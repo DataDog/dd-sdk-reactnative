@@ -6,11 +6,11 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 
-public class DatadogNativeSdkModule extends ReactContextBaseJavaModule {
+public class DatadogSdkModule extends ReactContextBaseJavaModule {
 
   private final ReactApplicationContext reactContext;
 
-  public DatadogNativeSdkModule(ReactApplicationContext reactContext) {
+  public DatadogSdkModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
   }

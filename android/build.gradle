@@ -1,5 +1,6 @@
 
 buildscript {
+    apply from: 'dependencies.gradle'
     repositories {
         google()
         mavenCentral()
@@ -8,16 +9,17 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.3'
+        classpath "com.android.tools.build:gradle:3.5.3"
     }
 }
 
+
+apply from: 'dependencies.gradle'
 apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 29
@@ -30,14 +32,15 @@ android {
 }
 
 repositories {
+    maven { url "https://dl.bintray.com/datadog/datadog-maven" }
     google()
     mavenCentral()
     jcenter()
-    maven { url "https://dl.bintray.com/datadog/datadog-maven" }
 }
 
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+    // Apparently you need to leave it like this because everything is controlled from other side.
+    implementation "com.facebook.react:react-native:+"
     implementation "com.datadoghq:dd-sdk-android:1.0.0"
 }
   

@@ -1,5 +1,5 @@
 
-# datadog-react-native-dd-react-native-sdk
+# dd-sdk-reactnative
 
 ## Getting started
 
@@ -50,7 +50,7 @@
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
-      compile project(':datadog-react-native-dd-react-native-sdk')
+      implementation project(':dd-sdk-reactnative')
   	```
 
 
