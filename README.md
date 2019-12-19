@@ -53,6 +53,13 @@
       implementation project(':dd-sdk-reactnative')
   	```
 
+## Run Sample App
+
+```console
+   $ npx react-native run-android
+   $ npx react-native run-ios
+```
+
 
 ## Usage
 ```javascript
