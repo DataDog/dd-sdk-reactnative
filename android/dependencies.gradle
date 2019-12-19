@@ -1,0 +1,7 @@
+ext {
+    buildToolsVersion = "29.0.2"
+    minSdkVersion = 21
+    compileSdkVersion = 29
+    datadogSdkVersion = "1.0.0"
+    gradlePluginVersion = "3.5.3"
+}
