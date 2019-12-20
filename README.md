@@ -11,22 +11,33 @@
 ### Public npm package mode installation
 
 * Install the npm package:
-`$ npm install dd-sdk-reactnative --save`
+```console
+$ npm install dd-sdk-reactnative --save
+```
 
 * Link the npm package as a dependency to your app:
-`$ npx react-native link dd-sdk-reactnative`
+```console
+$ npx react-native link dd-sdk-reactnative
+```
 
 ### Local npm package mode installation
 * Add the dependency into your package.json:
-`{
-  .........
-  devDependencies": {
-    ..........  
+
+```javascript
+{
+  "devDependencies": {
     "dd-sdk-reactnative": "file:../"
   }
-}`
-* Install the module: `$ npm install`
-* Link the module: `$ npx react-native link`
+}
+```
+* Install the module:
+```console
+$ npm install
+```
+* Link the module:
+```console
+$ npx react-native link
+```
 
 
 ### Local mode installation
