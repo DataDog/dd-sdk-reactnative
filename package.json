@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [
     "react-native"
@@ -12,6 +12,23 @@
   "author": "",
   "license": "",
   "peerDependencies": {
-    "react-native": "^0.41.2"
+    "react-native": "0.61.5"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "babel-jest": "24.9.0",
+    "react": "16.9.0",
+    "react-native": "0.61.5",
+    "react-test-renderer": "16.9.0",
+    "metro-react-native-babel-preset": "0.56.0"
+  },
+  "jest": {
+    "preset": "react-native",
+    "transform": {
+      "^.+\\.js$": "<rootDir>/node_modules/react-native/jest/preprocessor.js"
+    },
+    "modulePathIgnorePatterns": [
+      "SdkSample"
+    ]
   }
 }

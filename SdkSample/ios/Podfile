@@ -34,7 +34,6 @@ target 'SdkSample' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
-  pod 'RNDdReactNativeSdk', :path => '../node_modules/dd-sdk-reactnative'
 
   target 'SdkSampleTests' do
     inherit! :search_paths

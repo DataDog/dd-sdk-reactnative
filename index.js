@@ -1,6 +1,17 @@
 
 import { NativeModules } from 'react-native';
 
-const { RNDatadogSdk } = NativeModules;
+const { RNSdkModule } = NativeModules;
 
-export default RNDatadogSdk;
+async function initWithEndpoint(clientToken, endpointUrl) {
+   await RNSdkModule.initWithEndpoint(clientToken, endpointUrl)
+}
+
+async function init(clientToken) {
+   await RNSdkModule.init(clientToken)
+}
+
+export default{
+    init,
+    initWithEndpoint,
+};
