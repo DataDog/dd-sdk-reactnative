@@ -3,15 +3,15 @@ import { NativeModules } from 'react-native';
 
 const { RNSdkModule } = NativeModules;
 
-async function initWithEndpoint(clientToken, endpointUrl) {
-   await RNSdkModule.initWithEndpoint(clientToken, endpointUrl)
+async function initializeWithEndpoint(clientToken, endpointUrl) {
+   await RNSdkModule.initializeWithEndpoint(clientToken, endpointUrl);
 }
 
-async function init(clientToken) {
-   await RNSdkModule.init(clientToken)
+async function initialize(clientToken) {
+   await RNSdkModule.initialize(clientToken);
 }
 
 export default{
-    init,
-    initWithEndpoint,
+    initializeWithEndpoint,
+    initialize,
 };

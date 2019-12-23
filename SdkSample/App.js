@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
 export default class App extends React.Component{
     async componentDidMount(){
         alert("Initializing the SDK");
-        await Datadog.init("tokenID");
+        await Datadog.initialize("tokenID");
     }
     render(){
 

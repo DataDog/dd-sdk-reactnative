@@ -16,15 +16,15 @@ import Datadog from "../index";
 
 jest.mock('react-native', () => ({
   NativeModules: {
-    RNSdkModule: { init: jest.fn(async () => {}) },
-    RNSdkModule: { initWithEndpoint: jest.fn(async () => {}) },
+    RNSdkModule: { initialize: jest.fn(async () => {}) },
+    RNSdkModule: { initializeWithEndpoint: jest.fn(async () => {}) },
   },
 }));
 
 describe('Test SDK', () => {
     it('will init the Datadog SDK', async (done) => {
         try {
-          Datadog.init("test");
+          Datadog.initialize("test");
           done();
         } catch (ex) {
           console.error(ex);
@@ -33,7 +33,7 @@ describe('Test SDK', () => {
 
     it('will init the Datadog SDK with endpoint url', async (done) => {
         try {
-          Datadog.initWithEndpoint("test","endpointUrl");
+          Datadog.initializeWithEndpoint("test","endpointUrl");
           done();
         } catch (ex) {
           console.error(ex);

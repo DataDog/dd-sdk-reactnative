@@ -28,7 +28,7 @@ public class SdkModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void initWithEndpoint(final String clientToken,
+    public void initializeWithEndpoint(final String clientToken,
                                  final String endpointUrl,
                                  final Promise promise) {
         internalInit(clientToken, endpointUrl);
@@ -37,7 +37,7 @@ public class SdkModule extends ReactContextBaseJavaModule {
 
     // FOR SOME REASON REACT CANNOT SUPPORT JAVA OVERLOADED METHODS. WTFFF !!!!
     @ReactMethod
-    public void init(final String clientToken, final Promise promise) {
+    public void initialize(final String clientToken, final Promise promise) {
         internalInit(clientToken, null);
         promise.resolve(null);
     }
