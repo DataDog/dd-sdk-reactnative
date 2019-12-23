@@ -35,7 +35,7 @@ public class SdkModule extends ReactContextBaseJavaModule {
         promise.resolve(null);
     }
 
-    // FOR SOME REASON REACT CANNOT SUPPORT JAVA OVERLOADED METHODS. WTFFF !!!!
+    // We cannot use overloaded methods here because React Native does not support that.
     @ReactMethod
     public void initialize(final String clientToken, final Promise promise) {
         internalInit(clientToken, null);
