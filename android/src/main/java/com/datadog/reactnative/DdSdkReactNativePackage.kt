@@ -23,7 +23,7 @@ class DdSdkReactNativePackage : ReactPackage {
         reactContext: ReactApplicationContext
     ): List<NativeModule> {
         return listOf(
-            Datadog(reactContext),
+            DdSdk(reactContext),
             DdLogs(reactContext),
             DdTrace(reactContext),
             DdRum(reactContext)

@@ -7,7 +7,7 @@
 /**
  * A configuration object to initialize Datadog's features.
  */
-export class DatadogConfiguration {
+export class DdSdkConfiguration {
   constructor(
     readonly clientToken: string,
     readonly env: string,
@@ -18,12 +18,13 @@ export class DatadogConfiguration {
 /**
  * The entry point to initialize Datadog's features.
  */
-export type DatadogType = {
+export type DdSdkType = {
   /**
    * Initializes Datadog's features.
    * configuration: The configuration to use.
    */
-  initialize(configuration: DatadogConfiguration): Promise<void>;
+  initialize(configuration: DdSdkConfiguration): Promise<void>;
+
 };
 
 /**
@@ -57,6 +58,7 @@ export type DdLogsType = {
    * context: The additional context to send.
    */
   error(message: string, context: object): Promise<void>;
+
 };
 
 /**
@@ -69,11 +71,7 @@ export type DdTraceType = {
    * timestamp: The timestamp when the operation started.
    * context: The additional context to send.
    */
-  startSpan(
-    operation: string,
-    timestamp: number,
-    context: object
-  ): Promise<string>;
+  startSpan(operation: string, timestamp: number, context: object): Promise<string>;
 
   /**
    * Finish a started span.
@@ -82,6 +80,7 @@ export type DdTraceType = {
    * context: The additional context to send.
    */
   finishSpan(spanId: string, timestamp: number, context: object): Promise<void>;
+
 };
 
 /**
@@ -95,12 +94,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the view started.
    * context: The additional context to send.
    */
-  startView(
-    key: string,
-    name: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  startView(key: string, name: string, timestamp: number, context: object): Promise<void>;
 
   /**
    * Stop tracking a RUM View.
@@ -117,12 +111,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the action started.
    * context: The additional context to send.
    */
-  startAction(
-    type: string,
-    name: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  startAction(type: string, name: string, timestamp: number, context: object): Promise<void>;
 
   /**
    * Stop tracking the ongoing RUM Action.
@@ -138,12 +127,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the action occured.
    * context: The additional context to send.
    */
-  addAction(
-    type: string,
-    name: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  addAction(type: string, name: string, timestamp: number, context: object): Promise<void>;
 
   /**
    * Start tracking a RUM Resource.
@@ -153,13 +137,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the resource started.
    * context: The additional context to send.
    */
-  startResource(
-    key: string,
-    method: string,
-    url: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  startResource(key: string, method: string, url: string, timestamp: number, context: object): Promise<void>;
 
   /**
    * Stop tracking a RUM Resource.
@@ -169,13 +147,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the resource stopped.
    * context: The additional context to send.
    */
-  stopResource(
-    key: string,
-    statusCode: number,
-    kind: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  stopResource(key: string, statusCode: number, kind: string, timestamp: number, context: object): Promise<void>;
 
   /**
    * Add a RUM Error.
@@ -185,11 +157,7 @@ export type DdRumType = {
    * timestamp: The timestamp when the error occured.
    * context: The additional context to send.
    */
-  addError(
-    message: string,
-    source: string,
-    stacktrace: string,
-    timestamp: number,
-    context: object
-  ): Promise<void>;
+  addError(message: string, source: string, stacktrace: string, timestamp: number, context: object): Promise<void>;
+
 };
+
