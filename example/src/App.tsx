@@ -14,9 +14,9 @@ export default function App() {
     setResult('…');
 
     let config = new DdSdkConfiguration(
-      'pub1ac74d9934d7fae43935b4487c7ace52',
-      'prod',
-      'ddc9ab5c-8925-4d6f-90f3-8da0b3273174'
+      '<CLIENT_TOKEN>',
+      '<ENVIRONMENT>',
+      '<APPLICATION_ID>'
     );
 
     DdSdk.initialize(config).then(() => {
