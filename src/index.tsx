@@ -5,17 +5,11 @@
  */
 
 import { NativeModules } from 'react-native';
-import {
-  DatadogConfiguration,
-  DatadogType,
-  DdLogsType,
-  DdTraceType,
-  DdRumType,
-} from './types';
+import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
 
-const Datadog: DatadogType = NativeModules.Datadog;
+const DdSdk: DdSdkType = NativeModules.DdSdk;
 const DdLogs: DdLogsType = NativeModules.DdLogs;
 const DdTrace: DdTraceType = NativeModules.DdTrace;
 const DdRum: DdRumType = NativeModules.DdRum;
 
-export { DatadogConfiguration, Datadog, DdLogs, DdTrace, DdRum };
+export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum };

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import {
-  Datadog,
-  DatadogConfiguration,
+  DdSdk,
+  DdSdkConfiguration,
   DdLogs,
   DdRum,
 } from 'dd-sdk-reactnative';
@@ -13,13 +13,13 @@ export default function App() {
   React.useEffect(() => {
     setResult('…');
 
-    let config = new DatadogConfiguration(
-      'pub1ac74d9934d7fae43935b4487c7ace52',
-      'prod',
-      'ddc9ab5c-8925-4d6f-90f3-8da0b3273174'
+    let config = new DdSdkConfiguration(
+      '<CLIENT_TOKEN>',
+      '<ENVIRONMENT>',
+      '<APPLICATION_ID>'
     );
 
-    Datadog.initialize(config).then(() => {
+    DdSdk.initialize(config).then(() => {
       DdRum.startView('first', 'App', new Date().getTime(), {});
 
       DdLogs.info('This is a log sent from react-native', {
