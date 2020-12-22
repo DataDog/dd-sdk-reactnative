@@ -32,8 +32,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startView(key: String, name: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.startView(key, name, timestamp, context.toHashMap())
+    fun startView(key: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startView(key, name, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -44,8 +44,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopView(key: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopView(key, timestamp, context.toHashMap())
+    fun stopView(key: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopView(key, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -57,8 +57,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startAction(type: String, name: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.startAction(type, name, timestamp, context.toHashMap())
+    fun startAction(type: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startAction(type, name, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -68,8 +68,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopAction(timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopAction(timestamp, context.toHashMap())
+    fun stopAction(timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopAction(timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -81,8 +81,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun addAction(type: String, name: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.addAction(type, name, timestamp, context.toHashMap())
+    fun addAction(type: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.addAction(type, name, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -95,8 +95,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startResource(key: String, method: String, url: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.startResource(key, method, url, timestamp, context.toHashMap())
+    fun startResource(key: String, method: String, url: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startResource(key, method, url, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -109,8 +109,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopResource(key: String, statusCode: Long, kind: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopResource(key, statusCode, kind, timestamp, context.toHashMap())
+    fun stopResource(key: String, statusCode: Double, kind: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopResource(key, statusCode.toLong(), kind, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -123,8 +123,8 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun addError(message: String, source: String, stacktrace: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.addError(message, source, stacktrace, timestamp, context.toHashMap())
+    fun addError(message: String, source: String, stacktrace: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.addError(message, source, stacktrace, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 

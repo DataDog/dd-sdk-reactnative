@@ -30,6 +30,7 @@
     "bootstrap": "yarn example && yarn && yarn pods"
   },
   "keywords": [
+    "datadog",
     "react-native",
     "ios",
     "android"
