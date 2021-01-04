@@ -31,8 +31,8 @@ class DdTrace(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startSpan(operation: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-                val result = nativeInstance.startSpan(operation, timestamp, context.toHashMap())
+    fun startSpan(operation: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        val result = nativeInstance.startSpan(operation, timestamp.toLong(), context.toHashMap())
         promise.resolve(result)
     }
 
@@ -43,8 +43,8 @@ class DdTrace(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun finishSpan(spanId: String, timestamp: Long, context: ReadableMap, promise: Promise) {
-        nativeInstance.finishSpan(spanId, timestamp, context.toHashMap())
+    fun finishSpan(spanId: String, timestamp: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.finishSpan(spanId, timestamp.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
