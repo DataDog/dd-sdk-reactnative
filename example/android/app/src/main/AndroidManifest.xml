@@ -1,4 +1,10 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+This product includes software developed at Datadog (https://www.datadoghq.com/).
+Copyright 2016-Present Datadog, Inc.
+-->
+
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.example.ddsdkreactnative">
 
     <uses-permission android:name="android.permission.INTERNET"/>
