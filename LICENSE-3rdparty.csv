@@ -1,0 +1,10 @@
+Component,Origin,License,Copyright
+prod,react-native,MIT,"Copyright (c) Facebook, Inc. and its affiliates."
+dev,@react-native-community/bob,MIT,"Copyright (c) 2017 React Native Community"
+dev,@types/jest,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
+dev,@types/react,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
+dev,@types/react-native,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
+dev,jest,MIT,"Copyright (c) Facebook, Inc. and its affiliates."
+dev,pod-install,MIT,"Copyright (c) 2020-present 650 Industries, Inc. (aka Expo)"
+dev,react,MIT,"Copyright (c) Facebook, Inc. and its affiliates."
+dev,typescript,Apache-2.0,Copyright Microsoft Corporation
