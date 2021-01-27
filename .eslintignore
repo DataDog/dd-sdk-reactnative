@@ -1,0 +1,5 @@
+node_modules
+example
+dist
+lib
+src/types.tsx

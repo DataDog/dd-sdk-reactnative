@@ -40,3 +40,4 @@ DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
 ## License
 
 [Apache License, v2.0](LICENSE)
+

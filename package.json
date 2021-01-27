@@ -25,7 +25,8 @@
     "prepare": "bob build",
     "example": "yarn --cwd example",
     "pods": "cd example && pod-install --quiet",
-    "bootstrap": "yarn example && yarn && yarn pods"
+    "bootstrap": "yarn example && yarn && yarn pods",
+    "lint": "eslint ."
   },
   "keywords": [
     "datadog",
@@ -45,6 +46,11 @@
     "@types/jest": "^26.0.19",
     "@types/react": "^17.0.0",
     "@types/react-native": "0.63.42",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "eslint": "^7.18.0",
+    "eslint-plugin-react": "^7.22.0",
+    "eslint-plugin-react-native": "^3.10.0",
     "jest": "^26.6.3",
     "pod-install": "^0.1.14",
     "react": "17.0.1",
@@ -70,5 +76,8 @@
       "module",
       "typescript"
     ]
+  },
+  "dependencies": {
+    "@react-navigation/native": "^5.9.2"
   }
 }
