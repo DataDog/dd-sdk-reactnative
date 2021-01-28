@@ -13,6 +13,7 @@ declare type NavigationListener = (event: EventArg<string, boolean, any>) => voi
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
  */
 export default class DdRumReactNavigationTracking {
+    private static registeredContainers: WeakSet<NavigationContainerRef> = new WeakSet();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static navigationStateChangeListener: NavigationListener;
@@ -21,11 +22,12 @@ export default class DdRumReactNavigationTracking {
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
      */
-    static startTrackingViews(navigationRef: NavigationContainerRef | null): void {
-        if (navigationRef != null) {
+    static startTrackingViews(navigationRef?: NavigationContainerRef): void {
+        if (navigationRef != null && !this.registeredContainers.has(navigationRef)) {
             const listener = this.resolveNavigationStateChangeListener();
             this.handleRouteNavigation(navigationRef.getCurrentRoute());
             navigationRef.addListener("state", listener);
+            this.registeredContainers.add(navigationRef);
         }
     }
 
@@ -34,7 +36,10 @@ export default class DdRumReactNavigationTracking {
      * @param navigationRef the reference to the real NavigationContainer.
      */
     static stopTrackingViews(navigationRef?: NavigationContainerRef): void {
-        navigationRef?.removeListener("state", this.navigationStateChangeListener);
+        if (navigationRef != null) {
+            navigationRef.removeListener("state", this.navigationStateChangeListener);
+            this.registeredContainers.delete(navigationRef);
+        }
     }
 
     // eslint-disable-next-line

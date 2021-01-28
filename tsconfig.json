@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "dd-sdk-reactnative": ["./src/index"]
+      "dd-sdk-reactnative": [
+        "./src/index"
+      ]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -10,7 +12,9 @@
     "importsNotUsedAsValues": "error",
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
-    "lib": ["esnext"],
+    "lib": [
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
@@ -24,5 +28,8 @@
     "strict": true,
     "target": "esnext"
   },
-  "exclude": ["example"]
+  "exclude": [
+    "example",
+    "src/__tests__"
+  ]
 }
