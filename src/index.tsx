@@ -13,4 +13,4 @@ const DdLogs: DdLogsType = NativeModules.DdLogs;
 const DdTrace: DdTraceType = NativeModules.DdTrace;
 const DdRum: DdRumType = NativeModules.DdRum;
 
-export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum, DdRumReactNavigationTracking as ReactNavigationTrackingStrategy };
+export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum, DdRumReactNavigationTracking };

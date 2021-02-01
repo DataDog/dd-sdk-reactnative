@@ -22,7 +22,7 @@ export default class DdRumReactNavigationTracking {
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
      */
-    static startTrackingViews(navigationRef?: NavigationContainerRef): void {
+    static startTrackingViews(navigationRef: NavigationContainerRef | null): void {
         if (navigationRef != null && !this.registeredContainers.has(navigationRef)) {
             const listener = this.resolveNavigationStateChangeListener();
             this.handleRouteNavigation(navigationRef.getCurrentRoute());
@@ -35,7 +35,7 @@ export default class DdRumReactNavigationTracking {
      * Stops tracking the NavigationContainer.
      * @param navigationRef the reference to the real NavigationContainer.
      */
-    static stopTrackingViews(navigationRef?: NavigationContainerRef): void {
+    static stopTrackingViews(navigationRef: NavigationContainerRef | null): void {
         if (navigationRef != null) {
             navigationRef.removeListener("state", this.navigationStateChangeListener);
             this.registeredContainers.delete(navigationRef);
