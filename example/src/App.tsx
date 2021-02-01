@@ -5,7 +5,7 @@ import MainScreen from './screens/MainScreen';
 import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
-import { RumReactNavigationTracking } from 'dd-sdk-reactnative';
+import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
 
 
 const Tab = createBottomTabNavigator();
@@ -13,7 +13,7 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   return (
     <NavigationContainer ref={navigationRef} onReady={() => {
-      RumReactNavigationTracking.startTrackingViews(navigationRef.current)
+      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
     }}>
       <Tab.Navigator tabBarOptions={{
         labelStyle: style.tabLabelStyle,
