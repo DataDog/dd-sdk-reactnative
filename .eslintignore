@@ -1,0 +1,6 @@
+node_modules
+example
+dist
+lib
+src/types.tsx
+src/__tests__
