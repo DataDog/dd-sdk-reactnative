@@ -27,24 +27,24 @@ class DdTrace(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     /**
      * Start a span, and returns a unique identifier for the span.
      * @param operation The operation name of the span.
-     * @param timestamp The timestamp when the operation started.
+     * @param timestampMs The timestamp when the operation started (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startSpan(operation: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        val result = nativeInstance.startSpan(operation, timestamp.toLong(), context.toHashMap())
+    fun startSpan(operation: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        val result = nativeInstance.startSpan(operation, timestampMs.toLong(), context.toHashMap())
         promise.resolve(result)
     }
 
     /**
      * Finish a started span.
      * @param spanId The unique identifier of the span.
-     * @param timestamp The timestamp when the operation stopped.
+     * @param timestampMs The timestamp when the operation stopped (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun finishSpan(spanId: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.finishSpan(spanId, timestamp.toLong(), context.toHashMap())
+    fun finishSpan(spanId: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.finishSpan(spanId, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 

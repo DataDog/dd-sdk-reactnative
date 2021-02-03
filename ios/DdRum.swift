@@ -12,51 +12,51 @@ class RNDdRum: NSObject {
 
     let nativeInstance: DdRum = Bridge.getDdRum()
 
-    @objc(startView:withName:withTimestamp:withContext:withResolver:withRejecter:)
-    func startView(key: NSString, name: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.startView(key: key, name: name, timestamp: timestamp, context: context)
+    @objc(startView:withName:withTimestampms:withContext:withResolver:withRejecter:)
+    func startView(key: NSString, name: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.startView(key: key, name: name, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(stopView:withTimestamp:withContext:withResolver:withRejecter:)
-    func stopView(key: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.stopView(key: key, timestamp: timestamp, context: context)
+    @objc(stopView:withTimestampms:withContext:withResolver:withRejecter:)
+    func stopView(key: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.stopView(key: key, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(startAction:withName:withTimestamp:withContext:withResolver:withRejecter:)
-    func startAction(type: NSString, name: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.startAction(type: type, name: name, timestamp: timestamp, context: context)
+    @objc(startAction:withName:withTimestampms:withContext:withResolver:withRejecter:)
+    func startAction(type: NSString, name: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.startAction(type: type, name: name, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
     @objc(stopAction:withContext:withResolver:withRejecter:)
-    func stopAction(timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.stopAction(timestamp: timestamp, context: context)
+    func stopAction(timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.stopAction(timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(addAction:withName:withTimestamp:withContext:withResolver:withRejecter:)
-    func addAction(type: NSString, name: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.addAction(type: type, name: name, timestamp: timestamp, context: context)
+    @objc(addAction:withName:withTimestampms:withContext:withResolver:withRejecter:)
+    func addAction(type: NSString, name: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.addAction(type: type, name: name, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(startResource:withMethod:withUrl:withTimestamp:withContext:withResolver:withRejecter:)
-    func startResource(key: NSString, method: NSString, url: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.startResource(key: key, method: method, url: url, timestamp: timestamp, context: context)
+    @objc(startResource:withMethod:withUrl:withTimestampms:withContext:withResolver:withRejecter:)
+    func startResource(key: NSString, method: NSString, url: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.startResource(key: key, method: method, url: url, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(stopResource:withStatuscode:withKind:withTimestamp:withContext:withResolver:withRejecter:)
-    func stopResource(key: NSString, statusCode: Int64, kind: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.stopResource(key: key, statusCode: statusCode, kind: kind, timestamp: timestamp, context: context)
+    @objc(stopResource:withStatuscode:withKind:withTimestampms:withContext:withResolver:withRejecter:)
+    func stopResource(key: NSString, statusCode: Int64, kind: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.stopResource(key: key, statusCode: statusCode, kind: kind, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
-    @objc(addError:withSource:withStacktrace:withTimestamp:withContext:withResolver:withRejecter:)
-    func addError(message: NSString, source: NSString, stacktrace: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.addError(message: message, source: source, stacktrace: stacktrace, timestamp: timestamp, context: context)
+    @objc(addError:withSource:withStacktrace:withTimestampms:withContext:withResolver:withRejecter:)
+    func addError(message: NSString, source: NSString, stacktrace: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.addError(message: message, source: source, stacktrace: stacktrace, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 

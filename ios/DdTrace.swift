@@ -12,15 +12,15 @@ class RNDdTrace: NSObject {
 
     let nativeInstance: DdTrace = Bridge.getDdTrace()
 
-    @objc(startSpan:withTimestamp:withContext:withResolver:withRejecter:)
-    func startSpan(operation: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        let result = nativeInstance.startSpan(operation: operation, timestamp: timestamp, context: context)
+    @objc(startSpan:withTimestampms:withContext:withResolver:withRejecter:)
+    func startSpan(operation: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let result = nativeInstance.startSpan(operation: operation, timestampMs: timestampMs, context: context)
         resolve(result)
     }
 
-    @objc(finishSpan:withTimestamp:withContext:withResolver:withRejecter:)
-    func finishSpan(spanId: NSString, timestamp: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.finishSpan(spanId: spanId, timestamp: timestamp, context: context)
+    @objc(finishSpan:withTimestampms:withContext:withResolver:withRejecter:)
+    func finishSpan(spanId: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.finishSpan(spanId: spanId, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
 
