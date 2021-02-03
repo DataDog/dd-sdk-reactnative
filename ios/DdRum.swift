@@ -5,11 +5,15 @@
  */
 
 import Foundation
-import Datadog
+import DatadogSDKBridge
 
 @objc(DdRum)
 class RNDdRum: NSObject {
-
+    @objc(requiresMainQueueSetup)
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+    
     let nativeInstance: DdRum = Bridge.getDdRum()
 
     @objc(startView:withName:withTimestampms:withContext:withResolver:withRejecter:)
@@ -59,5 +63,4 @@ class RNDdRum: NSObject {
         nativeInstance.addError(message: message, source: source, stacktrace: stacktrace, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
-
 }

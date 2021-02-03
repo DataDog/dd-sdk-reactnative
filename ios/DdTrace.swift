@@ -5,11 +5,15 @@
  */
 
 import Foundation
-import Datadog
+import DatadogSDKBridge
 
 @objc(DdTrace)
 class RNDdTrace: NSObject {
-
+    @objc(requiresMainQueueSetup)
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+    
     let nativeInstance: DdTrace = Bridge.getDdTrace()
 
     @objc(startSpan:withTimestampms:withContext:withResolver:withRejecter:)
@@ -23,5 +27,4 @@ class RNDdTrace: NSObject {
         nativeInstance.finishSpan(spanId: spanId, timestampMs: timestampMs, context: context)
         resolve(nil)
     }
-
 }
