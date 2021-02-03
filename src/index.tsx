@@ -5,12 +5,14 @@
  */
 
 import { NativeModules } from 'react-native';
-import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
+import type { DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
 import DdRumReactNavigationTracking from './rum/instrumentation/DdRumReactNavigationTracking';
+import { DdRNSdkConfiguration } from './configuration';
+import { Datadog } from './Datadog';
 
 const DdSdk: DdSdkType = NativeModules.DdSdk;
 const DdLogs: DdLogsType = NativeModules.DdLogs;
 const DdTrace: DdTraceType = NativeModules.DdTrace;
 const DdRum: DdRumType = NativeModules.DdRum;
 
-export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum, DdRumReactNavigationTracking };
+export { DdRNSdkConfiguration as DdSdkConfiguration, Datadog, DdSdk, DdLogs, DdTrace, DdRum, DdRumReactNavigationTracking };
