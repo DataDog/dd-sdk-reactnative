@@ -1,4 +1,4 @@
-import type { DdRNSdkConfiguration } from "./configuration"
+import type { DdSdkReactNativeConfiguration } from "./configuration"
 import { DdSdkConfiguration, DdSdkType } from "./types"
 import { NativeModules } from 'react-native'
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
@@ -8,7 +8,7 @@ const DdSdk: DdSdkType = NativeModules.DdSdk;
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
  */
-export class Datadog {
+export class DdSdkReactNative {
     private static wasInitialized = false
 
     /**
@@ -16,7 +16,7 @@ export class Datadog {
     * @param configuration the configuration for the SDK library
     * @returns a Promise.
     */
-    static initialize(configuration: DdRNSdkConfiguration): Promise<void> {
+    static initialize(configuration: DdSdkReactNativeConfiguration): Promise<void> {
         return new Promise<void>((resolve => {
             if (this.wasInitialized) {
                 resolve()
@@ -30,7 +30,7 @@ export class Datadog {
 
     }
 
-    private static enableFeatures(configuration: DdRNSdkConfiguration) {
+    private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking()
         }

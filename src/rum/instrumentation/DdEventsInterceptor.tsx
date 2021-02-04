@@ -1,8 +1,9 @@
 import type EventsInterceptor from './EventsInterceptor'
 import { DdRum } from '../../index'
 
-export const UNKNOWN_TARGET_NAME = "unknown_arget"
-const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10;
+export const UNKNOWN_TARGET_NAME = "unknown_target"
+const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10
+const HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS = 1
 
 export class DdEventsInterceptor implements EventsInterceptor {
 
@@ -11,11 +12,13 @@ export class DdEventsInterceptor implements EventsInterceptor {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interceptOnPress(...args: any[]): void {
         if (args.length > 0 && args[0].length > 0 && args[0][0]._targetInst) {
-            const timestampDifference = Math.abs(new Date().getTime() - this.debouncingStartedTimestamp);
+            const currentTime = new Date().getTime()
+            const timestampDifference = Math.abs(new Date().getTime() - this.debouncingStartedTimestamp)
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
                 const targetProperties = args[0][0]._targetInst
                 this.handleTargetEvent(targetProperties)
-                this.debouncingStartedTimestamp = new Date().getTime()
+                // we add an approximated 1 millisecond for the execution time of the `handleTargetEvent` function
+                this.debouncingStartedTimestamp = currentTime + HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS
             }
         }
     }
