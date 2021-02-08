@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   defaultScreen: {
@@ -6,12 +6,17 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  tabLabelStyle:{
-    fontSize:22,
-    textAlign:"center",
-    fontWeight:"bold"
+  tabLabelStyle: {
+    fontSize: 22,
+    textAlign: "center",
+    fontWeight: "bold"
   },
-  tabItemStyle:{
-    justifyContent:"center"
-  }
+  tabItemStyle: {
+    justifyContent: "center"
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: "#DDDDDD",
+    padding: 10
+  },
 });

@@ -1,59 +1,87 @@
-import React, {Component} from 'react';
-import { View, Text, Button } from 'react-native';
+import React, { Component } from 'react';
+import { View, Text, Button, TouchableOpacity, TouchableWithoutFeedback, TouchableNativeFeedback } from 'react-native';
 import styles from './styles';
-import { APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT } from '@env';
 import {
-    DdSdk,
-    DdSdkConfiguration,
-    DdLogs,
-    DdRum,
-  } from 'dd-sdk-reactnative';
-  
-interface MainScreenState{
-    result: String;
+  DdRum
+} from 'dd-sdk-reactnative';
+
+interface MainScreenState {
+  welcomeMessage: string
+  resultButtonAction: string
+  resultTouchableOpacityAction: string,
+  resultTouchableWithoutFeedback: string,
+  resultTouchableNativeFeedback: string
 }
 
+const RESOURCE_URL = "http://www.example.com/api/v1/test";
 
 export default class MainScreen extends Component<any, MainScreenState> {
-   
-    constructor(props: Readonly<any> | undefined){
-        super(props);
-        this.state = {result: "random string"} as MainScreenState;
-        let config = new DdSdkConfiguration(
-            APPLICATION_ID,
-            CLIENT_TOKEN,
-            ENVIRONMENT
-          );
-      
-          DdSdk.initialize(config).then(() => {
-      
-            DdLogs.info('This is a log sent from react-native', {
-              foo: 42,
-              bar: 'xyz',
-            }).then(() => {
-              this.setState({result:"Log Sent!"} as MainScreenState);
-            });
-          }); 
-    }
 
-    render(){
-       return <View style={styles.defaultScreen}>
-        <Text>Result: {this.state.result}</Text>
+  constructor(props: Readonly<any> | undefined) {
+    super(props);
+    this.state = { welcomeMessage: "Welcome", resultButtonAction: "", resultTouchableOpacityAction: "" } as MainScreenState;
+  }
+
+  startRandomResource() {
+    const randomUrl = `${RESOURCE_URL}/${Math.random()}`
+    console.log("resource is started")
+    DdRum.startResource(
+      '1',
+      'GET',
+      randomUrl,
+      new Date().getTime(),
+      {}
+    );
+
+    DdRum.stopResource('1', 200, 'xhr', new Date().getTime(), {})
+    // give time to send the action
+  }
+  render() {
+    return <View style={styles.defaultScreen}>
+      <Text>{this.state.welcomeMessage}</Text>
+      <View style={{ marginTop: 40, alignItems: "center" }}>
+        <Text>{this.state.resultButtonAction}</Text>
         <Button
           title="Click me"
+          accessibilityLabel="ckick_me_button"
           onPress={() => {
-            DdRum.addAction('TAP', 'button1', new Date().getTime(), {});
-            DdRum.startResource(
-              '1',
-              'GET',
-              'http://www.example.com/api/v1/test',
-              new Date().getTime(),
-              {}
-            );
-            this.setState({result:"Clicked"} as MainScreenState);
-            DdRum.stopResource('1', 200, 'xhr', new Date().getTime() + 200, {});
+            this.startRandomResource()
+            this.setState({ resultButtonAction: "Button Clicked" } as MainScreenState);
           }}
         />
+        <Text style={{ marginTop: 20 }}>{this.state.resultTouchableOpacityAction}</Text>
+        <TouchableOpacity
+          accessibilityLabel="click_me_touchableopacity"
+          style={styles.button} onPress={() => {
+            this.startRandomResource()
+            this.setState({ resultTouchableOpacityAction: "TouchableOpacity Clicked" } as MainScreenState);
+          }}
+        >
+          <Text>Click me</Text>
+        </TouchableOpacity>
+        <Text style={{ marginTop: 20 }}>{this.state.resultTouchableWithoutFeedback}</Text>
+        <TouchableWithoutFeedback
+          accessibilityLabel="click_me_touchablewithoutfeedback"
+          onPress={() => {
+            this.startRandomResource()
+            this.setState({ resultTouchableWithoutFeedback: "TouchableWithoutFeedback Clicked" } as MainScreenState);
+          }}>
+          <View style={styles.button}>
+            <Text>Click me</Text>
+          </View>
+        </TouchableWithoutFeedback>
+        <Text style={{ marginTop: 20 }}>{this.state.resultTouchableNativeFeedback}</Text>
+        <TouchableNativeFeedback
+          accessibilityLabel="click_me_touchablenativefeedback"
+          onPress={() => {
+            this.startRandomResource()
+            this.setState({ resultTouchableNativeFeedback: "TouchableNativeFeedback Clicked" } as MainScreenState);
+          }}>
+          <View style={styles.button}>
+            <Text>Click me</Text>
+          </View>
+        </TouchableNativeFeedback>
       </View>
-    }
+    </View>
+  }
 }

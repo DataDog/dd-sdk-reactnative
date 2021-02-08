@@ -7,7 +7,6 @@ import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
 
-
 const Tab = createBottomTabNavigator();
 
 export default function App() {
