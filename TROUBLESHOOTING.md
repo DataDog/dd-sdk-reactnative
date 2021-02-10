@@ -1,6 +1,31 @@
 # TROUBLESHOOTING
 
+### `Undefined symbol _RCTModule`
+
+I had this issue when I run the project from Xcode. It might be related to this change in [`react-native v0.63 changelog`](https://github.com/facebook/react-native/commit/6e08f84719c47985e80123c72686d7a1c89b72ed)
+
+We made the change below to fix it:
+
+```
+// DdSdk.m
+// instead of
+#import <React/RCTBridgeModule.h>
+// maybe that:
+@import React // or @import React-Core
+```
+
+### Infinite loop-like error messages
+
+Sometimes, almost randomly, my RN project gives error messages non-stop.
+CPU usage goes up to %+100 and you'll quickly notice a problem with your laptop fan goes crazy.
+
+This is the issue: https://github.com/facebook/react-native/issues/28801
+
+I tried some of the solutions, none worked. I solved the issue by creating a new RN project.
+
 ## How to test before shipping?
+
+#### Run `make test-for-release`. If it doesn't work, read below
 
 1. `cd path/to/dd-sdk-reactnative && npm pack`
     * this creates a tarball from your local & unpublished package
@@ -42,28 +67,3 @@ const App: () => React$Node = () => {
 Then your project should work without problems ✅ 
 
 If it doesn't, you should fix it before shipping ❌
-
-## What are some other potential problems?
-
-### `Undefined symbol _RCTModule`
-
-I had this issue when I run the project from Xcode. It might be related to this change in [`react-native v0.63 changelog`](https://github.com/facebook/react-native/commit/6e08f84719c47985e80123c72686d7a1c89b72ed)
-
-I can't reproduce the issue anymore but if it happens again, you can try to import the module instead of header file
-
-```
-// DdSdk.m
-// instead of
-#import <React/RCTBridgeModule.h>
-// maybe that:
-@import React // or @import React-Core
-```
-
-### Infinite loop-like error messages
-
-Sometimes, almost randomly, my RN project gives error messages non-stop.
-CPU usage goes up to %+100 and you'll quickly notice a problem with your laptop fan goes crazy.
-
-This is the issue: https://github.com/facebook/react-native/issues/28801
-
-I tried some of the solutions, none worked. I solved the issue by creating a new RN project.
