@@ -8,10 +8,12 @@ import {
     DdLogs
 } from 'dd-sdk-reactnative';
 
+
 const config = new DdSdkReactNativeConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
     APPLICATION_ID,
+    true,
     true
 )
 
