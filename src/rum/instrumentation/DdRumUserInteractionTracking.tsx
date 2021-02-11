@@ -13,7 +13,7 @@ import type EventsInterceptor from './EventsInterceptor'
 const PROPERTY_FUNCTION_TYPE = "function"
 
 /**
-* Provides RUM auto - instrumentation feature to track user interaction as RUM events.
+* Provides RUM auto-instrumentation feature to track user interaction as RUM events.
 * For now we are only covering the "onPress" events.
 */
 export class DdRumUserInteractionTracking {
