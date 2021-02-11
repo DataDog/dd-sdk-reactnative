@@ -7,7 +7,8 @@ export class DdSdkReactNativeConfiguration {
         readonly clientToken: string,
         readonly env: string,
         readonly applicationId: string,
-        readonly trackInteractions: boolean = false
+        readonly trackInteractions: boolean = false,
+        readonly trackErrors: boolean = false
     ) {
 
     }

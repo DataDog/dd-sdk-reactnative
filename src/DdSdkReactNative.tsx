@@ -2,6 +2,7 @@ import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfigurat
 import { DdSdkConfiguration, DdSdkType } from "./types"
 import { NativeModules } from 'react-native'
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
+import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 
 const DdSdk: DdSdkType = NativeModules.DdSdk;
 
@@ -33,6 +34,10 @@ export class DdSdkReactNative {
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking()
+        }
+
+        if (configuration.trackErrors) {
+            DdRumErrorTracking.startTracking()
         }
     }
 }
