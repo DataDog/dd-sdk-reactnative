@@ -5,10 +5,9 @@
  */
 
 import Foundation
-import Datadog
+import DatadogSDKBridge
 
 extension NSDictionary {
-
     func asDdSdkConfiguration() -> DdSdkConfiguration {
         let clientToken = object(forKey: "clientToken") as? NSString
         let env = object(forKey: "env") as? NSString

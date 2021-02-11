@@ -13,16 +13,11 @@ npm install dd-sdk-reactnative
 ## Usage
 
 ```js
-import {
-  Datadog,
-  DdSdkConfiguration,
-  DdLogs,
-  DdRum,
-} from 'dd-sdk-reactnative';
+import { DdSdk, DdSdkConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
 
 // Initialize the SDK
 const config = new DdSdkConfiguration("<CLIENT_TOKEN>", "<ENVIRONMENT_NAME>", "<RUM_APPLICATION_ID>");
-Datadog.initialize(config);
+DdSdk.initialize(config);
 
 // Send logs (use the debug, info, warn of error methods)
 DdLogs.info("Lorem ipsum dolor sit amet…", 0, {});

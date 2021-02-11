@@ -28,24 +28,24 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * Start tracking a RUM View.
      * @param key The view unique key identifier.
      * @param name The view name.
-     * @param timestamp The timestamp when the view started.
+     * @param timestampMs The timestamp when the view started (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startView(key: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.startView(key, name, timestamp.toLong(), context.toHashMap())
+    fun startView(key: String, name: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startView(key, name, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
     /**
      * Stop tracking a RUM View.
      * @param key The view unique key identifier.
-     * @param timestamp The timestamp when the view stopped.
+     * @param timestampMs The timestamp when the view stopped (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopView(key: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopView(key, timestamp.toLong(), context.toHashMap())
+    fun stopView(key: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopView(key, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -53,23 +53,23 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * Start tracking a RUM Action.
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
-     * @param timestamp The timestamp when the action started.
+     * @param timestampMs The timestamp when the action started (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startAction(type: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.startAction(type, name, timestamp.toLong(), context.toHashMap())
+    fun startAction(type: String, name: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startAction(type, name, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
     /**
      * Stop tracking the ongoing RUM Action.
-     * @param timestamp The timestamp when the action stopped.
+     * @param timestampMs The timestamp when the action stopped (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopAction(timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopAction(timestamp.toLong(), context.toHashMap())
+    fun stopAction(timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopAction(timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -77,12 +77,12 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * Add a RUM Action.
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
-     * @param timestamp The timestamp when the action occured.
+     * @param timestampMs The timestamp when the action occurred (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun addAction(type: String, name: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.addAction(type, name, timestamp.toLong(), context.toHashMap())
+    fun addAction(type: String, name: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.addAction(type, name, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -91,12 +91,12 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param key The resource unique key identifier.
      * @param method The resource method (GET, POST, …).
      * @param url The resource url.
-     * @param timestamp The timestamp when the resource started.
+     * @param timestampMs The timestamp when the resource started (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun startResource(key: String, method: String, url: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.startResource(key, method, url, timestamp.toLong(), context.toHashMap())
+    fun startResource(key: String, method: String, url: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.startResource(key, method, url, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -105,12 +105,12 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param key The resource unique key identifier.
      * @param statusCode The resource status code.
      * @param kind The resource's kind (xhr, document, image, css, font, …).
-     * @param timestamp The timestamp when the resource stopped.
+     * @param timestampMs The timestamp when the resource stopped (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun stopResource(key: String, statusCode: Double, kind: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.stopResource(key, statusCode.toLong(), kind, timestamp.toLong(), context.toHashMap())
+    fun stopResource(key: String, statusCode: Double, kind: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.stopResource(key, statusCode.toLong(), kind, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 
@@ -119,12 +119,12 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param message The error message.
      * @param source The error source (network, source, console, logger, …).
      * @param stacktrace The error stacktrace.
-     * @param timestamp The timestamp when the error occured.
+     * @param timestampMs The timestamp when the error occurred (in milliseconds).
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun addError(message: String, source: String, stacktrace: String, timestamp: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.addError(message, source, stacktrace, timestamp.toLong(), context.toHashMap())
+    fun addError(message: String, source: String, stacktrace: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
+        nativeInstance.addError(message, source, stacktrace, timestampMs.toLong(), context.toHashMap())
         promise.resolve(null)
     }
 

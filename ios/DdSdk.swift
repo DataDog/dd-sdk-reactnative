@@ -5,11 +5,15 @@
  */
 
 import Foundation
-import Datadog
+import DatadogSDKBridge
 
 @objc(DdSdk)
 class RNDdSdk: NSObject {
-
+    @objc(requiresMainQueueSetup)
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+    
     let nativeInstance: DdSdk = Bridge.getDdSdk()
 
     @objc(initialize:withResolver:withRejecter:)
@@ -17,5 +21,4 @@ class RNDdSdk: NSObject {
         nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
         resolve(nil)
     }
-
 }

@@ -4,38 +4,38 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-#import <React/RCTBridgeModule.h>
+@import React;
 
 @interface RCT_EXTERN_MODULE(DdRum, NSObject)
 
 RCT_EXTERN_METHOD(startView:(NSString)key
                  withName:(NSString)name
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(stopView:(NSString)key
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(startAction:(NSString)type
                  withName:(NSString)name
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(stopAction:(NSInteger)timestamp
+RCT_EXTERN_METHOD(stopAction:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(addAction:(NSString)type
                  withName:(NSString)name
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -43,7 +43,7 @@ RCT_EXTERN_METHOD(addAction:(NSString)type
 RCT_EXTERN_METHOD(startResource:(NSString)key
                  withMethod:(NSString)method
                  withUrl:(NSString)url
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -51,7 +51,7 @@ RCT_EXTERN_METHOD(startResource:(NSString)key
 RCT_EXTERN_METHOD(stopResource:(NSString)key
                  withStatuscode:(NSInteger)statusCode
                  withKind:(NSString)kind
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -59,7 +59,7 @@ RCT_EXTERN_METHOD(stopResource:(NSString)key
 RCT_EXTERN_METHOD(addError:(NSString)message
                  withSource:(NSString)source
                  withStacktrace:(NSString)stacktrace
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)

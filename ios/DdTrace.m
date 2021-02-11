@@ -4,18 +4,18 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-#import <React/RCTBridgeModule.h>
+@import React;
 
 @interface RCT_EXTERN_MODULE(DdTrace, NSObject)
 
 RCT_EXTERN_METHOD(startSpan:(NSString)operation
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(finishSpan:(NSString)spanId
-                 withTimestamp:(NSInteger)timestamp
+                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
