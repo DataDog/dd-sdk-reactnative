@@ -1,4 +1,4 @@
-import type { DdSdkReactNativeConfiguration } from "./configuration"
+import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfiguration"
 import { DdSdkConfiguration, DdSdkType } from "./types"
 import { NativeModules } from 'react-native'
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
