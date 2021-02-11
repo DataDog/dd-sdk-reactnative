@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import React from 'react'
 import { DdRum } from '../../index';
 
 
@@ -16,7 +15,7 @@ const TYPE_SOURCE = "SOURCE"
 */
 export class DdRumErrorTracking {
 
-    private static sIsTracking = false
+    private static isTracking = false
 
     private static defaultErrorHandler = (error: any, isFatal?: boolean) => {}
 
@@ -25,7 +24,7 @@ export class DdRumErrorTracking {
      */
     static startTracking(): void {
         // extra safety to avoid wrapping the Error handler twice
-        if (this.sIsTracking) {
+        if (this.isTracking) {
             return
         }
         
@@ -34,7 +33,7 @@ export class DdRumErrorTracking {
 
             ErrorUtils.setGlobalHandler(this.onError);
 
-            this.sIsTracking = true;
+            this.isTracking = true;
         }
 
     }
