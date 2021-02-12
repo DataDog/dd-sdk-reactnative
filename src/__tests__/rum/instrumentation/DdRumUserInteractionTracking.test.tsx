@@ -29,7 +29,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-    DdRumUserInteractionTracking['sIsTracking'] = false
+    DdRumUserInteractionTracking['isTracking'] = false
     React.createElement = originalMethod
 })
 
@@ -44,9 +44,7 @@ it('M intercept and send a RUM event W onPress { Button component }', async () =
             <Button
                 title="Click me"
                 accessibilityLabel="click_me_button"
-                onPress={(event) => {
-                    console.log("Button was pressed")
-                }}
+                onPress={(event) => {}}
             />
         </View>
     ))
@@ -71,9 +69,7 @@ it('M intercept only once W startTracking { called multiple times }', async () =
             <Button
                 title="Click me"
                 accessibilityLabel="click_me_button"
-                onPress={(event) => {
-                    console.log("Button was pressed")
-                }}
+                onPress={(event) => {}}
             />
         </View>
     ))
@@ -96,9 +92,7 @@ it('M intercept and send a RUM event W onPress { TouchableOpacity component }', 
             <TouchableOpacity
                 style={styles.button}
                 accessibilityLabel="click_me_touchable_opacity"
-                onPress={(event) => {
-                    console.log("TouchableOpacity was pressed")
-                }}
+                onPress={(event) => {}}
             >
                 <Text>Click me</Text>
             </TouchableOpacity>
@@ -121,9 +115,7 @@ it('M intercept and send a RUM event W onPress { TouchableHighlight component }'
     const { getByText } = render((
         <View>
             <TouchableHighlight
-                onPress={() => {
-                    console.log("TouchableHighlight was pressed")
-                }}
+                onPress={(event) => {}}
                 underlayColor="white">
                 <View style={styles.button}>
                     <Text>Click me</Text>
@@ -148,9 +140,7 @@ it('M intercept and send a RUM event W onPress { TouchableNativeFeedback compone
     const { getByText } = render((
         <View>
             <TouchableNativeFeedback
-                onPress={() => {
-                    console.log("TouchableNativeFeedback was pressed")
-                }}>
+                onPress={(event) => {}}>
                 <View style={styles.button}>
                     <Text style={styles.button}>Click me</Text>
                 </View>
@@ -174,9 +164,7 @@ it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback compon
     const { getByText } = render((
         <View>
             <TouchableWithoutFeedback
-                onPress={() => {
-                    console.log("TouchableWithoutFeedback was pressed")
-                }}>
+                onPress={(event) => {}}>
                 <View style={styles.button}>
                     <Text style={styles.button}>Click me</Text>
                 </View>

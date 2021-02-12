@@ -26,7 +26,7 @@ jest.useFakeTimers();
 
 beforeEach(() => {
     jest.setTimeout(20000);
-    DdRum.startView.mockReset();
+    DdRum.startView.mockClear();
 })
 
 // Unit tests

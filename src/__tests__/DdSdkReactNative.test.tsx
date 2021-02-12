@@ -3,6 +3,7 @@ import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration'
 import type { DdSdkConfiguration } from '../types'
 import { DdSdkReactNative } from '../DdSdkReactNative'
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
+import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking'
 
 jest.mock('react-native', () => {
     return {
@@ -18,6 +19,14 @@ jest.mock('react-native', () => {
 jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
     return {
         DdRumUserInteractionTracking: {
+            startTracking: jest.fn().mockImplementation(() => { })
+        }
+    }
+})
+
+jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
+    return {
+        DdRumErrorTracking: {
             startTracking: jest.fn().mockImplementation(() => { })
         }
     }
@@ -84,4 +93,23 @@ it('M enable user interaction feature W initialize { user interaction config ena
     expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddsdkConfiguration.env).toBe(fakeEnvName)
     expect(DdRumUserInteractionTracking.startTracking).toHaveBeenCalledTimes(1)
+})
+
+it('M enable error tracking feature W initialize { error tracking config enabled }', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, true)
+
+    // WHEN
+    DdSdkReactNative.initialize(configuration)
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
