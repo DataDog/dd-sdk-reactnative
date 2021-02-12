@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native'
-import { DdRNSdkConfiguration } from '../configuration'
+import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration'
 import type { DdSdkConfiguration } from '../types'
-import { Datadog } from '../Datadog'
+import { DdSdkReactNative } from '../DdSdkReactNative'
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
 
 jest.mock('react-native', () => {
@@ -24,7 +24,7 @@ jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
 })
 
 beforeEach(async () => {
-    Datadog['wasInitialized'] = false;
+    DdSdkReactNative['wasInitialized'] = false;
     NativeModules.DdSdk.initialize.mockReset()
 })
 
@@ -33,10 +33,10 @@ it('M initialize the SDK W initialize', async () => {
     const fakeAppId = "1"
     const fakeClientToken = "2"
     const fakeEnvName = "env"
-    const configuration = new DdRNSdkConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
 
     // WHEN
-    Datadog.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -51,13 +51,13 @@ it('M initialize once W initialize { multiple times in a row }', async () => {
     const fakeAppId = "1"
     const fakeClientToken = "2"
     const fakeEnvName = "env"
-    const configuration = new DdRNSdkConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
 
     // WHEN
-    Datadog.initialize(configuration)
-    Datadog.initialize(configuration)
-    Datadog.initialize(configuration)
-    Datadog.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -72,10 +72,10 @@ it('M enable user interaction feature W initialize { user interaction config ena
     const fakeAppId = "1"
     const fakeClientToken = "2"
     const fakeEnvName = "env"
-    const configuration = new DdRNSdkConfiguration(fakeClientToken, fakeEnvName, fakeAppId, true)
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, true)
 
     // WHEN
-    Datadog.initialize(configuration)
+    DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
