@@ -7,6 +7,7 @@
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
 import { DdRum } from '../../index';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
 
 /**

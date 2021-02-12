@@ -17,7 +17,8 @@ export class DdRumErrorTracking {
 
     private static isTracking = false
 
-    private static defaultErrorHandler = (error: any, isFatal?: boolean) => {}
+    // eslint-disable-next-line 
+    private static defaultErrorHandler = (_error: any, _isFatal?: boolean) => {}
 
     /**
      * Starts tracking errors and sends a RUM Error event every time an error is detected.
@@ -38,6 +39,7 @@ export class DdRumErrorTracking {
 
     }
 
+    // eslint-disable-next-line 
     static onError(error: any, isFatal?: boolean) {
         // Stack trace
         let stack = EMPTY_STACK_TRACE
