@@ -12,6 +12,31 @@ npm install dd-sdk-reactnative
 
 ## Usage
 
+### Automatic Instrumentation
+
+We provide a simple way to automatically track all relevant events from your React Native application, using the following snippet: 
+
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from 'dd-sdk-reactnative';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>", 
+    "<ENVIRONMENT_NAME>", 
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons)
+    true // track Errors
+)
+
+DdSdkReactNative.initialize(config)
+```
+
+**Note**: Automatic View tracking is relying on the [React Navigation](https://reactnavigation.org/) package. If you're using another package to handle navigation in your application, use the manual instrumentation described below.
+
+### Manual Instrumentation
+
+If our automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs as follow:
+
 ```js
 import { DdSdk, DdSdkConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
 
