@@ -1,7 +1,14 @@
-import type { DdSdkReactNativeConfiguration } from "./configuration"
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfiguration"
 import { DdSdkConfiguration, DdSdkType } from "./types"
 import { NativeModules } from 'react-native'
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
+import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 
 const DdSdk: DdSdkType = NativeModules.DdSdk;
 
@@ -33,6 +40,10 @@ export class DdSdkReactNative {
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking()
+        }
+
+        if (configuration.trackErrors) {
+            DdRumErrorTracking.startTracking()
         }
     }
 }

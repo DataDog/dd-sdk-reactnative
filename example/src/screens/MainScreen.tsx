@@ -73,12 +73,11 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableNativeFeedback}</Text>
         <TouchableNativeFeedback
           accessibilityLabel="click_me_touchablenativefeedback"
-          onPress={() => {
-            this.startRandomResource()
-            this.setState({ resultTouchableNativeFeedback: "TouchableNativeFeedback Clicked" } as MainScreenState);
+          onPress={ () => { 
+            undefinedMethod(); // called on purpose to trigger an error
           }}>
           <View style={styles.button}>
-            <Text>Click me</Text>
+            <Text>Click me (error)</Text>
           </View>
         </TouchableNativeFeedback>
       </View>

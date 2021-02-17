@@ -13,13 +13,13 @@ import type EventsInterceptor from './EventsInterceptor'
 const PROPERTY_FUNCTION_TYPE = "function"
 
 /**
-* Provides RUM auto - instrumentation feature to track user interaction as RUM events.
+* Provides RUM auto-instrumentation feature to track user interaction as RUM events.
 * For now we are only covering the "onPress" events.
 */
 export class DdRumUserInteractionTracking {
 
-    private static sIsTracking = false
-    private static sEventsInterceptor: EventsInterceptor = new NoOpEventsInterceptor()
+    private static isTracking = false
+    private static eventsInterceptor: EventsInterceptor = new NoOpEventsInterceptor()
 
     /**
      * Starts tracking user interactions and sends a RUM Action event every time a new interaction was detected.
@@ -28,10 +28,10 @@ export class DdRumUserInteractionTracking {
      */
     static startTracking(): void {
         // extra safety to avoid wrapping more than 1 time this function
-        if (this.sIsTracking) {
+        if (this.isTracking) {
             return
         }
-        this.sEventsInterceptor = new DdEventsInterceptor()
+        this.eventsInterceptor = new DdEventsInterceptor()
         const original = React.createElement
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         React.createElement = (element: any, props: any, ...children: any): any => {
@@ -40,13 +40,13 @@ export class DdRumUserInteractionTracking {
                 const originalOnPress = props.onPress
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 props.onPress = (...args: any[]) => {
-                    this.sEventsInterceptor.interceptOnPress(args)
+                    this.eventsInterceptor.interceptOnPress(args)
                     return originalOnPress(...args)
                 }
             }
             return original(element, props, ...children)
         }
-        this.sIsTracking = true
+        this.isTracking = true
     }
 
 }
