@@ -15,7 +15,7 @@ module.exports = {
     [
       "module:react-native-dotenv",
       {
-        "allowUndefined": true
+        "allowUndefined": false
       }
     ]
   ],
