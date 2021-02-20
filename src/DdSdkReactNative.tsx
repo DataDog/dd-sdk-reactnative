@@ -9,6 +9,7 @@ import { DdSdkConfiguration, DdSdkType } from "./types"
 import { NativeModules } from 'react-native'
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
+import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'
 
 const DdSdk: DdSdkType = NativeModules.DdSdk;
 
@@ -29,6 +30,7 @@ export class DdSdkReactNative {
                 resolve()
                 return
             }
+
             DdSdk.initialize(new DdSdkConfiguration(configuration.clientToken, configuration.env, configuration.applicationId))
             this.enableFeatures(configuration)
             this.wasInitialized = true
@@ -39,11 +41,15 @@ export class DdSdkReactNative {
 
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {
         if (configuration.trackInteractions) {
-            DdRumUserInteractionTracking.startTracking()
+            DdRumUserInteractionTracking.startTracking();
+        }
+
+        if (configuration.trackResources) {
+            DdRumResourceTracking.startTracking();
         }
 
         if (configuration.trackErrors) {
-            DdRumErrorTracking.startTracking()
+            DdRumErrorTracking.startTracking();
         }
     }
 }
