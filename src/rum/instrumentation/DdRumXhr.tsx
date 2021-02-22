@@ -14,10 +14,6 @@ export interface DdRumXhr extends XMLHttpRequest {
 export interface DdRumXhrContext {
   method: string
   url: string
-  startTime: number
-}
-
-export interface DdRumXhrProxy{
-  beforeSend: (callback: (context: DdRumXhrContext, xhr: XMLHttpRequest) => void) => void
-  onRequestComplete: (callback: (context: DdRumXhrContext) => void) => void
+  startTime: number,
+  reported: boolean
 }

@@ -38,7 +38,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
       // URL will generate a 404 error ;)
-      xhr.open("GET", "https://random-data-api.com/api/restaurant/random_3restaurant");
+      xhr.open("GET", "https://random-data-api.com/api/restaurant/random_restaurant");
       xhr.onload = function () {
         if (this.status >= 200 && this.status < 300) {
           resolve(JSON.parse(xhr.responseText));
@@ -56,6 +56,8 @@ export default class MainScreen extends Component<any, MainScreenState> {
         });
       };
       xhr.send();
+      console.log("aborting !")
+      xhr.abort();
     });
   }
 

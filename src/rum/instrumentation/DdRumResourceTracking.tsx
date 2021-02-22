@@ -5,7 +5,7 @@
  */
 
 import { DdRum } from '../../index';
-import type { DdRumXhr } from './DdRumXhrProxy';
+import type { DdRumXhr } from './DdRumXhr';
 /**
 * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
 */
@@ -66,6 +66,7 @@ export class DdRumResourceTracking {
         method,
         startTime: -1,
         url: url,
+        reported: false
       }
       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any,prefer-rest-params
@@ -96,7 +97,10 @@ export class DdRumResourceTracking {
 
     xhrProxy.onreadystatechange = function () {
       if (xhrProxy.readyState === xhrType.DONE) {
-        DdRumResourceTracking.reportXhr(xhrProxy)
+        if (!xhrProxy._datadog_xhr.reported) {
+          DdRumResourceTracking.reportXhr(xhrProxy);
+          xhrProxy._datadog_xhr.reported = true;
+        }
       }
 
       if (originalOnreadystatechange) {

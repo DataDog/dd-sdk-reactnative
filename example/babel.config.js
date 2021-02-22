@@ -11,12 +11,6 @@ module.exports = {
           [pak.name]: path.join(__dirname, '..', pak.source),
         },
       },
-    ],
-    [
-      "module:react-native-dotenv",
-      {
-        "allowUndefined": false
-      }
     ]
   ],
 };

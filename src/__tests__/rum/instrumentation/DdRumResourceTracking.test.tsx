@@ -117,3 +117,60 @@ it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async 
     expect(xhr.originalSendCalled).toBe(true);
     expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
 })
+
+it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()', async () => {
+    // GIVEN
+    let method = "GET"
+    let url = "https://api.example.com/v2/user"
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+
+    // WHEN
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.send();
+    xhr.complete(500, 'error');
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.startResource.mock.calls.length).toBe(1);
+    expect(DdRum.startResource.mock.calls[0][1]).toBe(method);
+    expect(DdRum.startResource.mock.calls[0][2]).toBe(url);
+
+    expect(DdRum.stopResource.mock.calls.length).toBe(1);
+    expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
+    expect(DdRum.stopResource.mock.calls[0][1]).toBe(500);
+    expect(DdRum.stopResource.mock.calls[0][2]).toBe('XHR');
+
+    expect(xhr.originalOpenCalled).toBe(true);
+    expect(xhr.originalSendCalled).toBe(true);
+    expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
+})
+
+it('M intercept aborted XHR request W startTracking() + XHR.open() + XHR.send() + XHR.abort()', async () => {
+    // GIVEN
+    let method = "GET"
+    let url = "https://api.example.com/v2/user"
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+
+    // WHEN
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.send();
+    xhr.abort();
+    xhr.complete(0, undefined);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.startResource.mock.calls.length).toBe(1);
+    expect(DdRum.startResource.mock.calls[0][1]).toBe(method);
+    expect(DdRum.startResource.mock.calls[0][2]).toBe(url);
+
+    expect(DdRum.stopResource.mock.calls.length).toBe(1);
+    expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
+    expect(DdRum.stopResource.mock.calls[0][1]).toBe(0);
+    expect(DdRum.stopResource.mock.calls[0][2]).toBe('XHR');
+
+    expect(xhr.originalOpenCalled).toBe(true);
+    expect(xhr.originalSendCalled).toBe(true);
+    expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
+})
