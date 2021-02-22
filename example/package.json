@@ -16,7 +16,6 @@
     "axios": "^0.21.1",
     "react": "16.11.0",
     "react-native": "0.62.2",
-    "react-native-dotenv": "^2.5.0",
     "react-native-gesture-handler": "^1.9.0",
     "react-native-reanimated": "^1.13.2",
     "react-native-safe-area-context": "^3.1.9",
