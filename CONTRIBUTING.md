@@ -33,6 +33,24 @@ npm test
 npm run lint
 ```
 
+Before you run tests locally, make sure you modify the local version of `node_modules/react-native-gesture-handler/jestSetup.js` to be:
+
+```javascript
+import { NativeModules as RNNativeModules } from "react-native";
+
+RNNativeModules.RNGestureHandlerModule = RNNativeModules.RNGestureHandlerModule || {
+  State: { BEGAN: "BEGAN", FAILED: "FAILED", ACTIVE: "ACTIVE", END: "END" },
+  attachGestureHandler: jest.fn(),
+  createGestureHandler: jest.fn(),
+  dropGestureHandler: jest.fn(),
+  updateGestureHandler: jest.fn(),
+
+};
+RNNativeModules.PlatformConstants = RNNativeModules.PlatformConstants || {
+  forceTouchAvailable: false
+};
+``` 
+
 ### Example App
 
 The `example` folder contains a sample React Native application used to develop and test the SDK.
