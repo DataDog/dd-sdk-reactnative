@@ -73,9 +73,7 @@
     "setupFiles": [
       "./node_modules/react-native-gesture-handler/jestSetup.js"
     ],
-    "transformIgnorePatterns": [
-      "node_modules/(?!(jest-)?react-native|@react-native-community|@react-navigation)"
-    ]
+    "transformIgnorePatterns": []
   },
   "@react-native-community/bob": {
     "source": "src",
@@ -87,9 +85,9 @@
     ]
   },
   "dependencies": {
+    "@react-navigation/native": "^5.9.2",
     "react": "16.13.1",
     "react-native": "0.63.4",
-    "react-native-gesture-handler": "^1.9.0",
-    "@react-navigation/native": "^5.9.2"
+    "react-native-gesture-handler": "^1.10.1"
   }
 }

@@ -26,17 +26,53 @@ To edit the Kotlin files, open `example/android` in Android studio and find the 
 You can run the samples, linters and test using the following commands: 
 
 ```sh
+# Run the Unit Tests
+npm test
+
+# Run the linter
+npm run lint
+```
+
+Before you run tests locally, make sure you modify the local version of `node_modules/react-native-gesture-handler/jestSetup.js` to be:
+
+```javascript
+import { NativeModules as RNNativeModules } from "react-native";
+
+RNNativeModules.RNGestureHandlerModule = RNNativeModules.RNGestureHandlerModule || {
+  State: { BEGAN: "BEGAN", FAILED: "FAILED", ACTIVE: "ACTIVE", END: "END" },
+  attachGestureHandler: jest.fn(),
+  createGestureHandler: jest.fn(),
+  dropGestureHandler: jest.fn(),
+  updateGestureHandler: jest.fn(),
+
+};
+RNNativeModules.PlatformConstants = RNNativeModules.PlatformConstants || {
+  forceTouchAvailable: false
+};
+``` 
+
+### Example App
+
+The `example` folder contains a sample React Native application used to develop and test the SDK.
+
+To run it properly, you need to create a `example/src/ddCredentials.js` file with the following content:
+
+```javascript
+
+export const APPLICATION_ID = "<YOUR_APPLICATION_ID>";
+export const CLIENT_TOKEN = "<YOUR_CLIENT_TOKEN>";
+export const ENVIRONMENT = "<YOUR_ENVIRONMENT_NAME>";
+```
+
+You can then run the sample app using the following commands:
+
+```sh
 # Run the Android sample
 yarn example android
 
 # Run the ios sample
 yarn example ios
-
-# Run the Unit Tests
-yarn test
-
 ```
-
 
 ## Submitting Issues
 

@@ -4,4 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
- it.todo('write a test');
+const axios = require('axios');
+
+const axiosInstance = axios.default.create({
+    baseURL: 'https://random-data-api.com'
+});
+
+module.exports = axiosInstance;

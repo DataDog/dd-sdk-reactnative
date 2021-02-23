@@ -14,6 +14,7 @@ export class DdSdkReactNativeConfiguration {
         readonly env: string,
         readonly applicationId: string,
         readonly trackInteractions: boolean = false,
+        readonly trackResources: boolean = false,
         readonly trackErrors: boolean = false
     ) {
 
