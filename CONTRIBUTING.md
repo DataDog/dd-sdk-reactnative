@@ -74,6 +74,52 @@ yarn example android
 yarn example ios
 ```
 
+
+## How to test before shipping?
+
+#### For iOS, run `make test-for-release`. If it doesn't work, read below
+
+1. `cd path/to/dd-sdk-reactnative && npm pack`
+    * this creates a tarball from your local & unpublished package
+2. `cd {some other folder} && react-native init SomeAppName && cd SomeAppName`
+3. `npm install --save path/to/dd-sdk-reactnative/{tarball that npm pack created}`
+    * this installs the unpublished version of `dd-sdk-reactnative` **from your local**
+ 
+If for some reason `npm pack` doesn't work, you can do the workaround below after creating `SomeAppName`:
+
+1. `npm install --save path/to/dd-sdk-reactnative`
+2. `open node_modules` and remove symlink to `dd-sdk-reactnative`
+3. copy the real `dd-sdk-reactnative` folder to `node_modules`
+    * `react-native` doesn't support symlinks and JS engine gives `unresolved module: dd-sdk-reactnative` when you import it in your JS code
+
+Now you can proceed to `/ios`:
+
+1. `cd ../ios && open SomeAppName.xcworkspace`
+2. make the changes below in `Podfile` and run `pod install`
+
+```
+platform :ios, '11.0'
+use_frameworks!
+
+# and disable Flipper related lines
+```
+**NOTE:** You do **NOT** need to add `dd-sdk-reactnative` here manually, `pod install` should find and install it automatically
+
+Now you can go back to your `App.js/tsx` and use `dd-sdk-reactnative` from there
+Example code:
+```
+import { DdSdk, DdSdkConfiguration } from 'dd-sdk-reactnative';
+
+const App: () => React$Node = () => {
+  let config = new DdSdkConfiguration("token", "env", "appId");
+  DdSdk.initialize(config);
+  ...
+```
+
+Then your project should work without problems ✅ 
+
+If it doesn't, you should fix it before shipping ❌
+
 ## Submitting Issues
 
 Many great ideas for new features come from the community, and we'd be happy to
