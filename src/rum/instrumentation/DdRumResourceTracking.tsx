@@ -4,8 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../index';
-import type { DdRumXhr } from './DdRumXhr';
+import { DdRum } from '../../index'
+import type { DdRumXhr } from './DdRumXhr'
+import { genreateTraceId } from './TraceIdentifier';
+
+export const TRACE_ID_HEADER_KEY = "x-datadog-trace-id"
+export const PARENT_ID_HEADER_KEY = "x-datadog-parent-id"
+export const ORIGIN_HEADER_KEY = "x-datadog-origin"
+export const ORIGIN_RUM = "rum"
+
 /**
 * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
 */
@@ -62,16 +69,19 @@ export class DdRumResourceTracking {
     xhrType.prototype.open = function (this: DdRumXhr, method: string, url: string) {
       // Keep track of the method and url
       // start time is tracked by the `send` method
+      const spanId = genreateTraceId()
+      const traceId = genreateTraceId()
       this._datadog_xhr = {
         method,
         startTime: -1,
         url: url,
-        reported: false
+        reported: false,
+        spanId: spanId,
+        traceId: traceId
       }
-      
       // eslint-disable-next-line @typescript-eslint/no-explicit-any,prefer-rest-params
       return originalXhrOpen.apply(this, arguments as any)
-    }    
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,6 +92,10 @@ export class DdRumResourceTracking {
       if (this._datadog_xhr) {
         // keep track of start time
         this._datadog_xhr.startTime = Date.now();
+        this.setRequestHeader(TRACE_ID_HEADER_KEY, this._datadog_xhr.traceId)
+        this.setRequestHeader(PARENT_ID_HEADER_KEY, this._datadog_xhr.spanId)
+        this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM)
+
       }
 
       DdRumResourceTracking.proxyOnReadyStateChange(this, xhrType);
@@ -94,7 +108,6 @@ export class DdRumResourceTracking {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static proxyOnReadyStateChange(xhrProxy: DdRumXhr, xhrType: any): void {
     const originalOnreadystatechange = xhrProxy.onreadystatechange
-
     xhrProxy.onreadystatechange = function () {
       if (xhrProxy.readyState === xhrType.DONE) {
         if (!xhrProxy._datadog_xhr.reported) {
@@ -114,12 +127,16 @@ export class DdRumResourceTracking {
     const key = xhrProxy._datadog_xhr.startTime + "/" + xhrProxy._datadog_xhr.method + "/" + xhrProxy._datadog_xhr.startTime
     DdRum.startResource(
       key,
-      xhrProxy._datadog_xhr.method, 
+      xhrProxy._datadog_xhr.method,
       xhrProxy._datadog_xhr.url,
       xhrProxy._datadog_xhr.startTime,
-      {}
+      {
+        "_dd.span_id": xhrProxy._datadog_xhr.spanId,
+        "_dd.trace_id": xhrProxy._datadog_xhr.traceId
+      }
     ).then(() => {
       DdRum.stopResource(key, xhrProxy.status, "XHR", Date.now(), {});
-    })               
+    })
   }
+
 }

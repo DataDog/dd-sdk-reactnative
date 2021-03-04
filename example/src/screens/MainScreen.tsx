@@ -3,19 +3,17 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
- 
+
 import React, { Component } from 'react';
 import { View, Text, Button, TouchableOpacity, TouchableWithoutFeedback, TouchableNativeFeedback } from 'react-native';
 import styles from './styles';
-import {
-  DdRum
-} from 'dd-sdk-reactnative';
-
+import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
 
 const axios = require('../axiosConfig');
 
 interface MainScreenState {
   welcomeMessage: string
+  callDatadogButtonAction: string
   resultButtonAction: string
   resultTouchableOpacityAction: string,
   resultTouchableWithoutFeedback: string,
@@ -29,12 +27,22 @@ export default class MainScreen extends Component<any, MainScreenState> {
     this.state = { welcomeMessage: "Welcome", resultButtonAction: "", resultTouchableOpacityAction: "" } as MainScreenState;
   }
 
-  fetchUser () {
-     return fetch('https://random-data-api.com/api/users/random_user')
-         .then((response) => response.json())
+  fetchDatadogLogs() {
+    return fetch('https://api.datadoghq.com/api/v2/logs/events', {
+      headers: {
+        'Content-Type': 'application/json',
+        'DD-API-KEY': API_KEY,
+        'DD-APPLICATION-KEY': APPLICATION_KEY
+      }
+    }).then((response) => response.json())
+  }
+
+  fetchUser() {
+    return fetch('https://random-data-api.com/api/users/random_user')
+      .then((response) => response.json())
   };
 
-  xhrRestaurant () {
+  xhrRestaurant() {
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
       // URL will generate a 404 error ;)
@@ -61,23 +69,37 @@ export default class MainScreen extends Component<any, MainScreenState> {
     });
   }
 
-  axiosVehicle () {
-    return axios.request({ method: 'get', url: '/api/vehicle/random_vehicle'})
-        .then((response) => response.data);
+  axiosVehicle() {
+    return axios.request({ method: 'get', url: '/api/vehicle/random_vehicle' })
+      .then((response) => response.data);
   }
 
   render() {
     return <View style={styles.defaultScreen}>
       <Text>{this.state.welcomeMessage}</Text>
       <View style={{ marginTop: 40, alignItems: "center" }}>
-        <Text>{this.state.resultButtonAction}</Text>
+        <Text>{this.state.callDatadogButtonAction}</Text>
+        <Button
+          title="Fetch Datadog Logs"
+          accessibilityLabel="call_datadog_button"
+          onPress={() => {
+            this.fetchDatadogLogs().then((response) => {
+              console.log(response)
+              this.setState({ callDatadogButtonAction: "Datadog logs retrieved" } as MainScreenState);
+            }).catch(function (error) {
+              this.setState({ callDatadogButtonAction: "Unable to call Datadog" } as MainScreenState);
+              console.log(error);
+            });
+          }}
+        />
+        <Text style={{ marginTop: 20 }}>{this.state.resultButtonAction}</Text>
         <Button
           title="Click me"
           accessibilityLabel="ckick_me_button"
           onPress={() => {
-            this.fetchUser().then ((json) => {
+            this.fetchUser().then((json) => {
               const msg = "Fetched User:" + json.username
-              this.setState({ resultButtonAction: msg } as MainScreenState);  
+              this.setState({ resultButtonAction: msg } as MainScreenState);
               console.log("Fetched user:" + json.email)
             }).catch(function (error) {
               this.setState({ resultButtonAction: "Unable to load user" } as MainScreenState);
@@ -89,9 +111,9 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <TouchableOpacity
           accessibilityLabel="click_me_touchableopacity"
           style={styles.button} onPress={() => {
-            this.xhrRestaurant().then ((json) => {
+            this.xhrRestaurant().then((json) => {
               const msg = "Fetched restaurant:" + json.name
-              this.setState({ resultTouchableOpacityAction: msg } as MainScreenState);  
+              this.setState({ resultTouchableOpacityAction: msg } as MainScreenState);
               console.log("Fetched restaurant:" + json.name)
             }).catch(function (error) {
               //this.setState({ resultButtonAction: "Unable to load restaurant" } as MainScreenState);
@@ -105,9 +127,9 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <TouchableWithoutFeedback
           accessibilityLabel="click_me_touchablewithoutfeedback"
           onPress={() => {
-            this.axiosVehicle().then ((json) => {
+            this.axiosVehicle().then((json) => {
               const msg = "Fetched vehicle:" + json.make_and_model
-              this.setState({ resultTouchableWithoutFeedback: msg } as MainScreenState);  
+              this.setState({ resultTouchableWithoutFeedback: msg } as MainScreenState);
               console.log("Fetched vehicle:" + json.license_plate)
             }).catch(function (error) {
               // this.setState({ resultButtonAction: "Unable to load vehicle" } as MainScreenState);
@@ -121,7 +143,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableNativeFeedback}</Text>
         <TouchableNativeFeedback
           accessibilityLabel="click_me_touchablenativefeedback"
-          onPress={ () => { 
+          onPress={() => {
             undefinedMethod(); // called on purpose to trigger an error
           }}>
           <View style={styles.button}>

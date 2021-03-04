@@ -15,5 +15,7 @@ export interface DdRumXhrContext {
   method: string
   url: string
   startTime: number,
-  reported: boolean
+  reported: boolean,
+  spanId: string,
+  traceId: string
 }
