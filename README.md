@@ -25,13 +25,30 @@ const config = new DdSdkReactNativeConfiguration(
     "<ENVIRONMENT_NAME>", 
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons)
+    true, // track XHR Resources
     true // track Errors
 )
 
 DdSdkReactNative.initialize(config)
 ```
 
+### Track View Navigation
+
 **Note**: Automatic View tracking is relying on the [React Navigation](https://reactnavigation.org/) package. If you're using another package to handle navigation in your application, use the manual instrumentation described below.
+
+To track changes in navigation as RUM Views, you need to set the `onready` callback of your `NavigationContainer` component, as follow:
+
+```js
+import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
+
+// …
+
+    <NavigationContainer ref={navigationRef} onReady={() => {
+      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
+    }}>
+    // …
+    </NavigationContainer>
+```
 
 ### Manual Instrumentation
 
