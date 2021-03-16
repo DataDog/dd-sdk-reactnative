@@ -62,7 +62,10 @@ const config = new DdSdkConfiguration("<CLIENT_TOKEN>", "<ENVIRONMENT_NAME>", "<
 DdSdk.initialize(config);
 
 // Send logs (use the debug, info, warn of error methods)
+DdLogs.debug("Lorem ipsum dolor sit amet…", 0, {});
 DdLogs.info("Lorem ipsum dolor sit amet…", 0, {});
+DdLogs.warn("Lorem ipsum dolor sit amet…", 0, {});
+DdLogs.error("Lorem ipsum dolor sit amet…", 0, {});
 
 // Track RUM Views manually
 DdRum.startView('<view-key>', 'View Url', new Date().getTime(), {});
@@ -71,6 +74,9 @@ DdRum.stopView('<view-key>', new Date().getTime(), { custom: 42});
 
 // Track RUM Actions manually
 DdRum.addAction('TAP', 'button name', new Date().getTime(), {});
+
+// Track RUM Errors manually
+DdRum.addError('<message>', 'source', '<stacktrace>', new Date().getTime(), {});
 
 
 // Track RUM Resource manually
