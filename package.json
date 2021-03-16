@@ -1,6 +1,6 @@
 {
   "name": "dd-sdk-reactnative",
-  "version": "1.0.0-alpha1",
+  "version": "1.0.0-alpha2",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
@@ -29,7 +29,7 @@
     "!**/__fixtures__",
     "!**/__mocks__"
   ],
-  "types": "lib/typescript/src/index.d.ts",
+  "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
   "module": "lib/module/index",
