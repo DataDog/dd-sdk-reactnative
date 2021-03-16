@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-@import React;
+#import <React/RCTBridgeModule.h>
 
 @interface RCT_EXTERN_MODULE(DdLogs, NSObject)
 

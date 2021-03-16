@@ -34,4 +34,24 @@ class DdSdk(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         promise.resolve(null)
     }
 
+    /**
+     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+     * @param attributes The global context attributes.
+     */
+    @ReactMethod
+    fun setAttributes(attributes: ReadableMap, promise: Promise) {
+        nativeInstance.setAttributes(attributes.toHashMap())
+        promise.resolve(null)
+    }
+
+    /**
+     * Set the user information.
+     * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     */
+    @ReactMethod
+    fun setUser(user: ReadableMap, promise: Promise) {
+        nativeInstance.setUser(user.toHashMap())
+        promise.resolve(null)
+    }
+
 }

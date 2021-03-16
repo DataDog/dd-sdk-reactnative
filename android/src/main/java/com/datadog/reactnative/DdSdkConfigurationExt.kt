@@ -15,7 +15,10 @@ fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration{
     return DdSdkConfiguration(
         clientToken = getString("clientToken").orEmpty(),
         env = getString("env").orEmpty(),
-        applicationId = getString("applicationId")
+        applicationId = getString("applicationId"),
+        nativeCrashReportEnabled = getBoolean("nativeCrashReportEnabled"),
+        sampleRate = getDouble("sampleRate"),
+        additionalConfig = getMap("additionalConfig")?.toHashMap()
     )
 }
 
@@ -24,5 +27,8 @@ fun DdSdkConfiguration.toReadableMap(): WritableNativeMap {
     map.putString("clientToken", clientToken)
     map.putString("env", env)
     if (applicationId != null) map.putString("applicationId", applicationId)
+    if (nativeCrashReportEnabled != null) map.putBoolean("nativeCrashReportEnabled", nativeCrashReportEnabled)
+    if (sampleRate != null) map.putDouble("sampleRate", sampleRate)
+    if (additionalConfig != null) map.putMap("additionalConfig", additionalConfig.toWritableMap())
     return map
 }

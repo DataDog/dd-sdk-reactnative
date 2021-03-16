@@ -5,15 +5,11 @@
  */
 
 import Foundation
-import DatadogSDKBridge
+import Datadog
 
 @objc(DdLogs)
 class RNDdLogs: NSObject {
-    @objc(requiresMainQueueSetup)
-    static func requiresMainQueueSetup() -> Bool {
-        return false
-    }
-    
+
     let nativeInstance: DdLogs = Bridge.getDdLogs()
 
     @objc(debug:withContext:withResolver:withRejecter:)
@@ -39,4 +35,5 @@ class RNDdLogs: NSObject {
         nativeInstance.error(message: message, context: context)
         resolve(nil)
     }
+
 }
