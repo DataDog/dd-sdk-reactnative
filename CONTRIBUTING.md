@@ -7,10 +7,10 @@ To propose improvements, feel free to submit a PR or open an Issue.
 
 ## Setup your developer Environment
 
-To get started with the project, run `yarn bootstrap` in the root directory to install the required dependencies for each package:
+To get started with the project, run `yarn install` in the root directory to install the required dependencies for each package:
 
 ```sh
-yarn bootstrap
+yarn install
 ```
 
 ### Native Module development
