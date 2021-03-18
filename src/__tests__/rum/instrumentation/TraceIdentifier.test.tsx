@@ -1,4 +1,4 @@
-import { genreateTraceId } from '../../../rum/instrumentation/TraceIdentifier'
+import { generateTraceId } from '../../../rum/instrumentation/TraceIdentifier'
 
 
 it('M return an unique identifier W toString', async () => {
@@ -9,7 +9,7 @@ it('M return an unique identifier W toString', async () => {
 
     // WHEN
     while (counter-- > 0) {
-        generatedIds.add(genreateTraceId())
+        generatedIds.add(generateTraceId())
     }
 
     // THEN
@@ -20,7 +20,7 @@ it('M return an 64 bits positive integer W toString', async () => {
     let iterations = 100
     while (iterations-- > 0) {
         // GIVEN
-        const id = genreateTraceId()
+        const id = generateTraceId()
 
         // THEN
         expect(id).toMatch(/[1-9]{1,19}/)

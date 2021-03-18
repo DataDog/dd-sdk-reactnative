@@ -95,7 +95,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <Text style={{ marginTop: 20 }}>{this.state.resultButtonAction}</Text>
         <Button
           title="Click me"
-          accessibilityLabel="ckick_me_button"
+          accessibilityLabel="click_me_button"
           onPress={() => {
             this.fetchUser().then((json) => {
               const msg = "Fetched User:" + json.username
@@ -121,7 +121,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
             });
           }}
         >
-          <Text>Click me</Text>
+        <Text>Click me</Text>
         </TouchableOpacity>
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableWithoutFeedback}</Text>
         <TouchableWithoutFeedback

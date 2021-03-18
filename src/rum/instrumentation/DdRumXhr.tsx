@@ -7,7 +7,7 @@
 
 export interface DdRumXhr extends XMLHttpRequest {
 
-    _datadog_xhr: DdRumXhrContext
+  _datadog_xhr: DdRumXhrContext
     
 }
 
