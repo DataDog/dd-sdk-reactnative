@@ -6,7 +6,7 @@
 
 import { DdRum } from '../../index'
 import type { DdRumXhr } from './DdRumXhr'
-import { genreateTraceId } from './TraceIdentifier';
+import { generateTraceId } from './TraceIdentifier';
 
 export const TRACE_ID_HEADER_KEY = "x-datadog-trace-id"
 export const PARENT_ID_HEADER_KEY = "x-datadog-parent-id"
@@ -69,8 +69,8 @@ export class DdRumResourceTracking {
     xhrType.prototype.open = function (this: DdRumXhr, method: string, url: string) {
       // Keep track of the method and url
       // start time is tracked by the `send` method
-      const spanId = genreateTraceId()
-      const traceId = genreateTraceId()
+      const spanId = generateTraceId()
+      const traceId = generateTraceId()
       this._datadog_xhr = {
         method,
         startTime: -1,

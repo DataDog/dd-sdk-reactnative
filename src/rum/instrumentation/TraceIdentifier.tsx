@@ -5,10 +5,10 @@
  */
 
 /*
- * This code was inspired from broswer-sdk at (https://github.com/DataDog/browser-sdk/blob/master/packages/rum-core/src/domain/tracing/tracer.ts#L107)
+ * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/master/packages/rum-core/src/domain/tracing/tracer.ts#L107)
  */
 
-export function genreateTraceId(): string {
+export function generateTraceId(): string {
   const radix = 10
   const MAX_32_BITS_NUMBER = 4294967295 // 2^32-1
   let low: number = Math.floor(Math.random() * MAX_32_BITS_NUMBER)

@@ -64,14 +64,14 @@ export const CLIENT_TOKEN = "<YOUR_CLIENT_TOKEN>";
 export const ENVIRONMENT = "<YOUR_ENVIRONMENT_NAME>";
 ```
 
-You can then run the sample app using the following commands:
+You can then run the sample app using the following commands (from `example` folder):
 
 ```sh
 # Run the Android sample
-yarn example android
+yarn android
 
 # Run the ios sample
-yarn example ios
+yarn ios
 ```
 
 
