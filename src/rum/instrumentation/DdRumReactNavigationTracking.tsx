@@ -6,30 +6,44 @@
 
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
 import { DdRum } from '../../index';
+import { AppState, AppStateStatus } from 'react-native';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
+
+declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
  */
 export default class DdRumReactNavigationTracking {
-    private static registeredContainers: WeakSet<NavigationContainerRef> = new WeakSet();
+
+    private static registeredContainer: NavigationContainerRef | null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static navigationStateChangeListener: NavigationListener;
+
+    private static appStateListener: AppStateListener;
 
     /**
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
      */
     static startTrackingViews(navigationRef: NavigationContainerRef | null): void {
-        if (navigationRef != null && !this.registeredContainers.has(navigationRef)) {
+        if (navigationRef == null) {
+            return;
+        }
+
+        if (this.registeredContainer != null && this.registeredContainer !== navigationRef) {
+            console.error('Cannot track new navigation container while another one is still tracked');
+        } else if (this.registeredContainer == null) {
             const listener = this.resolveNavigationStateChangeListener();
             this.handleRouteNavigation(navigationRef.getCurrentRoute());
             navigationRef.addListener("state", listener);
-            this.registeredContainers.add(navigationRef);
+            this.registeredContainer = navigationRef;
         }
+
+        this.registerAppStateListenerIfNeeded();
     }
 
     /**
@@ -39,7 +53,7 @@ export default class DdRumReactNavigationTracking {
     static stopTrackingViews(navigationRef: NavigationContainerRef | null): void {
         if (navigationRef != null) {
             navigationRef.removeListener("state", this.navigationStateChangeListener);
-            this.registeredContainers.delete(navigationRef);
+            this.registeredContainer = null;
         }
     }
 
@@ -60,6 +74,30 @@ export default class DdRumReactNavigationTracking {
             };
         }
         return this.navigationStateChangeListener;
+    }
+
+    private static registerAppStateListenerIfNeeded() {
+        if (this.appStateListener == null) {
+            this.appStateListener = (appStateStatus: AppStateStatus) => {
+
+                const currentRoute = this.registeredContainer?.getCurrentRoute();
+                const currentViewKey = currentRoute?.key;
+                const currentViewName = currentRoute?.name;
+
+                if (currentViewKey != null && currentViewName != null) {
+                    if (appStateStatus === 'background') {
+                        DdRum.stopView(currentViewKey, new Date().getTime(), {});
+                    } else if (appStateStatus === 'active') {
+                        // case when app goes into foreground, in that case navigation listener
+                        // won't be called
+                        DdRum.startView(currentViewKey, currentViewName, new Date().getTime(), {});
+                    }
+                }
+            };
+
+            // AppState is singleton, so we should add a listener only once in the app lifetime
+            AppState.addEventListener("change", this.appStateListener);
+        }
     }
 
 }
