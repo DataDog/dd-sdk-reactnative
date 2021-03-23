@@ -11,7 +11,7 @@ import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 
-fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration{
+fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     return DdSdkConfiguration(
         clientToken = getString("clientToken").orEmpty(),
         env = getString("env").orEmpty(),
@@ -26,9 +26,9 @@ fun DdSdkConfiguration.toReadableMap(): WritableNativeMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)
     map.putString("env", env)
-    if (applicationId != null) map.putString("applicationId", applicationId)
-    if (nativeCrashReportEnabled != null) map.putBoolean("nativeCrashReportEnabled", nativeCrashReportEnabled)
-    if (sampleRate != null) map.putDouble("sampleRate", sampleRate)
-    if (additionalConfig != null) map.putMap("additionalConfig", additionalConfig.toWritableMap())
+    applicationId?.let { map.putString("applicationId", it) }
+    nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
+    sampleRate?.let { map.putDouble("sampleRate", it) }
+    additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }

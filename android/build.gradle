@@ -131,7 +131,7 @@ dependencies {
   api 'com.facebook.react:react-native:+'
   
   implementation "com.datadoghq:dd-sdk-android:1.8.0-alpha1"
-  implementation "com.datadoghq:dd-bridge-android:0.1.0"
+  implementation "com.datadoghq:dd-bridge-android:0.2.0"
 
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
