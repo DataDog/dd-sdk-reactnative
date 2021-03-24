@@ -211,7 +211,6 @@
 				"${PODS_ROOT}/Target Support Files/Pods-DdSdkReactNativeExample/Pods-DdSdkReactNativeExample-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/DatadogSDK/Datadog.framework",
 				"${BUILT_PRODUCTS_DIR}/DatadogSDKBridge/DatadogSDKBridge.framework",
-				"${BUILT_PRODUCTS_DIR}/DatadogSDKObjc/DatadogObjc.framework",
 				"${BUILT_PRODUCTS_DIR}/DoubleConversion/DoubleConversion.framework",
 				"${BUILT_PRODUCTS_DIR}/FBReactNativeSpec/FBReactNativeSpec.framework",
 				"${BUILT_PRODUCTS_DIR}/Folly/folly.framework",
@@ -245,7 +244,6 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Datadog.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DatadogSDKBridge.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DatadogObjc.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DoubleConversion.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBReactNativeSpec.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/folly.framework",
