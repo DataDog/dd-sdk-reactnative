@@ -9,6 +9,10 @@ import DatadogSDKBridge
 
 @objc(DdSdk)
 class RNDdSdk: NSObject {
+    @objc(requiresMainQueueSetup)
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
 
     let nativeInstance: DdSdk = Bridge.getDdSdk()
 

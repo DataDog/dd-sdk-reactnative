@@ -9,6 +9,11 @@ import DatadogSDKBridge
 
 @objc(DdRum)
 class RNDdRum: NSObject {
+    
+    @objc(requiresMainQueueSetup)
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
 
     let nativeInstance: DdRum = Bridge.getDdRum()
 
