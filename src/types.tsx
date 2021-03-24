@@ -14,7 +14,7 @@ export class DdSdkConfiguration {
     readonly applicationId: string,
     readonly nativeCrashReportEnabled: boolean,
     readonly sampleRate: number,
-    readonly additionalConfig: object
+    readonly additionalConfig: object = {}
   ) {}
 }
 
