@@ -5,7 +5,7 @@
  */
 
 import Foundation
-import Datadog
+import DatadogSDKBridge
 
 @objc(DdRum)
 class RNDdRum: NSObject {
