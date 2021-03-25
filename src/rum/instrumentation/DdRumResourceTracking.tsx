@@ -135,7 +135,7 @@ export class DdRumResourceTracking {
         "_dd.trace_id": xhrProxy._datadog_xhr.traceId
       }
     ).then(() => {
-      DdRum.stopResource(key, xhrProxy.status, "XHR", Date.now(), {});
+      DdRum.stopResource(key, xhrProxy.status, "xhr", Date.now(), {});
     })
   }
 

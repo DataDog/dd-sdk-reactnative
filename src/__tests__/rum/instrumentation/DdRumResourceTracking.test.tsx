@@ -116,7 +116,7 @@ it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async 
     expect(DdRum.stopResource.mock.calls.length).toBe(1);
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(200);
-    expect(DdRum.stopResource.mock.calls[0][2]).toBe('XHR');
+    expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -144,7 +144,7 @@ it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()'
     expect(DdRum.stopResource.mock.calls.length).toBe(1);
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(500);
-    expect(DdRum.stopResource.mock.calls[0][2]).toBe('XHR');
+    expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -173,7 +173,7 @@ it('M intercept aborted XHR request W startTracking() + XHR.open() + XHR.send() 
     expect(DdRum.stopResource.mock.calls.length).toBe(1);
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(0);
-    expect(DdRum.stopResource.mock.calls[0][2]).toBe('XHR');
+    expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
