@@ -9,6 +9,12 @@
  * It will be used to configure the SDK functionality at initialization.
  */
 export class DdSdkReactNativeConfiguration {
+
+    public nativeCrashReportEnabled: boolean = false
+    public sampleRate: number = 100.0
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    public additionalConfig: object = {}
+
     constructor(
         readonly clientToken: string,
         readonly env: string,

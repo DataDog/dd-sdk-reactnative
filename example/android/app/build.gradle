@@ -210,13 +210,7 @@ dependencies {
         exclude group:'com.facebook.flipper'
     }
 
-    if (enableHermes) {
-        def hermesPath = "../../node_modules/hermes-engine/android/";
-        debugImplementation files(hermesPath + "hermes-debug.aar")
-        releaseImplementation files(hermesPath + "hermes-release.aar")
-    } else {
-        implementation jscFlavor
-    }
+    implementation jscFlavor
 
     implementation project(':ddsdkreactnative')
     implementation 'androidx.multidex:multidex:2.0.1'

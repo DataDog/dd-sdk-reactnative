@@ -8,14 +8,21 @@ import Foundation
 import DatadogSDKBridge
 
 extension NSDictionary {
+
     func asDdSdkConfiguration() -> DdSdkConfiguration {
         let clientToken = object(forKey: "clientToken") as? NSString
         let env = object(forKey: "env") as? NSString
         let applicationId = object(forKey: "applicationId") as? NSString
+        let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
+        let sampleRate = object(forKey: "sampleRate") as? Double
+        let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : NSString(),
             env: (env != nil) ? env! : NSString(),
-            applicationId: applicationId
+            applicationId: applicationId,
+            nativeCrashReportEnabled: nativeCrashReportEnabled,
+            sampleRate: sampleRate,
+            additionalConfig: additionalConfig
         )
     }
 }

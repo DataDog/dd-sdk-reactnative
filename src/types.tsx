@@ -11,7 +11,10 @@ export class DdSdkConfiguration {
   constructor(
     readonly clientToken: string,
     readonly env: string,
-    readonly applicationId: string
+    readonly applicationId: string,
+    readonly nativeCrashReportEnabled: boolean,
+    readonly sampleRate: number,
+    readonly additionalConfig: object = {}
   ) {}
 }
 
@@ -24,6 +27,18 @@ export type DdSdkType = {
    * configuration: The configuration to use.
    */
   initialize(configuration: DdSdkConfiguration): Promise<void>;
+
+  /**
+   * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+   * attributes: The global context attributes.
+   */
+  setAttributes(attributes: object): Promise<void>;
+
+  /**
+   * Set the user information.
+   * user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+   */
+  setUser(user: object): Promise<void>;
 
 };
 

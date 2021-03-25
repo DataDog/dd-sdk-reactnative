@@ -31,7 +31,16 @@ export class DdSdkReactNative {
                 return
             }
 
-            DdSdk.initialize(new DdSdkConfiguration(configuration.clientToken, configuration.env, configuration.applicationId))
+            DdSdk.initialize(
+                new DdSdkConfiguration(
+                    configuration.clientToken, 
+                    configuration.env, 
+                    configuration.applicationId,
+                    configuration.nativeCrashReportEnabled,
+                    configuration.sampleRate,
+                    configuration.additionalConfig
+                    )
+                )
             this.enableFeatures(configuration)
             this.wasInitialized = true
             resolve()

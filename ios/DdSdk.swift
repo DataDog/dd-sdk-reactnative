@@ -13,7 +13,7 @@ class RNDdSdk: NSObject {
     static func requiresMainQueueSetup() -> Bool {
         return false
     }
-    
+
     let nativeInstance: DdSdk = Bridge.getDdSdk()
 
     @objc(initialize:withResolver:withRejecter:)
@@ -21,4 +21,17 @@ class RNDdSdk: NSObject {
         nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
         resolve(nil)
     }
+
+    @objc(setAttributes:withResolver:withRejecter:)
+    func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.setAttributes(attributes: attributes)
+        resolve(nil)
+    }
+
+    @objc(setUser:withResolver:withRejecter:)
+    func setUser(user: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.setUser(user: user)
+        resolve(nil)
+    }
+
 }
