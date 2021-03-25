@@ -28,7 +28,7 @@ const config = new DdSdkReactNativeConfiguration(
     true, // track XHR Resources
     true // track Errors
 )
-// Optional: enable or disable native craash reports
+// Optional: enable or disable native crash reports
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog)
 config.sampleRate = 80
@@ -56,11 +56,11 @@ import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
 
 ### Adding custom attributes
 
-In order to get more information out of your RUM sessions, you can attach user informations to all RUM events.
+You can attach user information to all RUM events to get more detailed information from your RUM sessions. 
 
 #### User information
 
-For user specifc information, you can use the following code wherever you want in your code (after the SDK has been initialized). Note that the `id`, `name` and `email` attributes are built-in the Datadog UI, but you can add any attribute that makes sense to your app.
+For user specifc information, you can use the following code wherever you want in your code (after the SDK has been initialized). The `id`, `name` and `email` attributes are built into the Datadog UI, but you can add any attribute that makes sense to your app.
 
 ```js
 DdSdk.setUser({
@@ -73,7 +73,7 @@ DdSdk.setUser({
 
 #### Global attributes
 
-You can also keep global attributes to track information about a specific session: A/B testing configuration, advert campaign origin, cart status, …
+You can also keep global attributes to track information about a specific session, such as A/B testing configuration, advert campaign origin, or cart status.
 
 ```js
 DdSdk.setAttributes({
@@ -121,4 +121,3 @@ DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
 ## License
 
 [Apache License, v2.0](LICENSE)
-
