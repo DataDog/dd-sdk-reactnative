@@ -24,6 +24,7 @@ jest.mock('../../../index', () => {
 const { Screen, Navigator } = createStackNavigator();
 const navigationRef1: React.RefObject<NavigationContainerRef> = React.createRef();
 const navigationRef2: React.RefObject<NavigationContainerRef> = React.createRef();
+const navigationRef3: React.RefObject<NavigationContainerRef> = React.createRef();
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
@@ -160,6 +161,28 @@ it('M send a RUM ViewEvent for each W switching screens { mutliple navigation co
     expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
 })
 
+it('M send a RUM ViewEvent for each W switching screens { nested navigation containers }', async () => {
+
+    // GIVEN
+    const testUtils: { getByText } = render(<FakeNestedNavigator />);
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef3.current);
+    const goToAboutButton = testUtils.getByText('Go to About');
+    let initialRoute = navigationRef3.current?.getCurrentRoute()
+
+    // WHEN
+    expect(goToAboutButton).toBeTruthy();
+    fireEvent(goToAboutButton, "press");
+
+    // THEN
+    expect(DdRum.startView.mock.calls.length).toBe(2);
+    expect(DdRum.startView.mock.calls[0][0]).toBe(initialRoute?.key);
+    expect(DdRum.startView.mock.calls[0][1]).toBe(initialRoute?.name);
+    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef3.current?.getCurrentRoute()?.key);
+    expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef3.current?.getCurrentRoute()?.name);
+    expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
+})
+
 
 // Internals
 
@@ -186,6 +209,25 @@ function FakeHomeScreen({ navigation }) {
     )
 }
 
+function FakeSettingsScreen({ navigation }) {
+
+    return (
+        <View>
+            <Text>Welcome to About</Text>
+        </View>
+
+    )
+}
+
+function FakeProfileScreen({navigation}) {
+    return (
+        <Navigator>
+            <Screen name="Home" component={FakeHomeScreen} />
+            <Screen name="About" component={FakeAboutScreen} />
+        </Navigator>
+    )
+}
+
 function FakeNavigator1() {
     return (
         <NavigationContainer ref={navigationRef1}>
@@ -208,4 +250,14 @@ function FakeNavigator2() {
     )
 }
 
+function FakeNestedNavigator() {
+    return (
+        <NavigationContainer ref={navigationRef3}>
+            <Navigator>
+                <Screen name="Profile" component= {FakeProfileScreen} />
+                <Screen name ="Settings" component= {FakeSettingsScreen}/>
+            </Navigator>
+        </NavigationContainer>
+    )
+}
 

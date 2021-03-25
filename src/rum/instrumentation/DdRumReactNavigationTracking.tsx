@@ -56,7 +56,12 @@ export default class DdRumReactNavigationTracking {
         if (this.navigationStateChangeListener == null) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.navigationStateChangeListener = (event: EventArg<string, boolean, any>) => {
-                this.handleRouteNavigation(event.data?.state?.routes[event.data?.state?.index]);
+                let nestedRoute = event.data?.state?.routes[event.data?.state?.index];
+                while (nestedRoute.state != undefined) {
+                    nestedRoute = nestedRoute.state.routes[nestedRoute.state.index];
+                }
+
+                this.handleRouteNavigation(nestedRoute);
             };
         }
         return this.navigationStateChangeListener;
