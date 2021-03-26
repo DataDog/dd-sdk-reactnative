@@ -53,7 +53,7 @@ import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
     // …
     </NavigationContainer>
 ```
-Please note, that only one `NavigationContainer` can be tracked at the time. If you need to track another container, you need to stop tracking previous one first.
+**Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking previous one first.
 
 ### Adding custom attributes
 
