@@ -1,6 +1,6 @@
 {
   "name": "dd-sdk-reactnative",
-  "version": "1.0.0-alpha2",
+  "version": "1.0.0-alpha3",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
