@@ -15,7 +15,7 @@
     "@react-navigation/stack": "^5.14.1",
     "axios": "^0.21.1",
     "dd-sdk-reactnative": "file:..",
-    "react": "16.13.1",
+    "react": "17.0.0",
     "react-native": "0.63.4",
     "react-native-gesture-handler": "^1.9.0",
     "react-native-reanimated": "^1.13.2",
