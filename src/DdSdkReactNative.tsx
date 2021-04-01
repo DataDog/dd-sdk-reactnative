@@ -17,6 +17,9 @@ const DdSdk: DdSdkType = NativeModules.DdSdk;
  * This class initializes the Datadog SDK, and sets up communication with the server.
  */
 export class DdSdkReactNative {
+
+    private static readonly DD_SOURCE_KEY = "_dd.source";
+
     private static wasInitialized = false
 
     /**
@@ -30,6 +33,8 @@ export class DdSdkReactNative {
                 resolve()
                 return
             }
+
+            configuration.additionalConfig[this.DD_SOURCE_KEY] = 'react-native';
 
             DdSdk.initialize(
                 new DdSdkConfiguration(

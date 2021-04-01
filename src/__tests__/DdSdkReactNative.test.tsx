@@ -64,10 +64,13 @@ it('M initialize the SDK W initialize', async () => {
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
 })
 
 it('M initialize once W initialize { multiple times in a row }', async () => {
@@ -85,10 +88,13 @@ it('M initialize once W initialize { multiple times in a row }', async () => {
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
 })
 
 it('M enable user interaction feature W initialize { user interaction config enabled }', async () => {
@@ -103,10 +109,13 @@ it('M enable user interaction feature W initialize { user interaction config ena
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
     expect(DdRumUserInteractionTracking.startTracking).toHaveBeenCalledTimes(1)
 })
 
@@ -122,10 +131,13 @@ it('M enable resource tracking feature W initialize { resource tracking config e
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
     expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(1)
 })
 
@@ -141,9 +153,12 @@ it('M enable error tracking feature W initialize { error tracking config enabled
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddsdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddsdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddsdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddsdkConfiguration.env).toBe(fakeEnvName)
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
