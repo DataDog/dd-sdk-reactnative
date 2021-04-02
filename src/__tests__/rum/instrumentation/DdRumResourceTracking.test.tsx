@@ -9,7 +9,7 @@ import { DdRum } from '../../../index';
 
 jest.useFakeTimers()
 
-jest.mock('../../../index', () => {
+jest.mock('../../../dd-foundation', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
