@@ -212,7 +212,6 @@ dependencies {
 
     implementation jscFlavor
 
-    implementation project(':ddsdkreactnative')
     implementation 'androidx.multidex:multidex:2.0.1'
 }
 

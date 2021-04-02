@@ -10,5 +10,4 @@ target 'DdSdkReactNativeExample' do
 
   # uncomment this line to use the local version of the iOS DatadogSDK
   # pod 'DatadogSDKBridge', :path => '../../../dd-bridge-ios/DatadogSDKBridge.podspec'
-  # pod 'dd-sdk-reactnative', :path => '../..'
 end
