@@ -4,9 +4,9 @@ PODS:
     - Kronos (~> 4.1)
   - DatadogSDKBridge (0.2.0):
     - DatadogSDK (~> 1.5.1)
-  - dd-sdk-reactnative (1.0.0-alpha2):
+  - dd-sdk-reactnative (1.0.0-alpha3):
     - DatadogSDKBridge (~> 0.2.0)
-    - React
+    - React-Core
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.63.4)
   - FBReactNativeSpec (0.63.4):
@@ -266,7 +266,7 @@ PODS:
   - Yoga (1.14.0)
 
 DEPENDENCIES:
-  - dd-sdk-reactnative (from `../..`)
+  - dd-sdk-reactnative (from `../node_modules/dd-sdk-reactnative`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
@@ -310,7 +310,7 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   dd-sdk-reactnative:
-    :path: "../.."
+    :path: "../node_modules/dd-sdk-reactnative"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -378,7 +378,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DatadogSDK: de0d7e8f35e65ea600d1844aaf6865a35dcba5da
   DatadogSDKBridge: b0ca962e74822f9c1408419ca906b538dc4a228c
-  dd-sdk-reactnative: 46cefa0ceebd7496aec6e4e1938b7e4285466efe
+  dd-sdk-reactnative: d9faa6bd33fb0d3641bc00c3482509b8cf94e17a
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   FBLazyVector: 3bb422f41b18121b71783a905c10e58606f7dc3e
   FBReactNativeSpec: f2c97f2529dd79c083355182cc158c9f98f4bd6e
@@ -412,6 +412,6 @@ SPEC CHECKSUMS:
   RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   Yoga: 4bd86afe9883422a7c4028c00e34790f560923d6
 
-PODFILE CHECKSUM: 65ed36a49df95e7b825f43d220498c39a90782f7
+PODFILE CHECKSUM: 1937595be2a60fd14951cf594cc45f7f330e51de
 
 COCOAPODS: 1.10.1
