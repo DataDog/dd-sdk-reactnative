@@ -4,7 +4,7 @@ PODS:
     - Kronos (~> 4.1)
   - DatadogSDKBridge (0.2.0):
     - DatadogSDK (~> 1.5.1)
-  - dd-sdk-reactnative (1.0.0-alpha2):
+  - dd-sdk-reactnative (1.0.0-alpha3):
     - DatadogSDKBridge (~> 0.2.0)
     - React
   - DoubleConversion (1.1.6)
@@ -257,7 +257,7 @@ PODS:
     - React-jsi (= 0.63.4)
   - RNCMaskedView (0.1.10):
     - React
-  - RNGestureHandler (1.10.0):
+  - RNGestureHandler (1.10.3):
     - React-Core
   - RNReanimated (1.13.2):
     - React-Core
@@ -266,7 +266,7 @@ PODS:
   - Yoga (1.14.0)
 
 DEPENDENCIES:
-  - dd-sdk-reactnative (from `../..`)
+  - dd-sdk-reactnative (from `../node_modules/dd-sdk-reactnative`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
@@ -310,7 +310,7 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   dd-sdk-reactnative:
-    :path: "../.."
+    :path: "../node_modules/dd-sdk-reactnative"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -378,7 +378,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DatadogSDK: de0d7e8f35e65ea600d1844aaf6865a35dcba5da
   DatadogSDKBridge: b0ca962e74822f9c1408419ca906b538dc4a228c
-  dd-sdk-reactnative: 46cefa0ceebd7496aec6e4e1938b7e4285466efe
+  dd-sdk-reactnative: a5b96f1f0a0f55e403a5da7c8423500298c77548
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   FBLazyVector: 3bb422f41b18121b71783a905c10e58606f7dc3e
   FBReactNativeSpec: f2c97f2529dd79c083355182cc158c9f98f4bd6e
@@ -407,11 +407,11 @@ SPEC CHECKSUMS:
   React-RCTVibration: ae4f914cfe8de7d4de95ae1ea6cc8f6315d73d9d
   ReactCommon: 73d79c7039f473b76db6ff7c6b159c478acbbb3b
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
-  RNGestureHandler: 03f587ba19a7e2d9fe48fb9aa6e33ace5fd07dd5
+  RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
   RNReanimated: e03f7425cb7a38dcf1b644d680d1bfc91c3337ad
   RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   Yoga: 4bd86afe9883422a7c4028c00e34790f560923d6
 
-PODFILE CHECKSUM: 65ed36a49df95e7b825f43d220498c39a90782f7
+PODFILE CHECKSUM: 0622c0089241056d28245084d28a6d85c4b68d8e
 
 COCOAPODS: 1.10.1
