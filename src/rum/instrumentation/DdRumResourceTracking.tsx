@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../index'
+import { DdRum } from '../../dd-foundation'
 import type { DdRumXhr } from './DdRumXhr'
 import { generateTraceId } from './TraceIdentifier';
 

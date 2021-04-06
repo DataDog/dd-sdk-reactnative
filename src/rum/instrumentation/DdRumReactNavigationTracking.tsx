@@ -5,7 +5,7 @@
  */
 
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
-import { DdRum } from '../../index';
+import { DdRum } from '../../dd-foundation';
 import { AppState, AppStateStatus } from 'react-native';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
