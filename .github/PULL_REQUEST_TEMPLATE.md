@@ -15,4 +15,5 @@ Anything else we should know when reviewing?
 - [ ] Feature or bugfix MUST have appropriate tests
 - [ ] Make sure you discussed the feature or bugfix with the maintaining team in an Issue
 - [ ] Make sure each commit and the PR mention the Issue number (cf the [CONTRIBUTING](CONTRIBUTING.md) doc)
+- [ ] If this PR is auto-generated, please make sure also to manually update the code related to the change
 

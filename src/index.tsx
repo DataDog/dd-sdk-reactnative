@@ -4,11 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdSdkConfiguration } from './types';
-import { DdSdk, DdLogs, DdTrace, DdRum } from './dd-foundation';
+import { DdLogs, DdTrace, DdRum } from './dd-foundation';
 import DdRumReactNavigationTracking from './rum/instrumentation/DdRumReactNavigationTracking';
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 
 
-export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, DdRumReactNavigationTracking };
+export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, DdRumReactNavigationTracking };

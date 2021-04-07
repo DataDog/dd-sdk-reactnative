@@ -61,10 +61,10 @@ You can attach user information to all RUM events to get more detailed informati
 
 #### User information
 
-For user specifc information, you can use the following code wherever you want in your code (after the SDK has been initialized). The `id`, `name` and `email` attributes are built into the Datadog UI, but you can add any attribute that makes sense to your app.
+For user specific information, you can use the following code wherever you want in your code (after the SDK has been initialized). The `id`, `name` and `email` attributes are built into the Datadog UI, but you can add any attribute that makes sense to your app.
 
 ```js
-DdSdk.setUser({
+DdSdkReactNative.setUser({
     id: "1337", 
     name: "John Smith", 
     email: "john@example.com", 
@@ -77,7 +77,7 @@ DdSdk.setUser({
 You can also keep global attributes to track information about a specific session, such as A/B testing configuration, advert campaign origin, or cart status.
 
 ```js
-DdSdk.setAttributes({
+DdSdkReactNative.setAttributes({
     profile_mode: "wall",
     chat_enabled: true,
     campaign_origin: "example_ad_network"
@@ -89,11 +89,11 @@ DdSdk.setAttributes({
 If our automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs as follow:
 
 ```js
-import { DdSdk, DdSdkConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
 
 // Initialize the SDK
-const config = new DdSdkConfiguration("<CLIENT_TOKEN>", "<ENVIRONMENT_NAME>", "<RUM_APPLICATION_ID>");
-DdSdk.initialize(config);
+const config = new DdSdkReactNativeConfiguration("<CLIENT_TOKEN>", "<ENVIRONMENT_NAME>", "<RUM_APPLICATION_ID>");
+DdSdkReactNative.initialize(config);
 
 // Send logs (use the debug, info, warn of error methods)
 DdLogs.debug("Lorem ipsum dolor sit amet…", 0, {});

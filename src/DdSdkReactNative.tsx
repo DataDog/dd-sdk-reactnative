@@ -5,13 +5,11 @@
  */
 
 import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfiguration"
-import { DdSdkConfiguration, DdSdkType } from "./types"
-import { NativeModules } from 'react-native'
+import { DdSdkConfiguration } from "./types"
+import { DdSdk } from "./dd-foundation"
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'
-
-const DdSdk: DdSdkType = NativeModules.DdSdk;
 
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
@@ -51,6 +49,32 @@ export class DdSdkReactNative {
             resolve()
         }))
 
+    }
+
+    /**
+     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+     * @param attributes: The global context attributes.
+     * @returns a Promise.
+     */
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    static setAttributes(attributes: object): Promise<void> {
+        return new Promise<void>((resolve => {
+            DdSdk.setAttributes(attributes)
+            resolve()
+        }));
+    }
+
+    /**
+     * Set the user information.
+     * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     * @returns a Promise.
+     */
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    static setUser(user: object): Promise<void> {
+        return new Promise<void>((resolve => {
+            DdSdk.setUser(user)
+            resolve()
+        }))
     }
 
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {

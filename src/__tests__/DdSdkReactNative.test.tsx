@@ -7,6 +7,7 @@
 import { NativeModules } from 'react-native'
 import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration'
 import type { DdSdkConfiguration } from '../types'
+import { DdSdk } from '../dd-foundation'
 import { DdSdkReactNative } from '../DdSdkReactNative'
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking'
@@ -16,8 +17,9 @@ jest.mock('react-native', () => {
     return {
         NativeModules: {
             DdSdk: {
-                // eslint-disable-next-line @typescript-eslint/no-empty-function
-                initialize: jest.fn().mockImplementation(() => { })
+                initialize: jest.fn().mockImplementation(() => { }),
+                setUser: jest.fn().mockImplementation(() => { }),
+                setAttributes: jest.fn().mockImplementation(() => { })
             }
         }
     };
@@ -50,6 +52,8 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
 beforeEach(async () => {
     DdSdkReactNative['wasInitialized'] = false;
     NativeModules.DdSdk.initialize.mockReset()
+    NativeModules.DdSdk.setAttributes.mockReset()
+    NativeModules.DdSdk.setUser.mockReset()
 })
 
 it('M initialize the SDK W initialize', async () => {
@@ -161,4 +165,30 @@ it('M enable error tracking feature W initialize { error tracking config enabled
         '_dd.source': 'react-native'
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
+})
+
+it('M call SDK method W setAttributes', async () => {
+    // GIVEN
+    const attributes = { "foo": "bar" }
+
+    // WHEN
+
+    DdSdkReactNative.setAttributes(attributes)
+
+    // THEN
+    expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1)
+    expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes)
+})
+
+it('M call SDK method W setUser', async () => {
+    // GIVEN
+    const user = { "foo": "bar" }
+
+    // WHEN
+
+    DdSdkReactNative.setUser(user)
+
+    // THEN
+    expect(DdSdk.setUser).toHaveBeenCalledTimes(1)
+    expect(DdSdk.setUser).toHaveBeenCalledWith(user)
 })

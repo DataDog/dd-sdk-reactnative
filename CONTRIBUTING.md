@@ -108,11 +108,11 @@ use_frameworks!
 Now you can go back to your `App.js/tsx` and use `dd-sdk-reactnative` from there
 Example code:
 ```
-import { DdSdk, DdSdkConfiguration } from 'dd-sdk-reactnative';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from 'dd-sdk-reactnative';
 
 const App: () => React$Node = () => {
-  let config = new DdSdkConfiguration("token", "env", "appId");
-  DdSdk.initialize(config);
+  let config = new DdSdkReactNativeConfiguration("token", "env", "appId");
+  DdSdkReactNative.initialize(config);
   ...
 ```
 
