@@ -58,10 +58,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setAttributes(attributes: object): Promise<void> {
-        return new Promise<void>((resolve => {
-            DdSdk.setAttributes(attributes)
-            resolve()
-        }));
+        return DdSdk.setAttributes(attributes)
     }
 
     /**
@@ -71,10 +68,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setUser(user: object): Promise<void> {
-        return new Promise<void>((resolve => {
-            DdSdk.setUser(user)
-            resolve()
-        }))
+        return DdSdk.setUser(user)
     }
 
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {

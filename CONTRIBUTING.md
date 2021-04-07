@@ -111,7 +111,14 @@ Example code:
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from 'dd-sdk-reactnative';
 
 const App: () => React$Node = () => {
-  let config = new DdSdkReactNativeConfiguration("token", "env", "appId");
+  const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons)
+    true, // track XHR Resources
+    true // track Errors
+  )
   DdSdkReactNative.initialize(config);
   ...
 ```

@@ -92,7 +92,14 @@ If our automatic instrumentation doesn't suit your needs, you can manually creat
 import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
 
 // Initialize the SDK
-const config = new DdSdkReactNativeConfiguration("<CLIENT_TOKEN>", "<ENVIRONMENT_NAME>", "<RUM_APPLICATION_ID>");
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons)
+    true, // track XHR Resources
+    true // track Errors
+)
 DdSdkReactNative.initialize(config);
 
 // Send logs (use the debug, info, warn of error methods)
