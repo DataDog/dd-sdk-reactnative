@@ -9,7 +9,7 @@ import DatadogSDKBridge
 
 @objc(DdLogs)
 class RNDdLogs: NSObject {
-    
+
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
         return false

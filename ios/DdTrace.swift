@@ -9,6 +9,7 @@ import DatadogSDKBridge
 
 @objc(DdTrace)
 class RNDdTrace: NSObject {
+
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
         return false

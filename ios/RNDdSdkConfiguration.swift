@@ -15,6 +15,7 @@ extension NSDictionary {
         let applicationId = object(forKey: "applicationId") as? NSString
         let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
         let sampleRate = object(forKey: "sampleRate") as? Double
+        let site = object(forKey: "site") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : NSString(),
@@ -22,6 +23,7 @@ extension NSDictionary {
             applicationId: applicationId,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             sampleRate: sampleRate,
+            site: site,
             additionalConfig: additionalConfig
         )
     }
