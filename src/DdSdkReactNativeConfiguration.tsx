@@ -10,10 +10,10 @@
  */
 export class DdSdkReactNativeConfiguration {
 
-    public nativeCrashReportEnabled: boolean = false
-    public sampleRate: number = 100.0
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    public additionalConfig: object = {}
+    public nativeCrashReportEnabled: boolean = false;
+    public sampleRate: number = 100.0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public additionalConfig: {[k: string]: any} = {};
 
     constructor(
         readonly clientToken: string,

@@ -1,12 +1,10 @@
 import { AppRegistry } from 'react-native';
 import App from './src/App';
 import { name as appName } from './app.json';
-import { NativeModules } from 'react-native'
 import {
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     DdLogs,
-    DdSdk
 } from 'dd-sdk-reactnative';
 
 import { CLIENT_TOKEN, ENVIRONMENT, APPLICATION_ID } from './src/ddCredentials';
@@ -29,9 +27,9 @@ DdSdkReactNative.initialize(config).then(() => {
         bar: 'xyz',
     })
 
-    DdSdk.setUser({id: "1337", name: "Xavier", email: "xg@example.com", type: "premium"})
+    DdSdkReactNative.setUser({id: "1337", name: "Xavier", email: "xg@example.com", type: "premium"})
 
-    DdSdk.setAttributes({campaign: "react-native-bs"})
+    DdSdkReactNative.setAttributes({campaign: "react-native-bs"})
 });
 
 AppRegistry.registerComponent(appName, () => App);
