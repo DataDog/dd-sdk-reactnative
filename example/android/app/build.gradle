@@ -77,6 +77,8 @@ import com.android.build.OutputFile
 
 project.ext.react = [
     enableHermes: false,  // clean and rebuild if changing
+    // the entry file for bundle generation
+    entryFile: "index.tsx",
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
