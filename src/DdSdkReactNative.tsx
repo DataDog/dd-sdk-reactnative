@@ -6,7 +6,7 @@
 
 import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfiguration"
 import { DdSdkConfiguration } from "./types"
-import { DdSdk } from "./dd-foundation"
+import { DdSdk } from "./foundation"
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'

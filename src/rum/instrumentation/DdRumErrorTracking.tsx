@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../dd-foundation';
+import { DdRum } from '../../foundation';
 
 
 const EMPTY_STACK_TRACE = ""

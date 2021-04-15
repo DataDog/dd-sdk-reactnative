@@ -5,7 +5,7 @@
  */
 
 import type EventsInterceptor from './EventsInterceptor'
-import { DdRum } from '../../dd-foundation'
+import { DdRum } from '../../foundation'
 
 export const UNKNOWN_TARGET_NAME = "unknown_target"
 const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10
