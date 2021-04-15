@@ -28,10 +28,10 @@ export class DdRumUserInteractionTracking {
      */
     static startTracking(): void {
         // extra safety to avoid wrapping more than 1 time this function
-        if (this.isTracking) {
+        if (DdRumUserInteractionTracking.isTracking) {
             return
         }
-        this.eventsInterceptor = new DdEventsInterceptor()
+        DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor()
         const original = React.createElement
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         React.createElement = (element: any, props: any, ...children: any): any => {
@@ -40,13 +40,13 @@ export class DdRumUserInteractionTracking {
                 const originalOnPress = props.onPress
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 props.onPress = (...args: any[]) => {
-                    this.eventsInterceptor.interceptOnPress(args)
+                    DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(args)
                     return originalOnPress(...args)
                 }
             }
             return original(element, props, ...children)
         }
-        this.isTracking = true
+        DdRumUserInteractionTracking.isTracking = true
     }
 
 }
