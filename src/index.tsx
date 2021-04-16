@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdLogs, DdTrace, DdRum } from './dd-foundation';
+import { DdLogs, DdTrace, DdRum } from './foundation';
 import DdRumReactNavigationTracking from './rum/instrumentation/DdRumReactNavigationTracking';
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';

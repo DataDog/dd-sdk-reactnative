@@ -7,7 +7,7 @@
 import { NativeModules } from 'react-native'
 import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration'
 import type { DdSdkConfiguration } from '../types'
-import { DdSdk } from '../dd-foundation'
+import { DdSdk } from '../foundation'
 import { DdSdkReactNative } from '../DdSdkReactNative'
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking'

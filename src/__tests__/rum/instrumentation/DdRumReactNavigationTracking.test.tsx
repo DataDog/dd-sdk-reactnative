@@ -12,7 +12,7 @@ import DdRumReactNavigationTracking from '../../../rum/instrumentation/DdRumReac
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-jest.mock('../../../dd-foundation', () => {
+jest.mock('../../../foundation', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
