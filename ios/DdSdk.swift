@@ -35,4 +35,10 @@ class RNDdSdk: NSObject {
         resolve(nil)
     }
 
+    @objc(setTrackingConsent:withResolver:withRejecter:)
+    func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.setTrackingConsent(trackingConsent: trackingConsent)
+        resolve(nil)
+    }
+
 }

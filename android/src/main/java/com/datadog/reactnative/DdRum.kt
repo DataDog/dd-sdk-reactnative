@@ -128,4 +128,14 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         promise.resolve(null)
     }
 
+    /**
+     * Adds a specific timing in the active View. The timing duration will be computed as the difference between the time the View was started and the time this function was called.
+     * @param name The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
+     */
+    @ReactMethod
+    fun addTiming(name: String, promise: Promise) {
+        nativeInstance.addTiming(name)
+        promise.resolve(null)
+    }
+
 }

@@ -54,4 +54,14 @@ class DdSdk(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         promise.resolve(null)
     }
 
+    /**
+     * Set the tracking consent regarding the data collection.
+     * @param trackingConsent Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
+     */
+    @ReactMethod
+    fun setTrackingConsent(trackingConsent: String, promise: Promise) {
+        nativeInstance.setTrackingConsent(trackingConsent)
+        promise.resolve(null)
+    }
+
 }
