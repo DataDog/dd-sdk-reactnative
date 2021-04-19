@@ -34,16 +34,16 @@ export default class DdRumReactNavigationTracking {
             return;
         }
 
-        if (this.registeredContainer != null && this.registeredContainer !== navigationRef) {
+        if (DdRumReactNavigationTracking.registeredContainer != null && this.registeredContainer !== navigationRef) {
             console.error('Cannot track new navigation container while another one is still tracked');
-        } else if (this.registeredContainer == null) {
-            const listener = this.resolveNavigationStateChangeListener();
-            this.handleRouteNavigation(navigationRef.getCurrentRoute());
+        } else if (DdRumReactNavigationTracking.registeredContainer == null) {
+            const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
+            DdRumReactNavigationTracking.handleRouteNavigation(navigationRef.getCurrentRoute());
             navigationRef.addListener("state", listener);
-            this.registeredContainer = navigationRef;
+            DdRumReactNavigationTracking.registeredContainer = navigationRef;
         }
 
-        this.registerAppStateListenerIfNeeded();
+        DdRumReactNavigationTracking.registerAppStateListenerIfNeeded();
     }
 
     /**
@@ -52,8 +52,8 @@ export default class DdRumReactNavigationTracking {
      */
     static stopTrackingViews(navigationRef: NavigationContainerRef | null): void {
         if (navigationRef != null) {
-            navigationRef.removeListener("state", this.navigationStateChangeListener);
-            this.registeredContainer = null;
+            navigationRef.removeListener("state", DdRumReactNavigationTracking.navigationStateChangeListener);
+            DdRumReactNavigationTracking.registeredContainer = null;
         }
     }
 
@@ -67,25 +67,25 @@ export default class DdRumReactNavigationTracking {
     }
 
     private static resolveNavigationStateChangeListener(): NavigationListener {
-        if (this.navigationStateChangeListener == null) {
+        if (DdRumReactNavigationTracking.navigationStateChangeListener == null) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.navigationStateChangeListener = (event: EventArg<string, boolean, any>) => {
+            DdRumReactNavigationTracking.navigationStateChangeListener = (event: EventArg<string, boolean, any>) => {
                 let nestedRoute = event.data?.state?.routes[event.data?.state?.index];
                 while (nestedRoute.state != undefined) {
                     nestedRoute = nestedRoute.state.routes[nestedRoute.state.index];
                 }
 
-                this.handleRouteNavigation(nestedRoute);
+                DdRumReactNavigationTracking.handleRouteNavigation(nestedRoute);
             };
         }
-        return this.navigationStateChangeListener;
+        return DdRumReactNavigationTracking.navigationStateChangeListener;
     }
 
     private static registerAppStateListenerIfNeeded() {
-        if (this.appStateListener == null) {
-            this.appStateListener = (appStateStatus: AppStateStatus) => {
+        if (DdRumReactNavigationTracking.appStateListener == null) {
+            DdRumReactNavigationTracking.appStateListener = (appStateStatus: AppStateStatus) => {
 
-                const currentRoute = this.registeredContainer?.getCurrentRoute();
+                const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
                 const currentViewKey = currentRoute?.key;
                 const currentViewName = currentRoute?.name;
 
@@ -101,7 +101,7 @@ export default class DdRumReactNavigationTracking {
             };
 
             // AppState is singleton, so we should add a listener only once in the app lifetime
-            AppState.addEventListener("change", this.appStateListener);
+            AppState.addEventListener("change", DdRumReactNavigationTracking.appStateListener);
         }
     }
 

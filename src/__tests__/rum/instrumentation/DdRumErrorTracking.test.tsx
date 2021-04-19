@@ -29,6 +29,12 @@ let baseErrorHandler = (error: any, isFatal?: boolean) => {
 };
 let originalErrorHandler = undefined;
 
+let baseConsoleErrorCalled = false;
+let baseConsoleError = (...params: unknown) => {
+    baseConsoleErrorCalled = true
+}
+let originalConsoleError = undefined
+
 const flushPromises = () => new Promise(setImmediate);
 
 beforeEach(() => {
@@ -36,22 +42,26 @@ beforeEach(() => {
     baseErrorHandlerCalled = false;
     originalErrorHandler = ErrorUtils.getGlobalHandler();
     ErrorUtils.setGlobalHandler(baseErrorHandler);
+    originalConsoleError = console.error;
+    console.error = baseConsoleError;
     jest.setTimeout(20000)
 })
 
 afterEach(() => {
     DdRumErrorTracking['isTracking'] = false
     ErrorUtils.setGlobalHandler(originalErrorHandler)
+    console.error = originalConsoleError
 })
 
 
-it('M intercept and send a RUM event W onError() {empty stack trace}', async () => {
+it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking()
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
     const error = new Error('Something bad happened');
 
     // WHEN
-    DdRumErrorTracking.onError(error, false);
+    DdRumErrorTracking.onGlobalError(error, is_fatal);
     await flushPromises();
 
     // THEN
@@ -59,14 +69,17 @@ it('M intercept and send a RUM event W onError() {empty stack trace}', async () 
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual(error);
+    const attributes = DdRum.addError.mock.calls[0][4];
+    expect(attributes["_dd.error.raw"]).toStrictEqual(error);
+    expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 })
 
 
-it('M intercept and send a RUM event W onError() {with source file info}', async () => {
+it('M intercept and send a RUM event W onGlobalError() {with source file info}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking()
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
     const error = {
       sourceURL: "./path/to/file.js",
       line: 1038,
@@ -75,7 +88,7 @@ it('M intercept and send a RUM event W onError() {with source file info}', async
     };
 
     // WHEN
-    DdRumErrorTracking.onError(error, false);
+    DdRumErrorTracking.onGlobalError(error, is_fatal);
     await flushPromises();
 
     // THEN
@@ -83,21 +96,24 @@ it('M intercept and send a RUM event W onError() {with source file info}', async
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("at ./path/to/file.js:1038:57");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual(error);
+    const attributes = DdRum.addError.mock.calls[0][4];
+    expect(attributes["_dd.error.raw"]).toStrictEqual(error);
+    expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 })
 
 
-it('M intercept and send a RUM event W onError() {with component stack}', async () => {
+it('M intercept and send a RUM event W onGlobalError() {with component stack}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking()
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
     const error = {
       componentStack: ["doSomething() at ./path/to/file.js:67:3", "nestedCall() at ./path/to/file.js:1064:9", "root() at ./path/to/index.js:10:1"],
       message: "Something bad happened"
     };
 
     // WHEN
-    DdRumErrorTracking.onError(error, false);
+    DdRumErrorTracking.onGlobalError(error, is_fatal);
     await flushPromises();
 
     // THEN
@@ -105,7 +121,72 @@ it('M intercept and send a RUM event W onError() {with component stack}', async 
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual(error);
+    const attributes = DdRum.addError.mock.calls[0][4];
+    expect(attributes["_dd.error.raw"]).toStrictEqual(error);
+    expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 })
 
+it('M intercept and send a RUM event W onConsole() {Error with source file info}', async () => {
+    // GIVEN
+    DdRumErrorTracking.startTracking();
+    const message= "Something bad happened";
+    const error = {
+      sourceURL: "./path/to/file.js",
+      line: 1038,
+      column: 57,
+      message: message
+    };
+
+    // WHEN
+    DdRumErrorTracking.onConsoleError(message, error);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError.mock.calls.length).toBe(1);
+    expect(DdRum.addError.mock.calls[0][0]).toBe(message + " " + JSON.stringify(error));
+    expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
+    expect(DdRum.addError.mock.calls[0][2]).toBe("at ./path/to/file.js:1038:57");
+    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(baseConsoleErrorCalled).toStrictEqual(true);
+})
+
+it('M intercept and send a RUM event W onConsole() {Error with component stack}', async () => {
+    // GIVEN
+    DdRumErrorTracking.startTracking();
+    const message= "Something bad happened";
+    const error = {
+      componentStack: ["doSomething() at ./path/to/file.js:67:3", "nestedCall() at ./path/to/file.js:1064:9", "root() at ./path/to/index.js:10:1"],
+      message: "Something bad happened"
+    };
+
+    // WHEN
+    DdRumErrorTracking.onConsoleError(message, error);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError.mock.calls.length).toBe(1);
+    expect(DdRum.addError.mock.calls[0][0]).toBe(message + " " + JSON.stringify(error));
+    expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
+    expect(DdRum.addError.mock.calls[0][2]).toBe("doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1");
+    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(baseConsoleErrorCalled).toStrictEqual(true);
+})
+
+it('M intercept and send a RUM event W onConsole() {message only}', async () => {
+    // GIVEN
+    DdRumErrorTracking.startTracking();
+    const message= "Something bad happened";
+
+    // WHEN
+    DdRumErrorTracking.onConsoleError(message);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError.mock.calls.length).toBe(1);
+    expect(DdRum.addError.mock.calls[0][0]).toBe(message);
+    expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
+    expect(DdRum.addError.mock.calls[0][2]).toBe("");
+    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(baseConsoleErrorCalled).toStrictEqual(true);
+})

@@ -29,7 +29,7 @@ export class DdRumResourceTracking {
   * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
   */
   static startTracking(): void {
-    this.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
   }
 
   /**
@@ -38,22 +38,22 @@ export class DdRumResourceTracking {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
   static startTrackingInternal(xhrType: any): void {
     // extra safety to avoid proxying the XHR class twice
-    if (this.isTracking) {
+    if (DdRumResourceTracking.isTracking) {
       return
     }
 
-    this.originalXhrOpen = xhrType.prototype.open;
-    this.originalXhrSend = xhrType.prototype.send;
+    DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
+    DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
 
-    this.proxyXhr(xhrType)
+    DdRumResourceTracking.proxyXhr(xhrType)
   }
 
 
   static stopTracking(): void {
-    if (this.isTracking) {
-      this.isTracking = false;
-      XMLHttpRequest.prototype.open = this.originalXhrOpen;
-      XMLHttpRequest.prototype.send = this.originalXhrSend;
+    if (DdRumResourceTracking.isTracking) {
+      DdRumResourceTracking.isTracking = false;
+      XMLHttpRequest.prototype.open = DdRumResourceTracking.originalXhrOpen;
+      XMLHttpRequest.prototype.send = DdRumResourceTracking.originalXhrSend;
     }
   }
 
