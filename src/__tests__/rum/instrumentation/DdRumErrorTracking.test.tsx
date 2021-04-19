@@ -50,6 +50,7 @@ beforeEach(() => {
 afterEach(() => {
     DdRumErrorTracking['isTracking'] = false
     ErrorUtils.setGlobalHandler(originalErrorHandler)
+    console.error = originalConsoleError
 })
 
 
@@ -134,7 +135,7 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
       sourceURL: "./path/to/file.js",
       line: 1038,
       column: 57,
-      message: "Something bad happened"
+      message: message
     };
 
     // WHEN

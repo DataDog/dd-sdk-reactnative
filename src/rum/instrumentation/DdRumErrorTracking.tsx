@@ -93,13 +93,13 @@ export class DdRumErrorTracking {
     private static getErrorStackTrace(error: any | undefined): string {
         let stack = EMPTY_STACK_TRACE
         if (error == undefined) {
-            stack = EMPTY_STACK_TRACE
+            stack = EMPTY_STACK_TRACE;
         } else if (typeof error === 'string') {
-            stack = EMPTY_STACK_TRACE
+            stack = EMPTY_STACK_TRACE;
         } else if ('componentStack' in error) {
             stack = String(error.componentStack);
         } else if (('sourceURL' in error) && ('line' in error) && ('column' in error)) {
-            stack = "at " + error.sourceURL + ":" + error.line + ":" + error.column
+            stack = `at ${error.sourceURL}:${error.line}:${error.column}`;
         }
         return stack
     }
