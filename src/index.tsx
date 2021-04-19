@@ -5,9 +5,9 @@
  */
 
 import { DdLogs, DdTrace, DdRum } from './foundation';
+
 import DdRumReactNavigationTracking from './rum/instrumentation/DdRumReactNavigationTracking';
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
-
 
 export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, DdRumReactNavigationTracking };

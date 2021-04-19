@@ -6,8 +6,16 @@ This repository provides a Native Module allowing you to track your React Native
 
 ## Installation
 
+### NPM
+
 ```sh
 npm install dd-sdk-reactnative
+```
+
+### Yarn
+
+```sh
+yarn add dd-sdk-reactnative
 ```
 
 ## Usage
@@ -28,6 +36,8 @@ const config = new DdSdkReactNativeConfiguration(
     true, // track XHR Resources
     true // track Errors
 )
+// Optional: Select your Datadog website (one of "US", "EU" or "GOV")
+config.site = "US"
 // Optional: enable or disable native crash reports
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog)

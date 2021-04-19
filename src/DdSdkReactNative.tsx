@@ -41,9 +41,10 @@ export class DdSdkReactNative {
                     configuration.applicationId,
                     configuration.nativeCrashReportEnabled,
                     configuration.sampleRate,
+                    configuration.site,
                     configuration.additionalConfig
-                    )
                 )
+            )
             this.enableFeatures(configuration)
             this.wasInitialized = true
             resolve()
