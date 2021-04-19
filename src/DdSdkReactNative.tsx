@@ -10,6 +10,7 @@ import { DdSdk } from "./foundation"
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'
+import type { TrackingConsent } from "./TrackingConsent"
 
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
@@ -42,6 +43,7 @@ export class DdSdkReactNative {
                     configuration.nativeCrashReportEnabled,
                     configuration.sampleRate,
                     configuration.site,
+                    configuration.trackingConsent,
                     configuration.additionalConfig
                 )
             )
@@ -70,6 +72,15 @@ export class DdSdkReactNative {
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setUser(user: object): Promise<void> {
         return DdSdk.setUser(user)
+    }
+
+    /**
+     * Set the tracking consent regarding the data collection.
+     * @param trackingConsent: One of TrackingConsent values.
+     * @returns a Promise.
+     */
+    static setTrackingConsent(consent: TrackingConsent): Promise<void> {
+        return DdSdk.setTrackingConsent(consent)
     }
 
     private static enableFeatures(configuration: DdSdkReactNativeConfiguration) {

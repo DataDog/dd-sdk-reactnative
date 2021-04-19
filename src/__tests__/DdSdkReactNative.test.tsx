@@ -12,6 +12,7 @@ import { DdSdkReactNative } from '../DdSdkReactNative'
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
 import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking'
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking'
+import { TrackingConsent } from '../TrackingConsent'
 
 jest.mock('react-native', () => {
     return {
@@ -19,7 +20,8 @@ jest.mock('react-native', () => {
             DdSdk: {
                 initialize: jest.fn().mockImplementation(() => { }),
                 setUser: jest.fn().mockImplementation(() => { }),
-                setAttributes: jest.fn().mockImplementation(() => { })
+                setAttributes: jest.fn().mockImplementation(() => { }),
+                setTrackingConsent: jest.fn().mockImplementation(() => { })
             }
         }
     };
@@ -54,6 +56,11 @@ beforeEach(async () => {
     NativeModules.DdSdk.initialize.mockReset()
     NativeModules.DdSdk.setAttributes.mockReset()
     NativeModules.DdSdk.setUser.mockReset()
+    NativeModules.DdSdk.setTrackingConsent.mockReset()
+
+    DdRumUserInteractionTracking.startTracking.mockReset()
+    DdRumResourceTracking.startTracking.mockReset()
+    DdRumErrorTracking.startTracking.mockReset()
 })
 
 it('M initialize the SDK W initialize', async () => {
@@ -72,6 +79,30 @@ it('M initialize the SDK W initialize', async () => {
     expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
     expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
+})
+
+it('M initialize the SDK W initialize {explicit tracking consent}', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const fakeConsent = TrackingConsent.NOT_GRANTED
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, false, fakeConsent)
+
+    // WHEN
+    DdSdkReactNative.initialize(configuration)
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native'
     })
@@ -191,4 +222,17 @@ it('M call SDK method W setUser', async () => {
     // THEN
     expect(DdSdk.setUser).toHaveBeenCalledTimes(1)
     expect(DdSdk.setUser).toHaveBeenCalledWith(user)
+})
+
+it('M call SDK method W setTrackingConsent', async () => {
+    // GIVEN
+    const consent = TrackingConsent.PENDING
+
+    // WHEN
+
+    DdSdkReactNative.setTrackingConsent(consent)
+
+    // THEN
+    expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1)
+    expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent)
 })
