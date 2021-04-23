@@ -53,15 +53,21 @@ DdSdkReactNative.initialize(config)
 To track changes in navigation as RUM Views, you need to set the `onready` callback of your `NavigationContainer` component, as follow:
 
 ```js
+import * as React from 'react';
 import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
 
-// …
-
-    <NavigationContainer ref={navigationRef} onReady={() => {
-      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
-    }}>
-    // …
-    </NavigationContainer>
+function App() {
+  const navigationRef = React.useRef(null);
+  return (
+    <View>
+      <NavigationContainer ref={navigationRef} onReady={() => {
+        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
+      }}>
+        // …
+      </NavigationContainer>
+    </View>
+  );
+}
 ```
 **Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking previous one first.
 
