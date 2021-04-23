@@ -4,15 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import React, { Component } from 'react';
+import React, { Component, RefObject } from 'react';
 import {
-  View, Text, Button, TouchableOpacity, TouchableWithoutFeedback,
-  TouchableNativeFeedback, Modal, Pressable, FlatList
+  View, Text, Button, TouchableOpacity,
+  TouchableWithoutFeedback, TouchableNativeFeedback
 } from 'react-native';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
 import { DdSdkReactNative, TrackingConsent } from 'dd-sdk-reactnative';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
+import { ConsentModal } from '../components/consent';
 
 const axios = require('../axiosConfig');
 
@@ -27,19 +28,9 @@ interface MainScreenState {
   trackingConsentModalVisible: boolean
 }
 
-class TrackingConsentItem extends Component<any, any>{
-
-  render() {
-    return (
-      <TouchableOpacity onPress={this.props.onPress} style={[styles.item, this.props.backgroundColor]}>
-        <Text style={[styles.itemTitle, this.props.textColor]}>{this.props.item}</Text>
-      </TouchableOpacity>
-    )
-  }
-
-}
-
 export default class MainScreen extends Component<any, MainScreenState> {
+
+  consentModal: RefObject<ConsentModal>;
 
   constructor(props: Readonly<any> | undefined) {
     super(props);
@@ -50,6 +41,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
       trackingConsent: TrackingConsent.PENDING,
       trackingConsentModalVisible: false
     } as MainScreenState;
+    this.consentModal = React.createRef()
   }
 
   fetchDatadogLogs() {
@@ -112,25 +104,10 @@ export default class MainScreen extends Component<any, MainScreenState> {
   }
 
   setTrackingConsentModalVisible(visible: boolean) {
+    if (visible) {
+      this.consentModal.current.setConsent(this.state.trackingConsent)
+    }
     this.setState({ trackingConsentModalVisible: visible })
-  }
-
-  renderTrackingConsentItem({ item }) {
-    const isSelected = TrackingConsent[item] === this.state.trackingConsent
-    const backgroundColor = isSelected ? "#303f9f" : "#448aff";
-    const color = isSelected ? 'white' : 'black';
-
-    return (
-      <TrackingConsentItem
-        item={item}
-        onPress={() => {
-          const consent = TrackingConsent[item]
-          this.setState({ trackingConsent: consent })
-        }}
-        backgroundColor={{ backgroundColor }}
-        textColor={{ color }}
-      />
-    );
   }
 
   render() {
@@ -142,32 +119,17 @@ export default class MainScreen extends Component<any, MainScreenState> {
           accessibilityLabel="update_tracking_consent"
           onPress={() => this.setTrackingConsentModalVisible(true)}
         />
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={this.state.trackingConsentModalVisible}>
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>Tracking Consent</Text>
-              <FlatList
-                style={{ marginTop: 20 }}
-                data={Object.keys(TrackingConsent)}
-                renderItem={this.renderTrackingConsentItem.bind(this)}
-                keyExtractor={item => item}
-              />
-              <Pressable
-                style={styles.button}
-                onPress={() => {
-                  const consent = this.state.trackingConsent
-                  saveTrackingConsent(consent)
-                  DdSdkReactNative.setTrackingConsent(consent)
-                  this.setTrackingConsentModalVisible(false)
-                }}>
-                <Text>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
+        <ConsentModal
+          visible={this.state.trackingConsentModalVisible}
+          ref={this.consentModal}
+          onClose={
+            (consent) => {
+              saveTrackingConsent(consent)
+              DdSdkReactNative.setTrackingConsent(consent)
+              this.setState({ trackingConsent: consent })
+              this.setTrackingConsentModalVisible(false)
+            }
+          } />
         <Text style={{ marginTop: 20 }}>{this.state.callDatadogButtonAction}</Text>
         <Button
           title="Fetch Datadog Logs"
