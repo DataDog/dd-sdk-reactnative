@@ -65,4 +65,10 @@ class RNDdRum: NSObject {
         resolve(nil)
     }
 
+    @objc(addTiming:withResolver:withRejecter:)
+    func addTiming(name: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.addTiming(name: name)
+        resolve(nil)
+    }
+
 }

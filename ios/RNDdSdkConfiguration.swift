@@ -16,6 +16,7 @@ extension NSDictionary {
         let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
         let sampleRate = object(forKey: "sampleRate") as? Double
         let site = object(forKey: "site") as? NSString
+        let trackingConsent = object(forKey: "trackingConsent") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : NSString(),
@@ -24,6 +25,7 @@ extension NSDictionary {
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             sampleRate: sampleRate,
             site: site,
+            trackingConsent: trackingConsent,
             additionalConfig: additionalConfig
         )
     }

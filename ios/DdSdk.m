@@ -20,4 +20,8 @@ RCT_EXTERN_METHOD(setUser:(NSDictionary)user
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setTrackingConsent:(NSString)trackingConsent
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
 @end

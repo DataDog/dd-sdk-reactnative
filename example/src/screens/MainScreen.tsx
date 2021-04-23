@@ -4,10 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import React, { Component } from 'react';
-import { View, Text, Button, TouchableOpacity, TouchableWithoutFeedback, TouchableNativeFeedback } from 'react-native';
+import React, { Component, RefObject } from 'react';
+import {
+  View, Text, Button, TouchableOpacity,
+  TouchableWithoutFeedback, TouchableNativeFeedback
+} from 'react-native';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
+import { DdSdkReactNative, TrackingConsent } from 'dd-sdk-reactnative';
+import { getTrackingConsent, saveTrackingConsent } from '../utils';
+import { ConsentModal } from '../components/consent';
 
 const axios = require('../axiosConfig');
 
@@ -17,14 +23,25 @@ interface MainScreenState {
   resultButtonAction: string
   resultTouchableOpacityAction: string,
   resultTouchableWithoutFeedback: string,
-  resultTouchableNativeFeedback: string
+  resultTouchableNativeFeedback: string,
+  trackingConsent: TrackingConsent,
+  trackingConsentModalVisible: boolean
 }
 
 export default class MainScreen extends Component<any, MainScreenState> {
 
+  consentModal: RefObject<ConsentModal>;
+
   constructor(props: Readonly<any> | undefined) {
     super(props);
-    this.state = { welcomeMessage: "Welcome", resultButtonAction: "", resultTouchableOpacityAction: "" } as MainScreenState;
+    this.state = {
+      welcomeMessage: "Welcome",
+      resultButtonAction: "",
+      resultTouchableOpacityAction: "",
+      trackingConsent: TrackingConsent.PENDING,
+      trackingConsentModalVisible: false
+    } as MainScreenState;
+    this.consentModal = React.createRef()
   }
 
   fetchDatadogLogs() {
@@ -74,11 +91,46 @@ export default class MainScreen extends Component<any, MainScreenState> {
       .then((response) => response.data);
   }
 
+  componentDidMount() {
+    this.updateTrackingConsent()
+  }
+
+  updateTrackingConsent() {
+    getTrackingConsent().then(consent => {
+      this.setState({
+        trackingConsent: consent
+      })
+    })
+  }
+
+  setTrackingConsentModalVisible(visible: boolean) {
+    if (visible) {
+      this.consentModal.current.setConsent(this.state.trackingConsent)
+    }
+    this.setState({ trackingConsentModalVisible: visible })
+  }
+
   render() {
     return <View style={styles.defaultScreen}>
       <Text>{this.state.welcomeMessage}</Text>
       <View style={{ marginTop: 40, alignItems: "center" }}>
-        <Text>{this.state.callDatadogButtonAction}</Text>
+        <Button
+          title={`Tracking Consent: ${this.state.trackingConsent}`}
+          accessibilityLabel="update_tracking_consent"
+          onPress={() => this.setTrackingConsentModalVisible(true)}
+        />
+        <ConsentModal
+          visible={this.state.trackingConsentModalVisible}
+          ref={this.consentModal}
+          onClose={
+            (consent) => {
+              saveTrackingConsent(consent)
+              DdSdkReactNative.setTrackingConsent(consent)
+              this.setState({ trackingConsent: consent })
+              this.setTrackingConsentModalVisible(false)
+            }
+          } />
+        <Text style={{ marginTop: 20 }}>{this.state.callDatadogButtonAction}</Text>
         <Button
           title="Fetch Datadog Logs"
           accessibilityLabel="call_datadog_button"
@@ -121,7 +173,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
             });
           }}
         >
-        <Text>Click me</Text>
+          <Text>Click me</Text>
         </TouchableOpacity>
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableWithoutFeedback}</Text>
         <TouchableWithoutFeedback

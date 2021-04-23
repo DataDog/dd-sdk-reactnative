@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { TrackingConsent } from './TrackingConsent'
+
 /**
  * The SDK configuration class.
  * It will be used to configure the SDK functionality at initialization.
@@ -23,7 +25,8 @@ export class DdSdkReactNativeConfiguration {
         readonly applicationId: string,
         readonly trackInteractions: boolean = false,
         readonly trackResources: boolean = false,
-        readonly trackErrors: boolean = false
+        readonly trackErrors: boolean = false,
+        readonly trackingConsent: TrackingConsent = TrackingConsent.GRANTED
     ) {
 
     }

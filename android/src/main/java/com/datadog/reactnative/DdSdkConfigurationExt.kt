@@ -19,18 +19,20 @@ fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         nativeCrashReportEnabled = getBoolean("nativeCrashReportEnabled"),
         sampleRate = getDouble("sampleRate"),
         site = getString("site"),
+        trackingConsent = getString("trackingConsent"),
         additionalConfig = getMap("additionalConfig")?.toHashMap()
     )
 }
 
-fun DdSdkConfiguration.toReadableMap(): WritableNativeMap {
+fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)
     map.putString("env", env)
-    applicationId?.let{ map.putString("applicationId", it) }
-    nativeCrashReportEnabled?.let{ map.putBoolean("nativeCrashReportEnabled", it) }
-    sampleRate?.let{ map.putDouble("sampleRate", it) }
-    site?.let{ map.putString("site", it) }
-    additionalConfig?.let{ map.putMap("additionalConfig", it.toWritableMap()) }
+    applicationId?.let { map.putString("applicationId", it) }
+    nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
+    sampleRate?.let { map.putDouble("sampleRate", it) }
+    site?.let { map.putString("site", it) }
+    trackingConsent?.let { map.putString("trackingConsent", it) }
+    additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }
