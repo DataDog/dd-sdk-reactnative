@@ -5,7 +5,7 @@ PODS:
   - DatadogSDKBridge (0.4.3):
     - DatadogSDK (~> 1.6.0)
   - dd-sdk-reactnative (1.0.0-beta1):
-    - DatadogSDKBridge (~> 0.4.0)
+    - DatadogSDKBridge (~> 0.4.3)
     - React-Core
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.63.4)
@@ -395,7 +395,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DatadogSDK: f8d3b65909216d8f1a04c2ddb75a15784bf90fd2
   DatadogSDKBridge: 11bc3a030eb74339efb2043f604b1cddd50eec8b
-  dd-sdk-reactnative: 4711526a44bdf464cb8ec84299f8edfc5897460d
+  dd-sdk-reactnative: 4e5cef2d446d375eacc1789aeb8d865846a47a8c
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   FBLazyVector: 3bb422f41b18121b71783a905c10e58606f7dc3e
   FBReactNativeSpec: f2c97f2529dd79c083355182cc158c9f98f4bd6e

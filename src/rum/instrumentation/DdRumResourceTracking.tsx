@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { Platform } from 'react-native';
 import { DdRum } from '../../foundation'
 import type { DdRumXhr } from './DdRumXhr'
 import { generateTraceId } from './TraceIdentifier';
@@ -12,6 +13,66 @@ export const TRACE_ID_HEADER_KEY = "x-datadog-trace-id"
 export const PARENT_ID_HEADER_KEY = "x-datadog-parent-id"
 export const ORIGIN_HEADER_KEY = "x-datadog-origin"
 export const ORIGIN_RUM = "rum"
+
+const MISSING_TIME = -1
+
+interface Timing {
+  /**
+   * Time relative (absolute in case of iOS) to some point, in ns.
+   */
+  startTime: number
+  /**
+   * Duration in ns.
+   */
+  duration: number
+}
+
+interface ResourceTimings {
+  // unlike in Performance API it is not the time until request
+  // starts (requestStart, before it can be connect, SSL, DNS),
+  // but the time until the response is first seen
+  firstByte: Timing,
+  download: Timing,
+  // required by iOS, total timing from the beginning to the end
+  fetch: Timing
+}
+
+function createTimings(startTime: number,
+  responseStartTime: number, responseEndTime: number): ResourceTimings | null {
+
+  if (startTime === MISSING_TIME || responseStartTime === MISSING_TIME) {
+    return null
+  }
+
+  const firstByte = formatTiming(startTime, startTime, responseStartTime)
+  const download = formatTiming(startTime, responseStartTime, responseEndTime)
+  // needed for iOS, simply total duration from start to end
+  const fetch = formatTiming(startTime, startTime, responseEndTime)
+
+  return {
+    firstByte,
+    download,
+    fetch
+  }
+}
+
+/**
+ * @param origin Start time (absolute) of the request
+ * @param start Start time (absolute) of the timing
+ * @param end End time (absolute) of the timing
+ */
+function formatTiming(origin: number, start: number, end: number): Timing {
+  return {
+    duration: timeToNanos(end - start),
+    // if it is Android, startTime should be relative to the origin,
+    // if it is iOS - absolute (unix timestamp)
+    startTime: Platform.OS === 'ios' ? timeToNanos(start) : timeToNanos(start - origin)
+  }
+}
+
+function timeToNanos(durationMs: number): number {
+  return +(durationMs * 1e6).toFixed(0)
+}
 
 /**
 * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
@@ -70,7 +131,8 @@ export class DdRumResourceTracking {
       const traceId = generateTraceId()
       this._datadog_xhr = {
         method,
-        startTime: -1,
+        startTime: MISSING_TIME,
+        responseStartTime: MISSING_TIME,
         url: url,
         reported: false,
         spanId: spanId,
@@ -87,7 +149,7 @@ export class DdRumResourceTracking {
 
       if (this._datadog_xhr) {
         // keep track of start time
-        this._datadog_xhr.startTime = Date.now();
+        this._datadog_xhr.startTime = Date.now()
         this.setRequestHeader(TRACE_ID_HEADER_KEY, this._datadog_xhr.traceId)
         this.setRequestHeader(PARENT_ID_HEADER_KEY, this._datadog_xhr.spanId)
         this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM)
@@ -109,6 +171,9 @@ export class DdRumResourceTracking {
           DdRumResourceTracking.reportXhr(xhrProxy);
           xhrProxy._datadog_xhr.reported = true;
         }
+      } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED
+        && xhrProxy._datadog_xhr.responseStartTime === MISSING_TIME) {
+        xhrProxy._datadog_xhr.responseStartTime = Date.now()
       }
 
       if (originalOnreadystatechange) {
@@ -119,18 +184,33 @@ export class DdRumResourceTracking {
   }
 
   private static reportXhr(xhrProxy: DdRumXhr): void {
-    const key = xhrProxy._datadog_xhr.startTime + "/" + xhrProxy._datadog_xhr.method + "/" + xhrProxy._datadog_xhr.startTime
+
+    const context = xhrProxy._datadog_xhr
+
+    const key = context.startTime + "/"
+      + context.method + "/"
+      + context.startTime
+
+    const responseEndTime = Date.now()
+
     DdRum.startResource(
       key,
-      xhrProxy._datadog_xhr.method,
-      xhrProxy._datadog_xhr.url,
-      xhrProxy._datadog_xhr.startTime,
+      context.method,
+      context.url,
+      context.startTime,
       {
-        "_dd.span_id": xhrProxy._datadog_xhr.spanId,
-        "_dd.trace_id": xhrProxy._datadog_xhr.traceId
+        "_dd.span_id": context.spanId,
+        "_dd.trace_id": context.traceId
       }
     ).then(() => {
-      DdRum.stopResource(key, xhrProxy.status, "xhr", Date.now(), {});
+      DdRum.stopResource(
+        key,
+        xhrProxy.status,
+        "xhr",
+        responseEndTime,
+        {
+          "_dd.resource_timings": createTimings(context.startTime, context.responseStartTime, responseEndTime),
+        });
     })
   }
 
