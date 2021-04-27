@@ -2,20 +2,20 @@
 
 
 <div class="alert alert-warning">
-This feature is in open beta. Email <a href="mailto:support@datadoghq.com">support@datadoghq.com</a> to ask questions or to provide feedback on this feature.
+This feature is in open beta. Contact <a href="https://docs.datadoghq.com/help/">Support</a> to ask questions or to provide feedback on this feature.
 </div>
 
 Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
 ## Setup
 
-#### NPM Installation
+To install with NPM, run:
 
 ```sh
 npm install dd-sdk-reactnative
 ```
 
-#### Yarn Installation
+To install with Yarn, run:
 
 ```sh
 yarn add dd-sdk-reactnative
@@ -23,12 +23,13 @@ yarn add dd-sdk-reactnative
 
 ### Specify application details in UI
 
-1. Select UX Monitoring -> RUM Applications -> New Application
-2. Choose `react-native` as your Application Type in [Datadog UI][1] and provide a new application name to generate a unique Datadog application ID and client token.
+1. In the [Datadog app][1], select **UX Monitoring > RUM Applications > New Application**.
+2. Choose `react-native` as your Application Type.
+3. Provide a new application name to generate a unique Datadog application ID and client token.
 
 ![image][2]
 
-To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `dd-sdk-reactnative` library, as they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
+To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `dd-sdk-reactnative` library, because they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
 
 ### Initialize the library with application context
 
@@ -54,11 +55,11 @@ config.sampleRate = 80
 DdSdkReactNative.initialize(config)
 ```
 
-## Track View Navigation
+## Track view navigation
 
-**Note**: Automatic View tracking is relying on the [React Navigation](https://reactnavigation.org/) package. If you're using another package to handle navigation in your application, use the manual instrumentation described below.
+**Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package. If you use another package to handle navigation in your application, use the manual instrumentation method described below.
 
-To track changes in navigation as RUM Views, you need to set the `onready` callback of your `NavigationContainer` component, as follow:
+To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
 
 ```js
 import * as React from 'react';
@@ -79,13 +80,13 @@ function App() {
 ```
 **Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking previous one first.
 
-## Track Custom Attributes
+## Track custom attributes
 
 You can attach user information to all RUM events to get more detailed information from your RUM sessions. 
 
 ### User information
 
-For user specific information, you can use the following code wherever you want in your code (after the SDK has been initialized). The `id`, `name` and `email` attributes are built into the Datadog UI, but you can add any attribute that makes sense to your app.
+For user-specific information, use the following code wherever you want in your app (after the SDK has been initialized). The `id`, `name`, and `email` attributes are built into Datadog, and you can add other attributes that makes sense for your app.
 
 ```js
 DdSdkReactNative.setUser({
@@ -98,7 +99,7 @@ DdSdkReactNative.setUser({
 
 ### Global attributes
 
-You can also keep global attributes to track information about a specific session, such as A/B testing configuration, advert campaign origin, or cart status.
+You can also keep global attributes to track information about a specific session, such as A/B testing configuration, ad campaign origin, or cart status.
 
 ```js
 DdSdkReactNative.setAttributes({
@@ -108,9 +109,9 @@ DdSdkReactNative.setAttributes({
 })
 ```
 
-## Manual Instrumentation
+## Manual instrumentation
 
-If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs as follow:
+If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
 
 ```js
 import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
@@ -149,11 +150,6 @@ DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', ne
 //…
 DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
 ```
-
-[1]: https://app.datadoghq.com/rum/application/create
-[2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
-[3]: https://docs.datadoghq.com/account_management/api-app-keys/#api-keys
-[4]: https://docs.datadoghq.com/account_management/api-app-keys/#client-tokens
 ## License
 
 [Apache License, v2.0](LICENSE)
@@ -161,3 +157,8 @@ DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
 ## Further Reading
 
 {{< partial name="whats-next/whats-next.html" >}}
+
+[1]: https://app.datadoghq.com/rum/application/create
+[2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
+[3]: https://docs.datadoghq.com/account_management/api-app-keys/#api-keys
+[4]: https://docs.datadoghq.com/account_management/api-app-keys/#client-tokens
