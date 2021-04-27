@@ -150,7 +150,8 @@ DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', ne
 DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
 ```
 
-[1]: https://app.datadoghq.com/rum/application/create 
+[1]: https://app.datadoghq.com/rum/application/create
+[2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
 [3]: https://docs.datadoghq.com/account_management/api-app-keys/#api-keys
 [4]: https://docs.datadoghq.com/account_management/api-app-keys/#client-tokens
 ## License
