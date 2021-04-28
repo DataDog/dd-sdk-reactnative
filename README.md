@@ -127,7 +127,7 @@ const config = new DdSdkReactNativeConfiguration(
 )
 DdSdkReactNative.initialize(config);
 
-// Send logs (use the debug, info, warn of error methods)
+// Send logs (use the debug, info, warn or error methods)
 DdLogs.debug("Lorem ipsum dolor sit amet…", 0, {});
 DdLogs.info("Lorem ipsum dolor sit amet…", 0, {});
 DdLogs.warn("Lorem ipsum dolor sit amet…", 0, {});
