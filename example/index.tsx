@@ -1,45 +1,24 @@
 import { AppRegistry } from 'react-native';
 import App from './src/App';
+import { startReactNativeNavigation } from './src/WixApp';
 import { name as appName } from './app.json';
-import {
-    DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
-    DdLogs
-} from 'dd-sdk-reactnative';
-
-import { CLIENT_TOKEN, ENVIRONMENT, APPLICATION_ID } from './src/ddCredentials';
+import { navigation as navigationLib } from './app.json';
+import { initializeDatadog } from './src/ddUtils';
 import { getTrackingConsent } from './src/utils';
+import { TrackingConsent } from 'dd-sdk-reactnative';
 
 
-AppRegistry.registerRunnable(appName, async props => {
-    const trackingConsent = await getTrackingConsent()
+console.log("Starting Application with navigation library: " + navigationLib);
+if (navigationLib == "react-navigation") {
+    AppRegistry.registerRunnable(appName, async props => {
 
-    const config = new DdSdkReactNativeConfiguration(
-        CLIENT_TOKEN,
-        ENVIRONMENT,
-        APPLICATION_ID,
-        true,
-        true,
-        true,
-        trackingConsent
-    )
-    config.nativeCrashReportEnabled = true
-    config.sampleRate = 100
-    
-    DdSdkReactNative.initialize(config).then(() => {
-    
-        DdLogs.info('The RN Sdk was properly initialized', {
-            foo: 42,
-            bar: 'xyz',
-        })
-    
-        DdSdkReactNative.setUser({id: "1337", name: "Xavier", email: "xg@example.com", type: "premium"})
-    
-        DdSdkReactNative.setAttributes({campaign: "react-native-bs"})
-    });
-    AppRegistry.registerComponent(appName, () => App);
-    AppRegistry.runApplication(appName, props);
-})
-
-
+        const trackingConsent = await getTrackingConsent()
+        initializeDatadog(trackingConsent);
+        AppRegistry.registerComponent(appName, () => App);
+        AppRegistry.runApplication(appName, props);
+    })
+} else if (navigationLib == "react-native-navigation") {
+    initializeDatadog(TrackingConsent.GRANTED);
+    startReactNativeNavigation();
+}
 
