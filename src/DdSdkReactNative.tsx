@@ -28,12 +28,12 @@ export class DdSdkReactNative {
     */
     static initialize(configuration: DdSdkReactNativeConfiguration): Promise<void> {
         return new Promise<void>((resolve => {
-            if (this.wasInitialized) {
+            if (DdSdkReactNative.wasInitialized) {
                 resolve()
                 return
             }
 
-            configuration.additionalConfig[this.DD_SOURCE_KEY] = 'react-native';
+            configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] = 'react-native';
 
             DdSdk.initialize(
                 new DdSdkConfiguration(
@@ -47,8 +47,8 @@ export class DdSdkReactNative {
                     configuration.additionalConfig
                 )
             )
-            this.enableFeatures(configuration)
-            this.wasInitialized = true
+            DdSdkReactNative.enableFeatures(configuration)
+            DdSdkReactNative.wasInitialized = true
             resolve()
         }))
 
