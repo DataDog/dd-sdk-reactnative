@@ -62,7 +62,7 @@ export default class DdRumReactNavigationTracking {
         const key = route?.key;
         const screenName = route?.name;
         if (key != null && screenName != null) {
-            DdRum.startView(key, screenName, new Date().getTime(), {});
+            DdRum.startView(key, screenName, Date.now(), {});
         }
     }
 
@@ -91,11 +91,11 @@ export default class DdRumReactNavigationTracking {
 
                 if (currentViewKey != null && currentViewName != null) {
                     if (appStateStatus === 'background') {
-                        DdRum.stopView(currentViewKey, new Date().getTime(), {});
+                        DdRum.stopView(currentViewKey, Date.now(), {});
                     } else if (appStateStatus === 'active') {
                         // case when app goes into foreground, in that case navigation listener
                         // won't be called
-                        DdRum.startView(currentViewKey, currentViewName, new Date().getTime(), {});
+                        DdRum.startView(currentViewKey, currentViewName, Date.now(), {});
                     }
                 }
             };

@@ -35,10 +35,10 @@ export default class DdRumReactNativeNavigationTracking {
                 Navigation.events().registerComponentListener(
                     {
                         componentDidAppear: () => {
-                            DdRum.startView(componentId, componentId, new Date().getTime(), {});
+                            DdRum.startView(componentId, componentId, Date.now(), {});
                         },
                         componentDidDisappear: () => {
-                            DdRum.stopView(componentId, new Date().getTime(), {});
+                            DdRum.stopView(componentId, Date.now(), {});
                         },
                     },
                     componentId 
