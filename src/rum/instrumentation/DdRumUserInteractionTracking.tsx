@@ -33,12 +33,10 @@ export class DdRumUserInteractionTracking {
         }
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor()
         const original = React.createElement
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         React.createElement = (element: any, props: any, ...children: any): any => {
             // check if we have an 'onPress' property and that this is really a function
             if (props && typeof props.onPress === PROPERTY_FUNCTION_TYPE) {
                 const originalOnPress = props.onPress
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 props.onPress = (...args: any[]) => {
                     DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(args)
                     return originalOnPress(...args)

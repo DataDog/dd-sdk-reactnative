@@ -15,7 +15,6 @@ export class DdEventsInterceptor implements EventsInterceptor {
 
     private debouncingStartedTimestamp = Number.MIN_VALUE
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interceptOnPress(...args: any[]): void {
         if (args.length > 0 && args[0].length > 0 && args[0][0]._targetInst) {
             const currentTime = Date.now()
@@ -29,7 +28,6 @@ export class DdEventsInterceptor implements EventsInterceptor {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleTargetEvent(targetProperties: any | null) {
         if (targetProperties) {
             const resolvedTargetName = this.resolveTargetName(targetProperties);
@@ -37,7 +35,6 @@ export class DdEventsInterceptor implements EventsInterceptor {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolveTargetName(targetProperties: any): string {
         const accessibilityLabel = targetProperties.memoizedProps?.accessibilityLabel
         const elementType = targetProperties.elementType

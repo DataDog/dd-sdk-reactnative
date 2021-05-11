@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
 import { DdRum } from '../../../index';
 import DdRumReactNativeNavigationTracking from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 import { Navigation } from 'react-native-navigation';
@@ -14,7 +13,6 @@ import { Navigation } from 'react-native-navigation';
 jest.mock('../../../foundation', () => {
     return {
         DdRum: {
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             startView: jest.fn().mockImplementation(() => { }),
             stopView: jest.fn().mockImplementation(() => { })
         },

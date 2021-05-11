@@ -47,8 +47,8 @@ export class DdRumErrorTracking {
 
     }
 
-    // eslint-disable-next-line 
-    static onGlobalError(error: any, isFatal?: boolean) {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static onGlobalError(error: any, isFatal?: boolean): void  {
         DdRum.addError(
             String(error), 
             TYPE_SOURCE, 
@@ -60,7 +60,7 @@ export class DdRumErrorTracking {
         });
     }
 
-    static onConsoleError(...params: unknown[]) {
+    static onConsoleError(...params: unknown[]): void  {
         let stack: string = EMPTY_STACK_TRACE
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];

@@ -25,7 +25,6 @@ export default class DdRumReactNativeNavigationTracking {
             return
         }
         const original = React.createElement
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         React.createElement = (element: any, props: any, ...children: any): any => {
             if (
                 props.componentId != undefined 
@@ -50,4 +49,4 @@ export default class DdRumReactNativeNavigationTracking {
         }
         DdRumReactNativeNavigationTracking.isTracking = true
     }
-};
+}

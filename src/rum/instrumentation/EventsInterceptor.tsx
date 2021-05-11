@@ -5,6 +5,5 @@
  */
  
 export default interface EventsInterceptor {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interceptOnPress(...args: any[]): void
 }

@@ -20,9 +20,7 @@ export class DdRumResourceTracking {
 
   private static isTracking = false
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static originalXhrOpen: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static originalXhrSend: any
 
   /**
@@ -35,7 +33,7 @@ export class DdRumResourceTracking {
   /**
   * Starts tracking resources and sends a RUM Resource event every time a fetch or XHR call is detected.
   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   static startTrackingInternal(xhrType: any): void {
     // extra safety to avoid proxying the XHR class twice
     if (DdRumResourceTracking.isTracking) {
@@ -57,13 +55,12 @@ export class DdRumResourceTracking {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   static proxyXhr(xhrType: any): void {
     this.proxyOpen(xhrType);
     this.proxySend(xhrType);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static proxyOpen(xhrType: any): void {
     const originalXhrOpen = this.originalXhrOpen;
     xhrType.prototype.open = function (this: DdRumXhr, method: string, url: string) {
@@ -79,12 +76,11 @@ export class DdRumResourceTracking {
         spanId: spanId,
         traceId: traceId
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any,prefer-rest-params
+      // eslint-disable-next-line prefer-rest-params
       return originalXhrOpen.apply(this, arguments as any)
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static proxySend(xhrType: any): void {
     const originalXhrSend = this.originalXhrSend;
     xhrType.prototype.send = function (this: DdRumXhr) {
@@ -100,12 +96,11 @@ export class DdRumResourceTracking {
 
       DdRumResourceTracking.proxyOnReadyStateChange(this, xhrType);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any,prefer-rest-params
+      // eslint-disable-next-line prefer-rest-params
       return originalXhrSend.apply(this, arguments as any);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static proxyOnReadyStateChange(xhrProxy: DdRumXhr, xhrType: any): void {
     const originalOnreadystatechange = xhrProxy.onreadystatechange
     xhrProxy.onreadystatechange = function () {
@@ -117,7 +112,7 @@ export class DdRumResourceTracking {
       }
 
       if (originalOnreadystatechange) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any,prefer-rest-params
+        // eslint-disable-next-line prefer-rest-params
         originalOnreadystatechange.apply(xhrProxy, arguments as any)
       }
     }

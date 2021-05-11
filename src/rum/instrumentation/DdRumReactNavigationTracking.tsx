@@ -8,7 +8,6 @@ import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/
 import { DdRum } from '../../foundation';
 import { AppState, AppStateStatus } from 'react-native';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
 
 declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
@@ -19,8 +18,7 @@ declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
 export default class DdRumReactNavigationTracking {
 
     private static registeredContainer: NavigationContainerRef | null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     private static navigationStateChangeListener: NavigationListener;
 
     private static appStateListener: AppStateListener;
@@ -57,8 +55,7 @@ export default class DdRumReactNavigationTracking {
         }
     }
 
-    // eslint-disable-next-line
-    private static handleRouteNavigation(route: Route<string, object | undefined> | undefined) {
+    private static handleRouteNavigation(route: Route<string, any | undefined> | undefined) {
         const key = route?.key;
         const screenName = route?.name;
         if (key != null && screenName != null) {
@@ -68,7 +65,6 @@ export default class DdRumReactNavigationTracking {
 
     private static resolveNavigationStateChangeListener(): NavigationListener {
         if (DdRumReactNavigationTracking.navigationStateChangeListener == null) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DdRumReactNavigationTracking.navigationStateChangeListener = (event: EventArg<string, boolean, any>) => {
                 let nestedRoute = event.data?.state?.routes[event.data?.state?.index];
                 while (nestedRoute.state != undefined) {
