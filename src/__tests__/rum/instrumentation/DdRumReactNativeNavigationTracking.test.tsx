@@ -41,6 +41,7 @@ beforeEach(() => {
     jest.setTimeout(20000);
     DdRum.startView.mockClear();
     DdRum.stopView.mockClear();
+    mockRegisterComponentListener.mockClear();
     
     DdRumReactNativeNavigationTracking['trackedComponentIds'] = [];
     DdRumReactNativeNavigationTracking['isTracking'] = false;
@@ -53,10 +54,7 @@ afterEach(() => {
 
 // Unit tests
 
-
-
 it('M register only once W startTracking()', async () => {
-
     // GIVEN
     let componentId = "component42"
     DdRumReactNativeNavigationTracking.startTracking();
@@ -64,15 +62,25 @@ it('M register only once W startTracking()', async () => {
     // WHEN
     const testInstance = React.createElement('View', { 'componentId': componentId});
     const otherTestInstance = React.createElement('View', { 'componentId': componentId, 'something': 'else'});
-    const listener = mockRegisterComponentListener.mock.calls[0][0];
 
     // THEN
     expect(mockRegisterComponentListener.mock.calls.length).toBe(1);
 })
 
+it('M restore original createElement method W stopTracking()', async () => {
+    // GIVEN
+    let componentId = "component42"
+    DdRumReactNativeNavigationTracking.startTracking();
+
+    // WHEN
+    DdRumReactNativeNavigationTracking.stopTracking();
+    const testInstance = React.createElement('View', { 'componentId': componentId});
+
+    // THEN
+    expect(mockRegisterComponentListener.mock.calls.length).toBe(0);
+})
 
 it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
-
     // GIVEN
     let componentId = "component42"
     DdRumReactNativeNavigationTracking.startTracking();

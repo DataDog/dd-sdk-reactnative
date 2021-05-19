@@ -15,6 +15,7 @@ export default class DdRumReactNativeNavigationTracking {
 
     private static isTracking = false
     private static trackedComponentIds : Array<any> = [];
+    private static originalCreateElement: any = undefined
 
     /**
      * Starts tracking the Navigation and sends a RUM View event every time a root View component appear/disappear.
@@ -25,6 +26,7 @@ export default class DdRumReactNativeNavigationTracking {
             return
         }
         const original = React.createElement
+        DdRumReactNativeNavigationTracking.originalCreateElement = original
         React.createElement = (element: any, props: any, ...children: any): any => {
             if (
                 props.componentId != undefined 
@@ -48,5 +50,19 @@ export default class DdRumReactNativeNavigationTracking {
             return original(element, props, ...children)
         }
         DdRumReactNativeNavigationTracking.isTracking = true
+    }
+
+    /**
+     * Stops tracking Navigation.
+     */
+    static stopTracking(): void {
+        if (!DdRumReactNativeNavigationTracking.isTracking) {
+            return
+        }
+        if (DdRumReactNativeNavigationTracking.originalCreateElement != undefined) {
+            React.createElement = DdRumReactNativeNavigationTracking.originalCreateElement;
+        }
+        DdRumReactNativeNavigationTracking.trackedComponentIds.splice(0, DdRumReactNativeNavigationTracking.trackedComponentIds.length)
+        DdRumReactNativeNavigationTracking.isTracking = false
     }
 }
