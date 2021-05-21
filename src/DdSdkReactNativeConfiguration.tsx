@@ -16,7 +16,6 @@ export class DdSdkReactNativeConfiguration {
     public sampleRate: number = 100.0;
     public site: string = "US"
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public additionalConfig: {[k: string]: any} = {};
 
     constructor(

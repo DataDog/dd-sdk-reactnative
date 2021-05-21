@@ -15,11 +15,10 @@ export class DdEventsInterceptor implements EventsInterceptor {
 
     private debouncingStartedTimestamp = Number.MIN_VALUE
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interceptOnPress(...args: any[]): void {
         if (args.length > 0 && args[0].length > 0 && args[0][0]._targetInst) {
-            const currentTime = new Date().getTime()
-            const timestampDifference = Math.abs(new Date().getTime() - this.debouncingStartedTimestamp)
+            const currentTime = Date.now()
+            const timestampDifference = Math.abs(Date.now() - this.debouncingStartedTimestamp)
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
                 const targetProperties = args[0][0]._targetInst
                 this.handleTargetEvent(targetProperties)
@@ -29,15 +28,13 @@ export class DdEventsInterceptor implements EventsInterceptor {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleTargetEvent(targetProperties: any | null) {
         if (targetProperties) {
             const resolvedTargetName = this.resolveTargetName(targetProperties);
-            DdRum.addAction(RumActionType.TAP.valueOf(), resolvedTargetName, new Date().getTime(), {})
+            DdRum.addAction(RumActionType.TAP.valueOf(), resolvedTargetName, Date.now(), {})
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolveTargetName(targetProperties: any): string {
         const accessibilityLabel = targetProperties.memoizedProps?.accessibilityLabel
         const elementType = targetProperties.elementType

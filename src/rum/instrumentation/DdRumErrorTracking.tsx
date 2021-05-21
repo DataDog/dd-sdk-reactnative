@@ -47,20 +47,20 @@ export class DdRumErrorTracking {
 
     }
 
-    // eslint-disable-next-line 
-    static onGlobalError(error: any, isFatal?: boolean) {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static onGlobalError(error: any, isFatal?: boolean): void  {
         DdRum.addError(
             String(error), 
             TYPE_SOURCE, 
             DdRumErrorTracking.getErrorStackTrace(error), 
-            new Date().getTime(), 
+            Date.now(), 
             { "_dd.error.is_crash": isFatal, "_dd.error.raw": error }
         ).then(() => {
             DdRumErrorTracking.defaultErrorHandler(error, isFatal);
         });
     }
 
-    static onConsoleError(...params: unknown[]) {
+    static onConsoleError(...params: unknown[]): void  {
         let stack: string = EMPTY_STACK_TRACE
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
@@ -82,7 +82,7 @@ export class DdRumErrorTracking {
             message, 
             TYPE_CONSOLE,
             stack, 
-            new Date().getTime(), 
+            Date.now(), 
             {}
         ).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
