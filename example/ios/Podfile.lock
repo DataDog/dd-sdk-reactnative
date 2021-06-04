@@ -4,7 +4,7 @@ PODS:
     - Kronos (~> 4.1)
   - DatadogSDKBridge (0.4.0):
     - DatadogSDK (~> 1.5.2)
-  - dd-sdk-reactnative (1.0.0-alpha5):
+  - dd-sdk-reactnative (1.0.0-beta1):
     - DatadogSDKBridge (~> 0.4.0)
     - React-Core
   - DoubleConversion (1.1.6)
@@ -395,7 +395,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DatadogSDK: 825d16f4724f8767e1f7b64b59e22a70d404b919
   DatadogSDKBridge: 0d5a3800816e2b84940ceb9202453ede333d984d
-  dd-sdk-reactnative: 84c88dca05563331eb066474b21cd86b3944ba09
+  dd-sdk-reactnative: 4711526a44bdf464cb8ec84299f8edfc5897460d
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   FBLazyVector: 3bb422f41b18121b71783a905c10e58606f7dc3e
   FBReactNativeSpec: f2c97f2529dd79c083355182cc158c9f98f4bd6e
