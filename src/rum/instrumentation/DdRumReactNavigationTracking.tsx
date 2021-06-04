@@ -66,12 +66,23 @@ export default class DdRumReactNavigationTracking {
     private static resolveNavigationStateChangeListener(): NavigationListener {
         if (DdRumReactNavigationTracking.navigationStateChangeListener == null) {
             DdRumReactNavigationTracking.navigationStateChangeListener = (event: EventArg<string, boolean, any>) => {
-                let nestedRoute = event.data?.state?.routes[event.data?.state?.index];
-                while (nestedRoute.state != undefined) {
-                    nestedRoute = nestedRoute.state.routes[nestedRoute.state.index];
+                let route = event.data?.state?.routes[event.data?.state?.index];
+
+                if (route == undefined) {
+                    // RUMM-1400 in some cases the route seem to be undefined
+                    return
                 }
 
-                DdRumReactNavigationTracking.handleRouteNavigation(nestedRoute);
+                while (route.state != undefined) {
+                    const nestedRoute = route.state.routes[route.state.index];
+                    if (nestedRoute == undefined) {
+                        // RUMM-1400 in some cases the route seem to be undefined
+                        break;
+                    }
+                    route = nestedRoute
+                }
+
+                DdRumReactNavigationTracking.handleRouteNavigation(route);
             };
         }
         return DdRumReactNavigationTracking.navigationStateChangeListener;
