@@ -5,7 +5,7 @@
  */
 
 import React from 'react'
-import { Navigation } from 'react-native-navigation';
+import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '../../foundation';
 
 /**
@@ -35,14 +35,14 @@ export default class DdRumReactNativeNavigationTracking {
                 const componentId = props.componentId
                 Navigation.events().registerComponentListener(
                     {
-                        componentDidAppear: () => {
-                            DdRum.startView(componentId, componentId, Date.now(), {});
+                        componentDidAppear: (event: ComponentDidAppearEvent) => {
+                            DdRum.startView(componentId, event.componentName, Date.now(), {});
                         },
                         componentDidDisappear: () => {
                             DdRum.stopView(componentId, Date.now(), {});
                         },
                     },
-                    componentId 
+                    componentId
                 );
                 DdRumReactNativeNavigationTracking.trackedComponentIds.push(componentId);
             }

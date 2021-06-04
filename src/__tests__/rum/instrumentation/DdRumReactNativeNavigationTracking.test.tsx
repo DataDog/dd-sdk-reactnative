@@ -88,12 +88,13 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
     // WHEN
     const testInstance = React.createElement('View', { 'componentId': componentId});
     const listener = mockRegisterComponentListener.mock.calls[0][0];
-    listener.componentDidAppear();
+    const componentName = "some-name";
+    listener.componentDidAppear({componentName: componentName});
 
     // THEN
     expect(DdRum.startView.mock.calls.length).toBe(1);
     expect(DdRum.startView.mock.calls[0][0]).toBe(componentId);
-    expect(DdRum.startView.mock.calls[0][1]).toBe(componentId);
+    expect(DdRum.startView.mock.calls[0][1]).toBe(componentName);
     expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
 })
 
