@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 import MainScreen from './screens/MainScreen';
 import AboutScreen from './screens/AboutScreen';
@@ -34,12 +34,14 @@ function registerScreens() {
 const HomeScreen = (props) => {
   return (
     <View style={styles.defaultScreen}>
-      <Text>Hello React Native Navigation 👋</Text>
+      <Text style = {{ marginBottom: 20 }}>Hello React Native Navigation 👋</Text>
       <Button
         title='Main'
         onPress={() => {
             Navigation.push(props.componentId, { component: { name: 'Main' } });
         }}/>
+      <View 
+        style = {{ marginTop: 20 }} />
       <Button
         title='About'
         onPress={() => {
