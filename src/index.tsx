@@ -6,10 +6,6 @@
 
 import { DdLogs, DdTrace, DdRum } from './foundation';
 
-import DdRumReactNavigationTracking from './rum/instrumentation/DdRumReactNavigationTracking';
-import DdRumReactNativeNavigationTracking from './rum/instrumentation/DdRumReactNativeNavigationTracking';
-import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from './DdSdkReactNative';
-import { TrackingConsent } from './TrackingConsent'
+console.log("index.tsx was re-generated; make sure you include any missing code")
 
-export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, DdRumReactNavigationTracking, DdRumReactNativeNavigationTracking, TrackingConsent };
+export { DdLogs, DdTrace, DdRum };

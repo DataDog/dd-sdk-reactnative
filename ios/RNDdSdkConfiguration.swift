@@ -18,6 +18,7 @@ extension NSDictionary {
         let site = object(forKey: "site") as? NSString
         let trackingConsent = object(forKey: "trackingConsent") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
+        let manualTracingEnabled = object(forKey: "manualTracingEnabled") as? Bool
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : NSString(),
             env: (env != nil) ? env! : NSString(),
@@ -26,7 +27,8 @@ extension NSDictionary {
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
-            additionalConfig: additionalConfig
+            additionalConfig: additionalConfig,
+            manualTracingEnabled: manualTracingEnabled
         )
     }
 }

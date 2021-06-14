@@ -20,7 +20,8 @@ fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         sampleRate = getDouble("sampleRate"),
         site = getString("site"),
         trackingConsent = getString("trackingConsent"),
-        additionalConfig = getMap("additionalConfig")?.toHashMap()
+        additionalConfig = getMap("additionalConfig")?.toHashMap(),
+        manualTracingEnabled = getBoolean("manualTracingEnabled")
     )
 }
 
@@ -34,5 +35,6 @@ fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     site?.let { map.putString("site", it) }
     trackingConsent?.let { map.putString("trackingConsent", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
+    manualTracingEnabled?.let { map.putBoolean("manualTracingEnabled", it) }
     return map
 }
