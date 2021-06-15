@@ -18,7 +18,7 @@ jest.mock('react-native', () => {
     return {
         NativeModules: {
             DdSdk: {
-                initialize: jest.fn().mockImplementation(() => { }),
+                initialize: jest.fn().mockResolvedValue(null),
                 setUser: jest.fn().mockImplementation(() => { }),
                 setAttributes: jest.fn().mockImplementation(() => { }),
                 setTrackingConsent: jest.fn().mockImplementation(() => { })
@@ -53,14 +53,14 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
 
 beforeEach(async () => {
     DdSdkReactNative['wasInitialized'] = false;
-    NativeModules.DdSdk.initialize.mockReset()
-    NativeModules.DdSdk.setAttributes.mockReset()
-    NativeModules.DdSdk.setUser.mockReset()
-    NativeModules.DdSdk.setTrackingConsent.mockReset()
+    NativeModules.DdSdk.initialize.mockClear()
+    NativeModules.DdSdk.setAttributes.mockClear()
+    NativeModules.DdSdk.setUser.mockClear()
+    NativeModules.DdSdk.setTrackingConsent.mockClear()
 
-    DdRumUserInteractionTracking.startTracking.mockReset()
-    DdRumResourceTracking.startTracking.mockReset()
-    DdRumErrorTracking.startTracking.mockReset()
+    DdRumUserInteractionTracking.startTracking.mockClear()
+    DdRumResourceTracking.startTracking.mockClear()
+    DdRumErrorTracking.startTracking.mockClear()
 })
 
 it('M initialize the SDK W initialize', async () => {
@@ -70,8 +70,10 @@ it('M initialize the SDK W initialize', async () => {
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -85,6 +87,36 @@ it('M initialize the SDK W initialize', async () => {
     })
 })
 
+it('M give rejection W initialize', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+
+    NativeModules.DdSdk.initialize.mockRejectedValue('rejection')
+
+    // WHEN
+    await expect(DdSdkReactNative.initialize(configuration)).rejects.toMatch('rejection')
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native'
+    })
+
+    expect(DdSdkReactNative["wasInitialized"]).toBe(false)
+    expect(DdRumUserInteractionTracking.startTracking).toBeCalledTimes(0)
+    expect(DdRumResourceTracking.startTracking).toBeCalledTimes(0)
+    expect(DdRumErrorTracking.startTracking).toBeCalledTimes(0)
+
+})
+
 it('M initialize the SDK W initialize {explicit tracking consent}', async () => {
     // GIVEN
     const fakeAppId = "1"
@@ -93,8 +125,10 @@ it('M initialize the SDK W initialize {explicit tracking consent}', async () => 
     const fakeConsent = TrackingConsent.NOT_GRANTED
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, false, fakeConsent)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -115,11 +149,13 @@ it('M initialize once W initialize { multiple times in a row }', async () => {
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
-    DdSdkReactNative.initialize(configuration)
-    DdSdkReactNative.initialize(configuration)
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -139,8 +175,10 @@ it('M enable user interaction feature W initialize { user interaction config ena
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, true)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -161,8 +199,10 @@ it('M enable resource tracking feature W initialize { resource tracking config e
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, true)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
@@ -183,8 +223,10 @@ it('M enable error tracking feature W initialize { error tracking config enabled
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
 
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
     // WHEN
-    DdSdkReactNative.initialize(configuration)
+    await DdSdkReactNative.initialize(configuration)
 
     // THEN
     expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);

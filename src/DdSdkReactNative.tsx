@@ -27,7 +27,7 @@ export class DdSdkReactNative {
     * @returns a Promise.
     */
     static initialize(configuration: DdSdkReactNativeConfiguration): Promise<void> {
-        return new Promise<void>((resolve => {
+        return new Promise<void>((resolve, reject) => {
             if (DdSdkReactNative.wasInitialized) {
                 resolve()
                 return
@@ -37,8 +37,8 @@ export class DdSdkReactNative {
 
             DdSdk.initialize(
                 new DdSdkConfiguration(
-                    configuration.clientToken, 
-                    configuration.env, 
+                    configuration.clientToken,
+                    configuration.env,
                     configuration.applicationId,
                     configuration.nativeCrashReportEnabled,
                     configuration.sampleRate,
@@ -46,12 +46,14 @@ export class DdSdkReactNative {
                     configuration.trackingConsent,
                     configuration.additionalConfig
                 )
-            )
-            DdSdkReactNative.enableFeatures(configuration)
-            DdSdkReactNative.wasInitialized = true
-            resolve()
-        }))
-
+            ).then(() => {
+                DdSdkReactNative.enableFeatures(configuration)
+                DdSdkReactNative.wasInitialized = true
+                resolve()
+            }, (rejection) => {
+                reject(rejection)
+            })
+        })
     }
 
     /**
