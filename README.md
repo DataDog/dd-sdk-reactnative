@@ -134,21 +134,26 @@ DdLogs.warn("Lorem ipsum dolor sit amet…", 0, {});
 DdLogs.error("Lorem ipsum dolor sit amet…", 0, {});
 
 // Track RUM Views manually
-DdRum.startView('<view-key>', 'View Url', new Date().getTime(), {});
+DdRum.startView('<view-key>', 'View Url', Date.now(), {});
 //…
-DdRum.stopView('<view-key>', new Date().getTime(), { custom: 42});
+DdRum.stopView('<view-key>', Date.now(), { 'custom': 42 });
 
 // Track RUM Actions manually
-DdRum.addAction('TAP', 'button name', new Date().getTime(), {});
+DdRum.addAction('TAP', 'button name', Date.now(), {});
 
 // Track RUM Errors manually
-DdRum.addError('<message>', 'source', '<stacktrace>', new Date().getTime(), {});
+DdRum.addError('<message>', 'source', '<stacktrace>', Date.now(), {});
 
 
 // Track RUM Resource manually
-DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', new Date().getTime(), {} );
+DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', Date.now(), {} );
 //…
-DdRum.stopResource('<res-key>', 200, 'xhr', new Date().getTime(), {});
+DdRum.stopResource('<res-key>', 200, 'xhr', Date.now(), {});
+
+// Send spans manually
+const spanId = await DdTrace.startSpan("foo", Date.now(), { 'custom': 42 });
+//...
+DdTrace.finishSpan(spanId, Date.now(), { 'custom': 21 });
 ```
 ## License
 
