@@ -140,10 +140,16 @@ DdRum.stopView('<view-key>', Date.now(), { 'custom': 42 });
 
 // Track RUM Actions manually
 DdRum.addAction('TAP', 'button name', Date.now(), {});
+// or in case of continuous action
+DdRum.startAction('TAP', 'button name', Date.now(), {});
+// to stop action above
+DdRum.stopAction(Date.now(), {});
+
+// Add custom timings
+DdRum.addTiming('<timing-name>');
 
 // Track RUM Errors manually
 DdRum.addError('<message>', 'source', '<stacktrace>', Date.now(), {});
-
 
 // Track RUM Resource manually
 DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', Date.now(), {} );
