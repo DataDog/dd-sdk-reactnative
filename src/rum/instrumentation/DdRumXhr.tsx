@@ -8,13 +8,14 @@
 export interface DdRumXhr extends XMLHttpRequest {
 
   _datadog_xhr: DdRumXhrContext
-    
+
 }
 
 export interface DdRumXhrContext {
   method: string
   url: string
   startTime: number,
+  responseStartTime: number,
   reported: boolean,
   spanId: string,
   traceId: string

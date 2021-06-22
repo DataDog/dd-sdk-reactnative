@@ -155,6 +155,14 @@ const spanId = await DdTrace.startSpan("foo", Date.now(), { 'custom': 42 });
 //...
 DdTrace.finishSpan(spanId, Date.now(), { 'custom': 21 });
 ```
+
+## Resource timings
+
+Resource tracking is able to provide the following timings:
+
+* `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
+* `Download` - The time it took to receive a response.
+
 ## License
 
 [Apache License, v2.0](LICENSE)
