@@ -77,7 +77,6 @@ it('M send a RUM Action event W interceptOnPress { no accesibilityLabel argument
 
 it('M send a RUM Action event W interceptOnPress { no accesibilityLabel, no elementType } ', async () => {
     // GIVEN
-    const fakeElementType = "element_type"
     const fakeArguments = [{ _targetInst: {} }]
 
     // WHEN
@@ -89,13 +88,50 @@ it('M send a RUM Action event W interceptOnPress { no accesibilityLabel, no elem
     expect(DdRum.addAction.mock.calls[0][1]).toBe(UNKNOWN_TARGET_NAME)
 })
 
-it('M do nothing W interceptOnPress { invalid arguments } ', async () => {
+it('M do nothing W interceptOnPress { invalid arguments - empty object } ', async () => {
     // GIVEN
-    const fakeElementType = "element_type"
     const fakeArguments = [{}]
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - undefined element } ', async () => {
+    // GIVEN
+    const fakeArguments = [undefined]
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - null element } ', async () => {
+    // GIVEN
+    const fakeArguments = [null]
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - not array argument } ', async () => {
+    // WHEN
+    testedEventsInterceptor.interceptOnPress({'a':'b'})
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { no arguments call } ', async () => {
+    // WHEN
+    testedEventsInterceptor.interceptOnPress()
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)

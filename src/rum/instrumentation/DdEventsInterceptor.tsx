@@ -16,7 +16,7 @@ export class DdEventsInterceptor implements EventsInterceptor {
     private debouncingStartedTimestamp = Number.MIN_VALUE
 
     interceptOnPress(...args: any[]): void {
-        if (args.length > 0 && args[0].length > 0 && args[0][0]._targetInst) {
+        if (args.length > 0 && args[0].length > 0 && args[0][0] && args[0][0]._targetInst) {
             const currentTime = Date.now()
             const timestampDifference = Math.abs(Date.now() - this.debouncingStartedTimestamp)
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
