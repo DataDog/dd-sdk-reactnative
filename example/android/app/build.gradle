@@ -212,7 +212,13 @@ dependencies {
         exclude group:'com.facebook.flipper'
     }
 
-    implementation jscFlavor
+    if (enableHermes) {
+        def hermesPath = "../../node_modules/hermes-engine/android/";
+        debugImplementation files(hermesPath + "hermes-debug.aar")
+        releaseImplementation files(hermesPath + "hermes-release.aar")
+    } else {
+        implementation jscFlavor
+    }
 
     implementation 'androidx.multidex:multidex:2.0.1'
 }
