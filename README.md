@@ -21,6 +21,8 @@ To install with Yarn, run:
 yarn add dd-sdk-reactnative
 ```
 
+**Minimum React Native version**: SDK supports React Native version 0.63.4 or higher. Compatibility with older versions is not guaranteed out of the box.
+
 ### Specify application details in UI
 
 1. In the [Datadog app][1], select **UX Monitoring > RUM Applications > New Application**.
@@ -52,12 +54,14 @@ config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sampleRate = 80
 
-DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
 
 ## Track view navigation
 
-**Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package. If you use another package to handle navigation in your application, use the manual instrumentation method described below.
+**Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package (minimum supported version is `react-navigation/native@5.6.0`). If you use another package to handle navigation in your application, use the manual instrumentation method described below.
 
 To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
 
