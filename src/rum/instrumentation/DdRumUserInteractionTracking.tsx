@@ -38,7 +38,7 @@ export class DdRumUserInteractionTracking {
             if (props && typeof props.onPress === PROPERTY_FUNCTION_TYPE) {
                 const originalOnPress = props.onPress
                 props.onPress = (...args: any[]) => {
-                    DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(args)
+                    DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(...args)
                     return originalOnPress(...args)
                 }
             }

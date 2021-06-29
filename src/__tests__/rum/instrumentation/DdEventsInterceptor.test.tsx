@@ -29,10 +29,10 @@ beforeEach(() => {
     DdRum.addAction.mockReset()
 })
 
-it('M send a RUM Action event W interceptOnPress { arguments with accesibilityLabel } ', async () => {
+it('M send a RUM Action event W interceptOnPress { arguments with accessibilityLabel } ', async () => {
     // GIVEN
     const fakeAccessibilityLabel = "target_name"
-    const fakeArguments = [{ _targetInst: { memoizedProps: { accessibilityLabel: fakeAccessibilityLabel } } }]
+    const fakeArguments = { _targetInst: { memoizedProps: { accessibilityLabel: fakeAccessibilityLabel } } }
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
@@ -46,7 +46,7 @@ it('M send a RUM Action event W interceptOnPress { arguments with accesibilityLa
 it('M send only one RUM Action event W interceptOnPress { called multiple times for same target } ', async () => {
     // GIVEN
     const fakeAccessibilityLabel = "target_name"
-    const fakeArguments = [{ _targetInst: { memoizedProps: { accessibilityLabel: fakeAccessibilityLabel } } }]
+    const fakeArguments = { _targetInst: { memoizedProps: { accessibilityLabel: fakeAccessibilityLabel } } }
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
@@ -61,10 +61,10 @@ it('M send only one RUM Action event W interceptOnPress { called multiple times 
 })
 
 
-it('M send a RUM Action event W interceptOnPress { no accesibilityLabel arguments } ', async () => {
+it('M send a RUM Action event W interceptOnPress { no accessibilityLabel arguments } ', async () => {
     // GIVEN
     const fakeElementType = "element_type"
-    const fakeArguments = [{ _targetInst: { elementType: fakeElementType } }]
+    const fakeArguments = { _targetInst: { elementType: fakeElementType } }
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
@@ -75,10 +75,9 @@ it('M send a RUM Action event W interceptOnPress { no accesibilityLabel argument
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeElementType)
 })
 
-it('M send a RUM Action event W interceptOnPress { no accesibilityLabel, no elementType } ', async () => {
+it('M send a RUM Action event W interceptOnPress { no accessibilityLabel, no elementType } ', async () => {
     // GIVEN
-    const fakeElementType = "element_type"
-    const fakeArguments = [{ _targetInst: {} }]
+    const fakeArguments = { _targetInst: {} }
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
@@ -89,13 +88,72 @@ it('M send a RUM Action event W interceptOnPress { no accesibilityLabel, no elem
     expect(DdRum.addAction.mock.calls[0][1]).toBe(UNKNOWN_TARGET_NAME)
 })
 
-it('M do nothing W interceptOnPress { invalid arguments } ', async () => {
+it('M do nothing W interceptOnPress { invalid arguments - empty object } ', async () => {
     // GIVEN
-    const fakeElementType = "element_type"
-    const fakeArguments = [{}]
+    const fakeArguments = {}
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - array } ', async () => {
+    // GIVEN
+    const fakeArguments = []
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - nested array } ', async () => {
+    // GIVEN
+    const fakeArguments = [[]]
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - undefined } ', async () => {
+    // GIVEN
+    const fakeArguments = undefined
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => {
+    // GIVEN
+    const fakeArguments = null
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', async () => {
+    // WHEN
+    testedEventsInterceptor.interceptOnPress({'a':'b'})
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0)
+})
+
+it('M do nothing W interceptOnPress { no arguments call } ', async () => {
+    // WHEN
+    testedEventsInterceptor.interceptOnPress()
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)

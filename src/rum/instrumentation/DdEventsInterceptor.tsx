@@ -16,11 +16,11 @@ export class DdEventsInterceptor implements EventsInterceptor {
     private debouncingStartedTimestamp = Number.MIN_VALUE
 
     interceptOnPress(...args: any[]): void {
-        if (args.length > 0 && args[0].length > 0 && args[0][0]._targetInst) {
+        if (args.length > 0 && args[0] && args[0]._targetInst) {
             const currentTime = Date.now()
             const timestampDifference = Math.abs(Date.now() - this.debouncingStartedTimestamp)
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
-                const targetProperties = args[0][0]._targetInst
+                const targetProperties = args[0]._targetInst
                 this.handleTargetEvent(targetProperties)
                 // we add an approximated 1 millisecond for the execution time of the `handleTargetEvent` function
                 this.debouncingStartedTimestamp = currentTime + HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS

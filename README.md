@@ -41,7 +41,7 @@ const config = new DdSdkReactNativeConfiguration(
     "<CLIENT_TOKEN>", 
     "<ENVIRONMENT_NAME>", 
     "<RUM_APPLICATION_ID>",
-    true, // track User interactions (e.g.: Tap on buttons)
+    true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
     true, // track XHR Resources
     true // track Errors
 )
