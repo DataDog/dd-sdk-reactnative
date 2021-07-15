@@ -2,10 +2,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "dd-sdk-reactnative": [
-        "./src/index"
+      "@datadog/mobile-react-native": [
+        "./packages/core/src"
       ]
     },
+    "declaration": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
@@ -30,6 +31,9 @@
   },
   "exclude": [
     "example",
-    "src/__tests__"
+    "lib",
+    "__tests__",
+    "packages/*/lib",
+    "packages/*/src/__tests__"
   ]
 }

@@ -1,0 +1,79 @@
+{
+  "name": "@datadog/mobile-react-navigation",
+  "version": "1.0.0-beta4",
+  "description": "A client-side React Native module to interact with Datadog",
+  "keywords": [
+    "datadog",
+    "react-native",
+    "ios",
+    "android"
+  ],
+  "author": "Datadog (https://github.com/DataDog)",
+  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+  "repository": {
+    "url": "https://github.com/DataDog/dd-sdk-reactnative",
+    "directory": "packages/react-navigation"
+  },
+  "bugs": {
+    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+  },
+  "license": "Apache-2.0",
+  "main": "lib/commonjs/index",
+  "files": [
+    "src",
+    "lib",
+    "!lib/typescript/example",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "types": "lib/typescript/react-navigation/src/index.d.ts",
+  "react-native": "src/index",
+  "source": "src/index",
+  "module": "lib/module/index",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "prepare": "bob build"
+  },
+  "devDependencies": {
+    "@datadog/mobile-react-native": "^1.0.0-beta4",
+    "@react-navigation/native": "5.9.2",
+    "@react-navigation/stack": "5.14.2",
+    "react-native-gesture-handler": "1.10.3",
+    "react-native-safe-area-context": "3.1.9"
+  },
+  "peerDependencies": {
+    "@react-navigation/native": "^5.6.0",
+    "@datadog/mobile-react-native": "^1.0.0-beta4",
+    "react": "^16.13.1",
+    "react-native": "^0.63.4"
+  },
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/lib/"
+    ],
+    "setupFiles": [
+      "./../../node_modules/react-native-gesture-handler/jestSetup.js"
+    ],
+    "transformIgnorePatterns": []
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "tsc": "./../../node_modules/.bin/tsc"
+        }
+      ]
+    ]
+  }
+}

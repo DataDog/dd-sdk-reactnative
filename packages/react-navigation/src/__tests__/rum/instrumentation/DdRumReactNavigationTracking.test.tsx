@@ -7,12 +7,12 @@
 import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
-import { DdRum } from '../../../index';
+import { DdRum } from '@datadog/mobile-react-native';
 import DdRumReactNavigationTracking from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-jest.mock('../../../foundation', () => {
+jest.mock('@datadog/mobile-react-native', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -374,4 +374,3 @@ function FakeNestedNavigator() {
         </NavigationContainer>
     )
 }
-

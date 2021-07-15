@@ -3,7 +3,7 @@ import {
     DdSdkReactNativeConfiguration,
     DdLogs,
     TrackingConsent
-} from 'dd-sdk-reactnative';
+} from '@datadog/mobile-react-native';
 
 import { CLIENT_TOKEN, ENVIRONMENT, APPLICATION_ID } from './ddCredentials';
 import { getTrackingConsent } from './utils';
