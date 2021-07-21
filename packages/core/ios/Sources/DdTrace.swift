@@ -17,6 +17,9 @@ class RNDdTrace: NSObject {
 
     let nativeInstance: DdTrace = Bridge.getDdTrace()
 
+    @objc(methodQueue)
+    let methodQueue: DispatchQueue = sharedQueue
+
     @objc(startSpan:withTimestampms:withContext:withResolver:withRejecter:)
     func startSpan(operation: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let result = nativeInstance.startSpan(operation: operation, timestampMs: timestampMs, context: context)

@@ -395,7 +395,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DatadogSDK: f8d3b65909216d8f1a04c2ddb75a15784bf90fd2
   DatadogSDKBridge: a913ae62106d269958b67782722dec9776341908
-  DatadogSDKReactNative: 04d839f3db4ffb6ad83a769e6e92c1b3d61e4b8e
+  DatadogSDKReactNative: 6ac59bef4a414473a8abb90584232a18d2e79729
   DoubleConversion: cde416483dac037923206447da6e1454df403714
   FBLazyVector: 3bb422f41b18121b71783a905c10e58606f7dc3e
   FBReactNativeSpec: f2c97f2529dd79c083355182cc158c9f98f4bd6e

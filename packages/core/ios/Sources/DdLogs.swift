@@ -17,6 +17,9 @@ class RNDdLogs: NSObject {
 
     let nativeInstance: DdLogs = Bridge.getDdLogs()
 
+    @objc(methodQueue)
+    let methodQueue: DispatchQueue = sharedQueue
+
     @objc(debug:withContext:withResolver:withRejecter:)
     func debug(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeInstance.debug(message: message, context: context)
