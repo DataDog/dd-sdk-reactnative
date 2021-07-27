@@ -19,15 +19,11 @@
   "files": [
     "src",
     "lib",
-    "android",
-    "ios",
-    "DatadogSDKReactNative.podspec",
-    "!lib/typescript/example",
-    "!android/build",
-    "!ios/build",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__"
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/src",
+    "ios/Sources",
+    "DatadogSDKReactNative.podspec"
   ],
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
