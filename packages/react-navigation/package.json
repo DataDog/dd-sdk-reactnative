@@ -21,11 +21,7 @@
   "main": "lib/commonjs/index",
   "files": [
     "src",
-    "lib",
-    "!lib/typescript/example",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__"
+    "lib"
   ],
   "types": "lib/typescript/react-navigation/src/index.d.ts",
   "react-native": "src/index",

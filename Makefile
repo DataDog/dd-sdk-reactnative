@@ -1,6 +1,6 @@
 RELEASE_TEST_APP_NAME = ReleaseTestApp
 REACT_NATIVE_VERSION := $(shell node --eval="require('./example/package.json').dependencies['react-native']" -p)
-CORE_PACKAGE_VERSION := $(shell node --eval="require('./packages/core/package.json').version" -p)
+RELEASE_PACKAGE_VERSION := $(shell node --eval="require('./packages/core/package.json').version" -p)
 
 define ReleaseTestAppPodfile
 require_relative '../node_modules/react-native/scripts/react_native_pods'\n
@@ -37,9 +37,15 @@ endef
 export SDKUsageJavascript
 
 test-for-release:
-	yarn install && yarn workspace @datadog/mobile-react-native pack
+	yarn install
+	yarn workspace @datadog/mobile-react-native pack
+	yarn workspace @datadog/mobile-react-navigation pack
+	yarn workspace @datadog/mobile-react-native-navigation pack
+	./check-release-content.sh packages/core/datadog-mobile-react-native-v${RELEASE_PACKAGE_VERSION}.tgz packages/core/release-content.txt
+	./check-release-content.sh packages/react-navigation/datadog-mobile-react-navigation-v${RELEASE_PACKAGE_VERSION}.tgz packages/react-navigation/release-content.txt
+	./check-release-content.sh packages/react-native-navigation/datadog-mobile-react-native-navigation-v${RELEASE_PACKAGE_VERSION}.tgz packages/react-native-navigation/release-content.txt
 	npx react-native init ${RELEASE_TEST_APP_NAME} --version ${REACT_NATIVE_VERSION}
-	cd ${RELEASE_TEST_APP_NAME} && npm install --save ../packages/core/datadog-mobile-react-native-v${CORE_PACKAGE_VERSION}.tgz
+	cd ${RELEASE_TEST_APP_NAME} && npm install --save ../packages/core/datadog-mobile-react-native-v${RELEASE_PACKAGE_VERSION}.tgz
 	# write to Podfile
 	echo $$ReleaseTestAppPodfile > ${RELEASE_TEST_APP_NAME}/ios/Podfile
 	# append to App.js
