@@ -17,6 +17,9 @@ class RNDdRum: NSObject {
 
     let nativeInstance: DdRum = Bridge.getDdRum()
 
+    @objc(methodQueue)
+    let methodQueue: DispatchQueue = sharedQueue
+
     @objc(startView:withName:withTimestampms:withContext:withResolver:withRejecter:)
     func startView(key: NSString, name: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeInstance.startView(key: key, name: name, timestampMs: timestampMs, context: context)

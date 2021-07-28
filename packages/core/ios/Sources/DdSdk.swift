@@ -17,6 +17,9 @@ class RNDdSdk: NSObject {
 
     let nativeInstance: DdSdk = Bridge.getDdSdk()
 
+    @objc(methodQueue)
+    let methodQueue: DispatchQueue = sharedQueue
+
     @objc(initialize:withResolver:withRejecter:)
     func initialize(configuration: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())

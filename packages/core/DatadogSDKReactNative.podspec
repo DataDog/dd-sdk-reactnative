@@ -14,8 +14,12 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
   
-  s.source_files = "ios/**/*.{h,m,mm,swift}"
+  s.source_files = "ios/Sources/*.{h,m,mm,swift}"
   
   s.dependency "React-Core"
   s.dependency "DatadogSDKBridge", "~> 0.4.4"
+
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.source_files = 'ios/Tests/*.swift'
+  end
 end
