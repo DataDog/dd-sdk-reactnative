@@ -15,6 +15,7 @@ export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
     public site: string = "US"
+    public verbosity: string|undefined = undefined
 
     public additionalConfig: {[k: string]: any} = {};
 

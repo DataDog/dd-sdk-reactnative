@@ -240,6 +240,32 @@ it('M enable error tracking feature W initialize { error tracking config enabled
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
 
+it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
+    configuration.verbosity = "debug"
+
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
+    // WHEN
+    await DdSdkReactNative.initialize(configuration)
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native',
+        '_dd.sdk_verbosity': 'debug'
+    })
+    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
+})
+
 it('M call SDK method W setAttributes', async () => {
     // GIVEN
     const attributes = { "foo": "bar" }
