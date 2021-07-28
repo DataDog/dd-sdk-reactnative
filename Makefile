@@ -41,9 +41,6 @@ test-for-release:
 	yarn workspace @datadog/mobile-react-native pack
 	yarn workspace @datadog/mobile-react-navigation pack
 	yarn workspace @datadog/mobile-react-native-navigation pack
-	tar -tvf packages/core/datadog-mobile-react-native-v${RELEASE_PACKAGE_VERSION}.tgz
-	tar -tvf packages/react-navigation/datadog-mobile-react-navigation-v${RELEASE_PACKAGE_VERSION}.tgz
-	tar -tvf packages/react-native-navigation/datadog-mobile-react-native-navigation-v${RELEASE_PACKAGE_VERSION}.tgz
 	./check-release-content.sh packages/core/datadog-mobile-react-native-v${RELEASE_PACKAGE_VERSION}.tgz packages/core/release-content.txt
 	./check-release-content.sh packages/react-navigation/datadog-mobile-react-navigation-v${RELEASE_PACKAGE_VERSION}.tgz packages/react-navigation/release-content.txt
 	./check-release-content.sh packages/react-native-navigation/datadog-mobile-react-native-navigation-v${RELEASE_PACKAGE_VERSION}.tgz packages/react-native-navigation/release-content.txt

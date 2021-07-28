@@ -1,7 +1,7 @@
 #!/bin/bash
 package_file=$1
 reference_release_content_file=$2
-current_release_content=$(tar -tvf $package_file | awk '{print $9}')
+current_release_content=$(tar -tvf $package_file | awk '{print $9}' | sort)
 output=$(diff -w $reference_release_content_file <(echo "$current_release_content"))
 if [ "$output" != "" ]
 then
