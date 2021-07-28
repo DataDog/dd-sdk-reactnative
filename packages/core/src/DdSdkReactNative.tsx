@@ -19,6 +19,7 @@ export class DdSdkReactNative {
 
     private static readonly DD_SOURCE_KEY = "_dd.source";
     private static readonly DD_SDK_VERBOSITY_KEY = "_dd.sdk_verbosity";
+    private static readonly DD_NATIVE_VIEW_TRACKING_KEY = "_dd.native_view_tracking";
 
     private static wasInitialized = false
 
@@ -35,6 +36,7 @@ export class DdSdkReactNative {
             }
 
             configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] = 'react-native';
+            configuration.additionalConfig[DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY] = configuration.nativeViewTracking;
             if (configuration.verbosity != undefined) {
                 configuration.additionalConfig[DdSdkReactNative.DD_SDK_VERBOSITY_KEY] = configuration.verbosity
             }
