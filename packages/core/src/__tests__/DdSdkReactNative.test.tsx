@@ -84,7 +84,8 @@ it('M initialize the SDK W initialize', async () => {
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
 })
 
@@ -108,7 +109,8 @@ it('M give rejection W initialize', async () => {
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
 
     expect(DdSdkReactNative["wasInitialized"]).toBe(false)
@@ -139,7 +141,8 @@ it('M initialize the SDK W initialize {explicit tracking consent}', async () => 
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
 })
 
@@ -165,7 +168,8 @@ it('M initialize once W initialize { multiple times in a row }', async () => {
     expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
 })
 
@@ -188,7 +192,8 @@ it('M enable user interaction feature W initialize { user interaction config ena
     expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
     expect(DdRumUserInteractionTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -212,7 +217,8 @@ it('M enable resource tracking feature W initialize { resource tracking config e
     expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
     expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -236,7 +242,8 @@ it('M enable error tracking feature W initialize { error tracking config enabled
     expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native'
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': false
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -262,7 +269,34 @@ it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.sdk_verbosity': NativeSdkVerbosity.DEBUG
+        '_dd.sdk_verbosity': NativeSdkVerbosity.DEBUG,
+        '_dd.native_view_tracking': false
+    })
+    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
+})
+
+it('M enable native view tracking W initialize { native_view_tracking enabled }', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
+    configuration.nativeViewTracking = true
+
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
+    // WHEN
+    await DdSdkReactNative.initialize(configuration)
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native',
+        '_dd.native_view_tracking': true
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })

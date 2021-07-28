@@ -17,7 +17,8 @@ export class DdSdkReactNativeConfiguration {
     public sampleRate: number = 100.0;
     public site: string = "US"
     public verbosity: NativeSdkVerbosity|undefined = undefined
-
+    public nativeViewTracking: boolean = false
+    
     public additionalConfig: {[k: string]: any} = {};
 
     constructor(
