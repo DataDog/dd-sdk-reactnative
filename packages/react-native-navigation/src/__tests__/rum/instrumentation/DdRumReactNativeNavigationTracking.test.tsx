@@ -6,11 +6,11 @@
 
 import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
-import { DdRum } from '../../../index';
+import { DdRum } from '@datadog/mobile-react-native';
 import DdRumReactNativeNavigationTracking from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 import { Navigation } from 'react-native-navigation';
 
-jest.mock('../../../foundation', () => {
+jest.mock('@datadog/mobile-react-native', () => {
     return {
         DdRum: {
             startView: jest.fn().mockImplementation(() => { }),

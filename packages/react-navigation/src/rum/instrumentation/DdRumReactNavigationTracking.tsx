@@ -5,7 +5,7 @@
  */
 
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
-import { DdRum } from '../../foundation';
+import { DdRum } from '@datadog/mobile-react-native';
 import { AppState, AppStateStatus } from 'react-native';
 
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null

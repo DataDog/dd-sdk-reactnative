@@ -1,4 +1,6 @@
 RELEASE_TEST_APP_NAME = ReleaseTestApp
+REACT_NATIVE_VERSION := $(shell node --eval="require('./example/package.json').dependencies['react-native']" -p)
+CORE_PACKAGE_VERSION := $(shell node --eval="require('./packages/core/package.json').version" -p)
 
 define ReleaseTestAppPodfile
 require_relative '../node_modules/react-native/scripts/react_native_pods'\n
@@ -21,11 +23,11 @@ endef
 export ReleaseTestAppPodfile
 
 define SDKUsageJavascript
-import { DdSdkConfiguration, DdSdk, DdLogs, DdRum } from 'dd-sdk-reactnative';\n
-const config = new DdSdkConfiguration("token", "env", "appID");\n
-DdSdk.initialize(config).then(() => {\n
+import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdLogs, DdRum } from '@datadog/mobile-react-native';\n
+const config = new DdSdkReactNativeConfiguration("token", "env", "appID");\n
+DdSdkReactNative.initialize(config).then(() => {\n
   console.log("DD running...");\n
-  DdRum.startView('first', 'App', new Date().getTime(), {});\n
+  DdRum.startView('first', 'App', Date.now(), {});\n
   DdLogs.info('This is a log sent from react-native', {\n
     foo: 42,\n
     bar: 'xyz',\n
@@ -35,10 +37,9 @@ endef
 export SDKUsageJavascript
 
 test-for-release:
-	npm install && npm pack
-	npx react-native init ${RELEASE_TEST_APP_NAME}
-	# dd-sdk-reactnative-0.1.0.tgz is hardcoded for now, ideally we should read the version from package.json
-	cd ${RELEASE_TEST_APP_NAME} && npm install --save ../dd-sdk-reactnative-0.1.0.tgz
+	yarn install && yarn workspace @datadog/mobile-react-native pack
+	npx react-native init ${RELEASE_TEST_APP_NAME} --version ${REACT_NATIVE_VERSION}
+	cd ${RELEASE_TEST_APP_NAME} && npm install --save ../packages/core/datadog-mobile-react-native-v${CORE_PACKAGE_VERSION}.tgz
 	# write to Podfile
 	echo $$ReleaseTestAppPodfile > ${RELEASE_TEST_APP_NAME}/ios/Podfile
 	# append to App.js

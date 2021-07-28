@@ -5,7 +5,7 @@ import { name as appName } from './app.json';
 import { navigation as navigationLib } from './app.json';
 import { initializeDatadog } from './src/ddUtils';
 import { getTrackingConsent } from './src/utils';
-import { TrackingConsent } from 'dd-sdk-reactnative';
+import { TrackingConsent } from '@datadog/mobile-react-native';
 import { Navigation } from 'react-native-navigation';
 
 

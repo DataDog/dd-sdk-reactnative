@@ -657,6 +657,15 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@datadog/mobile-react-native-navigation@file:../packages/react-native-navigation":
+  version "1.0.0-beta4"
+
+"@datadog/mobile-react-navigation@file:../packages/react-navigation":
+  version "1.0.0-beta4"
+
+"@datadog/mobile-react-native@file:../packages/core":
+  version "1.0.0-beta4"
+
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
   resolved "https://registry.npmjs.org/@egjs/hammerjs/-/hammerjs-2.0.17.tgz"
@@ -1681,9 +1690,6 @@ dayjs@^1.8.15:
   version "1.10.4"
   resolved "https://registry.npmjs.org/dayjs/-/dayjs-1.10.4.tgz"
   integrity sha512-RI/Hh4kqRc1UKLOAf/T5zdMMX5DQIlDxwUe3wSyMMnEbGunnpENCdbUgM+dW7kXidZqCttBrmw7BhN4TMddkCw==
-
-"dd-sdk-reactnative@file:..":
-  version "1.0.0-beta1"
 
 debug@2.6.9, debug@^2.2.0, debug@^2.3.3:
   version "2.6.9"

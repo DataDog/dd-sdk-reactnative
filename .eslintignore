@@ -2,5 +2,5 @@ node_modules
 example
 dist
 lib
-src/types.tsx
-src/__tests__
+packages/**/src/types.tsx
+packages/**/src/__tests__

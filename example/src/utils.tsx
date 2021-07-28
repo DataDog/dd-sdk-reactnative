@@ -1,4 +1,4 @@
-import { TrackingConsent } from "dd-sdk-reactnative"
+import { TrackingConsent } from "@datadog/mobile-react-native"
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const TRACKING_CONSENT_KEY = 'tracking_consent'

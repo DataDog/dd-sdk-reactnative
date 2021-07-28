@@ -12,13 +12,13 @@ Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the re
 To install with NPM, run:
 
 ```sh
-npm install dd-sdk-reactnative
+npm install @datadog/mobile-react-native
 ```
 
 To install with Yarn, run:
 
 ```sh
-yarn add dd-sdk-reactnative
+yarn add @datadog/mobile-react-native
 ```
 
 **Minimum React Native version**: SDK supports React Native version 0.63.4 or higher. Compatibility with older versions is not guaranteed out of the box.
@@ -31,12 +31,12 @@ yarn add dd-sdk-reactnative
 
 ![image][2]
 
-To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `dd-sdk-reactnative` library, because they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
+To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, because they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
 
 ### Initialize the library with application context
 
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from 'dd-sdk-reactnative';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
 
 const config = new DdSdkReactNativeConfiguration(
@@ -63,11 +63,27 @@ await DdSdkReactNative.initialize(config)
 
 **Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package (minimum supported version is `react-navigation/native@5.6.0`). If you use another package to handle navigation in your application, use the manual instrumentation method described below.
 
+### Setup
+
+To install with NPM, run:
+
+```sh
+npm install @datadog/mobile-react-navigation
+```
+
+To install with Yarn, run:
+
+```sh
+yarn add @datadog/mobile-react-navigation
+```
+
+### Usage
+
 To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
 
 ```js
 import * as React from 'react';
-import { DdRumReactNavigationTracking } from 'dd-sdk-reactnative';
+import { DdRumReactNavigationTracking } from '@datadog/mobile-react-navigation';
 
 function App() {
   const navigationRef = React.useRef(null);
@@ -118,7 +134,7 @@ DdSdkReactNative.setAttributes({
 If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
 
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from 'dd-sdk-reactnative';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
 
 // Initialize the SDK
 const config = new DdSdkReactNativeConfiguration(
