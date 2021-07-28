@@ -7,8 +7,9 @@
 /**
  * Enum specifying possible consent options for DD SDK.
  */
-export enum TrackingConsent {
-    PENDING = "pending",
-    GRANTED = "granted",
-    NOT_GRANTED = "not_granted"
+export enum NativeSdkVerbosity {
+    DEBUG = "debug",
+    INFO = "info",
+    WARN = "warn",
+    ERROR = "error"
 }
