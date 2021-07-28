@@ -5,6 +5,7 @@
  */
 
 import { TrackingConsent } from './TrackingConsent'
+import type { NativeSdkVerbosity } from './NativeSdkVerbosity'
 
 /**
  * The SDK configuration class.
@@ -15,6 +16,7 @@ export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
     public site: string = "US"
+    public verbosity: NativeSdkVerbosity|undefined = undefined
 
     public additionalConfig: {[k: string]: any} = {};
 
