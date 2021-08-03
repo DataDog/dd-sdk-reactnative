@@ -61,9 +61,9 @@ await DdSdkReactNative.initialize(config)
 
 ### User interactions tracking
 
-If user interactions tracking is enabled as in the code example above, SDK will traverse up components hierarchy starting from the component which received a tap, looking for `dd-action-name` property. Once found, it will be used as a name for the action reported.
+If user interactions tracking is enabled as in the code example above, the SDK traverses up the hierarchy of components starting from the component that received a tap, looking for `dd-action-name` property. Once found, it is used as a name for the action reported.
 
-Alternatively you can use `accessibilityLabel` element property to give tap action the name, otherwise element type will be reported. You can check our sample app for the usage examples.
+Alternatively, you can use the `accessibilityLabel` element property to give the tap action a name; otherwise, the element type is reported. You can check the sample app for usage examples.
 
 ## Track view navigation
 
