@@ -43,7 +43,7 @@ const config = new DdSdkReactNativeConfiguration(
     "<CLIENT_TOKEN>", 
     "<ENVIRONMENT_NAME>", 
     "<RUM_APPLICATION_ID>",
-    true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
+    true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
 )
@@ -58,6 +58,12 @@ await DdSdkReactNative.initialize(config)
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
+### User interactions tracking
+
+If user interactions tracking is enabled as in the code example above, the SDK traverses up the hierarchy of components starting from the component that received a tap, looking for `dd-action-name` property. Once found, it is used as a name for the action reported.
+
+Alternatively, you can use the `accessibilityLabel` element property to give the tap action a name; otherwise, the element type is reported. You can check the sample app for usage examples.
 
 ## Track view navigation
 

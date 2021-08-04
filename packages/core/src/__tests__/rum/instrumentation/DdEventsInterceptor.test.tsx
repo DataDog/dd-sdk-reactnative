@@ -29,6 +29,55 @@ beforeEach(() => {
     DdRum.addAction.mockReset()
 })
 
+it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name } ', async () => {
+    // GIVEN
+    const fakeAccessibilityLabel = "target_name"
+    const fakeDdActionLabel = "DdActionLabel"
+    const fakeArguments = {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: fakeAccessibilityLabel,
+                "dd-action-name": fakeDdActionLabel
+            }
+        }
+    }
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1)
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf())
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel)
+})
+
+it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name on a parent node} ', async () => {
+    // GIVEN
+    const fakeAccessibilityLabel = "target_name"
+    const fakeDdActionLabel = "DdActionLabel"
+    const fakeArguments = {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: fakeAccessibilityLabel
+            },
+            return: {
+                memoizedProps: {
+                    accessibilityLabel: fakeAccessibilityLabel,
+                    "dd-action-name": fakeDdActionLabel
+                }
+            }
+        }
+    }
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1)
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf())
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel)
+})
+
 it('M send a RUM Action event W interceptOnPress { arguments with accessibilityLabel } ', async () => {
     // GIVEN
     const fakeAccessibilityLabel = "target_name"
@@ -61,10 +110,24 @@ it('M send only one RUM Action event W interceptOnPress { called multiple times 
 })
 
 
-it('M send a RUM Action event W interceptOnPress { no accessibilityLabel arguments } ', async () => {
+it('M send a RUM Action event W interceptOnPress { no accessibilityLabel arguments, elementType is string } ', async () => {
     // GIVEN
     const fakeElementType = "element_type"
     const fakeArguments = { _targetInst: { elementType: fakeElementType } }
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments)
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1)
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf())
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeElementType)
+})
+
+it('M send a RUM Action event W interceptOnPress { no accessibilityLabel arguments, elementType is object with name property } ', async () => {
+    // GIVEN
+    const fakeElementType = "element_type"
+    const fakeArguments = { _targetInst: { elementType: { name: fakeElementType } } }
 
     // WHEN
     testedEventsInterceptor.interceptOnPress(fakeArguments)
@@ -145,7 +208,7 @@ it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => 
 
 it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', async () => {
     // WHEN
-    testedEventsInterceptor.interceptOnPress({'a':'b'})
+    testedEventsInterceptor.interceptOnPress({ 'a': 'b' })
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)

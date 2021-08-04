@@ -147,7 +147,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <Text style={{ marginTop: 20 }}>{this.state.resultButtonAction}</Text>
         <Button
           title="Click me"
-          accessibilityLabel="click_me_button"
+          dd-action-name="click_me_button"
           onPress={() => {
             this.fetchUser().then((json) => {
               const msg = "Fetched User:" + json.username
@@ -162,7 +162,8 @@ export default class MainScreen extends Component<any, MainScreenState> {
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableOpacityAction}</Text>
         <TouchableOpacity
           accessibilityLabel="click_me_touchableopacity"
-          style={styles.button} onPress={() => {
+          style={styles.button}
+          onPress={() => {
             this.xhrRestaurant().then((json) => {
               const msg = "Fetched restaurant:" + json.name
               this.setState({ resultTouchableOpacityAction: msg } as MainScreenState);
