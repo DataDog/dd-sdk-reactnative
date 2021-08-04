@@ -70,7 +70,7 @@ it('M send a RUM ViewEvent W startTrackingViews', async () => {
     expect(DdRum.startView.mock.calls.length).toBe(1);
     expect(DdRum.startView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
 })
 
 it('M send a related RUM ViewEvent W switching screens { navigationContainer listener attached }', async () => {
@@ -88,7 +88,7 @@ it('M send a related RUM ViewEvent W switching screens { navigationContainer lis
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
 })
 
 it('M only register once W startTrackingViews{ multiple times }', async () => {
@@ -107,7 +107,7 @@ it('M only register once W startTrackingViews{ multiple times }', async () => {
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
 })
 
 it('M do nothing W switching screens { navigationContainer listener detached }', async () => {
@@ -156,7 +156,7 @@ it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation c
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
 })
 
 it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first is detached }', async () => {
@@ -185,10 +185,10 @@ it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation c
     expect(DdRum.startView.mock.calls.length).toBe(4);
     expect(DdRum.startView.mock.calls[2][0]).toBe(navigationRef2StartRoute.key);
     expect(DdRum.startView.mock.calls[2][1]).toBe(navigationRef2StartRoute.name);
-    expect(DdRum.startView.mock.calls[2][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[2][2]).toBeUndefined();
     expect(DdRum.startView.mock.calls[3][0]).toBe(navigationRef2.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[3][1]).toBe(navigationRef2.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[3][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[3][2]).toBeUndefined();
 })
 
 it('M send a RUM ViewEvent for each W switching screens { multiple navigation containers }', async () => {
@@ -205,7 +205,7 @@ it('M send a RUM ViewEvent for each W switching screens { multiple navigation co
     expect(DdRum.startView.mock.calls.length).toBe(1);
     expect(DdRum.startView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
 })
 
 it('M register AppState listener only once', async () => {
@@ -237,7 +237,7 @@ it('M stop active view W app goes into background', async () => {
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
     expect(DdRum.stopView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
-    expect(DdRum.stopView.mock.calls[0][2]).toStrictEqual({});
+    expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
 
 })
 
@@ -257,7 +257,7 @@ it('M start last view W app goes into foreground', async () => {
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
 })
 
 it('M not stop view W no navigator attached', async () => {
@@ -291,10 +291,10 @@ it('M send a RUM ViewEvent for each W switching screens { nested navigation cont
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[0][0]).toBe(initialRoute?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(initialRoute?.name);
-    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef3.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef3.current?.getCurrentRoute()?.name);
-    expect(DdRum.startView.mock.calls[1][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
 })
 
 

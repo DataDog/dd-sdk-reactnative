@@ -32,7 +32,7 @@ export class DdEventsInterceptor implements EventsInterceptor {
     private handleTargetEvent(targetNode: any | null) {
         if (targetNode) {
             const resolvedTargetName = this.resolveTargetName(targetNode);
-            DdRum.addAction(RumActionType.TAP.valueOf(), resolvedTargetName, Date.now(), {})
+            DdRum.addAction(RumActionType.TAP.valueOf(), resolvedTargetName)
         }
     }
 

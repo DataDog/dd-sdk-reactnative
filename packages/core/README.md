@@ -63,9 +63,9 @@ Because React Native offers a wide range of libraries to create screen navigatio
 import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
 
 
-// Start a view with a unique view identifier, a custom view url, and an object to attach additional attribtutes to the view
+// Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
 DdRum.startView('<view-key>', '/view/url', Date.now(), { 'custom.foo': "something" });
-// Stops a previously started view with the same unique view identifier, and an object to attach additional attribtutes to the view
+// Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
 DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
 ```
 
@@ -114,27 +114,27 @@ In addition to manually creating Views (as mentioned above), you can also create
 import { DdRum } from '@datadog/mobile-react-native';
 
 // Track RUM Views manually
-DdRum.startView('<view-key>', 'View Url', Date.now(), {});
+DdRum.startView('<view-key>', 'View Url', {}, Date.now());
 //…
-DdRum.stopView('<view-key>', Date.now(), { 'custom': 42 });
+DdRum.stopView('<view-key>', { 'custom': 42 }, Date.now());
 
 // Track RUM Actions manually
-DdRum.addAction('TAP', 'button name', Date.now(), {});
+DdRum.addAction('TAP', 'button name', {}, Date.now());
 // or in case of continuous action
-DdRum.startAction('TAP', 'button name', Date.now(), {});
+DdRum.startAction('TAP', 'button name', {}, Date.now());
 // to stop action above
-DdRum.stopAction(Date.now(), {});
+DdRum.stopAction({}, Date.now());
 
 // Add custom timings
 DdRum.addTiming('<timing-name>');
 
 // Track RUM Errors manually
-DdRum.addError('<message>', 'source', '<stacktrace>', Date.now(), {});
+DdRum.addError('<message>', 'source', '<stacktrace>', {}, Date.now());
 
 // Track RUM Resource manually
-DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', Date.now(), {} );
+DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', {}, Date.now());
 //…
-DdRum.stopResource('<res-key>', 200, 'xhr', Date.now(), {});
+DdRum.stopResource('<res-key>', 200, 'xhr', {}, Date.now());
 ```
 
 ### Logs
@@ -144,7 +144,7 @@ You can send custom log messages from anywhere in your application using the fol
 ```js
 import { DdLogs } from '@datadog/mobile-react-native';
 
-// Send logs (use the debug, info, warn or error methods) with object to attach additional attribtutes to the log
+// Send logs (use the debug, info, warn or error methods) with object to attach additional attributes to the log
 DdLogs.debug("Lorem ipsum dolor sit amet…", { 'custom': 42 });
 DdLogs.info("Lorem ipsum dolor sit amet…", { 'custom': 42 });
 DdLogs.warn("Lorem ipsum dolor sit amet…", { 'custom': 42 });
@@ -158,13 +158,13 @@ You can use spans to trace local computation performance, using the following co
 ```js
 import { DdTrace } from '@datadog/mobile-react-native';
 
-// Start a span with an object to attach additional attribtutes to the span
-const spanId = await DdTrace.startSpan("<operation-name>", Date.now(), { 'custom.x': 42 });
+// Start a span with an object to attach additional attributes to the span
+const spanId = await DdTrace.startSpan("<operation-name>", { 'custom.x': 42 }, Date.now());
 
 // perform some computation...
 
 // Stop the previously started span
-DdTrace.finishSpan(spanId, Date.now(), { 'custom.y': 23 });
+DdTrace.finishSpan(spanId, { 'custom.y': 23 }, Date.now());
 ```
 
 ## Resource timings

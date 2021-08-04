@@ -52,8 +52,7 @@ export class DdRumErrorTracking {
         DdRum.addError(
             String(error), 
             TYPE_SOURCE, 
-            DdRumErrorTracking.getErrorStackTrace(error), 
-            Date.now(), 
+            DdRumErrorTracking.getErrorStackTrace(error),
             { "_dd.error.is_crash": isFatal, "_dd.error.raw": error }
         ).then(() => {
             DdRumErrorTracking.defaultErrorHandler(error, isFatal);
@@ -81,9 +80,7 @@ export class DdRumErrorTracking {
         DdRum.addError(
             message, 
             TYPE_CONSOLE,
-            stack, 
-            Date.now(), 
-            {}
+            stack
         ).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
         });

@@ -59,28 +59,28 @@ export type DdLogsType = {
    * @param message: The message to send.
    * @param context: The additional context to send.
    */
-  debug(message: string, context: object): Promise<void>;
+  debug(message: string, context?: object): Promise<void>;
 
   /**
    * Send a log with level info.
    * @param message: The message to send.
    * @param context: The additional context to send.
    */
-  info(message: string, context: object): Promise<void>;
+  info(message: string, context?: object): Promise<void>;
 
   /**
    * Send a log with level warn.
    * @param message: The message to send.
    * @param context: The additional context to send.
    */
-  warn(message: string, context: object): Promise<void>;
+  warn(message: string, context?: object): Promise<void>;
 
   /**
    * Send a log with level error.
    * @param message: The message to send.
    * @param context: The additional context to send.
    */
-  error(message: string, context: object): Promise<void>;
+  error(message: string, context?: object): Promise<void>;
 
 };
 
@@ -91,18 +91,18 @@ export type DdTraceType = {
   /**
    * Start a span, and returns a unique identifier for the span.
    * @param operation: The operation name of the span.
-   * @param timestampMs: The timestamp when the operation started (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the operation started (in milliseconds).
    */
-  startSpan(operation: string, timestampMs: number, context: object): Promise<string>;
+  startSpan(operation: string, context?: object, timestampMs?: number): Promise<string>;
 
   /**
    * Finish a started span.
    * @param spanId: The unique identifier of the span.
-   * @param timestampMs: The timestamp when the operation stopped (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the operation stopped (in milliseconds).
    */
-  finishSpan(spanId: string, timestampMs: number, context: object): Promise<void>;
+  finishSpan(spanId: string, context?: object, timestampMs?: number): Promise<void>;
 
 };
 
@@ -114,73 +114,73 @@ export type DdRumType = {
    * Start tracking a RUM View.
    * @param key: The view unique key identifier.
    * @param name: The view name.
-   * @param timestampMs: The timestamp when the view started (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the view started (in milliseconds).
    */
-  startView(key: string, name: string, timestampMs: number, context: object): Promise<void>;
+  startView(key: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Stop tracking a RUM View.
    * @param key: The view unique key identifier.
-   * @param timestampMs: The timestamp when the view stopped (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the view stopped (in milliseconds).
    */
-  stopView(key: string, timestampMs: number, context: object): Promise<void>;
+  stopView(key: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Start tracking a RUM Action.
    * @param type: The action type (tap, scroll, swipe, click, custom).
    * @param name: The action name.
-   * @param timestampMs: The timestamp when the action started (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the action started (in milliseconds).
    */
-  startAction(type: string, name: string, timestampMs: number, context: object): Promise<void>;
+  startAction(type: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Stop tracking the ongoing RUM Action.
-   * @param timestampMs: The timestamp when the action stopped (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the action stopped (in milliseconds).
    */
-  stopAction(timestampMs: number, context: object): Promise<void>;
+  stopAction(context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Add a RUM Action.
    * @param type: The action type (tap, scroll, swipe, click, custom).
    * @param name: The action name.
-   * @param timestampMs: The timestamp when the action occurred (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the action occurred (in milliseconds).
    */
-  addAction(type: string, name: string, timestampMs: number, context: object): Promise<void>;
+  addAction(type: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Start tracking a RUM Resource.
    * @param key: The resource unique key identifier.
    * @param method: The resource method (GET, POST, …).
    * @param url: The resource url.
-   * @param timestampMs: The timestamp when the resource started (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the resource started (in milliseconds).
    */
-  startResource(key: string, method: string, url: string, timestampMs: number, context: object): Promise<void>;
+  startResource(key: string, method: string, url: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Stop tracking a RUM Resource.
    * @param key: The resource unique key identifier.
    * @param statusCode: The resource status code.
    * @param kind: The resource's kind (xhr, document, image, css, font, …).
-   * @param timestampMs: The timestamp when the resource stopped (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the resource stopped (in milliseconds).
    */
-  stopResource(key: string, statusCode: number, kind: string, timestampMs: number, context: object): Promise<void>;
+  stopResource(key: string, statusCode: number, kind: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Add a RUM Error.
    * @param message: The error message.
    * @param source: The error source (network, source, console, logger, …).
    * @param stacktrace: The error stacktrace.
-   * @param timestampMs: The timestamp when the error occurred (in milliseconds).
    * @param context: The additional context to send.
+   * @param timestampMs: The timestamp when the error occurred (in milliseconds).
    */
-  addError(message: string, source: string, stacktrace: string, timestampMs: number, context: object): Promise<void>;
+  addError(message: string, source: string, stacktrace: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Adds a specific timing in the active View. The timing duration will be computed as the difference between the time the View was started and the time this function was called.

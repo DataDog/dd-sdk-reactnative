@@ -154,38 +154,38 @@ const config = new DdSdkReactNativeConfiguration(
 DdSdkReactNative.initialize(config);
 
 // Send logs (use the debug, info, warn or error methods)
-DdLogs.debug("Lorem ipsum dolor sit amet…", 0, {});
-DdLogs.info("Lorem ipsum dolor sit amet…", 0, {});
-DdLogs.warn("Lorem ipsum dolor sit amet…", 0, {});
-DdLogs.error("Lorem ipsum dolor sit amet…", 0, {});
+DdLogs.debug("Lorem ipsum dolor sit amet…", {});
+DdLogs.info("Lorem ipsum dolor sit amet…", {});
+DdLogs.warn("Lorem ipsum dolor sit amet…", {});
+DdLogs.error("Lorem ipsum dolor sit amet…", {});
 
 // Track RUM Views manually
-DdRum.startView('<view-key>', 'View Url', Date.now(), {});
+DdRum.startView('<view-key>', 'View Url', {}, Date.now());
 //…
-DdRum.stopView('<view-key>', Date.now(), { 'custom': 42 });
+DdRum.stopView('<view-key>', { 'custom': 42 }, Date.now());
 
 // Track RUM Actions manually
-DdRum.addAction('TAP', 'button name', Date.now(), {});
+DdRum.addAction('TAP', 'button name', {}, Date.now());
 // or in case of continuous action
-DdRum.startAction('TAP', 'button name', Date.now(), {});
+DdRum.startAction('TAP', 'button name', {}, Date.now());
 // to stop action above
-DdRum.stopAction(Date.now(), {});
+DdRum.stopAction({}, Date.now());
 
 // Add custom timings
 DdRum.addTiming('<timing-name>');
 
 // Track RUM Errors manually
-DdRum.addError('<message>', 'source', '<stacktrace>', Date.now(), {});
+DdRum.addError('<message>', 'source', '<stacktrace>', {}, Date.now());
 
 // Track RUM Resource manually
-DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', Date.now(), {} );
+DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', {}, Date.now());
 //…
-DdRum.stopResource('<res-key>', 200, 'xhr', Date.now(), {});
+DdRum.stopResource('<res-key>', 200, 'xhr', {}, Date.now());
 
 // Send spans manually
-const spanId = await DdTrace.startSpan("foo", Date.now(), { 'custom': 42 });
+const spanId = await DdTrace.startSpan("foo", { 'custom': 42 }, Date.now());
 //...
-DdTrace.finishSpan(spanId, Date.now(), { 'custom': 21 });
+DdTrace.finishSpan(spanId, { 'custom': 21 }, Date.now());
 ```
 
 ## Resource timings

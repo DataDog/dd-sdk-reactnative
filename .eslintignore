@@ -3,4 +3,7 @@ example
 dist
 lib
 packages/**/src/types.tsx
+// TODO remove that line once bridges updated
+// with proper order of context and timestamp
+packages/**/src/foundation.tsx
 packages/**/src/__tests__

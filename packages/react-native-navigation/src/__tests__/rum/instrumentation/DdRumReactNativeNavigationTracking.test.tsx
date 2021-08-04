@@ -95,7 +95,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
     expect(DdRum.startView.mock.calls.length).toBe(1);
     expect(DdRum.startView.mock.calls[0][0]).toBe(componentId);
     expect(DdRum.startView.mock.calls[0][1]).toBe(componentName);
-    expect(DdRum.startView.mock.calls[0][3]).toStrictEqual({});
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
 })
 
 
@@ -114,5 +114,5 @@ it('M send a RUM ViewEvent W startTracking() componentDidDisappear', async () =>
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
     expect(DdRum.stopView.mock.calls[0][0]).toBe(componentId);
-    expect(DdRum.stopView.mock.calls[0][2]).toStrictEqual({});
+    expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
 })
