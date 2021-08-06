@@ -6,6 +6,7 @@
 
 import { Platform } from 'react-native';
 import { DdRum } from '../../foundation'
+import Timer from '../../Timer';
 import type { DdRumXhr } from './DdRumXhr'
 import { generateTraceId } from './TraceIdentifier';
 
@@ -14,7 +15,7 @@ export const PARENT_ID_HEADER_KEY = "x-datadog-parent-id"
 export const ORIGIN_HEADER_KEY = "x-datadog-origin"
 export const ORIGIN_RUM = "rum"
 
-const MISSING_TIME = -1
+const RESPONSE_START_LABEL = "response_start"
 
 interface Timing {
   /**
@@ -38,11 +39,7 @@ interface ResourceTimings {
 }
 
 function createTimings(startTime: number,
-  responseStartTime: number, responseEndTime: number): ResourceTimings | null {
-
-  if (startTime === MISSING_TIME || responseStartTime === MISSING_TIME) {
-    return null
-  }
+  responseStartTime: number, responseEndTime: number): ResourceTimings {
 
   const firstByte = formatTiming(startTime, startTime, responseStartTime)
   const download = formatTiming(startTime, responseStartTime, responseEndTime)
@@ -131,10 +128,9 @@ export class DdRumResourceTracking {
       const traceId = generateTraceId()
       this._datadog_xhr = {
         method,
-        startTime: MISSING_TIME,
-        responseStartTime: MISSING_TIME,
         url: url,
         reported: false,
+        timer: new Timer(),
         spanId: spanId,
         traceId: traceId
       }
@@ -149,7 +145,7 @@ export class DdRumResourceTracking {
 
       if (this._datadog_xhr) {
         // keep track of start time
-        this._datadog_xhr.startTime = Date.now()
+        this._datadog_xhr.timer.start()
         this.setRequestHeader(TRACE_ID_HEADER_KEY, this._datadog_xhr.traceId)
         this.setRequestHeader(PARENT_ID_HEADER_KEY, this._datadog_xhr.spanId)
         this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM)
@@ -171,9 +167,8 @@ export class DdRumResourceTracking {
           DdRumResourceTracking.reportXhr(xhrProxy);
           xhrProxy._datadog_xhr.reported = true;
         }
-      } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED
-        && xhrProxy._datadog_xhr.responseStartTime === MISSING_TIME) {
-        xhrProxy._datadog_xhr.responseStartTime = Date.now()
+      } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
+        xhrProxy._datadog_xhr.timer.recordTick(RESPONSE_START_LABEL)
       }
 
       if (originalOnreadystatechange) {
@@ -187,11 +182,9 @@ export class DdRumResourceTracking {
 
     const context = xhrProxy._datadog_xhr
 
-    const key = context.startTime + "/"
-      + context.method + "/"
-      + context.startTime
+    const key = context.timer.startTime + "/" + context.method
 
-    const responseEndTime = Date.now()
+    context.timer.stop()
 
     DdRum.startResource(
       key,
@@ -201,16 +194,21 @@ export class DdRumResourceTracking {
         "_dd.span_id": context.spanId,
         "_dd.trace_id": context.traceId
       },
-      context.startTime
+      context.timer.startTime
     ).then(() => {
       DdRum.stopResource(
         key,
         xhrProxy.status,
         "xhr",
         {
-          "_dd.resource_timings": createTimings(context.startTime, context.responseStartTime, responseEndTime),
+          "_dd.resource_timings": context.timer.hasTickFor(RESPONSE_START_LABEL) ?
+            createTimings(
+              context.timer.startTime,
+              context.timer.timeAt(RESPONSE_START_LABEL),
+              context.timer.stopTime
+            ) : null
         },
-        responseEndTime);
+        context.timer.stopTime);
     })
   }
 
