@@ -27,7 +27,7 @@ import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdLogs, DdRum } from '
 const config = new DdSdkReactNativeConfiguration("token", "env", "appID");\n
 DdSdkReactNative.initialize(config).then(() => {\n
   console.log("DD running...");\n
-  DdRum.startView('first', 'App', Date.now(), {});\n
+  DdRum.startView('first', 'App', {}, Date.now());\n
   DdLogs.info('This is a log sent from react-native', {\n
     foo: 42,\n
     bar: 'xyz',\n

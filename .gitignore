@@ -69,3 +69,6 @@ lib/
 
 #Lock files
 package-lock.json
+
+# Release artifacts
+packages/**/*.tgz

@@ -20,6 +20,7 @@ package/lib/typescript/core
 package/lib/typescript/core/src
 package/lib/typescript/core/src/DdSdkReactNative.d.ts
 package/lib/typescript/core/src/DdSdkReactNativeConfiguration.d.ts
+package/lib/typescript/core/src/NativeSdkVerbosity.d.ts
 package/lib/typescript/core/src/TrackingConsent.d.ts
 package/lib/typescript/core/src/foundation.d.ts
 package/lib/typescript/core/src/index.d.ts
