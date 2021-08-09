@@ -197,20 +197,20 @@ export class DdRumResourceTracking {
       key,
       context.method,
       context.url,
-      context.startTime,
       {
         "_dd.span_id": context.spanId,
         "_dd.trace_id": context.traceId
-      }
+      },
+      context.startTime
     ).then(() => {
       DdRum.stopResource(
         key,
         xhrProxy.status,
         "xhr",
-        responseEndTime,
         {
           "_dd.resource_timings": createTimings(context.startTime, context.responseStartTime, responseEndTime),
-        });
+        },
+        responseEndTime);
     })
   }
 

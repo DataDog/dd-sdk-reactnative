@@ -15,14 +15,14 @@ jest.mock('../../../foundation', () => {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             startResource: jest.fn().mockImplementation(() => {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     resolve()
                 })
             }),
 
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             stopResource: jest.fn().mockImplementation(() => {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     resolve()
                 })
             })
@@ -286,7 +286,7 @@ it('M add the span id as resource attributes W startTracking() + XHR.open() + XH
     await flushPromises();
 
     // THEN
-    const spanId = DdRum.startResource.mock.calls[0][4]["_dd.span_id"];
+    const spanId = DdRum.startResource.mock.calls[0][3]["_dd.span_id"];
     expect(spanId).toBeDefined();
     expect(spanId).toMatch(/[1-9].+/);
 })
@@ -306,7 +306,7 @@ it('M add the trace id as resource attributes W startTracking() + XHR.open() + X
     await flushPromises();
 
     // THEN
-    const traceId = DdRum.startResource.mock.calls[0][4]["_dd.trace_id"];
+    const traceId = DdRum.startResource.mock.calls[0][3]["_dd.trace_id"];
     expect(traceId).toBeDefined();
     expect(traceId).toMatch(/[1-9].+/);
 })
@@ -326,8 +326,8 @@ it('M generate different ids for spanId and traceId for resource attributes', as
     await flushPromises();
 
     // THEN
-    const traceId = DdRum.startResource.mock.calls[0][4]["_dd.trace_id"];
-    const spanId = DdRum.startResource.mock.calls[0][4]["_dd.span_id"];
+    const traceId = DdRum.startResource.mock.calls[0][3]["_dd.trace_id"];
+    const spanId = DdRum.startResource.mock.calls[0][3]["_dd.span_id"];
     expect(traceId !== spanId).toBeTruthy();
 })
 
@@ -351,7 +351,7 @@ describe.each([['android'], ['ios']])('timings test', (platform) => {
         await flushPromises();
 
         // THEN
-        const timings = DdRum.stopResource.mock.calls[0][4]["_dd.resource_timings"];
+        const timings = DdRum.stopResource.mock.calls[0][3]["_dd.resource_timings"];
 
         if (Platform.OS === 'ios') {
             expect(timings['firstByte']['startTime']).toBeGreaterThan(0)
@@ -391,7 +391,7 @@ describe.each([['android'], ['ios']])('timings test', (platform) => {
         await flushPromises();
 
         // THEN
-        const timings = DdRum.stopResource.mock.calls[0][4]["_dd.resource_timings"];
+        const timings = DdRum.stopResource.mock.calls[0][3]["_dd.resource_timings"];
 
         if (Platform.OS === 'ios') {
             expect(timings['firstByte']['startTime']).toBeGreaterThan(0)
@@ -427,7 +427,7 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
     await flushPromises();
 
     // THEN
-    const attributes = DdRum.stopResource.mock.calls[0][4];
+    const attributes = DdRum.stopResource.mock.calls[0][3];
 
     expect(attributes['_dd.resource_timings']).toBeNull()
 })

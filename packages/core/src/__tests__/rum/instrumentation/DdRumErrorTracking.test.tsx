@@ -14,7 +14,7 @@ jest.mock('../../../foundation', () => {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             addError: jest.fn().mockImplementation(() => {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     resolve()
                 })
             })
@@ -69,7 +69,7 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("");
-    const attributes = DdRum.addError.mock.calls[0][4];
+    const attributes = DdRum.addError.mock.calls[0][3];
     expect(attributes["_dd.error.raw"]).toStrictEqual(error);
     expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -96,7 +96,7 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("at ./path/to/file.js:1038:57");
-    const attributes = DdRum.addError.mock.calls[0][4];
+    const attributes = DdRum.addError.mock.calls[0][3];
     expect(attributes["_dd.error.raw"]).toStrictEqual(error);
     expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -121,7 +121,7 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
     expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1");
-    const attributes = DdRum.addError.mock.calls[0][4];
+    const attributes = DdRum.addError.mock.calls[0][3];
     expect(attributes["_dd.error.raw"]).toStrictEqual(error);
     expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -147,7 +147,7 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
     expect(DdRum.addError.mock.calls[0][0]).toBe(message + " " + JSON.stringify(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("at ./path/to/file.js:1038:57");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined()
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 })
 
@@ -169,7 +169,7 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
     expect(DdRum.addError.mock.calls[0][0]).toBe(message + " " + JSON.stringify(error));
     expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined()
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 })
 
@@ -187,6 +187,6 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
     expect(DdRum.addError.mock.calls[0][0]).toBe(message);
     expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
     expect(DdRum.addError.mock.calls[0][2]).toBe("");
-    expect(DdRum.addError.mock.calls[0][4]).toStrictEqual({})
+    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined()
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 })
