@@ -28,8 +28,7 @@ export default class DdRumReactNativeNavigationTracking {
         const original = React.createElement
         DdRumReactNativeNavigationTracking.originalCreateElement = original
         React.createElement = (element: any, props: any, ...children: any): any => {
-            if (
-                props.componentId != undefined 
+            if (props && props.componentId != undefined 
                 && !DdRumReactNativeNavigationTracking.trackedComponentIds.includes(props.componentId)
             ) {
                 const componentId = props.componentId

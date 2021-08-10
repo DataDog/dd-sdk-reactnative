@@ -5,10 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, Button, AppState } from 'react-native';
 import { DdRum } from '@datadog/mobile-react-native';
 import DdRumReactNativeNavigationTracking from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
-import { Navigation } from 'react-native-navigation';
 
 jest.mock('@datadog/mobile-react-native', () => {
     return {
@@ -24,7 +22,7 @@ let mockRegisterComponentListener = jest.fn().mockImplementation(() => { })
 jest.mock('react-native-navigation', () => {
     return {
         Navigation: {
-            events: jest.fn().mockImplementation(() => { 
+            events: jest.fn().mockImplementation(() => {
                 return {
                     registerComponentListener: mockRegisterComponentListener
                 }
@@ -37,12 +35,12 @@ jest.mock('react-native-navigation', () => {
 let originalCreateMethod: Function
 
 beforeEach(() => {
-    
+
     jest.setTimeout(20000);
     DdRum.startView.mockClear();
     DdRum.stopView.mockClear();
     mockRegisterComponentListener.mockClear();
-    
+
     DdRumReactNativeNavigationTracking['trackedComponentIds'] = [];
     DdRumReactNativeNavigationTracking['isTracking'] = false;
     originalCreateMethod = React.createElement
@@ -54,14 +52,36 @@ afterEach(() => {
 
 // Unit tests
 
+it('M not register W props are missing + startTracking()', async () => {
+    // GIVEN
+    DdRumReactNativeNavigationTracking.startTracking();
+
+    // WHEN
+    const testInstance = React.createElement('View', null);
+
+    // THEN
+    expect(mockRegisterComponentListener).toBeCalledTimes(0);
+})
+
+it('M not register W componentId is missing + startTracking()', async () => {
+    // GIVEN
+    DdRumReactNativeNavigationTracking.startTracking();
+
+    // WHEN
+    const testInstance = React.createElement('View', { 'foo': 'bar' });
+
+    // THEN
+    expect(mockRegisterComponentListener).toBeCalledTimes(0);
+})
+
 it('M register only once W startTracking()', async () => {
     // GIVEN
     let componentId = "component42"
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', { 'componentId': componentId});
-    const otherTestInstance = React.createElement('View', { 'componentId': componentId, 'something': 'else'});
+    const testInstance = React.createElement('View', { 'componentId': componentId });
+    const otherTestInstance = React.createElement('View', { 'componentId': componentId, 'something': 'else' });
 
     // THEN
     expect(mockRegisterComponentListener.mock.calls.length).toBe(1);
@@ -74,7 +94,7 @@ it('M restore original createElement method W stopTracking()', async () => {
 
     // WHEN
     DdRumReactNativeNavigationTracking.stopTracking();
-    const testInstance = React.createElement('View', { 'componentId': componentId});
+    const testInstance = React.createElement('View', { 'componentId': componentId });
 
     // THEN
     expect(mockRegisterComponentListener.mock.calls.length).toBe(0);
@@ -86,10 +106,10 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', { 'componentId': componentId});
+    const testInstance = React.createElement('View', { 'componentId': componentId });
     const listener = mockRegisterComponentListener.mock.calls[0][0];
     const componentName = "some-name";
-    listener.componentDidAppear({componentName: componentName});
+    listener.componentDidAppear({ componentName: componentName });
 
     // THEN
     expect(DdRum.startView.mock.calls.length).toBe(1);
@@ -107,7 +127,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidDisappear', async () =>
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', { 'componentId': componentId});
+    const testInstance = React.createElement('View', { 'componentId': componentId });
     const listener = mockRegisterComponentListener.mock.calls[0][0];
     listener.componentDidDisappear();
 
