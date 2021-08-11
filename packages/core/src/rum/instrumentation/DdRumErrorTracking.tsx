@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ErrorHandlerCallback } from 'react-native';
 import { DdRum } from '../../foundation';
 
 
@@ -16,13 +17,15 @@ const TYPE_CONSOLE = "CONSOLE"
 */
 export class DdRumErrorTracking {
 
-    private static isTracking = false
+    private static isTracking = false;
+
+    private static isInDefaultErrorHandler = false;
 
     // eslint-disable-next-line 
-    private static defaultErrorHandler = (_error: any, _isFatal?: boolean) => {}
+    private static defaultErrorHandler: ErrorHandlerCallback = (_error: any, _isFatal?: boolean) => { }
 
     // eslint-disable-next-line 
-    private static defaultConsoleError = (..._params: unknown[]) => {}
+    private static defaultConsoleError = (..._params: unknown[]) => { }
 
     /**
      * Starts tracking errors and sends a RUM Error event every time an error is detected.
@@ -33,12 +36,12 @@ export class DdRumErrorTracking {
             console.log("DdRumErrorTracking already started");
             return
         }
-        
+
         if (ErrorUtils) {
             DdRumErrorTracking.defaultErrorHandler = ErrorUtils.getGlobalHandler();
             DdRumErrorTracking.defaultConsoleError = console.error;
 
-            
+
             ErrorUtils.setGlobalHandler(DdRumErrorTracking.onGlobalError);
             console.error = DdRumErrorTracking.onConsoleError;
 
@@ -48,23 +51,33 @@ export class DdRumErrorTracking {
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static onGlobalError(error: any, isFatal?: boolean): void  {
+    static onGlobalError(error: any, isFatal?: boolean): void {
         DdRum.addError(
-            String(error), 
-            TYPE_SOURCE, 
+            String(error),
+            TYPE_SOURCE,
             DdRumErrorTracking.getErrorStackTrace(error),
             { "_dd.error.is_crash": isFatal, "_dd.error.raw": error }
         ).then(() => {
-            DdRumErrorTracking.defaultErrorHandler(error, isFatal);
+            DdRumErrorTracking.isInDefaultErrorHandler = true;
+            try {
+                DdRumErrorTracking.defaultErrorHandler(error, isFatal);
+            } finally {
+                DdRumErrorTracking.isInDefaultErrorHandler = false;
+            }
         });
     }
 
-    static onConsoleError(...params: unknown[]): void  {
-        let stack: string = EMPTY_STACK_TRACE
+    static onConsoleError(...params: unknown[]): void {
+
+        if (DdRumErrorTracking.isInDefaultErrorHandler) {
+            return;
+        }
+
+        let stack: string = EMPTY_STACK_TRACE;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
             const paramStack = DdRumErrorTracking.getErrorStackTrace(param)
-            if (paramStack != undefined && paramStack != EMPTY_STACK_TRACE){
+            if (paramStack != undefined && paramStack != EMPTY_STACK_TRACE) {
                 stack = paramStack;
                 break;
             }
@@ -73,18 +86,18 @@ export class DdRumErrorTracking {
         const message = params.map((param) => {
             if (typeof param === 'string') { return param }
             else if (param instanceof Error) { return String(param) }
-            else { return JSON.stringify(param)}
+            else { return JSON.stringify(param) }
         }).join(' ');
 
-        
+
         DdRum.addError(
-            message, 
+            message,
             TYPE_CONSOLE,
             stack
         ).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
         });
-        
+
     }
 
     private static getErrorStackTrace(error: any | undefined): string {
