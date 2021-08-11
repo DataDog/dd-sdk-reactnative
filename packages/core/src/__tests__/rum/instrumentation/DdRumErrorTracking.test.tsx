@@ -14,9 +14,7 @@ jest.mock('../../../foundation', () => {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             addError: jest.fn().mockImplementation(() => {
-                return new Promise<void>((resolve, reject) => {
-                    resolve()
-                })
+                return Promise.resolve();
             })
         },
     };
@@ -125,6 +123,36 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
     expect(attributes["_dd.error.raw"]).toStrictEqual(error);
     expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
+})
+
+it('M not report error in console handler W onGlobalError() {with console reporting handler}', async () => {
+    // GIVEN
+    const consoleReportingErrorHandler = jest.fn((error, isFatal)=> {
+        console.error(error.message);
+        baseErrorHandler(error, isFatal);
+    });
+    ErrorUtils.setGlobalHandler(consoleReportingErrorHandler);
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
+    const error = {
+      componentStack: ["doSomething() at ./path/to/file.js:67:3", "nestedCall() at ./path/to/file.js:1064:9", "root() at ./path/to/index.js:10:1"],
+      message: "Something bad happened"
+    };
+
+    // WHEN
+    DdRumErrorTracking.onGlobalError(error, is_fatal);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError.mock.calls.length).toBe(1);
+    expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
+    expect(DdRum.addError.mock.calls[0][1]).toBe("SOURCE");
+    expect(DdRum.addError.mock.calls[0][2]).toBe("doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1");
+    const attributes = DdRum.addError.mock.calls[0][3];
+    expect(attributes["_dd.error.raw"]).toStrictEqual(error);
+    expect(attributes["_dd.error.is_crash"]).toStrictEqual(is_fatal);
+    expect(consoleReportingErrorHandler).toBeCalledTimes(1);
+    expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M intercept and send a RUM event W onConsole() {Error with source file info}', async () => {
