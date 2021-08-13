@@ -13,18 +13,12 @@ jest.useFakeTimers()
 jest.mock('../../../foundation', () => {
     return {
         DdRum: {
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            startResource: jest.fn().mockImplementation(() => {
-                return new Promise<void>((resolve, reject) => {
-                    resolve()
-                })
+            startResource: jest.fn().mockResolvedValue(() => {
+                return Promise.resolve()
             }),
 
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            stopResource: jest.fn().mockImplementation(() => {
-                return new Promise<void>((resolve, reject) => {
-                    resolve()
-                })
+            stopResource: jest.fn().mockResolvedValue(() => {
+                return Promise.resolve()
             })
         },
     };

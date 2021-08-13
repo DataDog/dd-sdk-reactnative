@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type Timer from "../../Timer";
+
 
 export interface DdRumXhr extends XMLHttpRequest {
 
@@ -12,11 +14,10 @@ export interface DdRumXhr extends XMLHttpRequest {
 }
 
 export interface DdRumXhrContext {
-  method: string
-  url: string
-  startTime: number,
-  responseStartTime: number,
+  method: string,
+  url: string,
   reported: boolean,
+  timer: Timer,
   spanId: string,
   traceId: string
 }
