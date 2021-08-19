@@ -60,30 +60,24 @@ If user interactions tracking is enabled as in the code example above, the SDK t
 
 Alternatively, you can use the `accessibilityLabel` element property to give the tap action a name; otherwise, the element type is reported. You can check the sample app for usage examples.
 
-## Track view navigation
+### Track view navigation
 
-**Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package (minimum supported version is `react-navigation/native@5.6.0`). If you use another package to handle navigation in your application, use the manual instrumentation method described below.
-
-To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
+Because React Native offers a wide range of libraries to create screen navigation, by default only manual View tracking is supported. You can manually start and stop a View using the following `startView()` and `stopView` methods.
 
 ```js
-import * as React from 'react';
-import { DdRumReactNavigationTracking } from '@datadog/mobile-react-navigation';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
 
-function App() {
-  const navigationRef = React.useRef(null);
-  return (
-    <View>
-      <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
-      }}>
-        // …
-      </NavigationContainer>
-    </View>
-  );
-}
+
+// Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
+DdRum.startView('<view-key>', '/view/url', Date.now(), { 'custom.foo': "something" });
+// Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
+DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
 ```
-**Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking previous one first.
+
+You can also use one of our integration to automatically track Views, if you're using the following libraries:
+
+- If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [instructions][6] to set it up.
+- If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [instructions][8] to set it up.
 
 ## Track custom attributes
 
@@ -186,3 +180,7 @@ Resource tracking is able to provide the following timings:
 [2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
 [3]: https://docs.datadoghq.com/account_management/api-app-keys/#api-keys
 [4]: https://docs.datadoghq.com/account_management/api-app-keys/#client-tokens
+[5]: https://github.com/wix/react-native-navigation
+[6]: https://www.npmjs.com/package/@datadog/mobile-react-native-navigation
+[7]: https://github.com/react-navigation/react-navigation
+[8]: https://www.npmjs.com/package/@datadog/mobile-react-navigation
