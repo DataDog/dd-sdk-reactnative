@@ -1,10 +1,5 @@
 # React-Native Monitoring
 
-
-<div class="alert alert-warning">
-This feature is in open beta. Contact <a href="https://docs.datadoghq.com/help/">Support</a> to ask questions or to provide feedback on this feature.
-</div>
-
 Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
 ## Setup
@@ -68,22 +63,6 @@ Alternatively, you can use the `accessibilityLabel` element property to give the
 ## Track view navigation
 
 **Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package (minimum supported version is `react-navigation/native@5.6.0`). If you use another package to handle navigation in your application, use the manual instrumentation method described below.
-
-### Setup
-
-To install with NPM, run:
-
-```sh
-npm install @datadog/mobile-react-navigation
-```
-
-To install with Yarn, run:
-
-```sh
-yarn add @datadog/mobile-react-navigation
-```
-
-### Usage
 
 To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
 
