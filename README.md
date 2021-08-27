@@ -69,9 +69,9 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '
 
 
 // Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
-DdRum.startView('<view-key>', '/view/url', Date.now(), { 'custom.foo': "something" });
+DdRum.startView('<view-key>', '/view/url', { 'custom.foo': "something" }, Date.now());
 // Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
-DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
+DdRum.stopView('<view-key>', { 'custom.bar': 42 }, Date.now());
 ```
 
 Use one of Datadog's integrations to automatically track views if you're using the following libraries:
