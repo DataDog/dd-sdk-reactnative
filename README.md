@@ -170,7 +170,7 @@ Resource tracking is able to provide the following timings:
 
 ## License
 
-[Apache License, v2.0](LICENSE)
+[Apache License, v2.0][9]
 
 ## Further Reading
 
@@ -184,3 +184,4 @@ Resource tracking is able to provide the following timings:
 [6]: https://www.npmjs.com/package/@datadog/mobile-react-native-navigation
 [7]: https://github.com/react-navigation/react-navigation
 [8]: https://www.npmjs.com/package/@datadog/mobile-react-navigation
+[9]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
