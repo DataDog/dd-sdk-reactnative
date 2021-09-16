@@ -5,13 +5,13 @@
  */
 
 import XCTest
-@testable import dd_sdk_reactnative
+@testable import DatadogSDKReactNative
 @testable import React.RCTModuleData
 
 // Since RN tooling does the modules linking automatically, it doesn't include testspecs
 // To do that modify node_modules/@react-native-community/cli-platform-ios/native_modules.rb#L90 to:
 //
-// if spec.name == "dd-sdk-reactnative"
+// if spec.name == "DatadogSDKReactNative"
 //   pod spec.name, :path => relative_path.to_path, :testspecs => ['Tests']
 // else
 //   pod spec.name, :path => relative_path.to_path
