@@ -14,6 +14,7 @@ import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTrack
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking'
 import { TrackingConsent } from '../TrackingConsent'
 import { NativeSdkVerbosity } from '../NativeSdkVerbosity'
+import { ProxyType } from '../ProxyConfiguration'
 
 jest.mock('react-native', () => {
     return {
@@ -120,7 +121,7 @@ it('M give rejection W initialize', async () => {
 
 })
 
-it('M initialize the SDK W initialize {explicit tracking consent}', async () => {
+it('M initialize the SDK W initialize { explicit tracking consent }', async () => {
     // GIVEN
     const fakeAppId = "1"
     const fakeClientToken = "2"
@@ -338,4 +339,147 @@ it('M call SDK method W setTrackingConsent', async () => {
     // THEN
     expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1)
     expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent)
+})
+
+describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])('proxy configs test, no auth', proxyType => {
+    it(`M set proxy configuration W initialize { + proxy config, w/o proxy credentials, proxyType=${proxyType} }`, async () => {
+        // GIVEN
+        const fakeAppId = "1"
+        const fakeClientToken = "2"
+        const fakeEnvName = "env"
+        const proxyAddress = "1.1.1.1"
+        const proxyPort = 8080
+
+        const configuration = new DdSdkReactNativeConfiguration(
+            fakeClientToken,
+            fakeEnvName,
+            fakeAppId,
+            false,
+            false,
+            false
+        )
+
+        configuration.proxyConfig = {
+            type: proxyType,
+            address: proxyAddress,
+            port: proxyPort
+        }
+
+        NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
+        // WHEN
+        await DdSdkReactNative.initialize(configuration)
+
+        // THEN
+        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            '_dd.source': 'react-native',
+            '_dd.native_view_tracking': false,
+            '_dd.proxy.type': proxyType,
+            '_dd.proxy.address': proxyAddress,
+            '_dd.proxy.port': proxyPort
+        })
+    })
+})
+
+describe.each([[ProxyType.HTTP], [ProxyType.HTTPS]])('proxy configs test + auth', proxyType => {
+    it(`M set proxy configuration W initialize { with proxy config + proxy credentials, proxyType=${proxyType} }`, async () => {
+        // GIVEN
+        const fakeAppId = "1"
+        const fakeClientToken = "2"
+        const fakeEnvName = "env"
+
+        const proxyAddress = "1.1.1.1"
+        const proxyPort = 8080
+        const proxyUsername = "foo"
+        const proxyPassword = "bar"
+
+        const configuration = new DdSdkReactNativeConfiguration(
+            fakeClientToken,
+            fakeEnvName,
+            fakeAppId,
+            false,
+            false,
+            false
+        )
+
+        configuration.proxyConfig = {
+            type: proxyType,
+            address: proxyAddress,
+            port: proxyPort,
+            username: proxyUsername,
+            password: proxyPassword
+        }
+
+        NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
+        // WHEN
+        await DdSdkReactNative.initialize(configuration)
+
+        // THEN
+        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            '_dd.source': 'react-native',
+            '_dd.native_view_tracking': false,
+            '_dd.proxy.type': proxyType,
+            '_dd.proxy.address': proxyAddress,
+            '_dd.proxy.port': proxyPort,
+            '_dd.proxy.username': proxyUsername,
+            '_dd.proxy.password': proxyPassword
+        })
+    })
+})
+
+it('M log a warning W initialize { with socks proxy config + proxy credentials }', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const proxyType = ProxyType.SOCKS
+    const proxyAddress = "1.1.1.1"
+    const proxyPort = 8080
+    const proxyUsername = "foo"
+    const proxyPassword = "bar"
+
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, false)
+    configuration.proxyConfig = {
+        type: proxyType,
+        address: proxyAddress,
+        port: proxyPort,
+        username: proxyUsername,
+        password: proxyPassword
+    }
+
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+
+    try {
+        // WHEN
+        await DdSdkReactNative.initialize(configuration)
+
+        // THEN
+        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            '_dd.source': 'react-native',
+            '_dd.native_view_tracking': false,
+            '_dd.proxy.type': proxyType,
+            '_dd.proxy.address': proxyAddress,
+            '_dd.proxy.port': proxyPort
+        })
+        expect(spyConsoleWarn).toHaveBeenCalledTimes(1)
+    } finally {
+        spyConsoleWarn.mockRestore()
+    }
 })
