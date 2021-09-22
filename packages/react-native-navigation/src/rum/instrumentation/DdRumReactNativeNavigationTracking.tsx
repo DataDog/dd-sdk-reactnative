@@ -8,19 +8,26 @@ import React from 'react'
 import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '@datadog/mobile-react-native';
 
+
+
+
+export type ViewNamePredicate = (trackedView: any, trackedName: string) => string | null
+
 /**
 * Provides RUM integration for the [React Native Navigation](https://wix.github.io/react-native-navigation) API.
 */
-export default class DdRumReactNativeNavigationTracking {
+export class DdRumReactNativeNavigationTracking {
 
     private static isTracking = false
     private static trackedComponentIds : Array<any> = [];
     private static originalCreateElement: any = undefined
 
+    private static viewNamePredicate: ViewNamePredicate;
+
     /**
      * Starts tracking the Navigation and sends a RUM View event every time a root View component appear/disappear.
      */
-    static startTracking(): void {
+    static startTracking(viewNamePredicate: ViewNamePredicate = function defaultViewNamePredicate(_trackedView: any, trackedName: string) { return trackedName; }): void {
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumReactNativeNavigationTracking.isTracking) {
             return
@@ -35,7 +42,9 @@ export default class DdRumReactNativeNavigationTracking {
                 Navigation.events().registerComponentListener(
                     {
                         componentDidAppear: (event: ComponentDidAppearEvent) => {
-                            DdRum.startView(componentId, event.componentName);
+                            const predicate = DdRumReactNativeNavigationTracking.viewNamePredicate;
+                            const screenName = predicate(event, event.componentName) ?? event.componentName;
+                            DdRum.startView(componentId, screenName);
                         },
                         componentDidDisappear: () => {
                             DdRum.stopView(componentId);
@@ -49,6 +58,7 @@ export default class DdRumReactNativeNavigationTracking {
             return original(element, props, ...children)
         }
         DdRumReactNativeNavigationTracking.isTracking = true
+        DdRumReactNativeNavigationTracking.viewNamePredicate = viewNamePredicate
     }
 
     /**

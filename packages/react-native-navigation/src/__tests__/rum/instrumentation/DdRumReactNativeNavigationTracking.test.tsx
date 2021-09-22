@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { DdRum } from '@datadog/mobile-react-native';
-import DdRumReactNativeNavigationTracking from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
+import { DdRumReactNativeNavigationTracking, ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 
 jest.mock('@datadog/mobile-react-native', () => {
     return {
@@ -119,6 +119,29 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
 })
 
 
+
+it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPredicate }', async () => {
+    console.log("!!!!!!!")
+    // GIVEN
+    let componentId = "component42"
+    const customViewName = "custom_view_name"
+    const predicate: ViewNamePredicate = function customViewNamePredicate(_trackedView: any, _trackedName: string)  { 
+        return customViewName 
+    };
+    DdRumReactNativeNavigationTracking.startTracking(predicate);
+
+    // WHEN
+    const testInstance = React.createElement('View', { 'componentId': componentId });
+    const listener = mockRegisterComponentListener.mock.calls[0][0];
+    const componentName = "some-name";
+    listener.componentDidAppear({ componentName: componentName });
+
+    // THEN
+    expect(DdRum.startView.mock.calls.length).toBe(1);
+    expect(DdRum.startView.mock.calls[0][0]).toBe(componentId);
+    expect(DdRum.startView.mock.calls[0][1]).toBe(customViewName);
+    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
+})
 
 it('M send a RUM ViewEvent W startTracking() componentDidDisappear', async () => {
 
