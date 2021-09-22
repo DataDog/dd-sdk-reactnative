@@ -3,8 +3,8 @@ buildscript {
   def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['DdSdkReactNative_kotlinVersion']
 
   repositories {
+    mavenCentral()
     google()
-    jcenter()
   }
 
   dependencies {
@@ -52,7 +52,6 @@ android {
 
 repositories {
   mavenCentral()
-  jcenter()
   google()
   maven { url "https://jitpack.io" }
   mavenLocal()

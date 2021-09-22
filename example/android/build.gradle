@@ -10,7 +10,7 @@ buildscript {
     }
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.31"
@@ -23,6 +23,7 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenCentral()
         mavenLocal()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -34,7 +35,6 @@ allprojects {
         }
 
         google()
-        jcenter()
         maven { url 'https://www.jitpack.io' }
     }
 }
