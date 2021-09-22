@@ -20,12 +20,16 @@ yarn add @datadog/mobile-react-native-navigation
 
 ### Track view navigation
 
-In order to start tracking your navigation events, simply call the add the following lines before setting up your navigation:
+In order to start tracking your navigation events, simply call the add the following lines before setting up your navigation. You can use the optional `ViewNamePredicate` parameter to replace the automatically detected View name with something more relevant to your use case.
 
 ```js
-import { DdRumReactNativeNavigationTracking }  from '@datadog/mobile-react-native-navigation';
+import { DdRumReactNativeNavigationTracking, ViewNamePredicate }  from '@datadog/mobile-react-native-navigation';
 
-DdRumReactNativeNavigationTracking.startTracking();
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(trackedView: any, trackedName: string) {
+  return "My custom View Name"
+}
+
+DdRumReactNativeNavigationTracking.startTracking(viewNamePredicate);
 ```
 
 [1]: https://github.com/wix/react-native-navigation
