@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { DdRum } from '@datadog/mobile-react-native';
-import DdRumReactNavigationTracking from '../../../rum/instrumentation/DdRumReactNavigationTracking';
+import { DdRumReactNavigationTracking, ViewNamePredicate} from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -88,6 +88,27 @@ it('M send a related RUM ViewEvent W switching screens { navigationContainer lis
     expect(DdRum.startView.mock.calls.length).toBe(2);
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
+    expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
+})
+
+it('M send a related RUM ViewEvent W switching screens { viewPredicate provided }', async () => {
+    // GIVEN
+    const { getByText } = render(<FakeNavigator1 />);
+    const goToAboutButton = getByText('Go to About');
+    const customViewName = "custom_view_name"
+    const predicate: ViewNamePredicate = function customViewNamePredicate(_trackedView: any, _trackedName: string)  { 
+        return customViewName 
+    };
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current, predicate);
+
+    // WHEN
+    expect(goToAboutButton).toBeTruthy();
+    fireEvent(goToAboutButton, "press");
+
+    // THEN
+    expect(DdRum.startView.mock.calls.length).toBe(2);
+    expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
+    expect(DdRum.startView.mock.calls[1][1]).toBe(customViewName);
     expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
 })
 
