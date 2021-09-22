@@ -3,13 +3,19 @@ import { View, Text, Button } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 import MainScreen from './screens/MainScreen';
 import AboutScreen from './screens/AboutScreen';
-import { DdRumReactNativeNavigationTracking }  from '@datadog/mobile-react-native-navigation';
+import { DdRumReactNativeNavigationTracking, ViewNamePredicate }  from '@datadog/mobile-react-native-navigation';
 
 
 import styles from './screens/styles';
 
+const viewPredicate: ViewNamePredicate = function customViewNamePredicate(trackedView: any, trackedName: string) {
+  console.log(trackedView);
+  return "Custom RNN " + trackedName;
+}
+
+
 function startReactNativeNavigation() {
-    DdRumReactNativeNavigationTracking.startTracking();
+    DdRumReactNativeNavigationTracking.startTracking(viewPredicate);
     registerScreens();
     Navigation.events().registerAppLaunchedListener(async () => {
       Navigation.setRoot({
