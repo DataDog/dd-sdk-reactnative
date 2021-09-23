@@ -18,7 +18,7 @@ declare type NavigationListener = (event: EventArg<string, boolean, any>) => voi
 //     'extension' [iOS] - The app is running as an app extension
 declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
 
-export type ViewNamePredicate = (route: Route<string, any | undefined>, trackedName: string) => string | null
+export type ViewNamePredicate = (route: Route<string, any | undefined>, trackedName: string) => string
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.

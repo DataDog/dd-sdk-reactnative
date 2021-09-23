@@ -8,7 +8,7 @@ import React from 'react'
 import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '@datadog/mobile-react-native';
 
-export type ViewNamePredicate = (event: ComponentDidAppearEvent, trackedName: string) => string | null
+export type ViewNamePredicate = (event: ComponentDidAppearEvent, trackedName: string) => string
 
 /**
 * Provides RUM integration for the [React Native Navigation](https://wix.github.io/react-native-navigation) API.
