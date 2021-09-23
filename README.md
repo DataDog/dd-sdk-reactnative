@@ -168,6 +168,24 @@ Resource tracking is able to provide the following timings:
 * `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
 * `Download` - The time it took to receive a response.
 
+## Development mode
+
+While in development mode, your application can submit extra events related to the React Native tooling, like code transformation errors, requests to a local development server, etc.
+
+To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode, using the `__DEV__` flag:
+
+```
+const config = new DdSdkReactNativeConfiguration(
+	CLIENT_TOKEN,
+	ENVIRONMENT,
+	APPLICATION_ID,
+	true,
+	!__DEV__  /* trackResources will be false in DEV mode, true otherwise */,
+	!__DEV__  /* trackErrors will be false in DEV mode, true otherwise */,
+	trackingConsent
+)
+```
+
 ## License
 
 [Apache License, v2.0][9]
