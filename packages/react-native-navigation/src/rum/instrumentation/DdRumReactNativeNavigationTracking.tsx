@@ -8,10 +8,7 @@ import React from 'react'
 import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '@datadog/mobile-react-native';
 
-
-
-
-export type ViewNamePredicate = (trackedView: any, trackedName: string) => string | null
+export type ViewNamePredicate = (event: ComponentDidAppearEvent, trackedName: string) => string | null
 
 /**
 * Provides RUM integration for the [React Native Navigation](https://wix.github.io/react-native-navigation) API.
@@ -27,7 +24,7 @@ export class DdRumReactNativeNavigationTracking {
     /**
      * Starts tracking the Navigation and sends a RUM View event every time a root View component appear/disappear.
      */
-    static startTracking(viewNamePredicate: ViewNamePredicate = function defaultViewNamePredicate(_trackedView: any, trackedName: string) { return trackedName; }): void {
+    static startTracking(viewNamePredicate: ViewNamePredicate = function (_event: ComponentDidAppearEvent, trackedName: string) { return trackedName; }): void {
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumReactNativeNavigationTracking.isTracking) {
             return
@@ -73,5 +70,6 @@ export class DdRumReactNativeNavigationTracking {
         }
         DdRumReactNativeNavigationTracking.trackedComponentIds.splice(0, DdRumReactNativeNavigationTracking.trackedComponentIds.length)
         DdRumReactNativeNavigationTracking.isTracking = false
+        DdRumReactNativeNavigationTracking.viewNamePredicate = function (_event: ComponentDidAppearEvent, trackedName: string) { return trackedName; }
     }
 }

@@ -25,8 +25,9 @@ To track changes in navigation as RUM Views, set the `onready` callback of your 
 ```js
 import * as React from 'react';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { Route } from "@react-navigation/native";
 
-const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(trackedView: any, trackedName: string) {
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
   return "My custom View Name"
 }
 

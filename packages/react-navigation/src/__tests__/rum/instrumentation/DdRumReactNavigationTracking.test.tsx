@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef, Route } from '@react-navigation/native';
 import { DdRum } from '@datadog/mobile-react-native';
 import { DdRumReactNavigationTracking, ViewNamePredicate} from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
@@ -96,7 +96,7 @@ it('M send a related RUM ViewEvent W switching screens { viewPredicate provided 
     const { getByText } = render(<FakeNavigator1 />);
     const goToAboutButton = getByText('Go to About');
     const customViewName = "custom_view_name"
-    const predicate: ViewNamePredicate = function customViewNamePredicate(_trackedView: any, _trackedName: string)  { 
+    const predicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, _trackedName: string)  { 
         return customViewName 
     };
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current, predicate);

@@ -18,7 +18,7 @@ declare type NavigationListener = (event: EventArg<string, boolean, any>) => voi
 //     'extension' [iOS] - The app is running as an app extension
 declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
 
-export type ViewNamePredicate = (trackedView: any, trackedName: string) => string | null
+export type ViewNamePredicate = (route: Route<string, any | undefined>, trackedName: string) => string | null
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
@@ -39,7 +39,7 @@ export class DdRumReactNavigationTracking {
      */
     static startTrackingViews(
             navigationRef: NavigationContainerRef | null,
-            viewNamePredicate: ViewNamePredicate = function defaultViewNamePredicate(_trackedView: any, trackedName: string) { return trackedName; }
+            viewNamePredicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
         ): void {
 
         if (navigationRef == null) {
@@ -69,6 +69,7 @@ export class DdRumReactNavigationTracking {
         if (navigationRef != null) {
             navigationRef.removeListener("state", DdRumReactNavigationTracking.navigationStateChangeListener);
             DdRumReactNavigationTracking.registeredContainer = null;
+            DdRumReactNavigationTracking.viewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
         }
     }
 

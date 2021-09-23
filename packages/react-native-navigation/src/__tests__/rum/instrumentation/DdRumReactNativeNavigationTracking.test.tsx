@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { DdRum } from '@datadog/mobile-react-native';
+import { ComponentDidAppearEvent } from 'react-native-navigation';
 import { DdRumReactNativeNavigationTracking, ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 
 jest.mock('@datadog/mobile-react-native', () => {
@@ -121,11 +122,10 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
 
 
 it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPredicate }', async () => {
-    console.log("!!!!!!!")
     // GIVEN
     let componentId = "component42"
     const customViewName = "custom_view_name"
-    const predicate: ViewNamePredicate = function customViewNamePredicate(_trackedView: any, _trackedName: string)  { 
+    const predicate: ViewNamePredicate = function (_event: ComponentDidAppearEvent, _trackedName: string)  { 
         return customViewName 
     };
     DdRumReactNativeNavigationTracking.startTracking(predicate);

@@ -6,11 +6,11 @@ import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { Route } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator();
 
-const viewPredicate: ViewNamePredicate = function customViewNamePredicate(trackedView: any, trackedName: string) {
-  console.log(trackedView);
+const viewPredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
   return "Custom RN " + trackedName;
 }
 

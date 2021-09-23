@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Button } from 'react-native';
-import { Navigation } from 'react-native-navigation';
+import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import MainScreen from './screens/MainScreen';
 import AboutScreen from './screens/AboutScreen';
 import { DdRumReactNativeNavigationTracking, ViewNamePredicate }  from '@datadog/mobile-react-native-navigation';
@@ -8,8 +8,7 @@ import { DdRumReactNativeNavigationTracking, ViewNamePredicate }  from '@datadog
 
 import styles from './screens/styles';
 
-const viewPredicate: ViewNamePredicate = function customViewNamePredicate(trackedView: any, trackedName: string) {
-  console.log(trackedView);
+const viewPredicate: ViewNamePredicate = function customViewNamePredicate(_event: ComponentDidAppearEvent, trackedName: string) {
   return "Custom RNN " + trackedName;
 }
 
