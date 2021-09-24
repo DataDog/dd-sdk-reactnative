@@ -20,18 +20,23 @@ yarn add @datadog/mobile-react-navigation
 
 ### Track view navigation
 
-To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
+To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component as follow. You can use the optional `ViewNamePredicate` parameter to replace the automatically detected View name with something more relevant to your use case.
 
 ```js
 import * as React from 'react';
-import { DdRumReactNavigationTracking } from '@datadog/mobile-react-navigation';
+import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { Route } from "@react-navigation/native";
+
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
+  return "My custom View Name"
+}
 
 function App() {
   const navigationRef = React.useRef(null);
   return (
     <View>
       <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
+        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewNamePredicate)
       }}>
         // …
       </NavigationContainer>
