@@ -249,6 +249,34 @@ it('M enable error tracking feature W initialize { error tracking config enabled
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
 
+it('M enable custom service name W initialize { service name }', async () => {
+    // GIVEN
+    const fakeAppId = "1"
+    const fakeClientToken = "2"
+    const fakeEnvName = "env"
+    const fakeServiceName = "aFakeServiceName"
+    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
+    configuration.serviceName = fakeServiceName
+
+    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+
+    // WHEN
+    await DdSdkReactNative.initialize(configuration)
+
+    // THEN
+    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
+    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
+    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
+    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
+    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+        '_dd.source': 'react-native',
+        '_dd.service_name': fakeServiceName,
+        '_dd.native_view_tracking': false
+    })
+    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
+})
+
 it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
     // GIVEN
     const fakeAppId = "1"
