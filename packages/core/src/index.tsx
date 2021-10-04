@@ -8,6 +8,7 @@ import { DdLogs, DdTrace, DdRum } from './foundation';
 
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
-import { TrackingConsent } from './TrackingConsent'
+import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
+import { TrackingConsent } from './TrackingConsent';
 
-export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, TrackingConsent };
+export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, ProxyConfiguration, ProxyType, TrackingConsent };

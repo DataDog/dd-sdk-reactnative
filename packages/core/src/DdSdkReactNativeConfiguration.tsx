@@ -6,6 +6,7 @@
 
 import { TrackingConsent } from './TrackingConsent'
 import type { NativeSdkVerbosity } from './NativeSdkVerbosity'
+import type { ProxyConfiguration } from './ProxyConfiguration';
 
 /**
  * The SDK configuration class.
@@ -18,6 +19,7 @@ export class DdSdkReactNativeConfiguration {
     public site: string = "US"
     public verbosity: NativeSdkVerbosity|undefined = undefined
     public nativeViewTracking: boolean = false
+    public proxyConfig?: ProxyConfiguration = undefined
     
     public additionalConfig: {[k: string]: any} = {};
 
