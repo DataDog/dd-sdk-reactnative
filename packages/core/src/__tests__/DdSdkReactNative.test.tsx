@@ -86,7 +86,8 @@ it('M initialize the SDK W initialize', async () => {
     expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
 })
 
@@ -111,7 +112,8 @@ it('M give rejection W initialize', async () => {
     expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
 
     expect(DdSdkReactNative["wasInitialized"]).toBe(false)
@@ -143,7 +145,8 @@ it('M initialize the SDK W initialize { explicit tracking consent }', async () =
     expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
 })
 
@@ -170,7 +173,8 @@ it('M initialize once W initialize { multiple times in a row }', async () => {
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
 })
 
@@ -194,7 +198,8 @@ it('M enable user interaction feature W initialize { user interaction config ena
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumUserInteractionTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -219,7 +224,8 @@ it('M enable resource tracking feature W initialize { resource tracking config e
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -244,7 +250,8 @@ it('M enable error tracking feature W initialize { error tracking config enabled
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -272,7 +279,8 @@ it('M enable custom service name W initialize { service name }', async () => {
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
         '_dd.service_name': fakeServiceName,
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -299,7 +307,8 @@ it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
         '_dd.sdk_verbosity': NativeSdkVerbosity.DEBUG,
-        '_dd.native_view_tracking': false
+        '_dd.native_view_tracking': false,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -325,7 +334,8 @@ it('M enable native view tracking W initialize { native_view_tracking enabled }'
     expect(ddSdkConfiguration.env).toBe(fakeEnvName)
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
-        '_dd.native_view_tracking': true
+        '_dd.native_view_tracking': true,
+        '_dd.long_task.threshold': 200
     })
     expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
 })
@@ -409,7 +419,8 @@ describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])('proxy c
             '_dd.native_view_tracking': false,
             '_dd.proxy.type': proxyType,
             '_dd.proxy.address': proxyAddress,
-            '_dd.proxy.port': proxyPort
+            '_dd.proxy.port': proxyPort,
+            '_dd.long_task.threshold': 200
         })
     })
 })
@@ -461,7 +472,8 @@ describe.each([[ProxyType.HTTP], [ProxyType.HTTPS]])('proxy configs test + auth'
             '_dd.proxy.address': proxyAddress,
             '_dd.proxy.port': proxyPort,
             '_dd.proxy.username': proxyUsername,
-            '_dd.proxy.password': proxyPassword
+            '_dd.proxy.password': proxyPassword,
+            '_dd.long_task.threshold': 200
         })
     })
 })
@@ -504,7 +516,8 @@ it('M log a warning W initialize { with socks proxy config + proxy credentials }
             '_dd.native_view_tracking': false,
             '_dd.proxy.type': proxyType,
             '_dd.proxy.address': proxyAddress,
-            '_dd.proxy.port': proxyPort
+            '_dd.proxy.port': proxyPort,
+            '_dd.long_task.threshold': 200
         })
         expect(spyConsoleWarn).toHaveBeenCalledTimes(1)
     } finally {

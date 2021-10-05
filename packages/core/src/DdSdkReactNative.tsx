@@ -30,6 +30,9 @@ export class DdSdkReactNative {
     private static readonly DD_PROXY_USERNAME_KEY = "_dd.proxy.username";
     private static readonly DD_PROXY_PASSWORD_KEY = "_dd.proxy.password";
 
+    private static readonly DD_NATIVE_LONG_TASK_THRESHOLD_KEY = "_dd.long_task.threshold"
+    private static readonly NATIVE_LONG_TASK_THRESHOLD_MS = 200
+
 
     private static wasInitialized = false
 
@@ -71,6 +74,9 @@ export class DdSdkReactNative {
             if (configuration.serviceName) {
                 configuration.additionalConfig[DdSdkReactNative.DD_SERVICE_NAME] = configuration.serviceName;
             }
+
+            configuration.additionalConfig[DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY]
+                = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS
 
             DdSdk.initialize(
                 new DdSdkConfiguration(
