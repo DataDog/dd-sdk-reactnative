@@ -20,6 +20,7 @@ export class DdSdkReactNativeConfiguration {
     public verbosity: NativeSdkVerbosity|undefined = undefined
     public nativeViewTracking: boolean = false
     public proxyConfig?: ProxyConfiguration = undefined
+    public serviceName?: string = undefined
     
     public additionalConfig: {[k: string]: any} = {};
 
