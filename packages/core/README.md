@@ -42,7 +42,7 @@ const config = new DdSdkReactNativeConfiguration(
     true, // track XHR Resources
     true // track Errors
 )
-// Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1" or "US1_FED"), "US1" by default
+// Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", or "US1_FED"). Default is "US1".
 config.site = "US1"
 // Optional: enable or disable native crash reports
 config.nativeCrashReportEnabled = true
