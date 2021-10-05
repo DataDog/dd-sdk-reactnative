@@ -48,6 +48,8 @@ config.site = "US"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sampleRate = 80
+// Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
+config.serviceName = "com.example.reactnative"
 
 await DdSdkReactNative.initialize(config)
 
