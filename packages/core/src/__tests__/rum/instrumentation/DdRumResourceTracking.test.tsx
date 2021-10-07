@@ -4,7 +4,14 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRumResourceTracking, PARENT_ID_HEADER_KEY, TRACE_ID_HEADER_KEY, ORIGIN_RUM, ORIGIN_HEADER_KEY } from '../../../rum/instrumentation/DdRumResourceTracking'
+import {
+    DdRumResourceTracking,
+    PARENT_ID_HEADER_KEY,
+    TRACE_ID_HEADER_KEY,
+    ORIGIN_RUM,
+    ORIGIN_HEADER_KEY,
+    calculateResponseSize
+} from '../../../rum/instrumentation/DdRumResourceTracking'
 import { DdRum } from '../../../index';
 import { Platform } from 'react-native';
 
@@ -73,6 +80,10 @@ class XMLHttpRequest {
 
     setRequestHeader(header: string, value: string): void {
         this.headers[header] = value
+    }
+
+    getResponseHeader(header: string): string | null {
+        return null
     }
 }
 
@@ -427,4 +438,107 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
     const attributes = DdRum.stopResource.mock.calls[0][4];
 
     expect(attributes['_dd.resource_timings']).toBeNull()
+})
+
+
+const contentLengthHeaderFunc = (header: string) => {
+    if (header == 'Content-Length') {
+        return 42;
+    } else {
+        return null;
+    }
+}
+
+describe.each([
+    [{ responseType: 'blob', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
+    [{ responseType: 'arraybuffer', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
+    [{ responseType: 'text', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
+    [{ responseType: '', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
+    [{ responseType: 'json', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }]
+])('Response size from response header', (xhr) => {
+    let responseType = xhr.responseType;
+    if (responseType === '') {
+        responseType = '_empty_'
+    }
+    it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
+        // WHEN
+        // @ts-ignore
+        const size = calculateResponseSize(xhr as XMLHttpRequest);
+
+        // THEN
+        expect(size).toEqual(xhr.expectedSize);
+    })
+})
+
+const contentLengthHeaderNullFunc = () => { return null }
+
+describe.each([
+    [{ responseType: 'blob', response: { get size() { return 42 } }, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 42 }],
+    [{ responseType: 'arraybuffer', response: new ArrayBuffer(42), getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 42 }],
+    // size per char is 24, but in bytes it is 33.
+    [{ responseType: 'text', response: "{\"foo\": \"bar+úñïçôδè ℓ\"}", getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 33 }],
+    [{ responseType: '', response: "{\"foo\": \"bar+úñïçôδè ℓ\"}", getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 33 }],
+    [{ responseType: 'json', response: { "foo": { "bar": "foobar" } }, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 24 }],
+    // this one is not supported
+    [{ responseType: 'document', response: {}, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 0 }]
+])('Response size from response body', (xhr) => {
+    let responseType = xhr.responseType;
+    if (responseType === '') {
+        responseType = '_empty_'
+    }
+    it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
+        // WHEN
+        // @ts-ignore
+        const size = calculateResponseSize(xhr as XMLHttpRequest);
+
+        // THEN
+        expect(size).toEqual(xhr.expectedSize);
+    })
+})
+
+it('M return 0 W calculateResponseSize() { error is thrown }', () => {
+    // GIVEN
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize({
+        response: {
+            get size() { throw new Error() }
+        },
+        getResponseHeader: () => { return null },
+        responseType: 'blob'
+    });
+
+    // THEN
+    expect(size).toEqual(0);
+    expect(consoleErrorMock).toHaveBeenCalled();
+
+    consoleErrorMock.mockRestore();
+})
+
+it('M return 0 W calculateResponseSize() { size is not a number }', () => {
+    // WHEN
+    // we pass empty object, so that .size property is missing, we will get undefined
+    // @ts-ignore
+    const size = calculateResponseSize({
+        response: { },
+        responseType: 'blob',
+        getResponseHeader: () => { return null }
+    });
+
+    // THEN
+    expect(size).toEqual(0);
+})
+
+it('M return 0 W calculateResponseSize() { no response }', () => {
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize({
+        response: null,
+        responseType: 'blob',
+        getResponseHeader: () => { return null }
+    });
+
+    // THEN
+    expect(size).toEqual(0);
 })

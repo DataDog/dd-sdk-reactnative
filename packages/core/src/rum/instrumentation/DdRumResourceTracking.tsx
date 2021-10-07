@@ -71,6 +71,70 @@ function timeToNanos(durationMs: number): number {
   return +(durationMs * 1e6).toFixed(0)
 }
 
+function byteLength(str: string): number {
+  // This is a weird trick, but it works.
+  // Output is the same as TextEncoder.encode(...).length
+  return unescape(encodeURI(str)).length;
+}
+
+function getResponseContentLengthFromHeader(xhr: XMLHttpRequest): number | null {
+  const contentLengthHeader = parseInt(xhr.getResponseHeader('Content-Length') ?? '', 10);
+  if (!isNaN(contentLengthHeader)) {
+    return contentLengthHeader;
+  }
+  return null;
+}
+
+export function calculateResponseSize(xhr: XMLHttpRequest): number {
+
+  const contentLengthHeader = getResponseContentLengthFromHeader(xhr);
+  if (contentLengthHeader != null) {
+    return contentLengthHeader as number;
+  }
+
+  const response = xhr.response
+  if (!response) {
+    return 0;
+  }
+
+  let size;
+  try {
+    switch (xhr.responseType) {
+      case '':
+      case 'text':
+        // String
+        size = byteLength(response);
+        break;
+      case 'blob':
+        size = response.size;
+        break;
+      case 'arraybuffer':
+        size = response.byteLength;
+        break;
+      case 'document':
+        // currently not supported by RN as of 0.66
+        // HTML Document or XML Document
+        break;
+      case 'json':
+        // plain JS object
+        // original size was lost, because this is the object which was parsed.
+        // We can only convert back to the string and calculate the size,
+        // which will roughly match original.
+        size = byteLength(JSON.stringify(response))
+        break;
+      default:
+        break;
+    }
+  } catch (e) {
+    console.error("Couldn't get resource size, because of the error", e);
+  }
+
+  if (typeof size !== 'number') {
+    return 0;
+  }
+  return size;
+}
+
 /**
 * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
 */
@@ -180,6 +244,8 @@ export class DdRumResourceTracking {
 
   private static reportXhr(xhrProxy: DdRumXhr): void {
 
+    const responseSize = calculateResponseSize(xhrProxy)
+
     const context = xhrProxy._datadog_xhr
 
     const key = context.timer.startTime + "/" + context.method
@@ -209,7 +275,9 @@ export class DdRumResourceTracking {
               context.timer.stopTime
             ) : null
         },
-        context.timer.stopTime);
+        context.timer.stopTime,
+        responseSize
+      );
     })
   }
 
