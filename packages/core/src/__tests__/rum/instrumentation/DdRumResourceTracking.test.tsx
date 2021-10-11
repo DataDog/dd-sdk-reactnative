@@ -31,6 +31,10 @@ jest.mock('../../../foundation', () => {
     };
 });
 
+function randomInt(max: number): number {
+    return Math.floor(Math.random() * max)
+}
+
 class XMLHttpRequest {
 
     static readonly UNSENT = 0;
@@ -39,10 +43,12 @@ class XMLHttpRequest {
     static readonly LOADING = 3;
     static readonly DONE = 4;
 
-    public response: string | undefined = undefined
-    public status: number | undefined = undefined
-    public readyState: number = XMLHttpRequest.UNSENT
-    public headers: Map<String, String> = new Map()
+    public response?: any;
+    public responseType?: string;
+    public status: number = 0;
+    public readyState: number = XMLHttpRequest.UNSENT;
+    public requestHeaders: Map<String, String> = new Map();
+    public responseHeaders: Map<String, String> = new Map();
 
     constructor() {
 
@@ -71,19 +77,26 @@ class XMLHttpRequest {
         this.onreadystatechange()
     }
 
-    complete(status: number, response?: string) {
+    complete(status: number, response?: any, responseType?: string) {
         this.response = response
+        if (response) {
+            this.responseType = responseType ?? 'text'
+        }
         this.status = status
         this.readyState = XMLHttpRequest.DONE
         this.onreadystatechange()
     }
 
     setRequestHeader(header: string, value: string): void {
-        this.headers[header] = value
+        this.requestHeaders[header] = value
+    }
+
+    setResponseHeader(header: string, value: string): void {
+        this.responseHeaders[header] = value
     }
 
     getResponseHeader(header: string): string | null {
-        return null
+        return this.responseHeaders[header];
     }
 }
 
@@ -216,7 +229,7 @@ it('M add the span id in the request headers W startTracking() + XHR.open() + XH
     await flushPromises();
 
     // THEN
-    const spanId = xhr.headers[PARENT_ID_HEADER_KEY];
+    const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
     expect(spanId).toBeDefined();
     expect(spanId).toMatch(/[1-9].+/);
 })
@@ -236,7 +249,7 @@ it('M add the trace id in the request headers W startTracking() + XHR.open() + X
     await flushPromises();
 
     // THEN
-    const traceId = xhr.headers[TRACE_ID_HEADER_KEY];
+    const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
     expect(traceId).toBeDefined();
     expect(traceId).toMatch(/[1-9].+/);
 })
@@ -256,8 +269,8 @@ it('M generate different ids for spanId and traceId in request headers', async (
     await flushPromises();
 
     // THEN
-    const traceId = xhr.headers[TRACE_ID_HEADER_KEY];
-    const spanId = xhr.headers[PARENT_ID_HEADER_KEY];
+    const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+    const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
     expect(traceId !== spanId).toBeTruthy()
 })
 
@@ -276,7 +289,7 @@ it('M add origin as RUM in the request headers W startTracking() + XHR.open() + 
     await flushPromises();
 
     // THEN
-    expect(xhr.headers[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM)
+    expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM)
 })
 
 it('M add the span id as resource attributes W startTracking() + XHR.open() + XHR.send()', async () => {
@@ -440,74 +453,151 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
     expect(attributes['_dd.resource_timings']).toBeNull()
 })
 
-
-const contentLengthHeaderFunc = (header: string) => {
-    if (header == 'Content-Length') {
-        return 42;
-    } else {
-        return null;
-    }
-}
-
 describe.each([
-    [{ responseType: 'blob', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
-    [{ responseType: 'arraybuffer', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
-    [{ responseType: 'text', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
-    [{ responseType: '', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }],
-    [{ responseType: 'json', response: {}, getResponseHeader: contentLengthHeaderFunc, expectedSize: 42 }]
-])('Response size from response header', (xhr) => {
-    let responseType = xhr.responseType;
+    'blob',
+    'arraybuffer',
+    'text',
+    '',
+    'json'
+].map((responseType) => {
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = responseType;
+    xhr.response = {};
+
+    const contentLength = randomInt(1_000_000_000)
+    xhr.setResponseHeader('Content-Length', contentLength.toString());
+    return [xhr, responseType, contentLength]
+}))('Response size from response header', (xhr, responseType, expectedSize) => {
     if (responseType === '') {
         responseType = '_empty_'
     }
     it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
         // WHEN
         // @ts-ignore
-        const size = calculateResponseSize(xhr as XMLHttpRequest);
+        const size = calculateResponseSize(xhr);
 
         // THEN
-        expect(size).toEqual(xhr.expectedSize);
+        expect(size).toEqual(expectedSize);
     })
 })
 
-const contentLengthHeaderNullFunc = () => { return null }
+it('M calculate response size W calculateResponseSize() { responseType=blob }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'blob';
 
-describe.each([
-    [{ responseType: 'blob', response: { get size() { return 42 } }, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 42 }],
-    [{ responseType: 'arraybuffer', response: new ArrayBuffer(42), getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 42 }],
+    const expectedSize = randomInt(1_000_000)
+    xhr.response = { get size() { return expectedSize } }
+
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(expectedSize);
+})
+
+it('M calculate response size W calculateResponseSize() { responseType=arraybuffer }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'arraybuffer';
+
+    const expectedSize = randomInt(100_000);
+    xhr.response = new ArrayBuffer(expectedSize);
+
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(expectedSize);
+})
+
+it('M calculate response size W calculateResponseSize() { responseType=text }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'text';
+
     // size per char is 24, but in bytes it is 33.
-    [{ responseType: 'text', response: "{\"foo\": \"bar+úñïçôδè ℓ\"}", getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 33 }],
-    [{ responseType: '', response: "{\"foo\": \"bar+úñïçôδè ℓ\"}", getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 33 }],
-    [{ responseType: 'json', response: { "foo": { "bar": "foobar" } }, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 24 }],
-    // this one is not supported
-    [{ responseType: 'document', response: {}, getResponseHeader: contentLengthHeaderNullFunc, expectedSize: 0 }]
-])('Response size from response body', (xhr) => {
-    let responseType = xhr.responseType;
-    if (responseType === '') {
-        responseType = '_empty_'
-    }
-    it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
-        // WHEN
-        // @ts-ignore
-        const size = calculateResponseSize(xhr as XMLHttpRequest);
+    const expectedSize = 33;
+    xhr.response = "{\"foo\": \"bar+úñïçôδè ℓ\"}";
 
-        // THEN
-        expect(size).toEqual(xhr.expectedSize);
-    })
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(expectedSize);
+})
+
+it('M calculate response size W calculateResponseSize() { responseType=_empty_ }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = '';
+
+    // size per char is 24, but in bytes it is 33.
+    const expectedSize = 33;
+    xhr.response = "{\"foo\": \"bar+úñïçôδè ℓ\"}";
+
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(expectedSize);
+})
+
+it('M calculate response size W calculateResponseSize() { responseType=json }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'json';
+
+    const expectedSize = 24;
+    xhr.response = { "foo": { "bar": "foobar" } }
+
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(expectedSize);
+})
+
+it('M not calculate response size W calculateResponseSize() { responseType=document }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    // document type is not supported by RN, so there are no classes to handle it
+    xhr.responseType = 'document';
+    xhr.response = {};
+
+    // WHEN
+    // @ts-ignore
+    const size = calculateResponseSize(xhr);
+
+    // THEN
+    expect(size).toEqual(0);
 })
 
 it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     // GIVEN
     const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'blob';
+    xhr.response = {
+        get size() { throw new Error() }
+    };
+
     // WHEN
     // @ts-ignore
-    const size = calculateResponseSize({
-        response: {
-            get size() { throw new Error() }
-        },
-        getResponseHeader: () => { return null },
-        responseType: 'blob'
-    });
+    const size = calculateResponseSize(xhr);
 
     // THEN
     expect(size).toEqual(0);
@@ -517,27 +607,32 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
 })
 
 it('M return 0 W calculateResponseSize() { size is not a number }', () => {
-    // WHEN
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'blob';
+
     // we pass empty object, so that .size property is missing, we will get undefined
+    xhr.response = {};
+
+    // WHEN
     // @ts-ignore
-    const size = calculateResponseSize({
-        response: { },
-        responseType: 'blob',
-        getResponseHeader: () => { return null }
-    });
+    const size = calculateResponseSize(xhr);
 
     // THEN
     expect(size).toEqual(0);
 })
 
 it('M return 0 W calculateResponseSize() { no response }', () => {
+    // GIVEN
+    const xhr = new XMLHttpRequest();
+    xhr.readyState = XMLHttpRequest.DONE;
+    xhr.responseType = 'blob';
+    xhr.response = null;
+
     // WHEN
     // @ts-ignore
-    const size = calculateResponseSize({
-        response: null,
-        responseType: 'blob',
-        getResponseHeader: () => { return null }
-    });
+    const size = calculateResponseSize(xhr);
 
     // THEN
     expect(size).toEqual(0);
