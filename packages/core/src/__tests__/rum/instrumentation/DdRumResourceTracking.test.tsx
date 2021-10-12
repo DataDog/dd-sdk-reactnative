@@ -146,7 +146,7 @@ it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async 
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(200);
     expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
-    expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
+    expect(DdRum.stopResource.mock.calls[0][3]).toBeGreaterThan(0);
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -176,7 +176,7 @@ it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()'
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(500);
     expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
-    expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
+    expect(DdRum.stopResource.mock.calls[0][3]).toBeGreaterThan(0);
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -582,7 +582,7 @@ it('M not calculate response size W calculateResponseSize() { responseType=docum
     const size = calculateResponseSize(xhr);
 
     // THEN
-    expect(size).toEqual(0);
+    expect(size).toEqual(-1);
 })
 
 it('M return 0 W calculateResponseSize() { error is thrown }', () => {
@@ -600,7 +600,7 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     const size = calculateResponseSize(xhr);
 
     // THEN
-    expect(size).toEqual(0);
+    expect(size).toEqual(-1);
     expect(consoleErrorMock).toHaveBeenCalled();
 
     consoleErrorMock.mockRestore();
@@ -620,7 +620,7 @@ it('M return 0 W calculateResponseSize() { size is not a number }', () => {
     const size = calculateResponseSize(xhr);
 
     // THEN
-    expect(size).toEqual(0);
+    expect(size).toEqual(-1);
 })
 
 it('M return 0 W calculateResponseSize() { no response }', () => {
@@ -635,5 +635,5 @@ it('M return 0 W calculateResponseSize() { no response }', () => {
     const size = calculateResponseSize(xhr);
 
     // THEN
-    expect(size).toEqual(0);
+    expect(size).toEqual(-1);
 })

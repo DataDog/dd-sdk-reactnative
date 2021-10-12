@@ -16,6 +16,7 @@ export const ORIGIN_HEADER_KEY = "x-datadog-origin"
 export const ORIGIN_RUM = "rum"
 
 const RESPONSE_START_LABEL = "response_start"
+const MISSING_RESOURCE_SIZE = -1
 
 interface Timing {
   /**
@@ -94,7 +95,7 @@ export function calculateResponseSize(xhr: XMLHttpRequest): number {
 
   const response = xhr.response
   if (!response) {
-    return 0;
+    return MISSING_RESOURCE_SIZE;
   }
 
   let size;
@@ -130,7 +131,7 @@ export function calculateResponseSize(xhr: XMLHttpRequest): number {
   }
 
   if (typeof size !== 'number') {
-    return 0;
+    return MISSING_RESOURCE_SIZE;
   }
   return size;
 }
@@ -266,7 +267,7 @@ export class DdRumResourceTracking {
         key,
         xhrProxy.status,
         "xhr",
-        -1,
+        responseSize,
         {
           "_dd.resource_timings": context.timer.hasTickFor(RESPONSE_START_LABEL) ?
             createTimings(
@@ -275,8 +276,7 @@ export class DdRumResourceTracking {
               context.timer.stopTime
             ) : null
         },
-        context.timer.stopTime,
-        responseSize
+        context.timer.stopTime
       );
     })
   }
