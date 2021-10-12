@@ -92,7 +92,7 @@ export type DdTraceType = {
    * Start a span, and returns a unique identifier for the span.
    * @param operation: The operation name of the span.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the operation started (in milliseconds).
+   * @param timestampMs: The timestamp when the operation started (in milliseconds). If not provided, current timestamp will be used.
    */
   startSpan(operation: string, context?: object, timestampMs?: number): Promise<string>;
 
@@ -100,7 +100,7 @@ export type DdTraceType = {
    * Finish a started span.
    * @param spanId: The unique identifier of the span.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the operation stopped (in milliseconds).
+   * @param timestampMs: The timestamp when the operation stopped (in milliseconds). If not provided, current timestamp will be used.
    */
   finishSpan(spanId: string, context?: object, timestampMs?: number): Promise<void>;
 
@@ -115,7 +115,7 @@ export type DdRumType = {
    * @param key: The view unique key identifier.
    * @param name: The view name.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the view started (in milliseconds).
+   * @param timestampMs: The timestamp when the view started (in milliseconds). If not provided, current timestamp will be used.
    */
   startView(key: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
@@ -123,7 +123,7 @@ export type DdRumType = {
    * Stop tracking a RUM View.
    * @param key: The view unique key identifier.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the view stopped (in milliseconds).
+   * @param timestampMs: The timestamp when the view stopped (in milliseconds). If not provided, current timestamp will be used.
    */
   stopView(key: string, context?: object, timestampMs?: number): Promise<void>;
 
@@ -132,14 +132,14 @@ export type DdRumType = {
    * @param type: The action type (tap, scroll, swipe, click, custom).
    * @param name: The action name.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the action started (in milliseconds).
+   * @param timestampMs: The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
    */
   startAction(type: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Stop tracking the ongoing RUM Action.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the action stopped (in milliseconds).
+   * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
    */
   stopAction(context?: object, timestampMs?: number): Promise<void>;
 
@@ -148,7 +148,7 @@ export type DdRumType = {
    * @param type: The action type (tap, scroll, swipe, click, custom).
    * @param name: The action name.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the action occurred (in milliseconds).
+   * @param timestampMs: The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
    */
   addAction(type: string, name: string, context?: object, timestampMs?: number): Promise<void>;
 
@@ -158,7 +158,7 @@ export type DdRumType = {
    * @param method: The resource method (GET, POST, …).
    * @param url: The resource url.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the resource started (in milliseconds).
+   * @param timestampMs: The timestamp when the resource started (in milliseconds). If not provided, current timestamp will be used.
    */
   startResource(key: string, method: string, url: string, context?: object, timestampMs?: number): Promise<void>;
 
@@ -167,10 +167,11 @@ export type DdRumType = {
    * @param key: The resource unique key identifier.
    * @param statusCode: The resource status code.
    * @param kind: The resource's kind (xhr, document, image, css, font, …).
+   * @param size: The resource size in bytes. If size is unknown, use -1.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the resource stopped (in milliseconds).
+   * @param timestampMs: The timestamp when the resource stopped (in milliseconds). If not provided, current timestamp will be used.
    */
-  stopResource(key: string, statusCode: number, kind: string, context?: object, timestampMs?: number): Promise<void>;
+  stopResource(key: string, statusCode: number, kind: string, size?: number, context?: object, timestampMs?: number): Promise<void>;
 
   /**
    * Add a RUM Error.
@@ -178,7 +179,7 @@ export type DdRumType = {
    * @param source: The error source (network, source, console, logger, …).
    * @param stacktrace: The error stacktrace.
    * @param context: The additional context to send.
-   * @param timestampMs: The timestamp when the error occurred (in milliseconds).
+   * @param timestampMs: The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
    */
   addError(message: string, source: string, stacktrace: string, context?: object, timestampMs?: number): Promise<void>;
 
