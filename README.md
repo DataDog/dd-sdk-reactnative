@@ -1,10 +1,5 @@
 # React-Native Monitoring
 
-
-<div class="alert alert-warning">
-This feature is in open beta. Contact <a href="https://docs.datadoghq.com/help/">Support</a> to ask questions or to provide feedback on this feature.
-</div>
-
 Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
 ## Setup
@@ -65,46 +60,24 @@ If user interactions tracking is enabled as in the code example above, the SDK t
 
 Alternatively, you can use the `accessibilityLabel` element property to give the tap action a name; otherwise, the element type is reported. You can check the sample app for usage examples.
 
-## Track view navigation
+### Track view navigation
 
-**Note**: Automatic View tracking relies on the [React Navigation](https://reactnavigation.org/) package (minimum supported version is `react-navigation/native@5.6.0`). If you use another package to handle navigation in your application, use the manual instrumentation method described below.
-
-### Setup
-
-To install with NPM, run:
-
-```sh
-npm install @datadog/mobile-react-navigation
-```
-
-To install with Yarn, run:
-
-```sh
-yarn add @datadog/mobile-react-navigation
-```
-
-### Usage
-
-To track changes in navigation as RUM Views, set the `onready` callback of your `NavigationContainer` component:
+Because React Native offers a wide range of libraries to create screen navigation, by default only manual view tracking is supported. You can manually start and stop a view using the following `startView()` and `stopView` methods.
 
 ```js
-import * as React from 'react';
-import { DdRumReactNavigationTracking } from '@datadog/mobile-react-navigation';
+import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
 
-function App() {
-  const navigationRef = React.useRef(null);
-  return (
-    <View>
-      <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
-      }}>
-        // …
-      </NavigationContainer>
-    </View>
-  );
-}
+
+// Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
+DdRum.startView('<view-key>', '/view/url', { 'custom.foo': "something" }, Date.now());
+// Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
+DdRum.stopView('<view-key>', { 'custom.bar': 42 }, Date.now());
 ```
-**Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking previous one first.
+
+Use one of Datadog's integrations to automatically track views if you're using the following libraries:
+
+- If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
+- If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
 
 ## Track custom attributes
 
@@ -195,9 +168,27 @@ Resource tracking is able to provide the following timings:
 * `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
 * `Download` - The time it took to receive a response.
 
+## Development mode
+
+While in development mode, your application can submit extra events related to the React Native tooling, like code transformation errors, requests to a local development server, etc.
+
+To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode, using the `__DEV__` flag:
+
+```
+const config = new DdSdkReactNativeConfiguration(
+	CLIENT_TOKEN,
+	ENVIRONMENT,
+	APPLICATION_ID,
+	true,
+	!__DEV__  /* trackResources will be false in DEV mode, true otherwise */,
+	!__DEV__  /* trackErrors will be false in DEV mode, true otherwise */,
+	trackingConsent
+)
+```
+
 ## License
 
-[Apache License, v2.0](LICENSE)
+[Apache License, v2.0][9]
 
 ## Further Reading
 
@@ -207,3 +198,8 @@ Resource tracking is able to provide the following timings:
 [2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
 [3]: https://docs.datadoghq.com/account_management/api-app-keys/#api-keys
 [4]: https://docs.datadoghq.com/account_management/api-app-keys/#client-tokens
+[5]: https://github.com/wix/react-native-navigation
+[6]: https://www.npmjs.com/package/@datadog/mobile-react-native-navigation
+[7]: https://github.com/react-navigation/react-navigation
+[8]: https://www.npmjs.com/package/@datadog/mobile-react-navigation
+[9]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE

@@ -6,4 +6,4 @@
 
 import Foundation
 
-internal let sharedQueue = dispatch_queue_serial_t(label: "dd-react-native-sdk")
+internal let sharedQueue = DispatchQueue(label: "dd-react-native-sdk")

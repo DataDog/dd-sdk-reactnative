@@ -21,6 +21,7 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     )
     config.nativeCrashReportEnabled = true
     config.sampleRate = 100
+    config.serviceName = "com.datadoghq.reactnative.sample"
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')

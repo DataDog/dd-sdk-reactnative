@@ -10,12 +10,20 @@ import { AppState, AppStateStatus } from 'react-native';
 
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
 
+// AppStateStatus can have values: 
+//     'active' - The app is running in the foreground
+//     'background' - The app is running in the background. The user is either in another app or on the home screen
+//     'inactive' [iOS] - This is a transition state that currently never happens for typical React Native apps.
+//     'unknown' [iOS] - Initial value until the current app state is determined
+//     'extension' [iOS] - The app is running as an app extension
 declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null
+
+export type ViewNamePredicate = (route: Route<string, any | undefined>, trackedName: string) => string
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
  */
-export default class DdRumReactNavigationTracking {
+export class DdRumReactNavigationTracking {
 
     private static registeredContainer: NavigationContainerRef | null;
     
@@ -23,23 +31,32 @@ export default class DdRumReactNavigationTracking {
 
     private static appStateListener: AppStateListener;
 
+    private static viewNamePredicate: ViewNamePredicate;
+
     /**
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
      */
-    static startTrackingViews(navigationRef: NavigationContainerRef | null): void {
+    static startTrackingViews(
+            navigationRef: NavigationContainerRef | null,
+            viewNamePredicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
+        ): void {
+
         if (navigationRef == null) {
+            console.log ("Cannot track views with a null navigationRef");
             return;
         }
 
         if (DdRumReactNavigationTracking.registeredContainer != null && this.registeredContainer !== navigationRef) {
             console.error('Cannot track new navigation container while another one is still tracked');
         } else if (DdRumReactNavigationTracking.registeredContainer == null) {
+            DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
             const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
             DdRumReactNavigationTracking.handleRouteNavigation(navigationRef.getCurrentRoute());
             navigationRef.addListener("state", listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
         }
+
 
         DdRumReactNavigationTracking.registerAppStateListenerIfNeeded();
     }
@@ -52,14 +69,31 @@ export default class DdRumReactNavigationTracking {
         if (navigationRef != null) {
             navigationRef.removeListener("state", DdRumReactNavigationTracking.navigationStateChangeListener);
             DdRumReactNavigationTracking.registeredContainer = null;
+            DdRumReactNavigationTracking.viewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
         }
     }
 
-    private static handleRouteNavigation(route: Route<string, any | undefined> | undefined) {
-        const key = route?.key;
-        const screenName = route?.name;
+    private static handleRouteNavigation(
+        route: Route<string, any | undefined> | undefined, 
+        appStateStatus: AppStateStatus | undefined = undefined
+        ) {
+        if (route == undefined || route == null) {
+            // RUMM-1400 in some cases the route seem to be undefined
+            return
+        }
+        const key = route.key;
+
+        const predicate = DdRumReactNavigationTracking.viewNamePredicate;
+        const screenName = predicate(route, route.name) ?? route.name;
+
         if (key != null && screenName != null) {
-            DdRum.startView(key, screenName);
+            if (appStateStatus === 'background') {
+                DdRum.stopView(key);
+            } else if (appStateStatus === 'active' || appStateStatus == undefined) {
+                // case when app goes into foreground, 
+                // in that case navigation listener won't be called
+                DdRum.startView(key, screenName);
+            }
         }
     }
 
@@ -93,18 +127,11 @@ export default class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.appStateListener = (appStateStatus: AppStateStatus) => {
 
                 const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
-                const currentViewKey = currentRoute?.key;
-                const currentViewName = currentRoute?.name;
-
-                if (currentViewKey != null && currentViewName != null) {
-                    if (appStateStatus === 'background') {
-                        DdRum.stopView(currentViewKey);
-                    } else if (appStateStatus === 'active') {
-                        // case when app goes into foreground, in that case navigation listener
-                        // won't be called
-                        DdRum.startView(currentViewKey, currentViewName);
-                    }
+                if (currentRoute == undefined) {
+                    return;
                 }
+
+                DdRumReactNavigationTracking.handleRouteNavigation(currentRoute, appStateStatus);
             };
 
             // AppState is singleton, so we should add a listener only once in the app lifetime

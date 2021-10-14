@@ -5,14 +5,19 @@ import MainScreen from './screens/MainScreen';
 import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
-import { DdRumReactNavigationTracking } from '@datadog/mobile-react-navigation';
+import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { Route } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator();
+
+const viewPredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
+  return "Custom RN " + trackedName;
+}
 
 export default function App() {
   return (
     <NavigationContainer ref={navigationRef} onReady={() => {
-      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current)
+      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewPredicate)
     }}>
       <Tab.Navigator tabBarOptions={{
         labelStyle: style.tabLabelStyle,
