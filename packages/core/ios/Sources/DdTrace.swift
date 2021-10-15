@@ -20,15 +20,15 @@ class RNDdTrace: NSObject {
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
 
-    @objc(startSpan:withTimestampms:withContext:withResolver:withRejecter:)
-    func startSpan(operation: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        let result = nativeInstance.startSpan(operation: operation, timestampMs: timestampMs, context: context)
+    @objc(startSpan:withContext:withTimestampms:withResolver:withRejecter:)
+    func startSpan(operation: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let result = nativeInstance.startSpan(operation: operation, context: context, timestampMs: timestampMs)
         resolve(result)
     }
 
-    @objc(finishSpan:withTimestampms:withContext:withResolver:withRejecter:)
-    func finishSpan(spanId: NSString, timestampMs: Int64, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.finishSpan(spanId: spanId, timestampMs: timestampMs, context: context)
+    @objc(finishSpan:withContext:withTimestampms:withResolver:withRejecter:)
+    func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeInstance.finishSpan(spanId: spanId, context: context, timestampMs: timestampMs)
         resolve(nil)
     }
 

@@ -27,24 +27,24 @@ class DdTrace(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     /**
      * Start a span, and returns a unique identifier for the span.
      * @param operation The operation name of the span.
-     * @param timestampMs The timestamp when the operation started (in milliseconds).
      * @param context The additional context to send.
+     * @param timestampMs The timestamp when the operation started (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun startSpan(operation: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
-        val result = nativeInstance.startSpan(operation, timestampMs.toLong(), context.toHashMap())
+    fun startSpan(operation: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+        val result = nativeInstance.startSpan(operation, context.toHashMap(), timestampMs.toLong())
         promise.resolve(result)
     }
 
     /**
      * Finish a started span.
      * @param spanId The unique identifier of the span.
-     * @param timestampMs The timestamp when the operation stopped (in milliseconds).
      * @param context The additional context to send.
+     * @param timestampMs The timestamp when the operation stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun finishSpan(spanId: String, timestampMs: Double, context: ReadableMap, promise: Promise) {
-        nativeInstance.finishSpan(spanId, timestampMs.toLong(), context.toHashMap())
+    fun finishSpan(spanId: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+        nativeInstance.finishSpan(spanId, context.toHashMap(), timestampMs.toLong())
         promise.resolve(null)
     }
 

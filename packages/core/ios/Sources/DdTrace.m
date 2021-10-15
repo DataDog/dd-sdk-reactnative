@@ -9,14 +9,14 @@
 @interface RCT_EXTERN_MODULE(DdTrace, NSObject)
 
 RCT_EXTERN_METHOD(startSpan:(NSString)operation
-                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
+                 withTimestampms:(NSInteger)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(finishSpan:(NSString)spanId
-                 withTimestampms:(NSInteger)timestampMs
                  withContext:(NSDictionary)context
+                 withTimestampms:(NSInteger)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 

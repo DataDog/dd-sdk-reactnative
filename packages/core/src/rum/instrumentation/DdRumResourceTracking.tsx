@@ -200,6 +200,7 @@ export class DdRumResourceTracking {
         key,
         xhrProxy.status,
         "xhr",
+        -1,
         {
           "_dd.resource_timings": context.timer.hasTickFor(RESPONSE_START_LABEL) ?
             createTimings(

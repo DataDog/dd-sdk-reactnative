@@ -122,6 +122,7 @@ it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async 
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(200);
     expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
+    expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -151,6 +152,7 @@ it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()'
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(500);
     expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
+    expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -180,6 +182,7 @@ it('M intercept aborted XHR request W startTracking() + XHR.open() + XHR.send() 
     expect(DdRum.stopResource.mock.calls[0][0]).toBe(DdRum.startResource.mock.calls[0][0]);
     expect(DdRum.stopResource.mock.calls[0][1]).toBe(0);
     expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
+    expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
 
     expect(xhr.originalOpenCalled).toBe(true);
     expect(xhr.originalSendCalled).toBe(true);
@@ -345,7 +348,7 @@ describe.each([['android'], ['ios']])('timings test', (platform) => {
         await flushPromises();
 
         // THEN
-        const timings = DdRum.stopResource.mock.calls[0][3]["_dd.resource_timings"];
+        const timings = DdRum.stopResource.mock.calls[0][4]["_dd.resource_timings"];
 
         if (Platform.OS === 'ios') {
             expect(timings['firstByte']['startTime']).toBeGreaterThan(0)
@@ -385,7 +388,7 @@ describe.each([['android'], ['ios']])('timings test', (platform) => {
         await flushPromises();
 
         // THEN
-        const timings = DdRum.stopResource.mock.calls[0][3]["_dd.resource_timings"];
+        const timings = DdRum.stopResource.mock.calls[0][4]["_dd.resource_timings"];
 
         if (Platform.OS === 'ios') {
             expect(timings['firstByte']['startTime']).toBeGreaterThan(0)
@@ -421,7 +424,7 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
     await flushPromises();
 
     // THEN
-    const attributes = DdRum.stopResource.mock.calls[0][3];
+    const attributes = DdRum.stopResource.mock.calls[0][4];
 
     expect(attributes['_dd.resource_timings']).toBeNull()
 })
