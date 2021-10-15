@@ -43,6 +43,8 @@ package/lib/commonjs/DdSdkReactNativeConfiguration.js
 package/lib/commonjs/DdSdkReactNativeConfiguration.js.map
 package/lib/commonjs/NativeSdkVerbosity.js
 package/lib/commonjs/NativeSdkVerbosity.js.map
+package/lib/commonjs/ProxyConfiguration.js
+package/lib/commonjs/ProxyConfiguration.js.map
 package/lib/commonjs/Timer.js
 package/lib/commonjs/Timer.js.map
 package/lib/commonjs/TrackingConsent.js
@@ -78,6 +80,8 @@ package/lib/module/DdSdkReactNativeConfiguration.js
 package/lib/module/DdSdkReactNativeConfiguration.js.map
 package/lib/module/NativeSdkVerbosity.js
 package/lib/module/NativeSdkVerbosity.js.map
+package/lib/module/ProxyConfiguration.js
+package/lib/module/ProxyConfiguration.js.map
 package/lib/module/Timer.js
 package/lib/module/Timer.js.map
 package/lib/module/TrackingConsent.js
@@ -110,6 +114,7 @@ package/lib/typescript
 package/lib/typescript/DdSdkReactNative.d.ts
 package/lib/typescript/DdSdkReactNativeConfiguration.d.ts
 package/lib/typescript/NativeSdkVerbosity.d.ts
+package/lib/typescript/ProxyConfiguration.d.ts
 package/lib/typescript/Timer.d.ts
 package/lib/typescript/TrackingConsent.d.ts
 package/lib/typescript/foundation.d.ts
@@ -130,6 +135,7 @@ package/src
 package/src/DdSdkReactNative.tsx
 package/src/DdSdkReactNativeConfiguration.tsx
 package/src/NativeSdkVerbosity.tsx
+package/src/ProxyConfiguration.tsx
 package/src/Timer.ts
 package/src/TrackingConsent.tsx
 package/src/__tests__
