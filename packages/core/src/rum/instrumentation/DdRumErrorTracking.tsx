@@ -8,6 +8,7 @@ import type { ErrorHandlerCallback } from 'react-native';
 import { DdRum } from '../../foundation';
 
 
+const EMPTY_MESSAGE = "Unknown Error"
 const EMPTY_STACK_TRACE = ""
 const TYPE_SOURCE = "SOURCE"
 const TYPE_CONSOLE = "CONSOLE"
@@ -52,10 +53,12 @@ export class DdRumErrorTracking {
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static onGlobalError(error: any, isFatal?: boolean): void {
+        const message = DdRumErrorTracking.getErrorMessage(error);
+        const stacktrace = DdRumErrorTracking.getErrorStackTrace(error);
         DdRum.addError(
-            String(error),
+            message,
             TYPE_SOURCE,
-            DdRumErrorTracking.getErrorStackTrace(error),
+            stacktrace,
             { "_dd.error.is_crash": isFatal, "_dd.error.raw": error }
         ).then(() => {
             DdRumErrorTracking.isInDefaultErrorHandler = true;
@@ -76,17 +79,16 @@ export class DdRumErrorTracking {
         let stack: string = EMPTY_STACK_TRACE;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
-            const paramStack = DdRumErrorTracking.getErrorStackTrace(param)
+            const paramStack = DdRumErrorTracking.getErrorStackTrace(param);
             if (paramStack != undefined && paramStack != EMPTY_STACK_TRACE) {
                 stack = paramStack;
                 break;
             }
         }
 
-        const message = params.map((param) => {
-            if (typeof param === 'string') { return param }
-            else if (param instanceof Error) { return String(param) }
-            else { return JSON.stringify(param) }
+        const message = params.map((param) => { 
+            if (typeof param === 'string') { return param; }
+            else { return DdRumErrorTracking.getErrorMessage(param); }
         }).join(' ');
 
 
@@ -100,17 +102,36 @@ export class DdRumErrorTracking {
 
     }
 
+    private static getErrorMessage(error: any | undefined): string {
+        let message = EMPTY_MESSAGE;
+        if (error == undefined) {
+            message = EMPTY_MESSAGE;
+        } else if ("message" in error){
+            message = String(error.message);
+        } else {
+            message = String(error);
+        }
+
+        return message
+    }
+
     private static getErrorStackTrace(error: any | undefined): string {
         let stack = EMPTY_STACK_TRACE
+
         if (error == undefined) {
             stack = EMPTY_STACK_TRACE;
         } else if (typeof error === 'string') {
             stack = EMPTY_STACK_TRACE;
         } else if ('componentStack' in error) {
             stack = String(error.componentStack);
+        } else if ('stacktrace' in error) {
+            stack = String(error.stacktrace);
+        } else if ('stack' in error) {
+            stack = String(error.stack);
         } else if (('sourceURL' in error) && ('line' in error) && ('column' in error)) {
             stack = `at ${error.sourceURL}:${error.line}:${error.column}`;
         }
+
         return stack
     }
 }
