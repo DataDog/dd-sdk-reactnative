@@ -76,7 +76,9 @@ class DdRumWrapper implements DdRumType {
   }
 
   addError(message: string, source: string, stacktrace: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
-    return this.nativeRum.addError(message, source, stacktrace, context, timestampMs);
+    let updatedContext: any = context;
+    updatedContext["_dd.error.source_type"] = "react-native";
+    return this.nativeRum.addError(message, source, stacktrace, updatedContext, timestampMs);
   }
 
   addTiming(name: string): Promise<void> {
