@@ -13,12 +13,15 @@ import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracki
 import type { TrackingConsent } from "./TrackingConsent"
 import { ProxyType } from "./ProxyConfiguration"
 
+import {version as sdkVersion } from './version';
+
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
  */
 export class DdSdkReactNative {
 
     private static readonly DD_SOURCE_KEY = "_dd.source";
+    private static readonly DD_SDK_VERSION = "_dd.sdk_version";
     private static readonly DD_SERVICE_NAME = "_dd.service_name";
     private static readonly DD_SDK_VERBOSITY_KEY = "_dd.sdk_verbosity";
     private static readonly DD_NATIVE_VIEW_TRACKING_KEY = "_dd.native_view_tracking";
@@ -49,6 +52,7 @@ export class DdSdkReactNative {
             }
 
             configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] = 'react-native';
+            configuration.additionalConfig[DdSdkReactNative.DD_SDK_VERSION] = sdkVersion;
             configuration.additionalConfig[DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY] = configuration.nativeViewTracking;
             if (configuration.verbosity != undefined) {
                 configuration.additionalConfig[DdSdkReactNative.DD_SDK_VERBOSITY_KEY] = configuration.verbosity;
