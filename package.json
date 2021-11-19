@@ -21,9 +21,9 @@
     ]
   },
   "scripts": {
-    "prepare": "lerna link && lerna run prepare",
-    "test": "jest",
-    "lint": "eslint .",
+    "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna link && lerna run prepare",
+    "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
+    "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
     "example": "yarn --cwd example"
   },
   "devDependencies": {
@@ -45,7 +45,8 @@
     "react-native-builder-bob": "0.17.1",
     "react-test-renderer": "16.13.1",
     "metro-react-native-babel-preset": "0.66.1",
-    "typescript": "4.1.3"
+    "typescript": "4.1.3",
+    "genversion": "3.0.2"
   },
   "jest": {
     "preset": "react-native",
