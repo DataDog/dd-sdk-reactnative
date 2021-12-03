@@ -10,6 +10,8 @@ import {
     TRACE_ID_HEADER_KEY,
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
+    SAMPLING_PRIORITY_HEADER_KEY,
+    SAMPLED_HEADER_KEY,
     calculateResponseSize
 } from '../../../rum/instrumentation/DdRumResourceTracking'
 import { DdRum } from '../../../index';
@@ -290,6 +292,42 @@ it('M add origin as RUM in the request headers W startTracking() + XHR.open() + 
 
     // THEN
     expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM)
+})
+
+it('M force the agent to keep the request generated trace W startTracking() + XHR.open() + XHR.send()', async () => {
+    // GIVEN
+    let method = "GET"
+    let url = "https://api.example.com/v2/user"
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+
+    // WHEN
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.send();
+    xhr.notifyResponseArrived();
+    xhr.complete(200, 'ok');
+    await flushPromises();
+
+    // THEN
+    expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe("1")
+})
+
+it('M mark the request generated trace for sampling W startTracking() + XHR.open() + XHR.send()', async () => {
+    // GIVEN
+    let method = "GET"
+    let url = "https://api.example.com/v2/user"
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+
+    // WHEN
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.send();
+    xhr.notifyResponseArrived();
+    xhr.complete(200, 'ok');
+    await flushPromises();
+
+    // THEN
+    expect(xhr.requestHeaders[SAMPLED_HEADER_KEY]).toBe("1")
 })
 
 it('M add the span id as resource attributes W startTracking() + XHR.open() + XHR.send()', async () => {
