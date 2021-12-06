@@ -1,11 +1,11 @@
 PODS:
   - boost (1.76.0)
-  - DatadogSDK (1.8.0-beta1):
+  - DatadogSDK (1.8.0):
     - Kronos (~> 4.2)
-  - DatadogSDKBridge (0.5.0):
-    - DatadogSDK (~> 1.8.0-beta1)
-  - DatadogSDKReactNative (1.0.0-rc3):
-    - DatadogSDKBridge (~> 0.5.0)
+  - DatadogSDKBridge (0.5.1):
+    - DatadogSDK (~> 1.8.0)
+  - DatadogSDKReactNative (1.0.0-rc4):
+    - DatadogSDKBridge (= 0.5.1)
     - React-Core
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.66.3)
@@ -434,14 +434,14 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: a7c83b31436843459a1961bfd74b96033dc77234
-  DatadogSDK: 35cbc8a159ae74ae9318ad157d1e5bc2a9ba23f9
-  DatadogSDKBridge: df41e8f385750c262b2ea991fde5c9b647b5357e
-  DatadogSDKReactNative: 5c5285dbb41b14a56e5a74413cfd6fc325b07d41
-  DoubleConversion: cde416483dac037923206447da6e1454df403714
+  DatadogSDK: 70bd7f07d902c0e5835bba87ff0cfcf642cc5a91
+  DatadogSDKBridge: 61a59e46c3f00ba496be658c09c9f72ebbf9b3ea
+  DatadogSDKReactNative: af30ea3a02fd1c521b699e29114f3a905d9e420b
+  DoubleConversion: 831926d9b8bf8166fd87886c4abab286c2422662
   FBLazyVector: de148e8310b8b878db304ceea2fec13f2c02e3a0
   FBReactNativeSpec: 6192956c9e346013d5f1809ba049af720b11c6a4
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
+  glog: 5337263514dd6f09803962437687240c5dc39aa4
   Kronos: 0ca73a1c00dc9a49a0bab4a6ed42f282562a7058
   RCT-Folly: a21c126816d8025b547704b777a2ba552f3d9fa9
   RCTRequired: 59d2b744d8c2bf2d9bc7032a9f654809adcf7d50
