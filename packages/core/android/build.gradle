@@ -128,7 +128,7 @@ dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
   
-  implementation "com.datadoghq:dd-bridge-android:0.5.0"
+  implementation "com.datadoghq:dd-bridge-android:0.5.2"
 
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
