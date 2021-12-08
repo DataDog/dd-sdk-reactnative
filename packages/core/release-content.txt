@@ -73,6 +73,8 @@ package/lib/commonjs/rum/instrumentation/TraceIdentifier.js
 package/lib/commonjs/rum/instrumentation/TraceIdentifier.js.map
 package/lib/commonjs/types.js
 package/lib/commonjs/types.js.map
+package/lib/commonjs/version.js
+package/lib/commonjs/version.js.map
 package/lib/module
 package/lib/module/DdSdkReactNative.js
 package/lib/module/DdSdkReactNative.js.map
@@ -110,6 +112,8 @@ package/lib/module/rum/instrumentation/TraceIdentifier.js
 package/lib/module/rum/instrumentation/TraceIdentifier.js.map
 package/lib/module/types.js
 package/lib/module/types.js.map
+package/lib/module/version.js
+package/lib/module/version.js.map
 package/lib/typescript
 package/lib/typescript/DdSdkReactNative.d.ts
 package/lib/typescript/DdSdkReactNativeConfiguration.d.ts
@@ -130,6 +134,7 @@ package/lib/typescript/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/TraceIdentifier.d.ts
 package/lib/typescript/types.d.ts
+package/lib/typescript/version.d.ts
 package/package.json
 package/src
 package/src/DdSdkReactNative.tsx
@@ -139,6 +144,7 @@ package/src/ProxyConfiguration.tsx
 package/src/Timer.ts
 package/src/TrackingConsent.tsx
 package/src/__tests__
+package/src/__tests__/DdRumWrapper.test.tsx
 package/src/__tests__/DdSdkReactNative.test.tsx
 package/src/__tests__/Timer.test.ts
 package/src/__tests__/rum
@@ -161,3 +167,4 @@ package/src/rum/instrumentation/EventsInterceptor.tsx
 package/src/rum/instrumentation/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/TraceIdentifier.tsx
 package/src/types.tsx
+package/src/version.ts

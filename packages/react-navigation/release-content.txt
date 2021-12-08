@@ -37,6 +37,7 @@ package/lib/typescript/core/src/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/TraceIdentifier.d.ts
 package/lib/typescript/core/src/types.d.ts
+package/lib/typescript/core/src/version.d.ts
 package/lib/typescript/react-navigation
 package/lib/typescript/react-navigation/src
 package/lib/typescript/react-navigation/src/index.d.ts

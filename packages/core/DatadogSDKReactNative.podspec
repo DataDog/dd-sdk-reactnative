@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
   
   s.dependency "React-Core"
-  s.dependency "DatadogSDKBridge", "~> 0.5.0"
+  s.dependency "DatadogSDKBridge", "0.5.1"
 
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'
