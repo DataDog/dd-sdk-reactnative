@@ -62,7 +62,7 @@ Alternatively, you can use the `accessibilityLabel` element property to give the
 
 ### Track view navigation
 
-Because React Native offers a wide range of libraries to create screen navigation, only manual view tracking is supported. To see RUM sessions populate in Datadog, you need to implement view tracking.
+Because React Native offers a wide range of libraries to create screen navigation, only manual view tracking is supported by default. To see RUM sessions populate in Datadog, you need to implement view tracking.
 
 You can manually start and stop a view using the following `startView()` and `stopView` methods.
 
