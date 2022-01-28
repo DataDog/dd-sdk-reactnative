@@ -1,6 +1,10 @@
 # React-Native Monitoring
 
-Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+## Overview
+
+Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+
+The minimum supported version for the Datadog React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
 
 ## Setup
 
@@ -16,17 +20,17 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native
 ```
 
-**Minimum React Native version**: SDK supports React Native version 0.63.4 or higher. Compatibility with older versions is not guaranteed out of the box.
+### Specify application details in the UI
 
-### Specify application details in UI
+1. In the [Datadog app][1], navigate to **UX Monitoring** > **RUM Applications** > **New Application**.
+2. Choose `react-native` as the application type.
+3. Provide an application name to generate a unique Datadog application ID and client token.
 
-1. In the [Datadog app][1], select **UX Monitoring > RUM Applications > New Application**.
-2. Choose `react-native` as your Application Type.
-3. Provide a new application name to generate a unique Datadog application ID and client token.
+{{< img src="real_user_monitoring/react_native/image_reactnative.png" alt="Create a RUM application in Datadog workflow" style="width:90%;">}}
 
-![image][2]
+To ensure the safety of your data, you must use a client token. If you used only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, they would be exposed client-side in the React Native application's code. 
 
-To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, because they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
+For more information about setting up a client token, see the [Client Token documentation][4].
 
 ### Initialize the library with application context
 
@@ -188,7 +192,7 @@ const config = new DdSdkReactNativeConfiguration(
 
 ## License
 
-[Apache License, v2.0][9]
+For more information, see [Apache License, v2.0][9]
 
 ## Further Reading
 
