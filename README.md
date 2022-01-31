@@ -62,7 +62,9 @@ Alternatively, you can use the `accessibilityLabel` element property to give the
 
 ### Track view navigation
 
-Because React Native offers a wide range of libraries to create screen navigation, by default only manual view tracking is supported. You can manually start and stop a view using the following `startView()` and `stopView` methods.
+Because React Native offers a wide range of libraries to create screen navigation, only manual view tracking is supported by default. To see RUM sessions populate in Datadog, you need to implement view tracking.
+
+You can manually start and stop a view using the following `startView()` and `stopView` methods.
 
 ```js
 import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
@@ -74,7 +76,7 @@ DdRum.startView('<view-key>', '/view/url', { 'custom.foo': "something" }, Date.n
 DdRum.stopView('<view-key>', { 'custom.bar': 42 }, Date.now());
 ```
 
-Use one of Datadog's integrations to automatically track views if you're using the following libraries:
+Use one of Datadog's integrations to automatically track views for the following libraries:
 
 - If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
 - If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
