@@ -30,6 +30,7 @@ To ensure the safety of your data, you must use a client token. You cannot use o
 
 ### Initialize the library with application context
 
+{{< site-region region="us" >}}
 ```js
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
@@ -42,7 +43,6 @@ const config = new DdSdkReactNativeConfiguration(
     true, // track XHR Resources
     true // track Errors
 )
-// Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", or "US1_FED"). Default is "US1".
 config.site = "US1"
 // Optional: enable or disable native crash reports
 config.nativeCrashReportEnabled = true
@@ -53,6 +53,109 @@ await DdSdkReactNative.initialize(config)
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+{{< /site-region >}}
+
+{{< site-region region="us3" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>", 
+    "<ENVIRONMENT_NAME>", 
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US3"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="us5" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>", 
+    "<ENVIRONMENT_NAME>", 
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US5"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="eu" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>", 
+    "<ENVIRONMENT_NAME>", 
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "EU1"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="gov" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>", 
+    "<ENVIRONMENT_NAME>", 
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US1_FED"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+
 
 ### User interactions tracking
 
