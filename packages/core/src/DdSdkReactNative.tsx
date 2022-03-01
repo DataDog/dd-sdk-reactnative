@@ -4,16 +4,17 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { DdSdkReactNativeConfiguration } from "./DdSdkReactNativeConfiguration"
-import { DdSdkConfiguration } from "./types"
-import { DdSdk } from "./foundation"
-import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking'
-import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
-import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'
-import type { TrackingConsent } from "./TrackingConsent"
-import { ProxyType } from "./ProxyConfiguration"
-import { InternalLog } from "./InternalLog"
-import {version as sdkVersion } from './version';
+import type {DdSdkReactNativeConfiguration} from "./DdSdkReactNativeConfiguration"
+import {DdSdkConfiguration} from "./types"
+import {DdSdk} from "./foundation"
+import {DdRumUserInteractionTracking} from './rum/instrumentation/DdRumUserInteractionTracking'
+import {DdRumErrorTracking} from './rum/instrumentation/DdRumErrorTracking'
+import {DdRumResourceTracking} from './rum/instrumentation/DdRumResourceTracking'
+import type {TrackingConsent} from "./TrackingConsent"
+import {ProxyType} from "./ProxyConfiguration"
+import {InternalLog} from "./InternalLog"
+import {version as sdkVersion} from './version';
+import {SdkVerbosity} from "./SdkVerbosity";
 
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
@@ -47,6 +48,7 @@ export class DdSdkReactNative {
     static initialize(configuration: DdSdkReactNativeConfiguration): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (DdSdkReactNative.wasInitialized) {
+                InternalLog.log("Can't initialize Datadog, SDK was already initialized", SdkVerbosity.WARN);
                 resolve()
                 return
             }
@@ -96,6 +98,7 @@ export class DdSdkReactNative {
                     configuration.additionalConfig
                 )
             ).then(() => {
+                InternalLog.log("Datadog SDK was initialized", SdkVerbosity.INFO);
                 DdSdkReactNative.enableFeatures(configuration)
                 DdSdkReactNative.wasInitialized = true
                 resolve()
