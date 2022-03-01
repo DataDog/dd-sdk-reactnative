@@ -10,14 +10,16 @@ export class InternalLog {
 
     public static verbosity: SdkVerbosity|undefined = undefined
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public static log (message: any, verbosity: SdkVerbosity) {
+        const prefixedMessage = "DATADOG: " + message
         if (verbosity == SdkVerbosity.ERROR && (
                 (InternalLog.verbosity == SdkVerbosity.ERROR) ||
                 (InternalLog.verbosity == SdkVerbosity.WARN) ||
                 (InternalLog.verbosity == SdkVerbosity.INFO) ||
                 (InternalLog.verbosity == SdkVerbosity.DEBUG)
         )) {
-            console.error(message)
+            console.error(prefixedMessage)
         }
 
         if (verbosity == SdkVerbosity.WARN && (
@@ -25,20 +27,20 @@ export class InternalLog {
                 (InternalLog.verbosity == SdkVerbosity.INFO) ||
                 (InternalLog.verbosity == SdkVerbosity.DEBUG)
         )) {
-            console.warn(message)
+            console.warn(prefixedMessage)
         }
 
         if (verbosity == SdkVerbosity.INFO && (
                 (InternalLog.verbosity == SdkVerbosity.INFO) ||
                 (InternalLog.verbosity == SdkVerbosity.DEBUG)
         )) {
-            console.log(message)
+            console.log(prefixedMessage)
         }
 
         if (verbosity == SdkVerbosity.DEBUG && (
                 (InternalLog.verbosity == SdkVerbosity.DEBUG)
         )) {
-            console.log(message)
+            console.log(prefixedMessage)
         }
     }
 }

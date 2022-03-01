@@ -12,8 +12,8 @@ import {DdRumErrorTracking} from './rum/instrumentation/DdRumErrorTracking'
 import {DdRumResourceTracking} from './rum/instrumentation/DdRumResourceTracking'
 import type {TrackingConsent} from "./TrackingConsent"
 import {ProxyType} from "./ProxyConfiguration"
-import {InternalLog} from "./InternalLog"
 import {version as sdkVersion} from './version';
+import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 
 /**
@@ -115,6 +115,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setAttributes(attributes: object): Promise<void> {
+        InternalLog.log("Setting attributes " +  JSON.stringify(attributes), SdkVerbosity.DEBUG);
         return DdSdk.setAttributes(attributes)
     }
 
@@ -125,6 +126,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setUser(user: object): Promise<void> {
+        InternalLog.log("Setting user " +  JSON.stringify(user), SdkVerbosity.DEBUG);
         return DdSdk.setUser(user)
     }
 
@@ -134,6 +136,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static setTrackingConsent(consent: TrackingConsent): Promise<void> {
+        InternalLog.log("Setting consent " +  consent, SdkVerbosity.DEBUG);
         return DdSdk.setTrackingConsent(consent)
     }
 
