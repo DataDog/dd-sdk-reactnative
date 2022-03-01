@@ -42,18 +42,30 @@ const navigationRef3: React.RefObject<NavigationContainerRef> = React.createRef(
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
 jest.useFakeTimers();
 
+let baseConsoleErrorCalled = false;
+let baseConsoleError = (...params: unknown) => {
+    baseConsoleErrorCalled = true
+}
+let originalConsoleError = undefined
 
 beforeEach(() => {
-    
+
     jest.setTimeout(20000);
     DdRum.startView.mockClear();
     DdRum.stopView.mockClear();
     AppState.addEventListener.mockClear();
     AppState.removeEventListener.mockClear();
+    baseConsoleErrorCalled = false;
+    originalConsoleError = console.error;
+    console.error = baseConsoleError;
 
     DdRumReactNavigationTracking.registeredContainer = null;
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
     DdRumReactNavigationTracking.appStateListener = null;
+})
+
+afterEach(() => {
+    console.error = originalConsoleError
 })
 
 // Unit tests
@@ -96,8 +108,8 @@ it('M send a related RUM ViewEvent W switching screens { viewPredicate provided 
     const { getByText } = render(<FakeNavigator1 />);
     const goToAboutButton = getByText('Go to About');
     const customViewName = "custom_view_name"
-    const predicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, _trackedName: string)  { 
-        return customViewName 
+    const predicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, _trackedName: string)  {
+        return customViewName
     };
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current, predicate);
 
@@ -178,6 +190,7 @@ it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation c
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
+    expect(baseConsoleErrorCalled).toBe(true);
 })
 
 it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first is detached }', async () => {
@@ -227,6 +240,7 @@ it('M send a RUM ViewEvent for each W switching screens { multiple navigation co
     expect(DdRum.startView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
+    expect(baseConsoleErrorCalled).toBe(true);
 })
 
 it('M register AppState listener only once', async () => {

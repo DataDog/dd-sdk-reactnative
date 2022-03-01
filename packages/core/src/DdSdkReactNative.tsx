@@ -12,7 +12,7 @@ import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking'
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking'
 import type { TrackingConsent } from "./TrackingConsent"
 import { ProxyType } from "./ProxyConfiguration"
-
+import { InternalLog } from "./InternalLog"
 import {version as sdkVersion } from './version';
 
 /**
@@ -50,6 +50,8 @@ export class DdSdkReactNative {
                 resolve()
                 return
             }
+
+            InternalLog.verbosity = configuration.verbosity
 
             configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] = 'react-native';
             configuration.additionalConfig[DdSdkReactNative.DD_SDK_VERSION] = sdkVersion;

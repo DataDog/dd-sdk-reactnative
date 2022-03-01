@@ -10,6 +10,6 @@ import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { TrackingConsent } from './TrackingConsent';
-import type { SdkVerbosity } from './SdkVerbosity'
+import { SdkVerbosity } from './SdkVerbosity'
 
 export { DdLogs, DdTrace, DdRum, DdSdkReactNativeConfiguration, DdSdkReactNative, ProxyConfiguration, ProxyType, TrackingConsent, SdkVerbosity };

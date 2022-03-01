@@ -17,7 +17,7 @@ export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
     public site: string = "US"
-    public verbosity: Verbosity|undefined = undefined
+    public verbosity: SdkVerbosity|undefined = undefined
     public nativeViewTracking: boolean = false
     public proxyConfig?: ProxyConfiguration = undefined
     public serviceName?: string = undefined
