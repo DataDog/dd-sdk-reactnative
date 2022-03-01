@@ -5,7 +5,7 @@
  */
 
 import { TrackingConsent } from './TrackingConsent'
-import type { NativeSdkVerbosity } from './NativeSdkVerbosity'
+import type { SdkVerbosity } from './SdkVerbosity'
 import type { ProxyConfiguration } from './ProxyConfiguration';
 
 /**
@@ -17,11 +17,11 @@ export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
     public site: string = "US"
-    public verbosity: NativeSdkVerbosity|undefined = undefined
+    public verbosity: Verbosity|undefined = undefined
     public nativeViewTracking: boolean = false
     public proxyConfig?: ProxyConfiguration = undefined
     public serviceName?: string = undefined
-    
+
     public additionalConfig: {[k: string]: any} = {};
 
     constructor(
