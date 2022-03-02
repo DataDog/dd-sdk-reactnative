@@ -55,7 +55,7 @@ config.sampleRate = 80
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
 config.serviceName = "com.example.reactnative"
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
-configuration.verbosity = SdkVerbosity.WARN
+config.verbosity = SdkVerbosity.WARN
 
 await DdSdkReactNative.initialize(config)
 

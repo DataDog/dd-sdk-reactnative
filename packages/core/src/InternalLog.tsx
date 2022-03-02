@@ -8,39 +8,41 @@ import {SdkVerbosity} from './SdkVerbosity'
 
 export class InternalLog {
 
+    private static levelMap = new Map<SdkVerbosity, number>([
+        [SdkVerbosity.DEBUG, 1],
+        [SdkVerbosity.INFO, 2],
+        [SdkVerbosity.WARN, 3],
+        [SdkVerbosity.ERROR, 4]
+    ]);
+
     public static verbosity: SdkVerbosity|undefined = undefined
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    public static log (message: any, verbosity: SdkVerbosity) {
+    public static log (message: string, verbosity: SdkVerbosity): void {
+        if (InternalLog.verbosity === undefined) {
+            return;
+        }
+        const requiredLevel = InternalLog.levelMap.get(verbosity);
+        const allowedLevel = InternalLog.levelMap.get(InternalLog.verbosity);
+        if (allowedLevel === undefined || requiredLevel === undefined) {
+            return;
+        }
         const prefixedMessage = "DATADOG: " + message
-        if (verbosity == SdkVerbosity.ERROR && (
-                (InternalLog.verbosity == SdkVerbosity.ERROR) ||
-                (InternalLog.verbosity == SdkVerbosity.WARN) ||
-                (InternalLog.verbosity == SdkVerbosity.INFO) ||
-                (InternalLog.verbosity == SdkVerbosity.DEBUG)
-        )) {
+        if (verbosity == SdkVerbosity.ERROR && (requiredLevel >= allowedLevel)) {
             console.error(prefixedMessage)
         }
 
-        if (verbosity == SdkVerbosity.WARN && (
-                (InternalLog.verbosity == SdkVerbosity.WARN) ||
-                (InternalLog.verbosity == SdkVerbosity.INFO) ||
-                (InternalLog.verbosity == SdkVerbosity.DEBUG)
-        )) {
+        if (verbosity == SdkVerbosity.WARN && (requiredLevel >= allowedLevel)) {
             console.warn(prefixedMessage)
         }
 
-        if (verbosity == SdkVerbosity.INFO && (
-                (InternalLog.verbosity == SdkVerbosity.INFO) ||
-                (InternalLog.verbosity == SdkVerbosity.DEBUG)
-        )) {
-            console.log(prefixedMessage)
+        if (verbosity == SdkVerbosity.INFO && (requiredLevel >= allowedLevel)) {
+            console.info(prefixedMessage)
         }
 
-        if (verbosity == SdkVerbosity.DEBUG && (
-                (InternalLog.verbosity == SdkVerbosity.DEBUG)
-        )) {
-            console.log(prefixedMessage)
+        if (verbosity == SdkVerbosity.DEBUG && (requiredLevel >= allowedLevel)) {
+            console.debug(prefixedMessage)
         }
     }
+
+
 }

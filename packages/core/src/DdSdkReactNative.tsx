@@ -115,7 +115,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setAttributes(attributes: object): Promise<void> {
-        InternalLog.log("Setting attributes " +  JSON.stringify(attributes), SdkVerbosity.DEBUG);
+        InternalLog.log("Setting attributes " + JSON.stringify(attributes), SdkVerbosity.DEBUG);
         return DdSdk.setAttributes(attributes)
     }
 
@@ -126,7 +126,7 @@ export class DdSdkReactNative {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setUser(user: object): Promise<void> {
-        InternalLog.log("Setting user " +  JSON.stringify(user), SdkVerbosity.DEBUG);
+        InternalLog.log("Setting user " + JSON.stringify(user), SdkVerbosity.DEBUG);
         return DdSdk.setUser(user)
     }
 
@@ -136,7 +136,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static setTrackingConsent(consent: TrackingConsent): Promise<void> {
-        InternalLog.log("Setting consent " +  consent, SdkVerbosity.DEBUG);
+        InternalLog.log("Setting consent " + consent, SdkVerbosity.DEBUG);
         return DdSdk.setTrackingConsent(consent)
     }
 

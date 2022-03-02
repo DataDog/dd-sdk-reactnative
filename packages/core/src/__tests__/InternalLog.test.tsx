@@ -8,13 +8,21 @@
 import {SdkVerbosity} from '../SdkVerbosity'
 import {InternalLog} from '../InternalLog'
 
-let baseConsoleLogCalled = false;
-let baseConsoleLogArg = undefined;
-let baseConsoleLog = (...params: unknown) => {
-    baseConsoleLogCalled = true;
-    baseConsoleLogArg = params;
+let baseConsoleDebugCalled = false;
+let baseConsoleDebugArg = undefined;
+let baseConsoleDebug = (...params: unknown) => {
+    baseConsoleDebugCalled = true;
+    baseConsoleDebugArg = params;
 }
-let originalConsoleLog = undefined
+let originalConsoleDebug = undefined
+
+let baseConsoleInfoCalled = false;
+let baseConsoleInfoArg = undefined;
+let baseConsoleInfo = (...params: unknown) => {
+    baseConsoleInfoCalled = true;
+    baseConsoleInfoArg = params;
+}
+let originalConsoleInfo = undefined
 
 let baseConsoleWarnCalled = false;
 let baseConsoleWarnArg = undefined;
@@ -34,71 +42,77 @@ let originalConsoleError = undefined
 
 
 beforeEach(() => {
-    baseConsoleLogCalled = false;
+    baseConsoleDebugCalled = false;
+    baseConsoleInfoCalled = false;
     baseConsoleWarnCalled = false;
     baseConsoleErrorCalled = false;
 
-    baseConsoleLogArg = undefined;
+    baseConsoleDebugArg = undefined;
+    baseConsoleInfoArg = undefined;
     baseConsoleWarnArg = undefined;
     baseConsoleErrorArg = undefined;
 
-    originalConsoleLog = console.log;
+    originalConsoleDebug = console.debug;
+    originalConsoleInfo = console.info;
     originalConsoleWarn = console.warn;
     originalConsoleError = console.error;
 
-    console.log = baseConsoleLog;
+    console.debug = baseConsoleDebug;
+    console.info = baseConsoleInfo;
     console.warn = baseConsoleWarn;
     console.error = baseConsoleError;
-
-    jest.setTimeout(20000)
 })
 
 afterEach(() => {
-    console.log = originalConsoleLog
+    console.debug = originalConsoleDebug
+    console.info = originalConsoleInfo
     console.warn = originalConsoleWarn
     console.error = originalConsoleError
 })
 
 it('M output debug W log(debug) (DEBUG+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(debug) (DEBUG+ allowed)"
     InternalLog.verbosity = SdkVerbosity.DEBUG
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.DEBUG)
+    InternalLog.log(message, SdkVerbosity.DEBUG)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(true);
+    expect(baseConsoleDebugCalled).toStrictEqual(true);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
-    expect(baseConsoleLogArg).toStrictEqual(["DATADOG: " + message]);
+    expect(baseConsoleDebugArg).toStrictEqual(["DATADOG: " + message]);
 })
 
 it('M output info W log(info) (DEBUG+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(info) (DEBUG+ allowed)"
     InternalLog.verbosity = SdkVerbosity.DEBUG
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.INFO)
+    InternalLog.log(message, SdkVerbosity.INFO)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(true);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(true);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
-    expect(baseConsoleLogArg).toStrictEqual(["DATADOG: " + message]);
+    expect(baseConsoleInfoArg).toStrictEqual(["DATADOG: " + message]);
 })
 
 it('M output warn W log(warn) (DEBUG+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(warn) (DEBUG+ allowed)"
     InternalLog.verbosity = SdkVerbosity.DEBUG
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.WARN)
+    InternalLog.log(message, SdkVerbosity.WARN)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(true);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
     expect(baseConsoleWarnArg).toStrictEqual(["DATADOG: " + message]);
@@ -106,14 +120,15 @@ it('M output warn W log(warn) (DEBUG+ allowed)', async () => {
 
 it('M output error W log(error) (DEBUG+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(error) (DEBUG+ allowed)"
     InternalLog.verbosity = SdkVerbosity.DEBUG
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.ERROR)
+    InternalLog.log(message, SdkVerbosity.ERROR)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(baseConsoleErrorArg).toStrictEqual(["DATADOG: " + message]);
@@ -121,43 +136,46 @@ it('M output error W log(error) (DEBUG+ allowed)', async () => {
 
 it('M not output debug W log(debug) (INFO+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(debug) (INFO+ allowed)"
     InternalLog.verbosity = SdkVerbosity.INFO
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.DEBUG)
+    InternalLog.log(message, SdkVerbosity.DEBUG)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M output info W log(info) (INFO+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(info) (INFO+ allowed)"
     InternalLog.verbosity = SdkVerbosity.INFO
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.INFO)
+    InternalLog.log(message, SdkVerbosity.INFO)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(true);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(true);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
-    expect(baseConsoleLogArg).toStrictEqual(["DATADOG: " + message]);
+    expect(baseConsoleInfoArg).toStrictEqual(["DATADOG: " + message]);
 })
 
 it('M output warn W log(warn) (INFO+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(warn) (INFO+ allowed)"
     InternalLog.verbosity = SdkVerbosity.INFO
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.WARN)
+    InternalLog.log(message, SdkVerbosity.WARN)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(true);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
     expect(baseConsoleWarnArg).toStrictEqual(["DATADOG: " + message]);
@@ -165,14 +183,15 @@ it('M output warn W log(warn) (INFO+ allowed)', async () => {
 
 it('M output error W log(error) (INFO+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(error) (INFO+ allowed)"
     InternalLog.verbosity = SdkVerbosity.INFO
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.ERROR)
+    InternalLog.log(message, SdkVerbosity.ERROR)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(baseConsoleErrorArg).toStrictEqual(["DATADOG: " + message]);
@@ -180,43 +199,46 @@ it('M output error W log(error) (INFO+ allowed)', async () => {
 
 it('M not output debug W log(debug) (WARN+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(debug) (WARN+ allowed)"
     InternalLog.verbosity = SdkVerbosity.WARN
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.DEBUG)
+    InternalLog.log(message, SdkVerbosity.DEBUG)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M not output info W log(info) (WARN+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(info) (WARN+ allowed)"
     InternalLog.verbosity = SdkVerbosity.WARN
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.INFO)
+    InternalLog.log(message, SdkVerbosity.INFO)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M output warn W log(warn) (WARN+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
-    InternalLog.verbosity = SdkVerbosity.DEBUG
+    const message = "log(warn) (WARN+ allowed)"
+    InternalLog.verbosity = SdkVerbosity.WARN
 
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.WARN)
+    InternalLog.log(message, SdkVerbosity.WARN)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(true);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
     expect(baseConsoleWarnArg).toStrictEqual(["DATADOG: " + message]);
@@ -224,14 +246,15 @@ it('M output warn W log(warn) (WARN+ allowed)', async () => {
 
 it('M output error W log(error) (WARN+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
-    InternalLog.verbosity = SdkVerbosity.DEBUG
+    const message = "log(error) (WARN+ allowed)"
+    InternalLog.verbosity = SdkVerbosity.WARN
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.ERROR)
+    InternalLog.log(message, SdkVerbosity.ERROR)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(baseConsoleErrorArg).toStrictEqual(["DATADOG: " + message]);
@@ -239,56 +262,60 @@ it('M output error W log(error) (WARN+ allowed)', async () => {
 
 it('M not output debug W log(debug) (ERROR+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(debug) (ERROR+ allowed)"
     InternalLog.verbosity = SdkVerbosity.ERROR
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.DEBUG)
+    InternalLog.log(message, SdkVerbosity.DEBUG)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M not output info W log(info) (ERROR+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(info) (ERROR+ allowed)"
     InternalLog.verbosity = SdkVerbosity.ERROR
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.INFO)
+    InternalLog.log(message, SdkVerbosity.INFO)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M not output warn W log(warn) (ERROR+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(warn) (ERROR+ allowed)"
     InternalLog.verbosity = SdkVerbosity.ERROR
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.WARN)
+    InternalLog.log(message, SdkVerbosity.WARN)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
 it('M output error W log(error) (ERROR+ allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(error) (ERROR+ allowed)"
     InternalLog.verbosity = SdkVerbosity.ERROR
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.ERROR)
+    InternalLog.log(message, SdkVerbosity.ERROR)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(baseConsoleErrorArg).toStrictEqual(["DATADOG: " + message]);
@@ -296,56 +323,60 @@ it('M output error W log(error) (ERROR+ allowed)', async () => {
 
 it('M not output debug W log(debug) (none allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(debug) (none allowed)"
     InternalLog.verbosity = undefined
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.DEBUG)
+    InternalLog.log(message, SdkVerbosity.DEBUG)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
-it('M not output info W log(info) (ERROR+ allowed)', async () => {
+it('M not output info W log(info) (none allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(info) (none allowed)"
     InternalLog.verbosity = undefined
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.INFO)
+    InternalLog.log(message, SdkVerbosity.INFO)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
-it('M not output warn W log(warn) (ERROR+ allowed)', async () => {
+it('M not output warn W log(warn) (none allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(warn) (none allowed)"
     InternalLog.verbosity = undefined
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.WARN)
+    InternalLog.log(message, SdkVerbosity.WARN)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
 
-it('M output error W log(error) (ERROR+ allowed)', async () => {
+it('M not output error W log(error) (none allowed)', async () => {
     // GIVEN
-    const message = "Hello world"
+    const message = "log(error) (none allowed)"
     InternalLog.verbosity = undefined
 
     // WHEN
-    await InternalLog.log(message, SdkVerbosity.ERROR)
+    InternalLog.log(message, SdkVerbosity.ERROR)
 
     // THEN
-    expect(baseConsoleLogCalled).toStrictEqual(false);
+    expect(baseConsoleDebugCalled).toStrictEqual(false);
+    expect(baseConsoleInfoCalled).toStrictEqual(false);
     expect(baseConsoleWarnCalled).toStrictEqual(false);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 })
