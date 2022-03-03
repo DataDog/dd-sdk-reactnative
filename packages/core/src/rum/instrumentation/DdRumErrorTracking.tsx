@@ -106,7 +106,7 @@ export class DdRumErrorTracking {
         let message = EMPTY_MESSAGE;
         if (error == undefined) {
             message = EMPTY_MESSAGE;
-        } else if ("message" in error){
+        } else if (typeof error == 'object' && "message" in error){
             message = String(error.message);
         } else {
             message = String(error);
@@ -122,14 +122,16 @@ export class DdRumErrorTracking {
             stack = EMPTY_STACK_TRACE;
         } else if (typeof error === 'string') {
             stack = EMPTY_STACK_TRACE;
-        } else if ('componentStack' in error) {
-            stack = String(error.componentStack);
-        } else if ('stacktrace' in error) {
-            stack = String(error.stacktrace);
-        } else if ('stack' in error) {
-            stack = String(error.stack);
-        } else if (('sourceURL' in error) && ('line' in error) && ('column' in error)) {
-            stack = `at ${error.sourceURL}:${error.line}:${error.column}`;
+        } else if (typeof error === 'object') {
+            if ('componentStack' in error) {
+                stack = String(error.componentStack);
+            } else if ('stacktrace' in error) {
+                stack = String(error.stacktrace);
+            } else if ('stack' in error) {
+                stack = String(error.stack);
+            } else if (('sourceURL' in error) && ('line' in error) && ('column' in error)) {
+                stack = `at ${error.sourceURL}:${error.line}:${error.column}`;
+            }
         }
 
         return stack
