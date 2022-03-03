@@ -8,6 +8,8 @@ import React from 'react'
 import { DdEventsInterceptor } from './DdEventsInterceptor'
 import NoOpEventsInterceptor from './NoOpEventsInterceptor'
 import type EventsInterceptor from './EventsInterceptor'
+import {InternalLog} from "../../InternalLog"
+import {SdkVerbosity} from "../../SdkVerbosity"
 
 
 const PROPERTY_FUNCTION_TYPE = "function"
@@ -29,6 +31,7 @@ export class DdRumUserInteractionTracking {
     static startTracking(): void {
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumUserInteractionTracking.isTracking) {
+            InternalLog.log("Datadog SDK is already tracking interactions", SdkVerbosity.WARN);
             return
         }
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor()
@@ -45,6 +48,7 @@ export class DdRumUserInteractionTracking {
             return original(element, props, ...children)
         }
         DdRumUserInteractionTracking.isTracking = true
+        InternalLog.log("Datadog SDK is tracking interactions", SdkVerbosity.INFO);
     }
 
 }

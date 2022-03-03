@@ -5,9 +5,9 @@
  */
 
 /**
- * Enum specifying possible consent options for DD SDK.
+ * Enum specifying possible log levels for DD SDK.
  */
-export enum NativeSdkVerbosity {
+export enum SdkVerbosity {
     DEBUG = "debug",
     INFO = "info",
     WARN = "warn",

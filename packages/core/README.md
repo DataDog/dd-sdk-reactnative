@@ -35,8 +35,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
     true, // track XHR Resources
@@ -50,6 +50,8 @@ config.nativeCrashReportEnabled = true
 config.sampleRate = 80
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
 config.serviceName = "com.example.reactnative"
+// Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
+config.verbosity = SdkVerbosity.WARN
 
 await DdSdkReactNative.initialize(config)
 

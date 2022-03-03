@@ -28,7 +28,7 @@ yarn add @datadog/mobile-react-native
 
 {{< img src="real_user_monitoring/react_native/image_reactnative.png" alt="Create a RUM application in Datadog workflow" style="width:90%;">}}
 
-To ensure the safety of your data, you must use a client token. If you used only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, they would be exposed client-side in the React Native application's code. 
+To ensure the safety of your data, you must use a client token. If you used only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, they would be exposed client-side in the React Native application's code.
 
 For more information about setting up a client token, see the [Client Token documentation][4].
 
@@ -40,8 +40,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
@@ -52,6 +52,10 @@ config.site = "US1"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sampleRate = 80
+// Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
+config.serviceName = "com.example.reactnative"
+// Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
+config.verbosity = SdkVerbosity.WARN
 
 await DdSdkReactNative.initialize(config)
 
@@ -65,8 +69,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
@@ -90,8 +94,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
@@ -115,8 +119,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
@@ -140,8 +144,8 @@ import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
@@ -190,7 +194,7 @@ Use one of Datadog's integrations to automatically track views for the following
 
 ## Track custom attributes
 
-You can attach user information to all RUM events to get more detailed information from your RUM sessions. 
+You can attach user information to all RUM events to get more detailed information from your RUM sessions.
 
 ### User information
 
@@ -198,9 +202,9 @@ For user-specific information, use the following code wherever you want in your 
 
 ```js
 DdSdkReactNative.setUser({
-    id: "1337", 
-    name: "John Smith", 
-    email: "john@example.com", 
+    id: "1337",
+    name: "John Smith",
+    email: "john@example.com",
     type: "premium"
 })
 ```

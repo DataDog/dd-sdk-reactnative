@@ -6,6 +6,8 @@
 
 import type { ErrorHandlerCallback } from 'react-native';
 import { DdRum } from '../../foundation';
+import {InternalLog} from "../../InternalLog";
+import {SdkVerbosity} from "../../SdkVerbosity";
 
 
 const EMPTY_MESSAGE = "Unknown Error"
@@ -22,10 +24,10 @@ export class DdRumErrorTracking {
 
     private static isInDefaultErrorHandler = false;
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private static defaultErrorHandler: ErrorHandlerCallback = (_error: any, _isFatal?: boolean) => { }
 
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     private static defaultConsoleError = (..._params: unknown[]) => { }
 
     /**
@@ -34,7 +36,7 @@ export class DdRumErrorTracking {
     static startTracking(): void {
         // extra safety to avoid wrapping the Error handler twice
         if (DdRumErrorTracking.isTracking) {
-            console.log("DdRumErrorTracking already started");
+            InternalLog.log("Datadog SDK is already tracking errors", SdkVerbosity.WARN);
             return
         }
 
@@ -47,6 +49,9 @@ export class DdRumErrorTracking {
             console.error = DdRumErrorTracking.onConsoleError;
 
             DdRumErrorTracking.isTracking = true;
+            InternalLog.log("Datadog SDK is tracking errors", SdkVerbosity.INFO);
+        } else {
+            InternalLog.log("Datadog SDK cannot track errors, ErrorUtils is not defined", SdkVerbosity.ERROR);
         }
 
     }
@@ -86,7 +91,7 @@ export class DdRumErrorTracking {
             }
         }
 
-        const message = params.map((param) => { 
+        const message = params.map((param) => {
             if (typeof param === 'string') { return param; }
             else { return DdRumErrorTracking.getErrorMessage(param); }
         }).join(' ');
