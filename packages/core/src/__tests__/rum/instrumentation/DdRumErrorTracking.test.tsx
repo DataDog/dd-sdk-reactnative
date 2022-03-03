@@ -312,3 +312,24 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
     expect(DdRum.addError.mock.calls[0][3]).toBeUndefined()
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 })
+
+describe.each(
+    [[undefined], [null], [true], [1], ['message'], [() => { }], [{}], [['a']]]
+)('console calls with different message types', (message) => {
+    it(`M intercept and send a RUM event W onConsole() { message has ${typeof (message)} type }`, async () => {
+        // GIVEN
+        DdRumErrorTracking.startTracking();
+
+        // WHEN
+        DdRumErrorTracking.onConsoleError(message);
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.addError.mock.calls.length).toBe(1);
+        expect(DdRum.addError.mock.calls[0][0]).toBe(message == undefined ? "Unknown Error" : String(message));
+        expect(DdRum.addError.mock.calls[0][1]).toBe("CONSOLE");
+        expect(DdRum.addError.mock.calls[0][2]).toBe("");
+        expect(DdRum.addError.mock.calls[0][3]).toBeUndefined()
+        expect(baseConsoleErrorCalled).toStrictEqual(true);
+    })
+})
