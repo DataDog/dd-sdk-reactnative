@@ -981,13 +981,13 @@
     minimist "^1.2.0"
 
 "@datadog/mobile-react-native-navigation@file:../packages/react-native-navigation":
-  version "1.0.0-rc3"
+  version "1.0.0-rc5"
 
 "@datadog/mobile-react-native@file:../packages/core":
-  version "1.0.0-rc3"
+  version "1.0.0-rc5"
 
 "@datadog/mobile-react-navigation@file:../packages/react-navigation":
-  version "1.0.0-rc3"
+  version "1.0.0-rc5"
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
@@ -3960,6 +3960,11 @@ react-native-codegen@^0.0.7:
     flow-parser "^0.121.0"
     jscodeshift "^0.11.0"
     nullthrows "^1.1.1"
+
+react-native-crash-tester@0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/react-native-crash-tester/-/react-native-crash-tester-0.2.2.tgz#70d56969e8937056835a75732d8611445d56cd78"
+  integrity sha512-gnegH3WPvtkBkMNK5utu/5RhOmcOMaRZgZiRu6nyoD0OjJk8FoF1vWQ3otIJsZI8/UtFbWCvz8/62J4bqpSdCQ==
 
 react-native-gesture-handler@^1.10.1:
   version "1.10.3"

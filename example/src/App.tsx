@@ -2,6 +2,7 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MainScreen from './screens/MainScreen';
+import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
@@ -24,6 +25,7 @@ export default function App() {
         tabStyle: style.tabItemStyle
       }}>
         <Tab.Screen name="Home" component={MainScreen} />
+        <Tab.Screen name="Error" component={ErrorScreen} />
         <Tab.Screen name="About" component={AboutScreen} />
       </Tab.Navigator>
     </NavigationContainer>
