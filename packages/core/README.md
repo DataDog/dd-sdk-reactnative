@@ -73,3 +73,21 @@ DdRum.startView('<view-key>', '/view/url', Date.now(), { 'custom.foo': "somethin
 DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
 ```
 
+## Data Storage
+
+### Android
+
+Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory.
+This cache folder is protected by [Android's Application Sandbox][3], meaning that on most devices
+this data can't be read by other applications. However, if the mobile device is rooted, or someone
+tempers with the linux kernel, the stored data might become readable.
+
+### iOS
+
+Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
+of your [application sandbox](4), which can't be read by any other app installed on the device.
+
+[1]: https://app.datadoghq.com/rum/application/create
+[2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
+[3]: https://source.android.com/security/app-sandbox
+[4]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web

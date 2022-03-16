@@ -281,6 +281,21 @@ Resource tracking is able to provide the following timings:
 * `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
 * `Download` - The time it took to receive a response.
 
+
+## Data Storage
+
+### Android
+
+Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory.
+This cache folder is protected by [Android's Application Sandbox][10], meaning that on most devices
+this data can't be read by other applications. However, if the mobile device is rooted, or someone
+tempers with the linux kernel, the stored data might become readable.
+
+### iOS
+
+Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
+of your [application sandbox](11), which can't be read by any other app installed on the device.
+
 ## Development mode
 
 While in development mode, your application can submit extra events related to the React Native tooling, like code transformation errors, requests to a local development server, etc.
@@ -316,3 +331,5 @@ For more information, see [Apache License, v2.0][9]
 [7]: https://github.com/react-navigation/react-navigation
 [8]: https://www.npmjs.com/package/@datadog/mobile-react-navigation
 [9]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
+[10]: https://source.android.com/security/app-sandbox
+[11]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
