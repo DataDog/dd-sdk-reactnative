@@ -8,3 +8,6 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+-dontshrink
+-keepnames class com.facebook.react.devsupport.BridgeDevSupportManager { *; }
