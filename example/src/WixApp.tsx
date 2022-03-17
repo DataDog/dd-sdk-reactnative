@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Button } from 'react-native';
 import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import MainScreen from './screens/MainScreen';
+import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
 import { DdRumReactNativeNavigationTracking, ViewNamePredicate }  from '@datadog/mobile-react-native-navigation';
 
@@ -32,8 +33,9 @@ function startReactNativeNavigation() {
 function registerScreens() {
     Navigation.registerComponent('Home', () => HomeScreen);
     Navigation.registerComponent('Main', () => MainScreen);
+    Navigation.registerComponent('Error', () => ErrorScreen);
     Navigation.registerComponent('About', () => AboutScreen);
-} 
+}
 
 
 const HomeScreen = (props) => {
@@ -45,7 +47,14 @@ const HomeScreen = (props) => {
         onPress={() => {
             Navigation.push(props.componentId, { component: { name: 'Main' } });
         }}/>
-      <View 
+      <View
+        style = {{ marginTop: 20 }} />
+      <Button
+        title='Error'
+        onPress={() => {
+            Navigation.push(props.componentId, { component: { name: 'Error' } });
+        }}/>
+      <View
         style = {{ marginTop: 20 }} />
       <Button
         title='About'

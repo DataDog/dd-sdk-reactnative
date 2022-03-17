@@ -94,6 +94,11 @@ apply from: "../../node_modules/react-native/react.gradle"
 def enableSeparateBuildPerCPUArchitecture = false
 
 /**
+ * Run Proguard to shrink the Java bytecode in debug builds.
+ */
+def enableProguardInDebugBuilds = true
+
+/**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
 def enableProguardInReleaseBuilds = false
@@ -154,6 +159,8 @@ android {
     }
     buildTypes {
         debug {
+            minifyEnabled enableProguardInDebugBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.debug
         }
         release {
