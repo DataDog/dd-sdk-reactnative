@@ -9,7 +9,6 @@ Copyright 2016-Present Datadog, Inc.
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".MainApplication"
@@ -21,7 +20,7 @@ Copyright 2016-Present Datadog, Inc.
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
-            android:label="@string/app_name"
+            android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -29,9 +28,6 @@ Copyright 2016-Present Datadog, Inc.
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.facebook.react.devsupport.DevSettingsActivity"
-            android:exported="false" />
     </application>
 
 </manifest>
