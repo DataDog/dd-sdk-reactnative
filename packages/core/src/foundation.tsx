@@ -8,6 +8,9 @@ import { NativeModules } from 'react-native';
 import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
 import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
+import {TimeProvider} from "./TimeProvider";
+
+const timeProvider = new TimeProvider();
 
 class DdLogsWrapper implements DdLogsType {
 
@@ -39,13 +42,13 @@ class DdTraceWrapper implements DdTraceType {
 
     private nativeTrace: DdTraceType = NativeModules.DdTrace;
 
-    startSpan(operation: string, context: object = {}, timestampMs: number = Date.now()): Promise<string> {
+    startSpan(operation: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<string> {
         let spanId = this.nativeTrace.startSpan(operation, context, timestampMs);
         InternalLog.log("Starting span “" +  operation + "” #" + spanId, SdkVerbosity.DEBUG);
         return spanId
     }
 
-    finishSpan(spanId: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    finishSpan(spanId: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Finishing span #" +  spanId, SdkVerbosity.DEBUG);
         return this.nativeTrace.finishSpan(spanId, context, timestampMs);
     }
@@ -55,42 +58,42 @@ class DdRumWrapper implements DdRumType {
 
     private nativeRum: DdRumType = NativeModules.DdRum;
 
-    startView(key: string, name: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    startView(key: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM View “" +  name + "” #" + key, SdkVerbosity.DEBUG);
         return this.nativeRum.startView(key, name, context, timestampMs);
     }
 
-    stopView(key: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    stopView(key: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Stopping RUM View #" + key, SdkVerbosity.DEBUG);
         return this.nativeRum.stopView(key, context, timestampMs);
     }
 
-    startAction(type: string, name: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    startAction(type: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM Action “" + name + "” (" + type + ")", SdkVerbosity.DEBUG);
         return this.nativeRum.startAction(type, name, context, timestampMs);
     }
 
-    stopAction(context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    stopAction(context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Stopping current RUM Action", SdkVerbosity.DEBUG);
         return this.nativeRum.stopAction(context, timestampMs);
     }
 
-    addAction(type: string, name: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    addAction(type: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Adding RUM Action “" + name + "” (" + type + ")", SdkVerbosity.DEBUG);
         return this.nativeRum.addAction(type, name, context, timestampMs);
     }
 
-    startResource(key: string, method: string, url: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    startResource(key: string, method: string, url: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM Resource #" + key + " " + method + ": " + url, SdkVerbosity.DEBUG);
         return this.nativeRum.startResource(key, method, url, context, timestampMs);
     }
 
-    stopResource(key: string, statusCode: number, kind: string, size: number = -1, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    stopResource(key: string, statusCode: number, kind: string, size: number = -1, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Stopping RUM Resource #" + key + " status:" + statusCode, SdkVerbosity.DEBUG);
         return this.nativeRum.stopResource(key, statusCode, kind, size, context, timestampMs);
     }
 
-    addError(message: string, source: string, stacktrace: string, context: object = {}, timestampMs: number = Date.now()): Promise<void> {
+    addError(message: string, source: string, stacktrace: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Adding RUM Error “" + message + "”", SdkVerbosity.DEBUG);
         let updatedContext: any = context;
         updatedContext["_dd.error.source_type"] = "react-native";

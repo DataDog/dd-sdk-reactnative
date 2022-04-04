@@ -1,10 +1,11 @@
-type Timestamp = {
-    // Result of Date API. Unix timestamp in ms.
-    unix: number,
-    // Result of performance.now API. Timestamp in ms (with microsecond precision)
-    // since JS context start.
-    react_native: number | null
-}
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+import {TimeProvider, Timestamp} from "./TimeProvider";
+
 
 const START_LABEL = "__start"
 const STOP_LABEL = "__stop"
@@ -15,7 +16,12 @@ const STOP_LABEL = "__stop"
  */
 export default class Timer {
 
+    private timeProvider: TimeProvider;
     private times: Record<string, Timestamp> = {};
+
+    constructor(timeProvider: TimeProvider = new TimeProvider()) {
+        this.timeProvider = timeProvider;
+    }
 
     get startTime(): number {
         return this.times[START_LABEL].unix
@@ -34,10 +40,7 @@ export default class Timer {
     }
 
     recordTick(label: string): void {
-        this.times[label] = {
-            unix: Date.now(),
-            react_native: this.performanceNow()
-        }
+        this.times[label] = this.timeProvider.getTimestamp();
     }
 
     hasTickFor(label: string): boolean {
@@ -69,22 +72,6 @@ export default class Timer {
             return end.react_native - start.react_native;
         }
         return end.unix - start.unix;
-    }
-
-
-    private performanceNow(): number | null {
-        if (this.canUsePerformanceNow()) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            return performance.now();
-        }
-        return null;
-    }
-
-    private canUsePerformanceNow(): boolean {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return global.performance && typeof performance.now === 'function';
     }
 
     private checkLabelExists(label: string) {
