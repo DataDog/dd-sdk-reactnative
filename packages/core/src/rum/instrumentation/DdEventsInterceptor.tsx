@@ -6,6 +6,8 @@
 
 import type EventsInterceptor from './EventsInterceptor'
 import { DdRum } from '../../foundation'
+import { SdkVerbosity } from '../../SdkVerbosity'
+import { InternalLog } from '../../InternalLog'
 
 export const UNKNOWN_TARGET_NAME = "unknown_target"
 const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10
@@ -13,6 +15,9 @@ const HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS = 1
 const DD_ACTION_NAME_PROP = "dd-action-name"
 
 export class DdEventsInterceptor implements EventsInterceptor {
+
+    static ACTION_EVENT_DROPPED_WARN_MESSAGE = "An action event was dropped because either the `onPress` method arguments" +
+        " were undefined or they were missing the target information."
 
     private debouncingStartedTimestamp = Number.MIN_VALUE
 
@@ -26,6 +31,9 @@ export class DdEventsInterceptor implements EventsInterceptor {
                 // we add an approximated 1 millisecond for the execution time of the `handleTargetEvent` function
                 this.debouncingStartedTimestamp = currentTime + HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS
             }
+        }
+        else {
+            InternalLog.log(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE, SdkVerbosity.WARN)
         }
     }
 

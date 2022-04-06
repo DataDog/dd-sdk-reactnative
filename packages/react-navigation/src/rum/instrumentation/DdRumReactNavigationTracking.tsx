@@ -5,8 +5,9 @@
  */
 
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
-import { DdRum } from '@datadog/mobile-react-native';
+import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
 import { AppState, AppStateStatus } from 'react-native';
+import { InternalLog } from '@datadog/mobile-react-native/internal';
 
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
 
@@ -26,29 +27,33 @@ export type ViewNamePredicate = (route: Route<string, any | undefined>, trackedN
 export class DdRumReactNavigationTracking {
 
     private static registeredContainer: NavigationContainerRef | null;
-    
+
     private static navigationStateChangeListener: NavigationListener;
 
     private static appStateListener: AppStateListener;
 
     private static viewNamePredicate: ViewNamePredicate;
 
+    static ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE = "A navigation change was detected but the RUM ViewEvent was dropped as the route was undefined."
+    static NULL_NAVIGATION_REF_ERROR_MESSAGE = "Cannot track views with a null navigationRef."
+    static NAVIGATION_REF_IN_USE_ERROR_MESSAGE = "Cannot track new navigation container while another one is still tracked. Please call `DdRumReactNavigationTracking.stopTrackingViews` on the previous container reference."
+
     /**
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
      */
     static startTrackingViews(
-            navigationRef: NavigationContainerRef | null,
-            viewNamePredicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
-        ): void {
+        navigationRef: NavigationContainerRef | null,
+        viewNamePredicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
+    ): void {
 
         if (navigationRef == null) {
-            console.log ("Cannot track views with a null navigationRef");
+            InternalLog.log(DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE, SdkVerbosity.ERROR);
             return;
         }
 
         if (DdRumReactNavigationTracking.registeredContainer != null && this.registeredContainer !== navigationRef) {
-            console.error('Cannot track new navigation container while another one is still tracked');
+            InternalLog.log(DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE, SdkVerbosity.ERROR);
         } else if (DdRumReactNavigationTracking.registeredContainer == null) {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
             const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
@@ -74,10 +79,11 @@ export class DdRumReactNavigationTracking {
     }
 
     private static handleRouteNavigation(
-        route: Route<string, any | undefined> | undefined, 
+        route: Route<string, any | undefined> | undefined,
         appStateStatus: AppStateStatus | undefined = undefined
-        ) {
+    ) {
         if (route == undefined || route == null) {
+            InternalLog.log(DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE, SdkVerbosity.WARN)
             // RUMM-1400 in some cases the route seem to be undefined
             return
         }
@@ -103,6 +109,7 @@ export class DdRumReactNavigationTracking {
                 let route = event.data?.state?.routes[event.data?.state?.index];
 
                 if (route == undefined) {
+                    InternalLog.log(DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE, SdkVerbosity.WARN)
                     // RUMM-1400 in some cases the route seem to be undefined
                     return
                 }
@@ -128,6 +135,7 @@ export class DdRumReactNavigationTracking {
 
                 const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
                 if (currentRoute == undefined) {
+                    InternalLog.log(`We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`, SdkVerbosity.ERROR)
                     return;
                 }
 

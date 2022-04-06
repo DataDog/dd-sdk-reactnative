@@ -12,10 +12,12 @@ import {
     ORIGIN_HEADER_KEY,
     SAMPLING_PRIORITY_HEADER_KEY,
     SAMPLED_HEADER_KEY,
-    calculateResponseSize
+    calculateResponseSize,
+    RESOURCE_SIZE_ERROR_MESSAGE
 } from '../../../rum/instrumentation/DdRumResourceTracking'
 import { DdRum } from '../../../index';
 import { Platform } from 'react-native';
+import { SdkVerbosity } from "../../../SdkVerbosity"
 
 jest.useFakeTimers()
 
@@ -32,6 +34,16 @@ jest.mock('../../../foundation', () => {
         },
     };
 });
+
+jest.mock("../../../InternalLog", () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        }
+    }
+});
+
+import { InternalLog } from "../../../InternalLog";
 
 function randomInt(max: number): number {
     return Math.floor(Math.random() * max)
@@ -625,12 +637,14 @@ it('M not calculate response size W calculateResponseSize() { responseType=docum
 
 it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     // GIVEN
-    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
+    InternalLog.log.mockClear();
+
     const xhr = new XMLHttpRequest();
     xhr.readyState = XMLHttpRequest.DONE;
     xhr.responseType = 'blob';
+    let error = new Error()
     xhr.response = {
-        get size() { throw new Error() }
+        get size() { throw error }
     };
 
     // WHEN
@@ -639,9 +653,9 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
 
     // THEN
     expect(size).toEqual(-1);
-    expect(consoleErrorMock).toHaveBeenCalled();
-
-    consoleErrorMock.mockRestore();
+    expect(InternalLog.log).toHaveBeenCalled;
+    expect(InternalLog.log.mock.calls[0][0]).toBe(`${RESOURCE_SIZE_ERROR_MESSAGE}${error}`)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.ERROR)
 })
 
 it('M return 0 W calculateResponseSize() { size is not a number }', () => {

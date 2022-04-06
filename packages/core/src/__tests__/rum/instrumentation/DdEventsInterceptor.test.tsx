@@ -16,6 +16,18 @@ jest.mock('../../../foundation', () => {
     };
 });
 
+jest.mock("../../../InternalLog", () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        }
+    }
+});
+
+import { InternalLog } from "../../../InternalLog";
+import { SdkVerbosity } from '../../../SdkVerbosity';
+
+
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper')
 jest.useFakeTimers()
@@ -25,6 +37,7 @@ let testedEventsInterceptor: DdEventsInterceptor
 beforeEach(() => {
     testedEventsInterceptor = new DdEventsInterceptor()
     jest.setTimeout(20000)
+    InternalLog.log.mockReset()
     DdRum.addAction.mockReset()
 })
 
@@ -159,6 +172,9 @@ it('M do nothing W interceptOnPress { invalid arguments - empty object } ', asyn
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { invalid arguments - array } ', async () => {
@@ -170,6 +186,9 @@ it('M do nothing W interceptOnPress { invalid arguments - array } ', async () =>
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { invalid arguments - nested array } ', async () => {
@@ -181,6 +200,9 @@ it('M do nothing W interceptOnPress { invalid arguments - nested array } ', asyn
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { invalid arguments - undefined } ', async () => {
@@ -192,6 +214,9 @@ it('M do nothing W interceptOnPress { invalid arguments - undefined } ', async (
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => {
@@ -203,6 +228,9 @@ it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => 
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', async () => {
@@ -211,6 +239,9 @@ it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', asyn
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
 
 it('M do nothing W interceptOnPress { no arguments call } ', async () => {
@@ -219,4 +250,7 @@ it('M do nothing W interceptOnPress { no arguments call } ', async () => {
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(0)
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN)
 })
