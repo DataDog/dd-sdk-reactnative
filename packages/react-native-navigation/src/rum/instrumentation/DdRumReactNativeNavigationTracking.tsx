@@ -16,7 +16,7 @@ export type ViewNamePredicate = (event: ComponentDidAppearEvent, trackedName: st
 export class DdRumReactNativeNavigationTracking {
 
     private static isTracking = false
-    private static trackedComponentIds : Array<any> = [];
+    private static trackedComponentIds: Array<any> = [];
     private static originalCreateElement: any = undefined
 
     private static viewNamePredicate: ViewNamePredicate;
@@ -32,7 +32,7 @@ export class DdRumReactNativeNavigationTracking {
         const original = React.createElement
         DdRumReactNativeNavigationTracking.originalCreateElement = original
         React.createElement = (element: any, props: any, ...children: any): any => {
-            if (props && props.componentId != undefined 
+            if (props && props.componentId != undefined
                 && !DdRumReactNativeNavigationTracking.trackedComponentIds.includes(props.componentId)
             ) {
                 const componentId = props.componentId

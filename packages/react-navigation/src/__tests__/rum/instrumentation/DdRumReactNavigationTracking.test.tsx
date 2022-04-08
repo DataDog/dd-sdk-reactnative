@@ -8,9 +8,18 @@ import React from 'react';
 import { View, Text, Button, AppState } from 'react-native';
 import { NavigationContainer, NavigationContainerRef, Route } from '@react-navigation/native';
 import { DdRum } from '@datadog/mobile-react-native';
-import { DdRumReactNavigationTracking, ViewNamePredicate} from '../../../rum/instrumentation/DdRumReactNavigationTracking';
+import { DdRumReactNavigationTracking, ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { InternalLog } from '@datadog/mobile-react-native/internal';
+
+jest.mock('@datadog/mobile-react-native/internal', () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        }
+    }
+});
 
 jest.mock('@datadog/mobile-react-native', () => {
     return {
@@ -19,6 +28,12 @@ jest.mock('@datadog/mobile-react-native', () => {
             startView: jest.fn().mockImplementation(() => { }),
             stopView: jest.fn().mockImplementation(() => { })
         },
+        SdkVerbosity: {
+            DEBUG: "debug",
+            INFO: "info",
+            WARN: "warn",
+            ERROR: "error"
+        }
     };
 });
 
@@ -42,30 +57,18 @@ const navigationRef3: React.RefObject<NavigationContainerRef> = React.createRef(
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
 jest.useFakeTimers();
 
-let baseConsoleErrorCalled = false;
-let baseConsoleError = (...params: unknown) => {
-    baseConsoleErrorCalled = true
-}
-let originalConsoleError = undefined
 
 beforeEach(() => {
-
+    InternalLog.log.mockClear();
     jest.setTimeout(20000);
     DdRum.startView.mockClear();
     DdRum.stopView.mockClear();
     AppState.addEventListener.mockClear();
     AppState.removeEventListener.mockClear();
-    baseConsoleErrorCalled = false;
-    originalConsoleError = console.error;
-    console.error = baseConsoleError;
 
     DdRumReactNavigationTracking.registeredContainer = null;
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
     DdRumReactNavigationTracking.appStateListener = null;
-})
-
-afterEach(() => {
-    console.error = originalConsoleError
 })
 
 // Unit tests
@@ -108,7 +111,7 @@ it('M send a related RUM ViewEvent W switching screens { viewPredicate provided 
     const { getByText } = render(<FakeNavigator1 />);
     const goToAboutButton = getByText('Go to About');
     const customViewName = "custom_view_name"
-    const predicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, _trackedName: string)  {
+    const predicate: ViewNamePredicate = function (_route: Route<string, any | undefined>, _trackedName: string) {
         return customViewName
     };
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current, predicate);
@@ -166,6 +169,9 @@ it('M do nothing W startTrackingViews { undefined NavigationContainerRef ', asyn
 
     // THEN
     expect(DdRum.startView.mock.calls.length).toBe(0);
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe("error")
 })
 
 it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first not detached }', async () => {
@@ -190,7 +196,9 @@ it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation c
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
-    expect(baseConsoleErrorCalled).toBe(true);
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe("error")
 })
 
 it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first is detached }', async () => {
@@ -240,7 +248,9 @@ it('M send a RUM ViewEvent for each W switching screens { multiple navigation co
     expect(DdRum.startView.mock.calls[0][0]).toBe(navigationRef1.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[0][1]).toBe(navigationRef1.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
-    expect(baseConsoleErrorCalled).toBe(true);
+    expect(InternalLog.log.mock.calls.length).toBe(1)
+    expect(InternalLog.log.mock.calls[0][0]).toBe(DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE)
+    expect(InternalLog.log.mock.calls[0][1]).toBe("error")
 })
 
 it('M register AppState listener only once', async () => {
@@ -368,7 +378,7 @@ function FakeSettingsScreen({ navigation }) {
     )
 }
 
-function FakeProfileScreen({navigation}) {
+function FakeProfileScreen({ navigation }) {
     return (
         <Navigator>
             <Screen name="Home" component={FakeHomeScreen} />
@@ -403,8 +413,8 @@ function FakeNestedNavigator() {
     return (
         <NavigationContainer ref={navigationRef3}>
             <Navigator>
-                <Screen name="Profile" component= {FakeProfileScreen} />
-                <Screen name ="Settings" component= {FakeSettingsScreen}/>
+                <Screen name="Profile" component={FakeProfileScreen} />
+                <Screen name="Settings" component={FakeSettingsScreen} />
             </Navigator>
         </NavigationContainer>
     )
