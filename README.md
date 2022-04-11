@@ -269,7 +269,7 @@ DdRum.addError('<message>', 'source', '<stacktrace>', {}, Date.now());
 // Track RUM Resource manually
 DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', {}, Date.now());
 //…
-DdRum.stopResource('<res-key>', 200, 'xhr', {}, Date.now());
+DdRum.stopResource('<res-key>', 200, 'xhr', size = 1337, {}, Date.now());
 
 // Send spans manually
 const spanId = await DdTrace.startSpan("foo", { 'custom': 42 }, Date.now());
