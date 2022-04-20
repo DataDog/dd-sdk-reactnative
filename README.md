@@ -212,6 +212,12 @@ DdSdkReactNative.setUser({
 })
 ```
 
+When the user signs out of your app, you can unset the user by doing this:
+
+```js
+DdSdkReactNative.setUser({})
+```
+
 ### Global attributes
 
 You can also keep global attributes to track information about a specific session, such as A/B testing configuration, ad campaign origin, or cart status.
