@@ -212,7 +212,7 @@ DdSdkReactNative.setUser({
 })
 ```
 
-When the user signs out of your app, you can unset the user by doing this:
+If you want to clear the user information (for example, when the user signs out), you can do so by passing an empty object, as follows:
 
 ```js
 DdSdkReactNative.setUser({})
