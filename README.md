@@ -212,6 +212,12 @@ DdSdkReactNative.setUser({
 })
 ```
 
+If you want to clear the user information (for example, when the user signs out), you can do so by passing an empty object, as follows:
+
+```js
+DdSdkReactNative.setUser({})
+```
+
 ### Global attributes
 
 You can also keep global attributes to track information about a specific session, such as A/B testing configuration, ad campaign origin, or cart status.
