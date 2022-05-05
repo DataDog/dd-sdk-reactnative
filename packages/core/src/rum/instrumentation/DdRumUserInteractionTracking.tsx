@@ -54,6 +54,9 @@ export class DdRumUserInteractionTracking {
         const originalMemo = React.memo;
         React.memo = (component: any, propsAreEqual?: (prevProps: any, newProps: any) => boolean) => {
             return originalMemo(component, (prev, next) => {
+                if (!next.onPress || !prev.onPress) {
+                    return !!propsAreEqual ? propsAreEqual(prev, next) : areObjectShallowEqual(prev, next);
+                }
                 // we replace "our" onPress from the props by the original for comparison
                 const {onPress: _prevOnPress, ...partialPrevProps  } = prev;
                 const prevProps = {...partialPrevProps, onPress: prev.__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__}
