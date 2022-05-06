@@ -10,6 +10,7 @@ import NoOpEventsInterceptor from './NoOpEventsInterceptor'
 import type EventsInterceptor from './EventsInterceptor'
 import {InternalLog} from "../../InternalLog"
 import {SdkVerbosity} from "../../SdkVerbosity"
+import { areObjectShallowEqual } from './ShallowObjectEqualityChecker'
 
 
 const PROPERTY_FUNCTION_TYPE = "function"
@@ -44,9 +45,30 @@ export class DdRumUserInteractionTracking {
                     DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(...args)
                     return originalOnPress(...args)
                 }
+                // we store the original onPress prop so we can keep memoization working
+                props.__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__ = originalOnPress
             }
             return original(element, props, ...children)
         }
+
+        const originalMemo = React.memo;
+        React.memo = (component: any, propsAreEqual?: (prevProps: any, newProps: any) => boolean) => {
+            return originalMemo(component, (prev, next) => {
+                if (!next.onPress || !prev.onPress) {
+                    return !!propsAreEqual ? propsAreEqual(prev, next) : areObjectShallowEqual(prev, next);
+                }
+                // we replace "our" onPress from the props by the original for comparison
+                const {onPress: _prevOnPress, ...partialPrevProps  } = prev;
+                const prevProps = {...partialPrevProps, onPress: prev.__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__}
+                
+                const {onPress: _nextOnPress, ...partialNextProps  } = next;
+                const nextProps = {...partialNextProps, onPress: next.__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__}
+
+                // if no comparison function is provided we do shallow comparison
+                return !!propsAreEqual ? propsAreEqual(prevProps, nextProps) : areObjectShallowEqual(nextProps, prevProps);
+            })
+        }
+
         DdRumUserInteractionTracking.isTracking = true
         InternalLog.log("Datadog SDK is tracking interactions", SdkVerbosity.INFO);
     }

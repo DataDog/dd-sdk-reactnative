@@ -186,3 +186,129 @@ it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback compon
     const mockedInterceptOnPressFunction = currentMockedEventsInterceptor.interceptOnPress;
     expect(mockedInterceptOnPressFunction).toBeCalled()
 })
+
+it('M keep memoization working for elements W an onPress prop is passed', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking()
+    let rendersCount = 0;
+    const DummyComponent = (props) => {
+        rendersCount++;
+        return (
+            <TouchableWithoutFeedback
+                onPress={props.onPress}>
+                <View style={styles.button}>
+                    <Text style={styles.button}>Click me</Text>
+                </View>
+            </TouchableWithoutFeedback>
+        )
+    }
+    const stableOnPress = () => {};
+    const MemoizedComponent = React.memo(DummyComponent);
+    const { rerender } = render(<MemoizedComponent onPress={stableOnPress} />);
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={stableOnPress} />);
+    // THEN
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={() => {}} />);
+    // THEN
+    expect(rendersCount).toBe(2);
+})
+
+it('M keep memoization working for elements W no onPress prop is passed', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking()
+    let rendersCount = 0;
+    const DummyComponent = (props) => {
+        rendersCount++;
+        return (
+            <View style={styles.button}>
+                <Text style={styles.button}>{props.title}</Text>
+            </View>
+        )
+    }
+    const MemoizedComponent = React.memo(DummyComponent);
+    const { rerender } = render(<MemoizedComponent title={'Click me'} />);
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent title={'Click me'} />);
+    // THEN
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent title={'New title'} />);
+    // THEN
+    expect(rendersCount).toBe(2);
+})
+
+it('M keep memoization working for elements W an onPress prop is passed and custom arePropsEqual specified', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking()
+    let rendersCount = 0;
+    const DummyComponent = (props) => {
+        rendersCount++;
+        return (
+            <TouchableWithoutFeedback
+                onPress={props.onPress}>
+                <View style={styles.button}>
+                    <Text style={styles.button}>{props.title}</Text>
+                </View>
+            </TouchableWithoutFeedback>
+        )
+    }
+    const stableOnPress = () => {};
+    const MemoizedComponent = React.memo(
+        DummyComponent,
+        (previousProps, nextProps) => previousProps.title === nextProps.title
+    );
+    const { rerender } = render(<MemoizedComponent onPress={stableOnPress} title={'Click me'} />);
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={stableOnPress} title={'Click me'} />);
+    // THEN
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={stableOnPress} title={'New title'} />);
+    // THEN
+    expect(rendersCount).toBe(2);
+})
+
+it('M keep memoization working for elements W an onPress prop is passed and custom arePropsEqual specified including onPress check', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking()
+    let rendersCount = 0;
+    const DummyComponent = (props) => {
+        rendersCount++;
+        return (
+            <TouchableWithoutFeedback
+                onPress={props.onPress}>
+                <View style={styles.button}>
+                    <Text style={styles.button}>Click me</Text>
+                </View>
+            </TouchableWithoutFeedback>
+        )
+    }
+    const stableOnPress = () => {};
+    const MemoizedComponent = React.memo(
+        DummyComponent,
+        (previousProps, nextProps) => previousProps.onPress === nextProps.onPress
+    );
+    const { rerender } = render(<MemoizedComponent onPress={stableOnPress} />);
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={stableOnPress} />);
+    // THEN
+    expect(rendersCount).toBe(1);
+
+    // WHEN
+    rerender(<MemoizedComponent onPress={() => {}} />);
+    // THEN
+    expect(rendersCount).toBe(2);    
+})
