@@ -57,6 +57,7 @@
     "setupFiles": [
       "./node_modules/react-native-gesture-handler/jestSetup.js"
     ],
+    "testPathIgnorePatterns": ["/__utils__/"],
     "transformIgnorePatterns": []
   }
 }

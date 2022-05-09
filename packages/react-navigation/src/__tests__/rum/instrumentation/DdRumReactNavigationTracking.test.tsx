@@ -13,6 +13,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
+import { AppStateMock } from './__utils__/AppStateMock';
 
 jest.mock(
   'react-native/Libraries/Utilities/BackHandler',
@@ -43,16 +44,9 @@ jest.mock('@datadog/mobile-react-native', () => {
     };
 });
 
-let capturedAppStateChangeCallback = null;
-
-jest.mock('react-native/Libraries/AppState/AppState', () => ({
-    addEventListener: jest.fn((event, callback) => {
-        if (event === 'change') {
-            capturedAppStateChangeCallback = callback;
-        }
-    }),
-    removeEventListener: jest.fn().mockImplementation(() => { })
-}));
+const appStateMock = new AppStateMock();
+AppState.addEventListener.mockImplementation(appStateMock.addEventListener)
+AppState.removeEventListener.mockImplementation(appStateMock.removeEventListener)
 
 const { Screen, Navigator } = createStackNavigator();
 const navigationRef1: React.RefObject<NavigationContainerRef> = React.createRef();
@@ -71,6 +65,7 @@ beforeEach(() => {
     DdRum.stopView.mockClear();
     AppState.addEventListener.mockClear();
     AppState.removeEventListener.mockClear();
+    appStateMock.removeAllListeners();
     BackHandler.exitApp.mockClear();
 
     DdRumReactNavigationTracking.registeredContainer = null;
@@ -284,7 +279,7 @@ it('M stop active view W app goes into background', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
+    appStateMock.changeValue('background');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
@@ -301,8 +296,8 @@ it('M start last view W app goes into foreground', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
-    capturedAppStateChangeCallback('active');
+    appStateMock.changeValue('background');
+    appStateMock.changeValue('active');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
@@ -321,7 +316,7 @@ it('M not stop view W no navigator attached', async () => {
     DdRumReactNavigationTracking.stopTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
+    appStateMock.changeValue('background');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(0);
