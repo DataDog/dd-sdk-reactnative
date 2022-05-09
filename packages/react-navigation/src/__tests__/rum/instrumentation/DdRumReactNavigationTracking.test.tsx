@@ -70,7 +70,6 @@ beforeEach(() => {
 
     DdRumReactNavigationTracking.registeredContainer = null;
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
-    DdRumReactNavigationTracking.appStateListener = null;
 })
 
 // Unit tests
@@ -255,7 +254,7 @@ it('M send a RUM ViewEvent for each W switching screens { multiple navigation co
     expect(InternalLog.log.mock.calls[0][1]).toBe("error")
 })
 
-it('M register AppState listener only once', async () => {
+it('M register and unregister AppState', async () => {
 
     // GIVEN
     render(<FakeNavigator1 />);
@@ -267,8 +266,29 @@ it('M register AppState listener only once', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef2.current);
 
     // THEN
-    expect(AppState.addEventListener.mock.calls.length).toBe(1);
-    expect(AppState.removeEventListener.mock.calls.length).toBe(0);
+    expect(AppState.addEventListener.mock.calls.length).toBe(2);
+    expect(AppState.removeEventListener.mock.calls.length).toBe(1);
+
+    // WHEN we go in background mode
+    appStateMock.changeValue('background');
+
+    // THEN the listener is only called once
+    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+})
+
+it('M not log AppState changes W tracking is stopped', async () => {
+
+    // GIVEN
+    render(<FakeNavigator1 />);
+
+    // WHEN
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
+    DdRumReactNavigationTracking.stopTrackingViews(navigationRef1.current);
+    appStateMock.changeValue('background');
+
+    // THEN
+    expect(DdRum.stopView).not.toHaveBeenCalled();
+    expect(InternalLog.log).not.toHaveBeenCalledWith("We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.", "error");
 })
 
 it('M stop active view W app goes into background', async () => {

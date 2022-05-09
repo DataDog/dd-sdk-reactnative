@@ -30,8 +30,6 @@ export class DdRumReactNavigationTracking {
 
     private static navigationStateChangeListener: NavigationListener;
 
-    private static appStateListener: AppStateListener;
-
     private static viewNamePredicate: ViewNamePredicate;
 
     private static backHandler: NativeEventSubscription | null;
@@ -78,10 +76,9 @@ export class DdRumReactNavigationTracking {
             navigationRef.addListener("state", listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
             DdRumReactNavigationTracking.backHandler = BackHandler.addEventListener('hardwareBackPress', DdRumReactNavigationTracking.onBackPress);
+            AppState.addEventListener("change", DdRumReactNavigationTracking.appStateListener);
         }
 
-
-        DdRumReactNavigationTracking.registerAppStateListenerIfNeeded();
     }
 
     /**
@@ -96,6 +93,7 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.registeredContainer = null;
             DdRumReactNavigationTracking.viewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
         }
+        AppState.removeEventListener("change", DdRumReactNavigationTracking.appStateListener);
     }
 
     private static handleRouteNavigation(
@@ -149,23 +147,14 @@ export class DdRumReactNavigationTracking {
         return DdRumReactNavigationTracking.navigationStateChangeListener;
     }
 
-    private static registerAppStateListenerIfNeeded() {
-        if (DdRumReactNavigationTracking.appStateListener == null) {
-            DdRumReactNavigationTracking.appStateListener = (appStateStatus: AppStateStatus) => {
-
-                const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
-                if (currentRoute == undefined) {
-                    InternalLog.log(`We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`, SdkVerbosity.ERROR)
-                    return;
-                }
-
-                DdRumReactNavigationTracking.handleRouteNavigation(currentRoute, appStateStatus);
-            };
-
-            // AppState is singleton, so we should add a listener only once in the app lifetime
-            AppState.addEventListener("change", DdRumReactNavigationTracking.appStateListener);
+    private static appStateListener: AppStateListener = (appStateStatus: AppStateStatus) => {
+        const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
+        if (currentRoute == undefined) {
+            InternalLog.log(`We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`, SdkVerbosity.ERROR)
+            return;
         }
-    }
 
+        DdRumReactNavigationTracking.handleRouteNavigation(currentRoute, appStateStatus);
+    };
 }
 
