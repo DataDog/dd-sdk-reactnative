@@ -6,7 +6,7 @@
 
 import type { EventArg, NavigationContainerRef, Route } from "@react-navigation/native";
 import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, BackHandler, NativeEventSubscription } from 'react-native';
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 
 declare type NavigationListener = (event: EventArg<string, boolean, any>) => void | null
@@ -34,9 +34,26 @@ export class DdRumReactNavigationTracking {
 
     private static viewNamePredicate: ViewNamePredicate;
 
+    private static backHandler: NativeEventSubscription | null;
+
     static ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE = "A navigation change was detected but the RUM ViewEvent was dropped as the route was undefined."
     static NULL_NAVIGATION_REF_ERROR_MESSAGE = "Cannot track views with a null navigationRef."
     static NAVIGATION_REF_IN_USE_ERROR_MESSAGE = "Cannot track new navigation container while another one is still tracked. Please call `DdRumReactNavigationTracking.stopTrackingViews` on the previous container reference."
+
+    static isAppExitingOnBackPress = (): boolean => {
+        if (DdRumReactNavigationTracking.registeredContainer === null) return false;
+        if (DdRumReactNavigationTracking.registeredContainer.canGoBack()) return false;
+        return true;
+    }
+
+    static onBackPress = () => {
+        if (DdRumReactNavigationTracking.isAppExitingOnBackPress()) {
+            DdRumReactNavigationTracking.stopTrackingViews(DdRumReactNavigationTracking.registeredContainer);
+        }
+        // We always return false so we make sure the react-navigation callback is called.
+        // See https://reactnative.dev/docs/backhandler
+        return false;
+    }
 
     /**
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
@@ -60,6 +77,7 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.handleRouteNavigation(navigationRef.getCurrentRoute());
             navigationRef.addListener("state", listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
+            DdRumReactNavigationTracking.backHandler = BackHandler.addEventListener('hardwareBackPress', DdRumReactNavigationTracking.onBackPress);
         }
 
 
@@ -73,6 +91,8 @@ export class DdRumReactNavigationTracking {
     static stopTrackingViews(navigationRef: NavigationContainerRef | null): void {
         if (navigationRef != null) {
             navigationRef.removeListener("state", DdRumReactNavigationTracking.navigationStateChangeListener);
+            DdRumReactNavigationTracking.backHandler?.remove();
+            DdRumReactNavigationTracking.backHandler = null;
             DdRumReactNavigationTracking.registeredContainer = null;
             DdRumReactNavigationTracking.viewNamePredicate = function (_route: Route<string, any | undefined>, trackedName: string) { return trackedName; }
         }

@@ -5,13 +5,19 @@
  */
 
 import React from 'react';
-import { View, Text, Button, AppState } from 'react-native';
+import { View, Text, Button, AppState, BackHandler } from 'react-native';
 import { NavigationContainer, NavigationContainerRef, Route } from '@react-navigation/native';
 import { DdRum } from '@datadog/mobile-react-native';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { InternalLog } from '@datadog/mobile-react-native/internal';
+import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
+
+jest.mock(
+  'react-native/Libraries/Utilities/BackHandler',
+  () => mockBackHandler,
+);
 
 jest.mock('@datadog/mobile-react-native/internal', () => {
     return {
@@ -65,6 +71,7 @@ beforeEach(() => {
     DdRum.stopView.mockClear();
     AppState.addEventListener.mockClear();
     AppState.removeEventListener.mockClear();
+    BackHandler.exitApp.mockClear();
 
     DdRumReactNavigationTracking.registeredContainer = null;
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
@@ -340,6 +347,29 @@ it('M send a RUM ViewEvent for each W switching screens { nested navigation cont
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef3.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef3.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
+})
+
+it('M not send an error W the app closes with Android back button', async () => {
+
+    // GIVEN
+    const { unmount } = render(<FakeNavigator1 />);
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
+
+    // WHEN back is pressed
+    BackHandler.mockPressBack();
+    // THEN app is closed
+    expect(BackHandler.exitApp).toHaveBeenCalled();
+    
+    // WHEN app is restarted and we navigate
+    unmount();
+    const { getByText } = render(<FakeNavigator2 />);
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef2.current);
+    const goToAboutButton = getByText('Go to About');
+    fireEvent(goToAboutButton, "press");
+
+    // THEN new navigation is attached, no error and message is sent
+    expect(DdRum.startView).toHaveBeenLastCalledWith(expect.any(String), 'About');
+    expect(InternalLog.log).not.toHaveBeenCalledWith(DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE, "error");
 })
 
 
