@@ -13,12 +13,15 @@ module.exports = {
     }
   },
   extends: [
+    "prettier",
     "plugin:react/recommended", // Uses the recommended rules from @eslint-plugin-react
     "plugin:@typescript-eslint/recommended" // Uses the recommended rules from @typescript-eslint/eslint-plugin
   ],
+  plugins: ["prettier"],
   "rules": {
     "react/prop-types": 0,
     "@typescript-eslint/no-inferrable-types": 0,
-    "@typescript-eslint/no-explicit-any": 0
+    "@typescript-eslint/no-explicit-any": 0,
+    "prettier/prettier": "error"
   }
 };
