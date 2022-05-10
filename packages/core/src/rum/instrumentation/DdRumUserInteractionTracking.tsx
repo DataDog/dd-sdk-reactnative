@@ -14,8 +14,6 @@ import type EventsInterceptor from './EventsInterceptor';
 import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 
-const PROPERTY_FUNCTION_TYPE = 'function';
-
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
  * For now we are only covering the "onPress" events.
@@ -46,7 +44,7 @@ export class DdRumUserInteractionTracking {
             ...children: any
         ): any => {
             // check if we have an 'onPress' property and that this is really a function
-            if (props && typeof props.onPress === PROPERTY_FUNCTION_TYPE) {
+            if (props && typeof props.onPress === 'function') {
                 const originalOnPress = props.onPress;
                 props.onPress = (...args: any[]) => {
                     DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(

@@ -45,7 +45,7 @@ module.exports = {
         'no-caller': 'error',
         'no-case-declarations': 'error',
         'no-empty-function': [
-            'error',
+            'warn',
             {
                 allow: ['arrowFunctions', 'functions', 'methods']
             }
@@ -129,7 +129,7 @@ module.exports = {
         'no-console': [
             'error',
             {
-                allow: ['warn', 'error', 'info']
+                allow: ['warn', 'error', 'info', 'debug']
             }
         ],
         'no-constant-condition': 'warn',
