@@ -5,16 +5,16 @@
  */
 
 import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
-import { DdSdkConfiguration } from './types';
+import { InternalLog } from './InternalLog';
+import { ProxyType } from './ProxyConfiguration';
+import { SdkVerbosity } from './SdkVerbosity';
+import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
-import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking';
-import type { TrackingConsent } from './TrackingConsent';
-import { ProxyType } from './ProxyConfiguration';
+import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
+import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
-import { InternalLog } from './InternalLog';
-import { SdkVerbosity } from './SdkVerbosity';
 
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
@@ -146,7 +146,7 @@ export class DdSdkReactNative {
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setAttributes(attributes: object): Promise<void> {
         InternalLog.log(
-            'Setting attributes ' + JSON.stringify(attributes),
+            `Setting attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
         return DdSdk.setAttributes(attributes);
@@ -160,7 +160,7 @@ export class DdSdkReactNative {
     // eslint-disable-next-line @typescript-eslint/ban-types
     static setUser(user: object): Promise<void> {
         InternalLog.log(
-            'Setting user ' + JSON.stringify(user),
+            `Setting user ${JSON.stringify(user)}`,
             SdkVerbosity.DEBUG
         );
         return DdSdk.setUser(user);
@@ -172,7 +172,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static setTrackingConsent(consent: TrackingConsent): Promise<void> {
-        InternalLog.log('Setting consent ' + consent, SdkVerbosity.DEBUG);
+        InternalLog.log(`Setting consent ${consent}`, SdkVerbosity.DEBUG);
         return DdSdk.setTrackingConsent(consent);
     }
 

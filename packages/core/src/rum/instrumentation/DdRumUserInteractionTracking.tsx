@@ -5,11 +5,13 @@
  */
 
 import React from 'react';
-import { DdEventsInterceptor } from './DdEventsInterceptor';
-import NoOpEventsInterceptor from './NoOpEventsInterceptor';
-import type EventsInterceptor from './EventsInterceptor';
+
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+
+import { DdEventsInterceptor } from './DdEventsInterceptor';
+import type EventsInterceptor from './EventsInterceptor';
+import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 
 const PROPERTY_FUNCTION_TYPE = 'function';
@@ -65,7 +67,7 @@ export class DdRumUserInteractionTracking {
         ) => {
             return originalMemo(component, (prev, next) => {
                 if (!next.onPress || !prev.onPress) {
-                    return !!propsAreEqual
+                    return propsAreEqual
                         ? propsAreEqual(prev, next)
                         : areObjectShallowEqual(prev, next);
                 }
@@ -83,7 +85,7 @@ export class DdRumUserInteractionTracking {
                 };
 
                 // if no comparison function is provided we do shallow comparison
-                return !!propsAreEqual
+                return propsAreEqual
                     ? propsAreEqual(prevProps, nextProps)
                     : areObjectShallowEqual(nextProps, prevProps);
             });

@@ -4,9 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import React from 'react';
-import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '@datadog/mobile-react-native';
+import type { ComponentDidAppearEvent } from 'react-native-navigation';
+import { Navigation } from 'react-native-navigation';
+import React from 'react';
 
 export type ViewNamePredicate = (
     event: ComponentDidAppearEvent,

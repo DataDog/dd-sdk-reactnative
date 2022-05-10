@@ -4,19 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '@datadog/mobile-react-native/internal';
+import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
 import type {
     EventArg,
     NavigationContainerRef,
     Route
 } from '@react-navigation/native';
-import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
-import {
-    AppState,
-    AppStateStatus,
-    BackHandler,
-    NativeEventSubscription
-} from 'react-native';
-import { InternalLog } from '@datadog/mobile-react-native/internal';
+import type { AppStateStatus, NativeEventSubscription } from 'react-native';
+import { AppState, BackHandler } from 'react-native';
 
 declare type NavigationListener = (
     event: EventArg<string, boolean, any>
@@ -55,10 +51,12 @@ export class DdRumReactNavigationTracking {
         'Cannot track new navigation container while another one is still tracked. Please call `DdRumReactNavigationTracking.stopTrackingViews` on the previous container reference.';
 
     static isAppExitingOnBackPress = (): boolean => {
-        if (DdRumReactNavigationTracking.registeredContainer === null)
+        if (DdRumReactNavigationTracking.registeredContainer === null) {
             return false;
-        if (DdRumReactNavigationTracking.registeredContainer.canGoBack())
+        }
+        if (DdRumReactNavigationTracking.registeredContainer.canGoBack()) {
             return false;
+        }
         return true;
     };
 

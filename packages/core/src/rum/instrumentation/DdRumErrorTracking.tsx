@@ -5,9 +5,10 @@
  */
 
 import type { ErrorHandlerCallback } from 'react-native';
-import { DdRum } from '../../foundation';
+
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { DdRum } from '../../foundation';
 
 const EMPTY_MESSAGE = 'Unknown Error';
 const EMPTY_STACK_TRACE = '';

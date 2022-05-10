@@ -4,7 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { TimeProvider, Timestamp } from './TimeProvider';
+import type { Timestamp } from './TimeProvider';
+import { TimeProvider } from './TimeProvider';
 
 const START_LABEL = '__start';
 const STOP_LABEL = '__stop';

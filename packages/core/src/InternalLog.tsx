@@ -25,7 +25,7 @@ export class InternalLog {
         if (allowedLevel === undefined || requiredLevel === undefined) {
             return;
         }
-        const prefixedMessage = 'DATADOG: ' + message;
+        const prefixedMessage = `DATADOG: ${message}`;
         if (verbosity == SdkVerbosity.ERROR && requiredLevel >= allowedLevel) {
             console.error(prefixedMessage);
         }
