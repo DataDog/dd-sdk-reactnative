@@ -5,13 +5,20 @@
  */
 
 import React from 'react';
-import { View, Text, Button, AppState } from 'react-native';
+import { View, Text, Button, AppState, BackHandler } from 'react-native';
 import { NavigationContainer, NavigationContainerRef, Route } from '@react-navigation/native';
 import { DdRum } from '@datadog/mobile-react-native';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { render, fireEvent } from '@testing-library/react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { InternalLog } from '@datadog/mobile-react-native/internal';
+import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
+import { AppStateMock } from './__utils__/AppStateMock';
+
+jest.mock(
+  'react-native/Libraries/Utilities/BackHandler',
+  () => mockBackHandler,
+);
 
 jest.mock('@datadog/mobile-react-native/internal', () => {
     return {
@@ -37,16 +44,9 @@ jest.mock('@datadog/mobile-react-native', () => {
     };
 });
 
-let capturedAppStateChangeCallback = null;
-
-jest.mock('react-native/Libraries/AppState/AppState', () => ({
-    addEventListener: jest.fn((event, callback) => {
-        if (event === 'change') {
-            capturedAppStateChangeCallback = callback;
-        }
-    }),
-    removeEventListener: jest.fn().mockImplementation(() => { })
-}));
+const appStateMock = new AppStateMock();
+AppState.addEventListener.mockImplementation(appStateMock.addEventListener)
+AppState.removeEventListener.mockImplementation(appStateMock.removeEventListener)
 
 const { Screen, Navigator } = createStackNavigator();
 const navigationRef1: React.RefObject<NavigationContainerRef> = React.createRef();
@@ -65,10 +65,11 @@ beforeEach(() => {
     DdRum.stopView.mockClear();
     AppState.addEventListener.mockClear();
     AppState.removeEventListener.mockClear();
+    appStateMock.removeAllListeners();
+    BackHandler.exitApp.mockClear();
 
     DdRumReactNavigationTracking.registeredContainer = null;
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
-    DdRumReactNavigationTracking.appStateListener = null;
 })
 
 // Unit tests
@@ -253,7 +254,7 @@ it('M send a RUM ViewEvent for each W switching screens { multiple navigation co
     expect(InternalLog.log.mock.calls[0][1]).toBe("error")
 })
 
-it('M register AppState listener only once', async () => {
+it('M register and unregister AppState', async () => {
 
     // GIVEN
     render(<FakeNavigator1 />);
@@ -265,8 +266,29 @@ it('M register AppState listener only once', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef2.current);
 
     // THEN
-    expect(AppState.addEventListener.mock.calls.length).toBe(1);
-    expect(AppState.removeEventListener.mock.calls.length).toBe(0);
+    expect(AppState.addEventListener.mock.calls.length).toBe(2);
+    expect(AppState.removeEventListener.mock.calls.length).toBe(1);
+
+    // WHEN we go in background mode
+    appStateMock.changeValue('background');
+
+    // THEN the listener is only called once
+    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+})
+
+it('M not log AppState changes W tracking is stopped', async () => {
+
+    // GIVEN
+    render(<FakeNavigator1 />);
+
+    // WHEN
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
+    DdRumReactNavigationTracking.stopTrackingViews(navigationRef1.current);
+    appStateMock.changeValue('background');
+
+    // THEN
+    expect(DdRum.stopView).not.toHaveBeenCalled();
+    expect(InternalLog.log).not.toHaveBeenCalledWith("We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.", "error");
 })
 
 it('M stop active view W app goes into background', async () => {
@@ -277,7 +299,7 @@ it('M stop active view W app goes into background', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
+    appStateMock.changeValue('background');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
@@ -294,8 +316,8 @@ it('M start last view W app goes into foreground', async () => {
     DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
-    capturedAppStateChangeCallback('active');
+    appStateMock.changeValue('background');
+    appStateMock.changeValue('active');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(1);
@@ -314,7 +336,7 @@ it('M not stop view W no navigator attached', async () => {
     DdRumReactNavigationTracking.stopTrackingViews(navigationRef1.current);
 
     // WHEN
-    capturedAppStateChangeCallback('background');
+    appStateMock.changeValue('background');
 
     // THEN
     expect(DdRum.stopView.mock.calls.length).toBe(0);
@@ -340,6 +362,29 @@ it('M send a RUM ViewEvent for each W switching screens { nested navigation cont
     expect(DdRum.startView.mock.calls[1][0]).toBe(navigationRef3.current?.getCurrentRoute()?.key);
     expect(DdRum.startView.mock.calls[1][1]).toBe(navigationRef3.current?.getCurrentRoute()?.name);
     expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
+})
+
+it('M not send an error W the app closes with Android back button', async () => {
+
+    // GIVEN
+    const { unmount } = render(<FakeNavigator1 />);
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef1.current);
+
+    // WHEN back is pressed
+    BackHandler.mockPressBack();
+    // THEN app is closed
+    expect(BackHandler.exitApp).toHaveBeenCalled();
+    
+    // WHEN app is restarted and we navigate
+    unmount();
+    const { getByText } = render(<FakeNavigator2 />);
+    DdRumReactNavigationTracking.startTrackingViews(navigationRef2.current);
+    const goToAboutButton = getByText('Go to About');
+    fireEvent(goToAboutButton, "press");
+
+    // THEN new navigation is attached, no error and message is sent
+    expect(DdRum.startView).toHaveBeenLastCalledWith(expect.any(String), 'About');
+    expect(InternalLog.log).not.toHaveBeenCalledWith(DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE, "error");
 })
 
 
