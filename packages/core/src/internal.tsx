@@ -1,1 +1,1 @@
-export { InternalLog } from "./InternalLog";
+export { InternalLog } from './InternalLog';

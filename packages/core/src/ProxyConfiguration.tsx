@@ -25,13 +25,13 @@ class ProxyConfiguration {
          * Password for Basic authentication scheme.
          */
         readonly password?: string
-    ) { }
+    ) {}
 }
 
 enum ProxyType {
-    HTTP = "http",
-    HTTPS = "https",
-    SOCKS = "socks"
+    HTTP = 'http',
+    HTTPS = 'https',
+    SOCKS = 'socks'
 }
 
-export { ProxyConfiguration, ProxyType }
+export { ProxyConfiguration, ProxyType };

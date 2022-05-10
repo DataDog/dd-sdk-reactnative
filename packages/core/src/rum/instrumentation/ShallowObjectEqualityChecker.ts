@@ -7,11 +7,14 @@
 /**
  * Does a shallow comparison between 2 objects
  */
-export const areObjectShallowEqual = (objectA: Record<string, unknown>, objectB: Record<string, unknown>): boolean => {
+export const areObjectShallowEqual = (
+    objectA: Record<string, unknown>,
+    objectB: Record<string, unknown>
+): boolean => {
     const keys = Object.keys(objectA);
-    if (keys.length !== Object.keys(objectB).length) return false
+    if (keys.length !== Object.keys(objectB).length) return false;
     for (const key of keys) {
-        if (objectA[key] !== objectB[key]) return false
+        if (objectA[key] !== objectB[key]) return false;
     }
     return true;
-}
+};

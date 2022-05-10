@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { TrackingConsent } from './TrackingConsent'
-import type { SdkVerbosity } from './SdkVerbosity'
+import { TrackingConsent } from './TrackingConsent';
+import type { SdkVerbosity } from './SdkVerbosity';
 import type { ProxyConfiguration } from './ProxyConfiguration';
 
 /**
@@ -13,16 +13,15 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
  * It will be used to configure the SDK functionality at initialization.
  */
 export class DdSdkReactNativeConfiguration {
-
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
-    public site: string = "US"
-    public verbosity: SdkVerbosity|undefined = undefined
-    public nativeViewTracking: boolean = false
-    public proxyConfig?: ProxyConfiguration = undefined
-    public serviceName?: string = undefined
+    public site: string = 'US';
+    public verbosity: SdkVerbosity | undefined = undefined;
+    public nativeViewTracking: boolean = false;
+    public proxyConfig?: ProxyConfiguration = undefined;
+    public serviceName?: string = undefined;
 
-    public additionalConfig: {[k: string]: any} = {};
+    public additionalConfig: { [k: string]: any } = {};
 
     constructor(
         readonly clientToken: string,
@@ -32,7 +31,5 @@ export class DdSdkReactNativeConfiguration {
         readonly trackResources: boolean = false,
         readonly trackErrors: boolean = false,
         readonly trackingConsent: TrackingConsent = TrackingConsent.GRANTED
-    ) {
-
-    }
+    ) {}
 }

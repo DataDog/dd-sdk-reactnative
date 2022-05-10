@@ -4,18 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import {TimeProvider, Timestamp} from "./TimeProvider";
+import { TimeProvider, Timestamp } from './TimeProvider';
 
-
-const START_LABEL = "__start"
-const STOP_LABEL = "__stop"
+const START_LABEL = '__start';
+const STOP_LABEL = '__stop';
 
 /**
  * Simple timer which records time ticks. Shouldn't be re-used once stopped.
  * All timestamps/durations returned are in milliseconds.
  */
 export default class Timer {
-
     private timeProvider: TimeProvider;
     private times: Record<string, Timestamp> = {};
 
@@ -24,11 +22,11 @@ export default class Timer {
     }
 
     get startTime(): number {
-        return this.times[START_LABEL].unix
+        return this.times[START_LABEL].unix;
     }
 
     get stopTime(): number {
-        return this.startTime + this.durationBetween(START_LABEL, STOP_LABEL)
+        return this.startTime + this.durationBetween(START_LABEL, STOP_LABEL);
     }
 
     start(): void {
@@ -36,7 +34,7 @@ export default class Timer {
     }
 
     stop(): void {
-        this.recordTick(STOP_LABEL)
+        this.recordTick(STOP_LABEL);
     }
 
     recordTick(label: string): void {
@@ -60,7 +58,7 @@ export default class Timer {
     timeAt(label: string): number {
         this.checkLabelExists(label);
 
-        return this.startTime + this.durationBetween(START_LABEL, label)
+        return this.startTime + this.durationBetween(START_LABEL, label);
     }
 
     reset(): void {
@@ -79,5 +77,4 @@ export default class Timer {
             throw new Error(`Label ${label} is not registered`);
         }
     }
-
 }

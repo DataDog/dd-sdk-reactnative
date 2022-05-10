@@ -4,20 +4,17 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type Timer from "../../Timer";
-
+import type Timer from '../../Timer';
 
 export interface DdRumXhr extends XMLHttpRequest {
-
-  _datadog_xhr: DdRumXhrContext
-
+    _datadog_xhr: DdRumXhrContext;
 }
 
 export interface DdRumXhrContext {
-  method: string,
-  url: string,
-  reported: boolean,
-  timer: Timer,
-  spanId: string,
-  traceId: string
+    method: string;
+    url: string;
+    reported: boolean;
+    timer: Timer;
+    spanId: string;
+    traceId: string;
 }

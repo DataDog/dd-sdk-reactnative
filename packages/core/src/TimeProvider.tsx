@@ -9,24 +9,24 @@
  */
 export type Timestamp = {
     // Result of Date API. Unix timestamp in ms.
-    unix: number,
+    unix: number;
     // Result of performance.now API. Timestamp in ms (with microsecond precision)
     // since JS context start.
-    react_native: number | null
-}
+    react_native: number | null;
+};
 
 /**
  * Simple class providing timestamps in milliseconds.
  * If available, it will use the `performance.now()` method, and will fallback on `Date.now()` otherwise.
  */
 export class TimeProvider {
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    private canUsePerformanceNow = global.performance && typeof performance.now === 'function';
+    private canUsePerformanceNow =
+        global.performance && typeof performance.now === 'function';
 
     /** Keeps an average offset between the unix time and the provided timestamp. */
-    private baseOffset: number
+    private baseOffset: number;
 
     constructor() {
         const timestamp = this.getTimestamp();
@@ -41,13 +41,13 @@ export class TimeProvider {
         return {
             unix: Date.now(),
             react_native: this.performanceNow()
-        }
+        };
     }
 
     now(): number {
         const timestamp = this.getTimestamp();
         if (timestamp.react_native == null) {
-            return timestamp.unix
+            return timestamp.unix;
         } else {
             return this.baseOffset + timestamp.react_native;
         }
