@@ -20,9 +20,9 @@ export type Timestamp = {
  * If available, it will use the `performance.now()` method, and will fallback on `Date.now()` otherwise.
  */
 export class TimeProvider {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     private canUsePerformanceNow =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         global.performance && typeof performance.now === 'function';
 
     /** Keeps an average offset between the unix time and the provided timestamp. */
