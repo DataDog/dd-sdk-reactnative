@@ -68,7 +68,7 @@ export class DdSdkReactNative {
             configuration.additionalConfig[
                 DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
             ] = configuration.nativeViewTracking;
-            if (configuration.verbosity != undefined) {
+            if (configuration.verbosity) {
                 configuration.additionalConfig[
                     DdSdkReactNative.DD_SDK_VERBOSITY_KEY
                 ] = configuration.verbosity;
@@ -85,7 +85,7 @@ export class DdSdkReactNative {
                 additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
                     proxyConfig.port;
                 if (proxyConfig.username && proxyConfig.password) {
-                    if (proxyConfig.type == ProxyType.SOCKS) {
+                    if (proxyConfig.type === ProxyType.SOCKS) {
                         console.warn(
                             "SOCKS proxy configuration doesn't support Basic authentication."
                         );

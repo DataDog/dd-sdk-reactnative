@@ -88,7 +88,7 @@ export class DdRumErrorTracking {
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
             const paramStack = DdRumErrorTracking.getErrorStackTrace(param);
-            if (paramStack != undefined && paramStack != EMPTY_STACK_TRACE) {
+            if (paramStack !== EMPTY_STACK_TRACE) {
                 stack = paramStack;
                 break;
             }
@@ -111,9 +111,9 @@ export class DdRumErrorTracking {
 
     private static getErrorMessage(error: any | undefined): string {
         let message = EMPTY_MESSAGE;
-        if (error == undefined) {
+        if (error === undefined || error === null) {
             message = EMPTY_MESSAGE;
-        } else if (typeof error == 'object' && 'message' in error) {
+        } else if (typeof error === 'object' && 'message' in error) {
             message = String(error.message);
         } else {
             message = String(error);
@@ -125,7 +125,7 @@ export class DdRumErrorTracking {
     private static getErrorStackTrace(error: any | undefined): string {
         let stack = EMPTY_STACK_TRACE;
 
-        if (error == undefined) {
+        if (error === undefined || error === null) {
             stack = EMPTY_STACK_TRACE;
         } else if (typeof error === 'string') {
             stack = EMPTY_STACK_TRACE;

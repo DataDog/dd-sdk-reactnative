@@ -48,7 +48,8 @@ export class DdRumReactNativeNavigationTracking {
         ): any => {
             if (
                 props &&
-                props.componentId != undefined &&
+                props.componentId !== undefined &&
+                props.componentId !== null &&
                 !DdRumReactNativeNavigationTracking.trackedComponentIds.includes(
                     props.componentId
                 )
@@ -91,7 +92,7 @@ export class DdRumReactNativeNavigationTracking {
             return;
         }
         if (
-            DdRumReactNativeNavigationTracking.originalCreateElement !=
+            DdRumReactNativeNavigationTracking.originalCreateElement !==
             undefined
         ) {
             React.createElement =

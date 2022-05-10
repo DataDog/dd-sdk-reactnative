@@ -26,19 +26,19 @@ export class InternalLog {
             return;
         }
         const prefixedMessage = `DATADOG: ${message}`;
-        if (verbosity == SdkVerbosity.ERROR && requiredLevel >= allowedLevel) {
+        if (verbosity === SdkVerbosity.ERROR && requiredLevel >= allowedLevel) {
             console.error(prefixedMessage);
         }
 
-        if (verbosity == SdkVerbosity.WARN && requiredLevel >= allowedLevel) {
+        if (verbosity === SdkVerbosity.WARN && requiredLevel >= allowedLevel) {
             console.warn(prefixedMessage);
         }
 
-        if (verbosity == SdkVerbosity.INFO && requiredLevel >= allowedLevel) {
+        if (verbosity === SdkVerbosity.INFO && requiredLevel >= allowedLevel) {
             console.info(prefixedMessage);
         }
 
-        if (verbosity == SdkVerbosity.DEBUG && requiredLevel >= allowedLevel) {
+        if (verbosity === SdkVerbosity.DEBUG && requiredLevel >= allowedLevel) {
             console.debug(prefixedMessage);
         }
     }
