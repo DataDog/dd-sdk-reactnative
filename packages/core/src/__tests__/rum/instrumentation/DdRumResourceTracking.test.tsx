@@ -23,14 +23,10 @@ import {
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
 jest.useFakeTimers();
-
-jest.mock('../../../InternalLog', () => {
-    return {
-        InternalLog: {
-            log: jest.fn()
-        }
-    };
-});
+jest.mock('../../../InternalLog');
+const mockedInternalLog = (InternalLog as unknown) as {
+    log: jest.MockedFunction<typeof InternalLog.log>;
+};
 
 const DdRum = NativeModules.DdRum;
 
@@ -57,7 +53,7 @@ beforeEach(() => {
 
 afterEach(() => {
     DdRumResourceTracking.stopTracking();
-    Date.now.mockClear();
+    (Date.now as jest.MockedFunction<typeof Date.now>).mockClear();
 });
 
 it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async () => {
@@ -566,7 +562,7 @@ it('M not calculate response size W calculateResponseSize() { responseType=docum
 
 it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     // GIVEN
-    InternalLog.log.mockClear();
+    mockedInternalLog.log.mockClear();
 
     const xhr = new XMLHttpRequestMock();
     xhr.readyState = XMLHttpRequestMock.DONE;
@@ -583,11 +579,11 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
 
     // THEN
     expect(size).toEqual(-1);
-    expect(InternalLog.log).toHaveBeenCalled();
-    expect(InternalLog.log.mock.calls[0][0]).toBe(
-        `${RESOURCE_SIZE_ERROR_MESSAGE}${error}`
+    expect(InternalLog.log).toHaveBeenCalledTimes(1);
+    expect(InternalLog.log).toHaveBeenCalledWith(
+        `${RESOURCE_SIZE_ERROR_MESSAGE}${error}`,
+        SdkVerbosity.ERROR
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.ERROR);
 });
 
 it('M return 0 W calculateResponseSize() { size is not a number }', () => {
