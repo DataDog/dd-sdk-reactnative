@@ -64,7 +64,7 @@ beforeEach(async () => {
 
 describe('DdSdkReactNative', () => {
     describe('initialization', () => {
-        it('M initialize the SDK W initialize', async () => {
+        it('initializes the SDK when initialize', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -98,7 +98,7 @@ describe('DdSdkReactNative', () => {
             });
         });
 
-        it('M give rejection W initialize', async () => {
+        it('gives rejection when initialize', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -141,7 +141,7 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toBeCalledTimes(0);
         });
 
-        it('M initialize the SDK W initialize { explicit tracking consent }', async () => {
+        it('initializes the SDK when initialize { explicit tracking consent }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -178,7 +178,7 @@ describe('DdSdkReactNative', () => {
             });
         });
 
-        it('M initialize once W initialize { multiple times in a row }', async () => {
+        it('initializes once when initialize { multiple times in a row }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -212,7 +212,7 @@ describe('DdSdkReactNative', () => {
             });
         });
 
-        it('M log a warning W initialize { with socks proxy config + proxy credentials }', async () => {
+        it('logs a warning when initialize { with socks proxy config + proxy credentials }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -274,7 +274,7 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('feature enablement', () => {
-        it('M enable user interaction feature W initialize { user interaction config enabled }', async () => {
+        it('enables user interaction feature when initialize { user interaction config enabled }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -309,7 +309,7 @@ describe('DdSdkReactNative', () => {
             ).toHaveBeenCalledTimes(1);
         });
 
-        it('M enable resource tracking feature W initialize { resource tracking config enabled }', async () => {
+        it('enables resource tracking feature when initialize { resource tracking config enabled }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -345,7 +345,7 @@ describe('DdSdkReactNative', () => {
             );
         });
 
-        it('M enable error tracking feature W initialize { error tracking config enabled }', async () => {
+        it('enables error tracking feature when initialize { error tracking config enabled }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -380,7 +380,7 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
 
-        it('M enable custom service name W initialize { service name }', async () => {
+        it('enables custom service name when initialize { service name }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -418,7 +418,7 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
 
-        it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
+        it('enables sdk verbosity when initialize { sdk verbosity }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -455,7 +455,7 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
 
-        it('M enable native view tracking W initialize { native_view_tracking enabled }', async () => {
+        it('enables native view tracking when initialize { native_view_tracking enabled }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -493,7 +493,7 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('setAttributes', () => {
-        it('M call SDK method W setAttributes', async () => {
+        it('calls SDK method when setAttributes', async () => {
             // GIVEN
             const attributes = { foo: 'bar' };
 
@@ -508,7 +508,7 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('setUser', () => {
-        it('M call SDK method W setUser', async () => {
+        it('calls SDK method when setUser', async () => {
             // GIVEN
             const user = { foo: 'bar' };
 
@@ -523,7 +523,7 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('setTrackingConsent', () => {
-        it('M call SDK method W setTrackingConsent', async () => {
+        it('calls SDK method when setTrackingConsent', async () => {
             // GIVEN
             const consent = TrackingConsent.PENDING;
 
@@ -540,7 +540,7 @@ describe('DdSdkReactNative', () => {
     describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])(
         'proxy configs test, no auth',
         proxyType => {
-            it(`M set proxy configuration W initialize { + proxy config, w/o proxy credentials, proxyType=${proxyType} }`, async () => {
+            it(`M set proxy configuration when initialize { + proxy config, w/o proxy credentials, proxyType=${proxyType} }`, async () => {
                 // GIVEN
                 const fakeAppId = '1';
                 const fakeClientToken = '2';
@@ -593,7 +593,7 @@ describe('DdSdkReactNative', () => {
     describe.each([[ProxyType.HTTP], [ProxyType.HTTPS]])(
         'proxy configs test + auth',
         proxyType => {
-            it(`M set proxy configuration W initialize { with proxy config + proxy credentials, proxyType=${proxyType} }`, async () => {
+            it(`M set proxy configuration when initialize { with proxy config + proxy credentials, proxyType=${proxyType} }`, async () => {
                 // GIVEN
                 const fakeAppId = '1';
                 const fakeClientToken = '2';
