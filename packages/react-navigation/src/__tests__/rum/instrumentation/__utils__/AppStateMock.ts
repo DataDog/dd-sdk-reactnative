@@ -5,34 +5,48 @@
  */
 
 export class AppStateMock {
-    private handlers: {[eventType: string]: Function[]} = {}
+    private handlers: { [eventType: string]: Function[] } = {};
 
     addEventListener = (type: string, callback: Function) => {
         if (!this.handlers[type]) {
-            this.handlers[type] = []
+            this.handlers[type] = [];
         }
         this.handlers[type].push(callback);
-    }
+    };
 
     removeEventListener = (type: string, callback: Function) => {
-        if (!this.handlers[type]) return;
+        if (!this.handlers[type]) {
+            return;
+        }
         const callbackIndex = this.handlers[type].indexOf(callback);
-        if (callbackIndex === -1) return;
-        this.handlers[type] = [...this.handlers[type].slice(0, callbackIndex), ...this.handlers[type].slice(callbackIndex+1, this.handlers[type].length)]; 
-    }
+        if (callbackIndex === -1) {
+            return;
+        }
+        this.handlers[type] = [
+            ...this.handlers[type].slice(0, callbackIndex),
+            ...this.handlers[type].slice(
+                callbackIndex + 1,
+                this.handlers[type].length
+            )
+        ];
+    };
 
     changeValue = (value: string) => {
-        if (!this.handlers.change) return;
-        this.handlers.change.forEach((callback) => {
+        if (!this.handlers.change) {
+            return;
+        }
+        this.handlers.change.forEach(callback => {
             try {
                 callback(value);
             } catch (e) {
-                console.warn(`Failure while executing callback for value ${value}`)
+                console.warn(
+                    `Failure while executing callback for value ${value}`
+                );
             }
-        })
-    }
+        });
+    };
 
     removeAllListeners = () => {
-        this.handlers = {}
-    }
+        this.handlers = {};
+    };
 }

@@ -4,37 +4,36 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { TimeProvider } from '../TimeProvider'
+import { TimeProvider } from '../TimeProvider';
 
-
-function mockDateNow(value: number){
+function mockDateNow(value: number) {
     Date.now = (): number => {
         return value;
-    }
+    };
 }
 
-function mockPerformanceNow(value: number = 0){
+function mockPerformanceNow(value: number = 0) {
     // @ts-ignore
     global.performance = {
         now: (): number => {
             return value;
         }
-    }
+    };
 }
 
 function randomInt(): number {
-    return Math.floor(Math.random() * 65536) + 512
+    return Math.floor(Math.random() * 65536) + 512;
 }
 
-let dateTime: number
-let perfTime: number
+let dateTime: number;
+let perfTime: number;
 
 beforeEach(() => {
     dateTime = randomInt();
     perfTime = randomInt();
     mockDateNow(dateTime);
     mockPerformanceNow(perfTime);
-})
+});
 
 it('M use performance W available', () => {
     // GIVEN
@@ -46,7 +45,7 @@ it('M use performance W available', () => {
     // THEN
     expect(result.unix).toBe(dateTime);
     expect(result.react_native).toBe(perfTime);
-})
+});
 
 it('M ignore performance W global.performance unavailable', () => {
     // GIVEN
@@ -59,7 +58,7 @@ it('M ignore performance W global.performance unavailable', () => {
     // THEN
     expect(result.unix).toBe(dateTime);
     expect(result.react_native).toBe(null);
-})
+});
 
 it('M ignore performance W unavailable', () => {
     // GIVEN
@@ -72,4 +71,4 @@ it('M ignore performance W unavailable', () => {
     // THEN
     expect(result.unix).toBe(dateTime);
     expect(result.react_native).toBe(null);
-})
+});
