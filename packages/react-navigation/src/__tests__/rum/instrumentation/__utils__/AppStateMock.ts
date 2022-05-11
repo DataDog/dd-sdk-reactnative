@@ -4,17 +4,19 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export class AppStateMock {
-    private handlers: { [eventType: string]: Function[] } = {};
+type handler = (value: string) => void;
 
-    addEventListener = (type: string, callback: Function) => {
+export class AppStateMock {
+    private handlers: { [eventType: string]: handler[] } = {};
+
+    addEventListener = (type: string, callback: handler) => {
         if (!this.handlers[type]) {
             this.handlers[type] = [];
         }
         this.handlers[type].push(callback);
     };
 
-    removeEventListener = (type: string, callback: Function) => {
+    removeEventListener = (type: string, callback: handler) => {
         if (!this.handlers[type]) {
             return;
         }
