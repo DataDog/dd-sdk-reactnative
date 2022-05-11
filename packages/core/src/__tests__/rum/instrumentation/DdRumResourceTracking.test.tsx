@@ -58,7 +58,7 @@ afterEach(() => {
 
 describe('DdRumResourceTracking', () => {
     describe('resource interception', () => {
-        it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('intercepts XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -90,7 +90,7 @@ describe('DdRumResourceTracking', () => {
             expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
         });
 
-        it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('intercepts failing XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -122,7 +122,7 @@ describe('DdRumResourceTracking', () => {
             expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
         });
 
-        it('M intercept aborted XHR request W startTracking() + XHR.open() + XHR.send() + XHR.abort()', async () => {
+        it('intercepts aborted XHR request when startTracking() + XHR.open() + XHR.send() + XHR.abort()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -156,7 +156,7 @@ describe('DdRumResourceTracking', () => {
     });
 
     describe('request headers', () => {
-        it('M add the span id in the request headers W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -176,7 +176,7 @@ describe('DdRumResourceTracking', () => {
             expect(spanId).toMatch(/[1-9].+/);
         });
 
-        it('M add the trace id in the request headers W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the trace id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -196,7 +196,7 @@ describe('DdRumResourceTracking', () => {
             expect(traceId).toMatch(/[1-9].+/);
         });
 
-        it('M generate different ids for spanId and traceId in request headers', async () => {
+        it('generates different ids for spanId and traceId in request headers', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -216,7 +216,7 @@ describe('DdRumResourceTracking', () => {
             expect(traceId !== spanId).toBeTruthy();
         });
 
-        it('M add origin as RUM in the request headers W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -234,7 +234,7 @@ describe('DdRumResourceTracking', () => {
             expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
         });
 
-        it('M force the agent to keep the request generated trace W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('forces the agent to keep the request generated trace when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -252,7 +252,7 @@ describe('DdRumResourceTracking', () => {
             expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
         });
 
-        it('M mark the request generated trace for sampling W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('marks the request generated trace for sampling when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -272,7 +272,7 @@ describe('DdRumResourceTracking', () => {
     });
 
     describe('DdRum.startResource calls', () => {
-        it('M add the span id as resource attributes W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -292,7 +292,7 @@ describe('DdRumResourceTracking', () => {
             expect(spanId).toMatch(/[1-9].+/);
         });
 
-        it('M add the trace id as resource attributes W startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the trace id as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -313,7 +313,7 @@ describe('DdRumResourceTracking', () => {
             expect(traceId).toMatch(/[1-9].+/);
         });
 
-        it('M generate different ids for spanId and traceId for resource attributes', async () => {
+        it('generates different ids for spanId and traceId for resource attributes', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -336,7 +336,7 @@ describe('DdRumResourceTracking', () => {
     });
 
     describe.each([['android'], ['ios']])('timings test', platform => {
-        it(`M generate resource timings W startTracking() + XHR.open() + XHR.send(), platform=${platform}`, async () => {
+        it(`M generate resource timings when startTracking() + XHR.open() + XHR.send(), platform=${platform}`, async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -376,7 +376,7 @@ describe('DdRumResourceTracking', () => {
             expect(timings['fetch']['duration']).toBeGreaterThan(0);
         });
 
-        it(`M generate resource timings W startTracking() + XHR.open() + XHR.send() + XHR.abort(), platform=${platform}`, async () => {
+        it(`M generate resource timings when startTracking() + XHR.open() + XHR.send() + XHR.abort(), platform=${platform}`, async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -419,7 +419,7 @@ describe('DdRumResourceTracking', () => {
     });
 
     describe('DdRum.stopResource calls', () => {
-        it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() + XHR.abort() before load started', async () => {
+        it('does not generate resource timings when startTracking() + XHR.open() + XHR.send() + XHR.abort() before load started', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -458,7 +458,7 @@ describe('DdRumResourceTracking', () => {
     )(
         'Response size from response header',
         ({ xhr, responseType, expectedSize }) => {
-            it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
+            it(`M calculate response size when calculateResponseSize(), responseType=${responseType}`, () => {
                 // WHEN
                 const size = calculateResponseSize(
                     (xhr as unknown) as XMLHttpRequest
@@ -471,7 +471,7 @@ describe('DdRumResourceTracking', () => {
     );
 
     describe('response size calculation', () => {
-        it('M calculate response size W calculateResponseSize() { responseType=blob }', () => {
+        it('calculates response size when calculateResponseSize() { responseType=blob }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -493,7 +493,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(expectedSize);
         });
 
-        it('M calculate response size W calculateResponseSize() { responseType=arraybuffer }', () => {
+        it('calculates response size when calculateResponseSize() { responseType=arraybuffer }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -511,7 +511,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(expectedSize);
         });
 
-        it('M calculate response size W calculateResponseSize() { responseType=text }', () => {
+        it('calculates response size when calculateResponseSize() { responseType=text }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -530,7 +530,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(expectedSize);
         });
 
-        it('M calculate response size W calculateResponseSize() { responseType=_empty_ }', () => {
+        it('calculates response size when calculateResponseSize() { responseType=_empty_ }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -549,7 +549,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(expectedSize);
         });
 
-        it('M calculate response size W calculateResponseSize() { responseType=json }', () => {
+        it('calculates response size when calculateResponseSize() { responseType=json }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -567,7 +567,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(expectedSize);
         });
 
-        it('M not calculate response size W calculateResponseSize() { responseType=document }', () => {
+        it('does not calculate response size when calculateResponseSize() { responseType=document }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -584,7 +584,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(-1);
         });
 
-        it('M return 0 W calculateResponseSize() { error is thrown }', () => {
+        it('returns 0 when calculateResponseSize() { error is thrown }', () => {
             // GIVEN
             mockedInternalLog.log.mockClear();
 
@@ -612,7 +612,7 @@ describe('DdRumResourceTracking', () => {
             );
         });
 
-        it('M return 0 W calculateResponseSize() { size is not a number }', () => {
+        it('returns 0 when calculateResponseSize() { size is not a number }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
@@ -630,7 +630,7 @@ describe('DdRumResourceTracking', () => {
             expect(size).toEqual(-1);
         });
 
-        it('M return 0 W calculateResponseSize() { no response }', () => {
+        it('returns 0 when calculateResponseSize() { no response }', () => {
             // GIVEN
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
