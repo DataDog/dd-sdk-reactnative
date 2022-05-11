@@ -58,7 +58,7 @@ it('M not register W props are missing + startTracking()', async () => {
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', null);
+    React.createElement('View', null);
 
     // THEN
     expect(mockRegisterComponentListener).toBeCalledTimes(0);
@@ -69,7 +69,7 @@ it('M not register W componentId is missing + startTracking()', async () => {
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', { foo: 'bar' });
+    React.createElement('View', { foo: 'bar' });
 
     // THEN
     expect(mockRegisterComponentListener).toBeCalledTimes(0);
@@ -81,10 +81,10 @@ it('M register only once W startTracking()', async () => {
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId
     });
-    const otherTestInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId,
         something: 'else'
     });
@@ -100,7 +100,7 @@ it('M restore original createElement method W stopTracking()', async () => {
 
     // WHEN
     DdRumReactNativeNavigationTracking.stopTracking();
-    const testInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId
     });
 
@@ -114,7 +114,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId
     });
     const listener = mockRegisterComponentListener.mock.calls[0][0];
@@ -141,7 +141,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPre
     DdRumReactNativeNavigationTracking.startTracking(predicate);
 
     // WHEN
-    const testInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId
     });
     const listener = mockRegisterComponentListener.mock.calls[0][0];
@@ -161,7 +161,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidDisappear', async () =>
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    const testInstance = React.createElement('View', {
+    React.createElement('View', {
         componentId
     });
     const listener = mockRegisterComponentListener.mock.calls[0][0];
