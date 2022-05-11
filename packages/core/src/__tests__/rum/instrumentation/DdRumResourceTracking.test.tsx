@@ -656,7 +656,7 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
 
     // THEN
     expect(size).toEqual(-1);
-    expect(InternalLog.log).toHaveBeenCalled;
+    expect(InternalLog.log).toHaveBeenCalled();
     expect(InternalLog.log.mock.calls[0][0]).toBe(
         `${RESOURCE_SIZE_ERROR_MESSAGE}${error}`
     );
