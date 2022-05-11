@@ -13,6 +13,7 @@ function mockDateNow(value: number) {
 }
 
 function mockPerformanceNow(value: number = 0) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     global.performance = {
         now: (): number => {

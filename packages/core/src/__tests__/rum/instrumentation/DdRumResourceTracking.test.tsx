@@ -49,7 +49,7 @@ function randomInt(max: number): number {
     return Math.floor(Math.random() * max);
 }
 
-class XMLHttpRequest {
+class XMLHttpRequestMock {
     static readonly UNSENT = 0;
     static readonly OPENED = 1;
     static readonly HEADERS_RECEIVED = 2;
@@ -59,7 +59,7 @@ class XMLHttpRequest {
     public response?: any;
     public responseType?: string;
     public status: number = 0;
-    public readyState: number = XMLHttpRequest.UNSENT;
+    public readyState: number = XMLHttpRequestMock.UNSENT;
     public requestHeaders: Map<string, string> = new Map();
     public responseHeaders: Map<string, string> = new Map();
 
@@ -84,7 +84,7 @@ class XMLHttpRequest {
     }
 
     notifyResponseArrived() {
-        this.readyState = XMLHttpRequest.HEADERS_RECEIVED;
+        this.readyState = XMLHttpRequestMock.HEADERS_RECEIVED;
         this.onreadystatechange();
     }
 
@@ -94,7 +94,7 @@ class XMLHttpRequest {
             this.responseType = responseType ?? 'text';
         }
         this.status = status;
-        this.readyState = XMLHttpRequest.DONE;
+        this.readyState = XMLHttpRequestMock.DONE;
         this.onreadystatechange();
     }
 
@@ -137,10 +137,10 @@ it('M intercept XHR request W startTracking() + XHR.open() + XHR.send()', async 
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -169,10 +169,10 @@ it('M intercept failing XHR request W startTracking() + XHR.open() + XHR.send()'
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -201,10 +201,10 @@ it('M intercept aborted XHR request W startTracking() + XHR.open() + XHR.send() 
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.abort();
@@ -233,10 +233,10 @@ it('M add the span id in the request headers W startTracking() + XHR.open() + XH
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -253,10 +253,10 @@ it('M add the trace id in the request headers W startTracking() + XHR.open() + X
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -273,10 +273,10 @@ it('M generate different ids for spanId and traceId in request headers', async (
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -293,10 +293,10 @@ it('M add origin as RUM in the request headers W startTracking() + XHR.open() + 
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -311,10 +311,10 @@ it('M force the agent to keep the request generated trace W startTracking() + XH
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -329,10 +329,10 @@ it('M mark the request generated trace for sampling W startTracking() + XHR.open
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -347,10 +347,10 @@ it('M add the span id as resource attributes W startTracking() + XHR.open() + XH
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -367,10 +367,10 @@ it('M add the trace id as resource attributes W startTracking() + XHR.open() + X
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -387,10 +387,10 @@ it('M generate different ids for spanId and traceId for resource attributes', as
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.notifyResponseArrived();
@@ -408,14 +408,14 @@ describe.each([['android'], ['ios']])('timings test', platform => {
         // GIVEN
         const method = 'GET';
         const url = 'https://api.example.com/v2/user';
-        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+        DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
         jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
             OS: platform
         }));
 
         // WHEN
-        const xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequestMock();
         xhr.open(method, url);
         xhr.send();
         xhr.notifyResponseArrived();
@@ -448,14 +448,14 @@ describe.each([['android'], ['ios']])('timings test', platform => {
         // GIVEN
         const method = 'GET';
         const url = 'https://api.example.com/v2/user';
-        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+        DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
         jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
             OS: platform
         }));
 
         // WHEN
-        const xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequestMock();
         xhr.open(method, url);
         xhr.send();
         xhr.notifyResponseArrived();
@@ -490,10 +490,10 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
     // GIVEN
     const method = 'GET';
     const url = 'https://api.example.com/v2/user';
-    DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
 
     // WHEN
-    const xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequestMock();
     xhr.open(method, url);
     xhr.send();
     xhr.abort();
@@ -508,33 +508,38 @@ it('M not generate resource timings W startTracking() + XHR.open() + XHR.send() 
 
 describe.each(
     ['blob', 'arraybuffer', 'text', '', 'json'].map(responseType => {
-        const xhr = new XMLHttpRequest();
-        xhr.readyState = XMLHttpRequest.DONE;
+        const xhr = new XMLHttpRequestMock();
+        xhr.readyState = XMLHttpRequestMock.DONE;
         xhr.responseType = responseType;
         xhr.response = {};
 
         const contentLength = randomInt(1_000_000_000);
         xhr.setResponseHeader('Content-Length', contentLength.toString());
-        return [xhr, responseType, contentLength];
+        return {
+            xhr,
+            responseType: responseType || '_empty_',
+            expectedSize: contentLength
+        };
     })
-)('Response size from response header', (xhr, responseType, expectedSize) => {
-    if (responseType === '') {
-        responseType = '_empty_';
-    }
-    it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
-        // WHEN
-        // @ts-ignore
-        const size = calculateResponseSize(xhr);
+)(
+    'Response size from response header',
+    ({ xhr, responseType, expectedSize }) => {
+        it(`M calculate response size W calculateResponseSize(), responseType=${responseType}`, () => {
+            // WHEN
+            const size = calculateResponseSize(
+                (xhr as unknown) as XMLHttpRequest
+            );
 
-        // THEN
-        expect(size).toEqual(expectedSize);
-    });
-});
+            // THEN
+            expect(size).toEqual(expectedSize);
+        });
+    }
+);
 
 it('M calculate response size W calculateResponseSize() { responseType=blob }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'blob';
 
     const expectedSize = randomInt(1_000_000);
@@ -545,8 +550,7 @@ it('M calculate response size W calculateResponseSize() { responseType=blob }', 
     };
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(expectedSize);
@@ -554,16 +558,15 @@ it('M calculate response size W calculateResponseSize() { responseType=blob }', 
 
 it('M calculate response size W calculateResponseSize() { responseType=arraybuffer }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'arraybuffer';
 
     const expectedSize = randomInt(100_000);
     xhr.response = new ArrayBuffer(expectedSize);
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(expectedSize);
@@ -571,8 +574,8 @@ it('M calculate response size W calculateResponseSize() { responseType=arraybuff
 
 it('M calculate response size W calculateResponseSize() { responseType=text }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'text';
 
     // size per char is 24, but in bytes it is 33.
@@ -580,8 +583,7 @@ it('M calculate response size W calculateResponseSize() { responseType=text }', 
     xhr.response = '{"foo": "bar+úñïçôδè ℓ"}';
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(expectedSize);
@@ -589,8 +591,8 @@ it('M calculate response size W calculateResponseSize() { responseType=text }', 
 
 it('M calculate response size W calculateResponseSize() { responseType=_empty_ }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = '';
 
     // size per char is 24, but in bytes it is 33.
@@ -598,8 +600,7 @@ it('M calculate response size W calculateResponseSize() { responseType=_empty_ }
     xhr.response = '{"foo": "bar+úñïçôδè ℓ"}';
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(expectedSize);
@@ -607,16 +608,15 @@ it('M calculate response size W calculateResponseSize() { responseType=_empty_ }
 
 it('M calculate response size W calculateResponseSize() { responseType=json }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'json';
 
     const expectedSize = 24;
     xhr.response = { foo: { bar: 'foobar' } };
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(expectedSize);
@@ -624,15 +624,14 @@ it('M calculate response size W calculateResponseSize() { responseType=json }', 
 
 it('M not calculate response size W calculateResponseSize() { responseType=document }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     // document type is not supported by RN, so there are no classes to handle it
     xhr.responseType = 'document';
     xhr.response = {};
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(-1);
@@ -642,8 +641,8 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     // GIVEN
     InternalLog.log.mockClear();
 
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'blob';
     const error = new Error();
     xhr.response = {
@@ -653,8 +652,7 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
     };
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(-1);
@@ -667,16 +665,15 @@ it('M return 0 W calculateResponseSize() { error is thrown }', () => {
 
 it('M return 0 W calculateResponseSize() { size is not a number }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'blob';
 
     // we pass empty object, so that .size property is missing, we will get undefined
     xhr.response = {};
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(-1);
@@ -684,14 +681,13 @@ it('M return 0 W calculateResponseSize() { size is not a number }', () => {
 
 it('M return 0 W calculateResponseSize() { no response }', () => {
     // GIVEN
-    const xhr = new XMLHttpRequest();
-    xhr.readyState = XMLHttpRequest.DONE;
+    const xhr = new XMLHttpRequestMock();
+    xhr.readyState = XMLHttpRequestMock.DONE;
     xhr.responseType = 'blob';
     xhr.response = null;
 
     // WHEN
-    // @ts-ignore
-    const size = calculateResponseSize(xhr);
+    const size = calculateResponseSize((xhr as unknown) as XMLHttpRequest);
 
     // THEN
     expect(size).toEqual(-1);
