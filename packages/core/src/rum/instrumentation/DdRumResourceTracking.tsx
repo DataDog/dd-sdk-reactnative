@@ -8,7 +8,9 @@ import { Platform } from 'react-native';
 import { DdRum } from '../../foundation'
 import Timer from '../../Timer';
 import type { DdRumXhr } from './DdRumXhr'
-import { generateTraceId } from './TraceIdentifier';
+import { generateTraceId } from './TraceIdentifier'
+import {InternalLog} from "../../InternalLog"
+import {SdkVerbosity} from "../../SdkVerbosity"
 
 export const TRACE_ID_HEADER_KEY = "x-datadog-trace-id"
 export const PARENT_ID_HEADER_KEY = "x-datadog-parent-id"
@@ -162,13 +164,15 @@ export class DdRumResourceTracking {
   static startTrackingInternal(xhrType: any): void {
     // extra safety to avoid proxying the XHR class twice
     if (DdRumResourceTracking.isTracking) {
+      InternalLog.log("Datadog SDK is already tracking XHR resources", SdkVerbosity.WARN);
       return
     }
 
     DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
     DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
 
-    DdRumResourceTracking.proxyXhr(xhrType)
+    DdRumResourceTracking.proxyXhr(xhrType);
+    InternalLog.log("Datadog SDK is tracking XHR resources", SdkVerbosity.INFO);
   }
 
 

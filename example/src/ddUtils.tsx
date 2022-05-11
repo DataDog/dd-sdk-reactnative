@@ -1,12 +1,12 @@
 import {
+    DdLogs,
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
-    DdLogs,
+    SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
 
-import { CLIENT_TOKEN, ENVIRONMENT, APPLICATION_ID } from './ddCredentials';
-import { getTrackingConsent } from './utils';
+import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 export function initializeDatadog(trackingConsent: TrackingConsent) {
 
@@ -22,6 +22,7 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     config.nativeCrashReportEnabled = true
     config.sampleRate = 100
     config.serviceName = "com.datadoghq.reactnative.sample"
+    config.verbosity = SdkVerbosity.DEBUG;
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')

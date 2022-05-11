@@ -13,7 +13,7 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserIn
 import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking'
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking'
 import { TrackingConsent } from '../TrackingConsent'
-import { NativeSdkVerbosity } from '../NativeSdkVerbosity'
+import { SdkVerbosity } from '../SdkVerbosity'
 import { ProxyType } from '../ProxyConfiguration'
 
 import { version as sdkVersion } from '../version';
@@ -301,7 +301,7 @@ it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
     const fakeClientToken = "2"
     const fakeEnvName = "env"
     const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
-    configuration.verbosity = NativeSdkVerbosity.DEBUG
+    configuration.verbosity = SdkVerbosity.DEBUG
 
     NativeModules.DdSdk.initialize.mockResolvedValue(null)
 
@@ -317,7 +317,7 @@ it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
     expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
         '_dd.source': 'react-native',
         '_dd.sdk_version': sdkVersion,
-        '_dd.sdk_verbosity': NativeSdkVerbosity.DEBUG,
+        '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
         '_dd.native_view_tracking': false,
         '_dd.long_task.threshold': 200
     })

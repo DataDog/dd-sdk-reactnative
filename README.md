@@ -1,6 +1,10 @@
 # React-Native Monitoring
 
-Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+## Overview
+
+Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+
+The minimum supported version for the Datadog React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
 
 ## Setup
 
@@ -16,34 +20,63 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native
 ```
 
-**Minimum React Native version**: SDK supports React Native version 0.63.4 or higher. Compatibility with older versions is not guaranteed out of the box.
+### Specify application details in the UI
 
-### Specify application details in UI
+1. In the [Datadog app][1], navigate to **UX Monitoring** > **RUM Applications** > **New Application**.
+2. Choose `react-native` as the application type.
+3. Provide an application name to generate a unique Datadog application ID and client token.
 
-1. In the [Datadog app][1], select **UX Monitoring > RUM Applications > New Application**.
-2. Choose `react-native` as your Application Type.
-3. Provide a new application name to generate a unique Datadog application ID and client token.
+{{< img src="real_user_monitoring/react_native/image_reactnative.png" alt="Create a RUM application in Datadog workflow" style="width:90%;">}}
 
-![image][2]
+To ensure the safety of your data, you must use a client token. If you used only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, they would be exposed client-side in the React Native application's code.
 
-To ensure the safety of your data, you must use a client token. You cannot use only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, because they would be exposed client-side. For more information about setting up a client token, see the [Client Token documentation][4].
+For more information about setting up a client token, see the [Client Token documentation][4].
 
 ### Initialize the library with application context
 
+{{< site-region region="us" >}}
 ```js
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>", 
-    "<ENVIRONMENT_NAME>", 
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
     "<RUM_APPLICATION_ID>",
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
 )
-// Optional: Select your Datadog website (one of "US", "EU" or "GOV")
-config.site = "US"
+config.site = "US1"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+// Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
+config.serviceName = "com.example.reactnative"
+// Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
+config.verbosity = SdkVerbosity.WARN
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="us3" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US3"
 // Optional: enable or disable native crash reports
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
@@ -53,6 +86,84 @@ await DdSdkReactNative.initialize(config)
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+{{< /site-region >}}
+
+{{< site-region region="us5" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US5"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="eu" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "EU1"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+{{< site-region region="gov" >}}
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+
+
+const config = new DdSdkReactNativeConfiguration(
+    "<CLIENT_TOKEN>",
+    "<ENVIRONMENT_NAME>",
+    "<RUM_APPLICATION_ID>",
+    true, // track User interactions (e.g.: Tap on buttons).
+    true, // track XHR Resources
+    true // track Errors
+)
+config.site = "US1_FED"
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sampleRate = 80
+
+await DdSdkReactNative.initialize(config)
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+{{< /site-region >}}
+
+
 
 ### User interactions tracking
 
@@ -62,7 +173,9 @@ Alternatively, you can use the `accessibilityLabel` element property to give the
 
 ### Track view navigation
 
-Because React Native offers a wide range of libraries to create screen navigation, by default only manual view tracking is supported. You can manually start and stop a view using the following `startView()` and `stopView` methods.
+Because React Native offers a wide range of libraries to create screen navigation, only manual view tracking is supported by default. To see RUM sessions populate in Datadog, you need to implement view tracking.
+
+You can manually start and stop a view using the following `startView()` and `stopView` methods.
 
 ```js
 import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
@@ -74,14 +187,14 @@ DdRum.startView('<view-key>', '/view/url', { 'custom.foo': "something" }, Date.n
 DdRum.stopView('<view-key>', { 'custom.bar': 42 }, Date.now());
 ```
 
-Use one of Datadog's integrations to automatically track views if you're using the following libraries:
+Use one of Datadog's integrations to automatically track views for the following libraries:
 
 - If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
 - If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
 
 ## Track custom attributes
 
-You can attach user information to all RUM events to get more detailed information from your RUM sessions. 
+You can attach user information to all RUM events to get more detailed information from your RUM sessions.
 
 ### User information
 
@@ -89,9 +202,9 @@ For user-specific information, use the following code wherever you want in your 
 
 ```js
 DdSdkReactNative.setUser({
-    id: "1337", 
-    name: "John Smith", 
-    email: "john@example.com", 
+    id: "1337",
+    name: "John Smith",
+    email: "john@example.com",
     type: "premium"
 })
 ```
@@ -188,7 +301,7 @@ const config = new DdSdkReactNativeConfiguration(
 
 ## License
 
-[Apache License, v2.0][9]
+For more information, see [Apache License, v2.0][9]
 
 ## Further Reading
 
