@@ -18,6 +18,8 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserIn
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
+jest.mock('../InternalLog');
+
 jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
     return {
         DdRumUserInteractionTracking: {
