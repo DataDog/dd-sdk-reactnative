@@ -250,17 +250,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: [
-                    'build/**',
-                    '**/*.preval.js',
-                    '*.config.js',
-                    '**/webpack.config.js',
-                    '**/test-helpers.*',
-                    '**/*.test-helpers.*',
-                    '**/*test.utils.*',
-                    '.budget.js',
-                    'internal-apps/docs-builder/webpack/**/*.{js,jsx,ts,tsx}'
-                ]
+                devDependencies: ['**/__tests__/**', '**/__utils__/**']
             }
         ],
         'import/no-mutable-exports': 'error',
