@@ -34,7 +34,7 @@ jest.mock('../../../rum/instrumentation/DdEventsInterceptor');
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
 jest.useFakeTimers();
 
-let originalMethod: Function;
+let originalMethod: typeof React.createElement;
 
 beforeEach(() => {
     originalMethod = React.createElement;
