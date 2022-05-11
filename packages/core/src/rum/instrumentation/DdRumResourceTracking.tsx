@@ -179,8 +179,7 @@ export class DdRumResourceTracking {
     /**
      * Starts tracking resources and sends a RUM Resource event every time a fetch or XHR call is detected.
      */
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static startTrackingInternal(xhrType: any): void {
+    static startTrackingInternal(xhrType: typeof XMLHttpRequest): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
             InternalLog.log(

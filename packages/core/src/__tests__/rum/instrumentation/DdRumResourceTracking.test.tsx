@@ -441,7 +441,13 @@ describe('DdRumResourceTracking', () => {
     });
 
     describe.each(
-        ['blob', 'arraybuffer', 'text', '', 'json'].map(responseType => {
+        ([
+            'blob',
+            'arraybuffer',
+            'text',
+            '',
+            'json'
+        ] as XMLHttpRequestResponseType[]).map(responseType => {
             const xhr = new XMLHttpRequestMock();
             xhr.readyState = XMLHttpRequestMock.DONE;
             xhr.responseType = responseType;
