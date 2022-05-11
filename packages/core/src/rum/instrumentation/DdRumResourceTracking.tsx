@@ -18,7 +18,6 @@ export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
-export const SAMPLED_HEADER_KEY = 'x-datadog-sampled';
 export const ORIGIN_RUM = 'rum';
 export const RESOURCE_SIZE_ERROR_MESSAGE =
     "Couldn't get resource size, because an error occured: ";
@@ -255,7 +254,6 @@ export class DdRumResourceTracking {
                 );
                 this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
                 this.setRequestHeader(SAMPLING_PRIORITY_HEADER_KEY, '1');
-                this.setRequestHeader(SAMPLED_HEADER_KEY, '1');
             }
 
             DdRumResourceTracking.proxyOnReadyStateChange(this, xhrType);

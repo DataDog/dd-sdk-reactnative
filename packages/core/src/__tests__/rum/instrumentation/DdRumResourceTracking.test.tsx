@@ -15,7 +15,6 @@ import {
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
     SAMPLING_PRIORITY_HEADER_KEY,
-    SAMPLED_HEADER_KEY,
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
 } from '../../../rum/instrumentation/DdRumResourceTracking';
@@ -250,24 +249,6 @@ describe('DdRumResourceTracking', () => {
 
             // THEN
             expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
-        });
-
-        it('marks the request generated trace for sampling when startTracking() + XHR.open() + XHR.send()', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock);
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
-            expect(xhr.requestHeaders[SAMPLED_HEADER_KEY]).toBe('1');
         });
     });
 
