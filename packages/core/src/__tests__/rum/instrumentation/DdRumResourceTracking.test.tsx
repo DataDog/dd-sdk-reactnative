@@ -4,11 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
-import { DdRum } from '../../../index';
 import {
     DdRumResourceTracking,
     PARENT_ID_HEADER_KEY,
@@ -25,20 +24,6 @@ import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
 jest.useFakeTimers();
 
-jest.mock('../../../foundation', () => {
-    return {
-        DdRum: {
-            startResource: jest.fn().mockResolvedValue(() => {
-                return Promise.resolve();
-            }),
-
-            stopResource: jest.fn().mockResolvedValue(() => {
-                return Promise.resolve();
-            })
-        }
-    };
-});
-
 jest.mock('../../../InternalLog', () => {
     return {
         InternalLog: {
@@ -46,6 +31,8 @@ jest.mock('../../../InternalLog', () => {
         }
     };
 });
+
+const DdRum = NativeModules.DdRum;
 
 function randomInt(max: number): number {
     return Math.floor(Math.random() * max);
