@@ -58,7 +58,7 @@ it('M add error source type W addError()', async () => {
         NativeModules.DdRum.addError.mock.calls[0][4]
     ).toBeGreaterThanOrEqual(before);
     expect(NativeModules.DdRum.addError.mock.calls[0][4]).toBeLessThanOrEqual(
-        before
+        after
     );
     const context = NativeModules.DdRum.addError.mock.calls[0][3];
     expect(context['_dd.error.source_type']).toStrictEqual('react-native');
@@ -89,7 +89,7 @@ it('M add error source type W addError() {with custom attributes}', async () => 
         NativeModules.DdRum.addError.mock.calls[0][4]
     ).toBeGreaterThanOrEqual(before);
     expect(NativeModules.DdRum.addError.mock.calls[0][4]).toBeLessThanOrEqual(
-        before
+        after
     );
     const context = NativeModules.DdRum.addError.mock.calls[0][3];
     expect(context['_dd.error.source_type']).toStrictEqual('react-native');
