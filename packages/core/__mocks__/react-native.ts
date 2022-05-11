@@ -4,10 +4,30 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { DdLogsType, DdRumType, DdTraceType } from '../src/types';
+import type {
+    DdLogsType,
+    DdRumType,
+    DdTraceType,
+    DdSdkType
+} from '../src/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const actualRN = require('react-native');
+
+actualRN.NativeModules.DdSdk = {
+    initialize: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdSdkType['initialize']>,
+    setUser: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdSdkType['setUser']>,
+    setAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdSdkType['setAttributes']>,
+    setTrackingConsent: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdSdkType['setTrackingConsent']>
+};
 
 actualRN.NativeModules.DdLogs = {
     debug: jest.fn().mockImplementation(

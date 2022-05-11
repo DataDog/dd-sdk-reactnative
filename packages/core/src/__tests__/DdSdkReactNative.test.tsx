@@ -18,19 +18,6 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserIn
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
-jest.mock('react-native', () => {
-    return {
-        NativeModules: {
-            DdSdk: {
-                initialize: jest.fn().mockResolvedValue(null),
-                setUser: jest.fn().mockImplementation(() => {}),
-                setAttributes: jest.fn().mockImplementation(() => {}),
-                setTrackingConsent: jest.fn().mockImplementation(() => {})
-            }
-        }
-    };
-});
-
 jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
     return {
         DdRumUserInteractionTracking: {
@@ -62,9 +49,15 @@ beforeEach(async () => {
     NativeModules.DdSdk.setUser.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
 
-    DdRumUserInteractionTracking.startTracking.mockClear();
-    DdRumResourceTracking.startTracking.mockClear();
-    DdRumErrorTracking.startTracking.mockClear();
+    (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
+        typeof DdRumUserInteractionTracking.startTracking
+    >).mockClear();
+    (DdRumResourceTracking.startTracking as jest.MockedFunction<
+        typeof DdRumResourceTracking.startTracking
+    >).mockClear();
+    (DdRumErrorTracking.startTracking as jest.MockedFunction<
+        typeof DdRumErrorTracking.startTracking
+    >).mockClear();
 });
 
 it('M initialize the SDK W initialize', async () => {
