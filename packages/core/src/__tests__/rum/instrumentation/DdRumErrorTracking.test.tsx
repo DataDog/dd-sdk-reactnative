@@ -375,7 +375,9 @@ describe.each([
         // THEN
         expect(DdRum.addError.mock.calls.length).toBe(1);
         expect(DdRum.addError.mock.calls[0][0]).toBe(
-            message == undefined ? 'Unknown Error' : String(message)
+            message === undefined || message === null
+                ? 'Unknown Error'
+                : String(message)
         );
         expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
         expect(DdRum.addError.mock.calls[0][2]).toBe('');

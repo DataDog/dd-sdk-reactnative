@@ -34,7 +34,7 @@ jest.mock('react-native-navigation', () => {
     };
 });
 
-let originalCreateMethod: Function;
+let originalCreateMethod: typeof React.createElement;
 
 beforeEach(() => {
     jest.setTimeout(20000);
