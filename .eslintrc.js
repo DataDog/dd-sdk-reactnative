@@ -50,6 +50,7 @@ module.exports = {
                 allow: ['arrowFunctions', 'functions', 'methods']
             }
         ],
+        '@typescript-eslint/no-empty-function': 'off',
         'no-empty-pattern': 'error',
         'no-eval': 'error',
         'no-extend-native': 'error',
