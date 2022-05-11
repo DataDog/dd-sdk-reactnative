@@ -24,7 +24,7 @@ it('M return an 64 bits positive integer W toString', async () => {
         // THEN
         expect(id).toMatch(/[1-9]{1,19}/);
         // should be less than the max 64 bits integer
-        if (id.length == 19) {
+        if (id.length === 19) {
             expect(id < '9223372036854775807').toBeTruthy();
         }
     }
