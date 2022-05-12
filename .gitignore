@@ -30,7 +30,6 @@ local.properties
 *.iml
 
 # VS Code
-.vscode
 *.save
 
 # node.js
