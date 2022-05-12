@@ -5,12 +5,14 @@
  */
 
 import { Platform } from 'react-native';
-import { DdRum } from '../../foundation';
-import Timer from '../../Timer';
-import type { DdRumXhr } from './DdRumXhr';
-import { generateTraceId } from './TraceIdentifier';
+
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import Timer from '../../Timer';
+import { DdRum } from '../../foundation';
+
+import type { DdRumXhr } from './DdRumXhr';
+import { generateTraceId } from './TraceIdentifier';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
@@ -227,11 +229,11 @@ export class DdRumResourceTracking {
             const traceId = generateTraceId();
             this._datadog_xhr = {
                 method,
-                url: url,
+                url,
                 reported: false,
                 timer: new Timer(),
-                spanId: spanId,
-                traceId: traceId
+                spanId,
+                traceId
             };
             // eslint-disable-next-line prefer-rest-params
             return originalXhrOpen.apply(this, arguments as any);
@@ -291,7 +293,7 @@ export class DdRumResourceTracking {
 
         const context = xhrProxy._datadog_xhr;
 
-        const key = context.timer.startTime + '/' + context.method;
+        const key = `${context.timer.startTime}/${context.method}`;
 
         context.timer.stop();
 

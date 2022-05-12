@@ -5,14 +5,14 @@
  */
 
 import React from 'react';
-import { DdEventsInterceptor } from './DdEventsInterceptor';
-import NoOpEventsInterceptor from './NoOpEventsInterceptor';
-import type EventsInterceptor from './EventsInterceptor';
+
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 
-const PROPERTY_FUNCTION_TYPE = 'function';
+import { DdEventsInterceptor } from './DdEventsInterceptor';
+import type EventsInterceptor from './EventsInterceptor';
+import NoOpEventsInterceptor from './NoOpEventsInterceptor';
+import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
@@ -44,7 +44,7 @@ export class DdRumUserInteractionTracking {
             ...children: any
         ): any => {
             // check if we have an 'onPress' property and that this is really a function
-            if (props && typeof props.onPress === PROPERTY_FUNCTION_TYPE) {
+            if (props && typeof props.onPress === 'function') {
                 const originalOnPress = props.onPress;
                 props.onPress = (...args: any[]) => {
                     DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(
@@ -65,7 +65,7 @@ export class DdRumUserInteractionTracking {
         ) => {
             return originalMemo(component, (prev, next) => {
                 if (!next.onPress || !prev.onPress) {
-                    return !!propsAreEqual
+                    return propsAreEqual
                         ? propsAreEqual(prev, next)
                         : areObjectShallowEqual(prev, next);
                 }
@@ -83,7 +83,7 @@ export class DdRumUserInteractionTracking {
                 };
 
                 // if no comparison function is provided we do shallow comparison
-                return !!propsAreEqual
+                return propsAreEqual
                     ? propsAreEqual(prevProps, nextProps)
                     : areObjectShallowEqual(nextProps, prevProps);
             });

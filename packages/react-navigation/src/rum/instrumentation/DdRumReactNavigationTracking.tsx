@@ -4,19 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '@datadog/mobile-react-native/internal';
+import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
 import type {
     EventArg,
     NavigationContainerRef,
     Route
 } from '@react-navigation/native';
-import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
-import {
-    AppState,
-    AppStateStatus,
-    BackHandler,
-    NativeEventSubscription
-} from 'react-native';
-import { InternalLog } from '@datadog/mobile-react-native/internal';
+import type { AppStateStatus, NativeEventSubscription } from 'react-native';
+import { AppState, BackHandler } from 'react-native';
 
 declare type NavigationListener = (
     event: EventArg<string, boolean, any>
@@ -55,10 +51,12 @@ export class DdRumReactNavigationTracking {
         'Cannot track new navigation container while another one is still tracked. Please call `DdRumReactNavigationTracking.stopTrackingViews` on the previous container reference.';
 
     static isAppExitingOnBackPress = (): boolean => {
-        if (DdRumReactNavigationTracking.registeredContainer === null)
+        if (DdRumReactNavigationTracking.registeredContainer === null) {
             return false;
-        if (DdRumReactNavigationTracking.registeredContainer.canGoBack())
+        }
+        if (DdRumReactNavigationTracking.registeredContainer.canGoBack()) {
             return false;
+        }
         return true;
     };
 
@@ -153,7 +151,7 @@ export class DdRumReactNavigationTracking {
         route: Route<string, any | undefined> | undefined,
         appStateStatus: AppStateStatus | undefined = undefined
     ) {
-        if (route == undefined || route == null) {
+        if (route === undefined || route === null) {
             InternalLog.log(
                 DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                 SdkVerbosity.WARN
@@ -171,7 +169,7 @@ export class DdRumReactNavigationTracking {
                 DdRum.stopView(key);
             } else if (
                 appStateStatus === 'active' ||
-                appStateStatus == undefined
+                appStateStatus === undefined
             ) {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
@@ -189,7 +187,7 @@ export class DdRumReactNavigationTracking {
             ) => {
                 let route = event.data?.state?.routes[event.data?.state?.index];
 
-                if (route == undefined) {
+                if (route === undefined || route === null) {
                     InternalLog.log(
                         DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
@@ -198,9 +196,9 @@ export class DdRumReactNavigationTracking {
                     return;
                 }
 
-                while (route.state != undefined) {
+                while (route.state !== undefined && route.state !== null) {
                     const nestedRoute = route.state.routes[route.state.index];
-                    if (nestedRoute == undefined) {
+                    if (route === undefined || route === null) {
                         // RUMM-1400 in some cases the route seem to be undefined
                         break;
                     }
@@ -217,7 +215,7 @@ export class DdRumReactNavigationTracking {
         appStateStatus: AppStateStatus
     ) => {
         const currentRoute = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
-        if (currentRoute == undefined) {
+        if (currentRoute === undefined || currentRoute === null) {
             InternalLog.log(
                 `We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`,
                 SdkVerbosity.ERROR

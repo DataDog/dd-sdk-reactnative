@@ -4,9 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import React from 'react';
-import { ComponentDidAppearEvent, Navigation } from 'react-native-navigation';
 import { DdRum } from '@datadog/mobile-react-native';
+import type { ComponentDidAppearEvent } from 'react-native-navigation';
+import { Navigation } from 'react-native-navigation';
+import React from 'react';
 
 export type ViewNamePredicate = (
     event: ComponentDidAppearEvent,
@@ -47,7 +48,8 @@ export class DdRumReactNativeNavigationTracking {
         ): any => {
             if (
                 props &&
-                props.componentId != undefined &&
+                props.componentId !== undefined &&
+                props.componentId !== null &&
                 !DdRumReactNativeNavigationTracking.trackedComponentIds.includes(
                     props.componentId
                 )
@@ -90,7 +92,7 @@ export class DdRumReactNativeNavigationTracking {
             return;
         }
         if (
-            DdRumReactNativeNavigationTracking.originalCreateElement !=
+            DdRumReactNativeNavigationTracking.originalCreateElement !==
             undefined
         ) {
             React.createElement =

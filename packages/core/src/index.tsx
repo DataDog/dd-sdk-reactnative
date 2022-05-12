@@ -4,13 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdLogs, DdTrace, DdRum } from './foundation';
-
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
-import { TrackingConsent } from './TrackingConsent';
 import { SdkVerbosity } from './SdkVerbosity';
+import { TrackingConsent } from './TrackingConsent';
+import { DdLogs, DdTrace, DdRum } from './foundation';
 
 export {
     DdLogs,

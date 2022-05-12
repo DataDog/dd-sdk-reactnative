@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { TrackingConsent } from './TrackingConsent';
-import type { SdkVerbosity } from './SdkVerbosity';
 import type { ProxyConfiguration } from './ProxyConfiguration';
+import type { SdkVerbosity } from './SdkVerbosity';
+import { TrackingConsent } from './TrackingConsent';
 
 /**
  * The SDK configuration class.

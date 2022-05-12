@@ -4,10 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type EventsInterceptor from './EventsInterceptor';
-import { DdRum } from '../../foundation';
-import { SdkVerbosity } from '../../SdkVerbosity';
 import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
+import { DdRum } from '../../foundation';
+
+import type EventsInterceptor from './EventsInterceptor';
 
 export const UNKNOWN_TARGET_NAME = 'unknown_target';
 const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10;
@@ -61,7 +62,7 @@ export class DdEventsInterceptor implements EventsInterceptor {
         const elementTypeName = this.resolveElementTypeName(
             targetNode.elementType
         );
-        return elementTypeName ? elementTypeName : UNKNOWN_TARGET_NAME;
+        return elementTypeName || UNKNOWN_TARGET_NAME;
     }
 
     private resolveElementTypeName(elementType: any): string | null {
