@@ -15,6 +15,7 @@ import { TrackingConsent } from './TrackingConsent';
 export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
     public sampleRate: number = 100.0;
+    public sessionSamplingRate?: number;
     public site: string = 'US';
     public verbosity: SdkVerbosity | undefined = undefined;
     public nativeViewTracking: boolean = false;
