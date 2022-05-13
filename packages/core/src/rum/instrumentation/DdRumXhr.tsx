@@ -15,6 +15,19 @@ export interface DdRumXhrContext {
     url: string;
     reported: boolean;
     timer: Timer;
-    spanId: string;
-    traceId: string;
+    tracingAttributes: DdRumResourceTracingAttributes;
 }
+
+export type DdRumResourceTracingAttributes =
+    | {
+          tracingStrategy: 'KEEP';
+          traceId: string;
+          spanId: string;
+          samplingPriorityHeader: '1';
+      }
+    | {
+          tracingStrategy: 'DISCARD';
+          traceId?: void;
+          spanId?: void;
+          samplingPriorityHeader: '0';
+      };
