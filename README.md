@@ -55,7 +55,7 @@ config.site = "US1"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80
-// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 100%)
+// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 config.tracingSamplingRate = 80
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
 config.serviceName = "com.example.reactnative"
@@ -86,7 +86,7 @@ config.site = "US3"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80
-// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 100%)
+// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 config.tracingSamplingRate = 80
 
 await DdSdkReactNative.initialize(config)
@@ -113,7 +113,7 @@ config.site = "US5"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80
-// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 100%)
+// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 config.tracingSamplingRate = 80
 
 await DdSdkReactNative.initialize(config)
@@ -140,7 +140,7 @@ config.site = "EU1"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80
-// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 100%)
+// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 config.tracingSamplingRate = 80
 
 await DdSdkReactNative.initialize(config)
@@ -167,7 +167,7 @@ config.site = "US1_FED"
 config.nativeCrashReportEnabled = true
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80
-// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 100%)
+// Optional: sample tracing integrations between between your app and backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 config.tracingSamplingRate = 80
 
 await DdSdkReactNative.initialize(config)
