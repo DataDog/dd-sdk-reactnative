@@ -116,8 +116,9 @@ export class DdSdkReactNative {
                     configuration.env,
                     configuration.applicationId,
                     configuration.nativeCrashReportEnabled,
-                    configuration.sessionSamplingRate ||
-                        configuration.sampleRate,
+                    configuration.sampleRate === undefined
+                        ? configuration.sessionSamplingRate
+                        : configuration.sampleRate,
                     configuration.site,
                     configuration.trackingConsent,
                     configuration.additionalConfig

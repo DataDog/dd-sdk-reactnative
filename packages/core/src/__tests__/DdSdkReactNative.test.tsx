@@ -304,7 +304,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.sampleRate = 80;
+            configuration.sampleRate = 0;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -312,7 +312,7 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    sampleRate: 80
+                    sampleRate: 0
                 })
             );
         });
