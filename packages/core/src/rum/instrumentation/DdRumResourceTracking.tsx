@@ -11,7 +11,7 @@ import { SdkVerbosity } from '../../SdkVerbosity';
 import Timer from '../../Timer';
 import { DdRum } from '../../foundation';
 
-import type { DdRumXhr } from './DdRumXhr';
+import type { DdRumResourceTracingAttributes, DdRumXhr } from './DdRumXhr';
 import { generateTraceId } from './TraceIdentifier';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
@@ -159,11 +159,29 @@ export function calculateResponseSize(xhr: XMLHttpRequest): number {
     return size;
 }
 
+const generateTracingAttributes = (
+    tracingSamplingRate: number
+): DdRumResourceTracingAttributes => {
+    if (Math.random() * 100 <= tracingSamplingRate) {
+        return {
+            traceId: generateTraceId(),
+            spanId: generateTraceId(),
+            samplingPriorityHeader: '1',
+            tracingStrategy: 'KEEP'
+        };
+    }
+    return {
+        samplingPriorityHeader: '0',
+        tracingStrategy: 'DISCARD'
+    };
+};
+
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
+    private static tracingSamplingRate: number;
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
@@ -171,14 +189,20 @@ export class DdRumResourceTracking {
     /**
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
-    static startTracking(): void {
-        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest);
+    static startTracking(tracingSamplingRate: number): void {
+        DdRumResourceTracking.startTrackingInternal(
+            XMLHttpRequest,
+            tracingSamplingRate
+        );
     }
 
     /**
      * Starts tracking resources and sends a RUM Resource event every time a fetch or XHR call is detected.
      */
-    static startTrackingInternal(xhrType: typeof XMLHttpRequest): void {
+    static startTrackingInternal(
+        xhrType: typeof XMLHttpRequest,
+        tracingSamplingRate: number
+    ): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
             InternalLog.log(
@@ -187,6 +211,8 @@ export class DdRumResourceTracking {
             );
             return;
         }
+
+        DdRumResourceTracking.tracingSamplingRate = tracingSamplingRate;
 
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
@@ -223,15 +249,14 @@ export class DdRumResourceTracking {
         ) {
             // Keep track of the method and url
             // start time is tracked by the `send` method
-            const spanId = generateTraceId();
-            const traceId = generateTraceId();
             this._datadog_xhr = {
                 method,
                 url,
                 reported: false,
                 timer: new Timer(),
-                spanId,
-                traceId
+                tracingAttributes: generateTracingAttributes(
+                    DdRumResourceTracking.tracingSamplingRate
+                )
             };
             // eslint-disable-next-line prefer-rest-params
             return originalXhrOpen.apply(this, arguments as any);
@@ -244,16 +269,23 @@ export class DdRumResourceTracking {
             if (this._datadog_xhr) {
                 // keep track of start time
                 this._datadog_xhr.timer.start();
-                this.setRequestHeader(
-                    TRACE_ID_HEADER_KEY,
-                    this._datadog_xhr.traceId
-                );
-                this.setRequestHeader(
-                    PARENT_ID_HEADER_KEY,
-                    this._datadog_xhr.spanId
-                );
                 this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
-                this.setRequestHeader(SAMPLING_PRIORITY_HEADER_KEY, '1');
+
+                const tracingAttributes = this._datadog_xhr.tracingAttributes;
+                this.setRequestHeader(
+                    SAMPLING_PRIORITY_HEADER_KEY,
+                    tracingAttributes.samplingPriorityHeader
+                );
+                if (tracingAttributes.tracingStrategy !== 'DISCARD') {
+                    this.setRequestHeader(
+                        TRACE_ID_HEADER_KEY,
+                        tracingAttributes.traceId
+                    );
+                    this.setRequestHeader(
+                        PARENT_ID_HEADER_KEY,
+                        tracingAttributes.spanId
+                    );
+                }
             }
 
             DdRumResourceTracking.proxyOnReadyStateChange(this, xhrType);
@@ -298,10 +330,12 @@ export class DdRumResourceTracking {
             key,
             context.method,
             context.url,
-            {
-                '_dd.span_id': context.spanId,
-                '_dd.trace_id': context.traceId
-            },
+            context.tracingAttributes.tracingStrategy === 'DISCARD'
+                ? undefined
+                : {
+                      '_dd.span_id': context.tracingAttributes.spanId,
+                      '_dd.trace_id': context.tracingAttributes.traceId
+                  },
             context.timer.startTime
         ).then(() => {
             DdRum.stopResource(
