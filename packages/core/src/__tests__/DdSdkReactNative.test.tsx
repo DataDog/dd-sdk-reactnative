@@ -389,7 +389,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.tracingSamplingRate = 42;
+            configuration.resourceTracingSamplingRate = 42;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -430,6 +430,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
+            configuration.resourceTracingSamplingRate = 2;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
