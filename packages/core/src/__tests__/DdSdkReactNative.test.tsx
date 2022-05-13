@@ -271,6 +271,74 @@ describe('DdSdkReactNative', () => {
                 spyConsoleWarn.mockRestore();
             }
         });
+
+        it('initializes with default sampleRate when not specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 100
+                })
+            );
+        });
+
+        it('initializes with sampleRate when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.sampleRate = 0;
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 0
+                })
+            );
+        });
+
+        it('initializes with sessionSamplingRate when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.sessionSamplingRate = 70;
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 70
+                })
+            );
+        });
     });
 
     describe('feature enablement', () => {
