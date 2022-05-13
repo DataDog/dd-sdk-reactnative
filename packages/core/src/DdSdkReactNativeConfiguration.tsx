@@ -14,6 +14,9 @@ import { TrackingConsent } from './TrackingConsent';
  */
 export class DdSdkReactNativeConfiguration {
     public nativeCrashReportEnabled: boolean = false;
+    /**
+     * @deprecated `sampleRate` has been replaced by `sessionSamplingRate` to avoid confusion with `tracingSamplingRate` and will be removed in a future release.
+     */
     public sampleRate?: number;
     public sessionSamplingRate: number = 100.0;
     public site: string = 'US';
