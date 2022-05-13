@@ -19,6 +19,7 @@ export class DdSdkReactNativeConfiguration {
      */
     public sampleRate?: number;
     public sessionSamplingRate: number = 100.0;
+    public tracingSamplingRate: number = 100.0;
     public site: string = 'US';
     public verbosity: SdkVerbosity | undefined = undefined;
     public nativeViewTracking: boolean = false;
