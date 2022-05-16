@@ -8,6 +8,7 @@ import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
 import { Route } from "@react-navigation/native";
+import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,13 +21,15 @@ export default function App() {
     <NavigationContainer ref={navigationRef} onReady={() => {
       DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewPredicate)
     }}>
-      <Tab.Navigator tabBarOptions={{
-        labelStyle: style.tabLabelStyle,
-        tabStyle: style.tabItemStyle
+      <Tab.Navigator screenOptions={{
+        tabBarLabelStyle: style.tabLabelStyle,
+        tabBarStyle: style.tabItemStyle,
+        tabBarIcon: () => null
       }}>
         <Tab.Screen name="Home" component={MainScreen} />
         <Tab.Screen name="Error" component={ErrorScreen} />
         <Tab.Screen name="About" component={AboutScreen} />
+        <Tab.Screen name="Nested" component={NestedNavigator} />
       </Tab.Navigator>
     </NavigationContainer>
   )
