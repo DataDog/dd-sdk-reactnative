@@ -6,18 +6,24 @@
 
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import { DdRum } from '@datadog/mobile-react-native';
-import type { NavigationContainerRef, Route } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import type { Route } from '@react-navigation/native';
 import { render, fireEvent } from '@testing-library/react-native';
 import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
-import { View, Text, Button, AppState, BackHandler } from 'react-native';
+import { AppState, BackHandler } from 'react-native';
 import React from 'react';
 
 import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 
 import { AppStateMock } from './__utils__/AppStateMock';
+import {
+    FakeNavigator1,
+    navigationRef1,
+    FakeNavigator2,
+    navigationRef2,
+    FakeNestedNavigator,
+    navigationRef3
+} from './__utils__/Navigators/NavigatorsV5';
 
 jest.mock(
     'react-native/Libraries/Utilities/BackHandler',
@@ -53,11 +59,6 @@ AppState.addEventListener.mockImplementation(appStateMock.addEventListener);
 AppState.removeEventListener.mockImplementation(
     appStateMock.removeEventListener
 );
-
-const { Screen, Navigator } = createStackNavigator();
-const navigationRef1: React.RefObject<NavigationContainerRef> = React.createRef();
-const navigationRef2: React.RefObject<NavigationContainerRef> = React.createRef();
-const navigationRef3: React.RefObject<NavigationContainerRef> = React.createRef();
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
@@ -434,77 +435,3 @@ it('M not send an error W the app closes with Android back button', async () => 
         'error'
     );
 });
-
-// Internals
-
-function FakeAboutScreen({ navigation }) {
-    return (
-        <View>
-            <Text>Welcome to About</Text>
-        </View>
-    );
-}
-
-function FakeHomeScreen({ navigation }) {
-    return (
-        <View>
-            <Text>Welcome to Home</Text>
-            <Button
-                title="Go to About"
-                onPress={() => {
-                    navigation.navigate('About');
-                }}
-            />
-        </View>
-    );
-}
-
-function FakeSettingsScreen({ navigation }) {
-    return (
-        <View>
-            <Text>Welcome to About</Text>
-        </View>
-    );
-}
-
-function FakeProfileScreen({ navigation }) {
-    return (
-        <Navigator>
-            <Screen name="Home" component={FakeHomeScreen} />
-            <Screen name="About" component={FakeAboutScreen} />
-        </Navigator>
-    );
-}
-
-function FakeNavigator1() {
-    return (
-        <NavigationContainer ref={navigationRef1}>
-            <Navigator>
-                <Screen name="Home" component={FakeHomeScreen} />
-                <Screen name="About" component={FakeAboutScreen} />
-            </Navigator>
-        </NavigationContainer>
-    );
-}
-
-function FakeNavigator2() {
-    return (
-        <NavigationContainer ref={navigationRef2}>
-            <Navigator>
-                <Screen name="Home" component={FakeHomeScreen} />
-                <Screen name="About" component={FakeAboutScreen} />
-            </Navigator>
-        </NavigationContainer>
-    );
-}
-
-function FakeNestedNavigator() {
-    return (
-        <NavigationContainer ref={navigationRef3}>
-            <Navigator>
-                <Screen name="Profile" component={FakeProfileScreen} />
-                <Screen name="Settings" component={FakeSettingsScreen} />
-            </Navigator>
-        </NavigationContainer>
-    );
-}
