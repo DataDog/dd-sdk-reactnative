@@ -4,12 +4,14 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-type handler = (value: string) => void;
+import type { AppStateEvent, AppStateStatus } from 'react-native';
+
+type handler = (type: AppStateStatus) => void;
 
 export class AppStateMock {
     private handlers: { [eventType: string]: handler[] } = {};
 
-    addEventListener = (type: string, callback: handler) => {
+    addEventListener = (type: AppStateEvent, callback: handler) => {
         if (!this.handlers[type]) {
             this.handlers[type] = [];
         }
@@ -33,7 +35,7 @@ export class AppStateMock {
         ];
     };
 
-    changeValue = (value: string) => {
+    changeValue = (value: AppStateStatus) => {
         if (!this.handlers.change) {
             return;
         }

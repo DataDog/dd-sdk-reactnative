@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /*
  * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
@@ -21,6 +22,11 @@ import {
     FakeNavigator2,
     FakeNestedNavigator
 } from './__utils__/Navigators/NavigatorsV5';
+
+// TODO: inject this as a global
+function mocked<T extends (...args: any[]) => any>(item: T) {
+    return (item as unknown) as jest.MockedFunction<typeof item>;
+}
 
 jest.mock(
     'react-native/Libraries/Utilities/BackHandler',
@@ -52,8 +58,10 @@ jest.mock('@datadog/mobile-react-native', () => {
 });
 
 const appStateMock = new AppStateMock();
-AppState.addEventListener.mockImplementation(appStateMock.addEventListener);
-AppState.removeEventListener.mockImplementation(
+mocked(AppState.addEventListener).mockImplementation(
+    appStateMock.addEventListener
+);
+mocked(AppState.removeEventListener).mockImplementation(
     appStateMock.removeEventListener
 );
 
@@ -62,16 +70,18 @@ jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
 jest.useFakeTimers();
 
 beforeEach(() => {
-    InternalLog.log.mockClear();
+    mocked(InternalLog.log).mockClear();
     jest.setTimeout(20000);
-    DdRum.startView.mockClear();
-    DdRum.stopView.mockClear();
-    AppState.addEventListener.mockClear();
-    AppState.removeEventListener.mockClear();
+    mocked(DdRum.startView).mockClear();
+    mocked(DdRum.stopView).mockClear();
+    mocked(AppState.addEventListener).mockClear();
+    mocked(AppState.removeEventListener).mockClear();
     appStateMock.removeAllListeners();
-    BackHandler.exitApp.mockClear();
+    mocked(BackHandler.exitApp).mockClear();
 
+    // @ts-ignore
     DdRumReactNavigationTracking.registeredContainer = null;
+    // @ts-ignore
     DdRumReactNavigationTracking.navigationStateChangeListener = null;
 });
 
