@@ -37,7 +37,13 @@ export function FakeHomeScreen({ navigation }) {
 export function FakeSettingsScreen({ navigation }) {
     return (
         <View>
-            <Text>Welcome to About</Text>
+            <Text>Welcome to Settings</Text>
+            <Button
+                title="Go to Nested Home"
+                onPress={() => {
+                    navigation.navigate('NestedStack');
+                }}
+            />
         </View>
     );
 }
@@ -46,7 +52,15 @@ export function FakeProfileScreen({ navigation }) {
     return (
         <Navigator>
             <Screen name="Home" component={FakeHomeScreen} />
-            <Screen name="About" component={FakeAboutScreen} />
+            <Screen name="About" component={FakeSettingsScreen} />
+        </Navigator>
+    );
+}
+
+export function FakeNestedStack({ navigation }) {
+    return (
+        <Navigator>
+            <Screen name="NestedHome" component={FakeHomeScreen} />
         </Navigator>
     );
 }
@@ -84,7 +98,7 @@ export function FakeNestedNavigator(props: {
         <NavigationContainer ref={props.navigationRef}>
             <Navigator>
                 <Screen name="Profile" component={FakeProfileScreen} />
-                <Screen name="Settings" component={FakeSettingsScreen} />
+                <Screen name="NestedStack" component={FakeNestedStack} />
             </Navigator>
         </NavigationContainer>
     );

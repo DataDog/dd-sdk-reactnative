@@ -182,27 +182,15 @@ export class DdRumReactNavigationTracking {
         if (
             DdRumReactNavigationTracking.navigationStateChangeListener == null
         ) {
-            DdRumReactNavigationTracking.navigationStateChangeListener = (
-                event: EventArg<string, boolean, any>
-            ) => {
-                let route = event.data?.state?.routes[event.data?.state?.index];
+            DdRumReactNavigationTracking.navigationStateChangeListener = () => {
+                const route = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
 
-                if (route === undefined || route === null) {
+                if (route === undefined) {
                     InternalLog.log(
                         DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
                     );
-                    // RUMM-1400 in some cases the route seem to be undefined
                     return;
-                }
-
-                while (route.state !== undefined && route.state !== null) {
-                    const nestedRoute = route.state.routes[route.state.index];
-                    if (route === undefined || route === null) {
-                        // RUMM-1400 in some cases the route seem to be undefined
-                        break;
-                    }
-                    route = nestedRoute;
                 }
 
                 DdRumReactNavigationTracking.handleRouteNavigation(route);

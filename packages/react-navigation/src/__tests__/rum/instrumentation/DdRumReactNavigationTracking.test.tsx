@@ -239,6 +239,16 @@ describe('DdRumReactNavigationTracking', () => {
                 expect.any(String),
                 'About'
             );
+
+            // WHEN
+            const goToNestedHome = testUtils.getByText('Go to Nested Home');
+            fireEvent(goToNestedHome, 'press');
+
+            // THEN
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'NestedHome'
+            );
         });
     });
 
