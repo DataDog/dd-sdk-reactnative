@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { NavigationContainerRef } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import type { NavigationContainerRef } from '@react-navigation/native-v5';
+import { NavigationContainer } from '@react-navigation/native-v5';
+import { createStackNavigator } from '@react-navigation/stack-v5';
 import { View, Text, Button } from 'react-native';
 import React from 'react';
 

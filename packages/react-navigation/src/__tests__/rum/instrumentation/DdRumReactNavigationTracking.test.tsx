@@ -7,7 +7,10 @@
 
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import { DdRum } from '@datadog/mobile-react-native';
-import type { NavigationContainerRef, Route } from '@react-navigation/native';
+import type {
+    NavigationContainerRef,
+    Route
+} from '@react-navigation/native-v5';
 import { render, fireEvent } from '@testing-library/react-native';
 import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
 import { AppState, BackHandler } from 'react-native';

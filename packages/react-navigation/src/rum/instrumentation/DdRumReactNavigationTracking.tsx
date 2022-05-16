@@ -10,7 +10,7 @@ import type {
     EventArg,
     NavigationContainerRef,
     Route
-} from '@react-navigation/native';
+} from '@react-navigation/native-v5';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { AppState, BackHandler } from 'react-native';
 

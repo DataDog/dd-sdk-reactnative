@@ -24,7 +24,8 @@
     "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna link && lerna run prepare",
     "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
     "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
-    "example": "yarn --cwd example"
+    "example": "yarn --cwd example",
+    "postinstall": "find node_modules/@react-navigation/stack-v5/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v5\"/g'"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "7.12.15",
