@@ -78,7 +78,7 @@ beforeEach(() => {
 // Unit tests
 describe('DdRumReactNavigationTracking', () => {
     describe('startTrackingViews', () => {
-        it('M send a RUM ViewEvent W startTrackingViews', async () => {
+        it('sends a RUM ViewEvent when startTrackingViews', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -99,7 +99,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
         });
 
-        it('M send a related RUM ViewEvent W switching screens { navigationContainer listener attached }', async () => {
+        it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             const { getByText } = render(
@@ -125,7 +125,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
 
-        it('M send a related RUM ViewEvent W switching screens { viewPredicate provided }', async () => {
+        it('sends a related RUM ViewEvent when switching screens { viewPredicate provided }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             const { getByText } = render(
@@ -157,7 +157,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
 
-        it('M only register once W startTrackingViews{ multiple times }', async () => {
+        it('only registers once when startTrackingViews{ multiple times }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             const { getByText } = render(
@@ -186,7 +186,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
 
-        it('M do nothing W startTrackingViews { undefined NavigationContainerRef ', async () => {
+        it('does nothing when startTrackingViews { undefined NavigationContainerRef ', async () => {
             // WHEN
             DdRumReactNavigationTracking.startTrackingViews(null);
 
@@ -199,7 +199,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
-        it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first not detached }', async () => {
+        it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first not detached }', async () => {
             // GIVEN
             const navigationRef1 = createRef<NavigationContainerRef>();
             const testUtils1: { getByText } = render(
@@ -241,7 +241,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
-        it('M send a RUM ViewEvent for each W switching screens { multiple navigation containers }', async () => {
+        it('sends a RUM ViewEvent for each when switching screens { multiple navigation containers }', async () => {
             // GIVEN
             const navigationRef1 = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef1} />);
@@ -272,7 +272,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
-        it('M send a RUM ViewEvent for each W switching screens { nested navigation containers }', async () => {
+        it('sends a RUM ViewEvent for each when switching screens { nested navigation containers }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             const testUtils: { getByText } = render(
@@ -304,7 +304,7 @@ describe('DdRumReactNavigationTracking', () => {
     });
 
     describe('stopTrackingViews', () => {
-        it('M do nothing W switching screens { navigationContainer listener detached }', async () => {
+        it('does nothing when switching screens { navigationContainer listener detached }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             const { getByText } = render(
@@ -326,7 +326,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls.length).toBe(1);
         });
 
-        it('M send a RUM ViewEvent for each W startTrackingViews { multiple navigation containers w first is detached }', async () => {
+        it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first is detached }', async () => {
             // GIVEN
             const navigationRef1 = createRef<NavigationContainerRef>();
             const testUtils1: { getByText } = render(
@@ -379,7 +379,7 @@ describe('DdRumReactNavigationTracking', () => {
     });
 
     describe('AppState listener', () => {
-        it('M register and unregister AppState', async () => {
+        it('registers and unregisters AppState', async () => {
             // GIVEN
             const navigationRef1 = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef1} />);
@@ -408,7 +408,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.stopView).toHaveBeenCalledTimes(1);
         });
 
-        it('M not log AppState changes W tracking is stopped', async () => {
+        it('does not log AppState changes when tracking is stopped', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -430,7 +430,7 @@ describe('DdRumReactNavigationTracking', () => {
             );
         });
 
-        it('M stop active view W app goes into background', async () => {
+        it('stops active view when app goes into background', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -450,7 +450,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
         });
 
-        it('M start last view W app goes into foreground', async () => {
+        it('starts last view when app goes into foreground', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -475,7 +475,7 @@ describe('DdRumReactNavigationTracking', () => {
             expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
         });
 
-        it('M not stop view W no navigator attached', async () => {
+        it('does not stop view when no navigator attached', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
             render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -496,7 +496,7 @@ describe('DdRumReactNavigationTracking', () => {
     });
 
     describe('Android back handler', () => {
-        it('M not send an error W the app closes with Android back button', async () => {
+        it('does not send an error when the app closes with Android back button', async () => {
             // GIVEN
             const navigationRef1 = createRef<NavigationContainerRef>();
             const { unmount } = render(
