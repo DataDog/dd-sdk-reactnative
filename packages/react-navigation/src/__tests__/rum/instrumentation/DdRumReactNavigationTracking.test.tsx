@@ -99,14 +99,11 @@ describe('DdRumReactNavigationTracking', () => {
             );
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(1);
-            expect(DdRum.startView.mock.calls[0][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
+            expect(DdRum.startView).toHaveBeenCalledTimes(1);
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'Home'
             );
-            expect(DdRum.startView.mock.calls[0][1]).toBe(
-                navigationRef.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
         });
 
         it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
@@ -125,14 +122,15 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[1][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
+            expect(DdRum.startView).toHaveBeenCalledTimes(2);
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'Home'
             );
-            expect(DdRum.startView.mock.calls[1][1]).toBe(
-                navigationRef.current?.getCurrentRoute()?.name
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'About'
             );
-            expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
 
         it('sends a related RUM ViewEvent when switching screens { viewPredicate provided }', async () => {
@@ -159,12 +157,10 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[1][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'custom_view_name'
             );
-            expect(DdRum.startView.mock.calls[1][1]).toBe(customViewName);
-            expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
 
         it('only registers once when startTrackingViews{ multiple times }', async () => {
@@ -186,14 +182,7 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[1][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
-            );
-            expect(DdRum.startView.mock.calls[1][1]).toBe(
-                navigationRef.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
+            expect(DdRum.startView).toHaveBeenCalledTimes(2);
         });
 
         it('does nothing when startTrackingViews { undefined NavigationContainerRef ', async () => {
@@ -201,12 +190,12 @@ describe('DdRumReactNavigationTracking', () => {
             DdRumReactNavigationTracking.startTrackingViews(null);
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(0);
-            expect(InternalLog.log.mock.calls.length).toBe(1);
-            expect(InternalLog.log.mock.calls[0][0]).toBe(
-                DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE
+            expect(DdRum.startView).toHaveBeenCalledTimes(0);
+            expect(InternalLog.log).toHaveBeenCalledTimes(1);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE,
+                'error'
             );
-            expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
         it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first not detached }', async () => {
@@ -236,19 +225,11 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton2, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[1][0]).toBe(
-                navigationRef1.current?.getCurrentRoute()?.key
+            expect(DdRum.startView).toHaveBeenCalledTimes(2);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
+                'error'
             );
-            expect(DdRum.startView.mock.calls[1][1]).toBe(
-                navigationRef1.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
-            expect(InternalLog.log.mock.calls.length).toBe(1);
-            expect(InternalLog.log.mock.calls[0][0]).toBe(
-                DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE
-            );
-            expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
         it('sends a RUM ViewEvent for each when switching screens { multiple navigation containers }', async () => {
@@ -292,24 +273,21 @@ describe('DdRumReactNavigationTracking', () => {
                 navigationRef.current
             );
             const goToAboutButton = testUtils.getByText('Go to About');
-            const initialRoute = navigationRef.current?.getCurrentRoute();
 
             // WHEN
             expect(goToAboutButton).toBeTruthy();
             fireEvent(goToAboutButton, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[0][0]).toBe(initialRoute?.key);
-            expect(DdRum.startView.mock.calls[0][1]).toBe(initialRoute?.name);
-            expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
-            expect(DdRum.startView.mock.calls[1][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
+            expect(DdRum.startView).toHaveBeenCalledTimes(2);
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'Home'
             );
-            expect(DdRum.startView.mock.calls[1][1]).toBe(
-                navigationRef.current?.getCurrentRoute()?.name
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                expect.any(String),
+                'About'
             );
-            expect(DdRum.startView.mock.calls[1][2]).toBeUndefined();
         });
     });
 
@@ -333,7 +311,7 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(1);
+            expect(DdRum.startView).toHaveBeenCalledTimes(1);
         });
 
         it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first is detached }', async () => {
@@ -370,21 +348,15 @@ describe('DdRumReactNavigationTracking', () => {
             fireEvent(goToAboutButton2, 'press');
 
             // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(4);
-            expect(DdRum.startView.mock.calls[2][0]).toBe(
-                navigationRef2StartRoute.key
+            expect(DdRum.startView).toHaveBeenCalledTimes(4);
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                navigationRef2StartRoute.key,
+                'Home'
             );
-            expect(DdRum.startView.mock.calls[2][1]).toBe(
-                navigationRef2StartRoute.name
+            expect(DdRum.startView).toHaveBeenCalledWith(
+                navigationRef2.current?.getCurrentRoute()?.key,
+                'About'
             );
-            expect(DdRum.startView.mock.calls[2][2]).toBeUndefined();
-            expect(DdRum.startView.mock.calls[3][0]).toBe(
-                navigationRef2.current?.getCurrentRoute()?.key
-            );
-            expect(DdRum.startView.mock.calls[3][1]).toBe(
-                navigationRef2.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[3][2]).toBeUndefined();
         });
     });
 
@@ -408,8 +380,8 @@ describe('DdRumReactNavigationTracking', () => {
             );
 
             // THEN
-            expect(AppState.addEventListener.mock.calls.length).toBe(2);
-            expect(AppState.removeEventListener.mock.calls.length).toBe(1);
+            expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
+            expect(AppState.removeEventListener).toHaveBeenCalledTimes(1);
 
             // WHEN we go in background mode
             appStateMock.changeValue('background');
@@ -453,11 +425,13 @@ describe('DdRumReactNavigationTracking', () => {
             appStateMock.changeValue('background');
 
             // THEN
-            expect(DdRum.stopView.mock.calls.length).toBe(1);
-            expect(DdRum.stopView.mock.calls[0][0]).toBe(
+            expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+            expect(DdRum.stopView).toHaveBeenCalledWith(
                 navigationRef.current?.getCurrentRoute()?.key
             );
-            expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
+            expect(typeof navigationRef.current?.getCurrentRoute()?.key).toBe(
+                'string'
+            );
         });
 
         it('starts last view when app goes into foreground', async () => {
@@ -474,15 +448,8 @@ describe('DdRumReactNavigationTracking', () => {
             appStateMock.changeValue('active');
 
             // THEN
-            expect(DdRum.stopView.mock.calls.length).toBe(1);
-            expect(DdRum.startView.mock.calls.length).toBe(2);
-            expect(DdRum.startView.mock.calls[0][0]).toBe(
-                navigationRef.current?.getCurrentRoute()?.key
-            );
-            expect(DdRum.startView.mock.calls[0][1]).toBe(
-                navigationRef.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
+            expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+            expect(DdRum.startView).toHaveBeenCalledTimes(2);
         });
 
         it('does not stop view when no navigator attached', async () => {
@@ -501,7 +468,7 @@ describe('DdRumReactNavigationTracking', () => {
             appStateMock.changeValue('background');
 
             // THEN
-            expect(DdRum.stopView.mock.calls.length).toBe(0);
+            expect(DdRum.stopView).not.toHaveBeenCalled();
         });
     });
 
@@ -517,7 +484,7 @@ describe('DdRumReactNavigationTracking', () => {
             );
 
             // WHEN back is pressed
-            BackHandler.mockPressBack();
+            mockBackHandler.mockPressBack();
             // THEN app is closed
             expect(BackHandler.exitApp).toHaveBeenCalled();
 
