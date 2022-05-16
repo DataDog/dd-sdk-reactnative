@@ -34,7 +34,7 @@
     "test": "jest",
     "lint": "eslint .",
     "prepare": "bob build",
-    "postinstall": "find ../../node_modules/@react-navigation/stack-v5/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v5\"/g' && find ../../node_modules/@react-navigation/stack-v6/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v6\"/g' && find ../../node_modules/@react-navigation/elements/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v6\"/g'"
+    "postinstall": "./fix-react-navigation-import-in-dependencies.sh"
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-rc6",
