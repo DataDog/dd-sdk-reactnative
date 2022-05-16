@@ -88,24 +88,6 @@ beforeEach(() => {
 // Unit tests
 describe('DdRumReactNavigationTracking', () => {
     describe('startTrackingViews', () => {
-        it('sends a RUM ViewEvent when startTrackingViews', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef} />);
-
-            // WHEN
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(1);
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'Home'
-            );
-        });
-
         it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
             // GIVEN
             const navigationRef = createRef<NavigationContainerRef>();
@@ -230,37 +212,6 @@ describe('DdRumReactNavigationTracking', () => {
                 DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
                 'error'
             );
-        });
-
-        it('sends a RUM ViewEvent for each when switching screens { multiple navigation containers }', async () => {
-            // GIVEN
-            const navigationRef1 = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef1} />);
-            const navigationRef2 = createRef<NavigationContainerRef>();
-            render(<FakeNavigator2 navigationRef={navigationRef2} />);
-
-            // WHEN
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef1.current
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef2.current
-            );
-
-            // THEN
-            expect(DdRum.startView.mock.calls.length).toBe(1);
-            expect(DdRum.startView.mock.calls[0][0]).toBe(
-                navigationRef1.current?.getCurrentRoute()?.key
-            );
-            expect(DdRum.startView.mock.calls[0][1]).toBe(
-                navigationRef1.current?.getCurrentRoute()?.name
-            );
-            expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
-            expect(InternalLog.log.mock.calls.length).toBe(1);
-            expect(InternalLog.log.mock.calls[0][0]).toBe(
-                DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE
-            );
-            expect(InternalLog.log.mock.calls[0][1]).toBe('error');
         });
 
         it('sends a RUM ViewEvent for each when switching screens { nested navigation containers }', async () => {
