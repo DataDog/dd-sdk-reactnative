@@ -10,10 +10,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, Button } from 'react-native';
 import React from 'react';
 
-export const navigationRef1: React.RefObject<NavigationContainerRef> = React.createRef();
-export const navigationRef2: React.RefObject<NavigationContainerRef> = React.createRef();
-export const navigationRef3: React.RefObject<NavigationContainerRef> = React.createRef();
-
 const { Screen, Navigator } = createStackNavigator();
 
 export function FakeAboutScreen({ navigation }) {
@@ -55,9 +51,11 @@ export function FakeProfileScreen({ navigation }) {
     );
 }
 
-export function FakeNavigator1() {
+export function FakeNavigator1(props: {
+    navigationRef: React.RefObject<NavigationContainerRef>;
+}) {
     return (
-        <NavigationContainer ref={navigationRef1}>
+        <NavigationContainer ref={props.navigationRef}>
             <Navigator>
                 <Screen name="Home" component={FakeHomeScreen} />
                 <Screen name="About" component={FakeAboutScreen} />
@@ -66,9 +64,11 @@ export function FakeNavigator1() {
     );
 }
 
-export function FakeNavigator2() {
+export function FakeNavigator2(props: {
+    navigationRef: React.RefObject<NavigationContainerRef>;
+}) {
     return (
-        <NavigationContainer ref={navigationRef2}>
+        <NavigationContainer ref={props.navigationRef}>
             <Navigator>
                 <Screen name="Home" component={FakeHomeScreen} />
                 <Screen name="About" component={FakeAboutScreen} />
@@ -77,9 +77,11 @@ export function FakeNavigator2() {
     );
 }
 
-export function FakeNestedNavigator() {
+export function FakeNestedNavigator(props: {
+    navigationRef: React.RefObject<NavigationContainerRef>;
+}) {
     return (
-        <NavigationContainer ref={navigationRef3}>
+        <NavigationContainer ref={props.navigationRef}>
             <Navigator>
                 <Screen name="Profile" component={FakeProfileScreen} />
                 <Screen name="Settings" component={FakeSettingsScreen} />
