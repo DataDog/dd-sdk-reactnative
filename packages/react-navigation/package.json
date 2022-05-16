@@ -34,12 +34,14 @@
     "test": "jest",
     "lint": "eslint .",
     "prepare": "bob build",
-    "postinstall": "find ../../node_modules/@react-navigation/stack-v5/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v5\"/g'"
+    "postinstall": "find ../../node_modules/@react-navigation/stack-v5/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v5\"/g' && find ../../node_modules/@react-navigation/stack-v6/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v6\"/g' && find ../../node_modules/@react-navigation/elements/. -name '*.js' -print0 | xargs -0 sed -i '' 's/@react-navigation\\/native\"/@react-navigation\\/native-v6\"/g'"
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-rc6",
     "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.2",
+    "@react-navigation/native-v6": "npm:@react-navigation/native@6.0.9",
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2",
+    "@react-navigation/stack-v6": "npm:@react-navigation/stack@6.2.1",
     "@testing-library/react-native": "7.0.2",
     "react-native-gesture-handler": "1.10.3",
     "react-native-safe-area-context": "3.1.9"
