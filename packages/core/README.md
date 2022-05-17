@@ -1,6 +1,6 @@
 # React-Native Monitoring
 
-Datadog *Real User Monitoring (RUM)* enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+Datadog _Real User Monitoring (RUM)_ enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
 ## Setup
 
@@ -18,8 +18,7 @@ yarn add @datadog/mobile-react-native
 
 **Minimum React Native version**: SDK supports React Native version 0.63.4 or higher. Compatibility with older versions is not guaranteed out of the box.
 
-**Note**: Versions `1.0.0-rc5` and above require having `compileSdkVersion = 31` in your app setup for Android, and this requirement also implies
- that Build Tools version 31+, Android Gradle Plugin 7+ and Gradle 7+ should be used. You can modify the versions used by changing the values in the `buildscript.ext` block of your app's top-level `build.gradle` file. Having React Native version `0.67+` is also recommended.
+Versions `1.0.0-rc5` and higher require you to have `compileSdkVersion = 31` in the Android application setup, which implies that you should use Build Tools version 31, Android Gradle Plugin version 7, and Gradle version 7 or higher. To modify the versions, change the values in the `buildscript.ext` block of your application's top-level `build.gradle` file. Datadog recommends using React Native version 0.67 or higher.
 
 ### Specify application details in UI
 
@@ -34,31 +33,33 @@ To ensure the safety of your data, you must use a client token. You cannot use o
 ### Initialize the library with application context
 
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
-
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
     true, // track XHR Resources
     true // track Errors
-)
+);
 // Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", or "US1_FED"). Default is "US1".
-config.site = "US1"
+config.site = 'US1';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
-config.serviceName = "com.example.reactnative"
+config.serviceName = 'com.example.reactnative';
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
-config.verbosity = SdkVerbosity.WARN
+config.verbosity = SdkVerbosity.WARN;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
@@ -67,13 +68,18 @@ await DdSdkReactNative.initialize(config)
 
 Because React Native offers a wide range of libraries to create screen navigation, by default only manual View tracking is supported. You can manually start and stop a View using the following `startView()` and `stopView` methods.
 
-
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
-
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration,
+    DdLogs,
+    DdRum
+} from '@datadog/mobile-react-native';
 
 // Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
-DdRum.startView('<view-key>', '/view/url', Date.now(), { 'custom.foo': "something" });
+DdRum.startView('<view-key>', '/view/url', Date.now(), {
+    'custom.foo': 'something'
+});
 // Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
 DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
 ```

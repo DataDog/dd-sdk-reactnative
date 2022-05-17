@@ -20,8 +20,7 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native
 ```
 
-**Note**: Versions `1.0.0-rc5` and above require having `compileSdkVersion = 31` in your app setup for Android, and this requirement also implies
- that Build Tools version 31+, Android Gradle Plugin 7+ and Gradle 7+ should be used. You can modify the versions used by changing the values in the `buildscript.ext` block of your app's top-level `build.gradle` file. Having React Native version `0.67+` is also recommended.
+Versions `1.0.0-rc5` and higher require you to have `compileSdkVersion = 31` in the Android application setup, which implies that you should use Build Tools version 31, Android Gradle Plugin version 7, and Gradle version 7 or higher. To modify the versions, change the values in the `buildscript.ext` block of your application's top-level `build.gradle` file. Datadog recommends using React Native version 0.67 or higher.
 
 ### Specify application details in the UI
 
@@ -38,145 +37,163 @@ For more information about setting up a client token, see the [Client Token docu
 ### Initialize the library with application context
 
 {{< site-region region="us" >}}
-```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
+```js
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
-)
-config.site = "US1"
+);
+config.site = 'US1';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
-config.serviceName = "com.example.reactnative"
+config.serviceName = 'com.example.reactnative';
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
-config.verbosity = SdkVerbosity.WARN
+config.verbosity = SdkVerbosity.WARN;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
 {{< /site-region >}}
 
 {{< site-region region="us3" >}}
-```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
+```js
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
-)
-config.site = "US3"
+);
+config.site = 'US3';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
 {{< /site-region >}}
 
 {{< site-region region="us5" >}}
-```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
+```js
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
-)
-config.site = "US5"
+);
+config.site = 'US5';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
 {{< /site-region >}}
 
 {{< site-region region="eu" >}}
-```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
+```js
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
-)
-config.site = "EU1"
+);
+config.site = 'EU1';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
 {{< /site-region >}}
 
 {{< site-region region="gov" >}}
-```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 
+```js
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons).
     true, // track XHR Resources
     true // track Errors
-)
-config.site = "US1_FED"
+);
+config.site = 'US1_FED';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true
+config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80
+config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-config.resourceTracingSamplingRate = 80
+config.resourceTracingSamplingRate = 80;
 
-await DdSdkReactNative.initialize(config)
+await DdSdkReactNative.initialize(config);
 
 // Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
 ```
+
 {{< /site-region >}}
-
-
 
 ### User interactions tracking
 
@@ -191,19 +208,28 @@ Because React Native offers a wide range of libraries to create screen navigatio
 You can manually start and stop a view using the following `startView()` and `stopView` methods.
 
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
-
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration,
+    DdLogs,
+    DdRum
+} from '@datadog/mobile-react-native';
 
 // Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
-DdRum.startView('<view-key>', '/view/url', { 'custom.foo': "something" }, Date.now());
+DdRum.startView(
+    '<view-key>',
+    '/view/url',
+    { 'custom.foo': 'something' },
+    Date.now()
+);
 // Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
 DdRum.stopView('<view-key>', { 'custom.bar': 42 }, Date.now());
 ```
 
 Use one of Datadog's integrations to automatically track views for the following libraries:
 
-- If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
-- If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
+-   If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
+-   If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
 
 ## Track custom attributes
 
@@ -215,17 +241,17 @@ For user-specific information, use the following code wherever you want in your 
 
 ```js
 DdSdkReactNative.setUser({
-    id: "1337",
-    name: "John Smith",
-    email: "john@example.com",
-    type: "premium"
-})
+    id: '1337',
+    name: 'John Smith',
+    email: 'john@example.com',
+    type: 'premium'
+});
 ```
 
 If you want to clear the user information (for example, when the user signs out), you can do so by passing an empty object, as follows:
 
 ```js
-DdSdkReactNative.setUser({})
+DdSdkReactNative.setUser({});
 ```
 
 ### Global attributes
@@ -234,10 +260,10 @@ You can also keep global attributes to track information about a specific sessio
 
 ```js
 DdSdkReactNative.setAttributes({
-    profile_mode: "wall",
+    profile_mode: 'wall',
     chat_enabled: true,
-    campaign_origin: "example_ad_network"
-})
+    campaign_origin: 'example_ad_network'
+});
 ```
 
 ## Manual instrumentation
@@ -245,29 +271,34 @@ DdSdkReactNative.setAttributes({
 If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
 
 ```js
-import { DdSdkReactNative, DdSdkReactNativeConfiguration, DdLogs, DdRum } from '@datadog/mobile-react-native';
+import {
+    DdSdkReactNative,
+    DdSdkReactNativeConfiguration,
+    DdLogs,
+    DdRum
+} from '@datadog/mobile-react-native';
 
 // Initialize the SDK
 const config = new DdSdkReactNativeConfiguration(
-    "<CLIENT_TOKEN>",
-    "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
     true, // track User interactions (e.g.: Tap on buttons)
     true, // track XHR Resources
     true // track Errors
-)
+);
 DdSdkReactNative.initialize(config);
 
 // Send logs (use the debug, info, warn or error methods)
-DdLogs.debug("Lorem ipsum dolor sit amet…", {});
-DdLogs.info("Lorem ipsum dolor sit amet…", {});
-DdLogs.warn("Lorem ipsum dolor sit amet…", {});
-DdLogs.error("Lorem ipsum dolor sit amet…", {});
+DdLogs.debug('Lorem ipsum dolor sit amet…', {});
+DdLogs.info('Lorem ipsum dolor sit amet…', {});
+DdLogs.warn('Lorem ipsum dolor sit amet…', {});
+DdLogs.error('Lorem ipsum dolor sit amet…', {});
 
 // Track RUM Views manually
 DdRum.startView('<view-key>', 'View Url', {}, Date.now());
 //…
-DdRum.stopView('<view-key>', { 'custom': 42 }, Date.now());
+DdRum.stopView('<view-key>', { custom: 42 }, Date.now());
 
 // Track RUM Actions manually
 DdRum.addAction('TAP', 'button name', {}, Date.now());
@@ -283,23 +314,28 @@ DdRum.addTiming('<timing-name>');
 DdRum.addError('<message>', 'source', '<stacktrace>', {}, Date.now());
 
 // Track RUM Resource manually
-DdRum.startResource('<res-key>', 'GET', 'http://www.example.com/api/v1/test', {}, Date.now());
+DdRum.startResource(
+    '<res-key>',
+    'GET',
+    'http://www.example.com/api/v1/test',
+    {},
+    Date.now()
+);
 //…
-DdRum.stopResource('<res-key>', 200, 'xhr', size = 1337, {}, Date.now());
+DdRum.stopResource('<res-key>', 200, 'xhr', (size = 1337), {}, Date.now());
 
 // Send spans manually
-const spanId = await DdTrace.startSpan("foo", { 'custom': 42 }, Date.now());
+const spanId = await DdTrace.startSpan('foo', { custom: 42 }, Date.now());
 //...
-DdTrace.finishSpan(spanId, { 'custom': 21 }, Date.now());
+DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 ```
 
 ## Resource timings
 
 Resource tracking is able to provide the following timings:
 
-* `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
-* `Download` - The time it took to receive a response.
-
+-   `First Byte` - The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
+-   `Download` - The time it took to receive a response.
 
 ## Data Storage
 
