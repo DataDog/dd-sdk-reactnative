@@ -6,17 +6,14 @@
 
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
-import type {
-    EventArg,
-    NavigationContainerRef,
-    Route
-} from '@react-navigation/native-v5';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { AppState, BackHandler } from 'react-native';
 
-declare type NavigationListener = (
-    event: EventArg<string, boolean, any>
-) => void | null;
+import type {
+    NavigationContainerRef,
+    Route,
+    NavigationListener
+} from './react-navigation';
 
 // AppStateStatus can have values:
 //     'active' - The app is running in the foreground
