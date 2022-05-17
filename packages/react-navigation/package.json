@@ -33,19 +33,21 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "bob build"
+    "prepare": "bob build",
+    "postinstall": "./fix-react-navigation-import-in-dependencies.sh"
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-rc6",
-    "@react-navigation/native": "5.9.2",
-    "@react-navigation/stack": "5.14.2",
+    "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.2",
+    "@react-navigation/native-v6": "npm:@react-navigation/native@6.0.9",
+    "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2",
+    "@react-navigation/stack-v6": "npm:@react-navigation/stack@6.2.1",
     "@testing-library/react-native": "7.0.2",
     "react-native-gesture-handler": "1.10.3",
     "react-native-safe-area-context": "3.1.9"
   },
   "peerDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-beta4",
-    "@react-navigation/native": "^5.6.0",
     "react": ">=16.13.1",
     "react-native": ">=0.63.4 <1.0"
   },

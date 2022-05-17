@@ -7,7 +7,7 @@
 
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import { DdRum } from '@datadog/mobile-react-native';
-import type { NavigationContainerRef, Route } from '@react-navigation/native';
+import type { Route } from '@react-navigation/native-v5';
 import { render, fireEvent } from '@testing-library/react-native';
 import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
 import { AppState, BackHandler } from 'react-native';
@@ -18,10 +18,15 @@ import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRum
 
 import { AppStateMock } from './__utils__/AppStateMock';
 import {
-    FakeNavigator1,
-    FakeNavigator2,
-    FakeNestedNavigator
+    FakeNavigator1 as FakeNavigator1v5,
+    FakeNavigator2 as FakeNavigator2v5,
+    FakeNestedNavigator as FakeNestedNavigatorv5
 } from './__utils__/Navigators/NavigatorsV5';
+import {
+    FakeNavigator1 as FakeNavigator1v6,
+    FakeNavigator2 as FakeNavigator2v6,
+    FakeNestedNavigator as FakeNestedNavigatorv6
+} from './__utils__/Navigators/NavigatorsV6';
 
 // TODO: inject this as a global
 function mocked<T extends (...args: any[]) => any>(item: T) {
@@ -86,380 +91,410 @@ beforeEach(() => {
 });
 
 // Unit tests
-describe('DdRumReactNavigationTracking', () => {
-    describe('startTrackingViews', () => {
-        it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            const { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef} />
-            );
-            const goToAboutButton = getByText('Go to About');
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
+describe.each([
+    [
+        '5',
+        {
+            FakeNavigator1: FakeNavigator1v5,
+            FakeNavigator2: FakeNavigator2v5,
+            FakeNestedNavigator: FakeNestedNavigatorv5
+        }
+    ],
+    [
+        '6',
+        {
+            FakeNavigator1: FakeNavigator1v6,
+            FakeNavigator2: FakeNavigator2v6,
+            FakeNestedNavigator: FakeNestedNavigatorv6
+        }
+    ]
+])(
+    'DdRumReactNavigationTracking on react-navigation v%s',
+    (version, { FakeNavigator1, FakeNavigator2, FakeNestedNavigator }) => {
+        describe('startTrackingViews', () => {
+            it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
 
-            // WHEN
-            expect(goToAboutButton).toBeTruthy();
-            fireEvent(goToAboutButton, 'press');
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
 
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(2);
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'Home'
-            );
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'About'
-            );
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'Home'
+                );
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+            });
+
+            it('sends a related RUM ViewEvent when switching screens { viewPredicate provided }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                const customViewName = 'custom_view_name';
+                const predicate: ViewNamePredicate = function (
+                    _route: Route<string, any | undefined>,
+                    _trackedName: string
+                ) {
+                    return customViewName;
+                };
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    predicate
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'custom_view_name'
+                );
+            });
+
+            it('only registers once when startTrackingViews{ multiple times }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+            });
+
+            it('does nothing when startTrackingViews { undefined any ', async () => {
+                // WHEN
+                DdRumReactNavigationTracking.startTrackingViews(null);
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(0);
+                expect(InternalLog.log).toHaveBeenCalledTimes(1);
+                expect(InternalLog.log).toHaveBeenCalledWith(
+                    DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE,
+                    'error'
+                );
+            });
+
+            it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first not detached }', async () => {
+                // GIVEN
+                const navigationRef1 = createRef<any>();
+                const testUtils1: { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef1} />
+                );
+                const goToAboutButton1 = testUtils1.getByText('Go to About');
+                const navigationRef2 = createRef<any>();
+                const testUtils2: { getByText } = render(
+                    <FakeNavigator2 navigationRef={navigationRef2} />
+                );
+                const goToAboutButton2 = testUtils2.getByText('Go to About');
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef1.current
+                );
+                // this call will be ignored, because only one NavigationContainer tracking is supported at the time
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef2.current
+                );
+
+                // WHEN
+                expect(goToAboutButton1).toBeTruthy();
+                expect(goToAboutButton2).toBeTruthy();
+                fireEvent(goToAboutButton1, 'press');
+                fireEvent(goToAboutButton2, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                expect(InternalLog.log).toHaveBeenCalledWith(
+                    DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
+                    'error'
+                );
+            });
+
+            it('sends a RUM ViewEvent for each when switching screens { nested navigation containers }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const testUtils: { getByText } = render(
+                    <FakeNestedNavigator navigationRef={navigationRef} />
+                );
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+                const goToAboutButton = testUtils.getByText('Go to About');
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'Home'
+                );
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+
+                // WHEN
+                const goToNestedHome = testUtils.getByText('Go to Nested Home');
+                fireEvent(goToNestedHome, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'NestedHome'
+                );
+            });
         });
 
-        it('sends a related RUM ViewEvent when switching screens { viewPredicate provided }', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            const { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef} />
-            );
-            const goToAboutButton = getByText('Go to About');
-            const customViewName = 'custom_view_name';
-            const predicate: ViewNamePredicate = function (
-                _route: Route<string, any | undefined>,
-                _trackedName: string
-            ) {
-                return customViewName;
-            };
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current,
-                predicate
-            );
+        describe('stopTrackingViews', () => {
+            it('does nothing when switching screens { navigationContainer listener detached }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
 
-            // WHEN
-            expect(goToAboutButton).toBeTruthy();
-            fireEvent(goToAboutButton, 'press');
+                // WHEN
+                DdRumReactNavigationTracking.stopTrackingViews(
+                    navigationRef.current
+                );
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
 
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'custom_view_name'
-            );
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(1);
+            });
+
+            it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first is detached }', async () => {
+                // GIVEN
+                const navigationRef1 = createRef<any>();
+                const testUtils1: { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef1} />
+                );
+                const goToAboutButton1 = testUtils1.getByText('Go to About');
+                const navigationRef2 = createRef<any>();
+                const testUtils2: { getByText } = render(
+                    <FakeNavigator2 navigationRef={navigationRef2} />
+                );
+                const goToAboutButton2 = testUtils2.getByText('Go to About');
+
+                // WHEN
+                expect(goToAboutButton1).toBeTruthy();
+                expect(goToAboutButton2).toBeTruthy();
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef1.current
+                );
+                fireEvent(goToAboutButton1, 'press');
+                DdRumReactNavigationTracking.stopTrackingViews(
+                    navigationRef1.current
+                );
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef2.current
+                );
+
+                const navigationRef2StartRoute = navigationRef2.current.getCurrentRoute();
+
+                fireEvent(goToAboutButton2, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(4);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    navigationRef2StartRoute.key,
+                    'Home'
+                );
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    navigationRef2.current?.getCurrentRoute()?.key,
+                    'About'
+                );
+            });
         });
 
-        it('only registers once when startTrackingViews{ multiple times }', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            const { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef} />
-            );
-            const goToAboutButton = getByText('Go to About');
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
+        describe('AppState listener', () => {
+            it('registers and unregisters AppState', async () => {
+                // GIVEN
+                const navigationRef1 = createRef<any>();
+                render(<FakeNavigator1 navigationRef={navigationRef1} />);
+                const navigationRef2 = createRef<any>();
+                render(<FakeNavigator2 navigationRef={navigationRef2} />);
 
-            // WHEN
-            expect(goToAboutButton).toBeTruthy();
-            fireEvent(goToAboutButton, 'press');
+                // WHEN
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef1.current
+                );
+                DdRumReactNavigationTracking.stopTrackingViews(
+                    navigationRef1.current
+                );
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef2.current
+                );
 
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                // THEN
+                expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
+                expect(AppState.removeEventListener).toHaveBeenCalledTimes(1);
+
+                // WHEN we go in background mode
+                appStateMock.changeValue('background');
+
+                // THEN the listener is only called once
+                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+            });
+
+            it('does not log AppState changes when tracking is stopped', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                // WHEN
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+                DdRumReactNavigationTracking.stopTrackingViews(
+                    navigationRef.current
+                );
+                appStateMock.changeValue('background');
+
+                // THEN
+                expect(DdRum.stopView).not.toHaveBeenCalled();
+                expect(InternalLog.log).not.toHaveBeenCalledWith(
+                    'We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.',
+                    'error'
+                );
+            });
+
+            it('stops active view when app goes into background', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+
+                // WHEN
+                appStateMock.changeValue('background');
+
+                // THEN
+                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                expect(DdRum.stopView).toHaveBeenCalledWith(
+                    navigationRef.current?.getCurrentRoute()?.key
+                );
+                expect(
+                    typeof navigationRef.current?.getCurrentRoute()?.key
+                ).toBe('string');
+            });
+
+            it('starts last view when app goes into foreground', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+
+                // WHEN
+                appStateMock.changeValue('background');
+                appStateMock.changeValue('active');
+
+                // THEN
+                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+            });
+
+            it('does not stop view when no navigator attached', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+                DdRumReactNavigationTracking.stopTrackingViews(
+                    navigationRef.current
+                );
+
+                // WHEN
+                appStateMock.changeValue('background');
+
+                // THEN
+                expect(DdRum.stopView).not.toHaveBeenCalled();
+            });
         });
 
-        it('does nothing when startTrackingViews { undefined NavigationContainerRef ', async () => {
-            // WHEN
-            DdRumReactNavigationTracking.startTrackingViews(null);
+        describe('Android back handler', () => {
+            it('does not send an error when the app closes with Android back button', async () => {
+                // GIVEN
+                const navigationRef1 = createRef<any>();
+                const { unmount } = render(
+                    <FakeNavigator1 navigationRef={navigationRef1} />
+                );
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef1.current
+                );
 
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(0);
-            expect(InternalLog.log).toHaveBeenCalledTimes(1);
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE,
-                'error'
-            );
+                // WHEN back is pressed
+                mockBackHandler.mockPressBack();
+                // THEN app is closed
+                expect(BackHandler.exitApp).toHaveBeenCalled();
+
+                // WHEN app is restarted and we navigate
+                unmount();
+                const navigationRef2 = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator2 navigationRef={navigationRef2} />
+                );
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef2.current
+                );
+                const goToAboutButton = getByText('Go to About');
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN new navigation is attached, no error and message is sent
+                expect(DdRum.startView).toHaveBeenLastCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+                expect(InternalLog.log).not.toHaveBeenCalledWith(
+                    DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
+                    'error'
+                );
+            });
         });
-
-        it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first not detached }', async () => {
-            // GIVEN
-            const navigationRef1 = createRef<NavigationContainerRef>();
-            const testUtils1: { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef1} />
-            );
-            const goToAboutButton1 = testUtils1.getByText('Go to About');
-            const navigationRef2 = createRef<NavigationContainerRef>();
-            const testUtils2: { getByText } = render(
-                <FakeNavigator2 navigationRef={navigationRef2} />
-            );
-            const goToAboutButton2 = testUtils2.getByText('Go to About');
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef1.current
-            );
-            // this call will be ignored, because only one NavigationContainer tracking is supported at the time
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef2.current
-            );
-
-            // WHEN
-            expect(goToAboutButton1).toBeTruthy();
-            expect(goToAboutButton2).toBeTruthy();
-            fireEvent(goToAboutButton1, 'press');
-            fireEvent(goToAboutButton2, 'press');
-
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(2);
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
-                'error'
-            );
-        });
-
-        it('sends a RUM ViewEvent for each when switching screens { nested navigation containers }', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            const testUtils: { getByText } = render(
-                <FakeNestedNavigator navigationRef={navigationRef} />
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-            const goToAboutButton = testUtils.getByText('Go to About');
-
-            // WHEN
-            expect(goToAboutButton).toBeTruthy();
-            fireEvent(goToAboutButton, 'press');
-
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(2);
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'Home'
-            );
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                expect.any(String),
-                'About'
-            );
-        });
-    });
-
-    describe('stopTrackingViews', () => {
-        it('does nothing when switching screens { navigationContainer listener detached }', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            const { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef} />
-            );
-            const goToAboutButton = getByText('Go to About');
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-
-            // WHEN
-            DdRumReactNavigationTracking.stopTrackingViews(
-                navigationRef.current
-            );
-            expect(goToAboutButton).toBeTruthy();
-            fireEvent(goToAboutButton, 'press');
-
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(1);
-        });
-
-        it('sends a RUM ViewEvent for each when startTrackingViews { multiple navigation containers when first is detached }', async () => {
-            // GIVEN
-            const navigationRef1 = createRef<NavigationContainerRef>();
-            const testUtils1: { getByText } = render(
-                <FakeNavigator1 navigationRef={navigationRef1} />
-            );
-            const goToAboutButton1 = testUtils1.getByText('Go to About');
-            const navigationRef2 = createRef<NavigationContainerRef>();
-            const testUtils2: { getByText } = render(
-                <FakeNavigator2 navigationRef={navigationRef2} />
-            );
-            const goToAboutButton2 = testUtils2.getByText('Go to About');
-
-            // WHEN
-            expect(goToAboutButton1).toBeTruthy();
-            expect(goToAboutButton2).toBeTruthy();
-
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef1.current
-            );
-            fireEvent(goToAboutButton1, 'press');
-            DdRumReactNavigationTracking.stopTrackingViews(
-                navigationRef1.current
-            );
-
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef2.current
-            );
-
-            const navigationRef2StartRoute = navigationRef2.current.getCurrentRoute();
-
-            fireEvent(goToAboutButton2, 'press');
-
-            // THEN
-            expect(DdRum.startView).toHaveBeenCalledTimes(4);
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                navigationRef2StartRoute.key,
-                'Home'
-            );
-            expect(DdRum.startView).toHaveBeenCalledWith(
-                navigationRef2.current?.getCurrentRoute()?.key,
-                'About'
-            );
-        });
-    });
-
-    describe('AppState listener', () => {
-        it('registers and unregisters AppState', async () => {
-            // GIVEN
-            const navigationRef1 = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef1} />);
-            const navigationRef2 = createRef<NavigationContainerRef>();
-            render(<FakeNavigator2 navigationRef={navigationRef2} />);
-
-            // WHEN
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef1.current
-            );
-            DdRumReactNavigationTracking.stopTrackingViews(
-                navigationRef1.current
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef2.current
-            );
-
-            // THEN
-            expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
-            expect(AppState.removeEventListener).toHaveBeenCalledTimes(1);
-
-            // WHEN we go in background mode
-            appStateMock.changeValue('background');
-
-            // THEN the listener is only called once
-            expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-        });
-
-        it('does not log AppState changes when tracking is stopped', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef} />);
-
-            // WHEN
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-            DdRumReactNavigationTracking.stopTrackingViews(
-                navigationRef.current
-            );
-            appStateMock.changeValue('background');
-
-            // THEN
-            expect(DdRum.stopView).not.toHaveBeenCalled();
-            expect(InternalLog.log).not.toHaveBeenCalledWith(
-                'We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.',
-                'error'
-            );
-        });
-
-        it('stops active view when app goes into background', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef} />);
-
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-
-            // WHEN
-            appStateMock.changeValue('background');
-
-            // THEN
-            expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-            expect(DdRum.stopView).toHaveBeenCalledWith(
-                navigationRef.current?.getCurrentRoute()?.key
-            );
-            expect(typeof navigationRef.current?.getCurrentRoute()?.key).toBe(
-                'string'
-            );
-        });
-
-        it('starts last view when app goes into foreground', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef} />);
-
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-
-            // WHEN
-            appStateMock.changeValue('background');
-            appStateMock.changeValue('active');
-
-            // THEN
-            expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-            expect(DdRum.startView).toHaveBeenCalledTimes(2);
-        });
-
-        it('does not stop view when no navigator attached', async () => {
-            // GIVEN
-            const navigationRef = createRef<NavigationContainerRef>();
-            render(<FakeNavigator1 navigationRef={navigationRef} />);
-
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef.current
-            );
-            DdRumReactNavigationTracking.stopTrackingViews(
-                navigationRef.current
-            );
-
-            // WHEN
-            appStateMock.changeValue('background');
-
-            // THEN
-            expect(DdRum.stopView).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('Android back handler', () => {
-        it('does not send an error when the app closes with Android back button', async () => {
-            // GIVEN
-            const navigationRef1 = createRef<NavigationContainerRef>();
-            const { unmount } = render(
-                <FakeNavigator1 navigationRef={navigationRef1} />
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef1.current
-            );
-
-            // WHEN back is pressed
-            mockBackHandler.mockPressBack();
-            // THEN app is closed
-            expect(BackHandler.exitApp).toHaveBeenCalled();
-
-            // WHEN app is restarted and we navigate
-            unmount();
-            const navigationRef2 = createRef<NavigationContainerRef>();
-            const { getByText } = render(
-                <FakeNavigator2 navigationRef={navigationRef2} />
-            );
-            DdRumReactNavigationTracking.startTrackingViews(
-                navigationRef2.current
-            );
-            const goToAboutButton = getByText('Go to About');
-            fireEvent(goToAboutButton, 'press');
-
-            // THEN new navigation is attached, no error and message is sent
-            expect(DdRum.startView).toHaveBeenLastCalledWith(
-                expect.any(String),
-                'About'
-            );
-            expect(InternalLog.log).not.toHaveBeenCalledWith(
-                DdRumReactNavigationTracking.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
-                'error'
-            );
-        });
-    });
-});
+    }
+);

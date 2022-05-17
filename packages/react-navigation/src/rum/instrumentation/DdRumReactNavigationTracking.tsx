@@ -6,17 +6,14 @@
 
 import { InternalLog } from '@datadog/mobile-react-native/internal';
 import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
-import type {
-    EventArg,
-    NavigationContainerRef,
-    Route
-} from '@react-navigation/native';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { AppState, BackHandler } from 'react-native';
 
-declare type NavigationListener = (
-    event: EventArg<string, boolean, any>
-) => void | null;
+import type {
+    NavigationContainerRef,
+    Route,
+    NavigationListener
+} from './react-navigation';
 
 // AppStateStatus can have values:
 //     'active' - The app is running in the foreground
@@ -182,27 +179,15 @@ export class DdRumReactNavigationTracking {
         if (
             DdRumReactNavigationTracking.navigationStateChangeListener == null
         ) {
-            DdRumReactNavigationTracking.navigationStateChangeListener = (
-                event: EventArg<string, boolean, any>
-            ) => {
-                let route = event.data?.state?.routes[event.data?.state?.index];
+            DdRumReactNavigationTracking.navigationStateChangeListener = () => {
+                const route = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
 
-                if (route === undefined || route === null) {
+                if (route === undefined) {
                     InternalLog.log(
                         DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
                     );
-                    // RUMM-1400 in some cases the route seem to be undefined
                     return;
-                }
-
-                while (route.state !== undefined && route.state !== null) {
-                    const nestedRoute = route.state.routes[route.state.index];
-                    if (route === undefined || route === null) {
-                        // RUMM-1400 in some cases the route seem to be undefined
-                        break;
-                    }
-                    route = nestedRoute;
                 }
 
                 DdRumReactNavigationTracking.handleRouteNavigation(route);

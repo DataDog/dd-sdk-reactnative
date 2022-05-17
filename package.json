@@ -24,7 +24,8 @@
     "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna link && lerna run prepare",
     "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
     "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
-    "example": "yarn --cwd example"
+    "example": "yarn --cwd example",
+    "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "7.12.15",

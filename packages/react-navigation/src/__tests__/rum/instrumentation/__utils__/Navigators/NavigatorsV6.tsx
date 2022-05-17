@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { NavigationContainerRef } from '@react-navigation/native-v5';
-import { NavigationContainer } from '@react-navigation/native-v5';
-import { createStackNavigator } from '@react-navigation/stack-v5';
+import type { NavigationContainerRef } from '@react-navigation/native-v6';
+import { NavigationContainer } from '@react-navigation/native-v6';
+import { createStackNavigator } from '@react-navigation/stack-v6';
 import { View, Text, Button } from 'react-native';
 import React from 'react';
 
@@ -66,7 +66,7 @@ export function FakeNestedStack({ navigation }) {
 }
 
 export function FakeNavigator1(props: {
-    navigationRef: React.RefObject<NavigationContainerRef>;
+    navigationRef: React.RefObject<NavigationContainerRef<unknown>>;
 }) {
     return (
         <NavigationContainer ref={props.navigationRef}>
@@ -79,7 +79,7 @@ export function FakeNavigator1(props: {
 }
 
 export function FakeNavigator2(props: {
-    navigationRef: React.RefObject<NavigationContainerRef>;
+    navigationRef: React.RefObject<NavigationContainerRef<unknown>>;
 }) {
     return (
         <NavigationContainer ref={props.navigationRef}>
@@ -92,7 +92,7 @@ export function FakeNavigator2(props: {
 }
 
 export function FakeNestedNavigator(props: {
-    navigationRef: React.RefObject<NavigationContainerRef>;
+    navigationRef: React.RefObject<NavigationContainerRef<unknown>>;
 }) {
     return (
         <NavigationContainer ref={props.navigationRef}>
