@@ -1,6 +1,6 @@
 # React-Native Monitoring
 
-Datadog _Real User Monitoring (RUM)_ enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
 ## Setup
 
