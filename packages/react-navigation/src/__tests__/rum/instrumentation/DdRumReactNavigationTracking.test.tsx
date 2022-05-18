@@ -5,8 +5,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '@datadog/mobile-react-native/internal';
-import { DdRum } from '@datadog/mobile-react-native';
+import { DdRum, InternalLog } from '@datadog/mobile-react-native';
 import type { Route } from '@react-navigation/native-v5';
 import { render, fireEvent } from '@testing-library/react-native';
 import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHandler.js';
@@ -38,14 +37,6 @@ jest.mock(
     () => mockBackHandler
 );
 
-jest.mock('@datadog/mobile-react-native/internal', () => {
-    return {
-        InternalLog: {
-            log: jest.fn()
-        }
-    };
-});
-
 jest.mock('@datadog/mobile-react-native', () => {
     return {
         DdRum: {
@@ -58,6 +49,9 @@ jest.mock('@datadog/mobile-react-native', () => {
             INFO: 'info',
             WARN: 'warn',
             ERROR: 'error'
+        },
+        InternalLog: {
+            log: jest.fn()
         }
     };
 });

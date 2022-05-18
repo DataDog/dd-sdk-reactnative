@@ -6,6 +6,7 @@
 
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
+import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
@@ -17,6 +18,7 @@ export {
     DdRum,
     DdSdkReactNativeConfiguration,
     DdSdkReactNative,
+    InternalLog,
     ProxyConfiguration,
     ProxyType,
     TrackingConsent,

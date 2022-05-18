@@ -6,6 +6,11 @@
 
 import { SdkVerbosity } from './SdkVerbosity';
 
+/**
+ * /!\ DO NOT USE THIS IN YOUR APP /!\\
+ *
+ * This logger is only for debugging the Datadog SDK.
+ */
 export class InternalLog {
     private static levelMap = new Map<SdkVerbosity, number>([
         [SdkVerbosity.DEBUG, 1],

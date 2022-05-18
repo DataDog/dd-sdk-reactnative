@@ -33,8 +33,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "bob build",
-    "postinstall": "./fix-react-navigation-import-in-dependencies.sh"
+    "prepare": "bob build"
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-rc6",
