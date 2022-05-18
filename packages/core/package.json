@@ -1,6 +1,6 @@
 {
   "name": "@datadog/mobile-react-native",
-  "version": "1.0.0-rc5",
+  "version": "1.0.0-rc6",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
@@ -30,7 +30,7 @@
   ],
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
-  "source": "src/index",
+  "source": "src",
   "module": "lib/module/index",
   "publishConfig": {
     "access": "public"
@@ -43,6 +43,9 @@
   "peerDependencies": {
     "react": ">=16.13.1",
     "react-native": ">=0.63.4 <1.0"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "7.0.2"
   },
   "jest": {
     "preset": "react-native",

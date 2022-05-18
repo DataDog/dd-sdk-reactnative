@@ -4,538 +4,722 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeModules } from 'react-native'
-import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration'
-import type { DdSdkConfiguration } from '../types'
-import { DdSdk } from '../foundation'
-import { DdSdkReactNative } from '../DdSdkReactNative'
-import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking'
-import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking'
-import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking'
-import { TrackingConsent } from '../TrackingConsent'
-import { SdkVerbosity } from '../SdkVerbosity'
-import { ProxyType } from '../ProxyConfiguration'
+import { NativeModules } from 'react-native';
 
+import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../DdSdkReactNative';
+import { ProxyType } from '../ProxyConfiguration';
+import { SdkVerbosity } from '../SdkVerbosity';
+import { TrackingConsent } from '../TrackingConsent';
+import { DdSdk } from '../foundation';
+import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
+import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking';
+import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
+import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
-jest.mock('react-native', () => {
-    return {
-        NativeModules: {
-            DdSdk: {
-                initialize: jest.fn().mockResolvedValue(null),
-                setUser: jest.fn().mockImplementation(() => { }),
-                setAttributes: jest.fn().mockImplementation(() => { }),
-                setTrackingConsent: jest.fn().mockImplementation(() => { })
-            }
-        }
-    };
-});
+jest.mock('../InternalLog');
 
 jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
     return {
         DdRumUserInteractionTracking: {
-            startTracking: jest.fn().mockImplementation(() => { })
+            startTracking: jest.fn().mockImplementation(() => {})
         }
-    }
-})
+    };
+});
 
 jest.mock('../rum/instrumentation/DdRumResourceTracking', () => {
     return {
         DdRumResourceTracking: {
-            startTracking: jest.fn().mockImplementation(() => { })
+            startTracking: jest.fn().mockImplementation(() => {})
         }
-    }
-})
+    };
+});
 
 jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
     return {
         DdRumErrorTracking: {
-            startTracking: jest.fn().mockImplementation(() => { })
+            startTracking: jest.fn().mockImplementation(() => {})
         }
-    }
-})
+    };
+});
 
 beforeEach(async () => {
     DdSdkReactNative['wasInitialized'] = false;
-    NativeModules.DdSdk.initialize.mockClear()
-    NativeModules.DdSdk.setAttributes.mockClear()
-    NativeModules.DdSdk.setUser.mockClear()
-    NativeModules.DdSdk.setTrackingConsent.mockClear()
+    NativeModules.DdSdk.initialize.mockClear();
+    NativeModules.DdSdk.setAttributes.mockClear();
+    NativeModules.DdSdk.setUser.mockClear();
+    NativeModules.DdSdk.setTrackingConsent.mockClear();
 
-    DdRumUserInteractionTracking.startTracking.mockClear()
-    DdRumResourceTracking.startTracking.mockClear()
-    DdRumErrorTracking.startTracking.mockClear()
-})
+    (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
+        typeof DdRumUserInteractionTracking.startTracking
+    >).mockClear();
+    (DdRumResourceTracking.startTracking as jest.MockedFunction<
+        typeof DdRumResourceTracking.startTracking
+    >).mockClear();
+    (DdRumErrorTracking.startTracking as jest.MockedFunction<
+        typeof DdRumErrorTracking.startTracking
+    >).mockClear();
+});
 
-it('M initialize the SDK W initialize', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+describe('DdSdkReactNative', () => {
+    describe('initialization', () => {
+        it('initializes the SDK when initialize', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-})
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.trackingConsent).toBe(
+                TrackingConsent.GRANTED
+            );
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+        });
 
-it('M give rejection W initialize', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+        it('gives rejection when initialize', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
 
-    NativeModules.DdSdk.initialize.mockRejectedValue('rejection')
+            NativeModules.DdSdk.initialize.mockRejectedValue('rejection');
 
-    // WHEN
-    await expect(DdSdkReactNative.initialize(configuration)).rejects.toMatch('rejection')
+            // WHEN
+            await expect(
+                DdSdkReactNative.initialize(configuration)
+            ).rejects.toMatch('rejection');
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.trackingConsent).toBe(TrackingConsent.GRANTED)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.trackingConsent).toBe(
+                TrackingConsent.GRANTED
+            );
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
 
-    expect(DdSdkReactNative["wasInitialized"]).toBe(false)
-    expect(DdRumUserInteractionTracking.startTracking).toBeCalledTimes(0)
-    expect(DdRumResourceTracking.startTracking).toBeCalledTimes(0)
-    expect(DdRumErrorTracking.startTracking).toBeCalledTimes(0)
+            expect(DdSdkReactNative['wasInitialized']).toBe(false);
+            expect(DdRumUserInteractionTracking.startTracking).toBeCalledTimes(
+                0
+            );
+            expect(DdRumResourceTracking.startTracking).toBeCalledTimes(0);
+            expect(DdRumErrorTracking.startTracking).toBeCalledTimes(0);
+        });
 
-})
+        it('initializes the SDK when initialize { explicit tracking consent }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const fakeConsent = TrackingConsent.NOT_GRANTED;
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                false,
+                fakeConsent
+            );
 
-it('M initialize the SDK W initialize { explicit tracking consent }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const fakeConsent = TrackingConsent.NOT_GRANTED
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, false, fakeConsent)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+        });
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-})
+        it('initializes once when initialize { multiple times in a row }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
 
-it('M initialize once W initialize { multiple times in a row }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdSdkReactNative.initialize(configuration);
+            await DdSdkReactNative.initialize(configuration);
+            await DdSdkReactNative.initialize(configuration);
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
-    await DdSdkReactNative.initialize(configuration)
-    await DdSdkReactNative.initialize(configuration)
-    await DdSdkReactNative.initialize(configuration)
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+        });
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-})
+        it('logs a warning when initialize { with socks proxy config + proxy credentials }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const proxyType = ProxyType.SOCKS;
+            const proxyAddress = '1.1.1.1';
+            const proxyPort = 8080;
+            const proxyUsername = 'foo';
+            const proxyPassword = 'bar';
 
-it('M enable user interaction feature W initialize { user interaction config enabled }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, true)
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                false
+            );
+            configuration.proxyConfig = {
+                type: proxyType,
+                address: proxyAddress,
+                port: proxyPort,
+                username: proxyUsername,
+                password: proxyPassword
+            };
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+            const spyConsoleWarn = jest
+                .spyOn(console, 'warn')
+                .mockImplementation();
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            try {
+                // WHEN
+                await DdSdkReactNative.initialize(configuration);
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumUserInteractionTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+                // THEN
+                expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(
+                    1
+                );
+                const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                    .calls[0][0] as DdSdkConfiguration;
+                expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                    '_dd.source': 'react-native',
+                    '_dd.sdk_version': sdkVersion,
+                    '_dd.native_view_tracking': false,
+                    '_dd.proxy.type': proxyType,
+                    '_dd.proxy.address': proxyAddress,
+                    '_dd.proxy.port': proxyPort,
+                    '_dd.long_task.threshold': 200
+                });
+                expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
+            } finally {
+                spyConsoleWarn.mockRestore();
+            }
+        });
 
-it('M enable resource tracking feature W initialize { resource tracking config enabled }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, true)
+        it('initializes with default sampleRate when not specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 100
+                })
+            );
+        });
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+        it('initializes with sampleRate when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.sampleRate = 0;
 
-it('M enable error tracking feature W initialize { error tracking config enabled }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 0
+                })
+            );
+        });
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+        it('initializes with sessionSamplingRate when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.sessionSamplingRate = 70;
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M enable custom service name W initialize { service name }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const fakeServiceName = "aFakeServiceName"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
-    configuration.serviceName = fakeServiceName
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sampleRate: 70
+                })
+            );
+        });
+    });
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+    describe('feature enablement', () => {
+        it('enables user interaction feature when initialize { user interaction config enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                true
+            );
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.service_name': fakeServiceName,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M enable sdk verbosity W initialize { sdk verbosity }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
-    configuration.verbosity = SdkVerbosity.DEBUG
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+            expect(
+                DdRumUserInteractionTracking.startTracking
+            ).toHaveBeenCalledTimes(1);
+        });
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+        it('enables resource tracking feature when initialize { resource tracking config enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.resourceTracingSamplingRate = 42;
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
-        '_dd.native_view_tracking': false,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M enable native view tracking W initialize { native_view_tracking enabled }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, true)
-    configuration.nativeViewTracking = true
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
+                1
+            );
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                42
+            );
+        });
 
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
+        it('enables error tracking feature when initialize { error tracking config enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.resourceTracingSamplingRate = 2;
 
-    // WHEN
-    await DdSdkReactNative.initialize(configuration)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-    const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-    expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-    expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-    expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-    expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-        '_dd.source': 'react-native',
-        '_dd.sdk_version': sdkVersion,
-        '_dd.native_view_tracking': true,
-        '_dd.long_task.threshold': 200
-    })
-    expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M call SDK method W setAttributes', async () => {
-    // GIVEN
-    const attributes = { "foo": "bar" }
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
 
-    // WHEN
+        it('enables custom service name when initialize { service name }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const fakeServiceName = 'aFakeServiceName';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.serviceName = fakeServiceName;
 
-    DdSdkReactNative.setAttributes(attributes)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1)
-    expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M call SDK method W setUser', async () => {
-    // GIVEN
-    const user = { "foo": "bar" }
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.service_name': fakeServiceName,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
 
-    // WHEN
+        it('enables sdk verbosity when initialize { sdk verbosity }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.verbosity = SdkVerbosity.DEBUG;
 
-    DdSdkReactNative.setUser(user)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(DdSdk.setUser).toHaveBeenCalledTimes(1)
-    expect(DdSdk.setUser).toHaveBeenCalledWith(user)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-it('M call SDK method W setTrackingConsent', async () => {
-    // GIVEN
-    const consent = TrackingConsent.PENDING
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 200
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
 
-    // WHEN
+        it('enables native view tracking when initialize { native_view_tracking enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeViewTracking = true;
 
-    DdSdkReactNative.setTrackingConsent(consent)
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-    // THEN
-    expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1)
-    expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent)
-})
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
 
-describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])('proxy configs test, no auth', proxyType => {
-    it(`M set proxy configuration W initialize { + proxy config, w/o proxy credentials, proxyType=${proxyType} }`, async () => {
-        // GIVEN
-        const fakeAppId = "1"
-        const fakeClientToken = "2"
-        const fakeEnvName = "env"
-        const proxyAddress = "1.1.1.1"
-        const proxyPort = 8080
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': true,
+                '_dd.long_task.threshold': 200
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
+    });
 
-        const configuration = new DdSdkReactNativeConfiguration(
-            fakeClientToken,
-            fakeEnvName,
-            fakeAppId,
-            false,
-            false,
-            false
-        )
+    describe('setAttributes', () => {
+        it('calls SDK method when setAttributes', async () => {
+            // GIVEN
+            const attributes = { foo: 'bar' };
 
-        configuration.proxyConfig = {
-            type: proxyType,
-            address: proxyAddress,
-            port: proxyPort
+            // WHEN
+
+            DdSdkReactNative.setAttributes(attributes);
+
+            // THEN
+            expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1);
+            expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes);
+        });
+    });
+
+    describe('setUser', () => {
+        it('calls SDK method when setUser', async () => {
+            // GIVEN
+            const user = { foo: 'bar' };
+
+            // WHEN
+
+            DdSdkReactNative.setUser(user);
+
+            // THEN
+            expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
+            expect(DdSdk.setUser).toHaveBeenCalledWith(user);
+        });
+    });
+
+    describe('setTrackingConsent', () => {
+        it('calls SDK method when setTrackingConsent', async () => {
+            // GIVEN
+            const consent = TrackingConsent.PENDING;
+
+            // WHEN
+
+            DdSdkReactNative.setTrackingConsent(consent);
+
+            // THEN
+            expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1);
+            expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent);
+        });
+    });
+
+    describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])(
+        'proxy configs test, no auth',
+        proxyType => {
+            it(`M set proxy configuration when initialize { + proxy config, w/o proxy credentials, proxyType=${proxyType} }`, async () => {
+                // GIVEN
+                const fakeAppId = '1';
+                const fakeClientToken = '2';
+                const fakeEnvName = 'env';
+                const proxyAddress = '1.1.1.1';
+                const proxyPort = 8080;
+
+                const configuration = new DdSdkReactNativeConfiguration(
+                    fakeClientToken,
+                    fakeEnvName,
+                    fakeAppId,
+                    false,
+                    false,
+                    false
+                );
+
+                configuration.proxyConfig = {
+                    type: proxyType,
+                    address: proxyAddress,
+                    port: proxyPort
+                };
+
+                NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+                // WHEN
+                await DdSdkReactNative.initialize(configuration);
+
+                // THEN
+                expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(
+                    1
+                );
+                const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                    .calls[0][0] as DdSdkConfiguration;
+                expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                    '_dd.source': 'react-native',
+                    '_dd.sdk_version': sdkVersion,
+                    '_dd.native_view_tracking': false,
+                    '_dd.proxy.type': proxyType,
+                    '_dd.proxy.address': proxyAddress,
+                    '_dd.proxy.port': proxyPort,
+                    '_dd.long_task.threshold': 200
+                });
+            });
         }
+    );
 
-        NativeModules.DdSdk.initialize.mockResolvedValue(null)
+    describe.each([[ProxyType.HTTP], [ProxyType.HTTPS]])(
+        'proxy configs test + auth',
+        proxyType => {
+            it(`M set proxy configuration when initialize { with proxy config + proxy credentials, proxyType=${proxyType} }`, async () => {
+                // GIVEN
+                const fakeAppId = '1';
+                const fakeClientToken = '2';
+                const fakeEnvName = 'env';
 
-        // WHEN
-        await DdSdkReactNative.initialize(configuration)
+                const proxyAddress = '1.1.1.1';
+                const proxyPort = 8080;
+                const proxyUsername = 'foo';
+                const proxyPassword = 'bar';
 
-        // THEN
-        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-            '_dd.source': 'react-native',
-            '_dd.sdk_version': sdkVersion,
-            '_dd.native_view_tracking': false,
-            '_dd.proxy.type': proxyType,
-            '_dd.proxy.address': proxyAddress,
-            '_dd.proxy.port': proxyPort,
-            '_dd.long_task.threshold': 200
-        })
-    })
-})
+                const configuration = new DdSdkReactNativeConfiguration(
+                    fakeClientToken,
+                    fakeEnvName,
+                    fakeAppId,
+                    false,
+                    false,
+                    false
+                );
 
-describe.each([[ProxyType.HTTP], [ProxyType.HTTPS]])('proxy configs test + auth', proxyType => {
-    it(`M set proxy configuration W initialize { with proxy config + proxy credentials, proxyType=${proxyType} }`, async () => {
-        // GIVEN
-        const fakeAppId = "1"
-        const fakeClientToken = "2"
-        const fakeEnvName = "env"
+                configuration.proxyConfig = {
+                    type: proxyType,
+                    address: proxyAddress,
+                    port: proxyPort,
+                    username: proxyUsername,
+                    password: proxyPassword
+                };
 
-        const proxyAddress = "1.1.1.1"
-        const proxyPort = 8080
-        const proxyUsername = "foo"
-        const proxyPassword = "bar"
+                NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
-        const configuration = new DdSdkReactNativeConfiguration(
-            fakeClientToken,
-            fakeEnvName,
-            fakeAppId,
-            false,
-            false,
-            false
-        )
+                // WHEN
+                await DdSdkReactNative.initialize(configuration);
 
-        configuration.proxyConfig = {
-            type: proxyType,
-            address: proxyAddress,
-            port: proxyPort,
-            username: proxyUsername,
-            password: proxyPassword
+                // THEN
+                expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(
+                    1
+                );
+                const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                    .calls[0][0] as DdSdkConfiguration;
+                expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                    '_dd.source': 'react-native',
+                    '_dd.sdk_version': sdkVersion,
+                    '_dd.native_view_tracking': false,
+                    '_dd.proxy.type': proxyType,
+                    '_dd.proxy.address': proxyAddress,
+                    '_dd.proxy.port': proxyPort,
+                    '_dd.proxy.username': proxyUsername,
+                    '_dd.proxy.password': proxyPassword,
+                    '_dd.long_task.threshold': 200
+                });
+            });
         }
-
-        NativeModules.DdSdk.initialize.mockResolvedValue(null)
-
-        // WHEN
-        await DdSdkReactNative.initialize(configuration)
-
-        // THEN
-        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-            '_dd.source': 'react-native',
-            '_dd.sdk_version': sdkVersion,
-            '_dd.native_view_tracking': false,
-            '_dd.proxy.type': proxyType,
-            '_dd.proxy.address': proxyAddress,
-            '_dd.proxy.port': proxyPort,
-            '_dd.proxy.username': proxyUsername,
-            '_dd.proxy.password': proxyPassword,
-            '_dd.long_task.threshold': 200
-        })
-    })
-})
-
-it('M log a warning W initialize { with socks proxy config + proxy credentials }', async () => {
-    // GIVEN
-    const fakeAppId = "1"
-    const fakeClientToken = "2"
-    const fakeEnvName = "env"
-    const proxyType = ProxyType.SOCKS
-    const proxyAddress = "1.1.1.1"
-    const proxyPort = 8080
-    const proxyUsername = "foo"
-    const proxyPassword = "bar"
-
-    const configuration = new DdSdkReactNativeConfiguration(fakeClientToken, fakeEnvName, fakeAppId, false, false, false)
-    configuration.proxyConfig = {
-        type: proxyType,
-        address: proxyAddress,
-        port: proxyPort,
-        username: proxyUsername,
-        password: proxyPassword
-    }
-
-    NativeModules.DdSdk.initialize.mockResolvedValue(null)
-    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-
-    try {
-        // WHEN
-        await DdSdkReactNative.initialize(configuration)
-
-        // THEN
-        expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
-        const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock.calls[0][0] as DdSdkConfiguration
-        expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken)
-        expect(ddSdkConfiguration.applicationId).toBe(fakeAppId)
-        expect(ddSdkConfiguration.env).toBe(fakeEnvName)
-        expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
-            '_dd.source': 'react-native',
-            '_dd.sdk_version': sdkVersion,
-            '_dd.native_view_tracking': false,
-            '_dd.proxy.type': proxyType,
-            '_dd.proxy.address': proxyAddress,
-            '_dd.proxy.port': proxyPort,
-            '_dd.long_task.threshold': 200
-        })
-        expect(spyConsoleWarn).toHaveBeenCalledTimes(1)
-    } finally {
-        spyConsoleWarn.mockRestore()
-    }
-})
+    );
+});

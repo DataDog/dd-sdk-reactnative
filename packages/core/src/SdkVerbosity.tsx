@@ -8,8 +8,8 @@
  * Enum specifying possible log levels for DD SDK.
  */
 export enum SdkVerbosity {
-    DEBUG = "debug",
-    INFO = "info",
-    WARN = "warn",
-    ERROR = "error"
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error'
 }

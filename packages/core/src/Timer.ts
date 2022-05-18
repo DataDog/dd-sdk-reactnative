@@ -1,28 +1,33 @@
-type Timestamp = {
-    // Result of Date API. Unix timestamp in ms.
-    unix: number,
-    // Result of performance.now API. Timestamp in ms (with microsecond precision)
-    // since JS context start.
-    react_native: number | null
-}
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
 
-const START_LABEL = "__start"
-const STOP_LABEL = "__stop"
+import type { Timestamp } from './TimeProvider';
+import { TimeProvider } from './TimeProvider';
+
+const START_LABEL = '__start';
+const STOP_LABEL = '__stop';
 
 /**
  * Simple timer which records time ticks. Shouldn't be re-used once stopped.
  * All timestamps/durations returned are in milliseconds.
  */
 export default class Timer {
-
+    private timeProvider: TimeProvider;
     private times: Record<string, Timestamp> = {};
 
+    constructor(timeProvider: TimeProvider = new TimeProvider()) {
+        this.timeProvider = timeProvider;
+    }
+
     get startTime(): number {
-        return this.times[START_LABEL].unix
+        return this.times[START_LABEL].unix;
     }
 
     get stopTime(): number {
-        return this.startTime + this.durationBetween(START_LABEL, STOP_LABEL)
+        return this.startTime + this.durationBetween(START_LABEL, STOP_LABEL);
     }
 
     start(): void {
@@ -30,14 +35,11 @@ export default class Timer {
     }
 
     stop(): void {
-        this.recordTick(STOP_LABEL)
+        this.recordTick(STOP_LABEL);
     }
 
     recordTick(label: string): void {
-        this.times[label] = {
-            unix: Date.now(),
-            react_native: this.performanceNow()
-        }
+        this.times[label] = this.timeProvider.getTimestamp();
     }
 
     hasTickFor(label: string): boolean {
@@ -57,7 +59,7 @@ export default class Timer {
     timeAt(label: string): number {
         this.checkLabelExists(label);
 
-        return this.startTime + this.durationBetween(START_LABEL, label)
+        return this.startTime + this.durationBetween(START_LABEL, label);
     }
 
     reset(): void {
@@ -71,26 +73,9 @@ export default class Timer {
         return end.unix - start.unix;
     }
 
-
-    private performanceNow(): number | null {
-        if (this.canUsePerformanceNow()) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            return performance.now();
-        }
-        return null;
-    }
-
-    private canUsePerformanceNow(): boolean {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return global.performance && typeof performance.now === 'function';
-    }
-
     private checkLabelExists(label: string) {
         if (!this.hasTickFor(label)) {
             throw new Error(`Label ${label} is not registered`);
         }
     }
-
 }

@@ -1,33 +1,31 @@
-import { generateTraceId } from '../../../rum/instrumentation/TraceIdentifier'
-
+import { generateTraceId } from '../../../rum/instrumentation/TraceIdentifier';
 
 it('M return an unique identifier W toString', async () => {
     // GIVEN
-    const generatedIds = new Set<String>()
-    const iterations = 100
-    var counter = iterations
+    const generatedIds = new Set<string>();
+    const iterations = 100;
+    let counter = iterations;
 
     // WHEN
     while (counter-- > 0) {
-        generatedIds.add(generateTraceId())
+        generatedIds.add(generateTraceId());
     }
 
     // THEN
-    expect(generatedIds.size).toBe(iterations)
-})
+    expect(generatedIds.size).toBe(iterations);
+});
 
 it('M return an 64 bits positive integer W toString', async () => {
-    let iterations = 100
+    let iterations = 100;
     while (iterations-- > 0) {
         // GIVEN
-        const id = generateTraceId()
+        const id = generateTraceId();
 
         // THEN
-        expect(id).toMatch(/[1-9]{1,19}/)
+        expect(id).toMatch(/[1-9]{1,19}/);
         // should be less than the max 64 bits integer
-        if (id.length == 19) {
-            expect(id < "9223372036854775807").toBeTruthy()
+        if (id.length === 19) {
+            expect(id < '9223372036854775807').toBeTruthy();
         }
     }
-
-})
+});
