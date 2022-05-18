@@ -165,6 +165,8 @@ package/src/SdkVerbosity.tsx
 package/src/TimeProvider.tsx
 package/src/Timer.ts
 package/src/TrackingConsent.tsx
+package/src/__mocks__
+package/src/__mocks__/InternalLog.tsx
 package/src/__tests__
 package/src/__tests__/DdRumWrapper.test.tsx
 package/src/__tests__/DdSdkReactNative.test.tsx
@@ -179,6 +181,8 @@ package/src/__tests__/rum/instrumentation/DdRumResourceTracking.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
 package/src/__tests__/rum/instrumentation/TraceIdentifier.test.tsx
+package/src/__tests__/rum/instrumentation/__utils__
+package/src/__tests__/rum/instrumentation/__utils__/XMLHttpRequestMock.ts
 package/src/foundation.tsx
 package/src/index.tsx
 package/src/internal.tsx
