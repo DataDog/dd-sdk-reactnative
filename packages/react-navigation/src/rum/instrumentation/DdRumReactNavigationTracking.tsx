@@ -4,8 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '@datadog/mobile-react-native/internal';
-import { DdRum, SdkVerbosity } from '@datadog/mobile-react-native';
+import { DdRum, SdkVerbosity, InternalLog } from '@datadog/mobile-react-native';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { AppState, BackHandler } from 'react-native';
 
