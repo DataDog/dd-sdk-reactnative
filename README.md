@@ -349,7 +349,7 @@ tempers with the linux kernel, the stored data might become readable.
 ### iOS
 
 Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
-of your [application sandbox](11), which can't be read by any other app installed on the device.
+of your [application sandbox][11], which can't be read by any other app installed on the device.
 
 ## Development mode
 
