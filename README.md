@@ -346,8 +346,8 @@ DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 
 Resource tracking is able to provide the following timings:
 
-- `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
-- `Download`: The time it took to receive a response.
+-   `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
+-   `Download`: The time it took to receive a response.
 
 ## Data Storage
 
@@ -357,7 +357,7 @@ Before data is uploaded to Datadog, it is stored in cleartext in your applicatio
 
 ### iOS
 
-Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`) of your [application sandbox](11), which can't be read by any other app installed on the device.
+Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`) of your [application sandbox][11], which can't be read by any other app installed on the device.
 
 ## Development mode
 
