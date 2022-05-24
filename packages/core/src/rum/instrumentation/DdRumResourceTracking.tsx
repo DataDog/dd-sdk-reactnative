@@ -159,7 +159,7 @@ export function calculateResponseSize(xhr: XMLHttpRequest): number {
     return size;
 }
 
-const generateTracingAttributes = (
+const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number
 ): DdRumResourceTracingAttributes => {
     if (Math.random() * 100 <= tracingSamplingRate) {
@@ -176,12 +176,36 @@ const generateTracingAttributes = (
     };
 };
 
+const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
+    if (firstPartyHosts.length === 0) {
+        return new RegExp('a^');
+    }
+    try {
+        // A regexp for matching hosts, e.g. when `hosts` is "example.com", it will match
+        // "example.com", "api.example.com", but not "foo.com".
+        const firstPartyHostsRegex = new RegExp(
+            `^(.*\\.)*(${firstPartyHosts.map(host => `${host}$`).join('|')})`
+        );
+        firstPartyHostsRegex.test('test_the_regex_is_valid');
+        return firstPartyHostsRegex;
+    } catch (e) {
+        InternalLog.log(
+            `Invalid first party hosts list ${JSON.stringify(
+                firstPartyHosts
+            )}. Regular expressions are not allowed.`,
+            SdkVerbosity.WARN
+        );
+        return new RegExp('a^');
+    }
+};
+
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
     private static tracingSamplingRate: number;
+    private static firstPartyHostsRegex: RegExp = new RegExp('a^'); // matches nothing by default
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
@@ -195,7 +219,8 @@ export class DdRumResourceTracking {
         tracingSamplingRate: number;
     }): void {
         DdRumResourceTracking.startTrackingInternal(XMLHttpRequest, {
-            tracingSamplingRate
+            tracingSamplingRate,
+            firstPartyHosts: []
         });
     }
 
@@ -204,7 +229,10 @@ export class DdRumResourceTracking {
      */
     static startTrackingInternal(
         xhrType: typeof XMLHttpRequest,
-        { tracingSamplingRate }: { tracingSamplingRate: number }
+        {
+            tracingSamplingRate,
+            firstPartyHosts
+        }: { tracingSamplingRate: number; firstPartyHosts: string[] }
     ): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
@@ -216,6 +244,9 @@ export class DdRumResourceTracking {
         }
 
         DdRumResourceTracking.tracingSamplingRate = tracingSamplingRate;
+        DdRumResourceTracking.firstPartyHostsRegex = getFirstPartyHostsRegex(
+            firstPartyHosts
+        );
 
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
@@ -235,6 +266,19 @@ export class DdRumResourceTracking {
             XMLHttpRequest.prototype.send =
                 DdRumResourceTracking.originalXhrSend;
         }
+    }
+
+    static getTracingAttributes(url: string): DdRumResourceTracingAttributes {
+        const hostname = new URL(url).hostname;
+        if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
+            return generateTracingAttributesWithSampling(
+                DdRumResourceTracking.tracingSamplingRate
+            );
+        }
+        return {
+            samplingPriorityHeader: '0',
+            tracingStrategy: 'DISCARD'
+        };
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -257,8 +301,8 @@ export class DdRumResourceTracking {
                 url,
                 reported: false,
                 timer: new Timer(),
-                tracingAttributes: generateTracingAttributes(
-                    DdRumResourceTracking.tracingSamplingRate
+                tracingAttributes: DdRumResourceTracking.getTracingAttributes(
+                    url
                 )
             };
             // eslint-disable-next-line prefer-rest-params
