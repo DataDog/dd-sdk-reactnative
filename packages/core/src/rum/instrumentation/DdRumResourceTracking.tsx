@@ -269,16 +269,28 @@ export class DdRumResourceTracking {
     }
 
     static getTracingAttributes(url: string): DdRumResourceTracingAttributes {
-        const hostname = new URL(url).hostname;
-        if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
-            return generateTracingAttributesWithSampling(
-                DdRumResourceTracking.tracingSamplingRate
+        try {
+            const hostname = new URL(url).hostname;
+
+            if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
+                return generateTracingAttributesWithSampling(
+                    DdRumResourceTracking.tracingSamplingRate
+                );
+            }
+            return {
+                samplingPriorityHeader: '0',
+                tracingStrategy: 'DISCARD'
+            };
+        } catch (e) {
+            InternalLog.log(
+                `Impossible to cast ${url} as URL`,
+                SdkVerbosity.WARN
             );
+            return {
+                samplingPriorityHeader: '0',
+                tracingStrategy: 'DISCARD'
+            };
         }
-        return {
-            samplingPriorityHeader: '0',
-            tracingStrategy: 'DISCARD'
-        };
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

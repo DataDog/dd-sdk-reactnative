@@ -279,6 +279,28 @@ describe('DdRumResourceTracking', () => {
             expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
         });
 
+        it('does not crash when provided URL is not a valid one', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'crash';
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['example.com']
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+        });
+
         it('does not generate spanId and traceId in request headers when tracing is disabled', async () => {
             // GIVEN
             const method = 'GET';
