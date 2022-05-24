@@ -31,6 +31,7 @@ export class DdSdkReactNativeConfiguration {
     public nativeViewTracking: boolean = false;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
+    public firstPartyHosts: string[] = [];
 
     public additionalConfig: { [k: string]: any } = {};
 

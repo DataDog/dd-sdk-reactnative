@@ -214,13 +214,15 @@ export class DdRumResourceTracking {
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
     static startTracking({
-        tracingSamplingRate
+        tracingSamplingRate,
+        firstPartyHosts
     }: {
         tracingSamplingRate: number;
+        firstPartyHosts: string[];
     }): void {
         DdRumResourceTracking.startTrackingInternal(XMLHttpRequest, {
             tracingSamplingRate,
-            firstPartyHosts: []
+            firstPartyHosts
         });
     }
 

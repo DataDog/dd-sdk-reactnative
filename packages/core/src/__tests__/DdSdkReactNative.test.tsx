@@ -390,6 +390,7 @@ describe('DdSdkReactNative', () => {
                 true
             );
             configuration.resourceTracingSamplingRate = 42;
+            configuration.firstPartyHosts = ['api.example.com'];
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -413,7 +414,8 @@ describe('DdSdkReactNative', () => {
                 1
             );
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
-                tracingSamplingRate: 42
+                tracingSamplingRate: 42,
+                firstPartyHosts: ['api.example.com']
             });
         });
 
