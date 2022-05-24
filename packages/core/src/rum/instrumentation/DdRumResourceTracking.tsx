@@ -189,11 +189,14 @@ export class DdRumResourceTracking {
     /**
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
-    static startTracking(tracingSamplingRate: number): void {
-        DdRumResourceTracking.startTrackingInternal(
-            XMLHttpRequest,
+    static startTracking({
+        tracingSamplingRate
+    }: {
+        tracingSamplingRate: number;
+    }): void {
+        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest, {
             tracingSamplingRate
-        );
+        });
     }
 
     /**
@@ -201,7 +204,7 @@ export class DdRumResourceTracking {
      */
     static startTrackingInternal(
         xhrType: typeof XMLHttpRequest,
-        tracingSamplingRate: number
+        { tracingSamplingRate }: { tracingSamplingRate: number }
     ): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {

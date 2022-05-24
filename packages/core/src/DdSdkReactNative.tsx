@@ -186,9 +186,9 @@ export class DdSdkReactNative {
         }
 
         if (configuration.trackResources) {
-            DdRumResourceTracking.startTracking(
-                configuration.resourceTracingSamplingRate
-            );
+            DdRumResourceTracking.startTracking({
+                tracingSamplingRate: configuration.resourceTracingSamplingRate
+            });
         }
 
         if (configuration.trackErrors) {

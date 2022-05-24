@@ -412,9 +412,9 @@ describe('DdSdkReactNative', () => {
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
                 1
             );
-            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
-                42
-            );
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
+                tracingSamplingRate: 42
+            });
         });
 
         it('enables error tracking feature when initialize { error tracking config enabled }', async () => {
