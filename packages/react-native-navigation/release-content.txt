@@ -21,6 +21,7 @@ package/lib/typescript/core/src
 package/lib/typescript/core/src/DdSdkReactNative.d.ts
 package/lib/typescript/core/src/DdSdkReactNativeConfiguration.d.ts
 package/lib/typescript/core/src/InternalLog.d.ts
+package/lib/typescript/core/src/LoggerLevel.d.ts
 package/lib/typescript/core/src/ProxyConfiguration.d.ts
 package/lib/typescript/core/src/SdkVerbosity.d.ts
 package/lib/typescript/core/src/TimeProvider.d.ts

@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { LoggerLevel } from './LoggerLevel';
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
@@ -31,6 +32,7 @@ export class DdSdkReactNativeConfiguration {
     public nativeViewTracking: boolean = false;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
+    public loggerLevel: LoggerLevel = LoggerLevel.DEBUG;
 
     public additionalConfig: { [k: string]: any } = {};
 

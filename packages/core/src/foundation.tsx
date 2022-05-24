@@ -9,30 +9,56 @@ import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } fro
 import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 import {TimeProvider} from "./TimeProvider";
+import { LoggerLevel } from './LoggerLevel';
 
 const timeProvider = new TimeProvider();
 
 class DdLogsWrapper implements DdLogsType {
 
     private nativeLogs: DdLogsType = NativeModules.DdLogs;
+    private level: LoggerLevel = LoggerLevel.DEBUG;
+
+    setLevel(level: LoggerLevel): void {
+        this.level = level;
+    }
 
     debug(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking debug log “" +  message + "”", SdkVerbosity.DEBUG);
+        const isLogged = this.level <= LoggerLevel.DEBUG;
+        InternalLog.log(`Debug log “${message}” ${isLogged ? '' : 'not '}tracked`, SdkVerbosity.DEBUG);
+
+        if(!isLogged) {
+            return new Promise(resolve => resolve());
+        }
         return this.nativeLogs.debug(message, context);
     }
 
     info(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking info log “" +  message + "”", SdkVerbosity.DEBUG);
+        const isLogged = this.level <= LoggerLevel.INFO;
+        InternalLog.log(`Info log “${message}” ${isLogged ? '' : 'not '}tracked`, SdkVerbosity.DEBUG);
+
+        if(!isLogged) {
+            return new Promise(resolve => resolve());
+        }
         return this.nativeLogs.info(message, context);
     }
 
     warn(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking warn log “" +  message + "”", SdkVerbosity.DEBUG);
+        const isLogged = this.level <= LoggerLevel.WARN;
+        InternalLog.log(`Warn log “${message}” ${isLogged ? '' : 'not '}tracked`, SdkVerbosity.DEBUG);
+
+        if(!isLogged) {
+            return new Promise(resolve => resolve());
+        }
         return this.nativeLogs.warn(message, context);
     }
 
     error(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking error log “" +  message + "”", SdkVerbosity.DEBUG);
+        const isLogged = this.level <= LoggerLevel.ERROR;
+        InternalLog.log(`Error log “${message}” ${isLogged ? '' : 'not '}tracked`, SdkVerbosity.DEBUG);
+
+        if(!isLogged) {
+            return new Promise(resolve => resolve());
+        }
         return this.nativeLogs.error(message, context);
     }
 

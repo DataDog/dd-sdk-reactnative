@@ -43,6 +43,8 @@ package/lib/commonjs/DdSdkReactNativeConfiguration.js
 package/lib/commonjs/DdSdkReactNativeConfiguration.js.map
 package/lib/commonjs/InternalLog.js
 package/lib/commonjs/InternalLog.js.map
+package/lib/commonjs/LoggerLevel.js
+package/lib/commonjs/LoggerLevel.js.map
 package/lib/commonjs/ProxyConfiguration.js
 package/lib/commonjs/ProxyConfiguration.js.map
 package/lib/commonjs/SdkVerbosity.js
@@ -88,6 +90,8 @@ package/lib/module/DdSdkReactNativeConfiguration.js
 package/lib/module/DdSdkReactNativeConfiguration.js.map
 package/lib/module/InternalLog.js
 package/lib/module/InternalLog.js.map
+package/lib/module/LoggerLevel.js
+package/lib/module/LoggerLevel.js.map
 package/lib/module/ProxyConfiguration.js
 package/lib/module/ProxyConfiguration.js.map
 package/lib/module/SdkVerbosity.js
@@ -130,6 +134,7 @@ package/lib/typescript
 package/lib/typescript/DdSdkReactNative.d.ts
 package/lib/typescript/DdSdkReactNativeConfiguration.d.ts
 package/lib/typescript/InternalLog.d.ts
+package/lib/typescript/LoggerLevel.d.ts
 package/lib/typescript/ProxyConfiguration.d.ts
 package/lib/typescript/SdkVerbosity.d.ts
 package/lib/typescript/TimeProvider.d.ts
@@ -155,6 +160,7 @@ package/src
 package/src/DdSdkReactNative.tsx
 package/src/DdSdkReactNativeConfiguration.tsx
 package/src/InternalLog.tsx
+package/src/LoggerLevel.ts
 package/src/ProxyConfiguration.tsx
 package/src/SdkVerbosity.tsx
 package/src/TimeProvider.tsx
@@ -163,6 +169,7 @@ package/src/TrackingConsent.tsx
 package/src/__mocks__
 package/src/__mocks__/InternalLog.tsx
 package/src/__tests__
+package/src/__tests__/DdLogs.test.ts
 package/src/__tests__/DdRumWrapper.test.tsx
 package/src/__tests__/DdSdkReactNative.test.tsx
 package/src/__tests__/InternalLog.test.tsx

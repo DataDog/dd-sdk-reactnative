@@ -9,7 +9,7 @@ import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
-import { DdSdk } from './foundation';
+import { DdSdk, DdLogs } from './foundation';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
@@ -109,6 +109,8 @@ export class DdSdkReactNative {
             configuration.additionalConfig[
                 DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
             ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
+
+            DdLogs.setLevel(configuration.loggerLevel);
 
             DdSdk.initialize(
                 new DdSdkConfiguration(

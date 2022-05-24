@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { LoggerLevel } from './LoggerLevel';
+
 /**
  * A configuration object to initialize Datadog's features.
  */
@@ -53,6 +55,12 @@ export type DdSdkType = {
  * The entry point to use Datadog's Logs feature.
  */
 export type DdLogsType = {
+    /**
+     * Sets the level of the logger.
+     * @param level: The minimum level for which logs won't be sent.
+     */
+    setLevel(level: LoggerLevel): void;
+
     /**
      * Send a log with level debug.
      * @param message: The message to send.

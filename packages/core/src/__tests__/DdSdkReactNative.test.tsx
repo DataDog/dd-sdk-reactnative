@@ -8,10 +8,11 @@ import { NativeModules } from 'react-native';
 
 import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
+import { LoggerLevel } from '../LoggerLevel';
 import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
-import { DdSdk } from '../foundation';
+import { DdLogs, DdSdk } from '../foundation';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
@@ -607,6 +608,38 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1);
             expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent);
+        });
+    });
+
+    describe('Logger', () => {
+        it('sends logs only for levels above threshold when loggerLevel is set', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.loggerLevel = LoggerLevel.WARN;
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+            await DdSdkReactNative.initialize(configuration);
+
+            // WHEN
+            DdLogs.debug('debug');
+            DdLogs.info('info');
+            DdLogs.warn('warn');
+            DdLogs.error('error');
+
+            // THEN
+            expect(NativeModules.DdLogs.debug).not.toHaveBeenCalled();
+            expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+            expect(NativeModules.DdLogs.warn).toHaveBeenCalledTimes(1);
+            expect(NativeModules.DdLogs.error).toHaveBeenCalledTimes(1);
         });
     });
 
