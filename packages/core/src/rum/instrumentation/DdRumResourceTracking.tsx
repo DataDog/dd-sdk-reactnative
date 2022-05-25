@@ -13,6 +13,7 @@ import { DdRum } from '../../foundation';
 
 import type { DdRumResourceTracingAttributes, DdRumXhr } from './DdRumXhr';
 import { generateTraceId } from './TraceIdentifier';
+import { URLHostParser } from './URLHostParser';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
@@ -272,7 +273,7 @@ export class DdRumResourceTracking {
 
     static getTracingAttributes(url: string): DdRumResourceTracingAttributes {
         try {
-            const hostname = new URL(url).hostname;
+            const hostname = URLHostParser(url);
 
             if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
                 return generateTracingAttributesWithSampling(
