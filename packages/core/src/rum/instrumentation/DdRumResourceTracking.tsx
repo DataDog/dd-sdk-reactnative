@@ -26,6 +26,9 @@ export const RESOURCE_SIZE_ERROR_MESSAGE =
 const RESPONSE_START_LABEL = 'response_start';
 const MISSING_RESOURCE_SIZE = -1;
 
+// This regex does not match anything
+const NO_MATCH_REGEX = new RegExp('a^');
+
 interface Timing {
     /**
      * Time relative (absolute in case of iOS) to some point, in ns.
@@ -179,7 +182,7 @@ const generateTracingAttributesWithSampling = (
 
 const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
     if (firstPartyHosts.length === 0) {
-        return new RegExp('a^');
+        return NO_MATCH_REGEX;
     }
     try {
         // A regexp for matching hosts, e.g. when `hosts` is "example.com", it will match
@@ -196,7 +199,7 @@ const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
             )}. Regular expressions are not allowed.`,
             SdkVerbosity.WARN
         );
-        return new RegExp('a^');
+        return NO_MATCH_REGEX;
     }
 };
 
@@ -206,7 +209,7 @@ const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
 export class DdRumResourceTracking {
     private static isTracking = false;
     private static tracingSamplingRate: number;
-    private static firstPartyHostsRegex: RegExp = new RegExp('a^'); // matches nothing by default
+    private static firstPartyHostsRegex: RegExp = NO_MATCH_REGEX; // matches nothing by default
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
