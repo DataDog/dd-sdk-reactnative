@@ -8,7 +8,12 @@ import type { AppStateEvent, AppStateStatus } from 'react-native';
 
 type handler = (type: AppStateStatus) => void;
 
-export class AppStateMock {
+/**
+ * This is a mock of legacy implementation of AppState (up until RN 0.65).
+ * In the new version, removeEventListener has been deprecated and addEventListener
+ * now returns a subscription.
+ */
+export class AppStateMockLegacy {
     private handlers: { [eventType: string]: handler[] } = {};
 
     addEventListener = (type: AppStateEvent, callback: handler) => {

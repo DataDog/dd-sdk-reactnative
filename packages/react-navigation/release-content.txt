@@ -60,7 +60,7 @@ package/src/__tests__/rum
 package/src/__tests__/rum/instrumentation
 package/src/__tests__/rum/instrumentation/DdRumReactNavigationTracking.test.tsx
 package/src/__tests__/rum/instrumentation/__utils__
-package/src/__tests__/rum/instrumentation/__utils__/AppStateMock.ts
+package/src/__tests__/rum/instrumentation/__utils__/AppStateMockLegacy.ts
 package/src/__tests__/rum/instrumentation/__utils__/Navigators
 package/src/__tests__/rum/instrumentation/__utils__/Navigators/NavigatorsV5.tsx
 package/src/__tests__/rum/instrumentation/__utils__/Navigators/NavigatorsV6.tsx

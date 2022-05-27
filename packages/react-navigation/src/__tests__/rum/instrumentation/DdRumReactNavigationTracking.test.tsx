@@ -15,7 +15,7 @@ import React, { createRef } from 'react';
 import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 
-import { AppStateMock } from './__utils__/AppStateMock';
+import { AppStateMockLegacy } from './__utils__/AppStateMockLegacy';
 import {
     FakeNavigator1 as FakeNavigator1v5,
     FakeNavigator2 as FakeNavigator2v5,
@@ -56,7 +56,7 @@ jest.mock('@datadog/mobile-react-native', () => {
     };
 });
 
-const appStateMock = new AppStateMock();
+const appStateMock = new AppStateMockLegacy();
 mocked(AppState.addEventListener).mockImplementation(
     appStateMock.addEventListener
 );
