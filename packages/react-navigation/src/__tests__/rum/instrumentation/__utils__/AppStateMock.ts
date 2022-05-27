@@ -13,7 +13,7 @@ import type {
 type handler = (type: AppStateStatus) => void;
 
 export class AppStateMock {
-    private handlers: {
+    private listeners: {
         [eventType: string]: {
             callback: handler;
             subscription: NativeEventSubscription;
@@ -21,13 +21,13 @@ export class AppStateMock {
     } = {};
 
     addEventListener = (type: AppStateEvent, callback: handler) => {
-        if (!this.handlers[type]) {
-            this.handlers[type] = [];
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
         }
         const subscription = {
             remove: () => this.removeListeners(type, callback)
         };
-        this.handlers[type].push({
+        this.listeners[type].push({
             callback,
             subscription
         });
@@ -36,29 +36,29 @@ export class AppStateMock {
     };
 
     private removeListeners = (type: string, callback: handler) => {
-        if (!this.handlers[type]) {
+        if (!this.listeners[type]) {
             return;
         }
-        const callbackIndex = this.handlers[type].findIndex(
+        const callbackIndex = this.listeners[type].findIndex(
             handler => handler.callback === callback
         );
         if (callbackIndex === -1) {
             return;
         }
-        this.handlers[type] = [
-            ...this.handlers[type].slice(0, callbackIndex),
-            ...this.handlers[type].slice(
+        this.listeners[type] = [
+            ...this.listeners[type].slice(0, callbackIndex),
+            ...this.listeners[type].slice(
                 callbackIndex + 1,
-                this.handlers[type].length
+                this.listeners[type].length
             )
         ];
     };
 
     changeValue = (value: AppStateStatus) => {
-        if (!this.handlers.change) {
+        if (!this.listeners.change) {
             return;
         }
-        this.handlers.change.forEach(handler => {
+        this.listeners.change.forEach(handler => {
             try {
                 handler.callback(value);
             } catch (e) {
@@ -70,6 +70,6 @@ export class AppStateMock {
     };
 
     removeAllListeners = () => {
-        this.handlers = {};
+        this.listeners = {};
     };
 }

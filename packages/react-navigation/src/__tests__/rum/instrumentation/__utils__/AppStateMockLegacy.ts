@@ -14,37 +14,37 @@ type handler = (type: AppStateStatus) => void;
  * now returns a subscription.
  */
 export class AppStateMockLegacy {
-    private handlers: { [eventType: string]: handler[] } = {};
+    private listeners: { [eventType: string]: handler[] } = {};
 
     addEventListener = (type: AppStateEvent, callback: handler) => {
-        if (!this.handlers[type]) {
-            this.handlers[type] = [];
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
         }
-        this.handlers[type].push(callback);
+        this.listeners[type].push(callback);
     };
 
     removeEventListener = (type: string, callback: handler) => {
-        if (!this.handlers[type]) {
+        if (!this.listeners[type]) {
             return;
         }
-        const callbackIndex = this.handlers[type].indexOf(callback);
+        const callbackIndex = this.listeners[type].indexOf(callback);
         if (callbackIndex === -1) {
             return;
         }
-        this.handlers[type] = [
-            ...this.handlers[type].slice(0, callbackIndex),
-            ...this.handlers[type].slice(
+        this.listeners[type] = [
+            ...this.listeners[type].slice(0, callbackIndex),
+            ...this.listeners[type].slice(
                 callbackIndex + 1,
-                this.handlers[type].length
+                this.listeners[type].length
             )
         ];
     };
 
     changeValue = (value: AppStateStatus) => {
-        if (!this.handlers.change) {
+        if (!this.listeners.change) {
             return;
         }
-        this.handlers.change.forEach(callback => {
+        this.listeners.change.forEach(callback => {
             try {
                 callback(value);
             } catch (e) {
@@ -56,6 +56,6 @@ export class AppStateMockLegacy {
     };
 
     removeAllListeners = () => {
-        this.handlers = {};
+        this.listeners = {};
     };
 }

@@ -364,7 +364,7 @@ describe.each([
                     DdRumReactNavigationTracking.stopTrackingViews(
                         navigationRef1.current
                     );
-                    expect(appStateMock.handlers.change).toHaveLength(0);
+                    expect(appStateMock.listeners.change).toHaveLength(0);
 
                     DdRumReactNavigationTracking.startTrackingViews(
                         navigationRef2.current
@@ -372,7 +372,7 @@ describe.each([
 
                     // THEN
                     expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
-                    expect(appStateMock.handlers.change).toHaveLength(1);
+                    expect(appStateMock.listeners.change).toHaveLength(1);
 
                     // WHEN we go in background mode
                     appStateMock.changeValue('background');
