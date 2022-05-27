@@ -13,6 +13,7 @@ import { DdRum } from '../../foundation';
 
 import type { DdRumResourceTracingAttributes, DdRumXhr } from './DdRumXhr';
 import { generateTraceId } from './TraceIdentifier';
+import { URLHostParser } from './URLHostParser';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
@@ -24,6 +25,9 @@ export const RESOURCE_SIZE_ERROR_MESSAGE =
 
 const RESPONSE_START_LABEL = 'response_start';
 const MISSING_RESOURCE_SIZE = -1;
+
+// This regex does not match anything
+const NO_MATCH_REGEX = new RegExp('a^');
 
 interface Timing {
     /**
@@ -159,7 +163,7 @@ export function calculateResponseSize(xhr: XMLHttpRequest): number {
     return size;
 }
 
-const generateTracingAttributes = (
+const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number
 ): DdRumResourceTracingAttributes => {
     if (Math.random() * 100 <= tracingSamplingRate) {
@@ -176,12 +180,36 @@ const generateTracingAttributes = (
     };
 };
 
+const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
+    if (firstPartyHosts.length === 0) {
+        return NO_MATCH_REGEX;
+    }
+    try {
+        // A regexp for matching hosts, e.g. when `hosts` is "example.com", it will match
+        // "example.com", "api.example.com", but not "foo.com".
+        const firstPartyHostsRegex = new RegExp(
+            `^(.*\\.)*(${firstPartyHosts.map(host => `${host}$`).join('|')})`
+        );
+        firstPartyHostsRegex.test('test_the_regex_is_valid');
+        return firstPartyHostsRegex;
+    } catch (e) {
+        InternalLog.log(
+            `Invalid first party hosts list ${JSON.stringify(
+                firstPartyHosts
+            )}. Regular expressions are not allowed.`,
+            SdkVerbosity.WARN
+        );
+        return NO_MATCH_REGEX;
+    }
+};
+
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
     private static tracingSamplingRate: number;
+    private static firstPartyHostsRegex: RegExp = NO_MATCH_REGEX; // matches nothing by default
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
@@ -189,11 +217,17 @@ export class DdRumResourceTracking {
     /**
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
-    static startTracking(tracingSamplingRate: number): void {
-        DdRumResourceTracking.startTrackingInternal(
-            XMLHttpRequest,
-            tracingSamplingRate
-        );
+    static startTracking({
+        tracingSamplingRate,
+        firstPartyHosts
+    }: {
+        tracingSamplingRate: number;
+        firstPartyHosts: string[];
+    }): void {
+        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest, {
+            tracingSamplingRate,
+            firstPartyHosts
+        });
     }
 
     /**
@@ -201,7 +235,10 @@ export class DdRumResourceTracking {
      */
     static startTrackingInternal(
         xhrType: typeof XMLHttpRequest,
-        tracingSamplingRate: number
+        {
+            tracingSamplingRate,
+            firstPartyHosts
+        }: { tracingSamplingRate: number; firstPartyHosts: string[] }
     ): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
@@ -213,6 +250,9 @@ export class DdRumResourceTracking {
         }
 
         DdRumResourceTracking.tracingSamplingRate = tracingSamplingRate;
+        DdRumResourceTracking.firstPartyHostsRegex = getFirstPartyHostsRegex(
+            firstPartyHosts
+        );
 
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
@@ -231,6 +271,31 @@ export class DdRumResourceTracking {
                 DdRumResourceTracking.originalXhrOpen;
             XMLHttpRequest.prototype.send =
                 DdRumResourceTracking.originalXhrSend;
+        }
+    }
+
+    static getTracingAttributes(url: string): DdRumResourceTracingAttributes {
+        try {
+            const hostname = URLHostParser(url);
+
+            if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
+                return generateTracingAttributesWithSampling(
+                    DdRumResourceTracking.tracingSamplingRate
+                );
+            }
+            return {
+                samplingPriorityHeader: '0',
+                tracingStrategy: 'DISCARD'
+            };
+        } catch (e) {
+            InternalLog.log(
+                `Impossible to cast ${url} as URL`,
+                SdkVerbosity.WARN
+            );
+            return {
+                samplingPriorityHeader: '0',
+                tracingStrategy: 'DISCARD'
+            };
         }
     }
 
@@ -254,8 +319,8 @@ export class DdRumResourceTracking {
                 url,
                 reported: false,
                 timer: new Timer(),
-                tracingAttributes: generateTracingAttributes(
-                    DdRumResourceTracking.tracingSamplingRate
+                tracingAttributes: DdRumResourceTracking.getTracingAttributes(
+                    url
                 )
             };
             // eslint-disable-next-line prefer-rest-params

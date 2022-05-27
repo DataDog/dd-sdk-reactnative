@@ -390,6 +390,7 @@ describe('DdSdkReactNative', () => {
                 true
             );
             configuration.resourceTracingSamplingRate = 42;
+            configuration.firstPartyHosts = ['api.example.com'];
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -412,9 +413,10 @@ describe('DdSdkReactNative', () => {
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
                 1
             );
-            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
-                42
-            );
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
+                tracingSamplingRate: 42,
+                firstPartyHosts: ['api.example.com']
+            });
         });
 
         it('enables error tracking feature when initialize { error tracking config enabled }', async () => {

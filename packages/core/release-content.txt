@@ -77,6 +77,8 @@ package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js.map
 package/lib/commonjs/rum/instrumentation/TraceIdentifier.js
 package/lib/commonjs/rum/instrumentation/TraceIdentifier.js.map
+package/lib/commonjs/rum/instrumentation/URLHostParser.js
+package/lib/commonjs/rum/instrumentation/URLHostParser.js.map
 package/lib/commonjs/types.js
 package/lib/commonjs/types.js.map
 package/lib/commonjs/version.js
@@ -122,6 +124,8 @@ package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js.map
 package/lib/module/rum/instrumentation/TraceIdentifier.js
 package/lib/module/rum/instrumentation/TraceIdentifier.js.map
+package/lib/module/rum/instrumentation/URLHostParser.js
+package/lib/module/rum/instrumentation/URLHostParser.js.map
 package/lib/module/types.js
 package/lib/module/types.js.map
 package/lib/module/version.js
@@ -148,6 +152,7 @@ package/lib/typescript/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/ShallowObjectEqualityChecker.d.ts
 package/lib/typescript/rum/instrumentation/TraceIdentifier.d.ts
+package/lib/typescript/rum/instrumentation/URLHostParser.d.ts
 package/lib/typescript/types.d.ts
 package/lib/typescript/version.d.ts
 package/package.json
@@ -176,6 +181,7 @@ package/src/__tests__/rum/instrumentation/DdRumResourceTracking.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
 package/src/__tests__/rum/instrumentation/TraceIdentifier.test.tsx
+package/src/__tests__/rum/instrumentation/URLHostParser.test.ts
 package/src/__tests__/rum/instrumentation/__utils__
 package/src/__tests__/rum/instrumentation/__utils__/XMLHttpRequestMock.ts
 package/src/foundation.tsx
@@ -191,5 +197,6 @@ package/src/rum/instrumentation/EventsInterceptor.tsx
 package/src/rum/instrumentation/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
 package/src/rum/instrumentation/TraceIdentifier.tsx
+package/src/rum/instrumentation/URLHostParser.ts
 package/src/types.tsx
 package/src/version.ts

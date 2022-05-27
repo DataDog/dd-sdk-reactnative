@@ -63,10 +63,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -98,10 +98,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -133,10 +133,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -170,10 +170,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -193,10 +193,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -215,11 +215,11 @@ describe('DdRumResourceTracking', () => {
         it('generates different ids for spanId and traceId in request headers', async () => {
             // GIVEN
             const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            const url = 'https://api.example.com:443/v2/user';
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['something.fr', 'example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -235,11 +235,80 @@ describe('DdRumResourceTracking', () => {
             expect(traceId !== spanId).toBeTruthy();
         });
 
+        it('does not generate spanId and traceId in request headers when no first party hosts are provided', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+        });
+
+        it('does not generate spanId and traceId in request headers when no the url does not match first party hosts', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['google.com', 'api.example.co']
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+        });
+
+        it('does not crash when provided URL is not a valid one', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'crash';
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['example.com']
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+        });
+
         it('does not generate spanId and traceId in request headers when tracing is disabled', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, 50);
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 50,
+                firstPartyHosts: ['api.example.com']
+            });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
 
             // WHEN
@@ -259,10 +328,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -280,10 +349,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -301,7 +370,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, 50);
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 50,
+                firstPartyHosts: ['api.example.com']
+            });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
 
             // WHEN
@@ -322,10 +394,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -345,10 +417,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -369,10 +441,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: ['api.example.com']
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
@@ -393,7 +465,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, 50);
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 50,
+                firstPartyHosts: ['api.example.com']
+            });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
 
             // WHEN
@@ -423,10 +498,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
                 OS: platform
@@ -466,10 +541,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
                 OS: platform
@@ -512,10 +587,10 @@ describe('DdRumResourceTracking', () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
-            DdRumResourceTracking.startTrackingInternal(
-                XMLHttpRequestMock,
-                100
-            );
+            DdRumResourceTracking.startTrackingInternal(XMLHttpRequestMock, {
+                tracingSamplingRate: 100,
+                firstPartyHosts: []
+            });
 
             // WHEN
             const xhr = new XMLHttpRequestMock();
