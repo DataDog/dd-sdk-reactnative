@@ -110,6 +110,9 @@ export class DdSdkReactNative {
                 DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
             ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
 
+            configuration.additionalConfig['_dd.first_party_hosts'] =
+                configuration.firstPartyHosts;
+
             DdSdk.initialize(
                 new DdSdkConfiguration(
                     configuration.clientToken,
