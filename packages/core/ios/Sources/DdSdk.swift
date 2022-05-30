@@ -21,18 +21,12 @@ class RNDdSdk: NSObject {
     let methodQueue: DispatchQueue = sharedQueue
 
     @objc(initialize:withResolver:withRejecter:)
-    func initialize(configuration: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
-        // This is safe because the main queue will never be blocked waiting for the sharedQueue
-        // Adding an extra check in case sharedQueue is ever changed to be DispatchQueue.main.
-        if Thread.isMainThread {
-            nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
-        } else {
-            DispatchQueue.main.sync {
-                nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
-            }
+        DispatchQueue.main.async {
+            self.nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
+            resolve(nil)
         }
-        resolve(nil)
     }
 
     @objc(setAttributes:withResolver:withRejecter:)
