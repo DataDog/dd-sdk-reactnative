@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
 jest.mock('../../../rum/instrumentation/DdEventsInterceptor');
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
-jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 jest.useFakeTimers();
 
 let originalMethod: typeof React.createElement;

@@ -4,44 +4,30 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type {
-    AppStateEvent,
-    AppStateStatus,
-    NativeEventSubscription
-} from 'react-native';
+import type { AppStateEvent, AppStateStatus } from 'react-native';
 
 type handler = (type: AppStateStatus) => void;
 
-export class AppStateMock {
-    private listeners: {
-        [eventType: string]: {
-            callback: handler;
-            subscription: NativeEventSubscription;
-        }[];
-    } = {};
+/**
+ * This is a mock of legacy implementation of AppState (up until RN 0.65).
+ * In the new version, removeEventListener has been deprecated and addEventListener
+ * now returns a subscription.
+ */
+export class AppStateMockLegacy {
+    private listeners: { [eventType: string]: handler[] } = {};
 
     addEventListener = (type: AppStateEvent, callback: handler) => {
         if (!this.listeners[type]) {
             this.listeners[type] = [];
         }
-        const subscription = {
-            remove: () => this.removeListeners(type, callback)
-        };
-        this.listeners[type].push({
-            callback,
-            subscription
-        });
-
-        return subscription;
+        this.listeners[type].push(callback);
     };
 
-    private removeListeners = (type: string, callback: handler) => {
+    removeEventListener = (type: string, callback: handler) => {
         if (!this.listeners[type]) {
             return;
         }
-        const callbackIndex = this.listeners[type].findIndex(
-            handler => handler.callback === callback
-        );
+        const callbackIndex = this.listeners[type].indexOf(callback);
         if (callbackIndex === -1) {
             return;
         }
@@ -58,9 +44,9 @@ export class AppStateMock {
         if (!this.listeners.change) {
             return;
         }
-        this.listeners.change.forEach(handler => {
+        this.listeners.change.forEach(callback => {
             try {
-                handler.callback(value);
+                callback(value);
             } catch (e) {
                 console.warn(
                     `Failure while executing callback for value ${value}`

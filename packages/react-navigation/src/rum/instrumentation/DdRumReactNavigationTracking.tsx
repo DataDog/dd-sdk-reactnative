@@ -39,6 +39,8 @@ export class DdRumReactNavigationTracking {
 
     private static backHandler: NativeEventSubscription | null;
 
+    private static appStateSubscription?: NativeEventSubscription;
+
     static ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE =
         'A navigation change was detected but the RUM ViewEvent was dropped as the route was undefined.';
     static NULL_NAVIGATION_REF_ERROR_MESSAGE =
@@ -108,7 +110,7 @@ export class DdRumReactNavigationTracking {
                 'hardwareBackPress',
                 DdRumReactNavigationTracking.onBackPress
             );
-            AppState.addEventListener(
+            this.appStateSubscription = AppState.addEventListener(
                 'change',
                 DdRumReactNavigationTracking.appStateListener
             );
@@ -137,10 +139,17 @@ export class DdRumReactNavigationTracking {
                 return trackedName;
             };
         }
-        AppState.removeEventListener(
-            'change',
-            DdRumReactNavigationTracking.appStateListener
-        );
+
+        // For versions of React Native below 0.65, addEventListener does not return a subscription.
+        // We have to call AppState.removeEventListener instead.
+        if (this.appStateSubscription) {
+            this.appStateSubscription.remove();
+        } else {
+            AppState.removeEventListener(
+                'change',
+                DdRumReactNavigationTracking.appStateListener
+            );
+        }
     }
 
     private static handleRouteNavigation(
