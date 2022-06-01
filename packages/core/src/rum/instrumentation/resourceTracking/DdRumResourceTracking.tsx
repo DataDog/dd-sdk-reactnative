@@ -14,6 +14,11 @@ import type { DdRumResourceTracingAttributes, DdRumXhr } from '../DdRumXhr';
 import { generateTraceId } from '../TraceIdentifier';
 import { URLHostParser } from '../URLHostParser';
 
+import {
+    firstPartyHostsRegexBuilder,
+    NO_MATCH_REGEX
+} from './implementation/firstPartyHostsRegex';
+
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
@@ -24,9 +29,6 @@ export const RESOURCE_SIZE_ERROR_MESSAGE =
 
 const RESPONSE_START_LABEL = 'response_start';
 const MISSING_RESOURCE_SIZE = -1;
-
-// This regex does not match anything
-const NO_MATCH_REGEX = new RegExp('a^');
 
 interface Timing {
     /**
@@ -179,29 +181,6 @@ const generateTracingAttributesWithSampling = (
     };
 };
 
-const getFirstPartyHostsRegex = (firstPartyHosts: string[]): RegExp => {
-    if (firstPartyHosts.length === 0) {
-        return NO_MATCH_REGEX;
-    }
-    try {
-        // A regexp for matching hosts, e.g. when `hosts` is "example.com", it will match
-        // "example.com", "api.example.com", but not "foo.com".
-        const firstPartyHostsRegex = new RegExp(
-            `^(.*\\.)*(${firstPartyHosts.map(host => `${host}$`).join('|')})`
-        );
-        firstPartyHostsRegex.test('test_the_regex_is_valid');
-        return firstPartyHostsRegex;
-    } catch (e) {
-        InternalLog.log(
-            `Invalid first party hosts list ${JSON.stringify(
-                firstPartyHosts
-            )}. Regular expressions are not allowed.`,
-            SdkVerbosity.WARN
-        );
-        return NO_MATCH_REGEX;
-    }
-};
-
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
@@ -249,7 +228,7 @@ export class DdRumResourceTracking {
         }
 
         DdRumResourceTracking.tracingSamplingRate = tracingSamplingRate;
-        DdRumResourceTracking.firstPartyHostsRegex = getFirstPartyHostsRegex(
+        DdRumResourceTracking.firstPartyHostsRegex = firstPartyHostsRegexBuilder(
             firstPartyHosts
         );
 
