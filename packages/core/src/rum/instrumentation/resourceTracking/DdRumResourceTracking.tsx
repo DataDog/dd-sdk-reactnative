@@ -61,8 +61,6 @@ export class DdRumResourceTracking {
 
         // eslint-disable-next-line no-new
         new XHRProxy(xhrType, {
-            originalXhrOpen: DdRumResourceTracking.originalXhrOpen,
-            originalXhrSend: DdRumResourceTracking.originalXhrSend,
             tracingSamplingRate,
             firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
         });

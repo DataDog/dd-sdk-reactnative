@@ -32,28 +32,24 @@ export class XHRProxy {
     private originalXhrSend: any;
 
     constructor(
-        xhrType: any,
+        xhrType: typeof XMLHttpRequest,
         {
-            originalXhrOpen,
-            originalXhrSend,
             tracingSamplingRate,
             firstPartyHostsRegex
         }: {
-            originalXhrOpen: any;
-            originalXhrSend: any;
             tracingSamplingRate: number;
             firstPartyHostsRegex: RegExp;
         }
     ) {
-        this.originalXhrOpen = originalXhrOpen;
-        this.originalXhrSend = originalXhrSend;
+        this.originalXhrOpen = xhrType.prototype.open;
+        this.originalXhrSend = xhrType.prototype.send;
         this.tracingSamplingRate = tracingSamplingRate;
         this.firstPartyHostsRegex = firstPartyHostsRegex;
         this.proxyOpen(xhrType);
         this.proxySend(xhrType);
     }
 
-    private proxyOpen(xhrType: any): void {
+    private proxyOpen(xhrType: typeof XMLHttpRequest): void {
         const originalXhrOpen = this.originalXhrOpen;
         const firstPartyHostsRegex = this.firstPartyHostsRegex;
         const tracingSamplingRate = this.tracingSamplingRate;
@@ -82,7 +78,7 @@ export class XHRProxy {
         };
     }
 
-    private proxySend(xhrType: any): void {
+    private proxySend(xhrType: typeof XMLHttpRequest): void {
         const originalXhrSend = this.originalXhrSend;
         const proxyOnReadyStateChange = this.proxyOnReadyStateChange;
         const reportXhr = this.reportXhr;
@@ -119,7 +115,7 @@ export class XHRProxy {
 
     private proxyOnReadyStateChange(
         xhrProxy: DdRumXhr,
-        xhrType: any,
+        xhrType: typeof XMLHttpRequest,
         reportXhr: (xhrProxy: DdRumXhr) => unknown
     ): void {
         const originalOnreadystatechange = xhrProxy.onreadystatechange;
