@@ -6,14 +6,13 @@
 
 import { Platform } from 'react-native';
 
-import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import Timer from '../../Timer';
-import { DdRum } from '../../foundation';
-
-import type { DdRumResourceTracingAttributes, DdRumXhr } from './DdRumXhr';
-import { generateTraceId } from './TraceIdentifier';
-import { URLHostParser } from './URLHostParser';
+import { InternalLog } from '../../../InternalLog';
+import { SdkVerbosity } from '../../../SdkVerbosity';
+import Timer from '../../../Timer';
+import { DdRum } from '../../../foundation';
+import type { DdRumResourceTracingAttributes, DdRumXhr } from '../DdRumXhr';
+import { generateTraceId } from '../TraceIdentifier';
+import { URLHostParser } from '../URLHostParser';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
