@@ -15,6 +15,7 @@ import { firstPartyHostsRegexBuilder } from './implementation/firstPartyHostsReg
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
+    private static xhrType: typeof XMLHttpRequest;
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
@@ -54,6 +55,7 @@ export class DdRumResourceTracking {
             return;
         }
 
+        DdRumResourceTracking.xhrType = xhrType;
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
 
@@ -67,14 +69,15 @@ export class DdRumResourceTracking {
             'Datadog SDK is tracking XHR resources',
             SdkVerbosity.INFO
         );
+        DdRumResourceTracking.isTracking = true;
     }
 
     static stopTracking(): void {
         if (DdRumResourceTracking.isTracking) {
             DdRumResourceTracking.isTracking = false;
-            XMLHttpRequest.prototype.open =
+            DdRumResourceTracking.xhrType.prototype.open =
                 DdRumResourceTracking.originalXhrOpen;
-            XMLHttpRequest.prototype.send =
+            DdRumResourceTracking.xhrType.prototype.send =
                 DdRumResourceTracking.originalXhrSend;
         }
     }
