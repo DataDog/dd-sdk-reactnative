@@ -10,8 +10,8 @@ import Timer from '../../../Timer';
 import { DdRum } from '../../../foundation';
 import type { DdRumResourceTracingAttributes, DdRumXhr } from '../DdRumXhr';
 
-import { generateTraceId } from './implementation/TraceIdentifier';
 import { URLHostParser } from './implementation/URLHostParser';
+import { generateTraceId } from './implementation/distributedTracing';
 import {
     firstPartyHostsRegexBuilder,
     NO_MATCH_REGEX
