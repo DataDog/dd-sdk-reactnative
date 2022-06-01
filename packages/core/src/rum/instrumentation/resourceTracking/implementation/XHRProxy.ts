@@ -25,13 +25,13 @@ const RESPONSE_START_LABEL = 'response_start';
  * Proxies XMLHTTPRequest to track resources.
  */
 export class XHRProxy {
-    private static tracingSamplingRate: number;
-    private static firstPartyHostsRegex: RegExp;
+    private tracingSamplingRate: number;
+    private firstPartyHostsRegex: RegExp;
 
-    private static originalXhrOpen: any;
-    private static originalXhrSend: any;
+    private originalXhrOpen: any;
+    private originalXhrSend: any;
 
-    static proxyXhr(
+    constructor(
         xhrType: any,
         {
             originalXhrOpen,
@@ -44,7 +44,7 @@ export class XHRProxy {
             tracingSamplingRate: number;
             firstPartyHostsRegex: RegExp;
         }
-    ): void {
+    ) {
         this.originalXhrOpen = originalXhrOpen;
         this.originalXhrSend = originalXhrSend;
         this.tracingSamplingRate = tracingSamplingRate;
@@ -53,8 +53,11 @@ export class XHRProxy {
         this.proxySend(xhrType);
     }
 
-    private static proxyOpen(xhrType: any): void {
+    private proxyOpen(xhrType: any): void {
         const originalXhrOpen = this.originalXhrOpen;
+        const firstPartyHostsRegex = this.firstPartyHostsRegex;
+        const tracingSamplingRate = this.tracingSamplingRate;
+
         xhrType.prototype.open = function (
             this: DdRumXhr,
             method: string,
@@ -70,8 +73,8 @@ export class XHRProxy {
                 timer: new Timer(),
                 tracingAttributes: getTracingAttributes({
                     hostname,
-                    firstPartyHostsRegex: XHRProxy.firstPartyHostsRegex,
-                    tracingSamplingRate: XHRProxy.tracingSamplingRate
+                    firstPartyHostsRegex,
+                    tracingSamplingRate
                 })
             };
             // eslint-disable-next-line prefer-rest-params
@@ -79,8 +82,11 @@ export class XHRProxy {
         };
     }
 
-    private static proxySend(xhrType: any): void {
+    private proxySend(xhrType: any): void {
         const originalXhrSend = this.originalXhrSend;
+        const proxyOnReadyStateChange = this.proxyOnReadyStateChange;
+        const reportXhr = this.reportXhr;
+
         xhrType.prototype.send = function (this: DdRumXhr) {
             if (this._datadog_xhr) {
                 // keep track of start time
@@ -104,22 +110,24 @@ export class XHRProxy {
                 }
             }
 
-            XHRProxy.proxyOnReadyStateChange(this, xhrType);
+            proxyOnReadyStateChange(this, xhrType, reportXhr);
 
             // eslint-disable-next-line prefer-rest-params
             return originalXhrSend.apply(this, arguments as any);
         };
     }
 
-    private static proxyOnReadyStateChange(
+    private proxyOnReadyStateChange(
         xhrProxy: DdRumXhr,
-        xhrType: any
+        xhrType: any,
+        reportXhr: (xhrProxy: DdRumXhr) => unknown
     ): void {
         const originalOnreadystatechange = xhrProxy.onreadystatechange;
+
         xhrProxy.onreadystatechange = function () {
             if (xhrProxy.readyState === xhrType.DONE) {
                 if (!xhrProxy._datadog_xhr.reported) {
-                    XHRProxy.reportXhr(xhrProxy);
+                    reportXhr(xhrProxy);
                     xhrProxy._datadog_xhr.reported = true;
                 }
             } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
@@ -133,7 +141,7 @@ export class XHRProxy {
         };
     }
 
-    private static async reportXhr(xhrProxy: DdRumXhr): Promise<void> {
+    private async reportXhr(xhrProxy: DdRumXhr): Promise<void> {
         const responseSize = calculateResponseSize(xhrProxy);
 
         const context = xhrProxy._datadog_xhr;

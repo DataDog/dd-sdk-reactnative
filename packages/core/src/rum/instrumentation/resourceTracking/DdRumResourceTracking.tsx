@@ -59,7 +59,8 @@ export class DdRumResourceTracking {
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
 
-        XHRProxy.proxyXhr(xhrType, {
+        // eslint-disable-next-line no-new
+        new XHRProxy(xhrType, {
             originalXhrOpen: DdRumResourceTracking.originalXhrOpen,
             originalXhrSend: DdRumResourceTracking.originalXhrSend,
             tracingSamplingRate,
