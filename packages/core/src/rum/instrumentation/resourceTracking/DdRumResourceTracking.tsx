@@ -6,34 +6,15 @@
 
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
-import Timer from '../../../Timer';
-import { DdRum } from '../../../foundation';
-import type { DdRumXhr } from '../DdRumXhr';
 
-import { URLHostParser } from './implementation/URLHostParser';
-import { getTracingAttributes } from './implementation/distributedTracing';
-import {
-    firstPartyHostsRegexBuilder,
-    NO_MATCH_REGEX
-} from './implementation/firstPartyHostsRegex';
-import { createTimings } from './implementation/resourceTiming';
-import { calculateResponseSize } from './implementation/responseSize';
-
-export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
-export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
-export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
-export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
-export const ORIGIN_RUM = 'rum';
-
-const RESPONSE_START_LABEL = 'response_start';
+import { XHRProxy } from './implementation/XHRProxy';
+import { firstPartyHostsRegexBuilder } from './implementation/firstPartyHostsRegex';
 
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
-    private static tracingSamplingRate: number;
-    private static firstPartyHostsRegex: RegExp = NO_MATCH_REGEX; // matches nothing by default
 
     private static originalXhrOpen: any;
     private static originalXhrSend: any;
@@ -73,15 +54,15 @@ export class DdRumResourceTracking {
             return;
         }
 
-        DdRumResourceTracking.tracingSamplingRate = tracingSamplingRate;
-        DdRumResourceTracking.firstPartyHostsRegex = firstPartyHostsRegexBuilder(
-            firstPartyHosts
-        );
-
         DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
         DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
 
-        DdRumResourceTracking.proxyXhr(xhrType);
+        XHRProxy.proxyXhr(xhrType, {
+            originalXhrOpen: DdRumResourceTracking.originalXhrOpen,
+            originalXhrSend: DdRumResourceTracking.originalXhrSend,
+            tracingSamplingRate,
+            firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
+        });
         InternalLog.log(
             'Datadog SDK is tracking XHR resources',
             SdkVerbosity.INFO
@@ -96,135 +77,5 @@ export class DdRumResourceTracking {
             XMLHttpRequest.prototype.send =
                 DdRumResourceTracking.originalXhrSend;
         }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static proxyXhr(xhrType: any): void {
-        this.proxyOpen(xhrType);
-        this.proxySend(xhrType);
-    }
-
-    private static proxyOpen(xhrType: any): void {
-        const originalXhrOpen = this.originalXhrOpen;
-        xhrType.prototype.open = function (
-            this: DdRumXhr,
-            method: string,
-            url: string
-        ) {
-            const hostname = URLHostParser(url);
-            // Keep track of the method and url
-            // start time is tracked by the `send` method
-            this._datadog_xhr = {
-                method,
-                url,
-                reported: false,
-                timer: new Timer(),
-                tracingAttributes: getTracingAttributes({
-                    hostname,
-                    firstPartyHostsRegex:
-                        DdRumResourceTracking.firstPartyHostsRegex,
-                    tracingSamplingRate:
-                        DdRumResourceTracking.tracingSamplingRate
-                })
-            };
-            // eslint-disable-next-line prefer-rest-params
-            return originalXhrOpen.apply(this, arguments as any);
-        };
-    }
-
-    private static proxySend(xhrType: any): void {
-        const originalXhrSend = this.originalXhrSend;
-        xhrType.prototype.send = function (this: DdRumXhr) {
-            if (this._datadog_xhr) {
-                // keep track of start time
-                this._datadog_xhr.timer.start();
-                this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
-
-                const tracingAttributes = this._datadog_xhr.tracingAttributes;
-                this.setRequestHeader(
-                    SAMPLING_PRIORITY_HEADER_KEY,
-                    tracingAttributes.samplingPriorityHeader
-                );
-                if (tracingAttributes.tracingStrategy !== 'DISCARD') {
-                    this.setRequestHeader(
-                        TRACE_ID_HEADER_KEY,
-                        tracingAttributes.traceId
-                    );
-                    this.setRequestHeader(
-                        PARENT_ID_HEADER_KEY,
-                        tracingAttributes.spanId
-                    );
-                }
-            }
-
-            DdRumResourceTracking.proxyOnReadyStateChange(this, xhrType);
-
-            // eslint-disable-next-line prefer-rest-params
-            return originalXhrSend.apply(this, arguments as any);
-        };
-    }
-
-    private static proxyOnReadyStateChange(
-        xhrProxy: DdRumXhr,
-        xhrType: any
-    ): void {
-        const originalOnreadystatechange = xhrProxy.onreadystatechange;
-        xhrProxy.onreadystatechange = function () {
-            if (xhrProxy.readyState === xhrType.DONE) {
-                if (!xhrProxy._datadog_xhr.reported) {
-                    DdRumResourceTracking.reportXhr(xhrProxy);
-                    xhrProxy._datadog_xhr.reported = true;
-                }
-            } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
-                xhrProxy._datadog_xhr.timer.recordTick(RESPONSE_START_LABEL);
-            }
-
-            if (originalOnreadystatechange) {
-                // eslint-disable-next-line prefer-rest-params
-                originalOnreadystatechange.apply(xhrProxy, arguments as any);
-            }
-        };
-    }
-
-    private static reportXhr(xhrProxy: DdRumXhr): void {
-        const responseSize = calculateResponseSize(xhrProxy);
-
-        const context = xhrProxy._datadog_xhr;
-
-        const key = `${context.timer.startTime}/${context.method}`;
-
-        context.timer.stop();
-
-        DdRum.startResource(
-            key,
-            context.method,
-            context.url,
-            context.tracingAttributes.tracingStrategy === 'DISCARD'
-                ? undefined
-                : {
-                      '_dd.span_id': context.tracingAttributes.spanId,
-                      '_dd.trace_id': context.tracingAttributes.traceId
-                  },
-            context.timer.startTime
-        ).then(() => {
-            DdRum.stopResource(
-                key,
-                xhrProxy.status,
-                'xhr',
-                responseSize,
-                {
-                    '_dd.resource_timings': context.timer.hasTickFor(
-                        RESPONSE_START_LABEL
-                    )
-                        ? createTimings(
-                              context.timer.startTime,
-                              context.timer.timeAt(RESPONSE_START_LABEL),
-                              context.timer.stopTime
-                          )
-                        : null
-                },
-                context.timer.stopTime
-            );
-        });
     }
 }

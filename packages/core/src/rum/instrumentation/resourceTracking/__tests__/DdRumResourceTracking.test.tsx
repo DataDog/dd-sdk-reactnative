@@ -8,14 +8,14 @@ import { Platform, NativeModules } from 'react-native';
 
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
+import { DdRumResourceTracking } from '../DdRumResourceTracking';
 import {
-    DdRumResourceTracking,
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
     SAMPLING_PRIORITY_HEADER_KEY
-} from '../DdRumResourceTracking';
+} from '../implementation/XHRProxy';
 import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
