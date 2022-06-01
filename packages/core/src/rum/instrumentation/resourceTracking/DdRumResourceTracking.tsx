@@ -7,6 +7,7 @@
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 
+import type { RequestProxy } from './domain/interfaces/RequestProxy';
 import { XHRProxy } from './implementation/XHRProxy';
 import { firstPartyHostsRegexBuilder } from './implementation/firstPartyHostsRegex';
 
@@ -15,10 +16,7 @@ import { firstPartyHostsRegexBuilder } from './implementation/firstPartyHostsReg
  */
 export class DdRumResourceTracking {
     private static isTracking = false;
-    private static xhrType: typeof XMLHttpRequest;
-
-    private static originalXhrOpen: any;
-    private static originalXhrSend: any;
+    private static requestProxy: RequestProxy | null;
 
     /**
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
@@ -55,15 +53,12 @@ export class DdRumResourceTracking {
             return;
         }
 
-        DdRumResourceTracking.xhrType = xhrType;
-        DdRumResourceTracking.originalXhrOpen = xhrType.prototype.open;
-        DdRumResourceTracking.originalXhrSend = xhrType.prototype.send;
-
-        // eslint-disable-next-line no-new
-        new XHRProxy(xhrType, {
+        this.requestProxy = new XHRProxy(xhrType);
+        this.requestProxy.onTrackingStart({
             tracingSamplingRate,
             firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
         });
+
         InternalLog.log(
             'Datadog SDK is tracking XHR resources',
             SdkVerbosity.INFO
@@ -74,10 +69,10 @@ export class DdRumResourceTracking {
     static stopTracking(): void {
         if (DdRumResourceTracking.isTracking) {
             DdRumResourceTracking.isTracking = false;
-            DdRumResourceTracking.xhrType.prototype.open =
-                DdRumResourceTracking.originalXhrOpen;
-            DdRumResourceTracking.xhrType.prototype.send =
-                DdRumResourceTracking.originalXhrSend;
+            if (this.requestProxy) {
+                this.requestProxy.onTrackingStop();
+            }
+            this.requestProxy = null;
         }
     }
 }

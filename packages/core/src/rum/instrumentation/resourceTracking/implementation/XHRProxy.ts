@@ -7,6 +7,8 @@
 import Timer from '../../../../Timer';
 import { DdRum } from '../../../../foundation';
 import type { DdRumXhr } from '../../DdRumXhr';
+import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
+import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
 import { URLHostParser } from './URLHostParser';
 import { getTracingAttributes } from './distributedTracing';
@@ -24,158 +26,162 @@ const RESPONSE_START_LABEL = 'response_start';
 /**
  * Proxies XMLHTTPRequest to track resources.
  */
-export class XHRProxy {
-    private tracingSamplingRate: number;
-    private firstPartyHostsRegex: RegExp;
+export class XHRProxy extends RequestProxy {
+    private xhrProxy: typeof XMLHttpRequest;
+    private static originalXhrOpen: typeof XMLHttpRequest.prototype.open;
+    private static originalXhrSend: typeof XMLHttpRequest.prototype.send;
 
-    private originalXhrOpen: any;
-    private originalXhrSend: any;
-
-    constructor(
-        xhrType: typeof XMLHttpRequest,
-        {
-            tracingSamplingRate,
-            firstPartyHostsRegex
-        }: {
-            tracingSamplingRate: number;
-            firstPartyHostsRegex: RegExp;
-        }
-    ) {
-        this.originalXhrOpen = xhrType.prototype.open;
-        this.originalXhrSend = xhrType.prototype.send;
-        this.tracingSamplingRate = tracingSamplingRate;
-        this.firstPartyHostsRegex = firstPartyHostsRegex;
-        this.proxyOpen(xhrType);
-        this.proxySend(xhrType);
+    constructor(xhrProxy: typeof XMLHttpRequest) {
+        super();
+        this.xhrProxy = xhrProxy;
     }
 
-    private proxyOpen(xhrType: typeof XMLHttpRequest): void {
-        const originalXhrOpen = this.originalXhrOpen;
-        const firstPartyHostsRegex = this.firstPartyHostsRegex;
-        const tracingSamplingRate = this.tracingSamplingRate;
+    onTrackingStart = (context: RequestProxyOptions) => {
+        XHRProxy.originalXhrOpen = this.xhrProxy.prototype.open;
+        XHRProxy.originalXhrSend = this.xhrProxy.prototype.send;
+        proxyRequests(this.xhrProxy, context);
+    };
 
-        xhrType.prototype.open = function (
-            this: DdRumXhr,
-            method: string,
-            url: string
-        ) {
-            const hostname = URLHostParser(url);
-            // Keep track of the method and url
-            // start time is tracked by the `send` method
-            this._datadog_xhr = {
-                method,
-                url,
-                reported: false,
-                timer: new Timer(),
-                tracingAttributes: getTracingAttributes({
-                    hostname,
-                    firstPartyHostsRegex,
-                    tracingSamplingRate
-                })
-            };
-            // eslint-disable-next-line prefer-rest-params
-            return originalXhrOpen.apply(this, arguments as any);
-        };
-    }
-
-    private proxySend(xhrType: typeof XMLHttpRequest): void {
-        const originalXhrSend = this.originalXhrSend;
-        const proxyOnReadyStateChange = this.proxyOnReadyStateChange;
-        const reportXhr = this.reportXhr;
-
-        xhrType.prototype.send = function (this: DdRumXhr) {
-            if (this._datadog_xhr) {
-                // keep track of start time
-                this._datadog_xhr.timer.start();
-                this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
-
-                const tracingAttributes = this._datadog_xhr.tracingAttributes;
-                this.setRequestHeader(
-                    SAMPLING_PRIORITY_HEADER_KEY,
-                    tracingAttributes.samplingPriorityHeader
-                );
-                if (tracingAttributes.tracingStrategy !== 'DISCARD') {
-                    this.setRequestHeader(
-                        TRACE_ID_HEADER_KEY,
-                        tracingAttributes.traceId
-                    );
-                    this.setRequestHeader(
-                        PARENT_ID_HEADER_KEY,
-                        tracingAttributes.spanId
-                    );
-                }
-            }
-
-            proxyOnReadyStateChange(this, xhrType, reportXhr);
-
-            // eslint-disable-next-line prefer-rest-params
-            return originalXhrSend.apply(this, arguments as any);
-        };
-    }
-
-    private proxyOnReadyStateChange(
-        xhrProxy: DdRumXhr,
-        xhrType: typeof XMLHttpRequest,
-        reportXhr: (xhrProxy: DdRumXhr) => unknown
-    ): void {
-        const originalOnreadystatechange = xhrProxy.onreadystatechange;
-
-        xhrProxy.onreadystatechange = function () {
-            if (xhrProxy.readyState === xhrType.DONE) {
-                if (!xhrProxy._datadog_xhr.reported) {
-                    reportXhr(xhrProxy);
-                    xhrProxy._datadog_xhr.reported = true;
-                }
-            } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
-                xhrProxy._datadog_xhr.timer.recordTick(RESPONSE_START_LABEL);
-            }
-
-            if (originalOnreadystatechange) {
-                // eslint-disable-next-line prefer-rest-params
-                originalOnreadystatechange.apply(xhrProxy, arguments as any);
-            }
-        };
-    }
-
-    private async reportXhr(xhrProxy: DdRumXhr): Promise<void> {
-        const responseSize = calculateResponseSize(xhrProxy);
-
-        const context = xhrProxy._datadog_xhr;
-
-        const key = `${context.timer.startTime}/${context.method}`;
-
-        context.timer.stop();
-
-        await DdRum.startResource(
-            key,
-            context.method,
-            context.url,
-            context.tracingAttributes.tracingStrategy === 'DISCARD'
-                ? undefined
-                : {
-                      '_dd.span_id': context.tracingAttributes.spanId,
-                      '_dd.trace_id': context.tracingAttributes.traceId
-                  },
-            context.timer.startTime
-        );
-
-        DdRum.stopResource(
-            key,
-            xhrProxy.status,
-            'xhr',
-            responseSize,
-            {
-                '_dd.resource_timings': context.timer.hasTickFor(
-                    RESPONSE_START_LABEL
-                )
-                    ? createTimings(
-                          context.timer.startTime,
-                          context.timer.timeAt(RESPONSE_START_LABEL),
-                          context.timer.stopTime
-                      )
-                    : null
-            },
-            context.timer.stopTime
-        );
-    }
+    onTrackingStop = () => {
+        this.xhrProxy.prototype.open = XHRProxy.originalXhrOpen;
+        this.xhrProxy.prototype.send = XHRProxy.originalXhrSend;
+    };
 }
+
+const proxyRequests = (
+    xhrType: typeof XMLHttpRequest,
+    context: RequestProxyOptions
+): void => {
+    proxyOpen(xhrType, context);
+    proxySend(xhrType);
+};
+
+const proxyOpen = (
+    xhrType: typeof XMLHttpRequest,
+    context: RequestProxyOptions
+): void => {
+    const originalXhrOpen = xhrType.prototype.open;
+    const firstPartyHostsRegex = context.firstPartyHostsRegex;
+    const tracingSamplingRate = context.tracingSamplingRate;
+
+    xhrType.prototype.open = function (
+        this: DdRumXhr,
+        method: string,
+        url: string
+    ) {
+        const hostname = URLHostParser(url);
+        // Keep track of the method and url
+        // start time is tracked by the `send` method
+        this._datadog_xhr = {
+            method,
+            url,
+            reported: false,
+            timer: new Timer(),
+            tracingAttributes: getTracingAttributes({
+                hostname,
+                firstPartyHostsRegex,
+                tracingSamplingRate
+            })
+        };
+        // eslint-disable-next-line prefer-rest-params
+        return originalXhrOpen.apply(this, arguments as any);
+    };
+};
+
+const proxySend = (xhrType: typeof XMLHttpRequest): void => {
+    const originalXhrSend = xhrType.prototype.send;
+
+    xhrType.prototype.send = function (this: DdRumXhr) {
+        if (this._datadog_xhr) {
+            // keep track of start time
+            this._datadog_xhr.timer.start();
+            this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
+
+            const tracingAttributes = this._datadog_xhr.tracingAttributes;
+            this.setRequestHeader(
+                SAMPLING_PRIORITY_HEADER_KEY,
+                tracingAttributes.samplingPriorityHeader
+            );
+            if (tracingAttributes.tracingStrategy !== 'DISCARD') {
+                this.setRequestHeader(
+                    TRACE_ID_HEADER_KEY,
+                    tracingAttributes.traceId
+                );
+                this.setRequestHeader(
+                    PARENT_ID_HEADER_KEY,
+                    tracingAttributes.spanId
+                );
+            }
+        }
+
+        proxyOnReadyStateChange(this, xhrType);
+
+        // eslint-disable-next-line prefer-rest-params
+        return originalXhrSend.apply(this, arguments as any);
+    };
+};
+
+const proxyOnReadyStateChange = (
+    xhrProxy: DdRumXhr,
+    xhrType: typeof XMLHttpRequest
+): void => {
+    const originalOnreadystatechange = xhrProxy.onreadystatechange;
+
+    xhrProxy.onreadystatechange = function () {
+        if (xhrProxy.readyState === xhrType.DONE) {
+            if (!xhrProxy._datadog_xhr.reported) {
+                reportXhr(xhrProxy);
+                xhrProxy._datadog_xhr.reported = true;
+            }
+        } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
+            xhrProxy._datadog_xhr.timer.recordTick(RESPONSE_START_LABEL);
+        }
+
+        if (originalOnreadystatechange) {
+            // eslint-disable-next-line prefer-rest-params
+            originalOnreadystatechange.apply(xhrProxy, arguments as any);
+        }
+    };
+};
+
+const reportXhr = async (xhrProxy: DdRumXhr): Promise<void> => {
+    const responseSize = calculateResponseSize(xhrProxy);
+
+    const context = xhrProxy._datadog_xhr;
+
+    const key = `${context.timer.startTime}/${context.method}`;
+
+    context.timer.stop();
+
+    await DdRum.startResource(
+        key,
+        context.method,
+        context.url,
+        context.tracingAttributes.tracingStrategy === 'DISCARD'
+            ? undefined
+            : {
+                  '_dd.span_id': context.tracingAttributes.spanId,
+                  '_dd.trace_id': context.tracingAttributes.traceId
+              },
+        context.timer.startTime
+    );
+
+    DdRum.stopResource(
+        key,
+        xhrProxy.status,
+        'xhr',
+        responseSize,
+        {
+            '_dd.resource_timings': context.timer.hasTickFor(
+                RESPONSE_START_LABEL
+            )
+                ? createTimings(
+                      context.timer.startTime,
+                      context.timer.timeAt(RESPONSE_START_LABEL),
+                      context.timer.stopTime
+                  )
+                : null
+        },
+        context.timer.stopTime
+    );
+};
