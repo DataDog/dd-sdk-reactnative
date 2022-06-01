@@ -6,8 +6,8 @@
 
 import { Platform, NativeModules } from 'react-native';
 
-import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
+import { InternalLog } from '../../../../InternalLog';
+import { SdkVerbosity } from '../../../../SdkVerbosity';
 import {
     DdRumResourceTracking,
     PARENT_ID_HEADER_KEY,
@@ -17,12 +17,12 @@ import {
     SAMPLING_PRIORITY_HEADER_KEY,
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
-} from '../../../rum/instrumentation/DdRumResourceTracking';
+} from '../DdRumResourceTracking';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
 jest.useFakeTimers();
-jest.mock('../../../InternalLog');
+jest.mock('../../../../InternalLog');
 const mockedInternalLog = (InternalLog as unknown) as {
     log: jest.MockedFunction<typeof InternalLog.log>;
 };
