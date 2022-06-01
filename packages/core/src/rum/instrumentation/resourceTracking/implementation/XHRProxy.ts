@@ -133,7 +133,7 @@ export class XHRProxy {
         };
     }
 
-    private static reportXhr(xhrProxy: DdRumXhr): void {
+    private static async reportXhr(xhrProxy: DdRumXhr): Promise<void> {
         const responseSize = calculateResponseSize(xhrProxy);
 
         const context = xhrProxy._datadog_xhr;
@@ -142,7 +142,7 @@ export class XHRProxy {
 
         context.timer.stop();
 
-        DdRum.startResource(
+        await DdRum.startResource(
             key,
             context.method,
             context.url,
@@ -153,25 +153,25 @@ export class XHRProxy {
                       '_dd.trace_id': context.tracingAttributes.traceId
                   },
             context.timer.startTime
-        ).then(() => {
-            DdRum.stopResource(
-                key,
-                xhrProxy.status,
-                'xhr',
-                responseSize,
-                {
-                    '_dd.resource_timings': context.timer.hasTickFor(
-                        RESPONSE_START_LABEL
-                    )
-                        ? createTimings(
-                              context.timer.startTime,
-                              context.timer.timeAt(RESPONSE_START_LABEL),
-                              context.timer.stopTime
-                          )
-                        : null
-                },
-                context.timer.stopTime
-            );
-        });
+        );
+
+        DdRum.stopResource(
+            key,
+            xhrProxy.status,
+            'xhr',
+            responseSize,
+            {
+                '_dd.resource_timings': context.timer.hasTickFor(
+                    RESPONSE_START_LABEL
+                )
+                    ? createTimings(
+                          context.timer.startTime,
+                          context.timer.timeAt(RESPONSE_START_LABEL),
+                          context.timer.stopTime
+                      )
+                    : null
+            },
+            context.timer.stopTime
+        );
     }
 }
