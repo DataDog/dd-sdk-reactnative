@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { URLHostParser } from '../../../rum/instrumentation/URLHostParser';
+import { URLHostParser } from '../URLHostParser';
 
 describe('URLHostParser', () => {
     it('returns the host when a classic URL is provided', () => {
@@ -33,8 +33,8 @@ describe('URLHostParser', () => {
         const egyptianURL = 'https://api.example.مصر./api.json';
         expect(URLHostParser(egyptianURL)).toBe('api.example.مصر.');
     });
-    it('throws if not given an URL', () => {
+    it('returns null if not given an URL', () => {
         const url = 'crash';
-        expect(() => URLHostParser(url)).toThrow();
+        expect(URLHostParser(url)).toBeNull();
     });
 });
