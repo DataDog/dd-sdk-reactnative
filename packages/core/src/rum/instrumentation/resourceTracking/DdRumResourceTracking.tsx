@@ -8,10 +8,10 @@ import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import Timer from '../../../Timer';
 import { DdRum } from '../../../foundation';
-import type { DdRumResourceTracingAttributes, DdRumXhr } from '../DdRumXhr';
+import type { DdRumXhr } from '../DdRumXhr';
 
 import { URLHostParser } from './implementation/URLHostParser';
-import { generateTraceId } from './implementation/distributedTracing';
+import { getTracingAttributes } from './implementation/distributedTracing';
 import {
     firstPartyHostsRegexBuilder,
     NO_MATCH_REGEX
@@ -26,23 +26,6 @@ export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 export const ORIGIN_RUM = 'rum';
 
 const RESPONSE_START_LABEL = 'response_start';
-
-const generateTracingAttributesWithSampling = (
-    tracingSamplingRate: number
-): DdRumResourceTracingAttributes => {
-    if (Math.random() * 100 <= tracingSamplingRate) {
-        return {
-            traceId: generateTraceId(),
-            spanId: generateTraceId(),
-            samplingPriorityHeader: '1',
-            tracingStrategy: 'KEEP'
-        };
-    }
-    return {
-        samplingPriorityHeader: '0',
-        tracingStrategy: 'DISCARD'
-    };
-};
 
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
@@ -115,31 +98,6 @@ export class DdRumResourceTracking {
         }
     }
 
-    static getTracingAttributes(url: string): DdRumResourceTracingAttributes {
-        try {
-            const hostname = URLHostParser(url);
-
-            if (DdRumResourceTracking.firstPartyHostsRegex.test(hostname)) {
-                return generateTracingAttributesWithSampling(
-                    DdRumResourceTracking.tracingSamplingRate
-                );
-            }
-            return {
-                samplingPriorityHeader: '0',
-                tracingStrategy: 'DISCARD'
-            };
-        } catch (e) {
-            InternalLog.log(
-                `Impossible to cast ${url} as URL`,
-                SdkVerbosity.WARN
-            );
-            return {
-                samplingPriorityHeader: '0',
-                tracingStrategy: 'DISCARD'
-            };
-        }
-    }
-
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static proxyXhr(xhrType: any): void {
         this.proxyOpen(xhrType);
@@ -153,6 +111,7 @@ export class DdRumResourceTracking {
             method: string,
             url: string
         ) {
+            const hostname = URLHostParser(url);
             // Keep track of the method and url
             // start time is tracked by the `send` method
             this._datadog_xhr = {
@@ -160,9 +119,13 @@ export class DdRumResourceTracking {
                 url,
                 reported: false,
                 timer: new Timer(),
-                tracingAttributes: DdRumResourceTracking.getTracingAttributes(
-                    url
-                )
+                tracingAttributes: getTracingAttributes({
+                    hostname,
+                    firstPartyHostsRegex:
+                        DdRumResourceTracking.firstPartyHostsRegex,
+                    tracingSamplingRate:
+                        DdRumResourceTracking.tracingSamplingRate
+                })
             };
             // eslint-disable-next-line prefer-rest-params
             return originalXhrOpen.apply(this, arguments as any);

@@ -4,6 +4,59 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { Hostname } from './URLHostParser';
+
+export type DdRumResourceTracingAttributes =
+    | {
+          tracingStrategy: 'KEEP';
+          traceId: string;
+          spanId: string;
+          samplingPriorityHeader: '1';
+      }
+    | {
+          tracingStrategy: 'DISCARD';
+          traceId?: void;
+          spanId?: void;
+          samplingPriorityHeader: '0';
+      };
+
+const DISCARDED_TRACE_ATTRIBUTES: DdRumResourceTracingAttributes = {
+    samplingPriorityHeader: '0',
+    tracingStrategy: 'DISCARD'
+};
+
+export const getTracingAttributes = ({
+    hostname,
+    firstPartyHostsRegex,
+    tracingSamplingRate
+}: {
+    hostname: Hostname | null;
+    firstPartyHostsRegex: RegExp;
+    tracingSamplingRate: number;
+}): DdRumResourceTracingAttributes => {
+    if (hostname === null) {
+        return DISCARDED_TRACE_ATTRIBUTES;
+    }
+    if (firstPartyHostsRegex.test(hostname)) {
+        return generateTracingAttributesWithSampling(tracingSamplingRate);
+    }
+    return DISCARDED_TRACE_ATTRIBUTES;
+};
+
+const generateTracingAttributesWithSampling = (
+    tracingSamplingRate: number
+): DdRumResourceTracingAttributes => {
+    if (Math.random() * 100 <= tracingSamplingRate) {
+        return {
+            traceId: generateTraceId(),
+            spanId: generateTraceId(),
+            samplingPriorityHeader: '1',
+            tracingStrategy: 'KEEP'
+        };
+    }
+    return DISCARDED_TRACE_ATTRIBUTES;
+};
+
 /*
  * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/master/packages/rum-core/src/domain/tracing/tracer.ts#L107)
  */

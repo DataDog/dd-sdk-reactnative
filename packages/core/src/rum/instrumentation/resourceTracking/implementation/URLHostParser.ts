@@ -4,20 +4,28 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../../InternalLog';
+import { SdkVerbosity } from '../../../../SdkVerbosity';
+
 // matches what is between the first "://" and the next "/", ":" or whitespace
 const hostRegex = '^.+://([^:/\\s]+)';
 
+export type Hostname = { _type: 'Hostname' } & string;
+
 /**
  * Returns the host from an URL.
- * @returns the host (without the port)
- * @throws if URL is not well formatted
+ * @returns the host (without the port) or null if could not cast the URL as host
  */
-export const URLHostParser = (url: string): string => {
-    const matchedHost = url.match(hostRegex);
-    if (matchedHost === null) {
-        throw new Error(`${url} is not a correctly formatted URL`);
+export const URLHostParser = (url: string): Hostname | null => {
+    try {
+        const matchedHost = url.match(hostRegex);
+        if (matchedHost === null) {
+            return null;
+        }
+        // [0] is the input, [1] is the captured group
+        return matchedHost[1] as Hostname;
+    } catch (e) {
+        InternalLog.log(`Impossible to cast ${url} as URL`, SdkVerbosity.WARN);
+        return null;
     }
-
-    // [0] is the input, [1] is the captured group
-    return matchedHost[1];
 };
