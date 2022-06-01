@@ -14,10 +14,12 @@ import {
     TRACE_ID_HEADER_KEY,
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
-    SAMPLING_PRIORITY_HEADER_KEY,
+    SAMPLING_PRIORITY_HEADER_KEY
+} from '../DdRumResourceTracking';
+import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
-} from '../DdRumResourceTracking';
+} from '../implementation/responseSize';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 

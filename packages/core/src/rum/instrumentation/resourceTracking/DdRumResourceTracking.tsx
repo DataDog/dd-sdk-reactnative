@@ -17,88 +17,15 @@ import {
     NO_MATCH_REGEX
 } from './implementation/firstPartyHostsRegex';
 import { createTimings } from './implementation/resourceTiming';
+import { calculateResponseSize } from './implementation/responseSize';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 export const ORIGIN_RUM = 'rum';
-export const RESOURCE_SIZE_ERROR_MESSAGE =
-    "Couldn't get resource size, because an error occured: ";
 
 const RESPONSE_START_LABEL = 'response_start';
-const MISSING_RESOURCE_SIZE = -1;
-
-function byteLength(str: string): number {
-    // This is a weird trick, but it works.
-    // Output is the same as TextEncoder.encode(...).length
-    return unescape(encodeURI(str)).length;
-}
-
-function getResponseContentLengthFromHeader(
-    xhr: XMLHttpRequest
-): number | null {
-    const contentLengthHeader = parseInt(
-        xhr.getResponseHeader('Content-Length') ?? '',
-        10
-    );
-    if (!isNaN(contentLengthHeader)) {
-        return contentLengthHeader;
-    }
-    return null;
-}
-
-export function calculateResponseSize(xhr: XMLHttpRequest): number {
-    const contentLengthHeader = getResponseContentLengthFromHeader(xhr);
-    if (contentLengthHeader != null) {
-        return contentLengthHeader as number;
-    }
-
-    const response = xhr.response;
-    if (!response) {
-        return MISSING_RESOURCE_SIZE;
-    }
-
-    let size;
-    try {
-        switch (xhr.responseType) {
-            case '':
-            case 'text':
-                // String
-                size = byteLength(response);
-                break;
-            case 'blob':
-                size = response.size;
-                break;
-            case 'arraybuffer':
-                size = response.byteLength;
-                break;
-            case 'document':
-                // currently not supported by RN as of 0.66
-                // HTML Document or XML Document
-                break;
-            case 'json':
-                // plain JS object
-                // original size was lost, because this is the object which was parsed.
-                // We can only convert back to the string and calculate the size,
-                // which will roughly match original.
-                size = byteLength(JSON.stringify(response));
-                break;
-            default:
-                break;
-        }
-    } catch (e) {
-        InternalLog.log(
-            `${RESOURCE_SIZE_ERROR_MESSAGE}${e}`,
-            SdkVerbosity.ERROR
-        );
-    }
-
-    if (typeof size !== 'number') {
-        return MISSING_RESOURCE_SIZE;
-    }
-    return size;
-}
 
 const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number
