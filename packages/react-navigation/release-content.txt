@@ -47,7 +47,10 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/dist
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/resourceTiming.d.ts

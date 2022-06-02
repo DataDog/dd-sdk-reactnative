@@ -5,14 +5,13 @@
  */
 
 import Timer from '../../../../Timer';
-import { DdRum } from '../../../../foundation';
 import type { DdRumResourceTracingAttributes } from '../domain/distributedTracing';
 import { getTracingAttributes } from '../domain/distributedTracing';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
 import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
+import { reportResource } from './DatadogRumResource/reportResource';
 import { URLHostParser } from './URLHostParser';
-import { createTimings } from './resourceTiming';
 import { calculateResponseSize } from './responseSize';
 
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
@@ -165,35 +164,24 @@ const reportXhr = async (xhrProxy: DdRumXhr): Promise<void> => {
 
     context.timer.stop();
 
-    await DdRum.startResource(
+    reportResource({
         key,
-        context.method,
-        context.url,
-        context.tracingAttributes.tracingStrategy === 'DISCARD'
-            ? undefined
-            : {
-                  '_dd.span_id': context.tracingAttributes.spanId,
-                  '_dd.trace_id': context.tracingAttributes.traceId
-              },
-        context.timer.startTime
-    );
-
-    DdRum.stopResource(
-        key,
-        xhrProxy.status,
-        'xhr',
-        responseSize,
-        {
-            '_dd.resource_timings': context.timer.hasTickFor(
-                RESPONSE_START_LABEL
-            )
-                ? createTimings(
-                      context.timer.startTime,
-                      context.timer.timeAt(RESPONSE_START_LABEL),
-                      context.timer.stopTime
-                  )
-                : null
+        request: {
+            method: context.method,
+            url: context.url,
+            kind: 'xhr'
         },
-        context.timer.stopTime
-    );
+        tracingAttributes: context.tracingAttributes,
+        response: {
+            statusCode: xhrProxy.status,
+            size: responseSize
+        },
+        timings: {
+            startTime: context.timer.startTime,
+            stopTime: context.timer.stopTime,
+            responseStartTime: context.timer.hasTickFor(RESPONSE_START_LABEL)
+                ? context.timer.timeAt(RESPONSE_START_LABEL)
+                : undefined
+        }
+    });
 };

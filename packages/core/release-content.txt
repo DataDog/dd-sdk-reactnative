@@ -82,7 +82,12 @@ package/lib/commonjs/rum/instrumentation/resourceTracking/domain/firstPartyHosts
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.js.map
+package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation
+package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
+package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/URLHostParser.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/URLHostParser.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/XHRProxy.js
@@ -141,7 +146,12 @@ package/lib/module/rum/instrumentation/resourceTracking/domain/firstPartyHosts.j
 package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.js
 package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.js.map
+package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.js
+package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.js.map
 package/lib/module/rum/instrumentation/resourceTracking/implementation
+package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
+package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.js
+package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.js.map
 package/lib/module/rum/instrumentation/resourceTracking/implementation/URLHostParser.js
 package/lib/module/rum/instrumentation/resourceTracking/implementation/URLHostParser.js.map
 package/lib/module/rum/instrumentation/resourceTracking/implementation/XHRProxy.js
@@ -180,7 +190,10 @@ package/lib/typescript/rum/instrumentation/resourceTracking/domain/distributedTr
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/firstPartyHosts.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.d.ts
+package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation
+package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
+package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/URLHostParser.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/XHRProxy.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/resourceTiming.d.ts
@@ -234,7 +247,10 @@ package/src/rum/instrumentation/resourceTracking/domain/distributedTracing.tsx
 package/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.ts
 package/src/rum/instrumentation/resourceTracking/domain/interfaces
 package/src/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.ts
+package/src/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.ts
 package/src/rum/instrumentation/resourceTracking/implementation
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/reportResource.ts
 package/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.ts
 package/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.ts
 package/src/rum/instrumentation/resourceTracking/implementation/__tests__
