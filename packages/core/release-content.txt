@@ -224,6 +224,7 @@ package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
 package/src/rum/instrumentation/resourceTracking
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__
+package/src/rum/instrumentation/resourceTracking/__tests__/DdRumResourceTracking.test.ts
 package/src/rum/instrumentation/resourceTracking/__tests__/__utils__
 package/src/rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock.ts
 package/src/rum/instrumentation/resourceTracking/domain
