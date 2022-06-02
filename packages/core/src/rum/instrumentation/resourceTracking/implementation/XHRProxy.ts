@@ -34,41 +34,45 @@ interface DdRumXhrContext {
     tracingAttributes: DdRumResourceTracingAttributes;
 }
 
+interface XHRProxyProviders {
+    xhrType: typeof XMLHttpRequest;
+}
+
 /**
  * Proxies XMLHTTPRequest to track resources.
  */
 export class XHRProxy extends RequestProxy {
-    private xhrProxy: typeof XMLHttpRequest;
+    private providers: XHRProxyProviders;
     private static originalXhrOpen: typeof XMLHttpRequest.prototype.open;
     private static originalXhrSend: typeof XMLHttpRequest.prototype.send;
 
-    constructor(xhrProxy: typeof XMLHttpRequest) {
+    constructor(providers: XHRProxyProviders) {
         super();
-        this.xhrProxy = xhrProxy;
+        this.providers = providers;
     }
 
     onTrackingStart = (context: RequestProxyOptions) => {
-        XHRProxy.originalXhrOpen = this.xhrProxy.prototype.open;
-        XHRProxy.originalXhrSend = this.xhrProxy.prototype.send;
-        proxyRequests(this.xhrProxy, context);
+        XHRProxy.originalXhrOpen = this.providers.xhrType.prototype.open;
+        XHRProxy.originalXhrSend = this.providers.xhrType.prototype.send;
+        proxyRequests(this.providers, context);
     };
 
     onTrackingStop = () => {
-        this.xhrProxy.prototype.open = XHRProxy.originalXhrOpen;
-        this.xhrProxy.prototype.send = XHRProxy.originalXhrSend;
+        this.providers.xhrType.prototype.open = XHRProxy.originalXhrOpen;
+        this.providers.xhrType.prototype.send = XHRProxy.originalXhrSend;
     };
 }
 
 const proxyRequests = (
-    xhrType: typeof XMLHttpRequest,
+    providers: XHRProxyProviders,
     context: RequestProxyOptions
 ): void => {
-    proxyOpen(xhrType, context);
-    proxySend(xhrType);
+    proxyOpen(providers, context);
+    proxySend(providers);
 };
 
 const proxyOpen = (
-    xhrType: typeof XMLHttpRequest,
+    { xhrType }: XHRProxyProviders,
     context: RequestProxyOptions
 ): void => {
     const originalXhrOpen = xhrType.prototype.open;
@@ -99,7 +103,8 @@ const proxyOpen = (
     };
 };
 
-const proxySend = (xhrType: typeof XMLHttpRequest): void => {
+const proxySend = (providers: XHRProxyProviders): void => {
+    const xhrType = providers.xhrType;
     const originalXhrSend = xhrType.prototype.send;
 
     xhrType.prototype.send = function (this: DdRumXhr) {
@@ -125,7 +130,7 @@ const proxySend = (xhrType: typeof XMLHttpRequest): void => {
             }
         }
 
-        proxyOnReadyStateChange(this, xhrType);
+        proxyOnReadyStateChange(this, providers);
 
         // eslint-disable-next-line prefer-rest-params
         return originalXhrSend.apply(this, arguments as any);
@@ -134,8 +139,9 @@ const proxySend = (xhrType: typeof XMLHttpRequest): void => {
 
 const proxyOnReadyStateChange = (
     xhrProxy: DdRumXhr,
-    xhrType: typeof XMLHttpRequest
+    providers: XHRProxyProviders
 ): void => {
+    const xhrType = providers.xhrType;
     const originalOnreadystatechange = xhrProxy.onreadystatechange;
 
     xhrProxy.onreadystatechange = function () {

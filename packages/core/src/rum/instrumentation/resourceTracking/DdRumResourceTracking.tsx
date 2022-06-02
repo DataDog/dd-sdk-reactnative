@@ -37,7 +37,7 @@ export class DdRumResourceTracking {
             return;
         }
 
-        this.requestProxy = new XHRProxy(XMLHttpRequest);
+        this.requestProxy = new XHRProxy({ xhrType: XMLHttpRequest });
         this.requestProxy.onTrackingStart({
             tracingSamplingRate,
             firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
