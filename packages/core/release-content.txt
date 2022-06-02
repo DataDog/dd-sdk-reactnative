@@ -251,6 +251,10 @@ package/src/rum/instrumentation/resourceTracking/domain/interfaces/RumResource.t
 package/src/rum/instrumentation/resourceTracking/implementation
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.ts
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/ResourceReporter.test.ts
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/__utils__
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/__utils__/ResourceMockFactory.ts
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.ts
 package/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.ts
 package/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.ts

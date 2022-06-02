@@ -19,7 +19,16 @@ export class ResourceReporter {
     }
 
     reportResource = (resource: RUMResource) => {
-        reportResource(resource);
+        let modifiedResource: RUMResource | null = resource;
+
+        for (const mapper of this.mappers) {
+            modifiedResource = mapper(resource);
+            if (modifiedResource === null) {
+                return;
+            }
+        }
+
+        reportResource(modifiedResource);
     };
 }
 
