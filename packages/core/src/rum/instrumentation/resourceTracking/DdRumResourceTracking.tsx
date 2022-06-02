@@ -9,7 +9,7 @@ import { SdkVerbosity } from '../../../SdkVerbosity';
 
 import { firstPartyHostsRegexBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';
-import { ResourceReporter } from './implementation/DatadogRumResource/reportResource';
+import { ResourceReporter } from './implementation/DatadogRumResource/ResourceReporter';
 import { XHRProxy } from './implementation/XHRProxy';
 
 /**

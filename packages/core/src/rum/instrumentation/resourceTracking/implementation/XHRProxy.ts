@@ -10,7 +10,7 @@ import { getTracingAttributes } from '../domain/distributedTracing';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
 import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
-import type { ResourceReporter } from './DatadogRumResource/reportResource';
+import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';
 import { calculateResponseSize } from './responseSize';
 

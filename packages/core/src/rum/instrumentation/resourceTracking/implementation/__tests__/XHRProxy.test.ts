@@ -10,7 +10,7 @@ import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
-import { ResourceReporter } from '../DatadogRumResource/reportResource';
+import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
