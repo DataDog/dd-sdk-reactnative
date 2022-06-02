@@ -10,7 +10,7 @@ import { getTracingAttributes } from '../domain/distributedTracing';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
 import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
-import { reportResource } from './DatadogRumResource/reportResource';
+import type { ResourceReporter } from './DatadogRumResource/reportResource';
 import { URLHostParser } from './URLHostParser';
 import { calculateResponseSize } from './responseSize';
 
@@ -36,6 +36,7 @@ interface DdRumXhrContext {
 
 interface XHRProxyProviders {
     xhrType: typeof XMLHttpRequest;
+    resourceReporter: ResourceReporter;
 }
 
 /**
@@ -147,7 +148,7 @@ const proxyOnReadyStateChange = (
     xhrProxy.onreadystatechange = function () {
         if (xhrProxy.readyState === xhrType.DONE) {
             if (!xhrProxy._datadog_xhr.reported) {
-                reportXhr(xhrProxy);
+                reportXhr(xhrProxy, providers.resourceReporter);
                 xhrProxy._datadog_xhr.reported = true;
             }
         } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
@@ -161,7 +162,10 @@ const proxyOnReadyStateChange = (
     };
 };
 
-const reportXhr = async (xhrProxy: DdRumXhr): Promise<void> => {
+const reportXhr = async (
+    xhrProxy: DdRumXhr,
+    resourceReporter: ResourceReporter
+): Promise<void> => {
     const responseSize = calculateResponseSize(xhrProxy);
 
     const context = xhrProxy._datadog_xhr;
@@ -170,7 +174,7 @@ const reportXhr = async (xhrProxy: DdRumXhr): Promise<void> => {
 
     context.timer.stop();
 
-    reportResource({
+    resourceReporter.reportResource({
         key,
         request: {
             method: context.method,

@@ -1,6 +1,26 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 import { DdRum } from '../../../../../foundation';
 import type { RUMResource } from '../../domain/interfaces/RumResource';
 import { createTimings } from '../resourceTiming';
+
+type ResourceMapper = (resource: RUMResource) => RUMResource | null;
+
+export class ResourceReporter {
+    private mappers: ResourceMapper[];
+
+    constructor(resourceMappers: ResourceMapper[]) {
+        this.mappers = resourceMappers;
+    }
+
+    reportResource = (resource: RUMResource) => {
+        reportResource(resource);
+    };
+}
 
 const formatResourceStartContext = (
     tracingAttributes: RUMResource['tracingAttributes']
@@ -28,7 +48,7 @@ const formatResourceStopContext = (
     };
 };
 
-export const reportResource = async (resource: RUMResource) => {
+const reportResource = async (resource: RUMResource) => {
     await DdRum.startResource(
         resource.key,
         resource.request.method,
