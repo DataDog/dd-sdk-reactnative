@@ -6,12 +6,12 @@
 
 import Timer from '../../../../Timer';
 import { DdRum } from '../../../../foundation';
+import type { DdRumResourceTracingAttributes } from '../domain/distributedTracing';
+import { getTracingAttributes } from '../domain/distributedTracing';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
 import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
 import { URLHostParser } from './URLHostParser';
-import type { DdRumResourceTracingAttributes } from './distributedTracing';
-import { getTracingAttributes } from './distributedTracing';
 import { createTimings } from './resourceTiming';
 import { calculateResponseSize } from './responseSize';
 
