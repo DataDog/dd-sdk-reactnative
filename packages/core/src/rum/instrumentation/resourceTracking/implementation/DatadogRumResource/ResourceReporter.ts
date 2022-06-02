@@ -6,7 +6,8 @@
 
 import { DdRum } from '../../../../../foundation';
 import type { RUMResource } from '../../domain/interfaces/RumResource';
-import { createTimings } from '../resourceTiming';
+
+import { createTimings } from './resourceTiming';
 
 type ResourceMapper = (resource: RUMResource) => RUMResource | null;
 
