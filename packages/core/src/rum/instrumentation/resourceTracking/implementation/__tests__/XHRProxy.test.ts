@@ -9,6 +9,7 @@ import { Platform, NativeModules } from 'react-native';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
+import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
@@ -17,7 +18,6 @@ import {
     SAMPLING_PRIORITY_HEADER_KEY,
     XHRProxy
 } from '../XHRProxy';
-import { firstPartyHostsRegexBuilder } from '../firstPartyHostsRegex';
 import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE

@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { Hostname } from '../implementation/firstPartyHostsRegex';
-import { isHostFirstParty } from '../implementation/firstPartyHostsRegex';
+import type { Hostname } from './firstPartyHosts';
+import { isHostFirstParty } from './firstPartyHosts';
 
 export type DdRumResourceTracingAttributes =
     | {

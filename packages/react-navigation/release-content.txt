@@ -44,12 +44,12 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/distributedTracing.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.d.ts
-package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/firstPartyHostsRegex.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/resourceTiming.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/implementation/responseSize.d.ts
 package/lib/typescript/core/src/types.d.ts

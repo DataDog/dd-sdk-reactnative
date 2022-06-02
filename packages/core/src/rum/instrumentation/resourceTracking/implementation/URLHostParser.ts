@@ -6,8 +6,7 @@
 
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
-
-import type { Hostname } from './firstPartyHostsRegex';
+import type { Hostname } from '../domain/firstPartyHosts';
 
 // matches what is between the first "://" and the next "/", ":" or whitespace
 const hostRegex = '^.+://([^:/\\s]+)';

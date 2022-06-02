@@ -7,9 +7,9 @@
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 
+import { firstPartyHostsRegexBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';
 import { XHRProxy } from './implementation/XHRProxy';
-import { firstPartyHostsRegexBuilder } from './implementation/firstPartyHostsRegex';
 
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
