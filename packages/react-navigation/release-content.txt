@@ -37,7 +37,6 @@ package/lib/typescript/core/src/rum/instrumentation
 package/lib/typescript/core/src/rum/instrumentation/DdEventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/DdRumErrorTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/DdRumUserInteractionTracking.d.ts
-package/lib/typescript/core/src/rum/instrumentation/DdRumXhr.d.ts
 package/lib/typescript/core/src/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/ShallowObjectEqualityChecker.d.ts

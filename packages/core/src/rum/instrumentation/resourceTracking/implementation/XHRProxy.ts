@@ -6,11 +6,11 @@
 
 import Timer from '../../../../Timer';
 import { DdRum } from '../../../../foundation';
-import type { DdRumXhr } from '../../DdRumXhr';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
 import { RequestProxy } from '../domain/interfaces/RequestProxy';
 
 import { URLHostParser } from './URLHostParser';
+import type { DdRumResourceTracingAttributes } from './distributedTracing';
 import { getTracingAttributes } from './distributedTracing';
 import { createTimings } from './resourceTiming';
 import { calculateResponseSize } from './responseSize';
@@ -22,6 +22,18 @@ export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 export const ORIGIN_RUM = 'rum';
 
 const RESPONSE_START_LABEL = 'response_start';
+
+interface DdRumXhr extends XMLHttpRequest {
+    _datadog_xhr: DdRumXhrContext;
+}
+
+interface DdRumXhrContext {
+    method: string;
+    url: string;
+    reported: boolean;
+    timer: Timer;
+    tracingAttributes: DdRumResourceTracingAttributes;
+}
 
 /**
  * Proxies XMLHTTPRequest to track resources.

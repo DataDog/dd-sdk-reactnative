@@ -65,8 +65,6 @@ package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js
 package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js.map
 package/lib/commonjs/rum/instrumentation/DdRumUserInteractionTracking.js
 package/lib/commonjs/rum/instrumentation/DdRumUserInteractionTracking.js.map
-package/lib/commonjs/rum/instrumentation/DdRumXhr.js
-package/lib/commonjs/rum/instrumentation/DdRumXhr.js.map
 package/lib/commonjs/rum/instrumentation/EventsInterceptor.js
 package/lib/commonjs/rum/instrumentation/EventsInterceptor.js.map
 package/lib/commonjs/rum/instrumentation/NoOpEventsInterceptor.js
@@ -126,8 +124,6 @@ package/lib/module/rum/instrumentation/DdRumErrorTracking.js
 package/lib/module/rum/instrumentation/DdRumErrorTracking.js.map
 package/lib/module/rum/instrumentation/DdRumUserInteractionTracking.js
 package/lib/module/rum/instrumentation/DdRumUserInteractionTracking.js.map
-package/lib/module/rum/instrumentation/DdRumXhr.js
-package/lib/module/rum/instrumentation/DdRumXhr.js.map
 package/lib/module/rum/instrumentation/EventsInterceptor.js
 package/lib/module/rum/instrumentation/EventsInterceptor.js.map
 package/lib/module/rum/instrumentation/NoOpEventsInterceptor.js
@@ -174,7 +170,6 @@ package/lib/typescript/rum/instrumentation
 package/lib/typescript/rum/instrumentation/DdEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/DdRumErrorTracking.d.ts
 package/lib/typescript/rum/instrumentation/DdRumUserInteractionTracking.d.ts
-package/lib/typescript/rum/instrumentation/DdRumXhr.d.ts
 package/lib/typescript/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/ShallowObjectEqualityChecker.d.ts
@@ -223,7 +218,6 @@ package/src/rum/instrumentation
 package/src/rum/instrumentation/DdEventsInterceptor.tsx
 package/src/rum/instrumentation/DdRumErrorTracking.tsx
 package/src/rum/instrumentation/DdRumUserInteractionTracking.tsx
-package/src/rum/instrumentation/DdRumXhr.tsx
 package/src/rum/instrumentation/EventsInterceptor.tsx
 package/src/rum/instrumentation/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
