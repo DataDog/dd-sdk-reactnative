@@ -28,22 +28,6 @@ export class DdRumResourceTracking {
         tracingSamplingRate: number;
         firstPartyHosts: string[];
     }): void {
-        DdRumResourceTracking.startTrackingInternal(XMLHttpRequest, {
-            tracingSamplingRate,
-            firstPartyHosts
-        });
-    }
-
-    /**
-     * Starts tracking resources and sends a RUM Resource event every time a fetch or XHR call is detected.
-     */
-    static startTrackingInternal(
-        xhrType: typeof XMLHttpRequest,
-        {
-            tracingSamplingRate,
-            firstPartyHosts
-        }: { tracingSamplingRate: number; firstPartyHosts: string[] }
-    ): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
             InternalLog.log(
@@ -53,7 +37,7 @@ export class DdRumResourceTracking {
             return;
         }
 
-        this.requestProxy = new XHRProxy(xhrType);
+        this.requestProxy = new XHRProxy(XMLHttpRequest);
         this.requestProxy.onTrackingStart({
             tracingSamplingRate,
             firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
