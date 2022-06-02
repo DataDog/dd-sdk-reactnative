@@ -224,7 +224,6 @@ package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
 package/src/rum/instrumentation/resourceTracking
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__
-package/src/rum/instrumentation/resourceTracking/__tests__/DdRumResourceTracking.test.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__/__utils__
 package/src/rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock.ts
 package/src/rum/instrumentation/resourceTracking/domain
@@ -235,6 +234,7 @@ package/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.ts
 package/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.ts
 package/src/rum/instrumentation/resourceTracking/implementation/__tests__
 package/src/rum/instrumentation/resourceTracking/implementation/__tests__/URLHostParser.test.ts
+package/src/rum/instrumentation/resourceTracking/implementation/__tests__/XHRProxy.test.ts
 package/src/rum/instrumentation/resourceTracking/implementation/__tests__/distributedTracing.test.tsx
 package/src/rum/instrumentation/resourceTracking/implementation/distributedTracing.tsx
 package/src/rum/instrumentation/resourceTracking/implementation/firstPartyHostsRegex.ts
