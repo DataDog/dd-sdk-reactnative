@@ -7,6 +7,8 @@
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
 
+export type Hostname = { _type: 'Hostname' } & string;
+
 // This regex does not match anything
 export const NO_MATCH_REGEX = new RegExp('a^');
 
@@ -33,4 +35,11 @@ export const firstPartyHostsRegexBuilder = (
         );
         return NO_MATCH_REGEX;
     }
+};
+
+export const isHostFirstParty = (
+    hostname: Hostname,
+    firstPartyHostsRegex: RegExp
+): boolean => {
+    return firstPartyHostsRegex.test(hostname);
 };

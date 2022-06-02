@@ -4,7 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { Hostname } from './URLHostParser';
+import type { Hostname } from './firstPartyHostsRegex';
+import { isHostFirstParty } from './firstPartyHostsRegex';
 
 export type DdRumResourceTracingAttributes =
     | {
@@ -37,7 +38,7 @@ export const getTracingAttributes = ({
     if (hostname === null) {
         return DISCARDED_TRACE_ATTRIBUTES;
     }
-    if (firstPartyHostsRegex.test(hostname)) {
+    if (isHostFirstParty(hostname, firstPartyHostsRegex)) {
         return generateTracingAttributesWithSampling(tracingSamplingRate);
     }
     return DISCARDED_TRACE_ATTRIBUTES;

@@ -7,10 +7,10 @@
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
 
+import type { Hostname } from './firstPartyHostsRegex';
+
 // matches what is between the first "://" and the next "/", ":" or whitespace
 const hostRegex = '^.+://([^:/\\s]+)';
-
-export type Hostname = { _type: 'Hostname' } & string;
 
 /**
  * Returns the host from an URL.
