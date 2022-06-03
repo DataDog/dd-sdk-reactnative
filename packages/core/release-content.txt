@@ -88,6 +88,8 @@ package/lib/commonjs/rum/instrumentation/resourceTracking/implementation
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.js.map
+package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/implementation/URLHostParser.js
@@ -152,6 +154,8 @@ package/lib/module/rum/instrumentation/resourceTracking/implementation
 package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
 package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.js
 package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.js.map
+package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.js
+package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.js.map
 package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.js
 package/lib/module/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.js.map
 package/lib/module/rum/instrumentation/resourceTracking/implementation/URLHostParser.js
@@ -194,6 +198,7 @@ package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces/Ru
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/ResourceReporter.d.ts
+package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/URLHostParser.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/implementation/XHRProxy.d.ts
@@ -255,6 +260,8 @@ package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResour
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/ResourceReporter.test.ts
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/__utils__
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/__utils__/ResourceMockFactory.ts
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/__tests__/internalDevResourceBlocklist.test.ts
+package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/internalDevResourceBlocklist.ts
 package/src/rum/instrumentation/resourceTracking/implementation/DatadogRumResource/resourceTiming.ts
 package/src/rum/instrumentation/resourceTracking/implementation/URLHostParser.ts
 package/src/rum/instrumentation/resourceTracking/implementation/XHRProxy.ts
