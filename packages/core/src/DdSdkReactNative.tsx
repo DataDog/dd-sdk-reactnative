@@ -11,8 +11,8 @@ import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
-import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
 

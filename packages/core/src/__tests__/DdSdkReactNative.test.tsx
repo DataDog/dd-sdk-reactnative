@@ -13,8 +13,8 @@ import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 import { DdSdk } from '../foundation';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
-import { DdRumResourceTracking } from '../rum/instrumentation/DdRumResourceTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
@@ -28,13 +28,16 @@ jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
     };
 });
 
-jest.mock('../rum/instrumentation/DdRumResourceTracking', () => {
-    return {
-        DdRumResourceTracking: {
-            startTracking: jest.fn().mockImplementation(() => {})
-        }
-    };
-});
+jest.mock(
+    '../rum/instrumentation/resourceTracking/DdRumResourceTracking',
+    () => {
+        return {
+            DdRumResourceTracking: {
+                startTracking: jest.fn().mockImplementation(() => {})
+            }
+        };
+    }
+);
 
 jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
     return {

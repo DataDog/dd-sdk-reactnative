@@ -1,4 +1,4 @@
-import { generateTraceId } from '../../../rum/instrumentation/TraceIdentifier';
+import { generateTraceId } from '../distributedTracing';
 
 it('M return an unique identifier W toString', async () => {
     // GIVEN
