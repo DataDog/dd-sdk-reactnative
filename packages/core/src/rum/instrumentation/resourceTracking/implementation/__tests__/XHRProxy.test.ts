@@ -10,6 +10,7 @@ import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
+import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
@@ -42,7 +43,10 @@ let xhrProxy;
 beforeEach(() => {
     DdRum.startResource.mockClear();
     DdRum.stopResource.mockClear();
-    xhrProxy = new XHRProxy(XMLHttpRequestMock);
+    xhrProxy = new XHRProxy({
+        xhrType: XMLHttpRequestMock,
+        resourceReporter: new ResourceReporter([])
+    });
 
     // we need this because with ms precision between Date.now() calls we can get 0, so we advance
     // it manually with each call

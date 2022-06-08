@@ -9,6 +9,7 @@ import { SdkVerbosity } from '../../../SdkVerbosity';
 
 import { firstPartyHostsRegexBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';
+import { ResourceReporter } from './implementation/DatadogRumResource/ResourceReporter';
 import { XHRProxy } from './implementation/XHRProxy';
 
 /**
@@ -37,7 +38,10 @@ export class DdRumResourceTracking {
             return;
         }
 
-        this.requestProxy = new XHRProxy(XMLHttpRequest);
+        this.requestProxy = new XHRProxy({
+            xhrType: XMLHttpRequest,
+            resourceReporter: new ResourceReporter([])
+        });
         this.requestProxy.onTrackingStart({
             tracingSamplingRate,
             firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
