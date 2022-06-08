@@ -24,9 +24,9 @@ afterEach(() => {
     global.XMLHttpRequest = undefined;
 });
 
-const executeRequest = () => {
+const executeRequest = (url: string = 'https://api.example.com/v2/user') => {
     const xhr = new XMLHttpRequestMock();
-    xhr.open('GET', 'https://api.example.com/v2/user');
+    xhr.open('GET', url);
     xhr.send();
     xhr.notifyResponseArrived();
     xhr.complete(200, 'ok');
@@ -58,5 +58,22 @@ describe('DdRumResourceTracking', () => {
         // THEN
         expect(DdRum.startResource).toHaveBeenCalledTimes(0);
         expect(DdRum.stopResource).toHaveBeenCalledTimes(0);
+    });
+
+    it('does not report the resource when it is an internal resource', async () => {
+        // GIVEN
+        global.XMLHttpRequest = XMLHttpRequestMock;
+        DdRumResourceTracking.startTracking({
+            tracingSamplingRate: 100,
+            firstPartyHosts: ['example.com']
+        });
+
+        // WHEN
+        executeRequest('http://192.168.1.20:8081/logs');
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).not.toHaveBeenCalled();
+        expect(DdRum.stopResource).not.toHaveBeenCalled();
     });
 });
