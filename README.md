@@ -6,6 +6,9 @@ Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real
 
 The minimum supported version for the Datadog React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
 
+If you are using Expo, you can use Datadog too!
+Please make sure to check out the [Expo guide](./docs/expo_guide.md).
+
 ## Setup
 
 To install with NPM, run:
