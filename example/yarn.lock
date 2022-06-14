@@ -1192,13 +1192,13 @@
     to-fast-properties "^2.0.0"
 
 "@datadog/mobile-react-native-navigation@file:../packages/react-native-navigation":
-  version "1.0.0-rc8"
+  version "1.0.0-rc9"
 
 "@datadog/mobile-react-native@file:../packages/core":
-  version "1.0.0-rc8"
+  version "1.0.0-rc9"
 
 "@datadog/mobile-react-navigation@file:../packages/react-navigation":
-  version "1.0.0-rc8"
+  version "1.0.0-rc9"
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"

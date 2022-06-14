@@ -7,7 +7,7 @@ PODS:
   - DatadogSDKCrashReporting (1.11.0-rc1):
     - DatadogSDK (= 1.11.0-rc1)
     - PLCrashReporter (~> 1.10.1)
-  - DatadogSDKReactNative (1.0.0-rc8):
+  - DatadogSDKReactNative (1.0.0-rc9):
     - DatadogSDKBridge (= 0.5.5)
     - React-Core
   - DoubleConversion (1.1.6)
@@ -457,7 +457,7 @@ SPEC CHECKSUMS:
   DatadogSDK: b24d474c6ba5cd460721f83fa8bb592e0c13465d
   DatadogSDKBridge: 61586d96e6bc465f33c74a483e002def65b9f572
   DatadogSDKCrashReporting: 2df15e7d24045c6e877c062f1f982e3359f0791d
-  DatadogSDKReactNative: a76c551f1e4fd03ed9388196c80ef8d1b1ab7c47
+  DatadogSDKReactNative: c5dd86b69c3e260ebabee23081500036fd042467
   DoubleConversion: 831926d9b8bf8166fd87886c4abab286c2422662
   FBLazyVector: a7a655862f6b09625d11c772296b01cd5164b648
   FBReactNativeSpec: 81ce99032d5b586fddd6a38d450f8595f7e04be4
@@ -499,6 +499,6 @@ SPEC CHECKSUMS:
   RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   Yoga: 99652481fcd320aefa4a7ef90095b95acd181952
 
-PODFILE CHECKSUM: d815a7a8689699761b3aa5c8ff3df3767cc39d40
+PODFILE CHECKSUM: 4952949b503b9b396c8583d9f86f3c70c821e1fe
 
 COCOAPODS: 1.11.3
