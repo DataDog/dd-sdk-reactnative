@@ -17,7 +17,7 @@ If you are using Expo Go, switch to development builds (recommended), or keep us
 Your application's [development builds][3] are debug builds that contain the `expo-dev-client` package.
 
 1. Enable the [custom native code to run][4] with `expo run:android` and `expo run:ios`.
-2. To start using your development application, run `expo install expo-dev-client` and `expo start --dev-client`. This will install and start the [`expo-dev-client` package][5] to execute the added native code in dev mode.
+2. To start using your development application, run `expo install expo-dev-client` and `expo start --dev-client`. This installs and starts the [`expo-dev-client` package][5] to execute the added native code in dev mode.
 
 ### Develop with Expo Go
 
