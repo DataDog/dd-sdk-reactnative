@@ -8,7 +8,7 @@ Datadog recommends using **Expo SDK 45** as a minimum version; previous versions
 
 No configuration plugins are needed. To get started, see [React Native Monitoring][2].
 
-## Export Go
+## Expo Go
 
 If you are using Expo Go, switch to development builds (recommended), or keep using Expo Go without Datadog while having it run on your standalone application (not recommended).
 

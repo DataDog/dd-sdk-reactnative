@@ -6,7 +6,7 @@ Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real
 
 The minimum supported version for the RUM React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
 
-The RUM React Native SDK supports [Expo and Export Go][12]. For more information, see the [Expo documentation][13].
+The RUM React Native SDK supports [Expo][12]. For more information, see the [Expo documentation][13].
 
 ## Setup
 
