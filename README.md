@@ -4,7 +4,9 @@
 
 Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
-The minimum supported version for the Datadog React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
+The minimum supported version for the RUM React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
+
+The RUM React Native SDK supports [Expo][12]. For more information, see the [Expo documentation][13].
 
 ## Setup
 
@@ -344,28 +346,24 @@ DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 
 Resource tracking is able to provide the following timings:
 
--   `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
--   `Download`: The time it took to receive a response.
+- `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
+- `Download`: The time it took to receive a response.
 
 ## Data Storage
 
 ### Android
 
-Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory.
-This cache folder is protected by [Android's Application Sandbox][10], meaning that on most devices
-this data can't be read by other applications. However, if the mobile device is rooted, or someone
-tempers with the linux kernel, the stored data might become readable.
+Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory. This cache folder is protected by [Android's Application Sandbox][10], meaning that on most devices this data can't be read by other applications. However, if the mobile device is rooted, or someone tempers with the Linux kernel, the stored data might become readable.
 
 ### iOS
 
-Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
-of your [application sandbox](11), which can't be read by any other app installed on the device.
+Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`) of your [application sandbox](11), which can't be read by any other app installed on the device.
 
 ## Development mode
 
-While in development mode, your application can submit extra events related to the React Native tooling, like code transformation errors, requests to a local development server, etc.
+While in development mode, your application can submit extra events related to the React Native tooling, such as code transformation errors and requests to a local development server.
 
-To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode, using the `__DEV__` flag:
+To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode using the `__DEV__` flag:
 
 ```
 const config = new DdSdkReactNativeConfiguration(
@@ -398,3 +396,5 @@ For more information, see [Apache License, v2.0][9]
 [9]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
 [10]: https://source.android.com/security/app-sandbox
 [11]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+[12]: https://docs.expo.dev/
+[13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo_go/
