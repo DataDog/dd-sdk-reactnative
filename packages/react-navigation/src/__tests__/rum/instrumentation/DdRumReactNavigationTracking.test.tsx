@@ -15,6 +15,7 @@ import React, { createRef } from 'react';
 import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 
+import { AppStateMockLegacy } from './__utils__/AppStateMockLegacy';
 import { AppStateMock } from './__utils__/AppStateMock';
 import {
     FakeNavigator1 as FakeNavigator1v5,
@@ -56,16 +57,8 @@ jest.mock('@datadog/mobile-react-native', () => {
     };
 });
 
-const appStateMock = new AppStateMock();
-mocked(AppState.addEventListener).mockImplementation(
-    appStateMock.addEventListener
-);
-mocked(AppState.removeEventListener).mockImplementation(
-    appStateMock.removeEventListener
-);
-
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
-jest.mock('react-native/Libraries/Animated/src/NativeAnimatedHelper');
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 jest.useFakeTimers();
 
 beforeEach(() => {
@@ -74,8 +67,6 @@ beforeEach(() => {
     mocked(DdRum.startView).mockClear();
     mocked(DdRum.stopView).mockClear();
     mocked(AppState.addEventListener).mockClear();
-    mocked(AppState.removeEventListener).mockClear();
-    appStateMock.removeAllListeners();
     mocked(BackHandler.exitApp).mockClear();
 
     // @ts-ignore
@@ -339,117 +330,139 @@ describe.each([
             });
         });
 
-        describe('AppState listener', () => {
-            it('registers and unregisters AppState', async () => {
-                // GIVEN
-                const navigationRef1 = createRef<any>();
-                render(<FakeNavigator1 navigationRef={navigationRef1} />);
-                const navigationRef2 = createRef<any>();
-                render(<FakeNavigator2 navigationRef={navigationRef2} />);
+        describe.each([
+            ['react-native 0.63-0.64', AppStateMockLegacy],
+            ['react-native 0.65+', AppStateMock]
+        ])(
+            'AppState listener on %s',
+            (reactNativeVersion, AppStateMockVersion) => {
+                let appStateMock;
+                beforeEach(() => {
+                    appStateMock = new AppStateMockVersion();
+                    mocked(AppState.addEventListener).mockImplementation(
+                        // @ts-ignore
+                        appStateMock.addEventListener
+                    );
+                    // @ts-ignore
+                    if (appStateMock.removeEventListener) {
+                        AppState.removeEventListener = jest.fn(
+                            appStateMock.removeEventListener
+                        );
+                    }
+                });
+                it('registers and unregisters AppState', async () => {
+                    // GIVEN
+                    const navigationRef1 = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef1} />);
+                    const navigationRef2 = createRef<any>();
+                    render(<FakeNavigator2 navigationRef={navigationRef2} />);
 
-                // WHEN
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef1.current
-                );
-                DdRumReactNavigationTracking.stopTrackingViews(
-                    navigationRef1.current
-                );
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef2.current
-                );
+                    // WHEN
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef1.current
+                    );
+                    DdRumReactNavigationTracking.stopTrackingViews(
+                        navigationRef1.current
+                    );
+                    expect(appStateMock.listeners.change).toHaveLength(0);
 
-                // THEN
-                expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
-                expect(AppState.removeEventListener).toHaveBeenCalledTimes(1);
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef2.current
+                    );
 
-                // WHEN we go in background mode
-                appStateMock.changeValue('background');
+                    // THEN
+                    expect(AppState.addEventListener).toHaveBeenCalledTimes(2);
+                    expect(appStateMock.listeners.change).toHaveLength(1);
 
-                // THEN the listener is only called once
-                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-            });
+                    // WHEN we go in background mode
+                    appStateMock.changeValue('background');
 
-            it('does not log AppState changes when tracking is stopped', async () => {
-                // GIVEN
-                const navigationRef = createRef<any>();
-                render(<FakeNavigator1 navigationRef={navigationRef} />);
+                    // THEN the listener is only called once
+                    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                });
 
-                // WHEN
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef.current
-                );
-                DdRumReactNavigationTracking.stopTrackingViews(
-                    navigationRef.current
-                );
-                appStateMock.changeValue('background');
+                it('does not log AppState changes when tracking is stopped', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
 
-                // THEN
-                expect(DdRum.stopView).not.toHaveBeenCalled();
-                expect(InternalLog.log).not.toHaveBeenCalledWith(
-                    'We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.',
-                    'error'
-                );
-            });
+                    // WHEN
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+                    DdRumReactNavigationTracking.stopTrackingViews(
+                        navigationRef.current
+                    );
+                    appStateMock.changeValue('background');
 
-            it('stops active view when app goes into background', async () => {
-                // GIVEN
-                const navigationRef = createRef<any>();
-                render(<FakeNavigator1 navigationRef={navigationRef} />);
+                    // THEN
+                    expect(DdRum.stopView).not.toHaveBeenCalled();
+                    expect(InternalLog.log).not.toHaveBeenCalledWith(
+                        'We could not determine the route when changing the application state to: background. No RUM View event will be sent in this case.',
+                        'error'
+                    );
+                });
 
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef.current
-                );
+                it('stops active view when app goes into background', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
 
-                // WHEN
-                appStateMock.changeValue('background');
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
 
-                // THEN
-                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-                expect(DdRum.stopView).toHaveBeenCalledWith(
-                    navigationRef.current?.getCurrentRoute()?.key
-                );
-                expect(
-                    typeof navigationRef.current?.getCurrentRoute()?.key
-                ).toBe('string');
-            });
+                    // WHEN
+                    appStateMock.changeValue('background');
 
-            it('starts last view when app goes into foreground', async () => {
-                // GIVEN
-                const navigationRef = createRef<any>();
-                render(<FakeNavigator1 navigationRef={navigationRef} />);
+                    // THEN
+                    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                    expect(DdRum.stopView).toHaveBeenCalledWith(
+                        navigationRef.current?.getCurrentRoute()?.key
+                    );
+                    expect(
+                        typeof navigationRef.current?.getCurrentRoute()?.key
+                    ).toBe('string');
+                });
 
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef.current
-                );
+                it('starts last view when app goes into foreground', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
 
-                // WHEN
-                appStateMock.changeValue('background');
-                appStateMock.changeValue('active');
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
 
-                // THEN
-                expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-                expect(DdRum.startView).toHaveBeenCalledTimes(2);
-            });
+                    // WHEN
+                    appStateMock.changeValue('background');
+                    appStateMock.changeValue('active');
 
-            it('does not stop view when no navigator attached', async () => {
-                // GIVEN
-                const navigationRef = createRef<any>();
-                render(<FakeNavigator1 navigationRef={navigationRef} />);
+                    // THEN
+                    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                    expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                });
 
-                DdRumReactNavigationTracking.startTrackingViews(
-                    navigationRef.current
-                );
-                DdRumReactNavigationTracking.stopTrackingViews(
-                    navigationRef.current
-                );
+                it('does not stop view when no navigator attached', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
 
-                // WHEN
-                appStateMock.changeValue('background');
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+                    DdRumReactNavigationTracking.stopTrackingViews(
+                        navigationRef.current
+                    );
 
-                // THEN
-                expect(DdRum.stopView).not.toHaveBeenCalled();
-            });
-        });
+                    // WHEN
+                    appStateMock.changeValue('background');
+
+                    // THEN
+                    expect(DdRum.stopView).not.toHaveBeenCalled();
+                });
+            }
+        );
 
         describe('Android back handler', () => {
             it('does not send an error when the app closes with Android back button', async () => {

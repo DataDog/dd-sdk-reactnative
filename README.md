@@ -4,7 +4,9 @@
 
 Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
-The minimum supported version for the Datadog React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
+The minimum supported version for the RUM React Native SDK is React Native v0.63.4+. Compatibility with older versions is not guaranteed out-of-the-box.
+
+The RUM React Native SDK supports [Expo][12]. For more information, see the [Expo documentation][13].
 
 ## Setup
 
@@ -58,7 +60,9 @@ config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
 config.serviceName = 'com.example.reactnative';
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
@@ -93,7 +97,9 @@ config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 
 await DdSdkReactNative.initialize(config);
 
@@ -124,7 +130,9 @@ config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 
 await DdSdkReactNative.initialize(config);
 
@@ -155,7 +163,9 @@ config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 
 await DdSdkReactNative.initialize(config);
 
@@ -186,7 +196,9 @@ config.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
 config.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 
 await DdSdkReactNative.initialize(config);
 
@@ -341,21 +353,17 @@ Resource tracking is able to provide the following timings:
 
 ### Android
 
-Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory.
-This cache folder is protected by [Android's Application Sandbox][10], meaning that on most devices
-this data can't be read by other applications. However, if the mobile device is rooted, or someone
-tempers with the linux kernel, the stored data might become readable.
+Before data is uploaded to Datadog, it is stored in cleartext in your application's cache directory. This cache folder is protected by [Android's Application Sandbox][10], meaning that on most devices this data can't be read by other applications. However, if the mobile device is rooted, or someone tempers with the Linux kernel, the stored data might become readable.
 
 ### iOS
 
-Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
-of your [application sandbox][11], which can't be read by any other app installed on the device.
+Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`) of your [application sandbox][11], which can't be read by any other app installed on the device.
 
 ## Development mode
 
-While in development mode, your application can submit extra events related to the React Native tooling, like code transformation errors, requests to a local development server, etc.
+While in development mode, your application can submit extra events related to the React Native tooling, such as code transformation errors and requests to a local development server.
 
-To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode, using the `__DEV__` flag:
+To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode using the `__DEV__` flag:
 
 ```
 const config = new DdSdkReactNativeConfiguration(
@@ -388,3 +396,5 @@ For more information, see [Apache License, v2.0][9]
 [9]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
 [10]: https://source.android.com/security/app-sandbox
 [11]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+[12]: https://docs.expo.dev/
+[13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo_go/

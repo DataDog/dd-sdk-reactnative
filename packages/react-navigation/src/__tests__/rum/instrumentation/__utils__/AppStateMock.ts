@@ -4,44 +4,63 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { AppStateEvent, AppStateStatus } from 'react-native';
+import type {
+    AppStateEvent,
+    AppStateStatus,
+    NativeEventSubscription
+} from 'react-native';
 
 type handler = (type: AppStateStatus) => void;
 
 export class AppStateMock {
-    private handlers: { [eventType: string]: handler[] } = {};
+    private listeners: {
+        [eventType: string]: {
+            callback: handler;
+            subscription: NativeEventSubscription;
+        }[];
+    } = {};
 
     addEventListener = (type: AppStateEvent, callback: handler) => {
-        if (!this.handlers[type]) {
-            this.handlers[type] = [];
+        if (!this.listeners[type]) {
+            this.listeners[type] = [];
         }
-        this.handlers[type].push(callback);
+        const subscription = {
+            remove: () => this.removeListeners(type, callback)
+        };
+        this.listeners[type].push({
+            callback,
+            subscription
+        });
+
+        return subscription;
     };
 
-    removeEventListener = (type: string, callback: handler) => {
-        if (!this.handlers[type]) {
+    private removeListeners = (type: string, callback: handler) => {
+        if (!this.listeners[type]) {
             return;
         }
-        const callbackIndex = this.handlers[type].indexOf(callback);
+        const callbackIndex = this.listeners[type].findIndex(
+            handler => handler.callback === callback
+        );
         if (callbackIndex === -1) {
             return;
         }
-        this.handlers[type] = [
-            ...this.handlers[type].slice(0, callbackIndex),
-            ...this.handlers[type].slice(
+        this.listeners[type] = [
+            ...this.listeners[type].slice(0, callbackIndex),
+            ...this.listeners[type].slice(
                 callbackIndex + 1,
-                this.handlers[type].length
+                this.listeners[type].length
             )
         ];
     };
 
     changeValue = (value: AppStateStatus) => {
-        if (!this.handlers.change) {
+        if (!this.listeners.change) {
             return;
         }
-        this.handlers.change.forEach(callback => {
+        this.listeners.change.forEach(handler => {
             try {
-                callback(value);
+                handler.callback(value);
             } catch (e) {
                 console.warn(
                     `Failure while executing callback for value ${value}`
@@ -51,6 +70,6 @@ export class AppStateMock {
     };
 
     removeAllListeners = () => {
-        this.handlers = {};
+        this.listeners = {};
     };
 }

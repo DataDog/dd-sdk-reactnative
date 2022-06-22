@@ -11,8 +11,8 @@ import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
-import { DdRumResourceTracking } from './rum/instrumentation/DdRumResourceTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
 
@@ -110,6 +110,9 @@ export class DdSdkReactNative {
                 DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
             ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
 
+            configuration.additionalConfig['_dd.first_party_hosts'] =
+                configuration.firstPartyHosts;
+
             DdSdk.initialize(
                 new DdSdkConfiguration(
                     configuration.clientToken,
@@ -186,9 +189,10 @@ export class DdSdkReactNative {
         }
 
         if (configuration.trackResources) {
-            DdRumResourceTracking.startTracking(
-                configuration.resourceTracingSamplingRate
-            );
+            DdRumResourceTracking.startTracking({
+                tracingSamplingRate: configuration.resourceTracingSamplingRate,
+                firstPartyHosts: configuration.firstPartyHosts
+            });
         }
 
         if (configuration.trackErrors) {

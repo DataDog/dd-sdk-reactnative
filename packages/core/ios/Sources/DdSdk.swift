@@ -21,9 +21,12 @@ class RNDdSdk: NSObject {
     let methodQueue: DispatchQueue = sharedQueue
 
     @objc(initialize:withResolver:withRejecter:)
-    func initialize(configuration: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
-        resolve(nil)
+    func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
+        DispatchQueue.main.async {
+            self.nativeInstance.initialize(configuration: configuration.asDdSdkConfiguration())
+            resolve(nil)
+        }
     }
 
     @objc(setAttributes:withResolver:withRejecter:)
