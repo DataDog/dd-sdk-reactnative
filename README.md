@@ -397,4 +397,4 @@ For more information, see [Apache License, v2.0][9]
 [10]: https://source.android.com/security/app-sandbox
 [11]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
 [12]: https://docs.expo.dev/
-[13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo_go/
+[13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
