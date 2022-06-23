@@ -1,0 +1,139 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+def reactConfig = project.hasProperty("react") ? project.react : [:]
+def reactRoot = file(reactConfig.root ?: "../../")
+
+def datadogConfig = new Properties()
+def datadogConfigFile = new File(reactRoot, "datadog-sourcemaps.properties")
+
+if (datadogConfigFile.exists()) {
+    datadogConfigFile.withInputStream {
+        datadogConfig.load(it)
+    }
+}
+
+afterEvaluate {
+
+    def androidExtension = extensions.findByName("android")
+
+    if (androidExtension == null) {
+        throw new GradleException("Android extension is missing.")
+    }
+
+    // TODO service name per variant?
+    def serviceName = datadogConfig.SERVICE_NAME ?: androidExtension.defaultConfig.applicationId
+
+    if (serviceName == null) {
+        throw new GradleException("Cannot determine service name.")
+    }
+
+    def releaseVersion = androidExtension.defaultConfig.versionName
+    def buildVersion = androidExtension.defaultConfig.versionCode
+
+    if (releaseVersion == null) {
+        throw new GradleException("Cannot determine application version," +
+                " probably not running in the app module.")
+    }
+
+    androidExtension.applicationVariants.all { variant ->
+        // locations and names are defined in "../../node_modules/react-native/react.gradle"
+        def targetName = variant.name.capitalize()
+        def targetPath = variant.dirName
+
+        def bundleTask = tasks.findByName("bundle${targetName}JsAndAssets")
+
+        if (bundleTask == null) {
+            logger.info("Cannot find JS bundle task for target=${targetName}.")
+            return
+        }
+        if (!bundleTask.enabled) {
+            logger.info("JS bundle task for target=${targetName} is not enabled.")
+            return
+        }
+
+        def bundleAssetName = reactConfig.bundleAssetName ?: "index.android.bundle"
+
+        def jsBundleDir = file("$buildDir/generated/assets/react/${targetPath}")
+        def jsBundleFile = file("$jsBundleDir/$bundleAssetName")
+
+        def jsSourceMapsDir = file("$buildDir/generated/sourcemaps/react/${targetPath}")
+        def jsOutputSourceMapFile = file("$jsSourceMapsDir/${bundleAssetName}.map")
+
+        def uploadTask = tasks.create("upload${targetName}Sourcemaps") {
+            group = "datadog"
+            description = "Uploads sourcemaps to Datadog."
+
+            def execCommand = [
+                    "yarn",
+                    "datadog-ci",
+                    "react-native",
+                    "upload",
+                    "--platform",
+                    "android",
+                    "--service",
+                    serviceName,
+                    "--bundle",
+                    jsBundleFile.absolutePath,
+                    "--sourcemap",
+                    jsOutputSourceMapFile.absolutePath,
+                    "--release-version",
+                    releaseVersion,
+                    "--build-version",
+                    buildVersion
+            ]
+
+            doFirst {
+                if (!jsBundleFile.exists()) {
+                    throw new GradleException("JS bundle file doesn't exist, aborting upload.")
+                }
+
+                if (!jsOutputSourceMapFile.exists()) {
+                    throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
+                }
+
+                def env = [:]
+                if (System.getenv("DATADOG_API_KEY") == null) {
+                    def keyFile = new File(reactRoot, "datadog.credentials")
+                    if (!keyFile.exists() || keyFile.text.isEmpty()) {
+                        throw new GradleException("Cannot find Datadog API key, it is neither" +
+                                " in env, nor in datadog.credentials file.")
+                    }
+                    env["DATADOG_API_KEY"] = keyFile.text
+                }
+
+                logger.info("Going to run sourcemaps upload using the following command:" +
+                        " ${execCommand.join(" ")} and env=${env}")
+                runShellCommand(execCommand, env)
+
+            }
+        }
+
+        uploadTask.dependsOn bundleTask
+        bundleTask.finalizedBy uploadTask
+
+    }
+}
+
+def runShellCommand(List<String> command, Map<String, String> env = [:]) {
+    def outputStream = new ByteArrayOutputStream()
+    def errorStream = new ByteArrayOutputStream()
+
+    def result = exec {
+        standardOutput = outputStream
+        errorOutput = errorStream
+        env.forEach { key, value ->
+            environment key, value
+        }
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine("cmd", "/c", *command)
+        } else {
+            commandLine(*command)
+        }
+    }
+
+    if (result.exitValue != 0) {
+        logger.error(errorStream.toString("UTF-8"))
+    } else {
+        logger.info(outputStream.toString("UTF-8"))
+    }
+}
