@@ -4,7 +4,7 @@ def reactConfig = project.hasProperty("react") ? project.react : [:]
 def reactRoot = file(reactConfig.root ?: "../../")
 
 def datadogConfig = new Properties()
-def datadogConfigFile = new File(reactRoot, ".datadog.sourcemaps.env")
+def datadogConfigFile = new File(reactRoot, "datadog-sourcemaps.properties")
 
 if (datadogConfigFile.exists()) {
     datadogConfigFile.withInputStream {
@@ -90,18 +90,14 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                def env = [:]
-                if (System.getenv("DATADOG_API_KEY") == null) {
-                    if (datadogConfig.DATADOG_API_KEY == null) {
+                if (datadogConfig["DATADOG_API_KEY"] == null) {
+                    if (System.getenv("DATADOG_API_KEY") == null) {
                         throw new GradleException("Cannot find Datadog API key, it is neither" +
-                                " in env, nor in .datadog.sourcemaps.env file.")
+                                " in env, nor in datadog-sourcemaps.properties file.")
                     }
-                    env["DATADOG_API_KEY"] = datadogConfig.DATADOG_API_KEY
                 }
 
-                logger.info("Going to run sourcemaps upload using the following command:" +
-                        " ${execCommand.join(" ")} and env=${env}")
-                runShellCommand(execCommand, reactRoot, env)
+                runShellCommand(execCommand, reactRoot, datadogConfig)
 
             }
         }
@@ -115,7 +111,7 @@ afterEvaluate {
 private def runShellCommand(
         List<String> command,
         File workingDirectory,
-        Map<String, String> env = [:]
+        Map<String, String> env
 ) {
     def outputStream = new ByteArrayOutputStream()
     def errorStream = new ByteArrayOutputStream()
