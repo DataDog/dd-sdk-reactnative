@@ -24,11 +24,6 @@ afterEvaluate {
 
     androidExtension.applicationVariants.all { variant ->
 
-        // TODO service name per variant?
-        def serviceName = datadogConfig.SERVICE_NAME_ANDROID ?: variant.applicationId
-
-        logger.info("Service name used for the upload is ${serviceName}.")
-
         def releaseVersion = variant.versionName
         def buildVersion = variant.versionCode
 
@@ -44,13 +39,16 @@ afterEvaluate {
         def bundleTask = tasks.findByName("bundle${targetName}JsAndAssets")
 
         if (bundleTask == null) {
-            logger.info("Cannot find JS bundle task for target=${targetName}.")
+            logger.info("Cannot find JS bundle task for variant=${targetName}.")
             return
         }
         if (!bundleTask.enabled) {
-            logger.info("JS bundle task for target=${targetName} is not enabled.")
+            logger.info("JS bundle task for variant=${targetName} is not enabled.")
             return
         }
+
+        def serviceName = getServiceName(variant, datadogConfig)
+        logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
 
         def bundleAssetName = reactConfig.bundleAssetName ?: "index.android.bundle"
 
@@ -114,7 +112,11 @@ afterEvaluate {
     }
 }
 
-def runShellCommand(List<String> command, File workingDirectory, Map<String, String> env = [:]) {
+private def runShellCommand(
+        List<String> command,
+        File workingDirectory,
+        Map<String, String> env = [:]
+) {
     def outputStream = new ByteArrayOutputStream()
     def errorStream = new ByteArrayOutputStream()
 
@@ -133,7 +135,6 @@ def runShellCommand(List<String> command, File workingDirectory, Map<String, Str
             }
         }
 
-
         if (result.exitValue != 0) {
             logger.error(errorStream.toString("UTF-8"))
             result.rethrowFailure()
@@ -147,4 +148,16 @@ def runShellCommand(List<String> command, File workingDirectory, Map<String, Str
                 " stderr=${errorStreamContent}, stdout=${standardStreamContent}")
         throw e
     }
+}
+
+private static def getServiceName(variant, Properties datadogConfig) {
+    String flavorName = variant.flavorName.toUpperCase(Locale.US)
+    if (!flavorName.isEmpty()) {
+        def flavorServiceProperty = datadogConfig
+                .getProperty("SERVICE_NAME_ANDROID_${flavorName}", "")
+        if (!flavorServiceProperty.isEmpty()) {
+            return flavorServiceProperty
+        }
+    }
+    return datadogConfig.SERVICE_NAME_ANDROID ?: variant.applicationId
 }
