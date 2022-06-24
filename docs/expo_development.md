@@ -27,6 +27,9 @@ Your application crashes in Expo Go when some native code (that is not included)
 
 ```typescript
 // mockDatadog.ts
+// We do not recommend this approach, consider moving to Expo development builds instead.
+// This file is not officially maintained and might not be up-to-date with new releases.
+
 import {
     DdLogs,
     DdTrace,
