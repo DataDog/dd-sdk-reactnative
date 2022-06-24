@@ -1,6 +1,6 @@
 ## Overview
 
-The RUM React Native SDK supports Expo and Expo Go. The minimum supported version is [**@datadog/dd-sdk-reactnative:1.0.0-rc9**][1]. 
+The RUM React Native SDK supports Expo and Expo Go. The minimum supported version is [**@datadog/dd-sdk-reactnative:1.0.0-rc9**][1].
 
 Datadog recommends using **Expo SDK 45** as a minimum version; previous versions may require manual steps.
 
@@ -27,41 +27,38 @@ Your application crashes in Expo Go when some native code (that is not included)
 
 ```typescript
 // mockDatadog.ts
-import { NativeModules } from 'react-native';
+import {
+    DdLogs,
+    DdTrace,
+    DdRum,
+    DdSdkReactNative
+} from '@datadog/mobile-react-native';
 
 if (__DEV__) {
     const emptyAsyncFunction = () => new Promise<void>(resolve => resolve());
 
-    NativeModules.DdSdk = {
-        initialize: emptyAsyncFunction,
-        setUser: emptyAsyncFunction,
-        setAttributes: emptyAsyncFunction,
-        setTrackingConsent: emptyAsyncFunction
-    };
+    DdLogs.debug = emptyAsyncFunction;
+    DdLogs.info = emptyAsyncFunction;
+    DdLogs.warn = emptyAsyncFunction;
+    DdLogs.error = emptyAsyncFunction;
 
-    NativeModules.DdLogs = {
-        debug: emptyAsyncFunction,
-        info: emptyAsyncFunction,
-        warn: emptyAsyncFunction,
-        error: emptyAsyncFunction
-    };
+    DdTrace.startSpan = () =>
+        new Promise<string>(resolve => resolve('fakeSpanId'));
+    DdTrace.finishSpan = emptyAsyncFunction;
+    DdRum.startView = emptyAsyncFunction;
+    DdRum.stopView = emptyAsyncFunction;
+    DdRum.startAction = emptyAsyncFunction;
+    DdRum.stopAction = emptyAsyncFunction;
+    DdRum.addAction = emptyAsyncFunction;
+    DdRum.startResource = emptyAsyncFunction;
+    DdRum.stopResource = emptyAsyncFunction;
+    DdRum.addError = emptyAsyncFunction;
+    DdRum.addTiming = emptyAsyncFunction;
 
-    NativeModules.DdTrace = {
-        startSpan: emptyAsyncFunction,
-        finishSpan: emptyAsyncFunction
-    };
-
-    NativeModules.DdRum = {
-        startView: emptyAsyncFunction,
-        stopView: emptyAsyncFunction,
-        startAction: emptyAsyncFunction,
-        stopAction: emptyAsyncFunction,
-        addAction: emptyAsyncFunction,
-        startResource: emptyAsyncFunction,
-        stopResource: emptyAsyncFunction,
-        addError: emptyAsyncFunction,
-        addTiming: emptyAsyncFunction
-    };
+    DdSdkReactNative.initialize = emptyAsyncFunction;
+    DdSdkReactNative.setUser = emptyAsyncFunction;
+    DdSdkReactNative.setAttributes = emptyAsyncFunction;
+    DdSdkReactNative.setTrackingConsent = emptyAsyncFunction;
 }
 ```
 
