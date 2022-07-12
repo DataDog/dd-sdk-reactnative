@@ -1,0 +1,16 @@
+{
+  "name": "@datadog/mobile-expo",
+  "version": "1.0.0-rc9",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "expo-module build",
+    "clean": "expo-module clean",
+    "test": "expo-module test",
+    "prepare": "expo-module prepare",
+    "prepublishOnly": "expo-module prepublishOnly",
+    "expo-module": "expo-module"
+  },
+  "author": "",
+  "license": "ISC"
+}
