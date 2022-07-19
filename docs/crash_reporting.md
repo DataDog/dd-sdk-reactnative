@@ -50,7 +50,7 @@ yarn add -D @datadog/datadog-ci
 npm install --save-dev @datadog/datadog-ci
 ```
 
-#### Manually on each build
+#### Manually on each build (without Hermes)
 
 First you need to edit the XCode build phase "Bundle React Native Code and Images" to output sourcemap.
 To edit build phases in XCode:
@@ -84,15 +84,24 @@ export BUNDLE_PATH= # fill with your bundle path
 yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $BUNDLE_PATH --sourcemap ./build/main.jsbundle.map --release-version $VERSION --build-version $BUILD
 ```
 
-##### If you are using Hermes
+#### Manually on each build (with Hermes)
 
-When using Hermes, sourcemaps will be generated in the same directory as your bundle.
-You can only specify the name of the file, so you can edit the build phase like so:
+There is currently a bug in React Native that generates an incorrect sourcemap when using Hermes.
+To solve it, you need to add a few more lines **at the very end** of the build phase to generate a correct sourcemap file.
+
+Edit your build phase like so:
 
 ```bash
 set -e
-export SOURCEMAP_FILE=main.jsbundle.map # <- add this line to output sourcemaps
-# leave the rest of the script unchanged
+export SOURCEMAP_FILE=./build/main.jsbundle.map # <- add this line to output sourcemaps
+
+# keep the rest of the script unchanged
+
+# add these lines to compose the packager and compiler sourcemaps into one file
+REACT_NATIVE_DIR=../node_modules/react-native
+source "$REACT_NATIVE_DIR/scripts/find-node.sh"
+source "$REACT_NATIVE_DIR/scripts/node-binary.sh"
+"$NODE_BINARY" "$REACT_NATIVE_DIR/scripts/compose-source-maps.js" "$CONFIGURATION_BUILD_DIR/main.jsbundle.map" "$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/main.jsbundle.map" -o "../$SOURCEMAP_FILE"
 ```
 
 To upload the sourcemap, run from your React Native project root:
@@ -103,9 +112,8 @@ export SERVICE=com.myapp # replace by your service name
 export VERSION=1.0.0 # replace by the Version of your app in XCode
 export BUILD=100 # replace by the Build of your app in XCode
 export BUNDLE_PATH= # fill with your bundle path
-export SOURCEMAP_PATH= # fill with your sourcemap path
 
-yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $BUNDLE_PATH --sourcemap $SOURCEMAP_PATH --release-version $VERSION --build-version $BUILD
+yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $BUNDLE_PATH --sourcemap ./build/main.jsbundle.map --release-version $VERSION --build-version $BUILD
 ```
 
 #### Automate the upload on each build
