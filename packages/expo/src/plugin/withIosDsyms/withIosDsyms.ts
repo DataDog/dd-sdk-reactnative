@@ -20,7 +20,8 @@ const withIosDsyms: ConfigPlugin<void> = config => {
             BUILD_PHASE_NAME,
             null /* target */,
             {
-                shellScript: `set -e\\n yarn datadog-ci dsyms upload $DWARF_DSYM_FOLDER_PATH`
+                shellScript: `set -e\\n yarn datadog-ci dsyms upload $DWARF_DSYM_FOLDER_PATH`,
+                shellPath: '/bin/sh'
             }
         );
 
