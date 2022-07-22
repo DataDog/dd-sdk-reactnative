@@ -1,29 +1,52 @@
-# @datadog/mobile-expo
+# expo-datadog
 
-Put a description of your Unimodule here
+Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
 
-# API documentation
+This package contains the Datadog Expo config plugin and exports the Datadog React Native SDK.
 
-- [Documentation for the master branch](https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/sdk/@datadog/mobile-expo.md)
-- [Documentation for the latest stable release](https://docs.expo.io/versions/latest/sdk/@datadog/mobile-expo/)
+## Setup
 
-# Installation in managed Expo projects
+To install with NPM, run:
 
-For managed [managed](https://docs.expo.io/versions/latest/introduction/managed-vs-bare/) Expo projects, please follow the installation instructions in the [API documentation for the latest stable release](#api-documentation). If you follow the link and there is no documentation available then this library is not yet usable within managed projects &mdash; it is likely to be included in an upcoming Expo SDK release.
-
-# Installation in bare React Native projects
-
-For bare React Native projects, you must ensure that you have [installed and configured the `react-native-unimodules` package](https://github.com/expo/expo/tree/master/packages/react-native-unimodules) before continuing.
-
-### Add the package to your npm dependencies
-
-```
-npm install @datadog/mobile-expo
+```sh
+npm install expo-datadog
 ```
 
+To install with Yarn, run:
 
+```sh
+yarn add expo-datadog
+```
 
+### Usage
 
-# Contributing
+Please refer to the [Expo documentation][1] for usage.
 
-Contributions are very welcome! Please refer to guidelines described in the [contributing guide]( https://github.com/expo/expo#contributing).
+### Expo SDK versions support
+
+`expo-datadog` supports Expo starting from SDK 45.
+
+`expo-datadog` versions follows Expo versions - if you use Expo SDK 45, use `expo-datadog` version `45.x.x`.
+
+## Contributing
+
+Please refer to the [Contributing Guidelines][2].
+
+To try a development build plugin on an app, run from the root of `dd-sdk-react-native`:
+
+-   `(cd packages/expo && yarn clean && yarn build)`
+-   `yarn workspace expo-datadog pack`
+
+Copy the generated archive to the root of your app, and change your `package.json` to install the package from the archive (change the version number accordingly):
+
+```json
+"expo-datadog": "./expo-datadog-v45.0.0.tgz",
+```
+
+Run `yarn install` from your app, then run `expo prebuild` to see the changes in the native files. If it looks good to you, [start an EAS build][3] to test your changes.
+
+**N.B.**: To avoid issues with the npm cache, change the name of the archive every time you test a new version (e.g. expo-datadog-v45.0.1-test-1.tgz).
+
+[1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
+[2]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/CONTRIBUTING.md
+[3]: https://docs.expo.dev/build/setup/

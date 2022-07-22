@@ -1,12 +1,100 @@
 ## Overview
 
-The RUM React Native SDK supports Expo and Expo Go. The minimum supported version is [**@datadog/dd-sdk-reactnative:1.0.0-rc9**][1].
+The RUM React Native SDK supports Expo and Expo Go. To use it, install and import from `expo-datadog` instead of `@datadog/mobile-react-native`.
 
 Datadog recommends using **Expo SDK 45** as a minimum version; previous versions may require manual steps.
 
 ## Setup
 
-No configuration plugins are needed. To get started, see [React Native Monitoring][2].
+To install with NPM, run:
+
+```sh
+npm install expo-datadog
+```
+
+To install with Yarn, run:
+
+```sh
+yarn add expo-datadog
+```
+
+### Initialize the library with application context
+
+```js
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from 'expo-datadog';
+
+const config = new DdSdkReactNativeConfiguration(
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
+    true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
+    true, // track XHR Resources
+    true // track Errors
+);
+// Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", or "US1_FED"). Default is "US1".
+config.site = 'US1';
+// Optional: enable or disable native crash reports
+config.nativeCrashReportEnabled = true;
+// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+config.sessionSamplingRate = 80;
+// Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// You need to specify the hosts of your backends to enable tracing with these backends
+config.resourceTracingSamplingRate = 80;
+config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
+// Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
+config.verbosity = SdkVerbosity.WARN;
+
+await DdSdkReactNative.initialize(config);
+
+// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+```
+
+### Error Tracking
+
+If you enable error tracking, you will have to upload sourcemaps and other mapping files in order to see meaningful errors.
+
+This can be done automatically thanks to our config plugin.
+To add it, add `expo-datadog` to your plugins in your `app.json`:
+
+```json
+{
+    "expo": {
+        "plugins": ["expo-datadog"]
+    }
+}
+```
+
+Run `eas secret:create` to set `DATADOG_API_KEY` and `DD_API_KEY` to your datadog API key, and `DATADOG_SITE` to the host of your Datadog site (e.g. `datadoghq.com`).
+
+#### Config plugin setup (optional)
+
+You can disable the upload of some files by setting the `iosDsyms`, `iosSourcemaps`, `androidProguardMappingFiles` or `androidSourcemaps` parameters to `false`. You can also specify your Datadog site.
+
+```json
+{
+    "expo": {
+        "plugins": [
+            [
+                "expo-datadog",
+                {
+                    "iosDsyms": false,
+                    "site": "EU1"
+                }
+            ]
+        ]
+    }
+}
+```
+
+| Parameter                     | Default | Description                                                                                                                          |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `iosDsyms`                    | `true`  | Enables the upload dSYMS files for the symbolication of native iOS crashes.                                                          |
+| `iosSourcemaps`               | `true`  | Enables the upload of JavaScript source maps on iOS builds.                                                                          |
+| `androidProguardMappingFiles` | `true`  | Enables the upload of Proguard mapping files to deobfuscate native Android crashes (will only be applied if obfuscation is enabled). |
+| `androidSourcemaps`           | `true`  | Enables the upload of JavaScript source maps on Android builds.                                                                      |
+| `site`                        | `US1`   | Your Datadog site (one of "US1", "US3", "US5", EU1", or "US1_FED"). Has to match the value used to initialize the Datadog SDK.       |
+
+**N.B.**: Because of difference in the implementation of the different plugings, you need to specify the site both as an environment secret and as a config plugin parameter.
 
 ## Expo Go
 
@@ -30,12 +118,7 @@ Your application crashes in Expo Go when some native code (that is not included)
 // Datadog does not recommend this approach, consider moving to Expo development builds instead.
 // This file is not officially maintained and might not be up-to-date with new releases.
 
-import {
-    DdLogs,
-    DdTrace,
-    DdRum,
-    DdSdkReactNative
-} from '@datadog/mobile-react-native';
+import { DdLogs, DdTrace, DdRum, DdSdkReactNative } from 'expo-datadog';
 
 if (__DEV__) {
     const emptyAsyncFunction = () => new Promise<void>(resolve => resolve());
@@ -69,7 +152,7 @@ Then, import it before initializing the SDK:
 
 ```typescript
 import './mockDatadog';
-import { DdSdkReactNative } from '@datadog/mobile-react-native';
+import { DdSdkReactNative } from 'expo-datadog';
 
 const config = new DdSdkReactNativeConfiguration(/* your config */);
 DdSdkReactNative.initialize(config);
