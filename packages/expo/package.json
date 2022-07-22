@@ -1,7 +1,7 @@
 {
   "name": "expo-datadog",
   "version": "45.0.0",
-  "description": "",
+  "description": "A client-side Expo module to interact with Datadog",
   "main": "build/index.js",
   "scripts": {
     "build": "expo-module build",
@@ -14,6 +14,15 @@
   "dependencies": {
     "@datadog/mobile-react-native": "1.0.0-rc9"
   },
-  "author": "",
-  "license": "ISC"
+  "homepage": "https://github.com/DataDog/dd-sdk-reactnative/packages/expo",
+  "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+  "bugs": {
+    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+  },
+  "author": "Datadog (https://github.com/DataDog)",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@typescript-eslint/typescript-estree": "5.20.0",
+    "expo-module-scripts": "^2.0.0"
+  }
 }
