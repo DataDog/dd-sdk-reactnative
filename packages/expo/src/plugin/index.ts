@@ -5,12 +5,22 @@ import {
     ErrorTrackingOptions,
     getErrorTrackingPluginsFromOptions
 } from './getErrorTrackingPluginsFromOptions';
+import type { GradlePluginDatadogSite } from './pluginGlobalConfiguration';
 
-const withDatadog: ConfigPlugin<ErrorTrackingOptions | void> = (
-    config,
-    options
-) => {
-    return withPlugins(config, getErrorTrackingPluginsFromOptions(options));
+type PluginConfiguration =
+    | {
+          site?: GradlePluginDatadogSite;
+          errorTracking?: ErrorTrackingOptions;
+      }
+    | undefined;
+
+const withDatadog: ConfigPlugin<PluginConfiguration> = (config, options) => {
+    return withPlugins(
+        config,
+        getErrorTrackingPluginsFromOptions(options && options.errorTracking, {
+            site: options && options.site
+        })
+    );
 };
 
 export default withDatadog;

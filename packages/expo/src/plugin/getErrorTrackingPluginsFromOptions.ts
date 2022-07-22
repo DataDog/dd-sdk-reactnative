@@ -1,5 +1,6 @@
-import type { ConfigPlugin } from '@expo/config-plugins';
+import type { ConfigPlugin, StaticPlugin } from '@expo/config-plugins';
 
+import { GradlePluginDatadogSite } from './pluginGlobalConfiguration';
 import withAndroidProguardMappingFiles from './withAndroidProguardMappingFiles/withAndroidProguardMappingFiles';
 import withAndroidSourcemaps from './withAndroidSourcemaps/withAndroidSourcemaps';
 import withIosDsyms from './withIosDsyms/withIosDsyms';
@@ -12,23 +13,27 @@ export type ErrorTrackingOptions = {
     androidSourcemaps?: boolean;
 };
 
-const ERROR_TRACKING_CONFIG_PLUGINS_MAP: Record<
-    keyof ErrorTrackingOptions,
-    ConfigPlugin<any>
-> = {
-    iosDsyms: withIosDsyms,
-    iosSourcemaps: withIosSourcemaps,
-    androidProguardMappingFiles: withAndroidProguardMappingFiles,
-    androidSourcemaps: withAndroidSourcemaps
-};
-
 /**
  * By default, all plugins are enabled. To disable a plugin, you have to set it
  * to `false`.
  */
 export const getErrorTrackingPluginsFromOptions = (
-    options: ErrorTrackingOptions | void
-): ConfigPlugin<any>[] => {
+    options: ErrorTrackingOptions | void,
+    params: { site?: GradlePluginDatadogSite }
+): (ConfigPlugin<any> | StaticPlugin<any>)[] => {
+    const ERROR_TRACKING_CONFIG_PLUGINS_MAP: Record<
+        keyof ErrorTrackingOptions,
+        ConfigPlugin<any> | StaticPlugin<any>
+    > = {
+        iosDsyms: withIosDsyms,
+        iosSourcemaps: withIosSourcemaps,
+        androidProguardMappingFiles: [
+            withAndroidProguardMappingFiles,
+            { site: params.site }
+        ],
+        androidSourcemaps: withAndroidSourcemaps
+    };
+
     const configPluginsKeys = (Object.keys(
         ERROR_TRACKING_CONFIG_PLUGINS_MAP
     ) as (keyof ErrorTrackingOptions)[]).filter(
