@@ -121,7 +121,7 @@ yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $
 
 #### Manually on each build
 
-On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`.
+On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`. If your application has more comprehensive variants, replace `release` by your variant's name in the paths. 
 
 After running your build, upload your source map by running this from your React Native project root:
 
@@ -162,12 +162,12 @@ plugins {
 }
 
 datadog {
-    site = "US"
+    site = "US1"
     checkProjectDependencies = "none" // this is needed in any case for React Native projects
 }
 ```
 
-For more information, see the [Android Crash Reporting and Error Tracking documentation][6].
+The site value has to match the value in the Datadog SDK configuration. For more information, see the [Android Crash Reporting and Error Tracking documentation][6].
 
 To run the plugin after a build, export your API key as `DD_API_KEY` and run `(cd android && ./gradlew app:uploadMappingRelease)`.
 
