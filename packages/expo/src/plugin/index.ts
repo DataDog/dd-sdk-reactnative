@@ -1,18 +1,16 @@
 import type { ConfigPlugin } from '@expo/config-plugins';
 import { withPlugins } from '@expo/config-plugins';
 
-import withAndroidProguardMappingFiles from './withAndroidProguardMappingFiles/withAndroidProguardMappingFiles';
-import withAndroidSourcemaps from './withAndroidSourcemaps/withAndroidSourcemaps';
-import withIosDsyms from './withIosDsyms/withIosDsyms';
-import withIosSourcemaps from './withIosSourcemaps/withIosSourcemaps';
+import {
+    ErrorTrackingOptions,
+    getErrorTrackingPluginsFromOptions
+} from './getErrorTrackingPluginsFromOptions';
 
-const withDatadog: ConfigPlugin<void> = config => {
-    return withPlugins(config, [
-        withIosDsyms,
-        withAndroidProguardMappingFiles,
-        withAndroidSourcemaps,
-        withIosSourcemaps
-    ]);
+const withDatadog: ConfigPlugin<ErrorTrackingOptions | void> = (
+    config,
+    options
+) => {
+    return withPlugins(config, getErrorTrackingPluginsFromOptions(options));
 };
 
 export default withDatadog;
