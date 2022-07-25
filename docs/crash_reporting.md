@@ -167,7 +167,7 @@ datadog {
 }
 ```
 
-The site value has to match the value in the Datadog SDK configuration. For more information, see the [Android Crash Reporting and Error Tracking documentation][6].
+The [site value][8] has to match the value in the Datadog SDK configuration. For more information, see the [Datadog Android SDK Gradle Plugin][6].
 
 To run the plugin after a build, export your API key as `DD_API_KEY` and run `(cd android && ./gradlew app:uploadMappingRelease)`.
 
@@ -200,3 +200,4 @@ To verify your React Native Crash Reporting and Error Tracking configuration, yo
 [5]: https://reactnative.dev/docs/signed-apk-android#enabling-proguard-to-reduce-the-size-of-the-apk-optional
 [6]: https://github.com/datadog/dd-sdk-android-gradle-plugin
 [7]: https://github.com/cwhenderson20/react-native-crash-tester
+[8]: https://docs.datadoghq.com/getting_started/site/
