@@ -3,15 +3,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 def reactConfig = project.hasProperty("react") ? project.react : [:]
 def reactRoot = file(reactConfig.root ?: "../../")
 
-def datadogConfig = new Properties()
-def datadogConfigFile = new File(reactRoot, "datadog-sourcemaps.properties")
-
-if (datadogConfigFile.exists()) {
-    datadogConfigFile.withInputStream {
-        datadogConfig.load(it)
-    }
-}
-
 afterEvaluate {
 
     def androidExtension = extensions.findByName("android")
@@ -47,7 +38,7 @@ afterEvaluate {
             return
         }
 
-        def serviceName = getServiceName(variant, datadogConfig)
+        def serviceName = getServiceName(variant)
         logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
 
         def bundleAssetName = reactConfig.bundleAssetName ?: "index.android.bundle"
@@ -90,14 +81,12 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                if (datadogConfig["DATADOG_API_KEY"] == null) {
-                    if (System.getenv("DATADOG_API_KEY") == null) {
-                        throw new GradleException("Cannot find Datadog API key, it is neither" +
-                                " in env, nor in datadog-sourcemaps.properties file.")
-                    }
+                if (System.getenv("DATADOG_API_KEY") == null) {
+                    throw new GradleException("Cannot find Datadog API key, it is neither" +
+                            " in env, nor in datadog-sourcemaps.properties file.")
                 }
 
-                runShellCommand(execCommand, reactRoot, datadogConfig)
+                runShellCommand(execCommand, reactRoot)
 
             }
         }
@@ -110,8 +99,7 @@ afterEvaluate {
 
 private def runShellCommand(
         List<String> command,
-        File workingDirectory,
-        Map<String, String> env
+        File workingDirectory
 ) {
     def outputStream = new ByteArrayOutputStream()
     def errorStream = new ByteArrayOutputStream()
@@ -121,9 +109,6 @@ private def runShellCommand(
             workingDir = workingDirectory
             standardOutput = outputStream
             errorOutput = errorStream
-            env.forEach { key, value ->
-                environment key, value
-            }
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine("cmd", "/c", *command)
             } else {
@@ -146,14 +131,6 @@ private def runShellCommand(
     }
 }
 
-private static def getServiceName(variant, Properties datadogConfig) {
-    String flavorName = variant.flavorName.toUpperCase(Locale.US)
-    if (!flavorName.isEmpty()) {
-        def flavorServiceProperty = datadogConfig
-                .getProperty("SERVICE_NAME_ANDROID_${flavorName}", "")
-        if (!flavorServiceProperty.isEmpty()) {
-            return flavorServiceProperty
-        }
-    }
-    return datadogConfig.SERVICE_NAME_ANDROID ?: variant.applicationId
+private static def getServiceName(variant) {
+    return variant.applicationId
 }
