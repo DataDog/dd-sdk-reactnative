@@ -81,11 +81,6 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                if (System.getenv("DATADOG_API_KEY") == null) {
-                    throw new GradleException("Cannot find Datadog API key, it is neither" +
-                            " in env, nor in datadog-sourcemaps.properties file.")
-                }
-
                 runShellCommand(execCommand, reactRoot)
 
             }
