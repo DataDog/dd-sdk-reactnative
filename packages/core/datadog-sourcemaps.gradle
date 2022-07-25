@@ -115,7 +115,7 @@ private def runShellCommand(
             logger.error(errorStream.toString("UTF-8"))
             result.rethrowFailure()
         } else {
-            logger.info(outputStream.toString("UTF-8"))
+            logger.lifecycle(outputStream.toString("UTF-8"))
         }
     } catch (Exception e) {
         def errorStreamContent = errorStream.toString("UTF-8")
