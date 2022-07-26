@@ -30,6 +30,29 @@ const config = new DdSdkReactNativeConfiguration(
 config.nativeCrashReportEnabled = true; // enable native crash reporting
 ```
 
+## Limitations
+
+<div class="alert alert-warning"><p>
+Datadog only accepts uploads up to 50MB.
+</p></div>
+
+To compute the size of your source maps and bundle, run:
+
+```shell
+npx react-native bundle \
+  --dev false \
+  --platform ios \
+  --entry-file index.js \
+  --bundle-output build/main.jsbundle \
+  --sourcemap-output build/main.jsbundle.map
+
+sourcemapsize=$(wc -c build/main.jsbundle.map | awk '{print $1}')
+bundlesize=$(wc -c build/main.jsbundle | awk '{print $1}')
+payloadsize=$(($sourcemapsize + $bundlesize))
+
+echo "Size of source maps and bundle is $(($payloadsize / 1000000))MB"
+```
+
 ## Symbolicate crash reports
 
 In order to make your application's size smaller, its code is minified when it is built for release. To link errors to your actual code, you need to upload the following symbolication files:
@@ -116,7 +139,6 @@ export BUNDLE_PATH= # fill with your bundle path
 yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $BUNDLE_PATH --sourcemap ./build/main.jsbundle.map --release-version $VERSION --build-version $BUILD
 ```
 
-
 ### Upload JavaScript source maps on Android builds
 
 #### Manually on each build
@@ -136,13 +158,11 @@ export SOURCEMAP_PATH=android/app/build/generated/sourcemaps/react/release/index
 yarn datadog-ci react-native upload --platform android --service $SERVICE --bundle $BUNDLE_PATH --sourcemap $SOURCEMAP_PATH --release-version $VERSION --build-version $BUILD
 ```
 
-
 ### Upload iOS dSYM files
 
 #### Manually on each build
 
 For more information, see the [iOS Crash Reporting and Error Tracking documentation][4].
-
 
 ### Upload Android Proguard mapping files
 
@@ -175,7 +195,7 @@ To run the plugin after a build, export your API key as `DD_API_KEY` and run `(c
 
 Install the plugin like in the previous step.
 
-Find the loop on `applicationVariants` in the `android/app/build.gradle` file. It should look like `applicationVariants.all { variant ->`. 
+Find the loop on `applicationVariants` in the `android/app/build.gradle` file. It should look like `applicationVariants.all { variant ->`.
 
 Inside the loop, add the following snippet:
 
