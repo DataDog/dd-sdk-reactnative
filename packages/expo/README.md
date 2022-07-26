@@ -1,52 +1,31 @@
 # expo-datadog
 
-Datadog Real User Monitoring (RUM) enables you to visualize and analyze the real-time performance and user journeys of your application’s individual users.
+## Overview
 
 This package contains the Datadog Expo config plugin and exports the Datadog React Native SDK.
 
-## Setup
-
-To install with NPM, run:
-
-```sh
-npm install expo-datadog
-```
-
-To install with Yarn, run:
-
-```sh
-yarn add expo-datadog
-```
-
-### Usage
-
-Please refer to the [Expo documentation][1] for usage.
-
-### Expo SDK versions support
-
-`expo-datadog` supports Expo starting from SDK 45.
-
-`expo-datadog` versions follows Expo versions - if you use Expo SDK 45, use `expo-datadog` version `45.x.x`.
+For more information about tracking Expo crash reports, see the [Expo Crash Reporting and Error Tracking documentation][1].
 
 ## Contributing
 
-Please refer to the [Contributing Guidelines][2].
+If you find an issue with this package and have a fix, first consult the [Contributing Guidelines][3].
 
-To try a development build plugin on an app, run from the root of `dd-sdk-react-native`:
+To try a development build plugin on an app, run these commands from the root of `dd-sdk-react-native`:
 
 -   `(cd packages/expo && yarn clean && yarn build)`
 -   `yarn workspace expo-datadog pack`
 
-Copy the generated archive to the root of your app, and change your `package.json` to install the package from the archive (change the version number accordingly):
+Copy the generated archive to the root of your app and change your `package.json` to install the package from the archive (change the version number accordingly):
 
 ```json
 "expo-datadog": "./expo-datadog-v45.0.0.tgz",
 ```
 
-Run `yarn install` from your app, then run `expo prebuild` to see the changes in the native files. If it looks good to you, [start an EAS build][3] to test your changes.
+Run `yarn install` from your app and run `expo prebuild` to see changes appear in the native files. If this looks good to you, [start an EAS build][4] to test your changes.
 
-**N.B.**: To avoid issues with the npm cache, change the name of the archive every time you test a new version (e.g. expo-datadog-v45.0.1-test-1.tgz).
+To avoid issues with the `npm` cache, change the name of the archive every time you test a new version, for example: expo-datadog-v45.0.1-test-1.tgz.
 
-[1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
-[2]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/CONTRIBUTING.md
-[3]: https://docs.expo.dev/build/setup/
+[1]: https://docs.datadoghq.com/real_user_monitoring/error_tracking/expo/
+[2]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
+[3]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/CONTRIBUTING.md
+[4]: https://docs.expo.dev/build/setup/
