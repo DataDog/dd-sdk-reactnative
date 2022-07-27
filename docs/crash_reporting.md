@@ -33,10 +33,10 @@ config.nativeCrashReportEnabled = true; // enable native crash reporting
 ## Limitations
 
 <div class="alert alert-warning"><p>
-Datadog only accepts uploads up to 50MB.
+Datadog can accept uploads up to 50MB.
 </p></div>
 
-To compute the size of your source maps and bundle, run:
+To compute the size of your source maps and bundle, run this command:
 
 ```shell
 npx react-native bundle \
