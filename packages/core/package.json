@@ -26,7 +26,8 @@
     "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/xcsharedata",
     "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/*.xcworkspacedata",
     "ios/DdSdkReactNative.xcodeproj/*.pbxproj",
-    "DatadogSDKReactNative.podspec"
+    "DatadogSDKReactNative.podspec",
+    "datadog-sourcemaps.gradle"
   ],
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
