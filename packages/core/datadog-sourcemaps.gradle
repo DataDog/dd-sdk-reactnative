@@ -1,0 +1,131 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+def reactConfig = project.hasProperty("react") ? project.react : [:]
+def reactRoot = file(reactConfig.root ?: "../../")
+
+afterEvaluate {
+
+    def androidExtension = extensions.findByName("android")
+
+    if (androidExtension == null || android.applicationVariants == null) {
+        throw new GradleException("Android extension is missing or running not in the application" +
+                " module. Make sure you've applied datadog-sourcemaps.gradle in the" +
+                " application module (usually it is located in the android/app/build.gradle file).")
+    }
+
+    androidExtension.applicationVariants.all { variant ->
+
+        def releaseVersion = variant.versionName
+        def buildVersion = variant.versionCode
+
+        if (releaseVersion == null) {
+            throw new GradleException("Cannot determine application version. Make sure to" +
+                    " define versionName property in the application/variant config.")
+        }
+
+        // locations and names are defined in "../../node_modules/react-native/react.gradle"
+        def targetName = variant.name.capitalize()
+        def targetPath = variant.dirName
+
+        def bundleTask = tasks.findByName("bundle${targetName}JsAndAssets")
+
+        if (bundleTask == null) {
+            logger.info("Cannot find JS bundle task for variant=${targetName}.")
+            return
+        }
+        if (!bundleTask.enabled) {
+            logger.info("JS bundle task for variant=${targetName} is not enabled.")
+            return
+        }
+
+        def serviceName = getServiceName(variant)
+        logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
+
+        def bundleAssetName = reactConfig.bundleAssetName ?: "index.android.bundle"
+
+        def jsBundleDir = file("$buildDir/generated/assets/react/${targetPath}")
+        def jsBundleFile = file("$jsBundleDir/$bundleAssetName")
+
+        def jsSourceMapsDir = file("$buildDir/generated/sourcemaps/react/${targetPath}")
+        def jsOutputSourceMapFile = file("$jsSourceMapsDir/${bundleAssetName}.map")
+
+        def uploadTask = tasks.create("upload${targetName}Sourcemaps") {
+            group = "datadog"
+            description = "Uploads sourcemaps to Datadog."
+
+            def execCommand = [
+                    "yarn",
+                    "datadog-ci",
+                    "react-native",
+                    "upload",
+                    "--platform",
+                    "android",
+                    "--service",
+                    serviceName,
+                    "--bundle",
+                    jsBundleFile.absolutePath,
+                    "--sourcemap",
+                    jsOutputSourceMapFile.absolutePath,
+                    "--release-version",
+                    releaseVersion,
+                    "--build-version",
+                    buildVersion
+            ]
+
+            doFirst {
+                if (!jsBundleFile.exists()) {
+                    throw new GradleException("JS bundle file doesn't exist, aborting upload.")
+                }
+
+                if (!jsOutputSourceMapFile.exists()) {
+                    throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
+                }
+
+                runShellCommand(execCommand, reactRoot)
+
+            }
+        }
+
+        uploadTask.dependsOn bundleTask
+        bundleTask.finalizedBy uploadTask
+
+    }
+}
+
+private def runShellCommand(
+        List<String> command,
+        File workingDirectory
+) {
+    def outputStream = new ByteArrayOutputStream()
+    def errorStream = new ByteArrayOutputStream()
+
+    try {
+        def result = exec {
+            workingDir = workingDirectory
+            standardOutput = outputStream
+            errorOutput = errorStream
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                commandLine("cmd", "/c", *command)
+            } else {
+                commandLine(*command)
+            }
+        }
+
+        if (result.exitValue != 0) {
+            logger.error(errorStream.toString("UTF-8"))
+            result.rethrowFailure()
+        } else {
+            logger.lifecycle(outputStream.toString("UTF-8"))
+        }
+    } catch (Exception e) {
+        def errorStreamContent = errorStream.toString("UTF-8")
+        def standardStreamContent = outputStream.toString("UTF-8")
+        logger.error("Exception raised during command execution," +
+                " stderr=${errorStreamContent}, stdout=${standardStreamContent}")
+        throw e
+    }
+}
+
+private static def getServiceName(variant) {
+    return variant.applicationId
+}
