@@ -32,6 +32,7 @@ package/ios/Sources/DdRum.m
 package/ios/Sources/DdRum.swift
 package/ios/Sources/DdSdk.m
 package/ios/Sources/DdSdk.swift
+package/ios/Sources/DdSdkConfiguration.swift
 package/ios/Sources/DdSdkReactNative-Bridging-Header.h
 package/ios/Sources/DdTrace.m
 package/ios/Sources/DdTrace.swift
