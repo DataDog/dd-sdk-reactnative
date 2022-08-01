@@ -5,7 +5,15 @@
  */
 
 import Foundation
-import DatadogSDKBridge
+import Datadog
+
+extension Logger: NativeLogger { }
+internal protocol NativeLogger {
+    func debug(_ message: String, error: Error?, attributes: [String: Encodable]?)
+    func info(_ message: String, error: Error?, attributes: [String: Encodable]?)
+    func warn(_ message: String, error: Error?, attributes: [String: Encodable]?)
+    func error(_ message: String, error: Error?, attributes: [String: Encodable]?)
+}
 
 @objc(DdLogs)
 class RNDdLogs: NSObject {
@@ -15,32 +23,48 @@ class RNDdLogs: NSObject {
         return false
     }
 
-    let nativeInstance: DdLogs = Bridge.getDdLogs()
-
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
 
+    private lazy var logger: NativeLogger = loggerProvider()
+    private let loggerProvider: () -> NativeLogger
+
+    internal init(_ loggerProvider: @escaping () -> NativeLogger) {
+        self.loggerProvider = loggerProvider
+    }
+
+    override public convenience init() {
+        let builder = Logger.builder
+            .sendNetworkInfo(true)
+            .printLogsToConsole(true)
+        self.init { builder.build() }
+    }
+
     @objc(debug:withContext:withResolver:withRejecter:)
     func debug(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.debug(message: message, context: context)
+        let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
+        logger.debug(message as String, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(info:withContext:withResolver:withRejecter:)
     func info(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.info(message: message, context: context)
+        let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
+        logger.info(message as String, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(warn:withContext:withResolver:withRejecter:)
     func warn(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.warn(message: message, context: context)
+        let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
+        logger.warn(message as String, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(error:withContext:withResolver:withRejecter:)
     func error(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeInstance.error(message: message, context: context)
+        let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
+        logger.error(message as String, error: nil, attributes: attributes)
         resolve(nil)
     }
 

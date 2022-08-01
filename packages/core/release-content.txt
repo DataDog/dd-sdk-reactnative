@@ -25,6 +25,7 @@ package/ios/DdSdkReactNative.xcodeproj/project.pbxproj
 package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace
 package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 package/ios/Sources
+package/ios/Sources/AnyEncodable.swift
 package/ios/Sources/DdLogs.m
 package/ios/Sources/DdLogs.swift
 package/ios/Sources/DdRum.m
@@ -34,6 +35,7 @@ package/ios/Sources/DdSdk.swift
 package/ios/Sources/DdSdkReactNative-Bridging-Header.h
 package/ios/Sources/DdTrace.m
 package/ios/Sources/DdTrace.swift
+package/ios/Sources/GlobalState.swift
 package/ios/Sources/QueueHolder.swift
 package/ios/Sources/RNDdSdkConfiguration.swift
 package/lib
