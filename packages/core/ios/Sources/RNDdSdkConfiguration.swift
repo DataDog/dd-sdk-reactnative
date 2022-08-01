@@ -5,7 +5,6 @@
  */
 
 import Foundation
-import DatadogSDKBridge
 
 extension NSDictionary {
 
