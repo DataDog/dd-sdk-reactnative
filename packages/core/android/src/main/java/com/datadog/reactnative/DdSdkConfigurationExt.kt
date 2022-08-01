@@ -6,8 +6,6 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.bridge.DdSdkConfiguration
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 
