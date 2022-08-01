@@ -6,21 +6,23 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.bridge.DdBridge
-import com.datadog.android.bridge.DdRum as SDKDdRum
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.datadog.android.rum.GlobalRum
+import com.datadog.android.rum.RumActionType
+import com.datadog.android.rum.RumAttributes
+import com.datadog.android.rum.RumErrorSource
+import com.datadog.android.rum.RumResourceKind
+import java.util.Locale
 
 /**
  * The entry point to use Datadog's RUM feature.
  */
 class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
-
-    private val nativeInstance: SDKDdRum = DdBridge.getDdRum(reactContext)
 
     override fun getName(): String = "DdRum"
 
@@ -33,7 +35,14 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun startView(key: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.startView(key, name, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().startView(
+            key = key,
+            name = name,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -45,7 +54,13 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun stopView(key: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.stopView(key, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().stopView(
+            key = key,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -58,7 +73,14 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun startAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.startAction(type, name, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().startUserAction(
+            type = type.asRumActionType(),
+            name = name,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -69,7 +91,12 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun stopAction(context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.stopAction(context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().stopUserAction(
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -82,7 +109,14 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun addAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.addAction(type, name, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().addUserAction(
+            type = type.asRumActionType(),
+            name = name,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -96,7 +130,15 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun startResource(key: String, method: String, url: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.startResource(key, method, url, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().startResource(
+            key = key,
+            method = method,
+            url = url,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -111,7 +153,21 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun stopResource(key: String, statusCode: Double, kind: String, size: Double, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.stopResource(key, statusCode.toLong(), kind, size.toLong(), context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        val resourceSize = if (size.toLong() == MISSING_RESOURCE_SIZE) {
+            null
+        } else {
+            size.toLong()
+        }
+        GlobalRum.get().stopResource(
+            key = key,
+            statusCode = statusCode.toInt(),
+            kind = kind.asRumResourceKind(),
+            size = resourceSize,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -125,7 +181,15 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun addError(message: String, source: String, stacktrace: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
-        nativeInstance.addError(message, source, stacktrace, context.toHashMap(), timestampMs.toLong())
+        val attributes = context.toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
+        }
+        GlobalRum.get().addErrorWithStacktrace(
+            message = message,
+            source = source.asErrorSource(),
+            stacktrace = stacktrace,
+            attributes = attributes
+        )
         promise.resolve(null)
     }
 
@@ -135,8 +199,54 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      */
     @ReactMethod
     fun addTiming(name: String, promise: Promise) {
-        nativeInstance.addTiming(name)
+        GlobalRum.get().addTiming(name)
         promise.resolve(null)
     }
 
+    // region Internal
+
+    private fun String.asRumActionType(): RumActionType {
+        return when (lowercase(Locale.US)) {
+            "tap" -> RumActionType.TAP
+            "scroll" -> RumActionType.SCROLL
+            "swipe" -> RumActionType.SWIPE
+            "click" -> RumActionType.CLICK
+            else -> RumActionType.CUSTOM
+        }
+    }
+
+    private fun String.asRumResourceKind(): RumResourceKind {
+        return when (lowercase(Locale.US)) {
+            "xhr" -> RumResourceKind.XHR
+            "native" -> RumResourceKind.NATIVE
+            "fetch" -> RumResourceKind.FETCH
+            "document" -> RumResourceKind.DOCUMENT
+            "beacon" -> RumResourceKind.BEACON
+            "js" -> RumResourceKind.JS
+            "image" -> RumResourceKind.IMAGE
+            "font" -> RumResourceKind.FONT
+            "css" -> RumResourceKind.CSS
+            "media" -> RumResourceKind.MEDIA
+            "other" -> RumResourceKind.OTHER
+            else -> RumResourceKind.UNKNOWN
+        }
+    }
+
+    private fun String.asErrorSource(): RumErrorSource {
+        return when (lowercase(Locale.US)) {
+            "agent" -> RumErrorSource.AGENT
+            "console" -> RumErrorSource.CONSOLE
+            "logger" -> RumErrorSource.LOGGER
+            "network" -> RumErrorSource.NETWORK
+            "source" -> RumErrorSource.SOURCE
+            "webview" -> RumErrorSource.WEBVIEW
+            else -> RumErrorSource.SOURCE
+        }
+    }
+
+    // endregion
+
+    companion object {
+        private const val MISSING_RESOURCE_SIZE = -1L
+    }
 }
