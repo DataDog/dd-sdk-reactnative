@@ -6,8 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.bridge.DdBridge
-import com.datadog.android.bridge.DdLogs as SDKDdLogs
+import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -20,9 +19,16 @@ import com.facebook.react.bridge.ReadableMap
  */
 class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
-    private val nativeInstance: SDKDdLogs = DdBridge.getDdLogs(reactContext)
-
     override fun getName(): String = "DdLogs"
+
+    private val bridgeLogger: Logger by lazy {
+        Logger.Builder()
+            .setDatadogLogsEnabled(true)
+            .setLogcatLogsEnabled(true)
+            .setLoggerName("DdLogs")
+            .build()
+    }
+
 
     /**
      * Send a log with level debug.
@@ -31,7 +37,10 @@ class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule
      */
     @ReactMethod
     fun debug(message: String, context: ReadableMap, promise: Promise) {
-        nativeInstance.debug(message, context.toHashMap())
+        bridgeLogger.d(
+            message = message,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
         promise.resolve(null)
     }
 
@@ -42,7 +51,10 @@ class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule
      */
     @ReactMethod
     fun info(message: String, context: ReadableMap, promise: Promise) {
-        nativeInstance.info(message, context.toHashMap())
+        bridgeLogger.i(
+            message = message,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
         promise.resolve(null)
     }
 
@@ -53,7 +65,10 @@ class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule
      */
     @ReactMethod
     fun warn(message: String, context: ReadableMap, promise: Promise) {
-        nativeInstance.warn(message, context.toHashMap())
+        bridgeLogger.w(
+            message = message,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
         promise.resolve(null)
     }
 
@@ -64,7 +79,10 @@ class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule
      */
     @ReactMethod
     fun error(message: String, context: ReadableMap, promise: Promise) {
-        nativeInstance.error(message, context.toHashMap())
+        bridgeLogger.e(
+            message = message,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
         promise.resolve(null)
     }
 

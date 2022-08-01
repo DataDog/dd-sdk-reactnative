@@ -18,6 +18,7 @@ package/android/src/main/java/com/datadog/reactnative/DdSdkBridgeExt.kt
 package/android/src/main/java/com/datadog/reactnative/DdSdkConfigurationExt.kt
 package/android/src/main/java/com/datadog/reactnative/DdSdkReactNativePackage.kt
 package/android/src/main/java/com/datadog/reactnative/DdTrace.kt
+package/android/src/main/java/com/datadog/reactnative/GlobalState.kt
 package/datadog-sourcemaps.gradle
 package/ios
 package/ios/DdSdkReactNative.xcodeproj
