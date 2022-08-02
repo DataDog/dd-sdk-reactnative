@@ -86,16 +86,20 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
 
     /**
      * Stop tracking the ongoing RUM Action.
+     * @param type The action type (tap, scroll, swipe, click, custom).
+     * @param name The action name.
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun stopAction(context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun stopAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
         GlobalRum.get().stopUserAction(
-            attributes = attributes
+                type = type.asRumActionType(),
+                name = name,
+                attributes = attributes
         )
         promise.resolve(null)
     }
