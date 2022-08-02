@@ -67,6 +67,8 @@ package/lib/commonjs/foundation.js
 package/lib/commonjs/foundation.js.map
 package/lib/commonjs/index.js
 package/lib/commonjs/index.js.map
+package/lib/commonjs/nativeModulesTypes.js
+package/lib/commonjs/nativeModulesTypes.js.map
 package/lib/commonjs/rum
 package/lib/commonjs/rum/instrumentation
 package/lib/commonjs/rum/instrumentation/DdEventsInterceptor.js
@@ -133,6 +135,8 @@ package/lib/module/foundation.js
 package/lib/module/foundation.js.map
 package/lib/module/index.js
 package/lib/module/index.js.map
+package/lib/module/nativeModulesTypes.js
+package/lib/module/nativeModulesTypes.js.map
 package/lib/module/rum
 package/lib/module/rum/instrumentation
 package/lib/module/rum/instrumentation/DdEventsInterceptor.js
@@ -189,6 +193,7 @@ package/lib/typescript/Timer.d.ts
 package/lib/typescript/TrackingConsent.d.ts
 package/lib/typescript/foundation.d.ts
 package/lib/typescript/index.d.ts
+package/lib/typescript/nativeModulesTypes.d.ts
 package/lib/typescript/rum
 package/lib/typescript/rum/instrumentation
 package/lib/typescript/rum/instrumentation/DdEventsInterceptor.d.ts
@@ -241,6 +246,7 @@ package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
 package/src/foundation.tsx
 package/src/index.tsx
+package/src/nativeModulesTypes.ts
 package/src/rum
 package/src/rum/instrumentation
 package/src/rum/instrumentation/DdEventsInterceptor.tsx

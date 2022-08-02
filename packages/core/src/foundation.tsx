@@ -5,16 +5,17 @@
  */
 
 import { NativeModules } from 'react-native';
-import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
+import { DdSdkConfiguration, DdLogsType, DdTraceType, DdRumType } from './types';
 import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 import {TimeProvider} from "./TimeProvider";
+import type { DdNativeLogsType, DdNativeRumType, DdNativeSdkType, DdNativeTraceType } from './nativeModulesTypes';
 
 const timeProvider = new TimeProvider();
 
 class DdLogsWrapper implements DdLogsType {
 
-    private nativeLogs: DdLogsType = NativeModules.DdLogs;
+    private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
 
     debug(message: string, context: object = {}): Promise<void> {
         InternalLog.log("Tracking debug log “" +  message + "”", SdkVerbosity.DEBUG);
@@ -40,7 +41,7 @@ class DdLogsWrapper implements DdLogsType {
 
 class DdTraceWrapper implements DdTraceType {
 
-    private nativeTrace: DdTraceType = NativeModules.DdTrace;
+    private nativeTrace: DdNativeTraceType = NativeModules.DdTrace;
 
     startSpan(operation: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<string> {
         let spanId = this.nativeTrace.startSpan(operation, context, timestampMs);
@@ -56,7 +57,7 @@ class DdTraceWrapper implements DdTraceType {
 
 class DdRumWrapper implements DdRumType {
 
-    private nativeRum: DdRumType = NativeModules.DdRum;
+    private nativeRum: DdNativeRumType = NativeModules.DdRum;
 
     startView(key: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM View “" +  name + "” #" + key, SdkVerbosity.DEBUG);
@@ -106,7 +107,7 @@ class DdRumWrapper implements DdRumType {
     }
 }
 
-const DdSdk: DdSdkType = NativeModules.DdSdk;
+const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
 const DdLogs: DdLogsType = new DdLogsWrapper();
 const DdTrace: DdTraceType = new DdTraceWrapper();
 const DdRum: DdRumType = new DdRumWrapper();
