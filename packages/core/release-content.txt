@@ -238,6 +238,7 @@ package/src/__tests__/DdSdkReactNative.test.tsx
 package/src/__tests__/InternalLog.test.tsx
 package/src/__tests__/TimeProvider.test.tsx
 package/src/__tests__/Timer.test.ts
+package/src/__tests__/foundation.test.ts
 package/src/__tests__/rum
 package/src/__tests__/rum/instrumentation
 package/src/__tests__/rum/instrumentation/DdEventsInterceptor.test.tsx

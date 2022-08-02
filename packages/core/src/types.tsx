@@ -157,6 +157,24 @@ export type DdRumType = {
 
     /**
      * Stop tracking the ongoing RUM Action.
+     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param name: The action name.
+     * @param context: The additional context to send.
+     * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
+     */
+    stopAction(
+        type: string,
+        name: string,
+        context?: object,
+        timestampMs?: number
+    ): Promise<void>;
+
+    /**
+     * Stop tracking the ongoing RUM Action.
+     *
+     * Warning: using this function signature can lead to inconsistent behaviors on iOS and Android when multiple actions are started in parallel.
+     *
+     * @deprecated add the `type` and `name` of the action as first two arguments.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
