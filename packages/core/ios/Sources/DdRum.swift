@@ -103,7 +103,6 @@ class RNDdRum: NSObject {
     private let rumProvider: () -> NativeRUM
 
     private typealias UserAction = (type: RUMUserActionType, name: String?)
-    private var ongoingUserActions = [UserAction]()
 
     internal init(_ rumProvider: @escaping () -> NativeRUM) {
         self.rumProvider = rumProvider
@@ -135,18 +134,13 @@ class RNDdRum: NSObject {
 
     @objc(startAction:withName:withContext:withTimestampms:withResolver:withRejecter:)
     func startAction(type: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        let actionType = RUMUserActionType(from: type as String)
-        nativeRUM.startUserAction(type: actionType, name: name as String, attributes: attributes(from: context, with: timestampMs))
-        ongoingUserActions.append((type: actionType, name: name as String))
+        nativeRUM.startUserAction(type: RUMUserActionType(from: type as String), name: name as String, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
-    @objc(stopAction:withTimestampms:withResolver:withRejecter:)
-    func stopAction(context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        guard let userAction = ongoingUserActions.popLast() else {
-            return
-        }
-        nativeRUM.stopUserAction(type: userAction.type, name: userAction.name, attributes: attributes(from: context, with: timestampMs))
+    @objc(stopAction:withName:withContext:withTimestampms:withResolver:withRejecter:)
+    func stopAction(type: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.stopUserAction(type: RUMUserActionType(from: type as String), name: name as String, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
