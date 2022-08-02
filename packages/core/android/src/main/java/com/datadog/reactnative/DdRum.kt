@@ -215,6 +215,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
             "scroll" -> RumActionType.SCROLL
             "swipe" -> RumActionType.SWIPE
             "click" -> RumActionType.CLICK
+            "back" -> RumActionType.BACK
             else -> RumActionType.CUSTOM
         }
     }
