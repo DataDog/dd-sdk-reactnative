@@ -8,6 +8,12 @@ import XCTest
 @testable import DatadogSDKReactNative
 @testable import Datadog
 
+final class DispatchQueueMock: DispatchQueueType {
+    func async(execute work: @escaping @convention(block) () -> Void) {
+        work()
+    }
+}
+
 internal class DdSdkTests: XCTestCase {
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
@@ -19,11 +25,11 @@ internal class DdSdkTests: XCTestCase {
         var printedMessage = ""
         consolePrint = { msg in printedMessage += msg }
 
-        RNDdSdk().initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "")
 
-        RNDdSdk().initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
 
@@ -57,7 +63,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityDebug() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "debug"])
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.debug)
 
@@ -67,7 +73,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityInfo() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "info"])
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.info)
 
@@ -77,7 +83,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityWarn() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "warn"])
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.warn)
 
@@ -87,7 +93,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityError() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "error"])
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.error)
 
@@ -97,7 +103,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityNil() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: nil)
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
@@ -107,7 +113,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityUnknown() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "foo"])
 
-        RNDdSdk().initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
@@ -240,7 +246,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSettingUserInfo() throws {
-        let bridge = RNDdSdk()
+        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         bridge.setUser(
@@ -270,7 +276,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSettingAttributes() {
-        let bridge = RNDdSdk()
+        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         let rumMonitorMock = MockRUMMonitor()

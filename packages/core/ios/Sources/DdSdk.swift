@@ -14,14 +14,25 @@ class RNDdSdk: NSObject {
     static func requiresMainQueueSetup() -> Bool {
         return false
     }
-
+    
+    let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
+    
+    convenience override init() {
+        self.init(mainDispatchQueue: DispatchQueue.main)
+    }
+    
+    init(mainDispatchQueue: DispatchQueueType) {
+        self.mainDispatchQueue = mainDispatchQueue
+        super.init()
+    }
+
 
     @objc(initialize:withResolver:withRejecter:)
     func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
-        DispatchQueue.main.async {
+        self.mainDispatchQueue.async {
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
@@ -70,7 +81,7 @@ class RNDdSdk: NSObject {
         resolve(nil)
     }
 
-    private func buildConfiguration(configuration: DdSdkConfiguration) -> Datadog.Configuration {
+    func buildConfiguration(configuration: DdSdkConfiguration) -> Datadog.Configuration {
         let ddConfigBuilder: Datadog.Configuration.Builder
         if let rumAppID = configuration.applicationId as String? {
             ddConfigBuilder = Datadog.Configuration.builderUsing(
@@ -135,7 +146,7 @@ class RNDdSdk: NSObject {
         return ddConfigBuilder.build()
     }
 
-    private func buildProxyConfiguration(config: NSDictionary?) -> [AnyHashable: Any]? {
+    func buildProxyConfiguration(config: NSDictionary?) -> [AnyHashable: Any]? {
         guard let address = config?["_dd.proxy.address"] as? String else {
             return nil
         }
@@ -175,7 +186,7 @@ class RNDdSdk: NSObject {
         return proxy
     }
 
-    private func buildTrackingConsent(consent: NSString?) -> TrackingConsent {
+    func buildTrackingConsent(consent: NSString?) -> TrackingConsent {
         let trackingConsent: TrackingConsent
         switch consent?.lowercased {
         case "pending":
@@ -190,7 +201,7 @@ class RNDdSdk: NSObject {
         return trackingConsent
     }
 
-    private func setVerbosityLevel(additionalConfig: NSDictionary?) {
+    func setVerbosityLevel(additionalConfig: NSDictionary?) {
         let verbosityLevel = (additionalConfig?["_dd.sdk_verbosity"]) as? NSString
         switch verbosityLevel?.lowercased {
         case "debug":
