@@ -12,6 +12,11 @@ export type Hostname = { _type: 'Hostname' } & string;
 // This regex does not match anything
 export const NO_MATCH_REGEX = new RegExp('a^');
 
+// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+};
+
 export const firstPartyHostsRegexBuilder = (
     firstPartyHosts: string[]
 ): RegExp => {
@@ -22,7 +27,9 @@ export const firstPartyHostsRegexBuilder = (
         // A regexp for matching hosts, e.g. when `hosts` is "example.com", it will match
         // "example.com", "api.example.com", but not "foo.com".
         const firstPartyHostsRegex = new RegExp(
-            `^(.*\\.)*(${firstPartyHosts.map(host => `${host}$`).join('|')})`
+            `^(.*\\.)*(${firstPartyHosts
+                .map(host => `${escapeRegExp(host)}$`)
+                .join('|')})`
         );
         firstPartyHostsRegex.test('test_the_regex_is_valid');
         return firstPartyHostsRegex;
