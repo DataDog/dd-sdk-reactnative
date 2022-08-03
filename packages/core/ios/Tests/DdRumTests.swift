@@ -81,7 +81,7 @@ internal class DdRumTests: XCTestCase {
     func testStopActionWithoutStarting() {
         rum.stopAction(type: "custom", name: "action name", context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(mockNativeRUM.calledMethods.count, 0)
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
     }
 
     func testStopAction() throws {
