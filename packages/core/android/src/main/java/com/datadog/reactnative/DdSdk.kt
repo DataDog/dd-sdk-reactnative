@@ -27,7 +27,7 @@ import java.util.Locale
 /**
  * The entry point to initialize Datadog's features.
  */
-class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogSDKWrapper = DatadogSDKWrapper()) : ReactContextBaseJavaModule(reactContext) {
+class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogWrapper = DatadogSDKWrapper()) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
 

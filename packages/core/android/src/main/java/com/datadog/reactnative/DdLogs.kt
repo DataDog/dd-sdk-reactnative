@@ -17,17 +17,18 @@ import com.facebook.react.bridge.ReadableMap
 /**
  * The entry point to use Datadog's Logs feature.
  */
-class DdLogs(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "DdLogs"
 
     private val bridgeLogger: Logger by lazy {
-        Logger.Builder()
-            .setDatadogLogsEnabled(true)
-            .setLogcatLogsEnabled(true)
-            .setLoggerName("DdLogs")
-            .build()
+        logger ?: Logger.Builder()
+                .setDatadogLogsEnabled(true)
+                .setLogcatLogsEnabled(true)
+                .setLoggerName("DdLogs")
+                .build()
     }
+
 
 
     /**

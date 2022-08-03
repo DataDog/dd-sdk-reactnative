@@ -12,7 +12,7 @@ import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumMonitor
 
-internal interface DatadogWrapper {
+interface DatadogWrapper {
 
     fun setVerbosity(level: Int)
 
