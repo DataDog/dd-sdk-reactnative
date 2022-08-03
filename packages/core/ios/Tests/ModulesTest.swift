@@ -6,7 +6,7 @@
 
 import XCTest
 @testable import DatadogSDKReactNative
-@testable import React.RCTModuleData
+@testable import React
 
 class ModulesTest: XCTestCase {
 
