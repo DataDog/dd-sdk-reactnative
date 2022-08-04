@@ -32,6 +32,7 @@ package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace
 package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 package/ios/Sources
 package/ios/Sources/AnyEncodable.swift
+package/ios/Sources/Attributes.swift
 package/ios/Sources/DdLogs.m
 package/ios/Sources/DdLogs.swift
 package/ios/Sources/DdRum.m

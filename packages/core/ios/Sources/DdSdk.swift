@@ -118,20 +118,20 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(additionalConfiguration: additionalConfiguration)
         }
 
-        if let enableViewTracking = additionalConfig?["_dd.native_view_tracking"] as? Bool, enableViewTracking {
+        if let enableViewTracking = additionalConfig?[InternalConfigurationAttributes.nativeViewTracking] as? Bool, enableViewTracking {
             _ = ddConfigBuilder.trackUIKitRUMViews()
         }
 
-        if let serviceName = additionalConfig?["_dd.service_name"] as? String {
+        if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
         }
 
-        if let threshold = additionalConfig?["_dd.long_task.threshold"] as? TimeInterval {
+        if let threshold = additionalConfig?[InternalConfigurationAttributes.longTaskThreshold] as? TimeInterval {
             // `_dd.long_task.threshold` attribute is in milliseconds
             _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
         }
 
-        if let firstPartyHosts = additionalConfig?["_dd.first_party_hosts"] as? [String] {
+        if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? [String] {
             _ = ddConfigBuilder.trackURLSession(firstPartyHosts: Set(firstPartyHosts))
         }
 
@@ -147,17 +147,17 @@ class RNDdSdk: NSObject {
     }
 
     func buildProxyConfiguration(config: NSDictionary?) -> [AnyHashable: Any]? {
-        guard let address = config?["_dd.proxy.address"] as? String else {
+        guard let address = config?[ProxyAttributes.address] as? String else {
             return nil
         }
 
         var proxy: [AnyHashable: Any] = [:]
-        proxy[kCFProxyUsernameKey] = config?["_dd.proxy.username"]
-        proxy[kCFProxyPasswordKey] = config?["_dd.proxy.password"]
+        proxy[kCFProxyUsernameKey] = config?[ProxyAttributes.username]
+        proxy[kCFProxyPasswordKey] = config?[ProxyAttributes.password]
 
-        let type = config?["_dd.proxy.type"] as? String
-        var port = config?["_dd.proxy.port"] as? Int
-        if let string = config?["_dd.proxy.port"] as? String {
+        let type = config?[ProxyAttributes.type] as? String
+        var port = config?[ProxyAttributes.port] as? Int
+        if let string = config?[ProxyAttributes.port] as? String {
             port = Int(string)
         }
 
@@ -202,7 +202,7 @@ class RNDdSdk: NSObject {
     }
 
     func setVerbosityLevel(additionalConfig: NSDictionary?) {
-        let verbosityLevel = (additionalConfig?["_dd.sdk_verbosity"]) as? NSString
+        let verbosityLevel = (additionalConfig?[InternalConfigurationAttributes.sdkVerbosity]) as? NSString
         switch verbosityLevel?.lowercased {
         case "debug":
             Datadog.verbosityLevel = .debug
