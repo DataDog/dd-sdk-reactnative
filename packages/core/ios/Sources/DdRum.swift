@@ -121,43 +121,43 @@ class RNDdRum: NSObject {
     let methodQueue: DispatchQueue = sharedQueue
 
     @objc(startView:withName:withContext:withTimestampms:withResolver:withRejecter:)
-    func startView(key: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.startView(key: key as String, name: name as String, attributes: attributes(from: context, with: timestampMs))
+    func startView(key: String, name: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.startView(key: key, name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(stopView:withContext:withTimestampms:withResolver:withRejecter:)
-    func stopView(key: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.stopView(key: key as String, attributes: attributes(from: context, with: timestampMs))
+    func stopView(key: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.stopView(key: key, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(startAction:withName:withContext:withTimestampms:withResolver:withRejecter:)
-    func startAction(type: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.startUserAction(type: RUMUserActionType(from: type as String), name: name as String, attributes: attributes(from: context, with: timestampMs))
+    func startAction(type: String, name: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.startUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(stopAction:withName:withContext:withTimestampms:withResolver:withRejecter:)
-    func stopAction(type: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.stopUserAction(type: RUMUserActionType(from: type as String), name: name as String, attributes: attributes(from: context, with: timestampMs))
+    func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.stopUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(addAction:withName:withContext:withTimestampms:withResolver:withRejecter:)
-    func addAction(type: NSString, name: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addUserAction(type: RUMUserActionType(from: type as String), name: name as String, attributes: attributes(from: context, with: timestampMs))
+    func addAction(type: String, name: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.addUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(startResource:withMethod:withUrl:withContext:withTimestampms:withResolver:withRejecter:)
-    func startResource(key: NSString, method: NSString, url: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.startResourceLoading(resourceKey: key as String, httpMethod: RUMMethod(from: method as String), urlString: url as String, attributes: attributes(from: context, with: timestampMs))
+    func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.startResourceLoading(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc(stopResource:withStatuscode:withKind:withSize:withContext:withTimestampms:withResolver:withRejecter:)
-    func stopResource(key: NSString, statusCode: Int64, kind: NSString, size: Int64, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func stopResource(key: String, statusCode: Int64, kind: String, size: Int64, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let mutableContext = NSMutableDictionary(dictionary: context)
         if let resourceTimings = mutableContext.object(forKey: Self.resourceTimingsKey) as? [String: Any] {
             mutableContext.removeObject(forKey: Self.resourceTimingsKey)
@@ -166,9 +166,9 @@ class RNDdRum: NSObject {
         }
 
         nativeRUM.stopResourceLoading(
-            resourceKey: key as String,
+            resourceKey: key,
             statusCode: Int(statusCode),
-            kind: RUMResourceType(from: kind as String),
+            kind: RUMResourceType(from: kind),
             size: size == Self.missingResourceSize ? nil : size,
             attributes: attributes(from: mutableContext, with: timestampMs)
         )
@@ -176,14 +176,14 @@ class RNDdRum: NSObject {
     }
 
     @objc(addError:withSource:withStacktrace:withContext:withTimestampms:withResolver:withRejecter:)
-    func addError(message: NSString, source: NSString, stacktrace: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addError(message: message as String, type: nil, source: RUMErrorSource(from: source as String), stack: stacktrace as String, attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
+    func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.addError(message: message, type: nil, source: RUMErrorSource(from: source), stack: stacktrace, attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
         resolve(nil)
     }
 
     @objc(addTiming:withResolver:withRejecter:)
-    func addTiming(name: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addTiming(name: name as String)
+    func addTiming(name: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.addTiming(name: name)
         resolve(nil)
     }
 
@@ -195,7 +195,7 @@ class RNDdRum: NSObject {
         return castAttributesToSwift(context)
     }
 
-    private func addResourceMetrics(key: NSString, resourceTimings: [String: Any]) {
+    private func addResourceMetrics(key: String, resourceTimings: [String: Any]) {
         let fetch = timingValue(from: resourceTimings, for: Self.fetchTimingKey)
         let redirect = timingValue(from: resourceTimings, for: Self.redirectTimingKey)
         let dns = timingValue(from: resourceTimings, for: Self.dnsTimingKey)
@@ -206,7 +206,7 @@ class RNDdRum: NSObject {
 
         if let fetch = fetch {
             nativeRUM.addResourceMetrics(
-                resourceKey: key as String,
+                resourceKey: key,
                 fetch: fetch,
                 redirection: redirect,
                 dns: dns,

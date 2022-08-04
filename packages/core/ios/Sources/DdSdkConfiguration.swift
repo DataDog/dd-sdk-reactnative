@@ -20,9 +20,9 @@ import Foundation
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
-    public var clientToken: NSString = ""
-    public var env: NSString = ""
-    public var applicationId: NSString? = nil
+    public var clientToken: String = ""
+    public var env: String = ""
+    public var applicationId: String? = nil
     public var nativeCrashReportEnabled: Bool? = nil
     public var sampleRate: Double? = nil
     public var site: NSString? = nil
@@ -30,9 +30,9 @@ public class DdSdkConfiguration: NSObject {
     public var additionalConfig: NSDictionary? = nil
 
     public init(
-        clientToken: NSString,
-        env: NSString,
-        applicationId: NSString?,
+        clientToken: String,
+        env: String,
+        applicationId: String?,
         nativeCrashReportEnabled: Bool?,
         sampleRate: Double?,
         site: NSString?,

@@ -30,14 +30,14 @@ class RNDdTrace: NSObject {
     let methodQueue: DispatchQueue = sharedQueue
 
     @objc(startSpan:withContext:withTimestampms:withResolver:withRejecter:)
-    func startSpan(operation: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func startSpan(operation: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let id = UUID().uuidString as NSString
         let timeIntervalSince1970: TimeInterval = Double(timestampMs) / 1_000
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
 
         objc_sync_enter(self)
         spanDictionary[id] = tracer.startSpan(
-            operationName: operation as String,
+            operationName: operation,
             childOf: nil,
             tags: castAttributesToSwift(context).mergeWithGlobalAttributes(),
             startTime: startDate

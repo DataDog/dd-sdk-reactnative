@@ -41,30 +41,30 @@ class RNDdLogs: NSObject {
     }
 
     @objc(debug:withContext:withResolver:withRejecter:)
-    func debug(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
-        logger.debug(message as String, error: nil, attributes: attributes)
+        logger.debug(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(info:withContext:withResolver:withRejecter:)
-    func info(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
-        logger.info(message as String, error: nil, attributes: attributes)
+        logger.info(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(warn:withContext:withResolver:withRejecter:)
-    func warn(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
-        logger.warn(message as String, error: nil, attributes: attributes)
+        logger.warn(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc(error:withContext:withResolver:withRejecter:)
-    func error(message: NSString, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
-        logger.error(message as String, error: nil, attributes: attributes)
+        logger.error(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 

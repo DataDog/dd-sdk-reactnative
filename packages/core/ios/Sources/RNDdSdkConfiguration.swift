@@ -9,17 +9,17 @@ import Foundation
 extension NSDictionary {
 
     func asDdSdkConfiguration() -> DdSdkConfiguration {
-        let clientToken = object(forKey: "clientToken") as? NSString
-        let env = object(forKey: "env") as? NSString
-        let applicationId = object(forKey: "applicationId") as? NSString
+        let clientToken = object(forKey: "clientToken") as? String
+        let env = object(forKey: "env") as? String
+        let applicationId = object(forKey: "applicationId") as? String
         let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
         let sampleRate = object(forKey: "sampleRate") as? Double
         let site = object(forKey: "site") as? NSString
         let trackingConsent = object(forKey: "trackingConsent") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         return DdSdkConfiguration(
-            clientToken: (clientToken != nil) ? clientToken! : NSString(),
-            env: (env != nil) ? env! : NSString(),
+            clientToken: (clientToken != nil) ? clientToken! : String(),
+            env: (env != nil) ? env! : String(),
             applicationId: applicationId,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             sampleRate: sampleRate,

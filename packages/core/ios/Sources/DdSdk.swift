@@ -83,17 +83,17 @@ class RNDdSdk: NSObject {
 
     func buildConfiguration(configuration: DdSdkConfiguration) -> Datadog.Configuration {
         let ddConfigBuilder: Datadog.Configuration.Builder
-        if let rumAppID = configuration.applicationId as String? {
+        if let rumAppID = configuration.applicationId {
             ddConfigBuilder = Datadog.Configuration.builderUsing(
                 rumApplicationID: rumAppID,
-                clientToken: configuration.clientToken as String,
-                environment: configuration.env as String
+                clientToken: configuration.clientToken,
+                environment: configuration.env
             )
             .set(rumSessionsSamplingRate: Float(configuration.sampleRate ?? 100.0))
         } else {
             ddConfigBuilder = Datadog.Configuration.builderUsing(
-                clientToken: configuration.clientToken as String,
-                environment: configuration.env as String
+                clientToken: configuration.clientToken,
+                environment: configuration.env
             )
         }
 
