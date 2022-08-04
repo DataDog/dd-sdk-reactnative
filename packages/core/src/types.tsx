@@ -143,13 +143,13 @@ export type DdRumType = {
 
     /**
      * Start tracking a RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
      */
     startAction(
-        type: string,
+        type: RumActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -157,13 +157,13 @@ export type DdRumType = {
 
     /**
      * Stop tracking the ongoing RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     stopAction(
-        type: string,
+        type: RumActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -182,13 +182,13 @@ export type DdRumType = {
 
     /**
      * Add a RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addAction(
-        type: string,
+        type: RumActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -222,7 +222,7 @@ export type DdRumType = {
     stopResource(
         key: string,
         statusCode: number,
-        kind: string,
+        kind: ResourceKind,
         size?: number,
         context?: object,
         timestampMs?: number
@@ -231,14 +231,14 @@ export type DdRumType = {
     /**
      * Add a RUM Error.
      * @param message: The error message.
-     * @param source: The error source (network, source, console, logger, …).
+     * @param source: The error source (network, source, console, webview, custom).
      * @param stacktrace: The error stacktrace.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addError(
         message: string,
-        source: string,
+        source: ErrorSource,
         stacktrace: string,
         context?: object,
         timestampMs?: number
@@ -250,3 +250,40 @@ export type DdRumType = {
      */
     addTiming(name: string): Promise<void>;
 };
+
+/**
+ * Describe the type of a RUM Action.
+ */
+export enum RumActionType {
+    /** User tapped on a widget. */
+    TAP = 'TAP',
+    /** User scrolled a view. */
+    SCROLL = 'SCROLL',
+    /** User swiped on a view. */
+    SWIPE = 'SWIPE',
+    /** User pressed hardware back button (Android only). */
+    BACK = 'BACK',
+    /** A custom action. */
+    CUSTOM = 'CUSTOM'
+}
+
+export type ResourceKind =
+    | 'image'
+    | 'xhr'
+    | 'beacon'
+    | 'css'
+    | 'document'
+    | 'fetch'
+    | 'font'
+    | 'js'
+    | 'media'
+    | 'other'
+    | 'native';
+
+export enum ErrorSource {
+    NETWORK = 'NETWORK',
+    SOURCE = 'SOURCE',
+    CONSOLE = 'CONSOLE',
+    WEBVIEW = 'WEBVIEW',
+    CUSTOM = 'CUSTOM'
+}

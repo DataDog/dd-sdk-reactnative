@@ -143,13 +143,13 @@ export type DdNativeRumType = {
 
     /**
      * Start tracking a RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
      */
     startAction(
-        type: string,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -157,13 +157,13 @@ export type DdNativeRumType = {
 
     /**
      * Stop tracking the ongoing RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     stopAction(
-        type: string,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -171,13 +171,13 @@ export type DdNativeRumType = {
 
     /**
      * Add a RUM Action.
-     * @param type: The action type (tap, scroll, swipe, click, custom).
+     * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addAction(
-        type: string,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -211,7 +211,7 @@ export type DdNativeRumType = {
     stopResource(
         key: string,
         statusCode: number,
-        kind: string,
+        kind: ResourceKind,
         size?: number,
         context?: object,
         timestampMs?: number
@@ -220,14 +220,14 @@ export type DdNativeRumType = {
     /**
      * Add a RUM Error.
      * @param message: The error message.
-     * @param source: The error source (network, source, console, logger, …).
+     * @param source: The error source (network, source, console, webview, custom).
      * @param stacktrace: The error stacktrace.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addError(
         message: string,
-        source: string,
+        source: ErrorSource,
         stacktrace: string,
         context?: object,
         timestampMs?: number
@@ -239,3 +239,20 @@ export type DdNativeRumType = {
      */
     addTiming(name: string): Promise<void>;
 };
+
+type ActionType = 'TAP' | 'SCROLL' | 'SWIPE' | 'BACK' | 'CUSTOM';
+
+type ResourceKind =
+    | 'image'
+    | 'xhr'
+    | 'beacon'
+    | 'css'
+    | 'document'
+    | 'fetch'
+    | 'font'
+    | 'js'
+    | 'media'
+    | 'other'
+    | 'native';
+
+type ErrorSource = 'NETWORK' | 'SOURCE' | 'CONSOLE' | 'WEBVIEW' | 'CUSTOM';

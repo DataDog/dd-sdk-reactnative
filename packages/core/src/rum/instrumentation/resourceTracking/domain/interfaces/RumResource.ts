@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ResourceKind } from '../../../../../../../core/src/types';
 import type { DdRumResourceTracingAttributes } from '../distributedTracing';
 
 export interface RUMResource {
@@ -11,7 +12,7 @@ export interface RUMResource {
     request: {
         method: string;
         url: string;
-        kind: string;
+        kind: ResourceKind;
     };
     tracingAttributes: DdRumResourceTracingAttributes;
     response: {

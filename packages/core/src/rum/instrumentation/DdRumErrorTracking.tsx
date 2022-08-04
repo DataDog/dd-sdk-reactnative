@@ -9,11 +9,10 @@ import type { ErrorHandlerCallback } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdRum } from '../../foundation';
+import { ErrorSource } from '../../types';
 
 const EMPTY_MESSAGE = 'Unknown Error';
 const EMPTY_STACK_TRACE = '';
-const TYPE_SOURCE = 'SOURCE';
-const TYPE_CONSOLE = 'CONSOLE';
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
@@ -66,7 +65,7 @@ export class DdRumErrorTracking {
     static onGlobalError(error: any, isFatal?: boolean): void {
         const message = DdRumErrorTracking.getErrorMessage(error);
         const stacktrace = DdRumErrorTracking.getErrorStackTrace(error);
-        DdRum.addError(message, TYPE_SOURCE, stacktrace, {
+        DdRum.addError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
         }).then(() => {
@@ -104,7 +103,7 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        DdRum.addError(message, TYPE_CONSOLE, stack).then(() => {
+        DdRum.addError(message, ErrorSource.CONSOLE, stack).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
         });
     }

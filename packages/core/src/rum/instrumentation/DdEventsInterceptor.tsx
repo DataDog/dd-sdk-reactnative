@@ -7,6 +7,7 @@
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdRum } from '../../foundation';
+import { RumActionType } from '../../types';
 
 import type EventsInterceptor from './EventsInterceptor';
 
@@ -46,7 +47,7 @@ export class DdEventsInterceptor implements EventsInterceptor {
     private handleTargetEvent(targetNode: any | null) {
         if (targetNode) {
             const resolvedTargetName = this.resolveTargetName(targetNode);
-            DdRum.addAction(RumActionType.TAP.valueOf(), resolvedTargetName);
+            DdRum.addAction(RumActionType.TAP, resolvedTargetName);
         }
     }
 
@@ -86,20 +87,4 @@ export class DdEventsInterceptor implements EventsInterceptor {
         }
         return null;
     }
-}
-
-/**
- * Describe the type of a RUM Action.
- */
-export enum RumActionType {
-    /** User tapped on a widget. */
-    TAP = 'TAP',
-    /** User scrolled a view. */
-    SCROLL = 'SCROLL',
-    /** User swiped on a view. */
-    SWIPE = 'SWIPE',
-    /** User clicked on a widget (not used on Mobile). */
-    CLICK = 'CLICK',
-    /** A custom action. */
-    CUSTOM = 'CUSTOM'
 }
