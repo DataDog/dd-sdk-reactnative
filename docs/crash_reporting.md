@@ -72,6 +72,104 @@ yarn add -D @datadog/datadog-ci
 npm install --save-dev @datadog/datadog-ci
 ```
 
+#### Automatically on each release build (React Native >= 0.69)
+
+Manually uploading your sourcemaps on every release build takes time and is prone to errors. We recommend automatically sending your sourcemaps every time you run a release build.
+
+Create a new script file named `datadog-sourcemaps.sh` at the root of your project, containing this:
+
+```shell
+#!/bin/sh
+
+# If the build runs from XCode, we cannot use yarn.
+# Therefore we need to check first which yarn command is appropriate
+package_manager_test_command="bin" # both `yarn bin` and `npm bin` are valid commands
+test_and_set_package_manager_bin()
+{
+  $(echo $1 $package_manager_test_command) && export PACKAGE_MANAGER_BIN=$1
+}
+
+test_and_set_package_manager_bin "yarn" || # Replace yarn by npm if you use npm
+test_and_set_package_manager_bin "/opt/homebrew/bin/node /opt/homebrew/bin/yarn" || # Replace yarn by npm if you use npm
+echo "package manager not found"
+
+REACT_NATIVE_XCODE="node_modules/react-native/scripts/react-native-xcode.sh"
+DATADOG_XCODE="$(echo $PACKAGE_MANAGER_BIN) datadog-ci react-native xcode"
+
+/bin/sh -c "$DATADOG_XCODE $REACT_NATIVE_XCODE"
+```
+
+This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
+
+-   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+-   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+
+It then runs this command that will take care of uploading the sourcemaps with all the right parameters for you. See [datadog-ci documentation][12] for more information.
+
+Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like this:
+
+```shell
+set -e
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+# Add these two lines
+REACT_NATIVE_XCODE="./datadog-sourcemaps.sh"
+export SOURCEMAP_FILE=./main.jsbundle.map
+
+# Edit the next line
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+```
+
+For the upload to work, you need to provide your Datadog API key. If you use a command-line tool or an external service, you can specify it as a `DATADOG_API_KEY` environment variable. If you run the build from XCode, create a `datadog-ci.json` file at the root of your project containing the API key:
+
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+
+#### Automatically on each release build (React Native < 0.69)
+
+Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like this:
+
+```shell
+set -e
+
+export NODE_BINARY=node
+# If the build runs from XCode, we cannot use ${this.packageManager}.
+# Therefore we need to check first which ${this.packageManager} command is appropriate
+package_manager_test_command="bin" # both `yarn bin` and `npm bin` are valid commands
+test_and_set_package_manager_bin()
+{
+  $(echo $1 $package_manager_test_command) && export PACKAGE_MANAGER_BIN=$1
+}
+
+test_and_set_package_manager_bin "yarn" || # Replace yarn by npm if you use npm
+test_and_set_package_manager_bin "/opt/homebrew/bin/node /opt/homebrew/bin/yarn" || # Replace yarn by npm if you use npm
+echo "package manager not found"
+
+export SOURCEMAP_FILE=./build/main.jsbundle.map
+$(echo $PACKAGE_MANAGER_BIN datadog-ci react-native xcode)
+```
+
+This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
+
+-   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+-   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+
+It then runs this command that will take care of uploading the sourcemaps with all the right parameters for you. See [datadog-ci documentation][12] for more information.
+
+For the upload to work, you need to provide your Datadog API key. If you use a command-line tool or an external service, you can specify it as a `DATADOG_API_KEY` environment variable. If you run the build from XCode, create a `datadog-ci.json` file at the root of your project containing the API key:
+
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+
 #### Manually on each build (without Hermes)
 
 To output a source map, you need to edit the XCode build phase "Bundle React Native Code and Images".
@@ -143,7 +241,7 @@ yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $
 
 #### Manually on each build
 
-On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`. If your application has more comprehensive variants, replace `release` by your variant's name in the paths. 
+On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`. If your application has more comprehensive variants, replace `release` by your variant's name in the paths.
 
 After running your build, upload your source map by running this from your React Native project root:
 
@@ -221,3 +319,7 @@ To verify your React Native Crash Reporting and Error Tracking configuration, yo
 [6]: https://github.com/datadog/dd-sdk-android-gradle-plugin
 [7]: https://github.com/cwhenderson20/react-native-crash-tester
 [8]: https://docs.datadoghq.com/getting_started/site/
+[9]: https://fastlane.tools/
+[10]: https://appcenter.ms/
+[11]: https://www.bitrise.io/
+[12]: https://github.com/DataDog/datadog-ci/tree/master/src/commands/react-native#xcode
