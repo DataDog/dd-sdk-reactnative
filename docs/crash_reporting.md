@@ -239,6 +239,24 @@ yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $
 
 ### Upload JavaScript source maps on Android builds
 
+#### Automatically on each release build
+
+In your `android/app/build.gradle` file, add right after the `apply from: "../../node_modules/react-native/react.gradle"` line:
+
+```groovy
+apply from: "../../node_modules/@datadog/mobile-react-native/datadog-sourcemaps.gradle"
+```
+
+For the upload to work, you need to provide your Datadog API key. You can specify it as a `DATADOG_API_KEY` environment variable, or create a `datadog-ci.json` file at the root of your project containing the API key:
+
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+
 #### Manually on each build
 
 On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`. If your application has more comprehensive variants, replace `release` by your variant's name in the paths.
