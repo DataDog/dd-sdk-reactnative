@@ -18,6 +18,7 @@ package/android/src/main/java/com/datadog/reactnative/DdSdkBridgeExt.kt
 package/android/src/main/java/com/datadog/reactnative/DdSdkConfigurationExt.kt
 package/android/src/main/java/com/datadog/reactnative/DdSdkReactNativePackage.kt
 package/android/src/main/java/com/datadog/reactnative/DdTrace.kt
+package/datadog-sourcemaps.gradle
 package/ios
 package/ios/DdSdkReactNative.xcodeproj
 package/ios/DdSdkReactNative.xcodeproj/project.pbxproj
@@ -248,6 +249,7 @@ package/src/rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequ
 package/src/rum/instrumentation/resourceTracking/domain
 package/src/rum/instrumentation/resourceTracking/domain/__tests__
 package/src/rum/instrumentation/resourceTracking/domain/__tests__/distributedTracing.test.ts
+package/src/rum/instrumentation/resourceTracking/domain/__tests__/firstPartyHosts.test.ts
 package/src/rum/instrumentation/resourceTracking/domain/distributedTracing.tsx
 package/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.ts
 package/src/rum/instrumentation/resourceTracking/domain/interfaces
