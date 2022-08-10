@@ -65,7 +65,23 @@ await DdSdkReactNative.initialize(config);
 // Once the Datadog SDK is initialized, you need to setup view tracking in order to see data in the RUM dashboard.
 ```
 
-For information about tracking Expo crashes, see [Expo Crash Reporting and Error Tracking][6].
+### Add the config plugin
+
+<div class="alert alert-info"><p>If you have not enabled crash reporting you can skip this step.<p><div>
+
+Add `expo-datadog` to your plugins in the `app.json` file:
+
+```json
+{
+    "expo": {
+        "plugins": ["expo-datadog"]
+    }
+}
+```
+
+Run `eas secret:create` to set `DATADOG_API_KEY` and `DD_API_KEY` to your Datadog API key.
+
+This plugin takes care of uploading the dSYMs, source maps and Proguard mapping files on every EAS build. For information about tracking Expo crashes, see [Expo Crash Reporting and Error Tracking][6].
 
 ## Expo Go
 
