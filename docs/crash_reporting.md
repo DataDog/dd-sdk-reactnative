@@ -74,15 +74,16 @@ npm install --save-dev @datadog/datadog-ci
 
 #### Automatically on each release build (React Native >= 0.69)
 
-Manually uploading your sourcemaps on every release build takes time and is prone to errors. We recommend automatically sending your sourcemaps every time you run a release build.
+Manually uploading your source maps on every release build takes time and is prone to errors. Datadog recommends automatically sending your source maps every time you run a release build.
 
-Create a new script file named `datadog-sourcemaps.sh` at the root of your project, containing this:
+Create a script file named `datadog-sourcemaps.sh` at the root of your project containing the following:
 
 ```shell
 #!/bin/sh
+set -e
 
 # If the build runs from XCode, we cannot use yarn.
-# Therefore we need to check first which yarn command is appropriate
+# Check first which yarn executable is appropriate
 package_manager_test_command="bin" # both `yarn bin` and `npm bin` are valid commands
 test_and_set_package_manager_bin()
 {
@@ -101,12 +102,12 @@ DATADOG_XCODE="$(echo $PACKAGE_MANAGER_BIN) datadog-ci react-native xcode"
 
 This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
 
--   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
--   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+- `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+- `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
 
-It then runs this command that will take care of uploading the sourcemaps with all the right parameters for you. See [datadog-ci documentation][12] for more information.
+It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
-Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like this:
+Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like the following:
 
 ```shell
 set -e
@@ -127,11 +128,11 @@ For the upload to work, you need to provide your Datadog API key. If you use a c
 }
 ```
 
-You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
 
 #### Automatically on each release build (React Native < 0.69)
 
-Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like this:
+Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like the following:
 
 ```shell
 set -e
@@ -155,10 +156,10 @@ $(echo $PACKAGE_MANAGER_BIN datadog-ci react-native xcode)
 
 This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
 
--   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
--   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+- `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+- `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
 
-It then runs this command that will take care of uploading the sourcemaps with all the right parameters for you. See [datadog-ci documentation][12] for more information.
+It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
 For the upload to work, you need to provide your Datadog API key. If you use a command-line tool or an external service, you can specify it as a `DATADOG_API_KEY` environment variable. If you run the build from XCode, create a `datadog-ci.json` file at the root of your project containing the API key:
 
@@ -168,7 +169,7 @@ For the upload to work, you need to provide your Datadog API key. If you use a c
 }
 ```
 
-You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
 
 #### Manually on each build (without Hermes)
 
@@ -241,7 +242,7 @@ yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $
 
 #### Automatically on each release build
 
-In your `android/app/build.gradle` file, add right after the `apply from: "../../node_modules/react-native/react.gradle"` line:
+In your `android/app/build.gradle` file, add the following after the `apply from: "../../node_modules/react-native/react.gradle"` line:
 
 ```groovy
 apply from: "../../node_modules/@datadog/mobile-react-native/datadog-sourcemaps.gradle"
@@ -255,7 +256,7 @@ For the upload to work, you need to provide your Datadog API key. You can specif
 }
 ```
 
-You can also specify the Datadog site (e.g. `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
 
 #### Manually on each build
 
