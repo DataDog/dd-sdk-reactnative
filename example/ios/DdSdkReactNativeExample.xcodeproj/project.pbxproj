@@ -11,7 +11,7 @@
 		13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.xib */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		EF03F5691A66F35160D776EB /* libPods-DdSdkReactNativeExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CBB773EC96B846E062491446 /* libPods-DdSdkReactNativeExample.a */; };
+		401458C2FDEF4B3C1E62D188 /* libPods-DdSdkReactNativeExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE5FEB557ED245F6694FB19 /* libPods-DdSdkReactNativeExample.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,8 +38,8 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = DdSdkReactNativeExample/main.m; sourceTree = "<group>"; };
 		20F357AE24636CDF00C146DC /* DdSdkReactNativeExample-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DdSdkReactNativeExample-Bridging-Header.h"; sourceTree = "<group>"; };
 		4D7192F03A36A017E887435B /* Pods-DdSdkReactNativeExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DdSdkReactNativeExample.release.xcconfig"; path = "Target Support Files/Pods-DdSdkReactNativeExample/Pods-DdSdkReactNativeExample.release.xcconfig"; sourceTree = "<group>"; };
+		5CE5FEB557ED245F6694FB19 /* libPods-DdSdkReactNativeExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DdSdkReactNativeExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		871719007ECC5EAD276C345C /* Pods-DdSdkReactNativeExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DdSdkReactNativeExample.debug.xcconfig"; path = "Target Support Files/Pods-DdSdkReactNativeExample/Pods-DdSdkReactNativeExample.debug.xcconfig"; sourceTree = "<group>"; };
-		CBB773EC96B846E062491446 /* libPods-DdSdkReactNativeExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DdSdkReactNativeExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -48,7 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EF03F5691A66F35160D776EB /* libPods-DdSdkReactNativeExample.a in Frameworks */,
+				401458C2FDEF4B3C1E62D188 /* libPods-DdSdkReactNativeExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,7 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				CBB773EC96B846E062491446 /* libPods-DdSdkReactNativeExample.a */,
+				5CE5FEB557ED245F6694FB19 /* libPods-DdSdkReactNativeExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

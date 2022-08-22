@@ -21,8 +21,27 @@ target 'DdSdkReactNativeExample' do
   # uncomment this line to use the local version of the iOS DatadogSDK
   # pod 'DatadogSDKBridge', :path => '../../../dd-bridge-ios/DatadogSDKBridge.podspec'
 
+  # Make all the other frameworks into static frameworks by overriding the static_framework? function to return true
+  pre_install do |installer|
+    installer.pod_targets.each do |pod|
+      if pod.name == "DatadogSDKReactNative"
+        def pod.path
+          '../../packages/core/DatadogSDKReactNative.podspec'
+        end 
+        def pod.testspecs
+          ['Tests']
+        end
+      end
+    end
+  end
+
   post_install do |installer|
     react_native_post_install(installer)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    # Enable `DD_SDK_COMPILED_FOR_TESTING` condition when compiling `DatadogSDK` dependency:
+    datadog_sdk_target = installer.pods_project.targets.detect {|t| t.name == "DatadogSDK" }
+    datadog_sdk_target.build_configurations.each do |config|
+      config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
+    end
   end
 end

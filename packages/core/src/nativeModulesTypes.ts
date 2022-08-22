@@ -7,7 +7,7 @@
 /**
  * A configuration object to initialize Datadog's features.
  */
-export class DdSdkConfiguration {
+export class DdNativeSdkConfiguration {
     constructor(
         readonly clientToken: string,
         readonly env: string,
@@ -23,12 +23,12 @@ export class DdSdkConfiguration {
 /**
  * The entry point to initialize Datadog's features.
  */
-export type DdSdkType = {
+export type DdNativeSdkType = {
     /**
      * Initializes Datadog's features.
      * @param configuration: The configuration to use.
      */
-    initialize(configuration: DdSdkConfiguration): Promise<void>;
+    initialize(configuration: DdNativeSdkConfiguration): Promise<void>;
 
     /**
      * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
@@ -52,7 +52,7 @@ export type DdSdkType = {
 /**
  * The entry point to use Datadog's Logs feature.
  */
-export type DdLogsType = {
+export type DdNativeLogsType = {
     /**
      * Send a log with level debug.
      * @param message: The message to send.
@@ -85,7 +85,7 @@ export type DdLogsType = {
 /**
  * The entry point to use Datadog's Trace feature.
  */
-export type DdTraceType = {
+export type DdNativeTraceType = {
     /**
      * Start a span, and returns a unique identifier for the span.
      * @param operation: The operation name of the span.
@@ -114,7 +114,7 @@ export type DdTraceType = {
 /**
  * The entry point to use Datadog's RUM feature.
  */
-export type DdRumType = {
+export type DdNativeRumType = {
     /**
      * Start tracking a RUM View.
      * @param key: The view unique key identifier.
@@ -149,7 +149,7 @@ export type DdRumType = {
      * @param timestampMs: The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
      */
     startAction(
-        type: RumActionType,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -163,22 +163,11 @@ export type DdRumType = {
      * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     stopAction(
-        type: RumActionType,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
     ): Promise<void>;
-
-    /**
-     * Stop tracking the ongoing RUM Action.
-     *
-     * Warning: using this function signature can lead to inconsistent behaviors on iOS and Android when multiple actions are started in parallel.
-     *
-     * @deprecated add the `type` and `name` of the action as first two arguments.
-     * @param context: The additional context to send.
-     * @param timestampMs: The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
-     */
-    stopAction(context?: object, timestampMs?: number): Promise<void>;
 
     /**
      * Add a RUM Action.
@@ -188,7 +177,7 @@ export type DdRumType = {
      * @param timestampMs: The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addAction(
-        type: RumActionType,
+        type: ActionType,
         name: string,
         context?: object,
         timestampMs?: number
@@ -251,23 +240,9 @@ export type DdRumType = {
     addTiming(name: string): Promise<void>;
 };
 
-/**
- * Describe the type of a RUM Action.
- */
-export enum RumActionType {
-    /** User tapped on a widget. */
-    TAP = 'TAP',
-    /** User scrolled a view. */
-    SCROLL = 'SCROLL',
-    /** User swiped on a view. */
-    SWIPE = 'SWIPE',
-    /** User pressed hardware back button (Android only). */
-    BACK = 'BACK',
-    /** A custom action. */
-    CUSTOM = 'CUSTOM'
-}
+type ActionType = 'TAP' | 'SCROLL' | 'SWIPE' | 'BACK' | 'CUSTOM';
 
-export type ResourceKind =
+type ResourceKind =
     | 'image'
     | 'xhr'
     | 'beacon'
@@ -280,10 +255,4 @@ export type ResourceKind =
     | 'other'
     | 'native';
 
-export enum ErrorSource {
-    NETWORK = 'NETWORK',
-    SOURCE = 'SOURCE',
-    CONSOLE = 'CONSOLE',
-    WEBVIEW = 'WEBVIEW',
-    CUSTOM = 'CUSTOM'
-}
+type ErrorSource = 'NETWORK' | 'SOURCE' | 'CONSOLE' | 'WEBVIEW' | 'CUSTOM';

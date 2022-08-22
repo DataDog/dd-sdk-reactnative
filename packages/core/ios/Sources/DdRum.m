@@ -28,7 +28,9 @@ RCT_EXTERN_METHOD(startAction:(NSString)type
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(stopAction:(NSDictionary)context
+RCT_EXTERN_METHOD(stopAction:(NSString)type
+                 withName:(NSString)name
+                 withContext:(NSDictionary)context
                  withTimestampms:(NSInteger)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)

@@ -6,18 +6,8 @@
 
 import XCTest
 @testable import DatadogSDKReactNative
-@testable import React.RCTModuleData
+@testable import React
 
-// Since RN tooling does the modules linking automatically, it doesn't include testspecs
-// To do that modify node_modules/@react-native-community/cli-platform-ios/native_modules.rb#L90 to:
-//
-// if spec.name == "DatadogSDKReactNative"
-//   pod spec.name, :path => relative_path.to_path, :testspecs => ['Tests']
-// else
-//   pod spec.name, :path => relative_path.to_path
-// end
-//
-// and only after that do 'pod install'
 class ModulesTest: XCTestCase {
 
     func testAllModulesUseSameQueue() {
