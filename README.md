@@ -407,7 +407,7 @@ pre_install do |installer|
 end
 ```
 
-N.B.: This solution comes from this [StackOverflow][14] post.
+**Note:** This solution comes from this [StackOverflow][14] post.
 
 ## License
 
