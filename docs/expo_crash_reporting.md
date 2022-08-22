@@ -41,9 +41,9 @@ You can disable some files from uploading by setting the `iosDsyms`, `iosSourcem
 
 ### Setting the Datadog site
 
-Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, for example: `datadoghq.eu`. By default `datadoghq.com` will be used.
+Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, for example: `datadoghq.eu`. By default, `datadoghq.com` is used.
 
-Due to the discrepancy in how your plugins are implemented, you also need to specify the `site` as a configuration plugin parameter, for example `EU1`. By default `US1` will be used.
+Due to the discrepancy in how your plugins are implemented, you need to specify the `site` as a configuration plugin parameter, for example `EU1`. By default, `US1` is used.
 
 ```json
 {
@@ -62,7 +62,7 @@ Due to the discrepancy in how your plugins are implemented, you also need to spe
 
 ### Plugin configuration options
 
-Due to the discrepancy in how your plugins are implemented, you need to specify the `site` as an environment secret and as a configuration plugin parameter.
+You also need to specify the `site` as an environment secret.
 
 | Parameter                     | Default | Description                                                                                                                                 |
 | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
