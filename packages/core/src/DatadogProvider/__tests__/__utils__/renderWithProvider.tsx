@@ -2,8 +2,8 @@ import { render } from '@testing-library/react-native';
 import { Text, View } from 'react-native';
 import React from 'react';
 
-import { DatadogProvider } from '../../../DatadogProvider';
 import { DdSdkReactNativeConfiguration } from '../../../DdSdkReactNativeConfiguration';
+import { DatadogProvider } from '../../DatadogProvider';
 
 const DefaultTestApp = () => {
     return (

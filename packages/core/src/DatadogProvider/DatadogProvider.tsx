@@ -6,8 +6,8 @@
 import React, { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 
-import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from './DdSdkReactNative';
+import type { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../DdSdkReactNative';
 
 type Props = PropsWithChildren<{
     configuration: DdSdkReactNativeConfiguration;
