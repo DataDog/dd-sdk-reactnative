@@ -3,11 +3,25 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 
-type Props = PropsWithChildren<{}>;
+import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from './DdSdkReactNative';
 
-export const DatadogProvider: React.FC<Props> = ({ children }) => {
+type Props = PropsWithChildren<{
+    configuration: DdSdkReactNativeConfiguration;
+}>;
+
+export const DatadogProvider: React.FC<Props> = ({
+    children,
+    configuration
+}) => {
+    useEffect(() => {
+        DdSdkReactNative.initialize(configuration);
+        // Here we do not want to re-initialize if the configuration changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     return <>{children}</>;
 };

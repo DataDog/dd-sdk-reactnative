@@ -267,8 +267,9 @@ package/src/__mocks__
 package/src/__mocks__/InternalLog.tsx
 package/src/__tests__
 package/src/__tests__/DatadogProvider
+package/src/__tests__/DatadogProvider/__utils__
+package/src/__tests__/DatadogProvider/__utils__/renderWithProvider.tsx
 package/src/__tests__/DatadogProvider/initialization.test.tsx
-package/src/__tests__/DatadogProvider/renderWithProvider.tsx
 package/src/__tests__/DdRumWrapper.test.tsx
 package/src/__tests__/DdSdkReactNative.test.tsx
 package/src/__tests__/InternalLog.test.tsx
