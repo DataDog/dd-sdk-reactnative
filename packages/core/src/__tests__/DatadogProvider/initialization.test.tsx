@@ -7,8 +7,12 @@ describe('DatadogProvider', () => {
         jest.resetAllMocks();
     });
     describe('initialization', () => {
-        it('renders its children and initializes the SDK', () => {
-            const { getByText } = renderWithProvider();
+        it('renders its children and initializes the SDK once', () => {
+            const {
+                getByText,
+                rerenderWithRandomConfig
+            } = renderWithProvider();
+
             getByText('I am a test application');
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(NativeModules.DdSdk.initialize.mock.calls[0])
@@ -32,6 +36,10 @@ describe('DatadogProvider', () => {
                   },
                 ]
             `);
+
+            // Re-render
+            rerenderWithRandomConfig();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
         });
     });
 });

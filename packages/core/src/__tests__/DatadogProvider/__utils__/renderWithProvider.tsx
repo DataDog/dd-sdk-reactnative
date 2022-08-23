@@ -29,9 +29,30 @@ export const renderWithProvider = (params?: {
     const AppComponent = params?.AppComponent || <DefaultTestApp />;
     const configuration = params?.configuration || defaultConfiguration;
 
-    return render(
+    const result = render(
         <DatadogProvider configuration={configuration}>
             {AppComponent}
         </DatadogProvider>
     );
+
+    const rerenderWithRandomConfig = () => {
+        const randomConfiguration = new DdSdkReactNativeConfiguration(
+            Math.random().toString(),
+            'fakeEnv',
+            'fakeApplicationId',
+            true,
+            true,
+            true
+        );
+        result.rerender(
+            <DatadogProvider configuration={randomConfiguration}>
+                {AppComponent}
+            </DatadogProvider>
+        );
+    };
+
+    return {
+        ...result,
+        rerenderWithRandomConfig
+    };
 };
