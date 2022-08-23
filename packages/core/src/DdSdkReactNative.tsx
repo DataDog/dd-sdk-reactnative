@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
 import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
@@ -160,6 +161,7 @@ export class DdSdkReactNative {
                     );
                     DdSdkReactNative.enableFeatures(configuration);
                     DdSdkReactNative.wasInitialized = true;
+                    BufferSingleton.onInitialization();
                     resolve();
                 },
                 rejection => {

@@ -18,7 +18,7 @@ const defaultConfiguration = new DdSdkReactNativeConfiguration(
     'fakeEnv',
     'fakeApplicationId',
     true,
-    true,
+    false, // TODO: the initialization is broken with trackResources in test, fix it
     true
 );
 
@@ -41,7 +41,7 @@ export const renderWithProvider = (params?: {
             'fakeEnv',
             'fakeApplicationId',
             true,
-            true,
+            false,
             true
         );
         result.rerender(
