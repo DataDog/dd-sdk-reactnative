@@ -24,7 +24,9 @@ describe('BoundedBuffer', () => {
                 .mockReturnValueOnce('callbackId');
             const callbackWithId = jest.fn();
 
-            const bufferId = buffer.addCallbackReturningId(callbackReturningId);
+            const bufferId = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
             buffer.addCallbackWithId(callbackWithId, bufferId);
 
             await buffer.drain();
@@ -42,10 +44,10 @@ describe('BoundedBuffer', () => {
                 .mockReturnValueOnce('callbackId2');
             const callbackWithId = jest.fn();
 
-            const bufferId1 = buffer.addCallbackReturningId(
+            const bufferId1 = await buffer.addCallbackReturningId(
                 callbackReturningId
             );
-            const bufferId2 = buffer.addCallbackReturningId(
+            const bufferId2 = await buffer.addCallbackReturningId(
                 callbackReturningId
             );
             buffer.addCallbackWithId(callbackWithId, bufferId1);
@@ -81,7 +83,9 @@ describe('BoundedBuffer', () => {
             const callbackWithId = jest.fn();
 
             buffer.addCallback(fakeCallback);
-            const bufferId = buffer.addCallbackReturningId(callbackReturningId);
+            const bufferId = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
             buffer.addCallbackWithId(callbackWithId, bufferId);
 
             await buffer.drain();
@@ -99,7 +103,9 @@ describe('BoundedBuffer', () => {
             const callbackWithId = jest.fn();
 
             buffer.addCallback(fakeCallback);
-            const bufferId = buffer.addCallbackReturningId(callbackReturningId);
+            const bufferId = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
             buffer.addCallbackWithId(callbackWithId, bufferId);
 
             await buffer.drain();

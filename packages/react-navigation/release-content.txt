@@ -22,6 +22,13 @@ package/lib/module/rum/instrumentation/react-navigation.js.map
 package/lib/typescript
 package/lib/typescript/core
 package/lib/typescript/core/src
+package/lib/typescript/core/src/DatadogProvider
+package/lib/typescript/core/src/DatadogProvider/Buffer
+package/lib/typescript/core/src/DatadogProvider/Buffer/BoundedBuffer.d.ts
+package/lib/typescript/core/src/DatadogProvider/Buffer/BufferSingleton.d.ts
+package/lib/typescript/core/src/DatadogProvider/Buffer/DatadogBuffer.d.ts
+package/lib/typescript/core/src/DatadogProvider/Buffer/PassThroughBuffer.d.ts
+package/lib/typescript/core/src/DatadogProvider/Buffer/bufferNativeCall.d.ts
 package/lib/typescript/core/src/DdSdkReactNative.d.ts
 package/lib/typescript/core/src/DdSdkReactNativeConfiguration.d.ts
 package/lib/typescript/core/src/InternalLog.d.ts

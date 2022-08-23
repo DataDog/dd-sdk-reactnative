@@ -5,20 +5,20 @@ import { PassThroughBuffer } from './PassThroughBuffer';
 export class BufferSingleton {
     static bufferInstance: DatadogBuffer = new BoundedBuffer();
 
-    static addCallback = (callback: () => Promise<void>): void => {
+    static addCallback = (callback: () => Promise<void>): Promise<void> => {
         return BufferSingleton.bufferInstance.addCallback(callback);
     };
 
     static addCallbackReturningId = (
         callback: () => Promise<string>
-    ): string => {
+    ): Promise<string> => {
         return BufferSingleton.bufferInstance.addCallbackReturningId(callback);
     };
 
     static addCallbackWithId = (
         callback: (id: string) => Promise<void>,
         id: string
-    ): void => {
+    ): Promise<void> => {
         return BufferSingleton.bufferInstance.addCallbackWithId(callback, id);
     };
 

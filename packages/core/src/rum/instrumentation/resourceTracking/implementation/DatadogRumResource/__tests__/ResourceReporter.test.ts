@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { BufferSingleton } from '../../../../../../DatadogProvider/Buffer/BufferSingleton';
 import type { RUMResource } from '../../../domain/interfaces/RumResource';
 import { ResourceReporter } from '../ResourceReporter';
 
@@ -18,6 +19,7 @@ const flushPromises = () => new Promise(setImmediate);
 beforeEach(() => {
     DdRum.startResource.mockClear();
     DdRum.stopResource.mockClear();
+    BufferSingleton.onInitialization();
 });
 
 describe('Resource reporter', () => {

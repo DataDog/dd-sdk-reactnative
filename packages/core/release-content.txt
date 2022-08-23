@@ -84,6 +84,8 @@ package/lib/commonjs/DatadogProvider/Buffer/DatadogBuffer.js
 package/lib/commonjs/DatadogProvider/Buffer/DatadogBuffer.js.map
 package/lib/commonjs/DatadogProvider/Buffer/PassThroughBuffer.js
 package/lib/commonjs/DatadogProvider/Buffer/PassThroughBuffer.js.map
+package/lib/commonjs/DatadogProvider/Buffer/bufferNativeCall.js
+package/lib/commonjs/DatadogProvider/Buffer/bufferNativeCall.js.map
 package/lib/commonjs/DatadogProvider/DatadogProvider.js
 package/lib/commonjs/DatadogProvider/DatadogProvider.js.map
 package/lib/commonjs/DdSdkReactNative.js
@@ -164,6 +166,8 @@ package/lib/module/DatadogProvider/Buffer/DatadogBuffer.js
 package/lib/module/DatadogProvider/Buffer/DatadogBuffer.js.map
 package/lib/module/DatadogProvider/Buffer/PassThroughBuffer.js
 package/lib/module/DatadogProvider/Buffer/PassThroughBuffer.js.map
+package/lib/module/DatadogProvider/Buffer/bufferNativeCall.js
+package/lib/module/DatadogProvider/Buffer/bufferNativeCall.js.map
 package/lib/module/DatadogProvider/DatadogProvider.js
 package/lib/module/DatadogProvider/DatadogProvider.js.map
 package/lib/module/DdSdkReactNative.js
@@ -240,6 +244,7 @@ package/lib/typescript/DatadogProvider/Buffer/BoundedBuffer.d.ts
 package/lib/typescript/DatadogProvider/Buffer/BufferSingleton.d.ts
 package/lib/typescript/DatadogProvider/Buffer/DatadogBuffer.d.ts
 package/lib/typescript/DatadogProvider/Buffer/PassThroughBuffer.d.ts
+package/lib/typescript/DatadogProvider/Buffer/bufferNativeCall.d.ts
 package/lib/typescript/DatadogProvider/DatadogProvider.d.ts
 package/lib/typescript/DdSdkReactNative.d.ts
 package/lib/typescript/DdSdkReactNativeConfiguration.d.ts
@@ -289,6 +294,7 @@ package/src/DatadogProvider/Buffer/PassThroughBuffer.ts
 package/src/DatadogProvider/Buffer/__tests__
 package/src/DatadogProvider/Buffer/__tests__/BoundedBuffer.test.ts
 package/src/DatadogProvider/Buffer/__tests__/BufferSingleton.test.ts
+package/src/DatadogProvider/Buffer/bufferNativeCall.ts
 package/src/DatadogProvider/DatadogProvider.tsx
 package/src/DatadogProvider/__tests__
 package/src/DatadogProvider/__tests__/__utils__

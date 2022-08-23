@@ -16,7 +16,7 @@ describe('BufferSingleton', () => {
 
             // registering callbacks
             BufferSingleton.addCallback(fakeCallback);
-            const bufferId = BufferSingleton.addCallbackReturningId(
+            const bufferId = await BufferSingleton.addCallbackReturningId(
                 callbackReturningId
             );
             BufferSingleton.addCallbackWithId(callbackWithId, bufferId);

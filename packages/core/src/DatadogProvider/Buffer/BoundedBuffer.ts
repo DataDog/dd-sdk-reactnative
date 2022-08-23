@@ -35,6 +35,8 @@ export class BoundedBuffer extends DatadogBuffer {
         if (this.buffer.length < this.bufferSize) {
             this.buffer.push({ callback, _type: 'VOID' });
         }
+
+        return new Promise<void>(resolve => resolve(undefined));
     };
 
     addCallbackReturningId = (callback: () => Promise<string>) => {
@@ -48,7 +50,7 @@ export class BoundedBuffer extends DatadogBuffer {
             this.idTable[bufferId] = null;
         }
 
-        return bufferId;
+        return new Promise<string>(resolve => resolve(bufferId));
     };
 
     addCallbackWithId = (
@@ -62,6 +64,8 @@ export class BoundedBuffer extends DatadogBuffer {
                 _type: 'WITH_ID'
             });
         }
+
+        return new Promise<void>(resolve => resolve(undefined));
     };
 
     drain = async () => {
