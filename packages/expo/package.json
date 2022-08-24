@@ -12,7 +12,7 @@
     "expo-module": "expo-module"
   },
   "dependencies": {
-    "@datadog/mobile-react-native": "1.0.0-rc9"
+    "@datadog/mobile-react-native": "1.0.0"
   },
   "homepage": "https://github.com/DataDog/dd-sdk-reactnative/packages/expo",
   "repository": "https://github.com/DataDog/dd-sdk-reactnative",
