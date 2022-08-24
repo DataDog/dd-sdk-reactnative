@@ -79,9 +79,23 @@ Add `expo-datadog` to your plugins in the `app.json` file:
 }
 ```
 
-Run `eas secret:create` to set `DATADOG_API_KEY` and `DD_API_KEY` to your Datadog API key.
+This plugin takes care of uploading the dSYMs, source maps and Proguard mapping files on every EAS build.
 
-This plugin takes care of uploading the dSYMs, source maps and Proguard mapping files on every EAS build. For information about tracking Expo crashes, see [Expo Crash Reporting and Error Tracking][6].
+Add `@datadog/datadog-ci` as a development dependency. This package contains scripts to upload the source maps. You can install it with NPM:
+
+```sh
+npm install @datadog/datadog-ci --save-dev
+```
+
+or with Yarn:
+
+```sh
+yarn add -D @datadog/datadog-ci
+```
+
+Run `eas secret:create` to set `DATADOG_API_KEY` to your Datadog API key.
+
+For information about tracking Expo crashes, see [Expo Crash Reporting and Error Tracking][6].
 
 ## Expo Go
 

@@ -18,7 +18,19 @@ Your crash reports appear in [**Error Tracking**][1].
 
 Use the [`expo-datadog` package and configuration plugin][2]. For more information, see the [Expo and Expo Go documentation][3].
 
-Run `eas secret:create` to set `DATADOG_API_KEY` and `DD_API_KEY` to your Datadog API key.
+Add `@datadog/datadog-ci` as a development dependency. This package contains scripts to upload the source maps. You can install it with NPM:
+
+```sh
+npm install @datadog/datadog-ci --save-dev
+```
+
+or with Yarn:
+
+```sh
+yarn add -D @datadog/datadog-ci
+```
+
+Run `eas secret:create` to set `DATADOG_API_KEY` to your Datadog API key.
 
 ### Disable file uploads
 
@@ -43,34 +55,14 @@ You can disable some files from uploading by setting the `iosDsyms`, `iosSourcem
 
 Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, for example: `datadoghq.eu`. By default, `datadoghq.com` is used.
 
-Due to the discrepancy in how your plugins are implemented, you need to specify the `site` as a configuration plugin parameter, for example `EU1`. By default, `US1` is used.
-
-```json
-{
-    "expo": {
-        "plugins": [
-            [
-                "expo-datadog",
-                {
-                    "site": "EU1"
-                }
-            ]
-        ]
-    }
-}
-```
-
 ### Plugin configuration options
 
-You also need to specify the `site` as an environment secret.
-
-| Parameter                     | Default | Description                                                                                                                                 |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iosDsyms`                    | `true`  | Enables the uploading of dSYMS files for the symbolication of native iOS crashes.                                                           |
-| `iosSourcemaps`               | `true`  | Enables the uploading of JavaScript source maps on iOS builds.                                                                              |
-| `androidProguardMappingFiles` | `true`  | Enables the uploading of Proguard mapping files to deobfuscate native Android crashes (is only applied if obfuscation is enabled).          |
-| `androidSourcemaps`           | `true`  | Enables the uploading of JavaScript source maps on Android builds.                                                                          |
-| `site`                        | `US1`   | Your Datadog site (one of "US1", "US3", "US5", EU1", or "US1_FED"). Has to match the value used to initialize the Datadog React Native SDK. |
+| Parameter                     | Default | Description                                                                                                                        |
+| ----------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `iosDsyms`                    | `true`  | Enables the uploading of dSYMS files for the symbolication of native iOS crashes.                                                  |
+| `iosSourcemaps`               | `true`  | Enables the uploading of JavaScript source maps on iOS builds.                                                                     |
+| `androidProguardMappingFiles` | `true`  | Enables the uploading of Proguard mapping files to deobfuscate native Android crashes (is only applied if obfuscation is enabled). |
+| `androidSourcemaps`           | `true`  | Enables the uploading of JavaScript source maps on Android builds.                                                                 |
 
 ## Further reading
 
