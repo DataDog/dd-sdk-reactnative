@@ -11,11 +11,9 @@ import {
     ErrorTrackingOptions,
     getErrorTrackingPluginsFromOptions
 } from './getErrorTrackingPluginsFromOptions';
-import type { GradlePluginDatadogSite } from './pluginGlobalConfiguration';
 
 type PluginConfiguration =
     | {
-          site?: GradlePluginDatadogSite;
           errorTracking?: ErrorTrackingOptions;
       }
     | undefined;
@@ -23,9 +21,7 @@ type PluginConfiguration =
 const withDatadog: ConfigPlugin<PluginConfiguration> = (config, options) => {
     return withPlugins(
         config,
-        getErrorTrackingPluginsFromOptions(options && options.errorTracking, {
-            site: options && options.site
-        })
+        getErrorTrackingPluginsFromOptions(options && options.errorTracking)
     );
 };
 

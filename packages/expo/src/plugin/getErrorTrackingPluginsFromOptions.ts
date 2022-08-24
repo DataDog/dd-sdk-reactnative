@@ -6,7 +6,6 @@
 
 import type { ConfigPlugin, StaticPlugin } from '@expo/config-plugins';
 
-import { GradlePluginDatadogSite } from './pluginGlobalConfiguration';
 import withAndroidProguardMappingFiles from './withAndroidProguardMappingFiles/withAndroidProguardMappingFiles';
 import withAndroidSourcemaps from './withAndroidSourcemaps/withAndroidSourcemaps';
 import withIosDsyms from './withIosDsyms/withIosDsyms';
@@ -24,8 +23,7 @@ export type ErrorTrackingOptions = {
  * to `false`.
  */
 export const getErrorTrackingPluginsFromOptions = (
-    options: ErrorTrackingOptions | void,
-    params: { site?: GradlePluginDatadogSite }
+    options: ErrorTrackingOptions | void
 ): (ConfigPlugin<any> | StaticPlugin<any>)[] => {
     const ERROR_TRACKING_CONFIG_PLUGINS_MAP: Record<
         keyof ErrorTrackingOptions,
@@ -33,10 +31,7 @@ export const getErrorTrackingPluginsFromOptions = (
     > = {
         iosDsyms: withIosDsyms,
         iosSourcemaps: withIosSourcemaps,
-        androidProguardMappingFiles: [
-            withAndroidProguardMappingFiles,
-            { site: params.site }
-        ],
+        androidProguardMappingFiles: withAndroidProguardMappingFiles,
         androidSourcemaps: withAndroidSourcemaps
     };
 

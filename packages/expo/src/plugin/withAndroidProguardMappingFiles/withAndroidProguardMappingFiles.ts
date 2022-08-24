@@ -7,11 +7,7 @@
 import type { ConfigPlugin } from '@expo/config-plugins';
 import { withAppBuildGradle } from '@expo/config-plugins';
 
-import { GradlePluginDatadogSite } from '../pluginGlobalConfiguration';
-
-const withAndroidProguardMappingFiles: ConfigPlugin<{
-    site?: GradlePluginDatadogSite;
-}> = (config, { site }) => {
+const withAndroidProguardMappingFiles: ConfigPlugin<void> = config => {
     return withAppBuildGradle(config, config => {
         const appBuildGradle = config.modResults;
         if (
@@ -25,12 +21,11 @@ const withAndroidProguardMappingFiles: ConfigPlugin<{
         // Add the installation for the Android Gradle Plugin
         const installationBlock = [
             `plugins {`,
-            `    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.4.0"`,
+            `    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.0"`,
             `}`,
             ``,
             `datadog {`,
             `    checkProjectDependencies = "none"`,
-            getDatadogSiteLine(site),
             `}`,
             ``
         ].join('\n');
@@ -51,11 +46,6 @@ const withAndroidProguardMappingFiles: ConfigPlugin<{
 
         return config;
     });
-};
-
-const getDatadogSiteLine = (datadogSite?: string) => {
-    if (!datadogSite) return '';
-    return `    site = "${datadogSite}"`;
 };
 
 export default withAndroidProguardMappingFiles;
