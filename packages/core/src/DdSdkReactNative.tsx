@@ -5,7 +5,11 @@
  */
 
 import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
-import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
+import type {
+    DatadogProviderConfiguration,
+    DdSdkReactNativeConfiguration
+} from './DdSdkReactNativeConfiguration';
+import { InitializationMode } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -49,127 +53,62 @@ export class DdSdkReactNative {
      * @param configuration the configuration for the SDK library
      * @returns a Promise.
      */
-    static initialize(
+    static async initialize(
         configuration: DdSdkReactNativeConfiguration
     ): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (DdSdkReactNative.wasInitialized) {
-                InternalLog.log(
-                    "Can't initialize Datadog, SDK was already initialized",
-                    SdkVerbosity.WARN
-                );
-                if (!__DEV__) {
-                    DdSdk.telemetryDebug(
-                        'RN SDK was already initialized in javascript'
-                    );
-                }
-                resolve();
-                return;
-            }
+        await DdSdkReactNative.initializeNativeSDK(configuration);
+        DdSdkReactNative.enableFeatures(configuration);
+    }
 
-            InternalLog.verbosity = configuration.verbosity;
-
-            configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] =
-                'react-native';
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_SDK_VERSION
-            ] = sdkVersion;
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
-            ] = configuration.nativeViewTracking;
-            if (configuration.verbosity) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_SDK_VERBOSITY_KEY
-                ] = configuration.verbosity;
-            }
-
-            if (configuration.proxyConfig) {
-                const additionalConfig = configuration.additionalConfig;
-                const proxyConfig = configuration.proxyConfig;
-
-                additionalConfig[DdSdkReactNative.DD_PROXY_TYPE_KEY] =
-                    proxyConfig.type;
-                additionalConfig[DdSdkReactNative.DD_PROXY_ADDRESS_KEY] =
-                    proxyConfig.address;
-                additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
-                    proxyConfig.port;
-                if (proxyConfig.username && proxyConfig.password) {
-                    if (proxyConfig.type === ProxyType.SOCKS) {
-                        console.warn(
-                            "SOCKS proxy configuration doesn't support Basic authentication."
-                        );
-                    } else {
-                        additionalConfig[
-                            DdSdkReactNative.DD_PROXY_USERNAME_KEY
-                        ] = proxyConfig.username;
-                        additionalConfig[
-                            DdSdkReactNative.DD_PROXY_PASSWORD_KEY
-                        ] = proxyConfig.password;
-                    }
-                }
-            }
-
-            if (configuration.serviceName) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_SERVICE_NAME
-                ] = configuration.serviceName;
-            }
-
-            if (configuration.version) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_VERSION
-                ] = `${configuration.version}${
-                    configuration.versionSuffix
-                        ? `-${configuration.versionSuffix}`
-                        : ''
-                }`;
-            }
-
-            // If both version and version suffix are provided, we merge them into the version field.
-            // To avoid adding it in again the native part, we only set it if the version isn't set.
-            if (configuration.versionSuffix && !configuration.version) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_VERSION_SUFFIX
-                ] = `-${configuration.versionSuffix}`;
-            }
-
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
-            ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
-
-            configuration.additionalConfig['_dd.first_party_hosts'] =
-                configuration.firstPartyHosts;
-
-            DdSdk.initialize(
-                new DdSdkConfiguration(
-                    configuration.clientToken,
-                    configuration.env,
-                    configuration.applicationId,
-                    configuration.nativeCrashReportEnabled,
-                    configuration.sampleRate === undefined
-                        ? configuration.sessionSamplingRate
-                        : configuration.sampleRate,
-                    configuration.site,
-                    configuration.trackingConsent,
-                    configuration.additionalConfig,
-                    configuration.telemetrySampleRate
-                )
-            ).then(
-                () => {
-                    InternalLog.log(
-                        'Datadog SDK was initialized',
-                        SdkVerbosity.INFO
-                    );
-                    DdSdkReactNative.enableFeatures(configuration);
-                    DdSdkReactNative.wasInitialized = true;
-                    BufferSingleton.onInitialization();
-                    resolve();
-                },
-                rejection => {
-                    reject(rejection);
-                }
+    private static initializeNativeSDK = async (
+        configuration: DdSdkReactNativeConfiguration
+    ): Promise<void> => {
+        if (DdSdkReactNative.wasInitialized) {
+            InternalLog.log(
+                "Can't initialize Datadog, SDK was already initialized",
+                SdkVerbosity.WARN
             );
-        });
+            if (!__DEV__) {
+                DdSdk.telemetryDebug(
+                    'RN SDK was already initialized in javascript'
+                );
+            }
+            return new Promise(resolve => resolve());
+        }
+
+        InternalLog.verbosity = configuration.verbosity;
+
+        DdSdkReactNative.buildConfiguration(configuration);
+
+        await DdSdk.initialize(
+            new DdSdkConfiguration(
+                configuration.clientToken,
+                configuration.env,
+                configuration.applicationId,
+                configuration.nativeCrashReportEnabled,
+                configuration.sampleRate === undefined
+                    ? configuration.sessionSamplingRate
+                    : configuration.sampleRate,
+                configuration.site,
+                configuration.trackingConsent,
+                configuration.additionalConfig
+            )
+        );
+        InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
+        DdSdkReactNative.wasInitialized = true;
+        BufferSingleton.onInitialization();
+    };
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static async _initializeFromDatadogProvider(
+        configuration: DatadogProviderConfiguration
+    ): Promise<void> {
+        DdSdkReactNative.enableFeatures(configuration);
+        if (configuration.initializationMode === InitializationMode.SYNC) {
+            await DdSdkReactNative.initializeNativeSDK(configuration);
+        }
     }
 
     /**
@@ -209,6 +148,78 @@ export class DdSdkReactNative {
         InternalLog.log(`Setting consent ${consent}`, SdkVerbosity.DEBUG);
         return DdSdk.setTrackingConsent(consent);
     }
+
+    private static buildConfiguration = (
+        configuration: DdSdkReactNativeConfiguration
+    ) => {
+        configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] =
+            'react-native';
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_SDK_VERSION
+        ] = sdkVersion;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
+        ] = configuration.nativeViewTracking;
+        if (configuration.verbosity) {
+            configuration.additionalConfig[
+                DdSdkReactNative.DD_SDK_VERBOSITY_KEY
+            ] = configuration.verbosity;
+        }
+
+        if (configuration.proxyConfig) {
+            const additionalConfig = configuration.additionalConfig;
+            const proxyConfig = configuration.proxyConfig;
+
+            additionalConfig[DdSdkReactNative.DD_PROXY_TYPE_KEY] =
+                proxyConfig.type;
+            additionalConfig[DdSdkReactNative.DD_PROXY_ADDRESS_KEY] =
+                proxyConfig.address;
+            additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
+                proxyConfig.port;
+            if (proxyConfig.username && proxyConfig.password) {
+                if (proxyConfig.type === ProxyType.SOCKS) {
+                    console.warn(
+                        "SOCKS proxy configuration doesn't support Basic authentication."
+                    );
+                } else {
+                    additionalConfig[DdSdkReactNative.DD_PROXY_USERNAME_KEY] =
+                        proxyConfig.username;
+                    additionalConfig[DdSdkReactNative.DD_PROXY_PASSWORD_KEY] =
+                        proxyConfig.password;
+                }
+            }
+        }
+
+        if (configuration.serviceName) {
+            configuration.additionalConfig[DdSdkReactNative.DD_SERVICE_NAME] =
+                configuration.serviceName;
+        }
+
+        if (configuration.version) {
+            configuration.additionalConfig[DdSdkReactNative.DD_VERSION] = `${
+                configuration.version
+            }${
+                configuration.versionSuffix
+                    ? `-${configuration.versionSuffix}`
+                    : ''
+            }`;
+        }
+
+        // If both version and version suffix are provided, we merge them into the version field.
+        // To avoid adding it in again the native part, we only set it if the version isn't set.
+        if (configuration.versionSuffix && !configuration.version) {
+            configuration.additionalConfig[
+                DdSdkReactNative.DD_VERSION_SUFFIX
+            ] = `-${configuration.versionSuffix}`;
+        }
+
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
+        ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
+
+        configuration.additionalConfig['_dd.first_party_hosts'] =
+            configuration.firstPartyHosts;
+    };
 
     private static enableFeatures(
         configuration: DdSdkReactNativeConfiguration

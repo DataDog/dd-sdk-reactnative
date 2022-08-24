@@ -3,25 +3,34 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { PropsWithChildren } from 'react';
 
-import type { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
+import type { DatadogProviderConfiguration } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
 
 type Props = PropsWithChildren<{
-    configuration: DdSdkReactNativeConfiguration;
+    configuration: DatadogProviderConfiguration;
 }>;
 
-export const DatadogProvider: React.FC<Props> = ({
+type StaticProperties = {
+    isInitialized: boolean;
+};
+
+export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     children,
     configuration
 }) => {
-    useEffect(() => {
-        DdSdkReactNative.initialize(configuration);
-        // Here we do not want to re-initialize if the configuration changes
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    if (!DatadogProvider.isInitialized) {
+        // Here we cannot use a useEffect hook since it would be called after
+        // the first render. Thus, we wouldn't enable auto-instrumentation on
+        // the elements rendered in this first render and what happens during
+        // the first render.
+        DdSdkReactNative._initializeFromDatadogProvider(configuration);
+        DatadogProvider.isInitialized = true;
+    }
 
     return <>{children}</>;
 };
+
+DatadogProvider.isInitialized = false;

@@ -300,6 +300,7 @@ package/src/DatadogProvider/__tests__
 package/src/DatadogProvider/__tests__/__utils__
 package/src/DatadogProvider/__tests__/__utils__/renderWithProvider.tsx
 package/src/DatadogProvider/__tests__/initialization.test.tsx
+package/src/DatadogProvider/__tests__/initializationModes.test.tsx
 package/src/DdSdkReactNative.tsx
 package/src/DdSdkReactNativeConfiguration.tsx
 package/src/InternalLog.tsx

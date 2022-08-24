@@ -76,3 +76,12 @@ export class DdSdkReactNativeConfiguration {
         readonly trackingConsent: TrackingConsent = TrackingConsent.GRANTED
     ) {}
 }
+
+export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration {
+    public initializationMode: InitializationMode = InitializationMode.SYNC;
+}
+
+export enum InitializationMode {
+    SYNC = 'SYNC',
+    SKIP = 'SKIP'
+}

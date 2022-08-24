@@ -1,19 +1,20 @@
 import { render } from '@testing-library/react-native';
-import { Text, View } from 'react-native';
+import { Button, Text, View } from 'react-native';
 import React from 'react';
 
-import { DdSdkReactNativeConfiguration } from '../../../DdSdkReactNativeConfiguration';
+import { DatadogProviderConfiguration } from '../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
 
 const DefaultTestApp = () => {
     return (
         <View>
             <Text>I am a test application</Text>
+            <Button title="test button" onPress={() => {}} />
         </View>
     );
 };
 
-const defaultConfiguration = new DdSdkReactNativeConfiguration(
+export const defaultConfiguration = new DatadogProviderConfiguration(
     'fakeToken',
     'fakeEnv',
     'fakeApplicationId',
@@ -24,7 +25,7 @@ const defaultConfiguration = new DdSdkReactNativeConfiguration(
 
 export const renderWithProvider = (params?: {
     AppComponent?: React.ReactNode;
-    configuration?: DdSdkReactNativeConfiguration;
+    configuration?: DatadogProviderConfiguration;
 }) => {
     const AppComponent = params?.AppComponent || <DefaultTestApp />;
     const configuration = params?.configuration || defaultConfiguration;
@@ -36,7 +37,7 @@ export const renderWithProvider = (params?: {
     );
 
     const rerenderWithRandomConfig = () => {
-        const randomConfiguration = new DdSdkReactNativeConfiguration(
+        const randomConfiguration = new DatadogProviderConfiguration(
             Math.random().toString(),
             'fakeEnv',
             'fakeApplicationId',
