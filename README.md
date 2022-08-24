@@ -377,6 +377,38 @@ const config = new DdSdkReactNativeConfiguration(
 )
 ```
 
+## Troubleshooting
+
+### Usage with `use_frameworks!`
+
+If you have `use_frameworks!` enabled in your `Podfile`, running `pod install` after adding the SDK is likely to trigger an error like this one:
+
+```shell
+The 'Pods-MyApp' target has transitive dependencies that include statically linked binaries: (DatadogSDKBridge, DatadogSDKCrashReporting)
+```
+
+To prevent that error, you can overwrite `use_frameworks!` and install all pods as static except for the ones that needs to be a framework:
+
+```ruby
+dynamic_frameworks = ['DatadogSDKBridge','DatadogSDKCrashReporting']
+
+# Make all the other frameworks into static frameworks by overriding the static_framework? function to return true
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    if !dynamic_frameworks.include?(pod.name)
+      def pod.static_framework?;
+        true
+      end
+      def pod.build_type;
+        Pod::BuildType.static_library
+      end
+    end
+  end
+end
+```
+
+**Note:** This solution comes from this [StackOverflow][14] post.
+
 ## License
 
 For more information, see [Apache License, v2.0][9]
@@ -398,3 +430,4 @@ For more information, see [Apache License, v2.0][9]
 [11]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
 [12]: https://docs.expo.dev/
 [13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
+[14]: https://stackoverflow.com/questions/37388126/use-frameworks-for-only-some-pods-or-swift-pods/60914505#60914505
