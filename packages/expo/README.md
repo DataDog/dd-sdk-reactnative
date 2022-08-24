@@ -10,7 +10,7 @@ For more information about using the Expo SDK, see the [Expo and Expo Go documen
 
 If you find an issue with this package and have a fix, first consult the [Contributing Guidelines][3].
 
-To try a development build plugin on an app, run these commands from the root of `dd-sdk-react-native`:
+To try a development build plugin on an app, run these commands from the root of `dd-sdk-reactnative`:
 
 -   `(cd packages/expo && yarn clean && yarn build)`
 -   `yarn workspace expo-datadog pack`
