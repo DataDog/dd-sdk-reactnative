@@ -42,6 +42,7 @@ export class DdSdkReactNative {
     private static readonly NATIVE_LONG_TASK_THRESHOLD_MS = 200;
 
     private static wasInitialized = false;
+    private static wasAutoInstrumented = false;
 
     /**
      * Initializes the Datadog SDK.
@@ -212,6 +213,13 @@ export class DdSdkReactNative {
     private static enableFeatures(
         configuration: DdSdkReactNativeConfiguration
     ) {
+        if (DdSdkReactNative.wasAutoInstrumented) {
+            InternalLog.log(
+                "Can't auto instrument Datadog, SDK was already instrumented",
+                SdkVerbosity.WARN
+            );
+            return;
+        }
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking();
         }
@@ -226,5 +234,6 @@ export class DdSdkReactNative {
         if (configuration.trackErrors) {
             DdRumErrorTracking.startTracking();
         }
+        DdSdkReactNative.wasAutoInstrumented = true;
     }
 }

@@ -49,6 +49,7 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
 
 beforeEach(async () => {
     DdSdkReactNative['wasInitialized'] = false;
+    DdSdkReactNative['wasAutoInstrumented'] = false;
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.setAttributes.mockClear();
     NativeModules.DdSdk.setUser.mockClear();
