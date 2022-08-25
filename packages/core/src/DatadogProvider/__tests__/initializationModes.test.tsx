@@ -6,6 +6,7 @@ import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { TimeProvider } from '../../TimeProvider';
 import { DdRumUserInteractionTracking } from '../../rum/instrumentation/DdRumUserInteractionTracking';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
+import { DatadogProvider } from '../DatadogProvider';
 
 import {
     defaultConfiguration,
@@ -25,13 +26,16 @@ const nowMock = new TimeProvider().now;
 const flushPromises = () => new Promise<void>(setImmediate);
 
 describe('DatadogProvider', () => {
-    afterEach(() => {
+    beforeEach(() => {
         jest.clearAllMocks();
         DdSdkReactNative['wasInitialized'] = false;
+        DdSdkReactNative['wasAutoInstrumented'] = false;
+        DatadogProvider.isInitialized = false;
         BufferSingleton.reset();
         DdRumUserInteractionTracking.stopTracking();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
     });
+
     describe('initializationMode SYNC', () => {
         it('starts auto-instrumentation', async () => {
             const { getByText } = renderWithProvider();
@@ -73,6 +77,11 @@ describe('DatadogProvider', () => {
 
             expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
             expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
+
+            await DatadogProvider.initialize();
+            await flushPromises();
+
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
     });
 });

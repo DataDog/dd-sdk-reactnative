@@ -15,6 +15,7 @@ type Props = PropsWithChildren<{
 
 type StaticProperties = {
     isInitialized: boolean;
+    initialize: () => Promise<void>;
 };
 
 export const DatadogProvider: React.FC<Props> & StaticProperties = ({
@@ -34,3 +35,6 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
 };
 
 DatadogProvider.isInitialized = false;
+DatadogProvider.initialize = () => {
+    return DdSdkReactNative._initializeFromDatadogProviderAsync();
+};

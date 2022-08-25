@@ -47,6 +47,7 @@ export class DdSdkReactNative {
 
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
+    private static configuration?: DdSdkReactNativeConfiguration;
 
     /**
      * Initializes the Datadog SDK.
@@ -106,10 +107,27 @@ export class DdSdkReactNative {
         configuration: DatadogProviderConfiguration
     ): Promise<void> {
         DdSdkReactNative.enableFeatures(configuration);
+        DdSdkReactNative.configuration = configuration;
         if (configuration.initializationMode === InitializationMode.SYNC) {
             await DdSdkReactNative.initializeNativeSDK(configuration);
         }
     }
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static _initializeFromDatadogProviderAsync = async (): Promise<void> => {
+        if (!DdSdkReactNative.configuration) {
+            InternalLog.log(
+                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
+                SdkVerbosity.WARN
+            );
+            return new Promise(resolve => resolve());
+        }
+        return DdSdkReactNative.initializeNativeSDK(
+            DdSdkReactNative.configuration
+        );
+    };
 
     /**
      * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
