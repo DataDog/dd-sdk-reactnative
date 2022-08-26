@@ -19,9 +19,7 @@ const ALL_PLUGINS = [
 
 describe('getErrorTrackingPluginsFromOptions', () => {
     it('returns all plugins if no option is provided', () => {
-        expect(getErrorTrackingPluginsFromOptions(undefined)).toEqual(
-            ALL_PLUGINS
-        );
+        expect(getErrorTrackingPluginsFromOptions()).toEqual(ALL_PLUGINS);
     });
 
     it('keeps plugins set to true or undefined, while removing those set to false in options', () => {

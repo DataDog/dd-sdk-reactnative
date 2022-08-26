@@ -23,7 +23,7 @@ export type ErrorTrackingOptions = {
  * to `false`.
  */
 export const getErrorTrackingPluginsFromOptions = (
-    options: ErrorTrackingOptions | void
+    options?: ErrorTrackingOptions
 ): (ConfigPlugin<any> | StaticPlugin<any>)[] => {
     const ERROR_TRACKING_CONFIG_PLUGINS_MAP: Record<
         keyof ErrorTrackingOptions,
