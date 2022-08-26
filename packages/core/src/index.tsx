@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { DatadogProvider } from './DatadogProvider/DatadogProvider';
 import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
@@ -14,6 +15,7 @@ import { DdLogs, DdTrace, DdRum } from './foundation';
 import { RumActionType, ErrorSource } from './types';
 
 export {
+    DatadogProvider,
     DdLogs,
     DdTrace,
     DdRum,
