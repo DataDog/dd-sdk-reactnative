@@ -303,18 +303,26 @@ In your `android/app/build.gradle` file, add the plugin and configure it **at th
 
 ```groovy
 plugins {
-    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.4.0"
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.0"
 }
 
 datadog {
-    site = "US1"
     checkProjectDependencies = "none" // this is needed in any case for React Native projects
 }
 ```
 
-The [site value][8] has to match the value in the Datadog SDK configuration. For more information, see the [Datadog Android SDK Gradle Plugin][6].
+For the upload to work, you need to provide your Datadog API key. You can specify it as a `DATADOG_API_KEY` environment variable, or create a `datadog-ci.json` file at the root of your project containing the API key:
 
-To run the plugin after a build, export your API key as `DD_API_KEY` and run `(cd android && ./gradlew app:uploadMappingRelease)`.
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+For more information, see the [Datadog Android SDK Gradle Plugin][6].
+
+To run the plugin after a build run `(cd android && ./gradlew app:uploadMappingRelease)`.
 
 #### Automate the upload on each build
 
@@ -345,7 +353,6 @@ To verify your React Native Crash Reporting and Error Tracking configuration, yo
 [5]: https://reactnative.dev/docs/signed-apk-android#enabling-proguard-to-reduce-the-size-of-the-apk-optional
 [6]: https://github.com/datadog/dd-sdk-android-gradle-plugin
 [7]: https://github.com/cwhenderson20/react-native-crash-tester
-[8]: https://docs.datadoghq.com/getting_started/site/
 [9]: https://fastlane.tools/
 [10]: https://appcenter.ms/
 [11]: https://www.bitrise.io/
