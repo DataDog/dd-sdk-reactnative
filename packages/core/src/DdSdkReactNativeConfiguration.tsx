@@ -83,5 +83,6 @@ export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration 
 
 export enum InitializationMode {
     SYNC = 'SYNC',
+    ASYNC = 'ASYNC',
     SKIP = 'SKIP'
 }

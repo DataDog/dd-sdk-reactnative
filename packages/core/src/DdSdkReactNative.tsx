@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InteractionManager } from 'react-native';
+
 import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
 import type {
     DatadogProviderConfiguration,
@@ -109,7 +111,12 @@ export class DdSdkReactNative {
         DdSdkReactNative.enableFeatures(configuration);
         DdSdkReactNative.configuration = configuration;
         if (configuration.initializationMode === InitializationMode.SYNC) {
-            await DdSdkReactNative.initializeNativeSDK(configuration);
+            return DdSdkReactNative.initializeNativeSDK(configuration);
+        }
+        if (configuration.initializationMode === InitializationMode.ASYNC) {
+            return InteractionManager.runAfterInteractions(() => {
+                return DdSdkReactNative.initializeNativeSDK(configuration);
+            });
         }
     }
 

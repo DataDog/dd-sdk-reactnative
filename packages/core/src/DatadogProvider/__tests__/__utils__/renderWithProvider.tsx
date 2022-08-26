@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react-native';
-import { Button, Text, View } from 'react-native';
-import React from 'react';
+import { Animated, Button, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 import { DatadogProviderConfiguration } from '../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
@@ -14,6 +14,22 @@ const DefaultTestApp = () => {
     );
 };
 
+const AppWithAnimation = () => {
+    const [opacity] = useState(new Animated.Value(0));
+    Animated.timing(opacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false
+    }).start();
+
+    return (
+        <View>
+            <Button onPress={() => {}} title="test button" />
+            <Animated.View style={{ opacity }} />
+        </View>
+    );
+};
+
 export const defaultConfiguration = new DatadogProviderConfiguration(
     'fakeToken',
     'fakeEnv',
@@ -22,6 +38,15 @@ export const defaultConfiguration = new DatadogProviderConfiguration(
     false, // TODO: the initialization is broken with trackResources in test, fix it
     true
 );
+
+export const renderWithProviderAndAnimation = (params?: {
+    configuration?: DatadogProviderConfiguration;
+}) => {
+    return renderWithProvider({
+        AppComponent: <AppWithAnimation />,
+        configuration: params?.configuration
+    });
+};
 
 export const renderWithProvider = (params?: {
     AppComponent?: React.ReactNode;

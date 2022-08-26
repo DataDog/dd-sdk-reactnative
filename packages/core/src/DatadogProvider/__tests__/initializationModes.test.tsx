@@ -10,7 +10,8 @@ import { DatadogProvider } from '../DatadogProvider';
 
 import {
     defaultConfiguration,
-    renderWithProvider
+    renderWithProvider,
+    renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
 
 jest.mock('../../TimeProvider', () => {
@@ -52,6 +53,46 @@ describe('DatadogProvider', () => {
                 }
             });
 
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+        });
+        it('starts auto-instrumentation before animations are done', async () => {
+            renderWithProviderAndAnimation({
+                configuration: {
+                    ...defaultConfiguration
+                }
+            });
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('initializationMode ASYNC', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+        it('starts auto-instrumentation after animations are done', async () => {
+            const { getByText } = renderWithProviderAndAnimation({
+                configuration: {
+                    ...defaultConfiguration,
+                    initializationMode: InitializationMode.ASYNC
+                }
+            });
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
+            jest.advanceTimersByTime(700);
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            const button = getByText('test button');
+            fireEvent(button, 'press', {
+                _targetInst: {
+                    props: {
+                        'dd-action-name': 'press button'
+                    }
+                }
+            });
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
     });
