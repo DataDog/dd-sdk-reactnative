@@ -326,7 +326,7 @@ Inside the loop, add the following snippet:
 
 To verify your React Native Crash Reporting and Error Tracking configuration, you can install a package like the [`react-native-crash-tester`][7] to crash your app from the native or JavaScript side.
 
-## Further Reading
+## Further reading
 
 {{< partial name="whats-next/whats-next.html" >}}
 
