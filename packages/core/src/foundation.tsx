@@ -5,16 +5,17 @@
  */
 
 import { NativeModules } from 'react-native';
-import { DdSdkConfiguration, DdSdkType, DdLogsType, DdTraceType, DdRumType } from './types';
+import { DdSdkConfiguration, DdLogsType, DdTraceType, DdRumType, RumActionType, ResourceKind, ErrorSource } from './types';
 import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 import {TimeProvider} from "./TimeProvider";
+import type { DdNativeLogsType, DdNativeRumType, DdNativeSdkType, DdNativeTraceType } from './nativeModulesTypes';
 
 const timeProvider = new TimeProvider();
 
 class DdLogsWrapper implements DdLogsType {
 
-    private nativeLogs: DdLogsType = NativeModules.DdLogs;
+    private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
 
     debug(message: string, context: object = {}): Promise<void> {
         InternalLog.log("Tracking debug log “" +  message + "”", SdkVerbosity.DEBUG);
@@ -40,7 +41,7 @@ class DdLogsWrapper implements DdLogsType {
 
 class DdTraceWrapper implements DdTraceType {
 
-    private nativeTrace: DdTraceType = NativeModules.DdTrace;
+    private nativeTrace: DdNativeTraceType = NativeModules.DdTrace;
 
     startSpan(operation: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<string> {
         let spanId = this.nativeTrace.startSpan(operation, context, timestampMs);
@@ -54,9 +55,18 @@ class DdTraceWrapper implements DdTraceType {
     }
 }
 
+const isNewStopActionAPI = (args: [type: RumActionType, name: string, context?: object, timestampMs?: number] | [context?: object, timestampMs?: number]): args is [type: RumActionType, name: string, context?: object, timestampMs?: number] => {
+    return typeof args[0] === 'string'
+}
+
+const isOldStopActionAPI = (args: [type: RumActionType, name: string, context?: object, timestampMs?: number] | [context?: object, timestampMs?: number]): args is [context?: object, timestampMs?: number] => {
+    return typeof args[0] === 'object' || typeof args[0] === 'undefined' 
+}
+
 class DdRumWrapper implements DdRumType {
 
-    private nativeRum: DdRumType = NativeModules.DdRum;
+    private nativeRum: DdNativeRumType = NativeModules.DdRum;
+    private lastActionData?: {type: RumActionType, name: string}
 
     startView(key: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM View “" +  name + "” #" + key, SdkVerbosity.DEBUG);
@@ -68,17 +78,36 @@ class DdRumWrapper implements DdRumType {
         return this.nativeRum.stopView(key, context, timestampMs);
     }
 
-    startAction(type: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
+    startAction(type: RumActionType, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Starting RUM Action “" + name + "” (" + type + ")", SdkVerbosity.DEBUG);
+        this.lastActionData={type, name}
         return this.nativeRum.startAction(type, name, context, timestampMs);
     }
 
-    stopAction(context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
+    stopAction(...args: [type: RumActionType, name: string, context?: object, timestampMs?: number] | [context?: object, timestampMs?: number]): Promise<void> {
         InternalLog.log("Stopping current RUM Action", SdkVerbosity.DEBUG);
-        return this.nativeRum.stopAction(context, timestampMs);
+        let returnPromise = this.getStopActionNativeCall(args)
+        this.lastActionData = undefined
+        return returnPromise
     }
 
-    addAction(type: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
+    private getStopActionNativeCall = (args: [type: RumActionType, name: string, context?: object, timestampMs?: number] | [context?: object, timestampMs?: number]): Promise<void> => {
+        if (isNewStopActionAPI(args)) {
+            return this.nativeRum.stopAction(args[0], args[1], args[2] || {}, args[3] || timeProvider.now())
+        }
+        if (isOldStopActionAPI(args)) {
+            if (this.lastActionData) {
+                return this.nativeRum.stopAction(this.lastActionData.type, this.lastActionData.name, args[0] || {}, args[1] || timeProvider.now());
+            } 
+            InternalLog.log("DdRum.startAction needs to be called before DdRum.stopAction", SdkVerbosity.WARN);
+        } else {
+            InternalLog.log("DdRum.stopAction was called with wrong arguments", SdkVerbosity.WARN);
+        }
+
+        return new Promise<void>(resolve => resolve())
+    }
+
+    addAction(type: RumActionType, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Adding RUM Action “" + name + "” (" + type + ")", SdkVerbosity.DEBUG);
         return this.nativeRum.addAction(type, name, context, timestampMs);
     }
@@ -88,12 +117,12 @@ class DdRumWrapper implements DdRumType {
         return this.nativeRum.startResource(key, method, url, context, timestampMs);
     }
 
-    stopResource(key: string, statusCode: number, kind: string, size: number = -1, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
+    stopResource(key: string, statusCode: number, kind: ResourceKind, size: number = -1, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Stopping RUM Resource #" + key + " status:" + statusCode, SdkVerbosity.DEBUG);
         return this.nativeRum.stopResource(key, statusCode, kind, size, context, timestampMs);
     }
 
-    addError(message: string, source: string, stacktrace: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
+    addError(message: string, source: ErrorSource, stacktrace: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
         InternalLog.log("Adding RUM Error “" + message + "”", SdkVerbosity.DEBUG);
         let updatedContext: any = context;
         updatedContext["_dd.error.source_type"] = "react-native";
@@ -106,7 +135,7 @@ class DdRumWrapper implements DdRumType {
     }
 }
 
-const DdSdk: DdSdkType = NativeModules.DdSdk;
+const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
 const DdLogs: DdLogsType = new DdLogsWrapper();
 const DdTrace: DdTraceType = new DdTraceWrapper();
 const DdRum: DdRumType = new DdRumWrapper();

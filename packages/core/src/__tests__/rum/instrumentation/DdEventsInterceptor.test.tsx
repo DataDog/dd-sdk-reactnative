@@ -9,9 +9,9 @@ import { SdkVerbosity } from '../../../SdkVerbosity';
 import { DdRum } from '../../../index';
 import {
     DdEventsInterceptor,
-    RumActionType,
     UNKNOWN_TARGET_NAME
 } from '../../../rum/instrumentation/DdEventsInterceptor';
+import { RumActionType } from '../../../types';
 
 jest.mock('../../../foundation', () => {
     return {
@@ -61,7 +61,7 @@ it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel);
 });
 
@@ -88,7 +88,7 @@ it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel);
 });
 
@@ -106,7 +106,7 @@ it('M send a RUM Action event W interceptOnPress { arguments with accessibilityL
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeAccessibilityLabel);
 });
 
@@ -127,7 +127,7 @@ it('M send only one RUM Action event W interceptOnPress { called multiple times 
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeAccessibilityLabel);
 });
 
@@ -141,7 +141,7 @@ it('M send a RUM Action event W interceptOnPress { no accessibilityLabel argumen
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeElementType);
 });
 
@@ -157,7 +157,7 @@ it('M send a RUM Action event W interceptOnPress { no accessibilityLabel argumen
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeElementType);
 });
 
@@ -170,7 +170,7 @@ it('M send a RUM Action event W interceptOnPress { no accessibilityLabel, no ele
 
     // THEN
     expect(DdRum.addAction.mock.calls.length).toBe(1);
-    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP.valueOf());
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(UNKNOWN_TARGET_NAME);
 });
 

@@ -68,7 +68,10 @@
       "./node_modules/react-native-gesture-handler/jestSetup.js",
       "./jest.setup.js"
     ],
-    "testPathIgnorePatterns": ["/__utils__/"],
+    "testPathIgnorePatterns": [
+      "/__utils__/",
+      "<rootDir>/expo/"
+    ],
     "transformIgnorePatterns": []
   }
 }
