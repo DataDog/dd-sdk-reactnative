@@ -37,6 +37,8 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.PromiseImpl
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
+import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.mock
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -87,7 +89,11 @@ internal class DdTraceTest {
     lateinit var fakeGlobalState: Map<String, String>
 
     var lastResolvedValue: Any? = null
-    var mockPromise: Promise = PromiseImpl(fun(value: Any?) { lastResolvedValue = value}, null)
+    private var mockPromise = mock<Promise>().apply {
+        whenever(resolve(any())) doAnswer {
+            lastResolvedValue = it.arguments[0]
+        }
+    }
 
     @Mock
     lateinit var mockReactContext: ReactApplicationContext

@@ -1,10 +1,7 @@
 package com.datadog.reactnative
 
-import android.content.Context
 import android.util.Log
 import com.datadog.android.DatadogEndpoint
-import com.datadog.reactnative.DdSdk
-import com.datadog.reactnative.DdSdkConfiguration
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
@@ -14,6 +11,8 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.toReadableJavaOnlyMap
+import com.datadog.tools.unit.toReadableMap
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -50,7 +49,6 @@ import org.mockito.quality.Strictness
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.PromiseImpl
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -94,7 +92,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -144,7 +142,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -192,7 +190,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -244,7 +242,7 @@ internal class DdSdkTest {
         val expectedRumSampleRate = fakeConfiguration.sampleRate?.toFloat() ?: 100f
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -296,7 +294,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -339,7 +337,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -392,7 +390,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -449,7 +447,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -506,7 +504,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -563,7 +561,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -620,7 +618,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -677,7 +675,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -735,7 +733,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -760,7 +758,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -785,7 +783,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -810,7 +808,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(fakeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -836,7 +834,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -868,7 +866,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -900,7 +898,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         inOrder(mockDatadog) {
@@ -938,7 +936,7 @@ internal class DdSdkTest {
         )
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         verify(mockDatadog).setVerbosity(verbosity)
@@ -957,7 +955,7 @@ internal class DdSdkTest {
         )
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         verify(mockDatadog, never()).setVerbosity(any())
@@ -978,7 +976,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         verify(mockDatadog).initialize(
@@ -1011,7 +1009,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         verify(mockDatadog).initialize(
@@ -1049,7 +1047,7 @@ internal class DdSdkTest {
         val configCaptor = argumentCaptor<Configuration>()
 
         // When
-        testedBridgeSdk.initialize(bridgeConfiguration as ReadableMap, mockPromise)
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
         verify(mockDatadog).initialize(
@@ -1076,7 +1074,7 @@ internal class DdSdkTest {
         ) extraInfo: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setUser(extraInfo as ReadableMap, mockPromise)
+        testedBridgeSdk.setUser(extraInfo.toReadableMap(), mockPromise)
 
         // Then
         argumentCaptor<Map<String, Any?>> {
@@ -1108,7 +1106,7 @@ internal class DdSdkTest {
         }
 
         // When
-        testedBridgeSdk.setUser(user as ReadableMap, mockPromise)
+        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
 
         // Then
         argumentCaptor<Map<String, Any?>> {
@@ -1140,7 +1138,7 @@ internal class DdSdkTest {
         }
 
         // When
-        testedBridgeSdk.setUser(user as ReadableMap, mockPromise)
+        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
 
         // Then
         argumentCaptor<Map<String, Any?>> {
@@ -1172,7 +1170,7 @@ internal class DdSdkTest {
         }
 
         // When
-        testedBridgeSdk.setUser(user as ReadableMap, mockPromise)
+        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
 
         // Then
         argumentCaptor<Map<String, Any?>> {
@@ -1208,7 +1206,7 @@ internal class DdSdkTest {
         }
 
         // When
-        testedBridgeSdk.setUser(user as ReadableMap, mockPromise)
+        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
 
         // Then
         argumentCaptor<Map<String, Any?>> {
@@ -1233,10 +1231,8 @@ internal class DdSdkTest {
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
-        // Given
-
         // When
-        testedBridgeSdk.setAttributes(customAttributes as ReadableMap, mockPromise)
+        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         verify(mockDatadog).addRumGlobalAttributes(customAttributes)
@@ -1249,10 +1245,8 @@ internal class DdSdkTest {
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
-        // Given
-
         // When
-        testedBridgeSdk.setAttributes(customAttributes as ReadableMap, mockPromise)
+        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         customAttributes.forEach { (k, v) ->

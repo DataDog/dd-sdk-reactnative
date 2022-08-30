@@ -15,6 +15,7 @@ import com.datadog.android.rum.RumResourceKind
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
+import com.datadog.tools.unit.toReadableMap
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.Forge
@@ -100,7 +101,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.startView(key, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.startView(key, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).startView(key, name, updatedContext)
@@ -114,7 +115,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.stopView(key, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.stopView(key, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).stopView(key, updatedContext)
@@ -129,7 +130,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.addAction(type.name, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.addAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).addUserAction(type, name, updatedContext)
@@ -144,7 +145,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.addAction(type, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.addAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).addUserAction(RumActionType.CUSTOM, name, updatedContext)
@@ -159,7 +160,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.startAction(type.name, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.startAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).startUserAction(type, name, updatedContext)
@@ -174,7 +175,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.startAction(type, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.startAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).startUserAction(RumActionType.CUSTOM, name, updatedContext)
@@ -189,7 +190,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.stopAction(type.name, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.stopAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).stopUserAction(type, name, updatedContext)
@@ -204,7 +205,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.stopAction(type, name, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.stopAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).stopUserAction(RumActionType.CUSTOM, name, updatedContext)
@@ -220,7 +221,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.startResource(key, method, url, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.startResource(key, method, url, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).startResource(key, method, url, updatedContext)
@@ -242,7 +243,7 @@ internal class DdRumTest {
             statusCode.toLong(),
             kind.toString(),
             resourceSize,
-            fakeContext as ReadableMap,
+            fakeContext.toReadableMap(),
             fakeTimestamp,
             mockPromise
         )
@@ -267,7 +268,7 @@ internal class DdRumTest {
             statusCode.toLong(),
             kind,
             resourceSize,
-            fakeContext as ReadableMap,
+            fakeContext.toReadableMap(),
             fakeTimestamp,
             mockPromise
         )
@@ -297,7 +298,7 @@ internal class DdRumTest {
             statusCode.toLong(),
             kind,
             -1,
-            fakeContext as ReadableMap,
+            fakeContext.toReadableMap(),
             fakeTimestamp,
             mockPromise
         )
@@ -322,7 +323,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.addError(message, source.name, stackTrace, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.addError(message, source.name, stackTrace, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).addErrorWithStacktrace(message, source, stackTrace, updatedContext)
@@ -338,7 +339,7 @@ internal class DdRumTest {
         val updatedContext = fakeContext + (RumAttributes.INTERNAL_TIMESTAMP to fakeTimestamp)
 
         // When
-        testedDdRum.addError(message, source, stackTrace, fakeContext as ReadableMap, fakeTimestamp, mockPromise)
+        testedDdRum.addError(message, source, stackTrace, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
         verify(mockRumMonitor).addErrorWithStacktrace(

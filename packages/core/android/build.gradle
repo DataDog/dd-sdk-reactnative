@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.2.1'
+    classpath 'com.android.tools.build:gradle:7.2.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -34,6 +34,20 @@ android {
     versionCode 1
     versionName "1.0"
     
+  }
+
+  sourceSets.named("main") {
+    java.srcDir("src/main/kotlin")
+  }
+
+  sourceSets.named("test") {
+    java.srcDir("src/test/kotlin")
+  }
+
+  testOptions {
+    unitTests {
+      returnDefaultValues = true
+    }
   }
   
   buildTypes {
@@ -145,3 +159,12 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
+tasks.withType(Test) {
+  useJUnitPlatform {
+    includeEngines("spek", "junit-jupiter", "junit-vintage")
+  }
+  reports {
+    junitXml.required.set(true)
+    html.required.set(true)
+  }
+}
