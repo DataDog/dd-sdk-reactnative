@@ -67,7 +67,7 @@ await DdSdkReactNative.initialize(config);
 
 ### Add the config plugin
 
-<div class="alert alert-info"><p>If you have not enabled crash reporting you can skip this step.<p></div>
+<div class="alert alert-info"><p>If you have not enabled Crash Reporting, you can skip this step.<p></div>
 
 Add `expo-datadog` to your plugins in the `app.json` file:
 
