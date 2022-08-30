@@ -347,6 +347,82 @@ describe('DdSdkReactNative', () => {
                 })
             );
         });
+
+        it('initializes with the version when a version is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.version = '2.0.0';
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.additionalConfig['_dd.version']).toBe(
+                '2.0.0'
+            );
+        });
+
+        it('initialized with a version suffix when a version suffix is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.versionSuffix = ':codepush-3';
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(
+                ddSdkConfiguration.additionalConfig['_dd.version']
+            ).toBeUndefined();
+            expect(
+                ddSdkConfiguration.additionalConfig['_dd.version_suffix']
+            ).toBe(':codepush-3');
+        });
+
+        it('initializes with the version when a version and version suffix are specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.version = '2.0.0';
+            configuration.versionSuffix = ':codepush-3';
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.additionalConfig['_dd.version']).toBe(
+                '2.0.0:codepush-3'
+            );
+            expect(
+                ddSdkConfiguration.additionalConfig['_dd.version_suffix']
+            ).toBeUndefined();
+        });
     });
 
     describe('feature enablement', () => {

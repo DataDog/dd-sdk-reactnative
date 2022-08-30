@@ -32,6 +32,8 @@ export class DdSdkReactNativeConfiguration {
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
     public firstPartyHosts: string[] = [];
+    public version?: string;
+    public versionSuffix?: string;
 
     public additionalConfig: { [k: string]: any } = {};
 
