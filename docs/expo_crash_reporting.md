@@ -69,5 +69,5 @@ Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, 
 {{< partial name="whats-next/whats-next.html" >}}
 
 [1]: https://app.datadoghq.com/rum/error-tracking
-[2]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/packages/expo/README.md
+[2]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/expo/README.md
 [3]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/#usage
