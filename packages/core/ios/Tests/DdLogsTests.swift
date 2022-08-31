@@ -55,7 +55,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerDebug_validAttributes() throws {
-        logger.debug(message: testMessage_objc, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
+        logger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -68,7 +68,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerInfo_validAttributes() throws {
-        logger.info(message: testMessage_objc, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
+        logger.info(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -81,7 +81,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerWarn_validAttributes() throws {
-        logger.warn(message: testMessage_objc, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
+        logger.warn(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -94,7 +94,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerError_validAttributes() throws {
-        logger.error(message: testMessage_objc, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
+        logger.error(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -107,7 +107,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerDebug_invalidAttributes() throws {
-        logger.debug(message: testMessage_objc, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
+        logger.debug(message: testMessage_objc as String, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -120,7 +120,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerInfo_invalidAttributes() throws {
-        logger.info(message: testMessage_objc, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
+        logger.info(message: testMessage_objc as String, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -133,7 +133,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerWarn_invalidAttributes() throws {
-        logger.warn(message: testMessage_objc, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
+        logger.warn(message: testMessage_objc as String, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -146,7 +146,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerError_invalidAttributes() throws {
-        logger.error(message: testMessage_objc, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
+        logger.error(message: testMessage_objc as String, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
