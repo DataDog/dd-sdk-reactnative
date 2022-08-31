@@ -245,6 +245,13 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertNotNil(ddConfig.crashReportingPlugin)
     }
     
+    func testBuildConfigurationWithVersionSuffix() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.version_suffix": ":codepush-3"])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration, defaultAppVersion: "1.2.3")
+
+        XCTAssertEqual(ddConfig.additionalConfiguration["_dd.version"] as! String, "1.2.3:codepush-3")
+    }
 
     func testSettingUserInfo() throws {
         let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
