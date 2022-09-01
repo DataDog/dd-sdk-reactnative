@@ -6,8 +6,13 @@
 
 package com.datadog.reactnative
 
+import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
@@ -33,12 +38,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
-import com.nhaarman.mockitokotlin2.doAnswer
-import com.nhaarman.mockitokotlin2.mock
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -61,9 +60,6 @@ internal class DdTraceTest {
     @Mock
     lateinit var mockSpan: Span
 
-    @Mock
-    lateinit var mockContext: ReadableMap
-
     @StringForgery
     lateinit var fakeOperation: String
 
@@ -76,11 +72,11 @@ internal class DdTraceTest {
     @StringForgery(type = StringForgeryType.HEXADECIMAL)
     lateinit var fakeTraceId: String
 
-    // @MapForgery(
-    //     key = AdvancedForgery(string = [StringForgery()]),
-    //     value = AdvancedForgery(string = [StringForgery(StringForgeryType.HEXADECIMAL)])
-    // )
-    // lateinit var fakeContext: Map<String, String>
+    @MapForgery(
+        key = AdvancedForgery(string = [StringForgery()]),
+        value = AdvancedForgery(string = [StringForgery(StringForgeryType.HEXADECIMAL)])
+    )
+    lateinit var fakeContext: Map<String, String>
 
     @MapForgery(
         key = AdvancedForgery(string = [StringForgery()]),
@@ -118,7 +114,12 @@ internal class DdTraceTest {
     @Test
     fun `M start a span W startSpan() `() {
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
 
         // Then
         assertThat(lastResolvedValue).isEqualTo(fakeSpanId)
@@ -136,9 +137,14 @@ internal class DdTraceTest {
         val endTimestamp = fakeTimestamp + duration
 
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
@@ -155,9 +161,14 @@ internal class DdTraceTest {
         val endTimestamp = fakeTimestamp + duration
 
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
-        testedTrace.finishSpan(otherSpanId, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(otherSpanId, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
@@ -172,17 +183,27 @@ internal class DdTraceTest {
         val endTimestamp = fakeTimestamp + duration
 
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(
+            id as String,
+            emptyMap<String, String>().toReadableMap(),
+            endTimestamp,
+            mockPromise
+        )
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp * 1000)
-        // fakeContext.forEach {
-        //     verify(mockSpan).setTag(it.key, it.value)
-        // }
+        fakeContext.forEach {
+            verify(mockSpan).setTag(it.key, it.value)
+        }
         verifyNoMoreInteractions(mockSpan)
     }
 
@@ -194,17 +215,22 @@ internal class DdTraceTest {
         val endTimestamp = fakeTimestamp + duration
 
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            emptyMap<String, String>().toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp * 1000)
-        // fakeContext.forEach {
-        //     verify(mockSpan).setTag(it.key, it.value)
-        // }
+        fakeContext.forEach {
+            verify(mockSpan).setTag(it.key, it.value)
+        }
         verifyNoMoreInteractions(mockSpan)
     }
 
@@ -219,17 +245,27 @@ internal class DdTraceTest {
         fakeGlobalState.forEach { (k, v) ->
             GlobalState.addAttribute(k, v)
         }
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(
+            id as String,
+            emptyMap<String, String>().toReadableMap(),
+            endTimestamp,
+            mockPromise
+        )
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp * 1000)
-        // fakeContext.forEach {
-        //     verify(mockSpan).setTag(it.key, it.value)
-        // }
+        fakeContext.forEach {
+            verify(mockSpan).setTag(it.key, it.value)
+        }
         fakeGlobalState.forEach {
             verify(mockSpan, times(2)).setTag(it.key, it.value)
         }
@@ -242,23 +278,28 @@ internal class DdTraceTest {
     ) {
         // Given
         val endTimestamp = fakeTimestamp + duration
-        val expectedAttributes = mockContext.toHashMap() + fakeGlobalState
+        val expectedAttributes = fakeContext + fakeGlobalState
 
         // When
-        testedTrace.startSpan(fakeOperation, mockContext, fakeTimestamp, mockPromise)
+        testedTrace.startSpan(
+            fakeOperation,
+            emptyMap<String, String>().toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
         val id = lastResolvedValue
         fakeGlobalState.forEach { (k, v) ->
             GlobalState.addAttribute(k, v)
         }
-        testedTrace.finishSpan(id as String, mockContext, endTimestamp, mockPromise)
+        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp * 1000)
-//        expectedAttributes.forEach {
-//            verify(mockSpan).setTag(it.key, it.value)
-//        }
+        expectedAttributes.forEach {
+            verify(mockSpan).setTag(it.key, it.value)
+        }
         verifyNoMoreInteractions(mockSpan)
     }
 }

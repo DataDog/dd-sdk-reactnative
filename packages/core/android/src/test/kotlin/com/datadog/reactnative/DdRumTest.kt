@@ -16,6 +16,9 @@ import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.PromiseImpl
+import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.Forge
@@ -37,10 +40,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -136,7 +135,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.addAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.addAction(
+            type.name, name, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).addUserAction(type, name, updatedContext)
@@ -170,7 +172,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.startAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.startAction(
+            type.name, name, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).startUserAction(type, name, updatedContext)
@@ -204,7 +209,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.stopAction(type.name, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.stopAction(
+            type.name, name, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).stopUserAction(type, name, updatedContext)
@@ -239,7 +247,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.startResource(key, method, url, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.startResource(
+            key, method, url, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).startResource(key, method, url, updatedContext)
@@ -349,7 +360,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.addError(message, source.name, stackTrace, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.addError(
+            message, source.name, stackTrace, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).addErrorWithStacktrace(message, source, stackTrace, updatedContext)
@@ -367,7 +381,10 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.addError(message, source, stackTrace, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.addError(
+            message, source, stackTrace, fakeContext.toReadableMap(),
+            fakeTimestamp, mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).addErrorWithStacktrace(

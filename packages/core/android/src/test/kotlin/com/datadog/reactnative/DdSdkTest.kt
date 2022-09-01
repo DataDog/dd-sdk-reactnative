@@ -13,6 +13,9 @@ import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.PromiseImpl
+import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -46,9 +49,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
-import com.facebook.react.bridge.ReactApplicationContext
 
 @Extensions(
     ExtendWith(MockitoExtension::class),

@@ -5,17 +5,22 @@ buildscript {
   repositories {
     mavenCentral()
     google()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
   }
 
   dependencies {
     classpath 'com.android.tools.build:gradle:7.2.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:10.2.0"
   }
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['DdSdkReactNative_' + name]
@@ -166,5 +171,22 @@ tasks.withType(Test) {
   reports {
     junitXml.required.set(true)
     html.required.set(true)
+  }
+}
+
+tasks.named("check") {
+  dependsOn("ktlintCheck")
+}
+
+ktlint {
+  debug.set(false)
+  android.set(true)
+  outputToConsole.set(true)
+  ignoreFailures.set(false)
+  enableExperimentalRules.set(false)
+  additionalEditorconfigFile.set(file("${project.rootDir}/script/config/.editorconfig"))
+  filter {
+    exclude("**/generated/**")
+    include("**/kotlin/**")
   }
 }

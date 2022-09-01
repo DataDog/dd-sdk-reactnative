@@ -8,7 +8,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     map["clientToken"] = clientToken
     map["env"] = env
     applicationId?.let { map.put("applicationId", it) }
-    map["nativeCrashReportEnabled"] = nativeCrashReportEnabled != null
+    map["nativeCrashReportEnabled"] = if (nativeCrashReportEnabled == null) {
+        false
+    } else {
+        nativeCrashReportEnabled
+    }
     if (sampleRate != null) {
         map["sampleRate"] = sampleRate
     } else {

@@ -6,9 +6,11 @@
 
 package com.datadog.reactnative
 
-import android.content.Context
-import com.datadog.reactnative.DdLogs
 import com.datadog.android.log.Logger
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.PromiseImpl
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableMap
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
@@ -24,10 +26,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
 
 @Extensions(
     ExtendWith(MockitoExtension::class),

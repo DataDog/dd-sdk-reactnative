@@ -11,25 +11,23 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 /**
  * The entry point to use Datadog's Logs feature.
  */
-class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) : ReactContextBaseJavaModule(reactContext) {
+class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
+    ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "DdLogs"
 
     private val bridgeLogger: Logger by lazy {
         logger ?: Logger.Builder()
-                .setDatadogLogsEnabled(true)
-                .setLogcatLogsEnabled(true)
-                .setLoggerName("DdLogs")
-                .build()
+            .setDatadogLogsEnabled(true)
+            .setLogcatLogsEnabled(true)
+            .setLoggerName("DdLogs")
+            .build()
     }
-
-
 
     /**
      * Send a log with level debug.
@@ -86,5 +84,4 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) : Re
         )
         promise.resolve(null)
     }
-
 }
