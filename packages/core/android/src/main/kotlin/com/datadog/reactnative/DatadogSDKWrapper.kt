@@ -14,7 +14,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 
-class DatadogSDKWrapper : DatadogWrapper {
+internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun setVerbosity(level: Int) {
         Datadog.setVerbosity(level)

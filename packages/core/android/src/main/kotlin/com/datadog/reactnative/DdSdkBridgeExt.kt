@@ -9,7 +9,7 @@ package com.datadog.reactnative
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
 
-fun List<*>.toWritableArray(): WritableNativeArray {
+internal fun List<*>.toWritableArray(): WritableNativeArray {
     val list = WritableNativeArray()
     forEach {
         when (it) {
@@ -27,7 +27,7 @@ fun List<*>.toWritableArray(): WritableNativeArray {
     return list
 }
 
-fun Map<*, *>.toWritableMap(): WritableNativeMap {
+internal fun Map<*, *>.toWritableMap(): WritableNativeMap {
     val map = WritableNativeMap()
     forEach { (k, v) ->
         val key = (k as? String) ?: k.toString()

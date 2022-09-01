@@ -112,7 +112,7 @@ class DdSdk(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
         val configBuilder = Configuration.Builder(
             logsEnabled = true,

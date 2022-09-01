@@ -155,6 +155,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the resource started (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
     fun startResource(
         key: String,
@@ -185,6 +186,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the resource stopped (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
     fun stopResource(
         key: String,
@@ -221,6 +223,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
     fun addError(
         message: String,
