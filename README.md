@@ -207,6 +207,31 @@ await DdSdkReactNative.initialize(config);
 
 {{< /site-region >}}
 
+### Overriding the reported version
+
+By default, the SDK will report the `version` as the commercial version of your app (e.g. "1.2.44").
+
+If you use an Over The Air (OTA) updates provider like Microsoft's Codepush, you can override this version to indicate which version of your javascript code is running.
+
+The recommended way is to do so by specifying a `versionSuffix` to the `DdSdkReactNativeConfiguration` object:
+
+```js
+const config = new DdSdkReactNativeConfiguration(
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
+    true,
+    true,
+    true
+);
+
+config.versionSuffix = ':ota-3';
+```
+
+If the commercial version of your app is "1.2.44", it will then be reported as "1.2.44:ota-3" in Datadog.
+
+You can also completely override the version by specifying the `version` field. However make sure you set it correctly, as it will have to match the one specified during the upload of your sourcemaps and other mapping files.
+
 ### User interactions tracking
 
 If user interactions tracking is enabled as in the code example above, the SDK traverses up the hierarchy of components starting from the component that received a tap, looking for `dd-action-name` property. Once found, it is used as a name for the action reported.
