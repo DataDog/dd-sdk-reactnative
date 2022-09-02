@@ -44,6 +44,7 @@ package/android/src/test/kotlin/com/datadog/tools/unit/ReflectUtils.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/BaseConfigurator.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/DdSdkConfigurationForgeryFactory.kt
+package/android/src/test/kotlin/com/datadog/tools/unit/forge/PackageInfoForgeryFactory.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/Throwable.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/ThrowableForgeryFactory.kt
 package/android/src/test/resources

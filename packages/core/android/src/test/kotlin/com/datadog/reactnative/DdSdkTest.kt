@@ -1,6 +1,7 @@
 package com.datadog.reactnative
 
 import android.util.Log
+import android.content.pm.PackageInfo
 import com.datadog.android.DatadogEndpoint
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
@@ -45,6 +46,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
+import org.mockito.Answers
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
@@ -59,7 +61,7 @@ internal class DdSdkTest {
 
     lateinit var testedBridgeSdk: DdSdk
 
-    @Mock
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockContext: ReactApplicationContext
 
     @Mock
@@ -71,9 +73,14 @@ internal class DdSdkTest {
     @Mock
     lateinit var mockPromise: Promise
 
+    @Forgery
+    lateinit var mockPackageInfo: PackageInfo
+
     @BeforeEach
     fun `set up`() {
         whenever(mockContext.applicationContext) doReturn mockContext
+        whenever(mockContext.packageName) doReturn "packageName"
+        whenever(mockContext.packageManager.getPackageInfo("packageName", 0)) doReturn mockPackageInfo
         testedBridgeSdk = DdSdk(mockContext, mockDatadog)
     }
 
@@ -1060,6 +1067,43 @@ internal class DdSdkTest {
             .hasField("coreConfig") { coreConfig ->
                 coreConfig.hasFieldEqualTo("firstPartyHosts", firstPartyHosts)
             }
+    }
+
+    // endregion
+
+    // region version suffix
+
+    @Test
+    fun `𝕄 set version 𝕎 initialize() {versionSuffix}`(
+            @Forgery configuration: DdSdkConfiguration,
+            @StringForgery versionSuffix: String
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+                additionalConfig = mapOf(
+                        DdSdk.DD_VERSION_SUFFIX to versionSuffix
+                )
+        )
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+                same(mockContext),
+                any(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+                .hasFieldEqualTo(
+                        "additionalConfig",
+                        mapOf(
+                            DdSdk.DD_VERSION_SUFFIX to versionSuffix,
+                            DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
+                        )
+                )
     }
 
     // endregion
