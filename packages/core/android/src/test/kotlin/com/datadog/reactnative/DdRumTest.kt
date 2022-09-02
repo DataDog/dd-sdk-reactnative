@@ -17,7 +17,6 @@ import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
 import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -59,7 +58,8 @@ internal class DdRumTest {
     @Mock
     lateinit var mockReactContext: ReactApplicationContext
 
-    var mockPromise: Promise = PromiseImpl(null, null)
+    @Mock
+    lateinit var mockPromise: Promise
 
     lateinit var fakeContext: Map<String, Any?>
 

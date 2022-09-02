@@ -8,7 +8,6 @@ package com.datadog.reactnative
 
 import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.nhaarman.mockitokotlin2.verify
@@ -42,7 +41,8 @@ internal class DdLogsTest {
     @StringForgery
     lateinit var fakeMessage: String
 
-    var mockPromise: Promise = PromiseImpl(null, null)
+    @Mock
+    lateinit var mockPromise: Promise
 
     @Mock
     lateinit var mockReactContext: ReactApplicationContext

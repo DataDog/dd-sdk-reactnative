@@ -14,7 +14,6 @@ import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.PromiseImpl
 import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -69,7 +68,8 @@ internal class DdSdkTest {
     @Forgery
     lateinit var fakeConfiguration: DdSdkConfiguration
 
-    var mockPromise: Promise = PromiseImpl(null, null)
+    @Mock
+    lateinit var mockPromise: Promise
 
     @BeforeEach
     fun `set up`() {
