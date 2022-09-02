@@ -62,13 +62,13 @@ In order to make your application's size smaller, its code is minified when it i
 -   dSYMs for your iOS native code
 -   Proguard mapping files if you have enabled code obfuscation for your Android native code
 
-To set your project up to send the symbolication files automatically, run `npx @datadog/react-native-wizard`.
+To set your project up to send the symbolication files automatically, run `npx datadog-react-native-wizard`.
 
 See the wizard [official documentation][13] for options.
 
-## Alternatives to `@datadog/react-native-wizard`
+## Alternatives to `datadog-react-native-wizard`
 
-If using `@datadog/react-native-wizard` did not succeed or if you don't want to upload your symbolication files automatically on each release, follow the next steps to symbolicate crash reports.
+If using `datadog-react-native-wizard` did not succeed or if you don't want to upload your symbolication files automatically on each release, follow the next steps to symbolicate crash reports.
 
 ### Upload JavaScript source maps on iOS builds
 
