@@ -21,7 +21,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
 
     override fun getName(): String = "DdLogs"
 
-    private val bridgeLogger: Logger by lazy {
+    private val reactNativeLogger: Logger by lazy {
         logger ?: Logger.Builder()
             .setDatadogLogsEnabled(true)
             .setLogcatLogsEnabled(true)
@@ -36,7 +36,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun debug(message: String, context: ReadableMap, promise: Promise) {
-        bridgeLogger.d(
+        reactNativeLogger.d(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
@@ -50,7 +50,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun info(message: String, context: ReadableMap, promise: Promise) {
-        bridgeLogger.i(
+        reactNativeLogger.i(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
@@ -64,7 +64,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun warn(message: String, context: ReadableMap, promise: Promise) {
-        bridgeLogger.w(
+        reactNativeLogger.w(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
@@ -78,7 +78,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun error(message: String, context: ReadableMap, promise: Promise) {
-        bridgeLogger.e(
+        reactNativeLogger.e(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
