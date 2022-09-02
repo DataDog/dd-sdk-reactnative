@@ -39,7 +39,7 @@ class DdTrace(
      * @param timestampMs The timestamp when the operation started (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun startSpan(operation: String, context: ReadableMap, timestampMs: Long, promise: Promise) {
+    fun startSpan(operation: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
         val span = tracer.buildSpan(operation)
             .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(timestampMs.toLong()))
             .start()
@@ -60,7 +60,7 @@ class DdTrace(
      * @param timestampMs The timestamp when the operation stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun finishSpan(spanId: String, context: ReadableMap, timestampMs: Long, promise: Promise) {
+    fun finishSpan(spanId: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
         val span = spanMap.remove(spanId)
         if (span == null) {
             promise.resolve(null)

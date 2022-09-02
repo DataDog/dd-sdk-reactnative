@@ -19,6 +19,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
+import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.LongForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
@@ -63,8 +64,8 @@ internal class DdTraceTest {
     @StringForgery
     lateinit var fakeOperation: String
 
-    @LongForgery(1000000000000L, 2000000000000L)
-    var fakeTimestamp: Long = 0L
+    @DoubleForgery(1000000000000.0, 2000000000000.0)
+    var fakeTimestamp: Double = 0.0
 
     @StringForgery(type = StringForgeryType.HEXADECIMAL)
     lateinit var fakeSpanId: String
@@ -97,7 +98,7 @@ internal class DdTraceTest {
     @BeforeEach
     fun `set up`() {
         whenever(mockTracer.buildSpan(fakeOperation)) doReturn mockSpanBuilder
-        whenever(mockSpanBuilder.withStartTimestamp(fakeTimestamp * 1000)) doReturn mockSpanBuilder
+        whenever(mockSpanBuilder.withStartTimestamp(fakeTimestamp.toLong() * 1000)) doReturn mockSpanBuilder
         whenever(mockSpanBuilder.start()) doReturn mockSpan
         whenever(mockSpan.context()) doReturn mockSpanContext
         whenever(mockSpanContext.toSpanId()) doReturn fakeSpanId
@@ -148,7 +149,7 @@ internal class DdTraceTest {
 
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
-        verify(mockSpan).finish(endTimestamp * 1000)
+        verify(mockSpan).finish(endTimestamp.toLong() * 1000)
     }
 
     @Test
@@ -200,7 +201,7 @@ internal class DdTraceTest {
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
-        verify(mockSpan).finish(endTimestamp * 1000)
+        verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
             verify(mockSpan).setTag(it.key, it.value)
         }
@@ -227,7 +228,7 @@ internal class DdTraceTest {
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
-        verify(mockSpan).finish(endTimestamp * 1000)
+        verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
             verify(mockSpan).setTag(it.key, it.value)
         }
@@ -262,7 +263,7 @@ internal class DdTraceTest {
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
-        verify(mockSpan).finish(endTimestamp * 1000)
+        verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
             verify(mockSpan).setTag(it.key, it.value)
         }
@@ -296,7 +297,7 @@ internal class DdTraceTest {
         // Then
         assertThat(id).isEqualTo(fakeSpanId)
         verify(mockSpan).context()
-        verify(mockSpan).finish(endTimestamp * 1000)
+        verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         expectedAttributes.forEach {
             verify(mockSpan).setTag(it.key, it.value)
         }
