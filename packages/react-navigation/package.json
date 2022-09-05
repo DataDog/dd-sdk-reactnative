@@ -33,7 +33,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "bob build"
+    "prepare": "rm -rf lib && yarn bob build"
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.0.0",
