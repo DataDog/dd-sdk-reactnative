@@ -112,7 +112,9 @@ export class DdSdkReactNative {
                 configuration.additionalConfig[
                     DdSdkReactNative.DD_VERSION
                 ] = `${configuration.version}${
-                    configuration.versionSuffix || ''
+                    configuration.versionSuffix
+                        ? `-${configuration.versionSuffix}`
+                        : ''
                 }`;
             }
 
@@ -121,7 +123,7 @@ export class DdSdkReactNative {
             if (configuration.versionSuffix && !configuration.version) {
                 configuration.additionalConfig[
                     DdSdkReactNative.DD_VERSION_SUFFIX
-                ] = configuration.versionSuffix;
+                ] = `-${configuration.versionSuffix}`;
             }
 
             configuration.additionalConfig[

@@ -225,12 +225,14 @@ const config = new DdSdkReactNativeConfiguration(
     true
 );
 
-config.versionSuffix = ':ota-3';
+config.versionSuffix = 'codepush.3';
 ```
 
-If the commercial version of your app is "1.2.44", it will then be reported as "1.2.44:ota-3" in Datadog.
+If the commercial version of your app is "1.2.44", it will then be reported as "1.2.44-codepush.3" in Datadog - a dash (`-`) is automatically added between the version and the suffix.
 
 You can also completely override the version by specifying the `version` field. However make sure you set it correctly, as it will have to match the one specified during the upload of your sourcemaps and other mapping files.
+
+For more information about limitations on the version field, see the [Tags documentation][15].
 
 ### User interactions tracking
 
@@ -456,3 +458,4 @@ For more information, see [Apache License, v2.0][9]
 [12]: https://docs.expo.dev/
 [13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
 [14]: https://stackoverflow.com/questions/37388126/use-frameworks-for-only-some-pods-or-swift-pods/60914505#60914505
+[15]: https://docs.datadoghq.com/getting_started/tagging/#define-tags

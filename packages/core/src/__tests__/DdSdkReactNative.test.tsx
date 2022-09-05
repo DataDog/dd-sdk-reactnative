@@ -381,7 +381,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.versionSuffix = ':codepush-3';
+            configuration.versionSuffix = 'codepush-3';
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -394,7 +394,7 @@ describe('DdSdkReactNative', () => {
             ).toBeUndefined();
             expect(
                 ddSdkConfiguration.additionalConfig['_dd.version_suffix']
-            ).toBe(':codepush-3');
+            ).toBe('-codepush-3');
         });
 
         it('initializes with the version when a version and version suffix are specified', async () => {
@@ -408,7 +408,7 @@ describe('DdSdkReactNative', () => {
                 fakeAppId
             );
             configuration.version = '2.0.0';
-            configuration.versionSuffix = ':codepush-3';
+            configuration.versionSuffix = 'codepush-3';
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -417,7 +417,7 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(ddSdkConfiguration.additionalConfig['_dd.version']).toBe(
-                '2.0.0:codepush-3'
+                '2.0.0-codepush-3'
             );
             expect(
                 ddSdkConfiguration.additionalConfig['_dd.version_suffix']

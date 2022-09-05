@@ -32,7 +32,25 @@ export class DdSdkReactNativeConfiguration {
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
     public firstPartyHosts: string[] = [];
+    /**
+     * Overrides the reported version of the app.
+     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
+     * Other special characters are converted to underscores.
+     *
+     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
+     *
+     * Make sure you set it correctly, as it will have to match the one specified during the upload of your source maps and other mapping files.
+     */
     public version?: string;
+    /**
+     * Add a suffix to the reported version of the app.
+     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
+     * Other special characters are converted to underscores.
+     *
+     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
+     *
+     * A dash (`-`) will be automatically added between the version and the suffix
+     */
     public versionSuffix?: string;
 
     public additionalConfig: { [k: string]: any } = {};
