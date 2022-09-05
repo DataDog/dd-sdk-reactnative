@@ -11,17 +11,18 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import io.opentracing.Span
 import io.opentracing.Tracer
 import java.util.concurrent.TimeUnit
 
-
 /**
  * The entry point to use Datadog's Trace feature.
  */
-class DdTrace(reactContext: ReactApplicationContext, private val tracerProvider: () -> Tracer = { AndroidTracer.Builder().build() }) : ReactContextBaseJavaModule(reactContext) {
+class DdTrace(
+    reactContext: ReactApplicationContext,
+    private val tracerProvider: () -> Tracer = { AndroidTracer.Builder().build() }
+) : ReactContextBaseJavaModule(reactContext) {
 
     private val spanMap: MutableMap<String, Span> = mutableMapOf()
 

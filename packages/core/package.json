@@ -39,7 +39,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "bob build"
+    "prepare": "rm -rf lib && yarn bob build"
   },
   "peerDependencies": {
     "react": ">=16.13.1",

@@ -18,7 +18,6 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -27,7 +26,10 @@ import java.util.Locale
 /**
  * The entry point to initialize Datadog's features.
  */
-class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogSDKWrapper = DatadogSDKWrapper()) : ReactContextBaseJavaModule(reactContext) {
+class DdSdk(
+    reactContext: ReactApplicationContext,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper()
+) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
 
@@ -110,7 +112,7 @@ class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogS
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
         val configBuilder = Configuration.Builder(
             logsEnabled = true,
@@ -247,5 +249,4 @@ class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogS
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
     }
-
 }

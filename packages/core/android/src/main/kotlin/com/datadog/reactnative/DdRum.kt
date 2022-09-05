@@ -6,17 +6,16 @@
 
 package com.datadog.reactnative
 
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.ReadableMap
 import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumResourceKind
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 
 /**
@@ -34,7 +33,13 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the view started (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun startView(key: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun startView(
+        key: String,
+        name: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -53,7 +58,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the view stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun stopView(key: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun stopView(key: String, context: ReadableMap, timestampMs: Long, promise: Promise) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -72,7 +77,13 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun startAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun startAction(
+        type: String,
+        name: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -92,14 +103,20 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun stopAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun stopAction(
+        type: String,
+        name: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
         GlobalRum.get().stopUserAction(
-                type = type.asRumActionType(),
-                name = name,
-                attributes = attributes
+            type = type.asRumActionType(),
+            name = name,
+            attributes = attributes
         )
         promise.resolve(null)
     }
@@ -112,7 +129,13 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun addAction(type: String, name: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun addAction(
+        type: String,
+        name: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -132,8 +155,16 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the resource started (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
-    fun startResource(key: String, method: String, url: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun startResource(
+        key: String,
+        method: String,
+        url: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -155,8 +186,17 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the resource stopped (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
-    fun stopResource(key: String, statusCode: Double, kind: String, size: Double, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun stopResource(
+        key: String,
+        statusCode: Long,
+        kind: String,
+        size: Long,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -183,8 +223,16 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
-    fun addError(message: String, source: String, stacktrace: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    fun addError(
+        message: String,
+        source: String,
+        stacktrace: String,
+        context: ReadableMap,
+        timestampMs: Long,
+        promise: Promise
+    ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
