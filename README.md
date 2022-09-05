@@ -209,9 +209,9 @@ await DdSdkReactNative.initialize(config);
 
 ### Overriding the reported version
 
-By default, the SDK will report the `version` as the commercial version of your app (e.g. "1.2.44").
+By default, the SDK will report the `version` as the commercial version of your app (for example, "1.2.44").
 
-If you use an Over The Air (OTA) updates provider like Microsoft's Codepush, you can override this version to indicate which version of your javascript code is running.
+If you use an Over The Air (OTA) updates provider like Microsoft's Codepush, you can override this version to indicate which version of your JavaScript code is running.
 
 The recommended way is to do so by specifying a `versionSuffix` to the `DdSdkReactNativeConfiguration` object:
 
@@ -230,7 +230,7 @@ config.versionSuffix = 'codepush.3';
 
 If the commercial version of your app is "1.2.44", it will then be reported as "1.2.44-codepush.3" in Datadog - a dash (`-`) is automatically added between the version and the suffix.
 
-You can also completely override the version by specifying the `version` field. However make sure you set it correctly, as it will have to match the one specified during the upload of your sourcemaps and other mapping files.
+You can also completely override the version by specifying the `version` field. However, make sure you set it correctly, as it will have to match the one specified during the upload of your source maps and other mapping files.
 
 For more information about limitations on the version field, see the [Tags documentation][15].
 
