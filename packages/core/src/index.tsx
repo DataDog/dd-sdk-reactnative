@@ -5,7 +5,11 @@
  */
 
 import { DatadogProvider } from './DatadogProvider/DatadogProvider';
-import { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
+import {
+    DatadogProviderConfiguration,
+    DdSdkReactNativeConfiguration,
+    InitializationMode
+} from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
@@ -16,6 +20,8 @@ import { RumActionType, ErrorSource } from './types';
 
 export {
     DatadogProvider,
+    DatadogProviderConfiguration,
+    InitializationMode,
     DdLogs,
     DdTrace,
     DdRum,
