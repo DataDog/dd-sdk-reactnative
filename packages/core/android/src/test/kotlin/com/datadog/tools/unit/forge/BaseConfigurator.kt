@@ -20,6 +20,7 @@ open class BaseConfigurator :
     override fun configure(forge: Forge) {
         forge.addFactory(ThrowableForgeryFactory())
         forge.addFactory(DdSdkConfigurationForgeryFactory())
+        forge.addFactory(PackageInfoForgeryFactory())
         forge.useJvmFactories()
     }
 }

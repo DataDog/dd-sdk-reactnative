@@ -26,6 +26,8 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERBOSITY_KEY = '_dd.sdk_verbosity';
     private static readonly DD_NATIVE_VIEW_TRACKING_KEY =
         '_dd.native_view_tracking';
+    private static readonly DD_VERSION = '_dd.version';
+    private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
 
     // Proxy
     private static readonly DD_PROXY_TYPE_KEY = '_dd.proxy.type';
@@ -104,6 +106,24 @@ export class DdSdkReactNative {
                 configuration.additionalConfig[
                     DdSdkReactNative.DD_SERVICE_NAME
                 ] = configuration.serviceName;
+            }
+
+            if (configuration.version) {
+                configuration.additionalConfig[
+                    DdSdkReactNative.DD_VERSION
+                ] = `${configuration.version}${
+                    configuration.versionSuffix
+                        ? `-${configuration.versionSuffix}`
+                        : ''
+                }`;
+            }
+
+            // If both version and version suffix are provided, we merge them into the version field.
+            // To avoid adding it in again the native part, we only set it if the version isn't set.
+            if (configuration.versionSuffix && !configuration.version) {
+                configuration.additionalConfig[
+                    DdSdkReactNative.DD_VERSION_SUFFIX
+                ] = `-${configuration.versionSuffix}`;
             }
 
             configuration.additionalConfig[

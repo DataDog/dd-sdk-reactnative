@@ -8,6 +8,12 @@ import Foundation
 import Datadog
 import DatadogCrashReporting
 
+func getDefaultAppVersion() -> String {
+    let bundleShortVersion = mainBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    let bundleVersion = mainBundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    return bundleShortVersion ?? bundleVersion ?? "0.0.0"
+}
+
 @objc(DdSdk)
 class RNDdSdk: NSObject {
     @objc(requiresMainQueueSetup)
@@ -81,7 +87,7 @@ class RNDdSdk: NSObject {
         resolve(nil)
     }
 
-    func buildConfiguration(configuration: DdSdkConfiguration) -> Datadog.Configuration {
+    func buildConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
         let ddConfigBuilder: Datadog.Configuration.Builder
         if let rumAppID = configuration.applicationId {
             ddConfigBuilder = Datadog.Configuration.builderUsing(
@@ -114,7 +120,12 @@ class RNDdSdk: NSObject {
 
         let additionalConfig = configuration.additionalConfig
 
-        if let additionalConfiguration = additionalConfig as? [String: Any] {
+        if var additionalConfiguration = additionalConfig as? [String: Any] {
+            if let versionSuffix = additionalConfig?[InternalConfigurationAttributes.versionSuffix] as? String {
+                let datadogVersion = defaultAppVersion + versionSuffix
+                additionalConfiguration[CrossPlatformAttributes.version] = datadogVersion
+            }
+            
             _ = ddConfigBuilder.set(additionalConfiguration: additionalConfiguration)
         }
 

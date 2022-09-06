@@ -244,6 +244,14 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNotNil(ddConfig.crashReportingPlugin)
     }
+    
+    func testBuildConfigurationWithVersionSuffix() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.version_suffix": ":codepush-3"])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration, defaultAppVersion: "1.2.3")
+
+        XCTAssertEqual(ddConfig.additionalConfiguration["_dd.version"] as! String, "1.2.3:codepush-3")
+    }
 
     func testSettingUserInfo() throws {
         let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
@@ -264,7 +272,7 @@ internal class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        let receivedUserInfo = try XCTUnwrap(Datadog.instance?.userInfoProvider.value)
+        let receivedUserInfo = try XCTUnwrap(defaultDatadogCore as? DatadogCore).dependencies.userInfoProvider.value
         XCTAssertEqual(receivedUserInfo.id, "abc-123")
         XCTAssertEqual(receivedUserInfo.name, "John Doe")
         XCTAssertEqual(receivedUserInfo.email, "john@doe.com")
@@ -432,9 +440,9 @@ extension DdSdkConfiguration {
         additionalConfig: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
-            clientToken: clientToken,
-            env: env,
-            applicationId: applicationId,
+            clientToken: clientToken as String,
+            env: env as String,
+            applicationId: applicationId as String,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             sampleRate: sampleRate,
             site: site,
