@@ -9,8 +9,8 @@ import Datadog
 import DatadogCrashReporting
 
 func getDefaultAppVersion() -> String {
-    let bundleShortVersion = mainBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-    let bundleVersion = mainBundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
     return bundleShortVersion ?? bundleVersion ?? "0.0.0"
 }
 
