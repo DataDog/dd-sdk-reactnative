@@ -62,6 +62,14 @@ In order to make your application's size smaller, its code is minified when it i
 -   dSYMs for your iOS native code
 -   Proguard mapping files if you have enabled code obfuscation for your Android native code
 
+To set your project up to send the symbolication files automatically, run `npx datadog-react-native-wizard`.
+
+See the wizard [official documentation][13] for options.
+
+## Alternatives to `datadog-react-native-wizard`
+
+If using `datadog-react-native-wizard` did not succeed or if you don't want to upload your symbolication files automatically on each release, follow the next steps to symbolicate crash reports.
+
 ### Upload JavaScript source maps on iOS builds
 
 You need to install `@datadog/datadog-ci` as a dev dependency to your project:
@@ -102,8 +110,8 @@ DATADOG_XCODE="$(echo $PACKAGE_MANAGER_BIN) datadog-ci react-native xcode"
 
 This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
 
-- `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
-- `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+-   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+-   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
 
 It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
@@ -156,8 +164,8 @@ $(echo $PACKAGE_MANAGER_BIN datadog-ci react-native xcode)
 
 This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
 
-- `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
-- `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
+-   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
+-   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
 
 It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
@@ -295,18 +303,26 @@ In your `android/app/build.gradle` file, add the plugin and configure it **at th
 
 ```groovy
 plugins {
-    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.4.0"
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.0"
 }
 
 datadog {
-    site = "US1"
     checkProjectDependencies = "none" // this is needed in any case for React Native projects
 }
 ```
 
-The [site value][8] has to match the value in the Datadog SDK configuration. For more information, see the [Datadog Android SDK Gradle Plugin][6].
+For the upload to work, you need to provide your Datadog API key. You can specify it as a `DATADOG_API_KEY` environment variable, or create a `datadog-ci.json` file at the root of your project containing the API key:
 
-To run the plugin after a build, export your API key as `DD_API_KEY` and run `(cd android && ./gradlew app:uploadMappingRelease)`.
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+For more information, see the [Datadog Android SDK Gradle Plugin][6].
+
+To run the plugin after a build run `(cd android && ./gradlew app:uploadMappingRelease)`.
 
 #### Automate the upload on each build
 
@@ -337,8 +353,8 @@ To verify your React Native Crash Reporting and Error Tracking configuration, yo
 [5]: https://reactnative.dev/docs/signed-apk-android#enabling-proguard-to-reduce-the-size-of-the-apk-optional
 [6]: https://github.com/datadog/dd-sdk-android-gradle-plugin
 [7]: https://github.com/cwhenderson20/react-native-crash-tester
-[8]: https://docs.datadoghq.com/getting_started/site/
 [9]: https://fastlane.tools/
 [10]: https://appcenter.ms/
 [11]: https://www.bitrise.io/
 [12]: https://github.com/DataDog/datadog-ci/tree/master/src/commands/react-native#xcode
+[13]: https://github.com/DataDog/datadog-react-native-wizard
