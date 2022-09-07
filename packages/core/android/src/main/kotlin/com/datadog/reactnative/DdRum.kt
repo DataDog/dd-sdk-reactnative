@@ -37,7 +37,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         key: String,
         name: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -58,7 +58,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
      * @param timestampMs The timestamp when the view stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     @ReactMethod
-    fun stopView(key: String, context: ReadableMap, timestampMs: Long, promise: Promise) {
+    fun stopView(key: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
@@ -81,7 +81,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         type: String,
         name: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -107,7 +107,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         type: String,
         name: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -133,7 +133,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         type: String,
         name: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -162,7 +162,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         method: String,
         url: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -190,11 +190,11 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
     @ReactMethod
     fun stopResource(
         key: String,
-        statusCode: Long,
+        statusCode: Double,
         kind: String,
-        size: Long,
+        size: Double,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
@@ -230,7 +230,7 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         source: String,
         stacktrace: String,
         context: ReadableMap,
-        timestampMs: Long,
+        timestampMs: Double,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {

@@ -21,6 +21,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.Forge
+import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
 import fr.xgouchet.elmyr.annotation.LongForgery
@@ -63,8 +64,8 @@ internal class DdRumTest {
 
     lateinit var fakeContext: Map<String, Any?>
 
-    @LongForgery(1000000000000L, 2000000000000L)
-    var fakeTimestamp: Long = 0L
+    @DoubleForgery(1000000000000.0, 2000000000000.0)
+    var fakeTimestamp: Double = 0.0
 
     @BeforeEach
     fun `set up`(forge: Forge) {
@@ -98,7 +99,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -114,7 +115,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -131,7 +132,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -151,7 +152,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -168,7 +169,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -188,7 +189,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -205,7 +206,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -225,7 +226,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -243,7 +244,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -260,18 +261,18 @@ internal class DdRumTest {
     fun `M call stopResource W stopResource()`(
         @StringForgery key: String,
         @IntForgery(200, 600) statusCode: Int,
-        @LongForgery(min = 0L) resourceSize: Long,
+        @DoubleForgery(min = 0.0) resourceSize: Double,
         @Forgery kind: RumResourceKind
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
         testedDdRum.stopResource(
             key,
-            statusCode.toLong(),
+            statusCode.toDouble(),
             kind.toString(),
             resourceSize,
             fakeContext.toReadableMap(),
@@ -280,25 +281,25 @@ internal class DdRumTest {
         )
 
         // Then
-        verify(mockRumMonitor).stopResource(key, statusCode, resourceSize, kind, updatedContext)
+        verify(mockRumMonitor).stopResource(key, statusCode, resourceSize.toLong(), kind, updatedContext)
     }
 
     @Test
     fun `M call stopResource W stopResource() with invalid kind`(
         @StringForgery key: String,
         @IntForgery(200, 600) statusCode: Int,
-        @LongForgery(min = 0L) resourceSize: Long,
+        @DoubleForgery(min = 0.0) resourceSize: Double,
         @StringForgery(StringForgeryType.HEXADECIMAL) kind: String
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
         testedDdRum.stopResource(
             key,
-            statusCode.toLong(),
+            statusCode.toDouble(),
             kind,
             resourceSize,
             fakeContext.toReadableMap(),
@@ -310,7 +311,7 @@ internal class DdRumTest {
         verify(mockRumMonitor).stopResource(
             key,
             statusCode,
-            resourceSize,
+            resourceSize.toLong(),
             RumResourceKind.UNKNOWN,
             updatedContext
         )
@@ -324,15 +325,15 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
         testedDdRum.stopResource(
             key,
-            statusCode.toLong(),
+            statusCode.toDouble(),
             kind,
-            -1,
+            -1.0,
             fakeContext.toReadableMap(),
             fakeTimestamp,
             mockPromise
@@ -356,7 +357,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
@@ -377,7 +378,7 @@ internal class DdRumTest {
     ) {
         // Given
         val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
-            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp)
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
         }
 
         // When
