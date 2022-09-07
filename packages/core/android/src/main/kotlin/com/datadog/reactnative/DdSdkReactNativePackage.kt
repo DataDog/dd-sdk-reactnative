@@ -11,6 +11,9 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
+/**
+ * Package of native dd-sdk-reactnative native modules.
+ */
 class DdSdkReactNativePackage : ReactPackage {
 
     override fun createViewManagers(

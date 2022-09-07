@@ -9,7 +9,7 @@ package com.datadog.reactnative
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 
-fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
+internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     return DdSdkConfiguration(
         clientToken = getString("clientToken").orEmpty(),
         env = getString("env").orEmpty(),
@@ -22,7 +22,7 @@ fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     )
 }
 
-fun DdSdkConfiguration.toReadableMap(): ReadableMap {
+internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)
     map.putString("env", env)

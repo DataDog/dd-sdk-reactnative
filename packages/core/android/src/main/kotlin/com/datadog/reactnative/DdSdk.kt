@@ -7,6 +7,7 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
@@ -18,7 +19,6 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -27,7 +27,10 @@ import java.util.Locale
 /**
  * The entry point to initialize Datadog's features.
  */
-class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogSDKWrapper = DatadogSDKWrapper()) : ReactContextBaseJavaModule(reactContext) {
+class DdSdk(
+    reactContext: ReactApplicationContext,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper()
+) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
 
@@ -110,8 +113,32 @@ class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogS
         }
     }
 
-    @Suppress("ComplexMethod")
+    private fun getDefaultAppVersion(): String {
+        val packageName = appContext.packageName
+        val packageInfo = try {
+            appContext.packageManager.getPackageInfo(packageName, 0)
+        } catch (e: PackageManager.NameNotFoundException) {
+            return DEFAULT_APP_VERSION
+        }
+
+        return packageInfo?.let {
+            // we need to use the deprecated method because getLongVersionCode method is only
+            // available from API 28 and above
+            @Suppress("DEPRECATION")
+            it.versionName ?: it.versionCode.toString()
+        } ?: DEFAULT_APP_VERSION
+    }
+
+    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
+        val additionalConfig = configuration.additionalConfig?.toMutableMap();
+
+        val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
+        if (versionSuffix != null && additionalConfig != null) {
+            val defaultVersion = getDefaultAppVersion()
+            additionalConfig.put(DD_VERSION, defaultVersion + versionSuffix)
+        }
+
         val configBuilder = Configuration.Builder(
             logsEnabled = true,
             tracesEnabled = true,
@@ -119,7 +146,7 @@ class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogS
             rumEnabled = true
         )
             .setAdditionalConfiguration(
-                configuration.additionalConfig
+                additionalConfig
                     ?.filterValues { it != null }
                     ?.mapValues { it.value!! } ?: emptyMap()
             )
@@ -236,16 +263,18 @@ class DdSdk(reactContext: ReactApplicationContext, private val datadog: DatadogS
     // endregion
 
     companion object {
+        internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
         internal const val DD_LONG_TASK_THRESHOLD = "_dd.long_task.threshold"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
+        internal const val DD_VERSION = "_dd.version"
+        internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
         internal const val DD_PROXY_ADDRESS = "_dd.proxy.address"
         internal const val DD_PROXY_PORT = "_dd.proxy.port"
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
     }
-
 }

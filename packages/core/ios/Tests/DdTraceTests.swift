@@ -142,7 +142,7 @@ internal class DdTraceTests: XCTestCase {
         let iterationCount = 30
         DispatchQueue.concurrentPerform(iterations: iterationCount) { iteration in
             tracer.startSpan(
-                operation: "concurrent_test_span_\(iteration)" as NSString,
+                operation: ("concurrent_test_span_\(iteration)" as NSString) as String,
                 context: testTags,
                 timestampMs: 0,
                 resolve: mockResolve,

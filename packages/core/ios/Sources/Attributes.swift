@@ -10,6 +10,11 @@ import Foundation
 /// Internal attributes, passed to the iOS SDK.
 /// Keep in sync with https://github.com/DataDog/dd-sdk-ios/blob/develop/Sources/Datadog/Core/Attributes/Attributes.swift.
 internal struct CrossPlatformAttributes {
+    /// Custom app version passed from CP SDK. Used for all events issued by the SDK (both coming from cross-platform SDK and produced internally, like RUM long tasks).
+    /// It should replace the default native `version` read from `Info.plist`.
+    /// Expects `String` value (semantic version).
+    static let version: String = "_dd.version"
+
     /// Custom SDK version passed from bridge SDK. Used for all events issued by the SDK (both coming from cross-platform SDK and produced internally, like RUM long tasks).
     /// It should replace the default native `sdkVersion`.
     /// Expects `String` value (semantic version).
@@ -89,4 +94,8 @@ internal struct InternalConfigurationAttributes {
     /// Specify native SDK verbosity
     /// Expects `NSString?` value
     static let sdkVerbosity = "_dd.sdk_verbosity"
+    
+    /// Specify version suffix.
+    /// Expects `NSString?` value
+    static let versionSuffix = "_dd.version_suffix"
 }

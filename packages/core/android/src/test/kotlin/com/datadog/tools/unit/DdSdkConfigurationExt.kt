@@ -1,0 +1,33 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+ 
+package com.datadog.tools.unit
+
+import com.datadog.reactnative.DdSdkConfiguration
+import com.facebook.react.bridge.ReadableMap
+
+fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    map["clientToken"] = clientToken
+    map["env"] = env
+    applicationId?.let { map.put("applicationId", it) }
+    map["nativeCrashReportEnabled"] = if (nativeCrashReportEnabled == null) {
+        false
+    } else {
+        nativeCrashReportEnabled
+    }
+    if (sampleRate != null) {
+        map["sampleRate"] = sampleRate
+    } else {
+        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
+        // ReadableMap#getDouble which doesn't allow having null value
+        map["sampleRate"] = 100f
+    }
+    site?.let { map.put("site", it) }
+    trackingConsent?.let { map.put("trackingConsent", it) }
+    additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
+    return map.toReadableMap()
+}

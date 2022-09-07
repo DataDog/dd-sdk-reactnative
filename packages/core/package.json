@@ -1,6 +1,6 @@
 {
   "name": "@datadog/mobile-react-native",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
@@ -39,7 +39,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "bob build"
+    "prepare": "rm -rf lib && yarn bob build"
   },
   "peerDependencies": {
     "react": ">=16.13.1",
