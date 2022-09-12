@@ -11,11 +11,23 @@ import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DdLogs, DdTrace, DdRum } from './foundation';
+import type { RumActionType, ResourceKind, ErrorSource } from './types';
+
+/**
+ * Using a syntax like `RumActionType as DdRumActionType` breaks unit tests
+ * as babel does not seem to be able to recognize the type alias.
+ */
+type DdRumActionType = RumActionType;
+type DdResourceKind = ResourceKind;
+type DdErrorSource = ErrorSource;
 
 export {
     DdLogs,
     DdTrace,
     DdRum,
+    DdRumActionType,
+    DdResourceKind,
+    DdErrorSource,
     DdSdkReactNativeConfiguration,
     DdSdkReactNative,
     InternalLog,
