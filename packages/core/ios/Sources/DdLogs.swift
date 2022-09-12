@@ -7,7 +7,7 @@
 import Foundation
 import Datadog
 
-extension Logger: NativeLogger { }
+extension DDLogger: NativeLogger { }
 internal protocol NativeLogger {
     func debug(_ message: String, error: Error?, attributes: [String: Encodable]?)
     func info(_ message: String, error: Error?, attributes: [String: Encodable]?)

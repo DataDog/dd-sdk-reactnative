@@ -314,6 +314,8 @@ import {
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     DdLogs,
+    ErrorSource,
+    RumActionType,
     DdRum
 } from '@datadog/mobile-react-native';
 
@@ -340,9 +342,9 @@ DdRum.startView('<view-key>', 'View Url', {}, Date.now());
 DdRum.stopView('<view-key>', { custom: 42 }, Date.now());
 
 // Track RUM Actions manually
-DdRum.addAction('TAP', 'button name', {}, Date.now());
+DdRum.addAction(RumActionType.TAP, 'button name', {}, Date.now());
 // or in case of continuous action
-DdRum.startAction('TAP', 'button name', {}, Date.now());
+DdRum.startAction(RumActionType.TAP, 'button name', {}, Date.now());
 // to stop action above
 DdRum.stopAction({}, Date.now());
 
@@ -350,7 +352,7 @@ DdRum.stopAction({}, Date.now());
 DdRum.addTiming('<timing-name>');
 
 // Track RUM Errors manually
-DdRum.addError('<message>', 'source', '<stacktrace>', {}, Date.now());
+DdRum.addError('<message>', ErrorSource.SOURCE, '<stacktrace>', {}, Date.now());
 
 // Track RUM Resource manually
 DdRum.startResource(
