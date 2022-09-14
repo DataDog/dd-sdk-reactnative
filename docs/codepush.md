@@ -6,7 +6,7 @@ Enable React Native Crash Reporting and Error Tracking to get comprehensive cras
 
 Each time you release a new [CodePush][1] version for your React Native application, you need to upload the source maps to Datadog to unminify errors.
 
-To achieve this, we recommand using `@datadog/mobile-react-native-code-push` in your app and the [datadog-ci][3] `react-native codepush` command to upload your source maps. It will ensure that the version will be consistent in both reported crashes and uploaded source maps.
+To achieve this, we recommend using `@datadog/mobile-react-native-code-push` in your app and the [datadog-ci][3] `react-native codepush` command to upload your source maps. It will ensure that the version will be consistent in both reported crashes and uploaded source maps.
 
 ## Setup
 
@@ -60,7 +60,7 @@ To install it with yarn:
 yarn add -D @datadog/datadog-ci
 ```
 
-Create an encrypted or gitignored `datadog-ci.json` file at the root of your project containing your API key and the Datadog site (if not `datadoghq.com`):
+Create a gitignored `datadog-ci.json` file at the root of your project containing your API key and the Datadog site (if not `datadoghq.com`):
 
 ```json
 {
