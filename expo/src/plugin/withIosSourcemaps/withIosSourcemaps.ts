@@ -21,7 +21,7 @@ const withIosSourcemaps: ConfigPlugin<void> = config => {
         const [beforeScript, afterScript] = bundlePhase.shellScript.split(
             "`\\\"$NODE_BINARY\\\" --print \\\"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\\\"`"
         );
-        const datadogScript = `export SOURCEMAP_FILE=./build/main.jsbundle.map\\n yarn datadog-ci react-native xcode \`\\\"$NODE_BINARY\\\" --print \\\"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\\\"\``;
+        const datadogScript = `export SOURCEMAP_FILE=./main.jsbundle.map\\n yarn datadog-ci react-native xcode \`\\\"$NODE_BINARY\\\" --print \\\"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\\\"\``;
         bundlePhase.shellScript = `${beforeScript}${datadogScript}${afterScript}`;
 
         return config;
