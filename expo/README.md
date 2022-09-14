@@ -2,7 +2,7 @@
 
 ## Overview
 
-This package contains the Datadog Expo config plugin and exports the Datadog React Native SDK as `expo-datadog`.
+This package contains the Datadog Expo config plugin `expo-datadog`. It requires `@datadog/mobile-react-native` to work.
 
 For more information about using the Expo SDK, see the [Expo and Expo Go documentation][2]. For more information about tracking Expo crash reports, see the [Expo Crash Reporting and Error Tracking documentation][1].
 
