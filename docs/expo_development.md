@@ -1,6 +1,6 @@
 ## Overview
 
-The RUM React Native SDK supports Expo and Expo Go. To use it, install and import from `expo-datadog` instead of `@datadog/mobile-react-native`.
+The RUM React Native SDK supports Expo and Expo Go. To use it, install `expo-datadog` and `@datadog/mobile-react-native`.
 
 `expo-datadog` supports Expo starting from SDK 45 and the plugin's versions follow Expo versions. For example, if you use Expo SDK 45, use `expo-datadog` version `45.x.x`. Datadog recommends using **Expo SDK 45** as a minimum version; previous versions may require manual steps.
 
@@ -9,13 +9,13 @@ The RUM React Native SDK supports Expo and Expo Go. To use it, install and impor
 To install with NPM, run:
 
 ```sh
-npm install expo-datadog
+npm install expo-datadog @datadog/mobile-react-native
 ```
 
 To install with Yarn, run:
 
 ```sh
-yarn add expo-datadog
+yarn add expo-datadog @datadog/mobile-react-native
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ Add `expo-datadog` to your plugins in the `app.json` file:
 }
 ```
 
-Run `eas secret:create` to set `DATADOG_API_KEY` and `DD_API_KEY` to your Datadog API key, and `DATADOG_SITE` to the host of your Datadog site, for example: `datadoghq.com`.
+Run `eas secret:create` to set `DATADOG_API_KEY` to your Datadog API key, and `DATADOG_SITE` to the host of your Datadog site, for example: `datadoghq.com`.
 
 ### Initialize the library with application context
 
