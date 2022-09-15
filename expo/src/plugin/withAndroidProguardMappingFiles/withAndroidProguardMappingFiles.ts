@@ -21,7 +21,7 @@ const withAndroidProguardMappingFiles: ConfigPlugin<void> = config => {
         // Add the installation for the Android Gradle Plugin
         const installationBlock = [
             `plugins {`,
-            `    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.0"`,
+            `    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.+"`,
             `}`,
             ``,
             `datadog {`,
