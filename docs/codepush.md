@@ -69,7 +69,7 @@ Create a gitignored `datadog-ci.json` file at the root of your project containin
 }
 ```
 
-N.B.: You can also export them as `DATADOG_API_KEY` and `DATADOG_SITE` environment variables.
+**Note:** You can also export them as `DATADOG_API_KEY` and `DATADOG_SITE` environment variables.
 
 When releasing a new CodePush bundle, specify a directory for outputting the source maps and bundle:
 
