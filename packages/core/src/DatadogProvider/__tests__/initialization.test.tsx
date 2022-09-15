@@ -37,15 +37,17 @@ describe('DatadogProvider', () => {
             } = renderWithProvider();
             getByText('I am a test application');
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
-            expect(NativeModules.DdSdk.initialize.mock.calls[0])
-                .toMatchInlineSnapshot(`
-                Array [
+
+            // We remove the sdk version from the configuration as it would require to update this snapshot
+            const receivedConfiguration =
+                NativeModules.DdSdk.initialize.mock.calls[0][0];
+            delete receivedConfiguration.additionalConfig['_dd.sdk_version'];
+            expect(receivedConfiguration).toMatchInlineSnapshot(`
                   DdSdkConfiguration {
                     "additionalConfig": Object {
                       "_dd.first_party_hosts": Array [],
                       "_dd.long_task.threshold": 200,
                       "_dd.native_view_tracking": false,
-                      "_dd.sdk_version": "1.0.0",
                       "_dd.source": "react-native",
                     },
                     "applicationId": "fakeApplicationId",
@@ -56,8 +58,7 @@ describe('DatadogProvider', () => {
                     "site": "US",
                     "telemetrySampleRate": undefined,
                     "trackingConsent": "granted",
-                  },
-                ]
+                  }
             `);
 
             // Re-render
