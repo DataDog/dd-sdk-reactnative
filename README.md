@@ -50,27 +50,27 @@ const config = new DdSdkReactNativeConfiguration(
     '<CLIENT_TOKEN>',
     '<ENVIRONMENT_NAME>',
     '<RUM_APPLICATION_ID>',
-    true, // track User interactions (e.g.: Tap on buttons).
-    true, // track XHR Resources
-    true // track Errors
+    true, // track user interactions (such as a tap on buttons).
+    true, // track XHR resources
+    true // track errors
 );
 config.site = 'US1';
-// Optional: enable or disable native crash reports
+// Optional: Enable or disable native crash reports
 config.nativeCrashReportEnabled = true;
-// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+// Optional: Sample RUM sessions (in this example, 80% of session are sent to Datadog. Default is 100%)
 config.sessionSamplingRate = 80;
-// Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
+// Optional: Sample tracing integrations for network calls between your app and your backend (in this example, 80% of calls to your instrumented backend are linked from the RUM view to the APM view. Default is 20%)
 // You need to specify the hosts of your backends to enable tracing with these backends
 config.resourceTracingSamplingRate = 80;
 config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
-// Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
+// Optional: set the reported service name (by default, it uses the package name or bundleIdentifier of your Android or iOS app respectively)
 config.serviceName = 'com.example.reactnative';
-// Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
+// Optional: let the SDK print internal logs above or equal to the provided level. Default is undefined (meaning no logs)
 config.verbosity = SdkVerbosity.WARN;
 
 await DdSdkReactNative.initialize(config);
 
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+// Once the Datadog React Native SDK for RUM is initialized, you need to setup view tracking to be able to see data in the RUM dashboard
 ```
 
 {{< /site-region >}}
@@ -87,9 +87,9 @@ const config = new DdSdkReactNativeConfiguration(
     '<CLIENT_TOKEN>',
     '<ENVIRONMENT_NAME>',
     '<RUM_APPLICATION_ID>',
-    true, // track User interactions (e.g.: Tap on buttons).
-    true, // track XHR Resources
-    true // track Errors
+    true, // track user interactions (such as a tap on buttons).
+    true, // track XHR resources
+    true // track errors
 );
 config.site = 'US3';
 // Optional: enable or disable native crash reports
@@ -103,7 +103,7 @@ config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomain
 
 await DdSdkReactNative.initialize(config);
 
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+// Once the Datadog React Native SDK for RUM is initialized, you need to setup view tracking to be able to see data in the RUM dashboard
 ```
 
 {{< /site-region >}}
@@ -136,7 +136,7 @@ config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomain
 
 await DdSdkReactNative.initialize(config);
 
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+// Once the Datadog React Native SDK for RUM is initialized, you need to setup view tracking to be able to see data in the RUM dashboard
 ```
 
 {{< /site-region >}}
@@ -169,7 +169,7 @@ config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomain
 
 await DdSdkReactNative.initialize(config);
 
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+// Once the Datadog React Native SDK for RUM is initialized, you need to setup view tracking to be able to see data in the RUM dashboard
 ```
 
 {{< /site-region >}}
@@ -202,18 +202,18 @@ config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomain
 
 await DdSdkReactNative.initialize(config);
 
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+// Once the Datadog React Native SDK for RUM is initialized, you need to setup view tracking to be able to see data in the RUM dashboard
 ```
 
 {{< /site-region >}}
 
-### Overriding the reported version
+### Override the reported version
 
-By default, the SDK will report the `version` as the commercial version of your app (for example, "1.2.44").
+By default, the Datadog React Native SDK reports the `version` as the commercial version of your app (for example, "1.2.44").
 
-If you use an Over The Air (OTA) updates provider like Microsoft's Codepush, you can override this version to indicate which version of your JavaScript code is running.
+If you use an Over The Air (OTA) updates provider like Microsoft's CodePush, you can override this version to indicate which version of your JavaScript code is running.
 
-The recommended way is to do so by specifying a `versionSuffix` to the `DdSdkReactNativeConfiguration` object:
+Datadog recommends using a `versionSuffix` to the `DdSdkReactNativeConfiguration` object:
 
 ```js
 const config = new DdSdkReactNativeConfiguration(
@@ -228,15 +228,15 @@ const config = new DdSdkReactNativeConfiguration(
 config.versionSuffix = 'codepush.3';
 ```
 
-If the commercial version of your app is "1.2.44", it will then be reported as "1.2.44-codepush.3" in Datadog - a dash (`-`) is automatically added between the version and the suffix.
+If the commercial version of your app is "1.2.44", it is reported as "1.2.44-codepush.3" in Datadog. A dash (`-`) is automatically added between the version and the suffix.
 
-You can also completely override the version by specifying the `version` field. However, make sure you set it correctly, as it will have to match the one specified during the upload of your source maps and other mapping files.
+You can also completely override the version by specifying the `version` field. However, make sure you set it correctly, as it has to match the one specified during the upload of your source maps and other mapping files.
 
 For more information about limitations on the version field, see the [Tags documentation][15].
 
 ### User interactions tracking
 
-If user interactions tracking is enabled as in the code example above, the SDK traverses up the hierarchy of components starting from the component that received a tap, looking for `dd-action-name` property. Once found, it is used as a name for the action reported.
+If user interactions tracking is enabled as in the code example above, the Datadog React Native SDK traverses up the hierarchy of components starting from the component that received a tap, looking for `dd-action-name` property. Once found, it is used as a name for the action reported.
 
 Alternatively, you can use the `accessibilityLabel` element property to give the tap action a name; otherwise, the element type is reported. You can check the sample app for usage examples.
 
@@ -304,79 +304,6 @@ DdSdkReactNative.setAttributes({
     campaign_origin: 'example_ad_network'
 });
 ```
-
-## Manual instrumentation
-
-If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
-
-```js
-import {
-    DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
-    DdLogs,
-    ErrorSource,
-    RumActionType,
-    DdRum
-} from '@datadog/mobile-react-native';
-
-// Initialize the SDK
-const config = new DdSdkReactNativeConfiguration(
-    '<CLIENT_TOKEN>',
-    '<ENVIRONMENT_NAME>',
-    '<RUM_APPLICATION_ID>',
-    true, // track User interactions (e.g.: Tap on buttons)
-    true, // track XHR Resources
-    true // track Errors
-);
-DdSdkReactNative.initialize(config);
-
-// Send logs (use the debug, info, warn or error methods)
-DdLogs.debug('Lorem ipsum dolor sit amet…', {});
-DdLogs.info('Lorem ipsum dolor sit amet…', {});
-DdLogs.warn('Lorem ipsum dolor sit amet…', {});
-DdLogs.error('Lorem ipsum dolor sit amet…', {});
-
-// Track RUM Views manually
-DdRum.startView('<view-key>', 'View Url', {}, Date.now());
-//…
-DdRum.stopView('<view-key>', { custom: 42 }, Date.now());
-
-// Track RUM Actions manually
-DdRum.addAction(RumActionType.TAP, 'button name', {}, Date.now());
-// or in case of continuous action
-DdRum.startAction(RumActionType.TAP, 'button name', {}, Date.now());
-// to stop action above
-DdRum.stopAction({}, Date.now());
-
-// Add custom timings
-DdRum.addTiming('<timing-name>');
-
-// Track RUM Errors manually
-DdRum.addError('<message>', ErrorSource.SOURCE, '<stacktrace>', {}, Date.now());
-
-// Track RUM Resource manually
-DdRum.startResource(
-    '<res-key>',
-    'GET',
-    'http://www.example.com/api/v1/test',
-    {},
-    Date.now()
-);
-//…
-DdRum.stopResource('<res-key>', 200, 'xhr', (size = 1337), {}, Date.now());
-
-// Send spans manually
-const spanId = await DdTrace.startSpan('foo', { custom: 42 }, Date.now());
-//...
-DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
-```
-
-## Resource timings
-
-Resource tracking is able to provide the following timings:
-
--   `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
--   `Download`: The time it took to receive a response.
 
 ## Data Storage
 
