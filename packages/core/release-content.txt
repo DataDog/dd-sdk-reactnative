@@ -314,6 +314,7 @@ package/src/__mocks__/InternalLog.tsx
 package/src/__tests__
 package/src/__tests__/DdRumWrapper.test.tsx
 package/src/__tests__/DdSdkReactNative.test.tsx
+package/src/__tests__/DdSdkReactNativeConfiguration.test.ts
 package/src/__tests__/InternalLog.test.tsx
 package/src/__tests__/TimeProvider.test.tsx
 package/src/__tests__/Timer.test.ts

@@ -77,6 +77,89 @@ export class DdSdkReactNativeConfiguration {
     ) {}
 }
 
+export type SkipInitializationFeatures = {
+    readonly trackInteractions: boolean;
+    readonly trackResources: boolean;
+    readonly firstPartyHosts?: string[];
+    readonly resourceTracingSamplingRate?: number;
+    readonly trackErrors: boolean;
+};
+
+export type SkipInitializationConfiguration = {
+    readonly clientToken: string;
+    readonly env: string;
+    readonly applicationId: string;
+    readonly sessionSamplingRate?: number;
+    readonly site?: string;
+    readonly verbosity?: SdkVerbosity | undefined;
+    readonly nativeViewTracking?: boolean;
+    readonly proxyConfig?: ProxyConfiguration;
+    readonly serviceName?: string;
+    readonly version?: string;
+    readonly versionSuffix?: string;
+    readonly additionalConfig?: { [k: string]: any };
+    readonly trackingConsent?: TrackingConsent;
+    readonly nativeCrashReportEnabled?: boolean;
+};
+
+const setConfigurationAttribute = <
+    AttributeName extends keyof DdSdkReactNativeConfiguration
+>(
+    attribute: {
+        value?: DdSdkReactNativeConfiguration[AttributeName];
+        name: AttributeName;
+    },
+    configuration: DdSdkReactNativeConfiguration
+) => {
+    if (attribute.value !== undefined) {
+        configuration[attribute.name] = attribute.value;
+    }
+};
+
+export const buildSkipConfiguration = (
+    features: SkipInitializationFeatures,
+    configuration: SkipInitializationConfiguration
+): DdSdkReactNativeConfiguration => {
+    const {
+        clientToken,
+        env,
+        applicationId,
+        ...remainingConfiguration
+    } = configuration;
+    const SDKConfiguration = new DdSdkReactNativeConfiguration(
+        clientToken,
+        env,
+        applicationId,
+        features.trackInteractions,
+        features.trackResources,
+        features.trackErrors,
+        configuration.trackingConsent
+    );
+
+    (Object.keys(
+        remainingConfiguration
+    ) as (keyof typeof remainingConfiguration)[]).forEach(name => {
+        setConfigurationAttribute(
+            { value: remainingConfiguration[name], name },
+            SDKConfiguration
+        );
+    });
+
+    setConfigurationAttribute(
+        {
+            name: 'resourceTracingSamplingRate',
+            value: features.resourceTracingSamplingRate
+        },
+        SDKConfiguration
+    );
+    setConfigurationAttribute(
+        { name: 'firstPartyHosts', value: features.firstPartyHosts },
+        SDKConfiguration
+    );
+
+    return SDKConfiguration;
+};
+
 export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration {
     public initializationMode: InitializationMode = InitializationMode.SYNC;
 }
