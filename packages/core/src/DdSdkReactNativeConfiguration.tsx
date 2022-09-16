@@ -8,12 +8,24 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 
+const DEFAULTS = {
+    nativeCrashReportEnabled: false,
+    sessionSamplingRate: 100.0,
+    resourceTracingSamplingRate: 20.0,
+    site: 'US',
+    nativeViewTracking: false,
+    getFirstPartyHosts: () => [],
+    getAdditionalConfig: () => ({}),
+    trackingConsent: TrackingConsent.GRANTED
+};
+
 /**
  * The SDK configuration class.
  * It will be used to configure the SDK functionality at initialization.
  */
 export class DdSdkReactNativeConfiguration {
-    public nativeCrashReportEnabled: boolean = false;
+    public nativeCrashReportEnabled: boolean =
+        DEFAULTS.nativeCrashReportEnabled;
     /**
      * @deprecated `sampleRate` has been replaced by `sessionSamplingRate` to avoid confusion with `resourceTracingSamplingRate` and will be removed in a future release.
      */
@@ -21,17 +33,18 @@ export class DdSdkReactNativeConfiguration {
     /**
      * Percentage of sampled RUM sessions. Range `0`-`100`.
      */
-    public sessionSamplingRate: number = 100.0;
+    public sessionSamplingRate: number = DEFAULTS.sessionSamplingRate;
     /**
      * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
      */
-    public resourceTracingSamplingRate: number = 20.0;
-    public site: string = 'US';
+    public resourceTracingSamplingRate: number =
+        DEFAULTS.resourceTracingSamplingRate;
+    public site: string = DEFAULTS.site;
     public verbosity: SdkVerbosity | undefined = undefined;
-    public nativeViewTracking: boolean = false;
+    public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
-    public firstPartyHosts: string[] = [];
+    public firstPartyHosts: string[] = DEFAULTS.getFirstPartyHosts();
     /**
      * Overrides the reported version of the app.
      * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
@@ -64,7 +77,9 @@ export class DdSdkReactNativeConfiguration {
      */
     public telemetrySampleRate?: number;
 
-    public additionalConfig: { [k: string]: any } = {};
+    public additionalConfig: {
+        [k: string]: any;
+    } = DEFAULTS.getAdditionalConfig();
 
     constructor(
         readonly clientToken: string,
@@ -73,7 +88,7 @@ export class DdSdkReactNativeConfiguration {
         readonly trackInteractions: boolean = false,
         readonly trackResources: boolean = false,
         readonly trackErrors: boolean = false,
-        readonly trackingConsent: TrackingConsent = TrackingConsent.GRANTED
+        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent
     ) {}
 }
 
@@ -83,6 +98,31 @@ export type SkipInitializationFeatures = {
     readonly firstPartyHosts?: string[];
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
+};
+
+export type AutoInstrumentationParameters = {
+    readonly trackInteractions: boolean;
+    readonly trackResources: boolean;
+    readonly firstPartyHosts: string[];
+    readonly resourceTracingSamplingRate: number;
+    readonly trackErrors: boolean;
+};
+
+/**
+ * We could use `Proxy` instead of this function, but `Proxy` is not available on
+ * the older android jsc that can still be used.
+ */
+export const addDefaultValuesToSkipInitializationFeatures = (
+    features: SkipInitializationFeatures
+): AutoInstrumentationParameters => {
+    return {
+        ...features,
+        firstPartyHosts:
+            features.firstPartyHosts || DEFAULTS.getFirstPartyHosts(),
+        resourceTracingSamplingRate:
+            features.resourceTracingSamplingRate ||
+            DEFAULTS.resourceTracingSamplingRate
+    };
 };
 
 export type SkipInitializationConfiguration = {
@@ -166,6 +206,5 @@ export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration 
 
 export enum InitializationMode {
     SYNC = 'SYNC',
-    ASYNC = 'ASYNC',
-    SKIP = 'SKIP'
+    ASYNC = 'ASYNC'
 }

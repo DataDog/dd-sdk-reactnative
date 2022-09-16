@@ -101,8 +101,11 @@ describe('DatadogProvider', () => {
         it('does not start auto-instrumentation', async () => {
             const { getByText } = renderWithProvider({
                 configuration: {
-                    ...defaultConfiguration,
-                    initializationMode: InitializationMode.SKIP
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true,
+                    firstPartyHosts: ['api.com'],
+                    resourceTracingSamplingRate: 100
                 }
             });
             await flushPromises();
@@ -119,9 +122,18 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
             expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
 
-            await DatadogProvider.initialize();
+            await DatadogProvider.initialize({
+                applicationId: 'fake-application-id',
+                clientToken: 'fake-client-token',
+                env: 'fake-env'
+            });
             await flushPromises();
 
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            expect(
+                NativeModules.DdSdk.initialize.mock.calls[0][0]
+                    .additionalConfig['_dd.first_party_hosts']
+            ).toEqual(['api.com']);
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
     });

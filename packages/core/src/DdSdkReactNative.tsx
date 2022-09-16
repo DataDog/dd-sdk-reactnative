@@ -8,10 +8,17 @@ import { InteractionManager } from 'react-native';
 
 import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
 import type {
+    AutoInstrumentationParameters,
     DatadogProviderConfiguration,
-    DdSdkReactNativeConfiguration
+    DdSdkReactNativeConfiguration,
+    SkipInitializationConfiguration,
+    SkipInitializationFeatures
 } from './DdSdkReactNativeConfiguration';
-import { InitializationMode } from './DdSdkReactNativeConfiguration';
+import {
+    buildSkipConfiguration,
+    addDefaultValuesToSkipInitializationFeatures,
+    InitializationMode
+} from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -50,6 +57,7 @@ export class DdSdkReactNative {
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
     private static configuration?: DdSdkReactNativeConfiguration;
+    private static features?: SkipInitializationFeatures;
 
     /**
      * Initializes the Datadog SDK.
@@ -123,6 +131,18 @@ export class DdSdkReactNative {
     /**
      * FOR INTERNAL USE ONLY.
      */
+    static async _enableFeaturesFromDatadogProvider(
+        features: SkipInitializationFeatures
+    ): Promise<void> {
+        DdSdkReactNative.features = features;
+        DdSdkReactNative.enableFeatures(
+            addDefaultValuesToSkipInitializationFeatures(features)
+        );
+    }
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
     static _initializeFromDatadogProviderAsync = async (): Promise<void> => {
         if (!DdSdkReactNative.configuration) {
             InternalLog.log(
@@ -133,6 +153,25 @@ export class DdSdkReactNative {
         }
         return DdSdkReactNative.initializeNativeSDK(
             DdSdkReactNative.configuration
+        );
+    };
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static _initializeFromDatadogProviderWithConfigurationAsync = async (
+        configuration: SkipInitializationConfiguration
+    ): Promise<void> => {
+        if (!DdSdkReactNative.features) {
+            InternalLog.log(
+                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
+                SdkVerbosity.WARN
+            );
+            return new Promise(resolve => resolve());
+        }
+
+        return DdSdkReactNative.initializeNativeSDK(
+            buildSkipConfiguration(DdSdkReactNative.features, configuration)
         );
     };
 
@@ -247,7 +286,7 @@ export class DdSdkReactNative {
     };
 
     private static enableFeatures(
-        configuration: DdSdkReactNativeConfiguration
+        configuration: AutoInstrumentationParameters
     ) {
         if (DdSdkReactNative.wasAutoInstrumented) {
             InternalLog.log(
