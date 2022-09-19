@@ -1,6 +1,6 @@
 {
   "name": "expo-datadog",
-  "version": "45.0.0",
+  "version": "46.0.0",
   "description": "A client-side Expo module to interact with Datadog",
   "main": "build/index.js",
   "scripts": {
@@ -10,9 +10,6 @@
     "prepare": "expo-module prepare",
     "prepublishOnly": "expo-module prepublishOnly",
     "expo-module": "expo-module"
-  },
-  "dependencies": {
-    "@datadog/mobile-react-native": "1.0.0"
   },
   "homepage": "https://github.com/DataDog/dd-sdk-reactnative/expo",
   "repository": "https://github.com/DataDog/dd-sdk-reactnative",
@@ -36,5 +33,9 @@
     "eslint": "8.10.0",
     "eslint-config-prettier": "6.0.0",
     "jest": "26.6.3"
+  },
+  "peerDependencies": {
+    "@datadog/mobile-react-native": ">=1.0.0",
+    "expo": "46.x"
   }
 }
