@@ -97,8 +97,8 @@ describe('DatadogProvider', () => {
         });
     });
 
-    describe('initializationMode SKIP', () => {
-        it('does not start auto-instrumentation', async () => {
+    describe('partial initialization', () => {
+        it('does not start reporting auto-instrumentation', async () => {
             const { getByText } = renderWithProvider({
                 configuration: {
                     trackErrors: true,

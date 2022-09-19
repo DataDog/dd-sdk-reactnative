@@ -8,25 +8,29 @@ import type { PropsWithChildren } from 'react';
 
 import type {
     DatadogProviderConfiguration,
-    SkipInitializationConfiguration,
-    SkipInitializationFeatures
+    PartialInitializationConfiguration,
+    AutoInstrumentationConfiguration
 } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
 
 type Props = PropsWithChildren<{
-    configuration: DatadogProviderConfiguration | SkipInitializationFeatures;
+    configuration:
+        | DatadogProviderConfiguration
+        | AutoInstrumentationConfiguration;
 }>;
 
 type StaticProperties = {
     isInitialized: boolean;
     initialize: (
-        configuration: SkipInitializationConfiguration
+        configuration: PartialInitializationConfiguration
     ) => Promise<void>;
 };
 
-const isConfigurationSkip = (
-    configuration: DatadogProviderConfiguration | SkipInitializationFeatures
-): configuration is SkipInitializationFeatures => {
+const isConfigurationPartial = (
+    configuration:
+        | DatadogProviderConfiguration
+        | AutoInstrumentationConfiguration
+): configuration is AutoInstrumentationConfiguration => {
     return !('applicationId' in configuration);
 };
 
@@ -39,7 +43,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
         // the first render. Thus, we wouldn't enable auto-instrumentation on
         // the elements rendered in this first render and what happens during
         // the first render.
-        if (isConfigurationSkip(configuration)) {
+        if (isConfigurationPartial(configuration)) {
             DdSdkReactNative._enableFeaturesFromDatadogProvider(configuration);
         } else {
             DdSdkReactNative._initializeFromDatadogProvider(configuration);
@@ -52,7 +56,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
 
 DatadogProvider.isInitialized = false;
 DatadogProvider.initialize = (
-    configuration: SkipInitializationConfiguration
+    configuration: PartialInitializationConfiguration
 ) => {
     return DdSdkReactNative._initializeFromDatadogProviderWithConfigurationAsync(
         configuration

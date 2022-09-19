@@ -4,16 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { buildSkipConfiguration } from '../DdSdkReactNativeConfiguration';
+import { buildConfigurationFromPartialConfiguration } from '../DdSdkReactNativeConfiguration';
 import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 
 describe('DdSdkReactNativeConfiguration', () => {
-    describe('buildSkipConfiguration', () => {
+    describe('buildConfigurationFromPartialConfiguration', () => {
         it('builds the SDK configuration when minimal configuration is passed', () => {
             expect(
-                buildSkipConfiguration(
+                buildConfigurationFromPartialConfiguration(
                     {
                         trackErrors: false,
                         trackInteractions: false,
@@ -50,7 +50,7 @@ describe('DdSdkReactNativeConfiguration', () => {
 
         it('builds the SDK configuration when every configuration attibute is set', () => {
             expect(
-                buildSkipConfiguration(
+                buildConfigurationFromPartialConfiguration(
                     {
                         trackErrors: true,
                         trackInteractions: true,
@@ -116,7 +116,7 @@ describe('DdSdkReactNativeConfiguration', () => {
 
         it('builds the SDK configuration when falsy values are passed', () => {
             expect(
-                buildSkipConfiguration(
+                buildConfigurationFromPartialConfiguration(
                     {
                         trackErrors: false,
                         trackInteractions: false,

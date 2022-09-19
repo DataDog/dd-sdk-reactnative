@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native';
 import { Animated, Button, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
-import type { SkipInitializationFeatures } from '../../../DdSdkReactNativeConfiguration';
+import type { AutoInstrumentationConfiguration } from '../../../DdSdkReactNativeConfiguration';
 import { DatadogProviderConfiguration } from '../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
 
@@ -51,7 +51,9 @@ export const renderWithProviderAndAnimation = (params?: {
 
 export const renderWithProvider = (params?: {
     AppComponent?: React.ReactNode;
-    configuration?: DatadogProviderConfiguration | SkipInitializationFeatures;
+    configuration?:
+        | DatadogProviderConfiguration
+        | AutoInstrumentationConfiguration;
 }) => {
     const AppComponent = params?.AppComponent || <DefaultTestApp />;
     const configuration = params?.configuration || defaultConfiguration;

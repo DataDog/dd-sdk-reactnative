@@ -11,12 +11,12 @@ import type {
     AutoInstrumentationParameters,
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
-    SkipInitializationConfiguration,
-    SkipInitializationFeatures
+    PartialInitializationConfiguration,
+    AutoInstrumentationConfiguration
 } from './DdSdkReactNativeConfiguration';
 import {
-    buildSkipConfiguration,
-    addDefaultValuesToSkipInitializationFeatures,
+    buildConfigurationFromPartialConfiguration,
+    addDefaultValuesToAutoInstrumentationConfiguration,
     InitializationMode
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
@@ -57,7 +57,7 @@ export class DdSdkReactNative {
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
     private static configuration?: DdSdkReactNativeConfiguration;
-    private static features?: SkipInitializationFeatures;
+    private static features?: AutoInstrumentationConfiguration;
 
     /**
      * Initializes the Datadog SDK.
@@ -132,11 +132,11 @@ export class DdSdkReactNative {
      * FOR INTERNAL USE ONLY.
      */
     static async _enableFeaturesFromDatadogProvider(
-        features: SkipInitializationFeatures
+        features: AutoInstrumentationConfiguration
     ): Promise<void> {
         DdSdkReactNative.features = features;
         DdSdkReactNative.enableFeatures(
-            addDefaultValuesToSkipInitializationFeatures(features)
+            addDefaultValuesToAutoInstrumentationConfiguration(features)
         );
     }
 
@@ -160,7 +160,7 @@ export class DdSdkReactNative {
      * FOR INTERNAL USE ONLY.
      */
     static _initializeFromDatadogProviderWithConfigurationAsync = async (
-        configuration: SkipInitializationConfiguration
+        configuration: PartialInitializationConfiguration
     ): Promise<void> => {
         if (!DdSdkReactNative.features) {
             InternalLog.log(
@@ -171,7 +171,10 @@ export class DdSdkReactNative {
         }
 
         return DdSdkReactNative.initializeNativeSDK(
-            buildSkipConfiguration(DdSdkReactNative.features, configuration)
+            buildConfigurationFromPartialConfiguration(
+                DdSdkReactNative.features,
+                configuration
+            )
         );
     };
 

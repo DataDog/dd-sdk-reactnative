@@ -38,15 +38,14 @@ Logs won't be recorded and calling a `DdLogs` method before the actual initializ
 
 ## Delaying the initialization
 
-You may want to wait before initializing the SDK, for instance if you wish to use a different configuration based on the user role, or to fetch the configuration from a server.
+You may want to wait before initializing the SDK, for instance if you wish to use a different configuration based on the user role, or to fetch the configuration from one of your servers.
 
 We provide a way to auto-instrument your app from the start (automatically collecting user interactions, XHR resources and errors) and record up to 50 RUM events before initializing the SDK.
 
 ```js
 import {
     DatadogProvider,
-    DatadogProviderConfiguration,
-    InitializationMode
+    DatadogProviderConfiguration
 } from '@datadog/mobile-react-native';
 
 const datadogAutoInstrumentation = {
@@ -58,7 +57,7 @@ const datadogAutoInstrumentation = {
 };
 
 const initializeApp = async () => {
-    const configuration = await fetchDatadogConfiguration();
+    const configuration = await fetchDatadogConfiguration(); // Fetches the configuration from one of your servers
     await DatadogProvider.initialize(configuration);
 };
 
@@ -76,6 +75,12 @@ export default function App() {
 where your configuration has the following keys:
 
 ```js
+import {
+    ProxyConfig,
+    SdkVerbosity,
+    TrackingConsent
+} from '@datadog/mobile-react-native';
+
 const configuration = {
     clientToken: '<CLIENT_TOKEN>',
     env: '<ENVIRONMENT_NAME>',
@@ -85,7 +90,10 @@ const configuration = {
     verbosity: SdkVerbosity.WARN, // Optional: let the SDK print internal logs (above or equal to the provided level). Default = undefined (no logs)
     serviceName: 'com.myapp', // Optional: set the reported service name. Default = package name / bundleIdentifier of your Android / iOS app respectively
     nativeCrashReportEnabled: true, // Optional: enable native crash reports. Default = false
-    version, // Optional: overriding the reported version
-    versionSuffix: 'codepush.v3' // Optional: adding a suffix to the reported version
+    version: '1.0.0', // Optional: see overriding the reported version in the documentation. Default = VersionName / Version of your Android / iOS app respectively
+    versionSuffix: 'codepush.v3', // Optional: see overriding the reported version in the documentation. Default = undefined
+    trackingConsent: TrackingConsent.GRANTED, // Optional: disable collection if user has not granted consent for tracking. Default = TrackingConsent.GRANTED
+    nativeViewTracking: true, // Optional: enables tracking of native views. Default = false
+    proxyConfig: new ProxyConfig() // Optional: send requestst through a proxy. Default = undefined
 };
 ```

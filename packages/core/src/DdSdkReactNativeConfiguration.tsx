@@ -92,7 +92,7 @@ export class DdSdkReactNativeConfiguration {
     ) {}
 }
 
-export type SkipInitializationFeatures = {
+export type AutoInstrumentationConfiguration = {
     readonly trackInteractions: boolean;
     readonly trackResources: boolean;
     readonly firstPartyHosts?: string[];
@@ -112,8 +112,8 @@ export type AutoInstrumentationParameters = {
  * We could use `Proxy` instead of this function, but `Proxy` is not available on
  * the older android jsc that can still be used.
  */
-export const addDefaultValuesToSkipInitializationFeatures = (
-    features: SkipInitializationFeatures
+export const addDefaultValuesToAutoInstrumentationConfiguration = (
+    features: AutoInstrumentationConfiguration
 ): AutoInstrumentationParameters => {
     return {
         ...features,
@@ -125,7 +125,7 @@ export const addDefaultValuesToSkipInitializationFeatures = (
     };
 };
 
-export type SkipInitializationConfiguration = {
+export type PartialInitializationConfiguration = {
     readonly clientToken: string;
     readonly env: string;
     readonly applicationId: string;
@@ -156,9 +156,9 @@ const setConfigurationAttribute = <
     }
 };
 
-export const buildSkipConfiguration = (
-    features: SkipInitializationFeatures,
-    configuration: SkipInitializationConfiguration
+export const buildConfigurationFromPartialConfiguration = (
+    features: AutoInstrumentationConfiguration,
+    configuration: PartialInitializationConfiguration
 ): DdSdkReactNativeConfiguration => {
     const {
         clientToken,
