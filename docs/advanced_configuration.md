@@ -6,7 +6,7 @@ If you have not set up the SDK yet, follow the [in-app setup instructions][1] or
 
 If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
 
-{{< code-block lang="javascript" filename="Initialization Snippet" collapsible="true" >}}
+```javascript
 import {
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
@@ -66,7 +66,7 @@ DdRum.stopResource('<res-key>', 200, 'xhr', (size = 1337), {}, Date.now());
 const spanId = await DdTrace.startSpan('foo', { custom: 42 }, Date.now());
 //...
 DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
-{{< /code-block >}}
+```
 
 ## Resource timings
 
