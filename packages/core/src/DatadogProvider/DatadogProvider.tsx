@@ -12,11 +12,14 @@ import type {
     AutoInstrumentationConfiguration
 } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
+import { InternalLog } from '../InternalLog';
+import { SdkVerbosity } from '../SdkVerbosity';
 
 type Props = PropsWithChildren<{
     configuration:
         | DatadogProviderConfiguration
         | AutoInstrumentationConfiguration;
+    onInitialization?: () => void;
 }>;
 
 type StaticProperties = {
@@ -34,9 +37,27 @@ const isConfigurationPartial = (
     return !('applicationId' in configuration);
 };
 
+const initializeDatadog = async (
+    configuration: DatadogProviderConfiguration,
+    onInitialization?: () => void
+) => {
+    await DdSdkReactNative._initializeFromDatadogProvider(configuration);
+    if (onInitialization) {
+        try {
+            onInitialization();
+        } catch (error) {
+            InternalLog.log(
+                `Error running onInitialization callback ${error}`,
+                SdkVerbosity.WARN
+            );
+        }
+    }
+};
+
 export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     children,
-    configuration
+    configuration,
+    onInitialization
 }) => {
     if (!DatadogProvider.isInitialized) {
         // Here we cannot use a useEffect hook since it would be called after
@@ -46,7 +67,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
         if (isConfigurationPartial(configuration)) {
             DdSdkReactNative._enableFeaturesFromDatadogProvider(configuration);
         } else {
-            DdSdkReactNative._initializeFromDatadogProvider(configuration);
+            initializeDatadog(configuration, onInitialization);
         }
         DatadogProvider.isInitialized = true;
     }

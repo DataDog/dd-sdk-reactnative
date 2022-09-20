@@ -54,12 +54,16 @@ export const renderWithProvider = (params?: {
     configuration?:
         | DatadogProviderConfiguration
         | AutoInstrumentationConfiguration;
+    onInitialization?: () => void;
 }) => {
     const AppComponent = params?.AppComponent || <DefaultTestApp />;
     const configuration = params?.configuration || defaultConfiguration;
 
     const result = render(
-        <DatadogProvider configuration={configuration}>
+        <DatadogProvider
+            configuration={configuration}
+            onInitialization={params?.onInitialization}
+        >
             {AppComponent}
         </DatadogProvider>
     );

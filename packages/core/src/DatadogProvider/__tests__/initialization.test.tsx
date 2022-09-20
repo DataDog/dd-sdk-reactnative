@@ -1,5 +1,6 @@
-import { NativeModules } from 'react-native';
+import { InteractionManager, NativeModules } from 'react-native';
 
+import { InitializationMode } from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { TimeProvider } from '../../TimeProvider';
 import { DdRum, DdTrace } from '../../foundation';
@@ -7,7 +8,10 @@ import { RumActionType } from '../../types';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import { DatadogProvider } from '../DatadogProvider';
 
-import { renderWithProvider } from './__utils__/renderWithProvider';
+import {
+    defaultConfiguration,
+    renderWithProvider
+} from './__utils__/renderWithProvider';
 
 jest.mock('../../TimeProvider', () => {
     const now = jest.fn();
@@ -20,6 +24,19 @@ jest.mock('../../TimeProvider', () => {
 const nowMock = new TimeProvider().now;
 
 const flushPromises = () => new Promise<void>(setImmediate);
+
+/**
+ * Mocks an animation for InteractionManager.runAfterInteractions. Returns
+ * a function to be called to finish the animation
+ */
+const mockAnimation = () => {
+    const fakeAnimationHandle = InteractionManager.createInteractionHandle();
+
+    return {
+        finishAnimation: () =>
+            InteractionManager.clearInteractionHandle(fakeAnimationHandle)
+    };
+};
 
 describe('DatadogProvider', () => {
     afterEach(() => {
@@ -102,5 +119,40 @@ describe('DatadogProvider', () => {
                 'good_timestamp'
             );
         });
+    });
+
+    describe('onInitialization callback', () => {
+        it('runs after initialization when SYNC initialization', async () => {
+            const onInitialization = jest.fn();
+            const { getByText } = renderWithProvider({ onInitialization });
+            getByText('I am a test application');
+            expect(onInitialization).not.toHaveBeenCalled();
+
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            expect(onInitialization).toHaveBeenCalledTimes(1);
+        });
+
+        it('runs after initialization when ASYNC initialization', async () => {
+            const onInitialization = jest.fn();
+            const { finishAnimation } = mockAnimation();
+            const { getByText } = renderWithProvider({
+                onInitialization,
+                configuration: {
+                    ...defaultConfiguration,
+                    initializationMode: InitializationMode.ASYNC
+                }
+            });
+            getByText('I am a test application');
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
+            expect(onInitialization).not.toHaveBeenCalled();
+
+            finishAnimation();
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            expect(onInitialization).toHaveBeenCalledTimes(1);
+        });
+        it('runs after initialization when partial initialization', () => {});
     });
 });
