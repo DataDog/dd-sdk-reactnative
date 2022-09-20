@@ -2,9 +2,7 @@
 
 ## Initializing asynchronously
 
-If your app includes a lot of animations at its start, running code during these animations might delay them on some devices. We provide a simple way to delay the Datadog React Native SDK for RUM aynchronously.
-
-Modify your configuration to set the `initializationMode` to `InitializationMode.ASYNC`:
+If your app includes a lot of animations when it starts, running code during these animations might delay them on some devices. To delay the Datadog React Native SDK for RUM asynchronously, set the `initializationMode` to `InitializationMode.ASYNC` in your configuration:
 
 ```js
 import {
@@ -32,15 +30,15 @@ export default function App() {
 }
 ```
 
-All interactions with the RUM sdk (view tracking, actions, resources tracing, etc.) will still be recorded and kept in a queue to a limit of 50 events.
+All interactions with the RUM SDK (view tracking, actions, resources tracing, and so on) is still recorded and kept in a queue with a limit of 50 events.
 
-Logs won't be recorded and calling a `DdLogs` method before the actual initialization might break logging.
+Logs are not recorded and calling a `DdLogs` method before the actual initialization might break logging.
 
 ## Delaying the initialization
 
 You may want to wait before initializing the SDK, for instance if you wish to use a different configuration based on the user role, or to fetch the configuration from one of your servers.
 
-We provide a way to auto-instrument your app from the start (automatically collecting user interactions, XHR resources and errors) and record up to 50 RUM events before initializing the SDK.
+In that case, you can auto-instrument your app from the start (automatically collect user interactions, XHR resources, and errors) and record up to 50 RUM events before initializing the SDK.
 
 ```js
 import {
@@ -72,7 +70,7 @@ export default function App() {
 }
 ```
 
-where your configuration has the following keys:
+Where your configuration has the following keys:
 
 ```js
 import {
