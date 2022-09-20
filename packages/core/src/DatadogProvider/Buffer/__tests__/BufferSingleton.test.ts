@@ -30,13 +30,17 @@ describe('BufferSingleton', () => {
                 bufferId
             );
 
+            expect(fakeCallback).not.toHaveBeenCalled();
+
             // initialization
             BufferSingleton.onInitialization();
+            await flushPromises();
+
+            expect(fakeCallback).toHaveBeenCalledTimes(1);
 
             // registering a new callback
             BufferSingleton.getInstance().addCallback(fakeCallback);
 
-            await flushPromises();
             expect(fakeCallback).toHaveBeenCalledTimes(2);
             expect(callbackReturningId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledTimes(1);
