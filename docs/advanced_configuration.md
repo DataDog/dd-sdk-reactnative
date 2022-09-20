@@ -70,7 +70,7 @@ DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 
 ## Resource timings
 
-Resource tracking is able to provide the following timings:
+Resource tracking provides the following timings:
 
 -   `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
 -   `Download`: The time it took to receive a response.
