@@ -9,23 +9,10 @@ import type { DatadogBuffer } from './DatadogBuffer';
 import { PassThroughBuffer } from './PassThroughBuffer';
 
 export class BufferSingleton {
-    static bufferInstance: DatadogBuffer = new BoundedBuffer();
+    private static bufferInstance: DatadogBuffer = new BoundedBuffer();
 
-    static addCallback = (callback: () => Promise<void>): Promise<void> => {
-        return BufferSingleton.bufferInstance.addCallback(callback);
-    };
-
-    static addCallbackReturningId = (
-        callback: () => Promise<string>
-    ): Promise<string> => {
-        return BufferSingleton.bufferInstance.addCallbackReturningId(callback);
-    };
-
-    static addCallbackWithId = (
-        callback: (id: string) => Promise<void>,
-        id: string
-    ): Promise<void> => {
-        return BufferSingleton.bufferInstance.addCallbackWithId(callback, id);
+    static getInstance = (): DatadogBuffer => {
+        return BufferSingleton.bufferInstance;
     };
 
     static onInitialization = () => {

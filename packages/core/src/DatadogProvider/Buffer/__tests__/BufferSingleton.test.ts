@@ -21,17 +21,20 @@ describe('BufferSingleton', () => {
             const callbackWithId = jest.fn();
 
             // registering callbacks
-            BufferSingleton.addCallback(fakeCallback);
-            const bufferId = await BufferSingleton.addCallbackReturningId(
+            BufferSingleton.getInstance().addCallback(fakeCallback);
+            const bufferId = await BufferSingleton.getInstance().addCallbackReturningId(
                 callbackReturningId
             );
-            BufferSingleton.addCallbackWithId(callbackWithId, bufferId);
+            BufferSingleton.getInstance().addCallbackWithId(
+                callbackWithId,
+                bufferId
+            );
 
             // initialization
             BufferSingleton.onInitialization();
 
             // registering a new callback
-            BufferSingleton.addCallback(fakeCallback);
+            BufferSingleton.getInstance().addCallback(fakeCallback);
 
             await flushPromises();
             expect(fakeCallback).toHaveBeenCalledTimes(2);

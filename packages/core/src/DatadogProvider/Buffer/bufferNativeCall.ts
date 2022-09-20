@@ -7,18 +7,18 @@
 import { BufferSingleton } from './BufferSingleton';
 
 export const bufferVoidNativeCall = (callback: () => Promise<void>) => {
-    return BufferSingleton.addCallback(callback);
+    return BufferSingleton.getInstance().addCallback(callback);
 };
 
 export const bufferNativeCallReturningId = (
     callback: () => Promise<string>
 ) => {
-    return BufferSingleton.addCallbackReturningId(callback);
+    return BufferSingleton.getInstance().addCallbackReturningId(callback);
 };
 
 export const bufferNativeCallWithId = (
     callback: (id: string) => Promise<void>,
     id: string
 ) => {
-    return BufferSingleton.addCallbackWithId(callback, id);
+    return BufferSingleton.getInstance().addCallbackWithId(callback, id);
 };
