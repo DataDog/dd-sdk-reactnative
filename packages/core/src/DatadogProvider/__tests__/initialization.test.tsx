@@ -77,6 +77,12 @@ describe('DatadogProvider', () => {
             await DdTrace.finishSpan(spanId);
             (nowMock as any).mockReturnValue('bad_timestamp');
 
+            // Then
+            expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
+            expect(NativeModules.DdTrace.startSpan).not.toHaveBeenCalled();
+            expect(NativeModules.DdTrace.finishSpan).not.toHaveBeenCalled();
+
+            // When initialization
             renderWithProvider();
             await flushPromises();
 
