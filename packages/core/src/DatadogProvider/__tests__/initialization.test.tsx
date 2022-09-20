@@ -129,7 +129,6 @@ describe('DatadogProvider', () => {
             expect(onInitialization).not.toHaveBeenCalled();
 
             await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(onInitialization).toHaveBeenCalledTimes(1);
         });
 
@@ -145,14 +144,35 @@ describe('DatadogProvider', () => {
             });
             getByText('I am a test application');
             await flushPromises();
-            expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
             expect(onInitialization).not.toHaveBeenCalled();
 
             finishAnimation();
             await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(onInitialization).toHaveBeenCalledTimes(1);
         });
-        it('runs after initialization when partial initialization', () => {});
+        it('runs after initialization when partial initialization', async () => {
+            const onInitialization = jest.fn();
+            const { getByText } = renderWithProvider({
+                onInitialization,
+                configuration: {
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true,
+                    firstPartyHosts: ['api.com'],
+                    resourceTracingSamplingRate: 100
+                }
+            });
+            getByText('I am a test application');
+            await flushPromises();
+            expect(onInitialization).not.toHaveBeenCalled();
+
+            await DatadogProvider.initialize({
+                applicationId: 'fake-application-id',
+                clientToken: 'fake-client-token',
+                env: 'fake-env'
+            });
+            await flushPromises();
+            expect(onInitialization).toHaveBeenCalledTimes(1);
+        });
     });
 });

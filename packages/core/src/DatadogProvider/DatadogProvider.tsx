@@ -27,6 +27,7 @@ type StaticProperties = {
     initialize: (
         configuration: PartialInitializationConfiguration
     ) => Promise<void>;
+    onInitialization?: () => void;
 };
 
 const isConfigurationPartial = (
@@ -66,6 +67,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
         // the first render.
         if (isConfigurationPartial(configuration)) {
             DdSdkReactNative._enableFeaturesFromDatadogProvider(configuration);
+            DatadogProvider.onInitialization = onInitialization;
         } else {
             initializeDatadog(configuration, onInitialization);
         }
@@ -76,10 +78,13 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
 };
 
 DatadogProvider.isInitialized = false;
-DatadogProvider.initialize = (
+DatadogProvider.initialize = async (
     configuration: PartialInitializationConfiguration
 ) => {
-    return DdSdkReactNative._initializeFromDatadogProviderWithConfigurationAsync(
+    await DdSdkReactNative._initializeFromDatadogProviderWithConfigurationAsync(
         configuration
     );
+    if (DatadogProvider.onInitialization) {
+        DatadogProvider.onInitialization();
+    }
 };
