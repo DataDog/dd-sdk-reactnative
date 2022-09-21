@@ -49,17 +49,26 @@ export class BoundedBuffer extends DatadogBuffer {
     };
 
     addCallbackReturningId = (callback: () => Promise<string>) => {
-        const bufferId = this.generateRandomBufferId();
-        if (this.buffer.length < this.bufferSize) {
-            this.buffer.push({
-                callback,
-                returnedBufferId: bufferId,
-                _type: 'RETURNING_ID'
-            });
-            this.idTable[bufferId] = null;
-        }
+        try {
+            const bufferId = this.generateRandomBufferId();
+            if (this.buffer.length < this.bufferSize) {
+                this.buffer.push({
+                    callback,
+                    returnedBufferId: bufferId,
+                    _type: 'RETURNING_ID'
+                });
+                this.idTable[bufferId] = null;
+            }
 
-        return new Promise<string>(resolve => resolve(bufferId));
+            return new Promise<string>(resolve => resolve(bufferId));
+        } catch (error) {
+            InternalLog.log(
+                `Could not generate enough random numbers. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`,
+                SdkVerbosity.WARN
+            );
+
+            return new Promise<string>(resolve => resolve(''));
+        }
     };
 
     addCallbackWithId = (
@@ -99,6 +108,7 @@ export class BoundedBuffer extends DatadogBuffer {
                     // callbackId can be `null` if the callback supposed to return the id errored. In this case, let's ignore the next callback.
                     if (callbackId !== null && callbackId !== undefined) {
                         item.callback(callbackId);
+                        this.idTable[item.withBufferId] = null;
                     }
                     continue;
                 }
@@ -115,17 +125,17 @@ export class BoundedBuffer extends DatadogBuffer {
         this.buffer = [];
     };
 
-    /**
-     * TODO: make this function less dangerous
-     * -> limit number of recusions
-     * -> can `Math.random().toString(36).slice(2)` fail?
-     */
     private generateRandomBufferId = (): string => {
-        const hash = Math.random().toString(36).slice(2);
-        if (this.idTable[hash] !== undefined) {
-            return this.generateRandomBufferId();
+        let tries = 0;
+        while (tries < 20) {
+            const hash = Math.random().toString(36).slice(2);
+            if (this.idTable[hash] !== undefined) {
+                tries++;
+            } else {
+                return hash;
+            }
         }
 
-        return hash;
+        throw new Error('Could not generate random Buffer id');
     };
 }

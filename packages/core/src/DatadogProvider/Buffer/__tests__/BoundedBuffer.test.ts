@@ -7,6 +7,10 @@
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     describe('void callbacks', () => {
         it('adds void callbacks then drains them', async () => {
             const buffer = new BoundedBuffer();
@@ -80,6 +84,37 @@ describe('BoundedBuffer', () => {
 
             await buffer.drain();
             expect(callbackWithId).not.toHaveBeenCalled();
+        });
+
+        it.only('does not crash when Math.random is mocked', async () => {
+            const spy = jest.spyOn(Math, 'random').mockReturnValue(42);
+
+            const buffer = new BoundedBuffer();
+
+            const callbackReturningId = jest
+                .fn()
+                .mockReturnValueOnce('callbackId1')
+                .mockReturnValueOnce('callbackId2')
+                .mockReturnValueOnce('callbackId3');
+            const callbackWithId = jest.fn();
+
+            const bufferId1 = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
+            const bufferId2 = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
+            const bufferId3 = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
+            spy.mockRestore();
+            buffer.addCallbackWithId(callbackWithId, bufferId1);
+            buffer.addCallbackWithId(callbackWithId, bufferId2);
+            buffer.addCallbackWithId(callbackWithId, bufferId3);
+
+            await buffer.drain();
+            expect(callbackWithId).toHaveBeenCalledTimes(1);
+            expect(callbackWithId).toHaveBeenNthCalledWith(1, 'callbackId1');
         });
     });
 
