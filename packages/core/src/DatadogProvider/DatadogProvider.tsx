@@ -18,9 +18,17 @@ import { SdkVerbosity } from '../SdkVerbosity';
 let isInitialized = false;
 
 type Props = PropsWithChildren<{
+    /**
+     * If a `DatadogProviderConfiguration` instance is passed, the SDK will start tracking errors, resources and actions and sending events.
+     *
+     * If a `AutoInstrumentationConfiguration` object is passed, the SDK will start tracking errors, resources and actions. To start sending events, call `DatadogProvider.initialize`.
+     */
     configuration:
         | DatadogProviderConfiguration
         | AutoInstrumentationConfiguration;
+    /**
+     * Callback to be run once the SDK starts sending events.
+     */
     onInitialization?: () => void;
 }>;
 
@@ -56,6 +64,9 @@ const initializeDatadog = async (
     }
 };
 
+/**
+ * Set up the Datadog React Native SDK.
+ */
 export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     children,
     configuration,
@@ -78,6 +89,10 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     return <>{children}</>;
 };
 
+/**
+ * Initialize the Datadog SDK to start sending RUM events, logs and traces,
+ * then execute onInitialization callback if any was provided.
+ */
 DatadogProvider.initialize = async (
     configuration: PartialInitializationConfiguration
 ) => {
