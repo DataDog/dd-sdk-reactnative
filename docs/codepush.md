@@ -26,6 +26,8 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native-code-push
 ```
 
+### Initializing with DdSdkReactNative.initialize
+
 Replace `DdSdkReactNative.initialize` by `DatadogCodepush.initialize` in your code:
 
 ```js
@@ -43,6 +45,24 @@ const config = new DdSdkReactNativeConfiguration(
 
 await DatadogCodepush.initialize(config);
 ```
+
+### Initializing with DatadogProvider
+
+Replace `DatadogProvider` by `DatadogCodepushProvider` in your App component:
+
+```js
+import { DatadogCodepushProvider } from '@datadog/mobile-react-native-code-push';
+
+export default function App() {
+    return (
+        <DatadogCodepushProvider configuration={datadogConfiguration}>
+            <Navigation />
+        </DatadogCodepushProvider>
+    );
+}
+```
+
+As getting the CodePush version is an asynchronous step that needs to be performed before initializing the Datadog React Native SDK for RUM, there is no difference between `InitializationMode.SYNC` and `InitializationMode.ASYNC` when using `DatadogCodepushProvider`.
 
 ## Upload CodePush source maps
 
