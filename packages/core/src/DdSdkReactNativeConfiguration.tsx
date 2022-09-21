@@ -136,7 +136,7 @@ export type PartialInitializationConfiguration = {
     readonly proxyConfig?: ProxyConfiguration;
     readonly serviceName?: string;
     readonly version?: string;
-    readonly versionSuffix?: string;
+    versionSuffix?: string;
     readonly additionalConfig?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
     readonly nativeCrashReportEnabled?: boolean;

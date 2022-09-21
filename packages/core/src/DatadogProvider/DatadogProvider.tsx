@@ -15,6 +15,8 @@ import { DdSdkReactNative } from '../DdSdkReactNative';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 
+let isInitialized = false;
+
 type Props = PropsWithChildren<{
     configuration:
         | DatadogProviderConfiguration
@@ -23,7 +25,6 @@ type Props = PropsWithChildren<{
 }>;
 
 type StaticProperties = {
-    isInitialized: boolean;
     initialize: (
         configuration: PartialInitializationConfiguration
     ) => Promise<void>;
@@ -60,7 +61,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     configuration,
     onInitialization
 }) => {
-    if (!DatadogProvider.isInitialized) {
+    if (!isInitialized) {
         // Here we cannot use a useEffect hook since it would be called after
         // the first render. Thus, we wouldn't enable auto-instrumentation on
         // the elements rendered in this first render and what happens during
@@ -71,13 +72,12 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
         } else {
             initializeDatadog(configuration, onInitialization);
         }
-        DatadogProvider.isInitialized = true;
+        isInitialized = true;
     }
 
     return <>{children}</>;
 };
 
-DatadogProvider.isInitialized = false;
 DatadogProvider.initialize = async (
     configuration: PartialInitializationConfiguration
 ) => {
@@ -87,4 +87,8 @@ DatadogProvider.initialize = async (
     if (DatadogProvider.onInitialization) {
         DatadogProvider.onInitialization();
     }
+};
+
+export const __internalResetIsInitializedForTesting = () => {
+    isInitialized = false;
 };

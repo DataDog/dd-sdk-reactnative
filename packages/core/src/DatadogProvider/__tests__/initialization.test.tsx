@@ -6,7 +6,10 @@ import { TimeProvider } from '../../TimeProvider';
 import { DdRum, DdTrace } from '../../foundation';
 import { RumActionType } from '../../types';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
-import { DatadogProvider } from '../DatadogProvider';
+import {
+    DatadogProvider,
+    __internalResetIsInitializedForTesting
+} from '../DatadogProvider';
 
 import {
     defaultConfiguration,
@@ -42,7 +45,7 @@ describe('DatadogProvider', () => {
     afterEach(() => {
         jest.clearAllMocks();
         DdSdkReactNative['wasInitialized'] = false;
-        DatadogProvider.isInitialized = false;
+        __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
     });
