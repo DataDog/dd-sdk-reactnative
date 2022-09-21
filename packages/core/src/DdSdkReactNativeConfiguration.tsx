@@ -12,7 +12,7 @@ const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
     resourceTracingSamplingRate: 20.0,
-    site: 'US',
+    site: 'US1',
     nativeViewTracking: false,
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),

@@ -38,7 +38,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "resourceTracingSamplingRate": 20,
                   "serviceName": undefined,
                   "sessionSamplingRate": 100,
-                  "site": "US",
+                  "site": "US1",
                   "trackErrors": false,
                   "trackInteractions": false,
                   "trackResources": false,

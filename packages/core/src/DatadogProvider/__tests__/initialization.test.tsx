@@ -75,7 +75,7 @@ describe('DatadogProvider', () => {
                     "env": "fakeEnv",
                     "nativeCrashReportEnabled": false,
                     "sampleRate": 100,
-                    "site": "US",
+                    "site": "US1",
                     "telemetrySampleRate": undefined,
                     "trackingConsent": "granted",
                   }
