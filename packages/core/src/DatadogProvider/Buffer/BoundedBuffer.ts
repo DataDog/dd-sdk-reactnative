@@ -4,6 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
+
 import { DatadogBuffer } from './DatadogBuffer';
 
 const DEFAULT_BUFFER_SIZE = 100;
@@ -80,23 +83,33 @@ export class BoundedBuffer extends DatadogBuffer {
             bufferIndex < this.buffer.length;
             bufferIndex++
         ) {
-            const item = this.buffer[bufferIndex];
-            if (item._type === 'RETURNING_ID') {
-                // Here we want to await the callback result to make sure that it has registered the id returned
-                // by the callback before executing the callback needing this id.
-                // eslint-disable-next-line no-await-in-loop
-                const callbackId = await item.callback();
-                this.idTable[item.returnedBufferId] = callbackId;
-                continue;
-            }
+            try {
+                const item = this.buffer[bufferIndex];
+                if (item._type === 'RETURNING_ID') {
+                    // Here we want to await the callback result to make sure that it has registered the id returned
+                    // by the callback before executing the callback needing this id.
+                    // eslint-disable-next-line no-await-in-loop
+                    const callbackId = await item.callback();
+                    this.idTable[item.returnedBufferId] = callbackId;
+                    continue;
+                }
 
-            if (item._type === 'WITH_ID') {
-                const callbackId = this.idTable[item.withBufferId];
-                item.callback(callbackId || '');
-                continue;
-            }
+                if (item._type === 'WITH_ID') {
+                    const callbackId = this.idTable[item.withBufferId];
+                    // callbackId can be `null` if the callback supposed to return the id errored. In this case, let's ignore the next callback.
+                    if (callbackId !== null && callbackId !== undefined) {
+                        item.callback(callbackId);
+                    }
+                    continue;
+                }
 
-            item.callback();
+                item.callback();
+            } catch (error) {
+                InternalLog.log(
+                    `Error while draining Datadog Buffer: ${error}`,
+                    SdkVerbosity.WARN
+                );
+            }
         }
 
         this.buffer = [];

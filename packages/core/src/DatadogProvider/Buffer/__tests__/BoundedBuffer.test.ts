@@ -64,6 +64,23 @@ describe('BoundedBuffer', () => {
             expect(callbackWithId).toHaveBeenNthCalledWith(1, 'callbackId1');
             expect(callbackWithId).toHaveBeenNthCalledWith(2, 'callbackId2');
         });
+
+        it('does not run the linked callback when the callback returning id fails', async () => {
+            const buffer = new BoundedBuffer();
+
+            const callbackReturningId = jest.fn().mockImplementationOnce(() => {
+                throw new Error('issue running callback');
+            });
+            const callbackWithId = jest.fn();
+
+            const bufferId = await buffer.addCallbackReturningId(
+                callbackReturningId
+            );
+            buffer.addCallbackWithId(callbackWithId, bufferId);
+
+            await buffer.drain();
+            expect(callbackWithId).not.toHaveBeenCalled();
+        });
     });
 
     describe('buffer size', () => {
