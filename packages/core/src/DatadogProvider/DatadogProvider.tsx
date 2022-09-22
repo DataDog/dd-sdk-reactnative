@@ -6,7 +6,10 @@
 import React from 'react';
 import type { PropsWithChildren } from 'react';
 
-import { DatadogProviderConfiguration } from '../DdSdkReactNativeConfiguration';
+import {
+    DatadogProviderConfiguration,
+    DdSdkReactNativeConfiguration
+} from '../DdSdkReactNativeConfiguration';
 import type {
     PartialInitializationConfiguration,
     AutoInstrumentationConfiguration
@@ -44,7 +47,17 @@ const isConfigurationPartial = (
         | DatadogProviderConfiguration
         | AutoInstrumentationConfiguration
 ): configuration is AutoInstrumentationConfiguration => {
-    return !(configuration instanceof DatadogProviderConfiguration);
+    if (configuration instanceof DatadogProviderConfiguration) {
+        return false;
+    }
+    if (configuration instanceof DdSdkReactNativeConfiguration) {
+        // Not using InternalLog here as it is not yet instanciated
+        console.warn(
+            'A DdSdkReactNativeConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
+        );
+        return false;
+    }
+    return true;
 };
 
 const initializeDatadog = async (

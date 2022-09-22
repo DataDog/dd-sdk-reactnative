@@ -7,17 +7,17 @@
 import { InteractionManager } from 'react-native';
 
 import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
-import type {
-    AutoInstrumentationParameters,
-    DatadogProviderConfiguration,
-    DdSdkReactNativeConfiguration,
-    PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration
-} from './DdSdkReactNativeConfiguration';
 import {
+    DdSdkReactNativeConfiguration,
     buildConfigurationFromPartialConfiguration,
     addDefaultValuesToAutoInstrumentationConfiguration,
     InitializationMode
+} from './DdSdkReactNativeConfiguration';
+import type {
+    AutoInstrumentationParameters,
+    DatadogProviderConfiguration,
+    PartialInitializationConfiguration,
+    AutoInstrumentationConfiguration
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
@@ -125,6 +125,10 @@ export class DdSdkReactNative {
             return InteractionManager.runAfterInteractions(() => {
                 return DdSdkReactNative.initializeNativeSDK(configuration);
             });
+        }
+        // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
+        if (configuration instanceof DdSdkReactNativeConfiguration) {
+            return DdSdkReactNative.initializeNativeSDK(configuration);
         }
     }
 
