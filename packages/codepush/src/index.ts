@@ -1,11 +1,9 @@
 import {
     DatadogProvider,
+    DatadogProviderConfiguration,
     DdSdkReactNative
 } from '@datadog/mobile-react-native';
-import type {
-    DdSdkReactNativeConfiguration,
-    DatadogProviderConfiguration
-} from '@datadog/mobile-react-native';
+import type { DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
 import codePush from 'react-native-code-push';
 
 /**
@@ -39,8 +37,7 @@ export const DatadogCodepushProvider: typeof DatadogProvider = ({
 }) => {
     // We cannot use SYNC or ASYNC initialization modes as we need to asynchronously get the CodePush version.
     // We turn it to partial initialization, while in parallel we get the CodePush version and initialize the SDK.
-    // TODO: if we can export the types from the core package, then we can write a type guard in this if condition.
-    if ('applicationId' in configuration) {
+    if (configuration instanceof DatadogProviderConfiguration) {
         initializeWithCodepushVersion(configuration);
         const partialConfiguration = {
             trackErrors: configuration.trackErrors,

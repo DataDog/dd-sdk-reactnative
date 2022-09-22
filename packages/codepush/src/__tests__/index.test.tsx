@@ -1,7 +1,7 @@
-import { DatadogProviderConfiguration } from '@datadog/mobile-react-native/src/DdSdkReactNativeConfiguration';
 import {
     DdSdkReactNative,
-    DdSdkReactNativeConfiguration
+    DdSdkReactNativeConfiguration,
+    DatadogProviderConfiguration
 } from '@datadog/mobile-react-native';
 import { render } from '@testing-library/react-native';
 import codePush from 'react-native-code-push';
