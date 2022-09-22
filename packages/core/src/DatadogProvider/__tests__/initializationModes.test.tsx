@@ -13,6 +13,7 @@ import {
 
 import {
     getDefaultConfiguration,
+    mockAnimation,
     renderWithProvider,
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
@@ -59,9 +60,12 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
         it('starts auto-instrumentation before animations are done', async () => {
-            renderWithProviderAndAnimation();
+            const { finishAnimation } = mockAnimation();
+            renderWithProvider();
+
             await flushPromises();
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            finishAnimation();
         });
     });
 
@@ -72,7 +76,7 @@ describe('DatadogProvider', () => {
         afterEach(() => {
             jest.useRealTimers();
         });
-        it('starts auto-instrumentation after animations are done', async () => {
+        it('starts auto-instrumentation after animations are done (with real Animation)', async () => {
             const configuration = getDefaultConfiguration();
             configuration.initializationMode = InitializationMode.ASYNC;
 
@@ -83,6 +87,31 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
             jest.advanceTimersByTime(700);
             await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            const button = getByText('test button');
+            fireEvent(button, 'press', {
+                _targetInst: {
+                    props: {
+                        'dd-action-name': 'press button'
+                    }
+                }
+            });
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+        });
+
+        it('starts auto-instrumentation after animations are done (with InteractionManager)', async () => {
+            const configuration = getDefaultConfiguration();
+            configuration.initializationMode = InitializationMode.ASYNC;
+
+            const { finishAnimation } = mockAnimation();
+            const { getByText } = renderWithProvider({ configuration });
+
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
+
+            finishAnimation();
+            await flushPromises();
+
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             const button = getByText('test button');
             fireEvent(button, 'press', {

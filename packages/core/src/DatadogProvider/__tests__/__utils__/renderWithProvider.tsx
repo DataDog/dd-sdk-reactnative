@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react-native';
-import { Animated, Button, Text, View } from 'react-native';
+import { Animated, Button, InteractionManager, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
 import type { AutoInstrumentationConfiguration } from '../../../DdSdkReactNativeConfiguration';
@@ -88,5 +88,18 @@ export const renderWithProvider = (params?: {
     return {
         ...result,
         rerenderWithRandomConfig
+    };
+};
+
+/**
+ * Mocks an animation for InteractionManager.runAfterInteractions. Returns
+ * a function to be called to finish the animation
+ */
+export const mockAnimation = () => {
+    const fakeAnimationHandle = InteractionManager.createInteractionHandle();
+
+    return {
+        finishAnimation: () =>
+            InteractionManager.clearInteractionHandle(fakeAnimationHandle)
     };
 };

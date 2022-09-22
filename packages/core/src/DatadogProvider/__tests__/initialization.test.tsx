@@ -1,4 +1,4 @@
-import { InteractionManager, NativeModules } from 'react-native';
+import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
@@ -13,6 +13,7 @@ import {
 
 import {
     getDefaultConfiguration,
+    mockAnimation,
     renderWithProvider
 } from './__utils__/renderWithProvider';
 
@@ -27,19 +28,6 @@ jest.mock('../../TimeProvider', () => {
 const nowMock = new TimeProvider().now;
 
 const flushPromises = () => new Promise<void>(setImmediate);
-
-/**
- * Mocks an animation for InteractionManager.runAfterInteractions. Returns
- * a function to be called to finish the animation
- */
-const mockAnimation = () => {
-    const fakeAnimationHandle = InteractionManager.createInteractionHandle();
-
-    return {
-        finishAnimation: () =>
-            InteractionManager.clearInteractionHandle(fakeAnimationHandle)
-    };
-};
 
 describe('DatadogProvider', () => {
     afterEach(() => {
