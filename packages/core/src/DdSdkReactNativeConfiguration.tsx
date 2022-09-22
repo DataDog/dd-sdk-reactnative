@@ -92,6 +92,10 @@ export class DdSdkReactNativeConfiguration {
     ) {}
 }
 
+/**
+ * Auto Instrumentation configuration passed to DatadogProvider.
+ * Does not include default values.
+ */
 export type AutoInstrumentationConfiguration = {
     readonly trackInteractions: boolean;
     readonly trackResources: boolean;
@@ -100,6 +104,9 @@ export type AutoInstrumentationConfiguration = {
     readonly trackErrors: boolean;
 };
 
+/**
+ * Parameters needed to start auto instrumentation. Includes default values.
+ */
 export type AutoInstrumentationParameters = {
     readonly trackInteractions: boolean;
     readonly trackResources: boolean;
