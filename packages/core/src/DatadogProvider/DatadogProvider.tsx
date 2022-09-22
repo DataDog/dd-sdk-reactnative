@@ -6,8 +6,8 @@
 import React from 'react';
 import type { PropsWithChildren } from 'react';
 
+import { DatadogProviderConfiguration } from '../DdSdkReactNativeConfiguration';
 import type {
-    DatadogProviderConfiguration,
     PartialInitializationConfiguration,
     AutoInstrumentationConfiguration
 } from '../DdSdkReactNativeConfiguration';
@@ -44,7 +44,7 @@ const isConfigurationPartial = (
         | DatadogProviderConfiguration
         | AutoInstrumentationConfiguration
 ): configuration is AutoInstrumentationConfiguration => {
-    return !('applicationId' in configuration);
+    return !(configuration instanceof DatadogProviderConfiguration);
 };
 
 const initializeDatadog = async (

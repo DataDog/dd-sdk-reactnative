@@ -12,7 +12,7 @@ import {
 } from '../DatadogProvider';
 
 import {
-    defaultConfiguration,
+    getDefaultConfiguration,
     renderWithProvider,
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
@@ -59,11 +59,7 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
         it('starts auto-instrumentation before animations are done', async () => {
-            renderWithProviderAndAnimation({
-                configuration: {
-                    ...defaultConfiguration
-                }
-            });
+            renderWithProviderAndAnimation();
             await flushPromises();
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
         });
@@ -77,11 +73,11 @@ describe('DatadogProvider', () => {
             jest.useRealTimers();
         });
         it('starts auto-instrumentation after animations are done', async () => {
+            const configuration = getDefaultConfiguration();
+            configuration.initializationMode = InitializationMode.ASYNC;
+
             const { getByText } = renderWithProviderAndAnimation({
-                configuration: {
-                    ...defaultConfiguration,
-                    initializationMode: InitializationMode.ASYNC
-                }
+                configuration
             });
             await flushPromises();
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);

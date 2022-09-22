@@ -12,7 +12,7 @@ import {
 } from '../DatadogProvider';
 
 import {
-    defaultConfiguration,
+    getDefaultConfiguration,
     renderWithProvider
 } from './__utils__/renderWithProvider';
 
@@ -138,12 +138,11 @@ describe('DatadogProvider', () => {
         it('runs after initialization when ASYNC initialization', async () => {
             const onInitialization = jest.fn();
             const { finishAnimation } = mockAnimation();
+            const configuration = getDefaultConfiguration();
+            configuration.initializationMode = InitializationMode.ASYNC;
             const { getByText } = renderWithProvider({
                 onInitialization,
-                configuration: {
-                    ...defaultConfiguration,
-                    initializationMode: InitializationMode.ASYNC
-                }
+                configuration
             });
             getByText('I am a test application');
             await flushPromises();

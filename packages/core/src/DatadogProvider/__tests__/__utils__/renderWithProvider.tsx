@@ -31,14 +31,15 @@ const AppWithAnimation = () => {
     );
 };
 
-export const defaultConfiguration = new DatadogProviderConfiguration(
-    'fakeToken',
-    'fakeEnv',
-    'fakeApplicationId',
-    true,
-    false, // TODO: the initialization is broken with trackResources in test, fix it
-    true
-);
+export const getDefaultConfiguration = () =>
+    new DatadogProviderConfiguration(
+        'fakeToken',
+        'fakeEnv',
+        'fakeApplicationId',
+        true,
+        false, // TODO: the initialization is broken with trackResources in test, fix it
+        true
+    );
 
 export const renderWithProviderAndAnimation = (params?: {
     configuration?: DatadogProviderConfiguration;
@@ -57,7 +58,7 @@ export const renderWithProvider = (params?: {
     onInitialization?: () => void;
 }) => {
     const AppComponent = params?.AppComponent || <DefaultTestApp />;
-    const configuration = params?.configuration || defaultConfiguration;
+    const configuration = params?.configuration || getDefaultConfiguration();
 
     const result = render(
         <DatadogProvider
