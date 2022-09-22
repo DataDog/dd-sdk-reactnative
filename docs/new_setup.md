@@ -30,15 +30,15 @@ export default function App() {
 }
 ```
 
-All interactions with the RUM SDK (view tracking, actions, resources tracing, and so on) is still recorded and kept in a queue with a limit of 50 events.
+All interactions with the RUM SDK (view tracking, actions, resources tracing, and so on) are still recorded and kept in a queue with a limit of 100 events.
 
 Logs are not recorded and calling a `DdLogs` method before the actual initialization might break logging.
 
 ## Delaying the initialization
 
-You may want to wait before initializing the SDK, for instance if you wish to use a different configuration based on the user role, or to fetch the configuration from one of your servers.
+There may be situations where you want to wait before initializing the SDK. For example, when you want to use a different configuration based on the user role or to fetch the configuration from one of your servers.
 
-In that case, you can auto-instrument your app from the start (automatically collect user interactions, XHR resources, and errors) and record up to 50 RUM events before initializing the SDK.
+In that case, you can auto-instrument your app from the start (automatically collect user interactions, XHR resources, and errors) and record up to 100 RUM events before initializing the SDK.
 
 ```js
 import {
