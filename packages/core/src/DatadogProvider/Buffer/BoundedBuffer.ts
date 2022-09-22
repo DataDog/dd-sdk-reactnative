@@ -62,9 +62,9 @@ export class BoundedBuffer extends DatadogBuffer {
 
             return new Promise<string>(resolve => resolve(bufferId));
         } catch (error) {
-            InternalLog.log(
-                `Could not generate enough random numbers. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`,
-                SdkVerbosity.WARN
+            // Not using InternalLog here as it is not yet instanciated
+            console.warn(
+                `[Datadog] Could not generate enough random numbers for RUM buffer. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`
             );
 
             return new Promise<string>(resolve => resolve(''));
