@@ -43,6 +43,7 @@ class RNDdSdk: NSObject {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
+                resolve(nil)
                 return
             }
             let sdkConfiguration = configuration.asDdSdkConfiguration()
