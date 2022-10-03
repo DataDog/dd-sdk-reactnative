@@ -254,10 +254,10 @@ import {
     DdRum
 } from '@datadog/mobile-react-native';
 
-// Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
+// Start a view with a unique view identifier, a custom view name, and an object to attach additional attributes to the view
 DdRum.startView(
-    '<view-key>',
-    '/view/url',
+    '<view-key>', // <view-key> has to be unique, for example it can be ViewName-unique-id
+    'View Name',
     { 'custom.foo': 'something' },
     Date.now()
 );
@@ -337,7 +337,7 @@ DdLogs.warn('Lorem ipsum dolor sit amet…', {});
 DdLogs.error('Lorem ipsum dolor sit amet…', {});
 
 // Track RUM Views manually
-DdRum.startView('<view-key>', 'View Url', {}, Date.now());
+DdRum.startView('<view-key>', 'View Name', {}, Date.now());
 //…
 DdRum.stopView('<view-key>', { custom: 42 }, Date.now());
 
