@@ -18,12 +18,12 @@ internal class ProxyAuthenticator(
     internal val password: String
 ) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
-        val proxyAuthorization = response.code == PROXY_AUTHORIZATION_REQUIRED_STATUS_CODE
+        val proxyAuthorization = response.code() == PROXY_AUTHORIZATION_REQUIRED_STATUS_CODE
 
         if (!proxyAuthorization) {
             Log.w(
                 ProxyAuthenticator::class.java.canonicalName,
-                "Unexpected response code=${response.code}" +
+                "Unexpected response code=${response.code()}" +
                     " received during proxy authentication request."
             )
             return null
@@ -31,16 +31,16 @@ internal class ProxyAuthenticator(
 
         val challenges = response.challenges()
         for (challenge in challenges) {
-            val scheme = challenge.scheme
+            val scheme = challenge.scheme()
             if ("Basic".equals(scheme, ignoreCase = true) ||
                 "OkHttp-Preemptive".equals(scheme, ignoreCase = true)
             ) {
                 val credential = Credentials.basic(
                     username,
                     password,
-                    challenge.charset
+                    challenge.charset()
                 )
-                return response.request.newBuilder()
+                return response.request().newBuilder()
                     .header("Proxy-Authorization", credential)
                     .build()
             }
