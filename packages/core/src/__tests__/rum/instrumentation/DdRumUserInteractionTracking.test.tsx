@@ -340,3 +340,18 @@ it('M keep memoization working for elements W an onPress prop is passed and cust
     // THEN
     expect(rendersCount).toBe(2);
 });
+
+describe('startTracking', () => {
+    it('does not crash if jsx-runtime is not exported from react', () => {
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
+        jest.setMock('react/jsx-runtime', null);
+        DdRumUserInteractionTracking.startTracking();
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+    });
+    it('does not crash if jsx-runtime does not contain jsx', () => {
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
+        jest.setMock('react/jsx-runtime', {});
+        DdRumUserInteractionTracking.startTracking();
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+    });
+});
