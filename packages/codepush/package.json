@@ -1,6 +1,6 @@
 {
   "name": "@datadog/mobile-react-native-code-push",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "A client-side React Native module to interact with Appcenter Codepush and Datadog",
   "keywords": [
     "datadog",
@@ -38,15 +38,15 @@
     "prepare": "rm -rf lib && yarn bob build"
   },
   "devDependencies": {
-    "@datadog/mobile-react-native": "^1.1.0",
+    "@datadog/mobile-react-native": "^1.1.2",
     "@testing-library/react-native": "7.0.2",
     "react-native-code-push": "7.0.5"
   },
   "peerDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-beta4",
-    "react-native-code-push": ">=2.0.0",
     "react": ">=16.13.1",
-    "react-native": ">=0.63.4 <1.0"
+    "react-native": ">=0.63.4 <1.0",
+    "react-native-code-push": ">=2.0.0"
   },
   "jest": {
     "preset": "react-native",
