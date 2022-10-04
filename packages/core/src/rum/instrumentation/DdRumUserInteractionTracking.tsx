@@ -22,6 +22,31 @@ export class DdRumUserInteractionTracking {
     private static isTracking = false;
     private static eventsInterceptor: EventsInterceptor = new NoOpEventsInterceptor();
 
+    private static patchCreateElementFunction = (
+        originalFunction: typeof React.createElement,
+        [element, props, ...rest]: Parameters<typeof React.createElement>
+    ): ReturnType<typeof React.createElement> => {
+        if (
+            props &&
+            typeof (props as Record<string, unknown>).onPress === 'function'
+        ) {
+            const originalOnPress = (props as Record<string, unknown>) // eslint-disable-next-line @typescript-eslint/ban-types
+                .onPress as Function;
+            (props as Record<string, unknown>).onPress = (...args: any[]) => {
+                DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(
+                    ...args
+                );
+                return originalOnPress(...args);
+            };
+            // we store the original onPress prop so we can keep memoization working
+            (props as Record<
+                string,
+                unknown
+            >).__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__ = originalOnPress;
+        }
+        return originalFunction(element, props, ...rest);
+    };
+
     /**
      * Starts tracking user interactions and sends a RUM Action event every time a new interaction was detected.
      * Please note that we are only considering as valid - for - tracking only the user interactions that have
@@ -37,26 +62,32 @@ export class DdRumUserInteractionTracking {
             return;
         }
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor();
+
         const original = React.createElement;
         React.createElement = (
-            element: any,
-            props: any,
-            ...children: any
+            ...args: Parameters<typeof React.createElement>
         ): any => {
-            // check if we have an 'onPress' property and that this is really a function
-            if (props && typeof props.onPress === 'function') {
-                const originalOnPress = props.onPress;
-                props.onPress = (...args: any[]) => {
-                    DdRumUserInteractionTracking.eventsInterceptor.interceptOnPress(
-                        ...args
-                    );
-                    return originalOnPress(...args);
-                };
-                // we store the original onPress prop so we can keep memoization working
-                props.__DATADOG_INTERNAL_ORIGINAL_ON_PRESS__ = originalOnPress;
-            }
-            return original(element, props, ...children);
+            return this.patchCreateElementFunction(original, args);
         };
+
+        try {
+            // We have to use inline require here because older React versions (below 17) don't have jsx-runtime
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const jsxRuntime = require('react/jsx-runtime');
+            const originaljsx = jsxRuntime.jsx;
+            if (!originaljsx) {
+                throw new Error(
+                    'React version does not support new jsx transform'
+                );
+            }
+            jsxRuntime.jsx = (
+                ...args: Parameters<typeof React.createElement>
+            ): ReturnType<typeof React.createElement> => {
+                return this.patchCreateElementFunction(originaljsx, args);
+            };
+        } catch (e) {
+            // TODO: Add telemetry
+        }
 
         const originalMemo = React.memo;
         React.memo = (

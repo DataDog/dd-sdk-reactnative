@@ -79,11 +79,11 @@ import {
 } from '@datadog/mobile-react-native';
 
 // Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
-DdRum.startView('<view-key>', '/view/url', Date.now(), {
+DdRum.startView('ViewKey', 'ViewName', Date.now(), {
     'custom.foo': 'something'
 });
 // Stops a previously started view with the same unique view identifier, and an object to attach additional attributes to the view
-DdRum.stopView('<view-key>', Date.now(), { 'custom.bar': 42 });
+DdRum.stopView('ViewKey', Date.now(), { 'custom.bar': 42 });
 ```
 
 ## Data Storage

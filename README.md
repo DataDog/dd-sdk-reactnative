@@ -254,10 +254,10 @@ import {
     DdRum
 } from '@datadog/mobile-react-native';
 
-// Start a view with a unique view identifier, a custom view url, and an object to attach additional attributes to the view
+// Start a view with a unique view identifier, a custom view name, and an object to attach additional attributes to the view
 DdRum.startView(
-    '<view-key>',
-    '/view/url',
+    '<view-key>', // <view-key> has to be unique, for example it can be ViewName-unique-id
+    'View Name',
     { 'custom.foo': 'something' },
     Date.now()
 );
