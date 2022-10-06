@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../InternalLog';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {
@@ -71,6 +72,7 @@ describe('BoundedBuffer', () => {
 
         it('does not run the linked callback when the callback returning id fails', async () => {
             const buffer = new BoundedBuffer();
+            const logSpy = jest.spyOn(InternalLog, 'log');
 
             const callbackReturningId = jest.fn().mockImplementationOnce(() => {
                 throw new Error('issue running callback');
@@ -84,9 +86,17 @@ describe('BoundedBuffer', () => {
 
             await buffer.drain();
             expect(callbackWithId).not.toHaveBeenCalled();
+            expect(logSpy).toHaveBeenCalledWith(
+                'Error running a callback returning an id in Buffer: Error: issue running callback',
+                'warn'
+            );
+            expect(logSpy).toHaveBeenCalledWith(
+                '1 event was not sent as callback id was not set',
+                'warn'
+            );
         });
 
-        it.only('does not crash when Math.random is mocked', async () => {
+        it('does not crash when Math.random is mocked', async () => {
             const spy = jest.spyOn(Math, 'random').mockReturnValue(42);
 
             const buffer = new BoundedBuffer();

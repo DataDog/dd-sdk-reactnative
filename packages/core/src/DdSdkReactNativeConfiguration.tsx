@@ -173,7 +173,7 @@ export const buildConfigurationFromPartialConfiguration = (
         applicationId,
         ...remainingConfiguration
     } = configuration;
-    const SDKConfiguration = new DdSdkReactNativeConfiguration(
+    const SdkConfiguration = new DdSdkReactNativeConfiguration(
         clientToken,
         env,
         applicationId,
@@ -188,7 +188,7 @@ export const buildConfigurationFromPartialConfiguration = (
     ) as (keyof typeof remainingConfiguration)[]).forEach(name => {
         setConfigurationAttribute(
             { value: remainingConfiguration[name], name },
-            SDKConfiguration
+            SdkConfiguration
         );
     });
 
@@ -197,14 +197,14 @@ export const buildConfigurationFromPartialConfiguration = (
             name: 'resourceTracingSamplingRate',
             value: features.resourceTracingSamplingRate
         },
-        SDKConfiguration
+        SdkConfiguration
     );
     setConfigurationAttribute(
         { name: 'firstPartyHosts', value: features.firstPartyHosts },
-        SDKConfiguration
+        SdkConfiguration
     );
 
-    return SDKConfiguration;
+    return SdkConfiguration;
 };
 
 export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration {

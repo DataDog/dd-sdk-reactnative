@@ -59,7 +59,7 @@ describe('DatadogProvider', () => {
 
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
-        it('starts auto-instrumentation before animations are done', async () => {
+        it('initializes the SDK before animations are done', async () => {
             const { finishAnimation } = mockAnimation();
             renderWithProvider();
 

@@ -62,7 +62,7 @@ export class BoundedBuffer extends DatadogBuffer {
 
             return new Promise<string>(resolve => resolve(bufferId));
         } catch (error) {
-            // Not using InternalLog here as it is not yet instanciated
+            // Not using InternalLog here as it is not yet instantiated
             console.warn(
                 `[Datadog] Could not generate enough random numbers for RUM buffer. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`
             );
@@ -95,11 +95,18 @@ export class BoundedBuffer extends DatadogBuffer {
             try {
                 const item = this.buffer[bufferIndex];
                 if (item._type === 'RETURNING_ID') {
-                    // Here we want to await the callback result to make sure that it has registered the id returned
-                    // by the callback before executing the callback needing this id.
-                    // eslint-disable-next-line no-await-in-loop
-                    const callbackId = await item.callback();
-                    this.idTable[item.returnedBufferId] = callbackId;
+                    try {
+                        // Here we want to await the callback result to make sure that it has registered the id returned
+                        // by the callback before executing the callback needing this id.
+                        // eslint-disable-next-line no-await-in-loop
+                        const callbackId = await item.callback();
+                        this.idTable[item.returnedBufferId] = callbackId;
+                    } catch (error) {
+                        InternalLog.log(
+                            `Error running a callback returning an id in Buffer: ${error}`,
+                            SdkVerbosity.WARN
+                        );
+                    }
                     continue;
                 }
 
@@ -108,7 +115,16 @@ export class BoundedBuffer extends DatadogBuffer {
                     // callbackId can be `null` if the callback supposed to return the id errored. In this case, let's ignore the next callback.
                     if (callbackId !== null && callbackId !== undefined) {
                         item.callback(callbackId);
-                        this.idTable[item.withBufferId] = null;
+                        delete this.idTable[item.withBufferId];
+                    } else {
+                        InternalLog.log(
+                            `1 event was not sent as callback id was ${
+                                callbackId === null
+                                    ? 'not set'
+                                    : 'already unset'
+                            }`,
+                            SdkVerbosity.WARN
+                        );
                     }
                     continue;
                 }
