@@ -291,6 +291,58 @@ internal class DdSdkTest {
 
     // endregion
 
+    // region initialize / telemetry sample rate
+
+    @Test
+    fun `𝕄 initialize native with telemetry sample rate SDK 𝕎 initialize() {}`() {
+        // Given
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+        val expectedTelemetrySampleRate = fakeConfiguration.telemetrySampleRate?.toFloat() ?: 20f
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("needsClearTextHttp", false)
+                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
+            }
+            .hasField("logsConfig") {
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("tracesConfig") {
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+                it.hasFieldEqualTo("telemetrySamplingRate", expectedTelemetrySampleRate)
+            }
+            .hasFieldEqualTo(
+                "additionalConfig",
+                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+            )
+        val credentials = credentialCaptor.firstValue
+        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
+        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
+        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
+        assertThat(credentials.variant).isEqualTo("")
+    }
+
+    // endregion
+
     // region initialize / additionalConfig
 
     @Test
