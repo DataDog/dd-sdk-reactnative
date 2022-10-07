@@ -53,6 +53,17 @@ export class DdSdkReactNativeConfiguration {
      */
     public versionSuffix?: string;
 
+    /**
+     * The sampling rate for Internal Telemetry (info related to the work of the
+     * SDK internals).
+     *
+     * The sampling rate must be a value between 0 and 100. A value of 0 means no
+     * telemetry will be sent, 100 means all telemetry will be sent. When
+     * `telemetrySampleRate` is not set, the default value from the iOS and
+     * Android SDK is used, which is 20.
+     */
+    public telemetrySampleRate?: number;
+
     public additionalConfig: { [k: string]: any } = {};
 
     constructor(

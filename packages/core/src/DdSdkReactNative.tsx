@@ -144,7 +144,8 @@ export class DdSdkReactNative {
                         : configuration.sampleRate,
                     configuration.site,
                     configuration.trackingConsent,
-                    configuration.additionalConfig
+                    configuration.additionalConfig,
+                    configuration.telemetrySampleRate
                 )
             ).then(
                 () => {

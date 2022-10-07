@@ -156,6 +156,9 @@ class DdSdk(
 
         configBuilder.useSite(buildSite(configuration.site))
 
+        val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
+        telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
+
         val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
         if (viewTracking == true) {
             // Use sensible default

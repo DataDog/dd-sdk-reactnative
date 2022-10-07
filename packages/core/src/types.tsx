@@ -16,7 +16,8 @@ export class DdSdkConfiguration {
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfig: object
+        readonly additionalConfig: object,
+        readonly telemetrySampleRate?: number
     ) {}
 }
 
