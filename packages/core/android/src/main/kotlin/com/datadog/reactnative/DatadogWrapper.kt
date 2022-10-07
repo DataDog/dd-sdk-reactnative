@@ -83,4 +83,14 @@ interface DatadogWrapper {
      * Sets tracking consent.
      */
     fun setTrackingConsent(trackingConsent: TrackingConsent)
+
+    /**
+     * Sends telemetry debug event
+     */
+    fun telemetryDebug(message: String)
+
+    /**
+     * Sends telemetry error
+     */
+    fun telemetryError(message: String, stack: String?, kind: String?)
 }
