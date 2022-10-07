@@ -19,6 +19,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             applicationId = forge.aNullable { getForgery<UUID>().toString() },
             nativeCrashReportEnabled = forge.aNullable { aBool() },
             sampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+            telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
             site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
             additionalConfig = forge.aMap {
                 forge.anAsciiString() to forge.anElementFrom(
