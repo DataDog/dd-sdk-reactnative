@@ -42,7 +42,7 @@ describe('foundation', () => {
             );
         });
 
-        test('does not call the native SDK when sartAction has not been called before and using old API', async () => {
+        test('does not call the native SDK when startAction has not been called before and using old API', async () => {
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).not.toHaveBeenCalled();
             expect(DdSdk.telemetryDebug).not.toHaveBeenCalled();
