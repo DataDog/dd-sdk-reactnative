@@ -18,6 +18,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         sampleRate = getDouble("sampleRate"),
         site = getString("site"),
         trackingConsent = getString("trackingConsent"),
+        telemetrySampleRate = getDouble("telemetrySampleRate"),
         additionalConfig = getMap("additionalConfig")?.toHashMap()
     )
 }
@@ -31,6 +32,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     sampleRate?.let { map.putDouble("sampleRate", it) }
     site?.let { map.putString("site", it) }
     trackingConsent?.let { map.putString("trackingConsent", it) }
+    telemetrySampleRate?.let { map.putDouble("telemetrySampleRate", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }

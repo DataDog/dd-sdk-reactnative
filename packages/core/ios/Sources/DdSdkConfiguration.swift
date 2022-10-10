@@ -16,6 +16,7 @@ import Foundation
      - sampleRate: The sample rate (between 0 and 100) of RUM sessions kept.
      - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
      - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
+     - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
      - additionalConfig: Additional configuration parameters.
  */
 @objc(DdSdkConfiguration)
@@ -27,6 +28,7 @@ public class DdSdkConfiguration: NSObject {
     public var sampleRate: Double? = nil
     public var site: NSString? = nil
     public var trackingConsent: NSString? = nil
+    public var telemetrySampleRate: Double? = nil
     public var additionalConfig: NSDictionary? = nil
 
     public init(
@@ -37,6 +39,7 @@ public class DdSdkConfiguration: NSObject {
         sampleRate: Double?,
         site: NSString?,
         trackingConsent: NSString?,
+        telemetrySampleRate: Double?,
         additionalConfig: NSDictionary?
     ) {
         self.clientToken = clientToken
@@ -46,6 +49,7 @@ public class DdSdkConfiguration: NSObject {
         self.sampleRate = sampleRate
         self.site = site
         self.trackingConsent = trackingConsent
+        self.telemetrySampleRate = telemetrySampleRate
         self.additionalConfig = additionalConfig
     }
 }

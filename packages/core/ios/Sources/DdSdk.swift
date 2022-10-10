@@ -119,6 +119,10 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
 
+        if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
+            _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
+        }
+
         let additionalConfig = configuration.additionalConfig
 
         if var additionalConfiguration = additionalConfig as? [String: Any] {
