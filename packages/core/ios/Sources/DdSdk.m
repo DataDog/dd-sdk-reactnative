@@ -24,4 +24,14 @@ RCT_EXTERN_METHOD(setTrackingConsent:(NSString)trackingConsent
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(telemetryDebug:(NSString)message
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(telemetryError:(NSString)message
+                 withStack:(NSString?)stack
+                 withKind:(NSString?)kind
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
 @end

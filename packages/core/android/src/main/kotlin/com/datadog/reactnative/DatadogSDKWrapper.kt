@@ -51,4 +51,12 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun setTrackingConsent(trackingConsent: TrackingConsent) {
         Datadog.setTrackingConsent(trackingConsent)
     }
+
+    override fun telemetryDebug(message: String) {
+        Datadog._internal._telemetry.debug(message)
+    }
+
+    override fun telemetryError(message: String, stack: String?, kind: String?) {
+        Datadog._internal._telemetry.error(message, stack, kind)
+    }
 }
