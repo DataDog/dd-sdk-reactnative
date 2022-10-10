@@ -43,6 +43,7 @@ class RNDdSdk: NSObject {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
+                Datadog._internal._telemtry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
                 resolve(nil)
                 return
             }
