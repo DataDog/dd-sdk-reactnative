@@ -97,6 +97,7 @@ class DdRumWrapper implements DdRumType {
         }
         if (isOldStopActionAPI(args)) {
             if (this.lastActionData) {
+                DdSdk.telemetryDebug('DDdRum.stopAction called with the old signature')
                 return this.nativeRum.stopAction(this.lastActionData.type, this.lastActionData.name, args[0] || {}, args[1] || timeProvider.now());
             } 
             InternalLog.log("DdRum.startAction needs to be called before DdRum.stopAction", SdkVerbosity.WARN);

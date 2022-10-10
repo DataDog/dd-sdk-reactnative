@@ -6,7 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdRum } from '../foundation';
+import { DdRum, DdSdk } from '../foundation';
 
 jest.mock('../TimeProvider', () => {
     return {
@@ -45,6 +45,7 @@ describe('foundation', () => {
         test('does not call the native SDK when sartAction has not been called before and using old API', async () => {
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).not.toHaveBeenCalled();
+            expect(DdSdk.telemetryDebug).not.toHaveBeenCalled();
         });
 
         test('calls the native SDK when called with old API', async () => {
@@ -56,6 +57,9 @@ describe('foundation', () => {
                 { user: 'me' },
                 789
             );
+            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+                'DDdRum.stopAction called with the old signature'
+            );
         });
 
         test('calls the native SDK when called with old API with default values', async () => {
@@ -66,6 +70,9 @@ describe('foundation', () => {
                 'page_old_api',
                 {},
                 456
+            );
+            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+                'DDdRum.stopAction called with the old signature'
             );
         });
 
