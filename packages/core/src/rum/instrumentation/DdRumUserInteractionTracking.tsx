@@ -8,6 +8,7 @@ import React from 'react';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { DdSdk } from '../../foundation';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
@@ -70,6 +71,18 @@ export class DdRumUserInteractionTracking {
             return this.patchCreateElementFunction(original, args);
         };
 
+        /**
+         * DO NOT MOVE THIS FUNCTION DEFINITION INTO THE CATCH BLOCK
+         *
+         * When an error is triggered by a package not found, new imports won't work in the following calls.
+         * Therefore we cannot call `DdSdk.telemetryDebug` in the catch block directly, it has to be required
+         * before.
+         */
+        const logJSXModuleNotFound = () =>
+            DdSdk.telemetryDebug(
+                'React version does not support new jsx transform'
+            );
+
         try {
             // We have to use inline require here because older React versions (below 17) don't have jsx-runtime
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -86,7 +99,8 @@ export class DdRumUserInteractionTracking {
                 return this.patchCreateElementFunction(originaljsx, args);
             };
         } catch (e) {
-            // TODO: Add telemetry
+            // TODO: Drop support for older React versions once this does not pop up in telemetry anymore
+            logJSXModuleNotFound();
         }
 
         const originalMemo = React.memo;

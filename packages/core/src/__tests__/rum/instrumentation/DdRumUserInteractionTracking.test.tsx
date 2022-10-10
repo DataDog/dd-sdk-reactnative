@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import React from 'react';
 
+import { DdSdk } from '../../../foundation';
 import { DdEventsInterceptor } from '../../../rum/instrumentation/DdEventsInterceptor';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/DdRumUserInteractionTracking';
 
@@ -39,6 +40,7 @@ let originalMethod: typeof React.createElement;
 beforeEach(() => {
     originalMethod = React.createElement;
     jest.setTimeout(20000);
+    jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -347,11 +349,17 @@ describe('startTracking', () => {
         jest.setMock('react/jsx-runtime', null);
         DdRumUserInteractionTracking.startTracking();
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+        expect(DdSdk.telemetryDebug).toBeCalledWith(
+            'React version does not support new jsx transform'
+        );
     });
     it('does not crash if jsx-runtime does not contain jsx', () => {
         expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
         jest.setMock('react/jsx-runtime', {});
         DdRumUserInteractionTracking.startTracking();
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+        expect(DdSdk.telemetryDebug).toBeCalledWith(
+            'React version does not support new jsx transform'
+        );
     });
 });
