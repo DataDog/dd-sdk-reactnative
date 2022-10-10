@@ -87,6 +87,18 @@ class RNDdSdk: NSObject {
         Datadog.set(trackingConsent: buildTrackingConsent(consent: trackingConsent))
         resolve(nil)
     }
+    
+    @objc(telemetryDebug:withResolver:withRejecter:)
+    func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        Datadog._internal._telemtry.debug(id: "datadog_react_native:\(message)", message: message as String)
+        resolve(nil)
+    }
+    
+    @objc(telemetryError:withStack:withKind:withResolver:withRejecter:)
+    func telemetryDebug(message: NSString, stack: NSString?, kind: NSString?, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        Datadog._internal._telemtry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        resolve(nil)
+    }
 
     func buildConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
         let ddConfigBuilder: Datadog.Configuration.Builder
