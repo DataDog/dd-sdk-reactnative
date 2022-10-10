@@ -56,6 +56,9 @@ export class DdSdkReactNative {
                     "Can't initialize Datadog, SDK was already initialized",
                     SdkVerbosity.WARN
                 );
+                DdSdk.telemetryDebug(
+                    'RN SDK was already initialized in javascript'
+                );
                 resolve();
                 return;
             }
