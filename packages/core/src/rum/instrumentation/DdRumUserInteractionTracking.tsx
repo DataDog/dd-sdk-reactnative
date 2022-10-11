@@ -8,6 +8,7 @@ import React from 'react';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { getErrorMessage } from '../../errorUtils';
 import { DdSdk } from '../../foundation';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
@@ -83,9 +84,7 @@ export class DdRumUserInteractionTracking {
                 return this.patchCreateElementFunction(originaljsx, args);
             };
         } catch (e) {
-            DdSdk.telemetryDebug(
-                'React version does not support new jsx transform'
-            );
+            DdSdk.telemetryDebug(getErrorMessage(e));
         }
 
         const originalMemo = React.memo;

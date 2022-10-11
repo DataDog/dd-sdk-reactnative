@@ -18,7 +18,7 @@ export const getJsxRuntime = () => {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, import/no-dynamic-require
     const jsxRuntime = require(jsxRuntimePackage);
     if (!jsxRuntime.jsx) {
-        throw new Error('React version does not support new jsx transform');
+        throw new Error('React jsx runtime does not export new jsx transform');
     }
     return jsxRuntime.jsx;
 };
