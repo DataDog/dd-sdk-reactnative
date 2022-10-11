@@ -12,11 +12,6 @@ import { Navigation } from 'react-native-navigation';
 console.log("Starting Application with navigation library: " + navigationLib);
 if (navigationLib == "react-navigation") {
 
-    // TODO implement async load example. Currently in case of async initialization
-    // there is a possibility to miss first screen in case of `react-navigation` lib
-    //const trackingConsent = await getTrackingConsent()
-    initializeDatadog(TrackingConsent.GRANTED);
-
     AppRegistry.registerComponent(appName, () => App);
     // this is a hack. we need to set root of `react-native-navigation`,
     // because native screen belongs to it. otherwise we will have blank screen

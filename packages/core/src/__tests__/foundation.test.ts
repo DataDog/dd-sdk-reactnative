@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { BufferSingleton } from '../DatadogProvider/Buffer/BufferSingleton';
 import { DdRum, DdSdk } from '../foundation';
 
 jest.mock('../TimeProvider', () => {
@@ -20,6 +21,7 @@ describe('foundation', () => {
     describe('DdRum.stopAction', () => {
         beforeEach(() => {
             jest.clearAllMocks();
+            BufferSingleton.onInitialization();
         });
 
         test('calls the native SDK when called with new API', async () => {

@@ -6,36 +6,12 @@
 
 import { NativeModules } from 'react-native';
 
+import { BufferSingleton } from '../DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../foundation';
 
-jest.mock('react-native', () => {
-    return {
-        NativeModules: {
-            DdRum: {
-                startView: jest.fn().mockImplementation(() => {}),
-                stopView: jest.fn().mockImplementation(() => {}),
-                startAction: jest.fn().mockImplementation(() => {}),
-                stopAction: jest.fn().mockImplementation(() => {}),
-                addAction: jest.fn().mockImplementation(() => {}),
-                startResource: jest.fn().mockImplementation(() => {}),
-                stopResource: jest.fn().mockImplementation(() => {}),
-                addError: jest.fn().mockImplementation(() => {}),
-                addTiming: jest.fn().mockImplementation(() => {})
-            }
-        }
-    };
-});
-
 beforeEach(async () => {
-    NativeModules.DdRum.startView.mockClear();
-    NativeModules.DdRum.stopView.mockClear();
-    NativeModules.DdRum.startAction.mockClear();
-    NativeModules.DdRum.stopAction.mockClear();
-    NativeModules.DdRum.addAction.mockClear();
-    NativeModules.DdRum.startResource.mockClear();
-    NativeModules.DdRum.stopResource.mockClear();
-    NativeModules.DdRum.addError.mockClear();
-    NativeModules.DdRum.addTiming.mockClear();
+    jest.clearAllMocks();
+    BufferSingleton.onInitialization();
 });
 
 it('M add error source type W addError()', async () => {

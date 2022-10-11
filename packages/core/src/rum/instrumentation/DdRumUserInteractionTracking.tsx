@@ -22,6 +22,8 @@ import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 export class DdRumUserInteractionTracking {
     private static isTracking = false;
     private static eventsInterceptor: EventsInterceptor = new NoOpEventsInterceptor();
+    private static originalCreateElement = React.createElement;
+    private static originalMemo = React.memo;
 
     private static patchCreateElementFunction = (
         originalFunction: typeof React.createElement,
@@ -139,5 +141,11 @@ export class DdRumUserInteractionTracking {
             'Datadog SDK is tracking interactions',
             SdkVerbosity.INFO
         );
+    }
+
+    static stopTracking() {
+        React.createElement = this.originalCreateElement;
+        React.memo = this.originalMemo;
+        DdRumUserInteractionTracking.isTracking = false;
     }
 }

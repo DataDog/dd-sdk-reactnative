@@ -4,7 +4,21 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { DdSdkReactNativeConfiguration } from './DdSdkReactNativeConfiguration';
+import { InteractionManager } from 'react-native';
+
+import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
+import {
+    DdSdkReactNativeConfiguration,
+    buildConfigurationFromPartialConfiguration,
+    addDefaultValuesToAutoInstrumentationConfiguration,
+    InitializationMode
+} from './DdSdkReactNativeConfiguration';
+import type {
+    AutoInstrumentationParameters,
+    DatadogProviderConfiguration,
+    PartialInitializationConfiguration,
+    AutoInstrumentationConfiguration
+} from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -41,133 +55,132 @@ export class DdSdkReactNative {
     private static readonly NATIVE_LONG_TASK_THRESHOLD_MS = 200;
 
     private static wasInitialized = false;
+    private static wasAutoInstrumented = false;
+    private static configuration?: DdSdkReactNativeConfiguration;
+    private static features?: AutoInstrumentationConfiguration;
 
     /**
      * Initializes the Datadog SDK.
      * @param configuration the configuration for the SDK library
      * @returns a Promise.
      */
-    static initialize(
+    static async initialize(
         configuration: DdSdkReactNativeConfiguration
     ): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (DdSdkReactNative.wasInitialized) {
-                InternalLog.log(
-                    "Can't initialize Datadog, SDK was already initialized",
-                    SdkVerbosity.WARN
-                );
-                if (!__DEV__) {
-                    DdSdk.telemetryDebug(
-                        'RN SDK was already initialized in javascript'
-                    );
-                }
-                resolve();
-                return;
-            }
-
-            InternalLog.verbosity = configuration.verbosity;
-
-            configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] =
-                'react-native';
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_SDK_VERSION
-            ] = sdkVersion;
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
-            ] = configuration.nativeViewTracking;
-            if (configuration.verbosity) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_SDK_VERBOSITY_KEY
-                ] = configuration.verbosity;
-            }
-
-            if (configuration.proxyConfig) {
-                const additionalConfig = configuration.additionalConfig;
-                const proxyConfig = configuration.proxyConfig;
-
-                additionalConfig[DdSdkReactNative.DD_PROXY_TYPE_KEY] =
-                    proxyConfig.type;
-                additionalConfig[DdSdkReactNative.DD_PROXY_ADDRESS_KEY] =
-                    proxyConfig.address;
-                additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
-                    proxyConfig.port;
-                if (proxyConfig.username && proxyConfig.password) {
-                    if (proxyConfig.type === ProxyType.SOCKS) {
-                        console.warn(
-                            "SOCKS proxy configuration doesn't support Basic authentication."
-                        );
-                    } else {
-                        additionalConfig[
-                            DdSdkReactNative.DD_PROXY_USERNAME_KEY
-                        ] = proxyConfig.username;
-                        additionalConfig[
-                            DdSdkReactNative.DD_PROXY_PASSWORD_KEY
-                        ] = proxyConfig.password;
-                    }
-                }
-            }
-
-            if (configuration.serviceName) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_SERVICE_NAME
-                ] = configuration.serviceName;
-            }
-
-            if (configuration.version) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_VERSION
-                ] = `${configuration.version}${
-                    configuration.versionSuffix
-                        ? `-${configuration.versionSuffix}`
-                        : ''
-                }`;
-            }
-
-            // If both version and version suffix are provided, we merge them into the version field.
-            // To avoid adding it in again the native part, we only set it if the version isn't set.
-            if (configuration.versionSuffix && !configuration.version) {
-                configuration.additionalConfig[
-                    DdSdkReactNative.DD_VERSION_SUFFIX
-                ] = `-${configuration.versionSuffix}`;
-            }
-
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
-            ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
-
-            configuration.additionalConfig['_dd.first_party_hosts'] =
-                configuration.firstPartyHosts;
-
-            DdSdk.initialize(
-                new DdSdkConfiguration(
-                    configuration.clientToken,
-                    configuration.env,
-                    configuration.applicationId,
-                    configuration.nativeCrashReportEnabled,
-                    configuration.sampleRate === undefined
-                        ? configuration.sessionSamplingRate
-                        : configuration.sampleRate,
-                    configuration.site,
-                    configuration.trackingConsent,
-                    configuration.additionalConfig,
-                    configuration.telemetrySampleRate
-                )
-            ).then(
-                () => {
-                    InternalLog.log(
-                        'Datadog SDK was initialized',
-                        SdkVerbosity.INFO
-                    );
-                    DdSdkReactNative.enableFeatures(configuration);
-                    DdSdkReactNative.wasInitialized = true;
-                    resolve();
-                },
-                rejection => {
-                    reject(rejection);
-                }
-            );
-        });
+        await DdSdkReactNative.initializeNativeSDK(configuration);
+        DdSdkReactNative.enableFeatures(configuration);
     }
+
+    private static initializeNativeSDK = async (
+        configuration: DdSdkReactNativeConfiguration
+    ): Promise<void> => {
+        if (DdSdkReactNative.wasInitialized) {
+            InternalLog.log(
+                "Can't initialize Datadog, SDK was already initialized",
+                SdkVerbosity.WARN
+            );
+            if (!__DEV__) {
+                DdSdk.telemetryDebug(
+                    'RN SDK was already initialized in javascript'
+                );
+            }
+            return new Promise(resolve => resolve());
+        }
+
+        InternalLog.verbosity = configuration.verbosity;
+
+        DdSdkReactNative.buildConfiguration(configuration);
+
+        await DdSdk.initialize(
+            new DdSdkConfiguration(
+                configuration.clientToken,
+                configuration.env,
+                configuration.applicationId,
+                configuration.nativeCrashReportEnabled,
+                configuration.sampleRate === undefined
+                    ? configuration.sessionSamplingRate
+                    : configuration.sampleRate,
+                configuration.site,
+                configuration.trackingConsent,
+                configuration.additionalConfig
+            )
+        );
+        InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
+        DdSdkReactNative.wasInitialized = true;
+        BufferSingleton.onInitialization();
+    };
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static async _initializeFromDatadogProvider(
+        configuration: DatadogProviderConfiguration
+    ): Promise<void> {
+        DdSdkReactNative.enableFeatures(configuration);
+        DdSdkReactNative.configuration = configuration;
+        if (configuration.initializationMode === InitializationMode.SYNC) {
+            return DdSdkReactNative.initializeNativeSDK(configuration);
+        }
+        if (configuration.initializationMode === InitializationMode.ASYNC) {
+            return InteractionManager.runAfterInteractions(() => {
+                return DdSdkReactNative.initializeNativeSDK(configuration);
+            });
+        }
+        // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
+        if (configuration instanceof DdSdkReactNativeConfiguration) {
+            return DdSdkReactNative.initializeNativeSDK(configuration);
+        }
+    }
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static async _enableFeaturesFromDatadogProvider(
+        features: AutoInstrumentationConfiguration
+    ): Promise<void> {
+        DdSdkReactNative.features = features;
+        DdSdkReactNative.enableFeatures(
+            addDefaultValuesToAutoInstrumentationConfiguration(features)
+        );
+    }
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static _initializeFromDatadogProviderAsync = async (): Promise<void> => {
+        if (!DdSdkReactNative.configuration) {
+            InternalLog.log(
+                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
+                SdkVerbosity.WARN
+            );
+            return new Promise(resolve => resolve());
+        }
+        return DdSdkReactNative.initializeNativeSDK(
+            DdSdkReactNative.configuration
+        );
+    };
+
+    /**
+     * FOR INTERNAL USE ONLY.
+     */
+    static _initializeFromDatadogProviderWithConfigurationAsync = async (
+        configuration: PartialInitializationConfiguration
+    ): Promise<void> => {
+        if (!DdSdkReactNative.features) {
+            InternalLog.log(
+                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
+                SdkVerbosity.WARN
+            );
+            return new Promise(resolve => resolve());
+        }
+
+        return DdSdkReactNative.initializeNativeSDK(
+            buildConfigurationFromPartialConfiguration(
+                DdSdkReactNative.features,
+                configuration
+            )
+        );
+    };
 
     /**
      * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
@@ -207,9 +220,88 @@ export class DdSdkReactNative {
         return DdSdk.setTrackingConsent(consent);
     }
 
-    private static enableFeatures(
+    private static buildConfiguration = (
         configuration: DdSdkReactNativeConfiguration
+    ) => {
+        configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] =
+            'react-native';
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_SDK_VERSION
+        ] = sdkVersion;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
+        ] = configuration.nativeViewTracking;
+        if (configuration.verbosity) {
+            configuration.additionalConfig[
+                DdSdkReactNative.DD_SDK_VERBOSITY_KEY
+            ] = configuration.verbosity;
+        }
+
+        if (configuration.proxyConfig) {
+            const additionalConfig = configuration.additionalConfig;
+            const proxyConfig = configuration.proxyConfig;
+
+            additionalConfig[DdSdkReactNative.DD_PROXY_TYPE_KEY] =
+                proxyConfig.type;
+            additionalConfig[DdSdkReactNative.DD_PROXY_ADDRESS_KEY] =
+                proxyConfig.address;
+            additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
+                proxyConfig.port;
+            if (proxyConfig.username && proxyConfig.password) {
+                if (proxyConfig.type === ProxyType.SOCKS) {
+                    console.warn(
+                        "SOCKS proxy configuration doesn't support Basic authentication."
+                    );
+                } else {
+                    additionalConfig[DdSdkReactNative.DD_PROXY_USERNAME_KEY] =
+                        proxyConfig.username;
+                    additionalConfig[DdSdkReactNative.DD_PROXY_PASSWORD_KEY] =
+                        proxyConfig.password;
+                }
+            }
+        }
+
+        if (configuration.serviceName) {
+            configuration.additionalConfig[DdSdkReactNative.DD_SERVICE_NAME] =
+                configuration.serviceName;
+        }
+
+        if (configuration.version) {
+            configuration.additionalConfig[DdSdkReactNative.DD_VERSION] = `${
+                configuration.version
+            }${
+                configuration.versionSuffix
+                    ? `-${configuration.versionSuffix}`
+                    : ''
+            }`;
+        }
+
+        // If both version and version suffix are provided, we merge them into the version field.
+        // To avoid adding it in again the native part, we only set it if the version isn't set.
+        if (configuration.versionSuffix && !configuration.version) {
+            configuration.additionalConfig[
+                DdSdkReactNative.DD_VERSION_SUFFIX
+            ] = `-${configuration.versionSuffix}`;
+        }
+
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
+        ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
+
+        configuration.additionalConfig['_dd.first_party_hosts'] =
+            configuration.firstPartyHosts;
+    };
+
+    private static enableFeatures(
+        configuration: AutoInstrumentationParameters
     ) {
+        if (DdSdkReactNative.wasAutoInstrumented) {
+            InternalLog.log(
+                "Can't auto instrument Datadog, SDK was already instrumented",
+                SdkVerbosity.WARN
+            );
+            return;
+        }
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking();
         }
@@ -224,5 +316,6 @@ export class DdSdkReactNative {
         if (configuration.trackErrors) {
             DdRumErrorTracking.startTracking();
         }
+        DdSdkReactNative.wasAutoInstrumented = true;
     }
 }

@@ -34,11 +34,11 @@ To ensure the safety of your data, you must use a client token. You cannot use o
 
 ```js
 import {
-    DdSdkReactNative,
-    DdSdkReactNativeConfiguration
+    DatadogProvider,
+    DatadogProviderConfiguration
 } from '@datadog/mobile-react-native';
 
-const config = new DdSdkReactNativeConfiguration(
+const datadogConfiguration = new DatadogProviderConfiguration(
     '<CLIENT_TOKEN>',
     '<ENVIRONMENT_NAME>',
     '<RUM_APPLICATION_ID>',
@@ -47,23 +47,27 @@ const config = new DdSdkReactNativeConfiguration(
     true // track Errors
 );
 // Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", or "US1_FED"). Default is "US1".
-config.site = 'US1';
+datadogConfiguration.site = 'US1';
 // Optional: enable or disable native crash reports
-config.nativeCrashReportEnabled = true;
+datadogConfiguration.nativeCrashReportEnabled = true;
 // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-config.sessionSamplingRate = 80;
+datadogConfiguration.sessionSamplingRate = 80;
 // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
 // You need to specify the hosts of your backends to enable tracing with these backends
-config.resourceTracingSamplingRate = 80;
-config.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
+datadogConfiguration.resourceTracingSamplingRate = 80;
+datadogConfiguration.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
-config.serviceName = 'com.example.reactnative';
+datadogConfiguration.serviceName = 'com.example.reactnative';
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
-config.verbosity = SdkVerbosity.WARN;
+datadogConfiguration.verbosity = SdkVerbosity.WARN;
 
-await DdSdkReactNative.initialize(config);
-
-// Once SDK is initialized you need to setup view tracking to be able to see data in the RUM Dashboard.
+export default function App() {
+    return (
+        <DatadogProvider configuration={datadogConfiguration}>
+            <Navigation />
+        </DatadogProvider>
+    );
+}
 ```
 
 ### Track view navigation
