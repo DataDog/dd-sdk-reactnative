@@ -6,6 +6,8 @@
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { getErrorStackTrace } from '../../errorUtils';
+import { DdSdk } from '../../foundation';
 
 import { DatadogBuffer } from './DatadogBuffer';
 
@@ -34,6 +36,14 @@ export class BoundedBuffer extends DatadogBuffer {
     private bufferSize: number;
     private buffer: BufferItem[] = [];
     private idTable: { [bufferId: string]: string | null } = {};
+    private telemetryBuffer: {
+        [kind: string]: {
+            message: string;
+            stack: string;
+            kind: string;
+            occurences: number;
+        };
+    } = {};
 
     constructor(bufferSize: number = DEFAULT_BUFFER_SIZE) {
         super();
@@ -62,6 +72,11 @@ export class BoundedBuffer extends DatadogBuffer {
 
             return new Promise<string>(resolve => resolve(bufferId));
         } catch (error) {
+            this.addTelemetryEvent(
+                'Could not generate enough random numbers',
+                getErrorStackTrace(error),
+                'RandomIdGenerationError'
+            );
             // Not using InternalLog here as it is not yet instantiated
             console.warn(
                 `[Datadog] Could not generate enough random numbers for RUM buffer. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`
@@ -139,6 +154,8 @@ export class BoundedBuffer extends DatadogBuffer {
         }
 
         this.buffer = [];
+
+        this.drainTelemetry();
     };
 
     private generateRandomBufferId = (): string => {
@@ -153,5 +170,34 @@ export class BoundedBuffer extends DatadogBuffer {
         }
 
         throw new Error('Could not generate random Buffer id');
+    };
+
+    private addTelemetryEvent = (
+        message: string,
+        stack: string,
+        kind: string
+    ) => {
+        if (this.telemetryBuffer[kind]) {
+            this.telemetryBuffer[kind].occurences++;
+        } else {
+            this.telemetryBuffer[kind] = {
+                message,
+                stack,
+                kind,
+                occurences: 1
+            };
+        }
+    };
+
+    private drainTelemetry = () => {
+        Object.values(this.telemetryBuffer).forEach(
+            ({ message, stack, kind, occurences }) => {
+                DdSdk.telemetryError(
+                    `${message} happened ${occurences} times.`,
+                    stack,
+                    kind
+                );
+            }
+        );
     };
 }

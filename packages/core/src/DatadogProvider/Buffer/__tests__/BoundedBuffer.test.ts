@@ -5,6 +5,7 @@
  */
 
 import { InternalLog } from '../../../InternalLog';
+import { DdSdk } from '../../../foundation';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {
@@ -125,6 +126,11 @@ describe('BoundedBuffer', () => {
             await buffer.drain();
             expect(callbackWithId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenNthCalledWith(1, 'callbackId1');
+            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+                'Could not generate enough random numbers happened 2 times.',
+                '',
+                'RandomIdGenerationError'
+            );
         });
     });
 
