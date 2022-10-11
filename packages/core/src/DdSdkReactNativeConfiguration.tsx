@@ -148,6 +148,7 @@ export type PartialInitializationConfiguration = {
     readonly additionalConfig?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
     readonly nativeCrashReportEnabled?: boolean;
+    readonly telemetrySampleRate?: number;
 };
 
 const setConfigurationAttribute = <
