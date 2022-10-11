@@ -74,18 +74,6 @@ export class DdRumUserInteractionTracking {
             return this.patchCreateElementFunction(original, args);
         };
 
-        /**
-         * DO NOT MOVE THIS FUNCTION DEFINITION INTO THE CATCH BLOCK
-         *
-         * When an error is triggered by a package not found, new imports won't work in the following calls.
-         * Therefore we cannot call `DdSdk.telemetryDebug` in the catch block directly, it has to be required
-         * before.
-         */
-        const logJSXModuleNotFound = () =>
-            DdSdk.telemetryDebug(
-                'React version does not support new jsx transform'
-            );
-
         try {
             const jsxRuntime = getJsxRuntime();
             const originaljsx = jsxRuntime.jsx;
@@ -95,8 +83,9 @@ export class DdRumUserInteractionTracking {
                 return this.patchCreateElementFunction(originaljsx, args);
             };
         } catch (e) {
-            // TODO: Drop support for older React versions once this does not pop up in telemetry anymore
-            logJSXModuleNotFound();
+            DdSdk.telemetryDebug(
+                'React version does not support new jsx transform'
+            );
         }
 
         const originalMemo = React.memo;
