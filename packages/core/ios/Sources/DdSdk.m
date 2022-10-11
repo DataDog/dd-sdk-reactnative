@@ -29,8 +29,8 @@ RCT_EXTERN_METHOD(telemetryDebug:(NSString)message
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(telemetryError:(NSString)message
-                 withStack:(NSString?)stack
-                 withKind:(NSString?)kind
+                 withStack:(NSString)stack
+                 withKind:(NSString)kind
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 

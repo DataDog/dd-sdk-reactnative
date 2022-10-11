@@ -60,11 +60,7 @@ export type DdNativeSdkType = {
      * @param stack error stack
      * @param kind error kind
      */
-    telemetryError(
-        message: string,
-        stack?: string,
-        kind?: string
-    ): Promise<void>;
+    telemetryError(message: string, stack: string, kind: string): Promise<void>;
 };
 
 /**
