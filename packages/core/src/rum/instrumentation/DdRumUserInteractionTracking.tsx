@@ -13,6 +13,7 @@ import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
 import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
+import { getJsxRuntime } from './getJsxRuntime';
 
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
@@ -71,15 +72,8 @@ export class DdRumUserInteractionTracking {
         };
 
         try {
-            // We have to use inline require here because older React versions (below 17) don't have jsx-runtime
-            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            const jsxRuntime = require('react/jsx-runtime');
+            const jsxRuntime = getJsxRuntime();
             const originaljsx = jsxRuntime.jsx;
-            if (!originaljsx) {
-                throw new Error(
-                    'React version does not support new jsx transform'
-                );
-            }
             jsxRuntime.jsx = (
                 ...args: Parameters<typeof React.createElement>
             ): ReturnType<typeof React.createElement> => {
