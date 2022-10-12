@@ -53,6 +53,8 @@ export class BoundedBuffer extends DatadogBuffer {
     addCallback = (callback: () => Promise<void>) => {
         if (this.buffer.length < this.bufferSize) {
             this.buffer.push({ callback, _type: 'VOID' });
+        } else {
+            this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
         }
 
         return new Promise<void>(resolve => resolve(undefined));
@@ -68,6 +70,8 @@ export class BoundedBuffer extends DatadogBuffer {
                     _type: 'RETURNING_ID'
                 });
                 this.idTable[bufferId] = null;
+            } else {
+                this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
             }
 
             return new Promise<string>(resolve => resolve(bufferId));
@@ -96,6 +100,8 @@ export class BoundedBuffer extends DatadogBuffer {
                 withBufferId: bufferId,
                 _type: 'WITH_ID'
             });
+        } else {
+            this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
         }
 
         return new Promise<void>(resolve => resolve(undefined));

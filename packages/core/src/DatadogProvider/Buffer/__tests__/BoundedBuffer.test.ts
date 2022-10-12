@@ -146,6 +146,11 @@ describe('BoundedBuffer', () => {
 
             await buffer.drain();
             expect(fakeCallback).toHaveBeenCalledTimes(3);
+            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+                'Buffer overflow happened 1 times.',
+                '',
+                'BufferOverflow'
+            );
         });
 
         it('does not add any new callback with id when the limit size is reached', async () => {
@@ -166,6 +171,11 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).not.toHaveBeenCalled();
             expect(callbackWithId).not.toHaveBeenCalled();
+            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+                'Buffer overflow happened 2 times.',
+                '',
+                'BufferOverflow'
+            );
         });
 
         it('adds corresponding callback with id even if the limit size is reached when corresponding callback exists', async () => {
@@ -186,6 +196,7 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledTimes(1);
+            expect(DdSdk.telemetryError).not.toHaveBeenCalled();
         });
     });
 });
