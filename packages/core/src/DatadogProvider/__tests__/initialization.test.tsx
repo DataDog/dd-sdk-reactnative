@@ -51,22 +51,22 @@ describe('DatadogProvider', () => {
                 NativeModules.DdSdk.initialize.mock.calls[0][0];
             delete receivedConfiguration.additionalConfig['_dd.sdk_version'];
             expect(receivedConfiguration).toMatchInlineSnapshot(`
-                  DdSdkConfiguration {
-                    "additionalConfig": Object {
-                      "_dd.first_party_hosts": Array [],
-                      "_dd.long_task.threshold": 200,
-                      "_dd.native_view_tracking": false,
-                      "_dd.source": "react-native",
-                    },
-                    "applicationId": "fakeApplicationId",
-                    "clientToken": "fakeToken",
-                    "env": "fakeEnv",
-                    "nativeCrashReportEnabled": false,
-                    "sampleRate": 100,
-                    "site": "US1",
-                    "telemetrySampleRate": undefined,
-                    "trackingConsent": "granted",
-                  }
+                DdSdkConfiguration {
+                  "additionalConfig": Object {
+                    "_dd.first_party_hosts": Array [],
+                    "_dd.long_task.threshold": 200,
+                    "_dd.native_view_tracking": false,
+                    "_dd.source": "react-native",
+                  },
+                  "applicationId": "fakeApplicationId",
+                  "clientToken": "fakeToken",
+                  "env": "fakeEnv",
+                  "nativeCrashReportEnabled": false,
+                  "sampleRate": 100,
+                  "site": "US1",
+                  "telemetrySampleRate": 20,
+                  "trackingConsent": "granted",
+                }
             `);
 
             // Re-render

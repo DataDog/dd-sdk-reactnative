@@ -8,11 +8,13 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import {
+    getErrorMessage,
+    getErrorStackTrace,
+    EMPTY_STACK_TRACE
+} from '../../errorUtils';
 import { DdRum } from '../../foundation';
 import { ErrorSource } from '../../types';
-
-const EMPTY_MESSAGE = 'Unknown Error';
-const EMPTY_STACK_TRACE = '';
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
@@ -63,8 +65,8 @@ export class DdRumErrorTracking {
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static onGlobalError(error: any, isFatal?: boolean): void {
-        const message = DdRumErrorTracking.getErrorMessage(error);
-        const stacktrace = DdRumErrorTracking.getErrorStackTrace(error);
+        const message = getErrorMessage(error);
+        const stacktrace = getErrorStackTrace(error);
         DdRum.addError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
@@ -86,7 +88,7 @@ export class DdRumErrorTracking {
         let stack: string = EMPTY_STACK_TRACE;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
-            const paramStack = DdRumErrorTracking.getErrorStackTrace(param);
+            const paramStack = getErrorStackTrace(param);
             if (paramStack !== EMPTY_STACK_TRACE) {
                 stack = paramStack;
                 break;
@@ -98,7 +100,7 @@ export class DdRumErrorTracking {
                 if (typeof param === 'string') {
                     return param;
                 } else {
-                    return DdRumErrorTracking.getErrorMessage(param);
+                    return getErrorMessage(param);
                 }
             })
             .join(' ');
@@ -106,44 +108,5 @@ export class DdRumErrorTracking {
         DdRum.addError(message, ErrorSource.CONSOLE, stack).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
         });
-    }
-
-    private static getErrorMessage(error: any | undefined): string {
-        let message = EMPTY_MESSAGE;
-        if (error === undefined || error === null) {
-            message = EMPTY_MESSAGE;
-        } else if (typeof error === 'object' && 'message' in error) {
-            message = String(error.message);
-        } else {
-            message = String(error);
-        }
-
-        return message;
-    }
-
-    private static getErrorStackTrace(error: any | undefined): string {
-        let stack = EMPTY_STACK_TRACE;
-
-        if (error === undefined || error === null) {
-            stack = EMPTY_STACK_TRACE;
-        } else if (typeof error === 'string') {
-            stack = EMPTY_STACK_TRACE;
-        } else if (typeof error === 'object') {
-            if ('componentStack' in error) {
-                stack = String(error.componentStack);
-            } else if ('stacktrace' in error) {
-                stack = String(error.stacktrace);
-            } else if ('stack' in error) {
-                stack = String(error.stack);
-            } else if (
-                'sourceURL' in error &&
-                'line' in error &&
-                'column' in error
-            ) {
-                stack = `at ${error.sourceURL}:${error.line}:${error.column}`;
-            }
-        }
-
-        return stack;
     }
 }

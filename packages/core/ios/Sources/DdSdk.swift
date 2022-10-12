@@ -96,7 +96,7 @@ class RNDdSdk: NSObject {
     }
     
     @objc(telemetryError:withStack:withKind:withResolver:withRejecter:)
-    func telemetryDebug(message: NSString, stack: NSString?, kind: NSString?, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    func telemetryDebug(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog._internal._telemtry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }

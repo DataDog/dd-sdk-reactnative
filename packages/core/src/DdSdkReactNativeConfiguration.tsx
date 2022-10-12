@@ -16,7 +16,8 @@ const DEFAULTS = {
     nativeViewTracking: false,
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),
-    trackingConsent: TrackingConsent.GRANTED
+    trackingConsent: TrackingConsent.GRANTED,
+    telemetrySampleRate: 20.0
 };
 
 /**
@@ -75,7 +76,7 @@ export class DdSdkReactNativeConfiguration {
      * `telemetrySampleRate` is not set, the default value from the iOS and
      * Android SDK is used, which is 20.
      */
-    public telemetrySampleRate?: number;
+    public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
 
     public additionalConfig: {
         [k: string]: any;
@@ -147,6 +148,7 @@ export type PartialInitializationConfiguration = {
     readonly additionalConfig?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
     readonly nativeCrashReportEnabled?: boolean;
+    readonly telemetrySampleRate?: number;
 };
 
 const setConfigurationAttribute = <

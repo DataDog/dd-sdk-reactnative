@@ -112,7 +112,7 @@ class DdSdk(
      * @param kind Error kind.
      */
     @ReactMethod
-    fun telemetryError(message: String, stack: String?, kind: String?, promise: Promise) {
+    fun telemetryError(message: String, stack: String, kind: String, promise: Promise) {
         datadog.telemetryError(message, stack, kind)
         promise.resolve(null)
     }
