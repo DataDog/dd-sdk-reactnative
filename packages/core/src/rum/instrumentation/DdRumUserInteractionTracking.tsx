@@ -8,12 +8,14 @@ import React from 'react';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { getErrorMessage } from '../../errorUtils';
 import { DdSdk } from '../../foundation';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
 import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
+import { getJsxRuntime } from './getJsxRuntime';
 
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
@@ -73,36 +75,16 @@ export class DdRumUserInteractionTracking {
             return this.patchCreateElementFunction(original, args);
         };
 
-        /**
-         * DO NOT MOVE THIS FUNCTION DEFINITION INTO THE CATCH BLOCK
-         *
-         * When an error is triggered by a package not found, new imports won't work in the following calls.
-         * Therefore we cannot call `DdSdk.telemetryDebug` in the catch block directly, it has to be required
-         * before.
-         */
-        const logJSXModuleNotFound = () =>
-            DdSdk.telemetryDebug(
-                'React version does not support new jsx transform'
-            );
-
         try {
-            // We have to use inline require here because older React versions (below 17) don't have jsx-runtime
-            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            const jsxRuntime = require('react/jsx-runtime');
+            const jsxRuntime = getJsxRuntime();
             const originaljsx = jsxRuntime.jsx;
-            if (!originaljsx) {
-                throw new Error(
-                    'React version does not support new jsx transform'
-                );
-            }
             jsxRuntime.jsx = (
                 ...args: Parameters<typeof React.createElement>
             ): ReturnType<typeof React.createElement> => {
                 return this.patchCreateElementFunction(originaljsx, args);
             };
         } catch (e) {
-            // TODO: Drop support for older React versions once this does not pop up in telemetry anymore
-            logJSXModuleNotFound();
+            DdSdk.telemetryDebug(getErrorMessage(e));
         }
 
         const originalMemo = React.memo;
