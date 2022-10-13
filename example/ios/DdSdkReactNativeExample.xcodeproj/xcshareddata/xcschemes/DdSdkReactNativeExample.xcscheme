@@ -51,6 +51,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E179FB5328F834D500CC2698"
+               BuildableName = "DdSdkReactNativeExampleTests.xctest"
+               BlueprintName = "DdSdkReactNativeExampleTests"
+               ReferencedContainer = "container:DdSdkReactNativeExample.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
