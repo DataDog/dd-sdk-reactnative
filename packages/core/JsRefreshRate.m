@@ -7,6 +7,7 @@
 
 // This ensures we can use [_bridge dispatchBlock]
 #import <React/RCTBridge+Private.h>
+#import "JsRefreshRate.h"
 
 @interface FrameCountHolder : NSObject
 
@@ -33,10 +34,6 @@
 
 @end
 
-@interface JsRefreshRate : NSObject
-@property (nonatomic, strong, readonly) RCTBridge *bridge;
-@end
-
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
 
@@ -56,6 +53,7 @@ RCT_EXPORT_MODULE()
  It simplifies installation but we should remove it if it create issues
  */
 static JsRefreshRate *_pluginSingleton = nil;
+
 - (instancetype)init {
   if (!_pluginSingleton) {
     self = [self initSingleton];
@@ -67,25 +65,17 @@ static JsRefreshRate *_pluginSingleton = nil;
 
 - (instancetype)initSingleton {
   jsFrameCountHolder = [FrameCountHolder new];
-
   return self;
 }
 
-- (void)startMeasuring
-{
-  [jsFrameCountHolder setPreviousTime:-1];
+- (void)startMeasuring {
+    [jsFrameCountHolder setPreviousTime:-1];
 
-  [_bridge dispatchBlock:^{
-    self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
-    [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-  }
-   queue:RCTJSThread];
-}
-
-- (void) stopMeasuring
-{
-  [self->_jsDisplayLink invalidate];
-  self->_jsDisplayLink = nil;
+    [_bridge dispatchBlock:^{
+      self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
+      [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    }
+    queue:RCTJSThread];
 }
 
 - (void)onJSFrame:(CADisplayLink *)displayLink
@@ -103,6 +93,7 @@ static JsRefreshRate *_pluginSingleton = nil;
   if ([frameCountHolder previousTime] == -1) {
     [frameCountHolder setPreviousTime:frameTimestamp];
   } else if (frameTimestamp - [frameCountHolder previousTime] >= 0.5) {
+
       // Call SDK to register call
       
 //    [_connection send:@"addRecord" withParams:@{
@@ -116,22 +107,8 @@ static JsRefreshRate *_pluginSingleton = nil;
   }
 }
 
-- (void)didConnect {
-    // Start measurement when the sdk is initialized
-    
-//  [connection receive:@"startMeasuring"
-//            withBlock:^(NSDictionary* params, id<FlipperResponder> responder) {
-//    [self startMeasuring];
-//  }];
-//
-//  [connection receive:@"stopMeasuring" withBlock:^(NSDictionary* params, id<FlipperResponder> responder) {
-//    [self stopMeasuring];
-//  }];
++ (BOOL)requiresMainQueueSetup {
+  return TRUE;
 }
-
-- (void)didDisconnect {
-  [self stopMeasuring];
-}
-
 
 @end
