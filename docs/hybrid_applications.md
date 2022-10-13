@@ -13,7 +13,7 @@ A few constraints to keep in mind:
 1. For **errors, resources and interactions tracking**, SDKs can work in 2 ways: through _auto-instrumentation_ (some React classes and methods are modified to automate this) or through _manual instrumentation_ - for instance if you want to report something you consider an error but that is not going to crash the app. Auto-instrumentation for JS errors, resources and interactions can only be started from javascript code.
 2. You cannot initialize more than 1 instance of the native `DatadogSDK` as it uses a singleton pattern on the native side. That means that once you initialize the native SDK on the native side or on the RN side (by calling `DdSdkReactNative.initialize`) it is initialized for both.
    This means that you can use _manual instrumentation_ on both sides, but _auto-instrumentation_ will only be activated for the side on which the SDK was initialized.
-3. If you try to report Datadog RUM events or logs before the initialization on iOS, they won't be sent as well as future RUM events and logs.
+3. If you try to report Datadog RUM events or logs before the initialization, they won't be sent as well as future RUM events and logs.
 4. You cannot change the `source` attribute of a RUM session, so all your RUM events will appear under the same source.
 
 ## Solutions
