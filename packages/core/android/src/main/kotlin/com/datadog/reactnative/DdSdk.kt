@@ -9,6 +9,7 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
@@ -23,6 +24,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The entry point to initialize Datadog's features.
@@ -33,6 +35,8 @@ class DdSdk(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
+    internal val reactContext: ReactApplicationContext = reactContext
+    internal val initialized = AtomicBoolean(false)
 
     override fun getName(): String = "DdSdk"
 
@@ -54,8 +58,14 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
+        initialized.set(true)
+        measureJSFPS()
 
         promise.resolve(null)
+    }
+
+    fun isInitialized(): Boolean {
+        return initialized.get()
     }
 
     /**
@@ -282,6 +292,27 @@ class DdSdk(
             "us5" -> DatadogSite.US5
             "us1_fed", "gov" -> DatadogSite.US1_FED
             else -> DatadogSite.US1
+        }
+    }
+
+    private var frameRateVitalListener: VitalListener = object : VitalListener {
+        override fun onVitalUpdate(info: VitalInfo) {
+            Log.d("DD-SDK", info.toString())
+        }
+    }
+
+    private fun measureJSFPS() {
+        reactContext.runOnJSQueueThread {
+            val frameRateVitalMonitor = AggregatingVitalMonitor()
+            val vitalFrameCallback =
+                VitalFrameCallback(frameRateVitalMonitor) { isInitialized() }
+            try {
+                Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
+            } catch (e: IllegalStateException) {
+                // This can happen if the SDK is initialized on a Thread with no looper
+                Log.e("DD-SDK", "Not on a looper thread")
+            }
+            frameRateVitalMonitor.register(frameRateVitalListener)
         }
     }
 
