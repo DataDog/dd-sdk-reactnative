@@ -26,15 +26,29 @@
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
-static JsRefreshRate;
+static JsRefreshRate *_pluginSingleton = nil;
+- (instancetype)init {
+  if (!_pluginSingleton) {
+    self = [self initSingleton];
+    _pluginSingleton = self;
+  }
+
+  return _pluginSingleton;
+}
+
+- (instancetype)initSingleton {
+  self = [super init];
+
+  self->_lastFrameTimestamp = -1;
+
+  return self;
+}
 
 - (void)start {
     if (self->_jsDisplayLink != nil) {
         return;
     }
-    
-    self->_lastFrameTimestamp = -1;
-    
+        
     [_bridge dispatchBlock:^{
       self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
       [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
@@ -51,10 +65,10 @@ static JsRefreshRate;
 
 - (void)onJSFrame:(CADisplayLink *)displayLink
 {
-  [self onFrameTick:displayLink threadName:@"JS"];
+  [self onFrameTick:displayLink];
 }
 
-- (void)onFrameTick:(CADisplayLink *)displayLink threadName:(NSString*)threadName
+- (void)onFrameTick:(CADisplayLink *)displayLink
 {
   NSTimeInterval frameTimestamp = displayLink.timestamp;
   if (self->_lastFrameTimestamp != -1) {
