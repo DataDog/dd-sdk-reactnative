@@ -18,49 +18,23 @@
 
 @end
 
-@implementation FrameCountHolder
-
-- (instancetype)init {
-  _previousTime = -1;
-  _frameCount = -1;
-  
-  return self;
-}
-
-- (void)incrementFrameCount {
-  _frameCount ++;
-}
-
-@end
-
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
-
-  FrameCountHolder *jsFrameCountHolder;
+  NSTimeInterval _lastFrameTimestamp;
 }
 
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
-static JsRefreshRate *_pluginSingleton = nil;
+static JsRefreshRate;
 
-- (instancetype)init {
-  if (!_pluginSingleton) {
-    self = [self initSingleton];
-    _pluginSingleton = self;
-  }
-
-  return _pluginSingleton;
-}
-
-- (instancetype)initSingleton {
-  jsFrameCountHolder = [FrameCountHolder new];
-  return self;
-}
-
-- (void)startMeasuring {
-    [jsFrameCountHolder setPreviousTime:-1];
-
+- (void)start {
+    if (self->_jsDisplayLink != nil) {
+        return;
+    }
+    
+    self->_lastFrameTimestamp = -1;
+    
     [_bridge dispatchBlock:^{
       self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
       [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
@@ -68,30 +42,41 @@ static JsRefreshRate *_pluginSingleton = nil;
     queue:RCTJSThread];
 }
 
-- (void)onJSFrame:(CADisplayLink *)displayLink
-{
-  [self onFrameTick:displayLink frameCountHolder:jsFrameCountHolder threadName:@"JS"];
+- (void)stop {
+    if (self->_jsDisplayLink) {
+        [self->_jsDisplayLink invalidate];
+        self->_jsDisplayLink = nil;
+    }
 }
 
-- (void)onFrameTick:(CADisplayLink *)displayLink frameCountHolder:(FrameCountHolder*)frameCountHolder threadName:(NSString*)threadName
+- (void)onJSFrame:(CADisplayLink *)displayLink
+{
+  [self onFrameTick:displayLink threadName:@"JS"];
+}
+
+- (void)onFrameTick:(CADisplayLink *)displayLink threadName:(NSString*)threadName
 {
   NSTimeInterval frameTimestamp = displayLink.timestamp;
-  
-  // See https://github.com/facebook/react-native/blob/1465c8f3874cdee8c325ab4a4916fda0b3e43bdb/React/CoreModules/RCTFPSGraph.m#L86
-  [frameCountHolder incrementFrameCount];
-  if ([frameCountHolder previousTime] == -1) {
-    [frameCountHolder setPreviousTime:frameTimestamp];
-  } else if (frameTimestamp - [frameCountHolder previousTime] >= 0.5) {
-    // TODO: Call SDK to register call
-    // TODO: Check at which frequency we can call the native SDK
-
-    [frameCountHolder setPreviousTime:frameTimestamp];
-    [frameCountHolder setFrameCount:0];
+  if (self->_lastFrameTimestamp != -1) {
+      NSTimeInterval frameDuration = frameTimestamp - self->_lastFrameTimestamp;
+      double currentFPS = 1.0 / frameDuration;
+      // TODO: Call SDK to register call
+      // TODO: Check at which frequency we can call the native SDK
+      NSLog(@"%f", currentFPS);
   }
+  self->_lastFrameTimestamp = frameTimestamp;
 }
 
 + (BOOL)requiresMainQueueSetup {
   return TRUE;
+}
+
+- (void)appWillResignActive {
+    [self stop];
+}
+
+- (void)appDidBecomeActive {
+    [self start];
 }
 
 @end
