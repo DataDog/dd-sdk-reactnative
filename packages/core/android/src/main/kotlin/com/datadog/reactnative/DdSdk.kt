@@ -297,7 +297,8 @@ class DdSdk(
 
     private var frameRateVitalListener: VitalListener = object : VitalListener {
         override fun onVitalUpdate(info: VitalInfo) {
-            Log.d("DD-SDK", info.toString())
+            // TODO: call SDK to report vital update
+            // TODO: check which frequency to make calls to the SDK
         }
     }
 
@@ -310,7 +311,7 @@ class DdSdk(
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
                 // This can happen if the SDK is initialized on a Thread with no looper
-                Log.e("DD-SDK", "Not on a looper thread")
+                // TODO: log here
             }
             frameRateVitalMonitor.register(frameRateVitalListener)
         }
