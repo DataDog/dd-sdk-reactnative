@@ -8,6 +8,7 @@
 
 @interface JsRefreshRate : NSObject<RCTBridgeModule>
 
--(void)startMeasuring;
+-(void)start;
+-(void)stop;
 
 @end

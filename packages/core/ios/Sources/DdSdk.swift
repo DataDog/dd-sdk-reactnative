@@ -56,7 +56,7 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            JsRefreshRate.init().startMeasuring()
+            JsRefreshRate.init().start()
             
             resolve(nil)
         }
