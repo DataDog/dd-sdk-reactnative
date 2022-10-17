@@ -1,3 +1,9 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 package com.datadog.reactnative
 
 import android.util.Log
@@ -6,10 +12,14 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * This files copies internal classes from the dd-android-sdk to be able to use them
+ * in the React Native SDK.
+ */
+
 internal interface VitalObserver {
     fun onNewSample(value: Double)
 }
-
 
 /**
  * Reads the UI framerate based on the [Choreographer.FrameCallback] and notify a [VitalObserver].
@@ -24,7 +34,6 @@ internal class VitalFrameCallback(
     // region Choreographer.FrameCallback
 
     override fun doFrame(frameTimeNanos: Long) {
-        Log.i("DD-SDK", "in doFrame")
         if (lastFrameTimestampNs != 0L) {
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
             if (durationNs > 0.0) {
@@ -39,9 +48,9 @@ internal class VitalFrameCallback(
         @Suppress("UnsafeThirdPartyFunctionCall") // internal safe call
         if (keepRunning()) {
             try {
+                // TODO: Check if we need to run this on the RN thread as well
                 Choreographer.getInstance().postFrameCallback(this)
             } catch (e: IllegalStateException) {
-                Log.e("DD-SDK", "problem in vitalFrame")
             }
         }
     }
@@ -79,8 +88,6 @@ internal data class VitalInfo(
         val EMPTY = VitalInfo(0, Double.MAX_VALUE, -Double.MAX_VALUE, 0.0)
     }
 }
-
-
 
 internal class AggregatingVitalMonitor : VitalMonitor {
 
@@ -153,7 +160,6 @@ internal class AggregatingVitalMonitor : VitalMonitor {
         synchronized(listeners) {
             listeners[listener] = updatedInfo
         }
-        Log.i("DD_FPS", value.toString())
     }
 
     // endregion

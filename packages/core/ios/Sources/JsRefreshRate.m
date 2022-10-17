@@ -1,9 +1,8 @@
-//
-//  JsRefreshRate.m
-//  DatadogSDKReactNative
-//
-//  Created by Louis Zawadzki on 13/10/2022.
-//
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
 
 // This ensures we can use [_bridge dispatchBlock]
 #import <React/RCTBridge+Private.h>
@@ -43,15 +42,6 @@
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
-/**
- Hack (non threadsafe) to populate Flipper plugin with the bridge automatically
- This flipper plugin is also a React Native native module, so that:
- 1. We initialize the plugin for flipper
- 2. RN automatically goes through init (since we have RCT_EXPORT_MODULE)
- 3. RN automatically sets the bridge
-  
- It simplifies installation but we should remove it if it create issues
- */
 static JsRefreshRate *_pluginSingleton = nil;
 
 - (instancetype)init {
@@ -83,7 +73,6 @@ static JsRefreshRate *_pluginSingleton = nil;
   [self onFrameTick:displayLink frameCountHolder:jsFrameCountHolder threadName:@"JS"];
 }
 
-
 - (void)onFrameTick:(CADisplayLink *)displayLink frameCountHolder:(FrameCountHolder*)frameCountHolder threadName:(NSString*)threadName
 {
   NSTimeInterval frameTimestamp = displayLink.timestamp;
@@ -93,14 +82,8 @@ static JsRefreshRate *_pluginSingleton = nil;
   if ([frameCountHolder previousTime] == -1) {
     [frameCountHolder setPreviousTime:frameTimestamp];
   } else if (frameTimestamp - [frameCountHolder previousTime] >= 0.5) {
-
-      // Call SDK to register call
-      
-//    [_connection send:@"addRecord" withParams:@{
-//      @"frameCount" : [NSNumber numberWithLong:[frameCountHolder frameCount]],
-//      @"time": [NSNumber numberWithLong:(frameTimestamp - [frameCountHolder previousTime]) * 1000],
-//      @"thread": threadName
-//    }];
+    // TODO: Call SDK to register call
+    // TODO: Check at which frequency we can call the native SDK
 
     [frameCountHolder setPreviousTime:frameTimestamp];
     [frameCountHolder setFrameCount:0];
