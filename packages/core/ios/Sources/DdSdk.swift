@@ -44,6 +44,7 @@ class RNDdSdk: NSObject {
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
                 Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                JsRefreshRate.init().start()
                 resolve(nil)
                 return
             }

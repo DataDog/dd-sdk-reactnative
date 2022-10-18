@@ -46,7 +46,7 @@ static JsRefreshRate *_pluginSingleton = nil;
 
 - (void)start {
     if (self->_jsDisplayLink != nil) {
-        return;
+        [self->_jsDisplayLink invalidate];
     }
         
     [_bridge dispatchBlock:^{
