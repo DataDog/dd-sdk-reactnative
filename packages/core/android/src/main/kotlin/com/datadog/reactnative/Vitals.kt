@@ -45,10 +45,8 @@ internal class VitalFrameCallback(
         }
         lastFrameTimestampNs = frameTimeNanos
 
-        @Suppress("UnsafeThirdPartyFunctionCall") // internal safe call
         if (keepRunning()) {
             try {
-                // TODO: Check if we need to run this on the RN thread as well
                 Choreographer.getInstance().postFrameCallback(this)
             } catch (e: IllegalStateException) {
             }
@@ -142,13 +140,10 @@ internal class AggregatingVitalMonitor : VitalMonitor {
         val vitalInfo = listeners[listener] ?: VitalInfo.EMPTY
         val newSampleCount = vitalInfo.sampleCount + 1
 
-        // Assuming M(n) is the mean value of the first n samples
-        // M(n) = ∑ sample(n) / n
-        // n⨉M(n) = ∑ sample(n)
-        // M(n+1) = ∑ sample(n+1) / (n+1)
-        //        = [ sample(n+1) + ∑ sample(n) ] / (n+1)
-        //        = (sample(n+1) + n⨉M(n)) / (n+1)
-        val meanValue = (value + (vitalInfo.sampleCount * vitalInfo.meanValue)) / newSampleCount
+        var meanValue = value
+        if (vitalInfo.meanValue != 0.0) {
+            meanValue = 1 / (vitalInfo.sampleCount/(newSampleCount * vitalInfo.meanValue) + (1/(value*newSampleCount)))
+        }
 
         val updatedInfo = VitalInfo(
             newSampleCount,
