@@ -419,7 +419,7 @@ describe('XHRPr', () => {
     });
 
     describe('DdRum.startResource calls', () => {
-        it('adds the span id and trace id as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id, trace id and rule_psr as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -447,6 +447,10 @@ describe('XHRPr', () => {
                 DdRum.startResource.mock.calls[0][3]['_dd.trace_id'];
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
+
+            const rulePsr =
+                DdRum.startResource.mock.calls[0][3]['_dd.rule_psr'];
+            expect(rulePsr).toBe(1);
 
             // Check traceId and spanId are different
             expect(traceId).not.toBe(spanId);
@@ -479,10 +483,12 @@ describe('XHRPr', () => {
                 expect.anything(),
                 expect.objectContaining({
                     '_dd.trace_id': expect.any(String),
-                    '_dd.span_id': expect.any(String)
+                    '_dd.span_id': expect.any(String),
+                    '_dd.rule_psr': expect.any(Number)
                 }),
                 expect.anything()
             );
+            expect(DdRum.startResource.mock.calls[0][3]).toStrictEqual({});
         });
     });
 
