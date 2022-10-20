@@ -104,6 +104,8 @@ package/lib/commonjs/Timer.js
 package/lib/commonjs/Timer.js.map
 package/lib/commonjs/TrackingConsent.js
 package/lib/commonjs/TrackingConsent.js.map
+package/lib/commonjs/errorUtils.js
+package/lib/commonjs/errorUtils.js.map
 package/lib/commonjs/foundation.js
 package/lib/commonjs/foundation.js.map
 package/lib/commonjs/index.js
@@ -124,6 +126,8 @@ package/lib/commonjs/rum/instrumentation/NoOpEventsInterceptor.js
 package/lib/commonjs/rum/instrumentation/NoOpEventsInterceptor.js.map
 package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js.map
+package/lib/commonjs/rum/instrumentation/getJsxRuntime.js
+package/lib/commonjs/rum/instrumentation/getJsxRuntime.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
@@ -186,6 +190,8 @@ package/lib/module/Timer.js
 package/lib/module/Timer.js.map
 package/lib/module/TrackingConsent.js
 package/lib/module/TrackingConsent.js.map
+package/lib/module/errorUtils.js
+package/lib/module/errorUtils.js.map
 package/lib/module/foundation.js
 package/lib/module/foundation.js.map
 package/lib/module/index.js
@@ -206,6 +212,8 @@ package/lib/module/rum/instrumentation/NoOpEventsInterceptor.js
 package/lib/module/rum/instrumentation/NoOpEventsInterceptor.js.map
 package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js.map
+package/lib/module/rum/instrumentation/getJsxRuntime.js
+package/lib/module/rum/instrumentation/getJsxRuntime.js.map
 package/lib/module/rum/instrumentation/resourceTracking
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
@@ -254,6 +262,7 @@ package/lib/typescript/SdkVerbosity.d.ts
 package/lib/typescript/TimeProvider.d.ts
 package/lib/typescript/Timer.d.ts
 package/lib/typescript/TrackingConsent.d.ts
+package/lib/typescript/errorUtils.d.ts
 package/lib/typescript/foundation.d.ts
 package/lib/typescript/index.d.ts
 package/lib/typescript/nativeModulesTypes.d.ts
@@ -265,6 +274,7 @@ package/lib/typescript/rum/instrumentation/DdRumUserInteractionTracking.d.ts
 package/lib/typescript/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/ShallowObjectEqualityChecker.d.ts
+package/lib/typescript/rum/instrumentation/getJsxRuntime.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking
 package/lib/typescript/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain
@@ -325,6 +335,7 @@ package/src/__tests__/rum/instrumentation/DdEventsInterceptor.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
+package/src/errorUtils.ts
 package/src/foundation.tsx
 package/src/index.tsx
 package/src/nativeModulesTypes.ts
@@ -336,6 +347,7 @@ package/src/rum/instrumentation/DdRumUserInteractionTracking.tsx
 package/src/rum/instrumentation/EventsInterceptor.tsx
 package/src/rum/instrumentation/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
+package/src/rum/instrumentation/getJsxRuntime.ts
 package/src/rum/instrumentation/resourceTracking
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__
