@@ -110,6 +110,8 @@ package/lib/commonjs/rum/instrumentation/NoOpEventsInterceptor.js
 package/lib/commonjs/rum/instrumentation/NoOpEventsInterceptor.js.map
 package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/commonjs/rum/instrumentation/ShallowObjectEqualityChecker.js.map
+package/lib/commonjs/rum/instrumentation/getJsxRuntime.js
+package/lib/commonjs/rum/instrumentation/getJsxRuntime.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
@@ -178,6 +180,8 @@ package/lib/module/rum/instrumentation/NoOpEventsInterceptor.js
 package/lib/module/rum/instrumentation/NoOpEventsInterceptor.js.map
 package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js
 package/lib/module/rum/instrumentation/ShallowObjectEqualityChecker.js.map
+package/lib/module/rum/instrumentation/getJsxRuntime.js
+package/lib/module/rum/instrumentation/getJsxRuntime.js.map
 package/lib/module/rum/instrumentation/resourceTracking
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
@@ -229,6 +233,7 @@ package/lib/typescript/rum/instrumentation/DdRumUserInteractionTracking.d.ts
 package/lib/typescript/rum/instrumentation/EventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/NoOpEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/ShallowObjectEqualityChecker.d.ts
+package/lib/typescript/rum/instrumentation/getJsxRuntime.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking
 package/lib/typescript/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain
@@ -283,6 +288,7 @@ package/src/rum/instrumentation/DdRumUserInteractionTracking.tsx
 package/src/rum/instrumentation/EventsInterceptor.tsx
 package/src/rum/instrumentation/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/ShallowObjectEqualityChecker.ts
+package/src/rum/instrumentation/getJsxRuntime.ts
 package/src/rum/instrumentation/resourceTracking
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__
