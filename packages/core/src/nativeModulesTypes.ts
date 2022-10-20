@@ -47,6 +47,20 @@ export type DdNativeSdkType = {
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */
     setTrackingConsent(trackingConsent: string): Promise<void>;
+
+    /**
+     * Sends internal telemetry debug message
+     * @param message debug message
+     */
+    telemetryDebug(message: string): Promise<void>;
+
+    /**
+     * Sends internal telemetry error
+     * @param message error message
+     * @param stack error stack
+     * @param kind error kind
+     */
+    telemetryError(message: string, stack: string, kind: string): Promise<void>;
 };
 
 /**

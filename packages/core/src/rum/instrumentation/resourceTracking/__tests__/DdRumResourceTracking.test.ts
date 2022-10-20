@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { BufferSingleton } from '../../../../DatadogProvider/Buffer/BufferSingleton';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
@@ -17,6 +18,7 @@ const flushPromises = () => new Promise(setImmediate);
 beforeEach(() => {
     DdRum.startResource.mockClear();
     DdRum.stopResource.mockClear();
+    BufferSingleton.onInitialization();
     global.XMLHttpRequest = XMLHttpRequestMock;
 });
 

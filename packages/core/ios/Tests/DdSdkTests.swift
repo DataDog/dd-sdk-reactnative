@@ -358,6 +358,14 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.firstPartyHosts, ["example.com", "datadog.com"])
     }
 
+    func testBuildTelemetrySampleRate() {
+        let configuration: DdSdkConfiguration = .mockAny(telemetrySampleRate: 42.0)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumTelemetrySamplingRate, 42.0)
+    }
+
     func testBuildProxyConfiguration() {
         let configuration: NSMutableDictionary = [
             "_dd.proxy.address": "host",
@@ -437,6 +445,7 @@ extension DdSdkConfiguration {
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
+        telemetrySampleRate: Double = 45.0,
         additionalConfig: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
@@ -447,6 +456,7 @@ extension DdSdkConfiguration {
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
+            telemetrySampleRate: telemetrySampleRate,
             additionalConfig: additionalConfig
         )
     }
@@ -461,6 +471,7 @@ extension NSDictionary {
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
+        telemetrySampleRate: Double = 45.0,
         additionalConfig: NSDictionary? = nil
     ) -> NSDictionary {
         NSDictionary(
@@ -472,6 +483,7 @@ extension NSDictionary {
                 "sampleRate": sampleRate,
                 "site": site,
                 "trackingConsent": trackingConsent,
+                "telemetrySampleRate": telemetrySampleRate,
                 "additionalConfig": additionalConfig
             ]
         )

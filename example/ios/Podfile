@@ -18,22 +18,7 @@ target 'DdSdkReactNativeExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # uncomment this line to use the local version of the iOS DatadogSDK
-  # pod 'DatadogSDKBridge', :path => '../../../dd-bridge-ios/DatadogSDKBridge.podspec'
-
-  # Make all the other frameworks into static frameworks by overriding the static_framework? function to return true
-  pre_install do |installer|
-    installer.pod_targets.each do |pod|
-      if pod.name == "DatadogSDKReactNative"
-        def pod.path
-          '../../packages/core/DatadogSDKReactNative.podspec'
-        end 
-        def pod.testspecs
-          ['Tests']
-        end
-      end
-    end
-  end
+  # pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
   post_install do |installer|
     react_native_post_install(installer)

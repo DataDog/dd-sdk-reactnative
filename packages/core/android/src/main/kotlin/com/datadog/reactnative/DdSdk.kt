@@ -95,6 +95,28 @@ class DdSdk(
         promise.resolve(null)
     }
 
+    /**
+     * Sends a telemetry debug event.
+     * @param message Debug message.
+     */
+    @ReactMethod
+    fun telemetryDebug(message: String, promise: Promise) {
+        datadog.telemetryDebug(message)
+        promise.resolve(null)
+    }
+
+    /**
+     * Sends a telemetry error event.
+     * @param message Error message.
+     * @param stack Error stack.
+     * @param kind Error kind.
+     */
+    @ReactMethod
+    fun telemetryError(message: String, stack: String, kind: String, promise: Promise) {
+        datadog.telemetryError(message, stack, kind)
+        promise.resolve(null)
+    }
+
     // endregion
 
     // region Internal
@@ -155,6 +177,9 @@ class DdSdk(
         }
 
         configBuilder.useSite(buildSite(configuration.site))
+
+        val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
+        telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
 
         val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
         if (viewTracking == true) {

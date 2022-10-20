@@ -6,6 +6,7 @@
 
 import { Platform, NativeModules } from 'react-native';
 
+import { BufferSingleton } from '../../../../../DatadogProvider/Buffer/BufferSingleton';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
@@ -43,6 +44,8 @@ let xhrProxy;
 beforeEach(() => {
     DdRum.startResource.mockClear();
     DdRum.stopResource.mockClear();
+    BufferSingleton.onInitialization();
+
     xhrProxy = new XHRProxy({
         xhrType: XMLHttpRequestMock,
         resourceReporter: new ResourceReporter([])

@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import React from 'react';
 
+import { DdSdk } from '../../../foundation';
 import { DdEventsInterceptor } from '../../../rum/instrumentation/DdEventsInterceptor';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/DdRumUserInteractionTracking';
 
@@ -39,6 +40,7 @@ let originalMethod: typeof React.createElement;
 beforeEach(() => {
     originalMethod = React.createElement;
     jest.setTimeout(20000);
+    jest.clearAllMocks();
 });
 
 afterEach(() => {
@@ -342,16 +344,28 @@ it('M keep memoization working for elements W an onPress prop is passed and cust
 });
 
 describe('startTracking', () => {
-    it('does not crash if jsx-runtime is not exported from react', () => {
-        expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
-        jest.setMock('react/jsx-runtime', null);
-        DdRumUserInteractionTracking.startTracking();
-        expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
-    });
+    /**
+     * WARNING: Because of caching in the require, the following 2 tests need
+     * to be run in this order
+     */
     it('does not crash if jsx-runtime does not contain jsx', () => {
         expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
         jest.setMock('react/jsx-runtime', {});
+
         DdRumUserInteractionTracking.startTracking();
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+        expect(DdSdk.telemetryDebug).toBeCalledWith(
+            'React jsx runtime does not export new jsx transform'
+        );
+    });
+    it('does not crash if jsx-runtime is not exported from react', () => {
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
+        jest.setMock('react/package.json', { version: '16.13.0' });
+
+        DdRumUserInteractionTracking.startTracking();
+        expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
+        expect(DdSdk.telemetryDebug).toBeCalledWith(
+            'React version does not support new jsx transform'
+        );
     });
 });

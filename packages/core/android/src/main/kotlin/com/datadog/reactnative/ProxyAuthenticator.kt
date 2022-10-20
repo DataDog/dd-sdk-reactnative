@@ -17,6 +17,8 @@ internal class ProxyAuthenticator(
     internal val username: String,
     internal val password: String
 ) : Authenticator {
+    // TODO: Remove the deprecation notice once okhttp5 is released and used in React Native
+    @Suppress("DEPRECATION_ERROR")
     override fun authenticate(route: Route?, response: Response): Request? {
         val proxyAuthorization = response.code() == PROXY_AUTHORIZATION_REQUIRED_STATUS_CODE
 

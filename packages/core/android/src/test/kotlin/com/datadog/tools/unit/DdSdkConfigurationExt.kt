@@ -26,6 +26,13 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         // ReadableMap#getDouble which doesn't allow having null value
         map["sampleRate"] = 100f
     }
+    if (telemetrySampleRate != null) {
+        map["telemetrySampleRate"] = telemetrySampleRate
+    } else {
+        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
+        // ReadableMap#getDouble which doesn't allow having null value
+        map["telemetrySampleRate"] = 20f
+    }
     site?.let { map.put("site", it) }
     trackingConsent?.let { map.put("trackingConsent", it) }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }

@@ -12,7 +12,18 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		401458C2FDEF4B3C1E62D188 /* libPods-DdSdkReactNativeExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE5FEB557ED245F6694FB19 /* libPods-DdSdkReactNativeExample.a */; };
+		E179FB5728F834D500CC2698 /* DdSdkReactNativeExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E179FB5628F834D500CC2698 /* DdSdkReactNativeExampleTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E179FB5828F834D500CC2698 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
+			remoteInfo = DdSdkReactNativeExample;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		B37F2B882551462D00FDB0E3 /* Embed Frameworks */ = {
@@ -40,6 +51,8 @@
 		4D7192F03A36A017E887435B /* Pods-DdSdkReactNativeExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DdSdkReactNativeExample.release.xcconfig"; path = "Target Support Files/Pods-DdSdkReactNativeExample/Pods-DdSdkReactNativeExample.release.xcconfig"; sourceTree = "<group>"; };
 		5CE5FEB557ED245F6694FB19 /* libPods-DdSdkReactNativeExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DdSdkReactNativeExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		871719007ECC5EAD276C345C /* Pods-DdSdkReactNativeExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DdSdkReactNativeExample.debug.xcconfig"; path = "Target Support Files/Pods-DdSdkReactNativeExample/Pods-DdSdkReactNativeExample.debug.xcconfig"; sourceTree = "<group>"; };
+		E179FB5428F834D500CC2698 /* DdSdkReactNativeExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DdSdkReactNativeExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E179FB5628F834D500CC2698 /* DdSdkReactNativeExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DdSdkReactNativeExampleTests.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -49,6 +62,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				401458C2FDEF4B3C1E62D188 /* libPods-DdSdkReactNativeExample.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E179FB5128F834D500CC2698 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +120,7 @@
 				20F357AE24636CDF00C146DC /* DdSdkReactNativeExample-Bridging-Header.h */,
 				13B07FAE1A68108700A75B9A /* DdSdkReactNativeExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				E179FB5528F834D500CC2698 /* DdSdkReactNativeExampleTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				1CFFDEF7170271C97B8B7E5A /* Pods */,
@@ -113,8 +134,17 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* DdSdkReactNativeExample.app */,
+				E179FB5428F834D500CC2698 /* DdSdkReactNativeExampleTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E179FB5528F834D500CC2698 /* DdSdkReactNativeExampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				E179FB5628F834D500CC2698 /* DdSdkReactNativeExampleTests.swift */,
+			);
+			path = DdSdkReactNativeExampleTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,17 +172,41 @@
 			productReference = 13B07F961A680F5B00A75B9A /* DdSdkReactNativeExample.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E179FB5328F834D500CC2698 /* DdSdkReactNativeExampleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E179FB5C28F834D500CC2698 /* Build configuration list for PBXNativeTarget "DdSdkReactNativeExampleTests" */;
+			buildPhases = (
+				E179FB5028F834D500CC2698 /* Sources */,
+				E179FB5128F834D500CC2698 /* Frameworks */,
+				E179FB5228F834D500CC2698 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E179FB5928F834D500CC2698 /* PBXTargetDependency */,
+			);
+			name = DdSdkReactNativeExampleTests;
+			productName = DdSdkReactNativeExampleTests;
+			productReference = E179FB5428F834D500CC2698 /* DdSdkReactNativeExampleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1400;
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = Facebook;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1110;
+					};
+					E179FB5328F834D500CC2698 = {
+						CreatedOnToolsVersion = 14.0.1;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 				};
 			};
@@ -171,6 +225,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* DdSdkReactNativeExample */,
+				E179FB5328F834D500CC2698 /* DdSdkReactNativeExampleTests */,
 			);
 		};
 /* End PBXProject section */
@@ -182,6 +237,13 @@
 			files = (
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E179FB5228F834D500CC2698 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,7 +335,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E179FB5028F834D500CC2698 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E179FB5728F834D500CC2698 /* DdSdkReactNativeExampleTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E179FB5928F834D500CC2698 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 13B07F861A680F5B00A75B9A /* DdSdkReactNativeExample */;
+			targetProxy = E179FB5828F834D500CC2698 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		13B07FB11A68108700A75B9A /* LaunchScreen.xib */ = {
@@ -457,6 +535,67 @@
 			};
 			name = Release;
 		};
+		E179FB5A28F834D500CC2698 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadog.DdSdkReactNativeExampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DdSdkReactNativeExample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DdSdkReactNativeExample";
+			};
+			name = Debug;
+		};
+		E179FB5B28F834D500CC2698 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadog.DdSdkReactNativeExampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DdSdkReactNativeExample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DdSdkReactNativeExample";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -474,6 +613,15 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E179FB5C28F834D500CC2698 /* Build configuration list for PBXNativeTarget "DdSdkReactNativeExampleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E179FB5A28F834D500CC2698 /* Debug */,
+				E179FB5B28F834D500CC2698 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
