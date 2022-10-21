@@ -152,7 +152,7 @@ exceptions:
     active: true
     ignoreLabeled: true
   SwallowedException:
-    active: true
+    active: false
     ignoredExceptionTypes: 'InterruptedException,NumberFormatException,ParseException,MalformedURLException'
     allowedExceptionNameRegex: "^(_|(ignore|expected).*)"
   ThrowingExceptionFromFinally:
