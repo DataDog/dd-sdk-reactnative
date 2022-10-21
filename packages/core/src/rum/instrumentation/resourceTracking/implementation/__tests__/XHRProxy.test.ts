@@ -419,7 +419,7 @@ describe('XHRPr', () => {
     });
 
     describe('DdRum.startResource calls', () => {
-        it('adds the span id as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id, trace id and rule_psr as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -442,58 +442,18 @@ describe('XHRPr', () => {
             const spanId = DdRum.startResource.mock.calls[0][3]['_dd.span_id'];
             expect(spanId).toBeDefined();
             expect(spanId).toMatch(/[1-9].+/);
-        });
 
-        it('adds the trace id as resource attributes when startTracking() + XHR.open() + XHR.send()', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
-                ])
-            });
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
             const traceId =
                 DdRum.startResource.mock.calls[0][3]['_dd.trace_id'];
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
-        });
 
-        it('generates different ids for spanId and traceId for resource attributes', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
-                ])
-            });
+            const rulePsr =
+                DdRum.startResource.mock.calls[0][3]['_dd.rule_psr'];
+            expect(rulePsr).toBe(1);
 
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
-            const traceId =
-                DdRum.startResource.mock.calls[0][3]['_dd.trace_id'];
-            const spanId = DdRum.startResource.mock.calls[0][3]['_dd.span_id'];
-            expect(traceId !== spanId).toBeTruthy();
+            // Check traceId and spanId are different
+            expect(traceId).not.toBe(spanId);
         });
 
         it('does not generate spanId and traceId when tracing is disabled', async () => {
@@ -523,10 +483,12 @@ describe('XHRPr', () => {
                 expect.anything(),
                 expect.objectContaining({
                     '_dd.trace_id': expect.any(String),
-                    '_dd.span_id': expect.any(String)
+                    '_dd.span_id': expect.any(String),
+                    '_dd.rule_psr': expect.any(Number)
                 }),
                 expect.anything()
             );
+            expect(DdRum.startResource.mock.calls[0][3]).toStrictEqual({});
         });
     });
 

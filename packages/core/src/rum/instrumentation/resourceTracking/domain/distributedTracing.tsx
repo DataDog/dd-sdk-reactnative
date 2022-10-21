@@ -13,6 +13,7 @@ export type DdRumResourceTracingAttributes =
           traceId: string;
           spanId: string;
           samplingPriorityHeader: '1';
+          rulePsr: number;
       }
     | {
           tracingStrategy: 'DISCARD';
@@ -52,7 +53,8 @@ const generateTracingAttributesWithSampling = (
             traceId: generateTraceId(),
             spanId: generateTraceId(),
             samplingPriorityHeader: '1',
-            tracingStrategy: 'KEEP'
+            tracingStrategy: 'KEEP',
+            rulePsr: tracingSamplingRate / 100
         };
     }
     return DISCARDED_TRACE_ATTRIBUTES;
