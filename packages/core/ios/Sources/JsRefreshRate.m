@@ -8,6 +8,8 @@
 #import <React/RCTBridge+Private.h>
 #import "JsRefreshRate.h"
 
+NSTimeInterval jsLongTaskThresholdInSeconds = 0.1;
+
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
@@ -73,6 +75,10 @@ static JsRefreshRate *_pluginSingleton = nil;
   NSTimeInterval frameTimestamp = displayLink.timestamp;
   if (self->_lastFrameTimestamp != -1) {
       NSTimeInterval frameDuration = frameTimestamp - self->_lastFrameTimestamp;
+      if (frameDuration > jsLongTaskThresholdInSeconds) {
+          // TODO: Report js long task
+          NSLog(@"js long tasks");
+      }
       // TODO: Call SDK to register call
       NSLog(@"%f", frameDuration);
   }
