@@ -8,16 +8,6 @@
 #import <React/RCTBridge+Private.h>
 #import "JsRefreshRate.h"
 
-@interface FrameCountHolder : NSObject
-
-// See https://github.com/facebook/react-native/blob/1465c8f3874cdee8c325ab4a4916fda0b3e43bdb/React/CoreModules/RCTFPSGraph.m#L29
-@property (nonatomic, assign) NSUInteger frameCount;
-@property (nonatomic, assign) NSTimeInterval previousTime;
-
-- (void)incrementFrameCount;
-
-@end
-
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
