@@ -45,6 +45,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackResources": false,
                   "trackingConsent": "granted",
                   "verbosity": undefined,
+                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
@@ -112,6 +113,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "verbosity": "debug",
                   "version": "1.4.5",
                   "versionSuffix": "codepush-3",
+                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
@@ -161,6 +163,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "verbosity": undefined,
                   "version": "",
                   "versionSuffix": "",
+                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });

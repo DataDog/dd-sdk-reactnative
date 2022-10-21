@@ -13,6 +13,7 @@ import android.view.Choreographer
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
@@ -187,6 +188,7 @@ class DdSdk(
         }
 
         configBuilder.useSite(buildSite(configuration.site))
+        configBuilder.setVitalsUpdateFrequency(buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency))
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
@@ -292,6 +294,17 @@ class DdSdk(
             "us5" -> DatadogSite.US5
             "us1_fed", "gov" -> DatadogSite.US1_FED
             else -> DatadogSite.US1
+        }
+    }
+
+    private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
+        val vitalUpdateFrequencyLower = vitalsUpdateFrequency?.lowercase(Locale.US)
+        return when (vitalUpdateFrequencyLower) {
+            "never" -> VitalsUpdateFrequency.NEVER
+            "rare" -> VitalsUpdateFrequency.RARE
+            "average" -> VitalsUpdateFrequency.AVERAGE
+            "frequent" -> VitalsUpdateFrequency.FREQUENT
+            else -> VitalsUpdateFrequency.AVERAGE
         }
     }
 
