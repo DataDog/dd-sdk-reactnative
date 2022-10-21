@@ -134,6 +134,8 @@ class RNDdSdk: NSObject {
         default:
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
+        
+        _ = ddConfigBuilder.set(mobileVitalsFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency))
 
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
@@ -231,6 +233,23 @@ class RNDdSdk: NSObject {
             trackingConsent = .pending
         }
         return trackingConsent
+    }
+
+    func buildVitalsUpdateFrequency(frequency: NSString?) -> Datadog.Configuration.VitalsFrequency {
+        let vitalsFrequency: Datadog.Configuration.VitalsFrequency
+        switch frequency?.lowercased {
+        case "never":
+            vitalsFrequency = .never
+        case "rare":
+            vitalsFrequency = .rare
+        case "average":
+            vitalsFrequency = .average
+        case "frequent":
+            vitalsFrequency = .frequent
+        default:
+            vitalsFrequency = .average
+        }
+        return vitalsFrequency
     }
 
     func setVerbosityLevel(additionalConfig: NSDictionary?) {

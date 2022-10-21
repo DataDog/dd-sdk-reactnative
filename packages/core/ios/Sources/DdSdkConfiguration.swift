@@ -29,6 +29,7 @@ public class DdSdkConfiguration: NSObject {
     public var site: NSString? = nil
     public var trackingConsent: NSString? = nil
     public var telemetrySampleRate: Double? = nil
+    public var vitalsUpdateFrequency: NSString? = nil
     public var additionalConfig: NSDictionary? = nil
 
     public init(
@@ -40,6 +41,7 @@ public class DdSdkConfiguration: NSObject {
         site: NSString?,
         trackingConsent: NSString?,
         telemetrySampleRate: Double?,
+        vitalsUpdateFrequency: NSString?,
         additionalConfig: NSDictionary?
     ) {
         self.clientToken = clientToken
@@ -50,6 +52,7 @@ public class DdSdkConfiguration: NSObject {
         self.site = site
         self.trackingConsent = trackingConsent
         self.telemetrySampleRate = telemetrySampleRate
+        self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.additionalConfig = additionalConfig
     }
 }

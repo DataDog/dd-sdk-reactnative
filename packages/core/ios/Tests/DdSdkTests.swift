@@ -426,6 +426,22 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.proxyConfiguration?[kCFProxyUsernameKey] as? String, "username")
         XCTAssertEqual(ddConfig.proxyConfiguration?[kCFProxyPasswordKey] as? String, "pwd")
     }
+
+    func testBuildConfigurationAverageVitalsUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "average")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.mobileVitalsFrequency, .average)
+    }
+
+    func testBuildConfigurationNeverVitalsUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "never")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.mobileVitalsFrequency, .never)
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor {
@@ -446,6 +462,7 @@ extension DdSdkConfiguration {
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
+        vitalsUpdateFrequency: NSString = "average",
         additionalConfig: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
@@ -457,6 +474,7 @@ extension DdSdkConfiguration {
             site: site,
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
+            vitalsUpdateFrequency: vitalsUpdateFrequency,
             additionalConfig: additionalConfig
         )
     }
@@ -472,6 +490,7 @@ extension NSDictionary {
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
+        vitalsUpdateFrequency: NSString = "average",
         additionalConfig: NSDictionary? = nil
     ) -> NSDictionary {
         NSDictionary(
@@ -484,6 +503,7 @@ extension NSDictionary {
                 "site": site,
                 "trackingConsent": trackingConsent,
                 "telemetrySampleRate": telemetrySampleRate,
+                "vitalsUpdateFrequency": vitalsUpdateFrequency,
                 "additionalConfig": additionalConfig
             ]
         )
