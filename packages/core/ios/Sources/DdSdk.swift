@@ -57,7 +57,9 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            JsRefreshRate.init().start()
+            if (self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != .never) {
+                JsRefreshRate.init().start()
+            }
             
             resolve(nil)
         }

@@ -10,5 +10,6 @@
 
 -(void)start;
 -(void)stop;
+-(BOOL)isStarted;
 
 @end
