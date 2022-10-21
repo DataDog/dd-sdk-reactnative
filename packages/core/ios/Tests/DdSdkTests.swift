@@ -442,6 +442,18 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.mobileVitalsFrequency, .never)
     }
+    
+    func testJsRefreshRateInitialization() {
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertEqual(JsRefreshRate.init().isStarted(), true)
+    }
+    
+    func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertEqual(JsRefreshRate.init().isStarted(), false)
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor {

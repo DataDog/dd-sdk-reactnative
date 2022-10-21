@@ -21,6 +21,7 @@
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
+  BOOL _isStarted;
 }
 
 @synthesize bridge = _bridge;
@@ -28,6 +29,8 @@ RCT_EXPORT_MODULE()
 
 static JsRefreshRate *_pluginSingleton = nil;
 - (instancetype)init {
+  self->_isStarted = false;
+
   if (!_pluginSingleton) {
     self = [self initSingleton];
     _pluginSingleton = self;
@@ -54,6 +57,8 @@ static JsRefreshRate *_pluginSingleton = nil;
       [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
     queue:RCTJSThread];
+    
+    self->_isStarted = true;
 }
 
 - (void)stop {
@@ -61,6 +66,11 @@ static JsRefreshRate *_pluginSingleton = nil;
         [self->_jsDisplayLink invalidate];
         self->_jsDisplayLink = nil;
     }
+    self->_isStarted = false;
+}
+
+- (BOOL)isStarted {
+    return self->_isStarted;
 }
 
 - (void)onJSFrame:(CADisplayLink *)displayLink
