@@ -6,6 +6,8 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
+
 /**
  * A configuration object to initialize Datadog's features.
  * @param clientToken A valid Datadog client token.
@@ -27,5 +29,6 @@ data class DdSdkConfiguration(
     val site: String? = null,
     val trackingConsent: String? = null,
     val telemetrySampleRate: Double? = null,
+    val vitalsUpdateFrequency: String? = null,
     val additionalConfig: Map<String, Any?>? = null
 )

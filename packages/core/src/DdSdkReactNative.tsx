@@ -103,7 +103,8 @@ export class DdSdkReactNative {
                 configuration.site,
                 configuration.trackingConsent,
                 configuration.additionalConfig,
-                configuration.telemetrySampleRate
+                configuration.telemetrySampleRate,
+                configuration.vitalsUpdateFrequency
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);

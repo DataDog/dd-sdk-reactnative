@@ -6,6 +6,7 @@
  
 package com.datadog.tools.unit
 
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.DdSdkConfiguration
 import com.facebook.react.bridge.ReadableMap
 
@@ -35,6 +36,13 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     }
     site?.let { map.put("site", it) }
     trackingConsent?.let { map.put("trackingConsent", it) }
+    if (vitalsUpdateFrequency != null) {
+        map["vitalsUpdateFrequency"] = vitalsUpdateFrequency
+    } else {
+        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
+        // ReadableMap#getString which doesn't allow having null value
+        map["vitalsUpdateFrequency"] = VitalsUpdateFrequency.AVERAGE.toString()
+    }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     return map.toReadableMap()
 }

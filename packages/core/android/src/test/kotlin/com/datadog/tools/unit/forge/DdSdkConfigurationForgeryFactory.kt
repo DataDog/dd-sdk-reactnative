@@ -6,6 +6,7 @@
  
 package com.datadog.tools.unit.forge
 
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.DdSdkConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -20,6 +21,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             nativeCrashReportEnabled = forge.aNullable { aBool() },
             sampleRate = forge.aNullable { aDouble(0.0, 100.0) },
             telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+            vitalsUpdateFrequency = forge.aNullable { anElementFrom("RARE", "NEVER", "FREQUENT", "AVERAGE") },
             site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
             additionalConfig = forge.aMap {
                 forge.anAsciiString() to forge.anElementFrom(
