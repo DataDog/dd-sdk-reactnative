@@ -65,6 +65,9 @@ class DdSdk(
         promise.resolve(null)
     }
 
+    /**
+     * Stops JS FPS measurement when false.
+     */
     fun isInitialized(): Boolean {
         return initialized.get()
     }

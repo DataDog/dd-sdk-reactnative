@@ -49,6 +49,7 @@ internal class VitalFrameCallback(
             try {
                 Choreographer.getInstance().postFrameCallback(this)
             } catch (e: IllegalStateException) {
+                // TODO: log error here
             }
         }
     }

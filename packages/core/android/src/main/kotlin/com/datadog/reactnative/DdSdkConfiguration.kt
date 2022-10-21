@@ -18,6 +18,7 @@ import com.datadog.android.core.configuration.VitalsUpdateFrequency
  * @param site The Datadog site of your organization (can be 'US', 'EU' or 'GOV', default is 'US').
  * @param trackingConsent Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
+ * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
  * @param additionalConfig Additional configuration parameters.
  */
 data class DdSdkConfiguration(
