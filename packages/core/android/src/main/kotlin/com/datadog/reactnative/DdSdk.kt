@@ -60,7 +60,9 @@ class DdSdk(
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
         initialized.set(true)
-        measureJSFPS()
+        if (buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER) {
+            measureJSFPS()
+        }
 
         promise.resolve(null)
     }
