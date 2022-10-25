@@ -13,6 +13,7 @@ NSTimeInterval jsLongTaskThresholdInSeconds = 0.1;
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
+  BOOL _monitorJsRefreshRate;
   BOOL _isStarted;
 }
 
@@ -39,10 +40,11 @@ static JsRefreshRate *_pluginSingleton = nil;
   return self;
 }
 
-- (void)start {
+- (void)start:(BOOL)monitorJsRefreshRate {
     if (self->_jsDisplayLink != nil) {
         [self->_jsDisplayLink invalidate];
     }
+    self->_monitorJsRefreshRate = monitorJsRefreshRate;
         
     [_bridge dispatchBlock:^{
       self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
@@ -79,8 +81,10 @@ static JsRefreshRate *_pluginSingleton = nil;
           // TODO: Report js long task
           NSLog(@"js long tasks");
       }
-      // TODO: Call SDK to register call
-      NSLog(@"%f", frameDuration);
+      if (self->_monitorJsRefreshRate) {
+          // TODO: Call SDK to register call
+          NSLog(@"%f", frameDuration);
+      }
   }
   self->_lastFrameTimestamp = frameTimestamp;
 }
@@ -94,7 +98,7 @@ static JsRefreshRate *_pluginSingleton = nil;
 }
 
 - (void)appDidBecomeActive {
-    [self start];
+    [self start:self->_monitorJsRefreshRate];
 }
 
 @end
