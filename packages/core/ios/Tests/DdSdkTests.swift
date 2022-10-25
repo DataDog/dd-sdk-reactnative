@@ -452,7 +452,7 @@ internal class DdSdkTests: XCTestCase {
     func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
         RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(JsRefreshRate.init().isStarted(), false)
+        XCTAssertEqual(JsRefreshRate.init().isStarted(), true)
     }
 }
 

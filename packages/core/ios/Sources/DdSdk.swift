@@ -39,16 +39,18 @@ class RNDdSdk: NSObject {
     func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
+            let sdkConfiguration = configuration.asDdSdkConfiguration()
+            let vitalsUpdateFrequency = self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency)
+            
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
                 Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
-                JsRefreshRate.init().start()
+                JsRefreshRate.init().start(vitalsUpdateFrequency != .never)
                 resolve(nil)
                 return
             }
-            let sdkConfiguration = configuration.asDdSdkConfiguration()
             self.setVerbosityLevel(additionalConfig: sdkConfiguration.additionalConfig)
 
             let ddConfig = self.buildConfiguration(configuration: sdkConfiguration)
@@ -57,9 +59,7 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            if (self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != .never) {
-                JsRefreshRate.init().start()
-            }
+            JsRefreshRate.init().start(vitalsUpdateFrequency != .never)
             
             resolve(nil)
         }

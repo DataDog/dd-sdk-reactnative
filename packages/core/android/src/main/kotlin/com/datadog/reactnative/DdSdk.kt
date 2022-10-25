@@ -59,10 +59,8 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
+        monitorJsRefreshRate(buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency))
         initialized.set(true)
-        if (buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER) {
-            measureJSFPS()
-        }
 
         promise.resolve(null)
     }
@@ -313,10 +311,10 @@ class DdSdk(
         }
     }
 
-    private fun measureJSFPS() {
+    private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
         reactContext.runOnJSQueueThread {
             val vitalFrameCallback =
-                VitalFrameCallback { isInitialized() }
+                VitalFrameCallback(vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER) { isInitialized() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {

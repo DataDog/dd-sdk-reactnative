@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
  * Reads the javascript framerate based on the [Choreographer.FrameCallback].
  */
 internal class VitalFrameCallback(
+    private val monitorJsRefreshRate: Boolean,
     private val keepRunning: () -> Boolean
 ) : Choreographer.FrameCallback {
 
@@ -24,7 +25,7 @@ internal class VitalFrameCallback(
     override fun doFrame(frameTimeNanos: Long) {
         if (lastFrameTimestampNs != 0L) {
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
-            if (durationNs > 0.0) {
+            if (monitorJsRefreshRate && durationNs > 0.0) {
                 // TODO: call native SDK to report frame time
             }
             if (durationNs > longTaskThresholdNS) {
