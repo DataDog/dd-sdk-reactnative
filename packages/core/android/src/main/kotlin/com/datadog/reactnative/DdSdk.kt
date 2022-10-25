@@ -313,25 +313,16 @@ class DdSdk(
         }
     }
 
-    private var frameRateVitalListener: VitalListener = object : VitalListener {
-        override fun onVitalUpdate(info: VitalInfo) {
-            // TODO: call SDK to report vital update
-            // TODO: check which frequency to make calls to the SDK
-        }
-    }
-
     private fun measureJSFPS() {
         reactContext.runOnJSQueueThread {
-            val frameRateVitalMonitor = AggregatingVitalMonitor()
             val vitalFrameCallback =
-                VitalFrameCallback(frameRateVitalMonitor) { isInitialized() }
+                VitalFrameCallback { isInitialized() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
                 // This can happen if the SDK is initialized on a Thread with no looper
                 // TODO: log here
             }
-            frameRateVitalMonitor.register(frameRateVitalListener)
         }
     }
 

@@ -6,26 +6,12 @@
 
 package com.datadog.reactnative
 
-import android.util.Log
 import android.view.Choreographer
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
-import kotlin.math.min
 
 /**
- * This files copies internal classes from the dd-android-sdk to be able to use them
- * in the React Native SDK.
- */
-
-internal interface VitalObserver {
-    fun onNewSample(value: Double)
-}
-
-/**
- * Reads the UI framerate based on the [Choreographer.FrameCallback] and notify a [VitalObserver].
+ * Reads the javascript framerate based on the [Choreographer.FrameCallback].
  */
 internal class VitalFrameCallback(
-    private val observer: VitalObserver,
     private val keepRunning: () -> Boolean
 ) : Choreographer.FrameCallback {
 
@@ -37,10 +23,7 @@ internal class VitalFrameCallback(
         if (lastFrameTimestampNs != 0L) {
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
             if (durationNs > 0.0) {
-                val frameRate = ONE_SECOND_NS / durationNs
-                if (frameRate in VALID_FPS_RANGE) {
-                    observer.onNewSample(frameRate)
-                }
+                // TODO: call native SDK to report frame time
             }
         }
         lastFrameTimestampNs = frameTimeNanos
@@ -51,110 +34,6 @@ internal class VitalFrameCallback(
             } catch (e: IllegalStateException) {
                 // TODO: log error here
             }
-        }
-    }
-
-    // endregion
-
-    companion object {
-        val ONE_SECOND_NS: Double = TimeUnit.SECONDS.toNanos(1).toDouble()
-
-        private const val MIN_FPS: Double = 1.0
-        private const val MAX_FPS: Double = 240.0
-        val VALID_FPS_RANGE = MIN_FPS.rangeTo(MAX_FPS)
-    }
-}
-
-internal interface VitalListener {
-    fun onVitalUpdate(info: VitalInfo)
-}
-
-internal interface VitalMonitor : VitalObserver {
-    fun getLastSample(): Double
-
-    fun register(listener: VitalListener)
-
-    fun unregister(listener: VitalListener)
-}
-
-internal data class VitalInfo(
-    val sampleCount: Int,
-    val minValue: Double,
-    val maxValue: Double,
-    val meanValue: Double
-) {
-    companion object {
-        val EMPTY = VitalInfo(0, Double.MAX_VALUE, -Double.MAX_VALUE, 0.0)
-    }
-}
-
-internal class AggregatingVitalMonitor : VitalMonitor {
-
-    private var lastKnownSample: Double = Double.NaN
-
-    private val listeners: MutableMap<VitalListener, VitalInfo> = mutableMapOf()
-
-    // region VitalObserver
-
-    override fun onNewSample(value: Double) {
-        lastKnownSample = value
-        notifyListeners(value)
-    }
-
-    // endregion
-
-    // region VitalMonitor
-
-    override fun getLastSample(): Double {
-        return lastKnownSample
-    }
-
-    override fun register(listener: VitalListener) {
-        val value = lastKnownSample
-        synchronized(listeners) {
-            listeners[listener] = VitalInfo.EMPTY
-        }
-        if (!value.isNaN()) {
-            notifyListener(listener, value)
-        }
-    }
-
-    override fun unregister(listener: VitalListener) {
-        synchronized(listeners) {
-            listeners.remove(listener)
-        }
-    }
-
-    // endregion
-
-    // region Internal
-
-    private fun notifyListeners(value: Double) {
-        synchronized(listeners) {
-            for (listener in listeners.keys) {
-                notifyListener(listener, value)
-            }
-        }
-    }
-
-    private fun notifyListener(listener: VitalListener, value: Double) {
-        val vitalInfo = listeners[listener] ?: VitalInfo.EMPTY
-        val newSampleCount = vitalInfo.sampleCount + 1
-
-        var meanValue = value
-        if (vitalInfo.meanValue != 0.0) {
-            meanValue = 1 / (vitalInfo.sampleCount/(newSampleCount * vitalInfo.meanValue) + (1/(value*newSampleCount)))
-        }
-
-        val updatedInfo = VitalInfo(
-            newSampleCount,
-            min(value, vitalInfo.minValue),
-            max(value, vitalInfo.maxValue),
-            meanValue
-        )
-        listener.onVitalUpdate(updatedInfo)
-        synchronized(listeners) {
-            listeners[listener] = updatedInfo
         }
     }
 
