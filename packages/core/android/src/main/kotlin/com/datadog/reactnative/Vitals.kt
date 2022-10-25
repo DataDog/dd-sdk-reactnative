@@ -7,6 +7,7 @@
 package com.datadog.reactnative
 
 import android.view.Choreographer
+import java.util.concurrent.TimeUnit
 
 /**
  * Reads the javascript framerate based on the [Choreographer.FrameCallback].
@@ -16,6 +17,7 @@ internal class VitalFrameCallback(
 ) : Choreographer.FrameCallback {
 
     internal var lastFrameTimestampNs: Long = 0L
+    internal val longTaskThresholdNS = TimeUnit.MILLISECONDS.toNanos(100L)
 
     // region Choreographer.FrameCallback
 
@@ -24,6 +26,9 @@ internal class VitalFrameCallback(
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
             if (durationNs > 0.0) {
                 // TODO: call native SDK to report frame time
+            }
+            if (durationNs > longTaskThresholdNS) {
+                // TODO: report long task
             }
         }
         lastFrameTimestampNs = frameTimeNanos
