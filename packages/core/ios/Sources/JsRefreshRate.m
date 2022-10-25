@@ -73,10 +73,8 @@ static JsRefreshRate *_pluginSingleton = nil;
   NSTimeInterval frameTimestamp = displayLink.timestamp;
   if (self->_lastFrameTimestamp != -1) {
       NSTimeInterval frameDuration = frameTimestamp - self->_lastFrameTimestamp;
-      double currentFPS = 1.0 / frameDuration;
       // TODO: Call SDK to register call
-      // TODO: Check at which frequency we can call the native SDK
-      NSLog(@"%f", currentFPS);
+      NSLog(@"%f", frameDuration);
   }
   self->_lastFrameTimestamp = frameTimestamp;
 }
