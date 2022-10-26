@@ -47,7 +47,7 @@ class RNDdSdk: NSObject {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
-                Datadog._internal._telemtry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
                 JsRefreshRate.init().start(frameTimeCallback)
                 resolve(nil)
                 return
@@ -97,13 +97,13 @@ class RNDdSdk: NSObject {
     
     @objc(telemetryDebug:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemtry.debug(id: "datadog_react_native:\(message)", message: message as String)
+        Datadog._internal._telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc(telemetryError:withStack:withKind:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemtry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        Datadog._internal._telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }
 
