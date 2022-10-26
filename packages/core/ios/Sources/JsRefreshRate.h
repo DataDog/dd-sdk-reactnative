@@ -8,7 +8,7 @@
 
 @interface JsRefreshRate : NSObject<RCTBridgeModule>
 
--(void)start:(BOOL)monitorJsRefreshRate;
+-(void)start:(nonnull void (^)(double frameTime))frameTimeCallback;
 -(void)stop;
 -(BOOL)isStarted;
 
