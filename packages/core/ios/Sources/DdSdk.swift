@@ -274,7 +274,7 @@ class RNDdSdk: NSObject {
     func buildFrameTimeCallback(vitalsUpdateFrequency: Datadog.Configuration.VitalsFrequency) -> (Double) -> () {
         func frameTimeCallback(frameTime: Double) {
             if (vitalsUpdateFrequency != .never && frameTime > 0) {
-            // TODO: report vital update
+                Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
             }
             if (frameTime > jsLongTaskThresholdInSeconds) {
                 // TODO: report long task
