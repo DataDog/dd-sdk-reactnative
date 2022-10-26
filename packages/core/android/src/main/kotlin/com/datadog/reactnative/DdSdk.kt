@@ -15,7 +15,9 @@ import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -25,6 +27,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -38,6 +41,7 @@ class DdSdk(
     internal val appContext: Context = reactContext.applicationContext
     internal val reactContext: ReactApplicationContext = reactContext
     internal val initialized = AtomicBoolean(false)
+    internal val longTaskThresholdNS = TimeUnit.MILLISECONDS.toNanos(100L)
 
     override fun getName(): String = "DdSdk"
 
@@ -312,14 +316,27 @@ class DdSdk(
     }
 
     private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
+        val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
         reactContext.runOnJSQueueThread {
             val vitalFrameCallback =
-                VitalFrameCallback(vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER) { isInitialized() }
+                VitalFrameCallback(frameTimeCallback) { isInitialized() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
                 // This can happen if the SDK is initialized on a Thread with no looper
                 // TODO: log here
+            }
+        }
+    }
+
+    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency): (frameTime: Double) -> Unit {
+        val monitorJsRefreshRate = vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER
+        return {
+            if (monitorJsRefreshRate && it > 0.0) {
+                GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+            }
+            if (it > longTaskThresholdNS) {
+                // TODO: report long task
             }
         }
     }
