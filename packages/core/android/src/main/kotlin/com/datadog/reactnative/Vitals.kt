@@ -7,6 +7,8 @@
 package com.datadog.reactnative
 
 import android.view.Choreographer
+import com.datadog.android.rum.GlobalRum
+import com.datadog.android.rum.RumPerformanceMetric
 import java.util.concurrent.TimeUnit
 
 /**
@@ -26,7 +28,7 @@ internal class VitalFrameCallback(
         if (lastFrameTimestampNs != 0L) {
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
             if (monitorJsRefreshRate && durationNs > 0.0) {
-                // TODO: call native SDK to report frame time
+                GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, durationNs)
             }
             if (durationNs > longTaskThresholdNS) {
                 // TODO: report long task
