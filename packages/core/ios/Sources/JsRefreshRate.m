@@ -18,8 +18,13 @@ NSTimeInterval jsLongTaskThresholdInSeconds = 0.1;
 }
 
 @synthesize bridge = _bridge;
+// This ensures we can use [_bridge dispatchBlock]
 RCT_EXPORT_MODULE()
 
+// The plugin is initialized twice: the first time by React (as we registered this with RCT_EXPORT_MODULE),
+// and that is the moment the bridge is set.
+// The second time in DdSdk when we start it. This singleton pattern ensures we only have one instance running and
+// it is initialized.
 static JsRefreshRate *_pluginSingleton = nil;
 - (instancetype)init {
   self->_isStarted = false;
