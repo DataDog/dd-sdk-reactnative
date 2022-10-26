@@ -8,12 +8,12 @@
 #import <React/RCTBridge+Private.h>
 #import "JsRefreshRate.h"
 
-NSTimeInterval jsLongTaskThresholdInSeconds = 0.1;
+typedef void (^frame_time_callback)(double frameTime);
 
 @implementation JsRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
-  BOOL _monitorJsRefreshRate;
+  frame_time_callback _frameTimeCallback;
   BOOL _isStarted;
 }
 
@@ -45,11 +45,12 @@ static JsRefreshRate *_pluginSingleton = nil;
   return self;
 }
 
-- (void)start:(BOOL)monitorJsRefreshRate {
+- (void)start:(frame_time_callback)frameTimeCallback
+{
     if (self->_jsDisplayLink != nil) {
         [self->_jsDisplayLink invalidate];
     }
-    self->_monitorJsRefreshRate = monitorJsRefreshRate;
+    self->_frameTimeCallback = frameTimeCallback;
         
     [_bridge dispatchBlock:^{
       self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onJSFrame:)];
@@ -60,7 +61,8 @@ static JsRefreshRate *_pluginSingleton = nil;
     self->_isStarted = true;
 }
 
-- (void)stop {
+- (void)stop
+{
     if (self->_jsDisplayLink) {
         [self->_jsDisplayLink invalidate];
         self->_jsDisplayLink = nil;
@@ -82,14 +84,7 @@ static JsRefreshRate *_pluginSingleton = nil;
   NSTimeInterval frameTimestamp = displayLink.timestamp;
   if (self->_lastFrameTimestamp != -1) {
       NSTimeInterval frameDuration = frameTimestamp - self->_lastFrameTimestamp;
-      if (frameDuration > jsLongTaskThresholdInSeconds) {
-          // TODO: Report js long task
-          NSLog(@"js long tasks");
-      }
-      if (self->_monitorJsRefreshRate) {
-          // TODO: Call SDK to register call
-          NSLog(@"%f", frameDuration);
-      }
+      self->_frameTimeCallback(frameDuration);
   }
   self->_lastFrameTimestamp = frameTimestamp;
 }
@@ -103,7 +98,7 @@ static JsRefreshRate *_pluginSingleton = nil;
 }
 
 - (void)appDidBecomeActive {
-    [self start:self->_monitorJsRefreshRate];
+    [self start:self->_frameTimeCallback];
 }
 
 @end
