@@ -7,32 +7,24 @@
 package com.datadog.reactnative
 
 import android.view.Choreographer
-import com.datadog.android.rum.GlobalRum
-import com.datadog.android.rum.RumPerformanceMetric
 import java.util.concurrent.TimeUnit
 
 /**
  * Reads the javascript framerate based on the [Choreographer.FrameCallback].
  */
 internal class VitalFrameCallback(
-    private val monitorJsRefreshRate: Boolean,
+    private val frameTimeCallback: (Double) -> Unit,
     private val keepRunning: () -> Boolean
 ) : Choreographer.FrameCallback {
 
     internal var lastFrameTimestampNs: Long = 0L
-    internal val longTaskThresholdNS = TimeUnit.MILLISECONDS.toNanos(100L)
 
     // region Choreographer.FrameCallback
 
     override fun doFrame(frameTimeNanos: Long) {
         if (lastFrameTimestampNs != 0L) {
             val durationNs = (frameTimeNanos - lastFrameTimestampNs).toDouble()
-            if (monitorJsRefreshRate && durationNs > 0.0) {
-                GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, durationNs)
-            }
-            if (durationNs > longTaskThresholdNS) {
-                // TODO: report long task
-            }
+            frameTimeCallback(durationNs)
         }
         lastFrameTimestampNs = frameTimeNanos
 
