@@ -16,7 +16,7 @@ const timeProvider = new TimeProvider();
 
 class DdLogsWrapper implements DdLogsType {
 
-    private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
+    private nativeLogs: DdNativeLogsType = require("./specs/DdLogs").default.DdLogs;
 
     debug(message: string, context: object = {}): Promise<void> {
         InternalLog.log("Tracking debug log “" +  message + "”", SdkVerbosity.DEBUG);
@@ -42,7 +42,7 @@ class DdLogsWrapper implements DdLogsType {
 
 class DdTraceWrapper implements DdTraceType {
 
-    private nativeTrace: DdNativeTraceType = NativeModules.DdTrace;
+    private nativeTrace: DdNativeTraceType = require("./specs/DdTrace").default.DdTrace;
 
     startSpan(operation: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<string> {
         let spanId = bufferNativeCallReturningId(() =>this.nativeTrace.startSpan(operation, context, timestampMs));
@@ -66,7 +66,7 @@ const isOldStopActionAPI = (args: [type: RumActionType, name: string, context?: 
 
 class DdRumWrapper implements DdRumType {
 
-    private nativeRum: DdNativeRumType = NativeModules.DdRum;
+    private nativeRum: DdNativeRumType = require("./specs/DdRum").default.DdRum;
     private lastActionData?: {type: RumActionType, name: string}
 
     startView(key: string, name: string, context: object = {}, timestampMs: number = timeProvider.now()): Promise<void> {
@@ -138,7 +138,7 @@ class DdRumWrapper implements DdRumType {
     }
 }
 
-const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
+const DdSdk: DdNativeSdkType = require("./specs/DdSdk").default.DdSdk;
 const DdLogs: DdLogsType = new DdLogsWrapper();
 const DdTrace: DdTraceType = new DdTraceWrapper();
 const DdRum: DdRumType = new DdRumWrapper();
