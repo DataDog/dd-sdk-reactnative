@@ -10,7 +10,6 @@ import android.util.Log
 import com.datadog.android.log.Logger
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -41,7 +40,7 @@ import org.mockito.quality.Strictness
 @MockitoSettings(strictness = Strictness.LENIENT)
 internal class DdLogsTest {
 
-    lateinit var testedLogs: DdLogs
+    lateinit var testedLogs: DdLogsImplementation
 
     @Mock
     lateinit var mockLogger: Logger
@@ -62,15 +61,6 @@ internal class DdLogsTest {
     lateinit var mockDatadog: DatadogWrapper
 
     @Mock
-    lateinit var mockReactContext: ReactApplicationContext
-
-    @MapForgery(
-        key = AdvancedForgery(string = [StringForgery()]),
-        value = AdvancedForgery(string = [StringForgery(StringForgeryType.HEXADECIMAL)])
-    )
-    lateinit var fakeContext: Map<String, String>
-
-    @Mock
     lateinit var mockContext: ReadableMap
 
     @MapForgery(
@@ -82,7 +72,7 @@ internal class DdLogsTest {
     @BeforeEach
     fun `set up`(forge: Forge) {
         whenever(mockDatadog.isInitialized()) doReturn true
-        testedLogs = DdLogs(mockReactContext, mockLogger, mockDatadog)
+        testedLogs = DdLogsImplementation(mockLogger, mockDatadog)
         fakeErrorKind = forge.aNullable { forge.aString() }
         fakeErrorMessage = forge.aNullable { forge.aString() }
         fakeStacktrace = forge.aNullable { forge.aString() }
@@ -285,7 +275,7 @@ internal class DdLogsTest {
     fun `M not forward logs W SDK is not initialized`() {
         // When
         whenever(mockDatadog.isInitialized()) doReturn false
-        var newTestedLogs = DdLogs(mockReactContext, mockLogger, mockDatadog)
+        var newTestedLogs = DdLogsImplementation(mockLogger, mockDatadog)
         newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
         newTestedLogs.info(fakeMessage, mockContext, mockPromise)
         newTestedLogs.warn(fakeMessage, mockContext, mockPromise)

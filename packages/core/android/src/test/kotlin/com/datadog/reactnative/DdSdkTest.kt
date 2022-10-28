@@ -102,7 +102,7 @@ fun mockChoreographerInstance(mock: Choreographer = mock()) {
 @ForgeConfiguration(BaseConfigurator::class)
 internal class DdSdkTest {
 
-    lateinit var testedBridgeSdk: DdSdk
+    lateinit var testedBridgeSdk: DdSdkImplementation
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockReactContext: ReactApplicationContext
@@ -150,7 +150,7 @@ internal class DdSdkTest {
             answer.getArgument<Runnable>(0).run()
             true
         }
-        testedBridgeSdk = DdSdk(mockReactContext, mockDatadog)
+        testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog)
     }
 
     @AfterEach
@@ -1018,7 +1018,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_VIEW_TRACKING to false
+                DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to false
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1050,7 +1050,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_VIEW_TRACKING to true
+                DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to true
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1082,7 +1082,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_INTERACTION_TRACKING to false
+                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to false
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1183,7 +1183,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_INTERACTION_TRACKING to true
+                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to true
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1219,7 +1219,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_INTERACTION_TRACKING to null
+                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to null
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1262,7 +1262,7 @@ internal class DdSdkTest {
         }
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_SDK_VERBOSITY to verbosityName
+                DdSdkImplementation.DD_SDK_VERBOSITY to verbosityName
             )
         )
 
@@ -1281,7 +1281,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_SDK_VERBOSITY to verbosity
+                DdSdkImplementation.DD_SDK_VERBOSITY to verbosity
             )
         )
 
@@ -1300,7 +1300,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_SERVICE_NAME to serviceName
+                DdSdkImplementation.DD_SERVICE_NAME to serviceName
             )
         )
         val credentialCaptor = argumentCaptor<Credentials>()
@@ -1419,7 +1419,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
+                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
         val configCaptor = argumentCaptor<Configuration>()
@@ -1473,7 +1473,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
+                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
         val configCaptor = argumentCaptor<Configuration>()
@@ -1534,7 +1534,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
+                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
         val configCaptor = argumentCaptor<Configuration>()
@@ -1863,7 +1863,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_VERSION_SUFFIX to versionSuffix
+                DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix
             )
         )
         val configCaptor = argumentCaptor<Configuration>()
@@ -1882,8 +1882,8 @@ internal class DdSdkTest {
             .hasFieldEqualTo(
                 "additionalConfig",
                 mapOf(
-                    DdSdk.DD_VERSION_SUFFIX to versionSuffix,
-                    DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
+                    DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix,
+                    DdSdkImplementation.DD_VERSION to mockPackageInfo.versionName + versionSuffix
                 )
             )
     }
@@ -2347,8 +2347,8 @@ internal class DdSdkTest {
     ) {
         // Given
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdk.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
+            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
+            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 
@@ -2370,9 +2370,9 @@ internal class DdSdkTest {
         assumeTrue(proxyType.lowercase(Locale.US) !in arrayOf("http", "https", "socks"))
 
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_TYPE to proxyType,
-            DdSdk.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdk.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
+            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
+            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
+            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 
@@ -2390,8 +2390,8 @@ internal class DdSdkTest {
     ) {
         // Given
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
-            DdSdk.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
+            DdSdkImplementation.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
+            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 
@@ -2409,8 +2409,8 @@ internal class DdSdkTest {
     ) {
         // Given
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
-            DdSdk.DD_PROXY_ADDRESS to "1.1.1.1"
+            DdSdkImplementation.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
+            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1"
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 
@@ -2430,9 +2430,9 @@ internal class DdSdkTest {
         val proxyType = forge.anElementFrom("http", "https", "socks")
 
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_TYPE to proxyType,
-            DdSdk.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdk.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
+            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
+            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
+            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 
@@ -2465,11 +2465,11 @@ internal class DdSdkTest {
         val proxyAddress = "1.1.1.1"
 
         val additionalConfig = mapOf(
-            DdSdk.DD_PROXY_TYPE to proxyType,
-            DdSdk.DD_PROXY_ADDRESS to proxyAddress,
-            DdSdk.DD_PROXY_PORT to proxyPort,
-            DdSdk.DD_PROXY_USERNAME to proxyUsername,
-            DdSdk.DD_PROXY_PASSWORD to proxyPassword
+            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
+            DdSdkImplementation.DD_PROXY_ADDRESS to proxyAddress,
+            DdSdkImplementation.DD_PROXY_PORT to proxyPort,
+            DdSdkImplementation.DD_PROXY_USERNAME to proxyUsername,
+            DdSdkImplementation.DD_PROXY_PASSWORD to proxyPassword
         )
         val config = configuration.copy(additionalConfig = additionalConfig)
 

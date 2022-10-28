@@ -92,16 +92,17 @@ android {
     buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
   }
 
-  sourceSets.named("main") {
-    if (isNewArchitectureEnabled()) {
-      java.srcDirs += ['src/main/kotlin/newarch']
-    } else {
-      java.srcDirs += ['src/main/kotlin/oldarch']
+  sourceSets {
+    main {
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += ['src/newarch/kotlin']
+      } else {
+        java.srcDirs += ['src/oldarch/kotlin']
+      }
     }
-  }
-
-  sourceSets.named("test") {
-    java.srcDir("src/test/kotlin")
+    test {
+      java.srcDir("src/test/kotlin")
+    }
   }
 
   testOptions {

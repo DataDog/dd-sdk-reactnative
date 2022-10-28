@@ -6,8 +6,6 @@
 
 package com.datadog.reactnative
 
-import android.util.Log as AndroidLog
-import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -18,20 +16,12 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's Logs feature.
  */
 class DdLogs(
-    reactContext: ReactApplicationContext,
-    logger: Logger? = null,
-    private val datadog: DatadogWrapper = DatadogSDKWrapper()
+    reactContext: ReactApplicationContext
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    override fun getName(): String = NAME
+    private val implementation = DdLogsImplementation()
 
-    private val reactNativeLogger: Logger by lazy {
-        logger ?: Logger.Builder()
-            .setDatadogLogsEnabled(true)
-            .setLogcatLogsEnabled(true)
-            .setLoggerName("DdLogs")
-            .build()
-    }
+    override fun getName(): String = DdLogsImplementation.NAME
 
     /**
      * Send a log with Debug level.
@@ -40,15 +30,7 @@ class DdLogs(
      */
     @ReactMethod
     fun debug(message: String, context: ReadableMap, promise: Promise) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.d(
-            message = message,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.debug(message, context, promise)
     }
 
     /**
@@ -58,15 +40,7 @@ class DdLogs(
      */
     @ReactMethod
     fun info(message: String, context: ReadableMap, promise: Promise) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.i(
-            message = message,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.info(message, context, promise)
     }
 
     /**
@@ -76,15 +50,7 @@ class DdLogs(
      */
     @ReactMethod
     fun warn(message: String, context: ReadableMap, promise: Promise) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.w(
-            message = message,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.warn(message, context, promise)
     }
 
     /**
@@ -94,15 +60,7 @@ class DdLogs(
      */
     @ReactMethod
     fun error(message: String, context: ReadableMap, promise: Promise) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.e(
-            message = message,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.error(message, context, promise)
     }
 
     /**
@@ -123,19 +81,14 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.log(
-            priority = AndroidLog.DEBUG,
-            message = message,
-            errorKind = errorKind,
-            errorMessage = errorMessage,
-            errorStacktrace = stacktrace,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
+        implementation.debugWithError(
+            message,
+            errorKind,
+            errorMessage,
+            stacktrace,
+            context,
+            promise
         )
-        promise.resolve(null)
     }
 
     /**
@@ -156,19 +109,7 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.log(
-            priority = AndroidLog.INFO,
-            message = message,
-            errorKind = errorKind,
-            errorMessage = errorMessage,
-            errorStacktrace = stacktrace,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.infoWithError(message, errorKind, errorMessage, stacktrace, context, promise)
     }
 
     /**
@@ -189,19 +130,7 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.log(
-            priority = AndroidLog.WARN,
-            message = message,
-            errorKind = errorKind,
-            errorMessage = errorMessage,
-            errorStacktrace = stacktrace,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
-        )
-        promise.resolve(null)
+        implementation.warnWithError(message, errorKind, errorMessage, stacktrace, context, promise)
     }
 
     /**
@@ -222,23 +151,13 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        if (!datadog.isInitialized()) {
-            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
-            return
-        }
-        reactNativeLogger.log(
-            priority = AndroidLog.ERROR,
-            message = message,
-            errorKind = errorKind,
-            errorMessage = errorMessage,
-            errorStacktrace = stacktrace,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
+        implementation.errorWithError(
+            message,
+            errorKind,
+            errorMessage,
+            stacktrace,
+            context,
+            promise
         )
-        promise.resolve(null)
-    }
-
-    companion object {
-        private const val SDK_NOT_INITIALIZED_MESSAGE = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
-        const val NAME = "DdLogs"
     }
 }

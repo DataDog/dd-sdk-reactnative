@@ -17,60 +17,34 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
  */
 class DdSdkReactNativePackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        return if (name == DdSdk.NAME) {
-            DdSdk(reactContext)
-        } else if (name == DdRum.NAME) {
-            DdRum(reactContext)
-        } else if (name == DdTrace.NAME) {
-            DdTrace(reactContext)
-        } else if (name == DdLogs.NAME) {
-            DdLogs(reactContext)
-        } else {
-            null
+        return when (name) {
+            DdSdkImplementation.NAME -> DdSdk(reactContext)
+            DdRumImplementation.NAME -> DdRum(reactContext)
+            DdTraceImplementation.NAME -> DdTrace(reactContext)
+            DdLogsImplementation.NAME -> DdLogs(reactContext)
+            else -> null
         }
     }
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
         return ReactModuleInfoProvider {
-            val moduleInfos: MutableMap<String, ReactModuleInfo> =
-                HashMap()
             val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-            moduleInfos[DdSdk.NAME] = ReactModuleInfo(
-                DdSdk.NAME,
-                DdSdk.NAME,
-                false,  // canOverrideExistingModule
-                false,  // needsEagerInit
-                true,  // hasConstants
-                false,  // isCxxModule
-                isTurboModule // isTurboModule
-            )
-            moduleInfos[DdRum.NAME] = ReactModuleInfo(
-                DdRum.NAME,
-                DdRum.NAME,
-                false,  // canOverrideExistingModule
-                false,  // needsEagerInit
-                true,  // hasConstants
-                false,  // isCxxModule
-                isTurboModule // isTurboModule
-            )
-            moduleInfos[DdTrace.NAME] = ReactModuleInfo(
-                DdTrace.NAME,
-                DdTrace.NAME,
-                false,  // canOverrideExistingModule
-                false,  // needsEagerInit
-                true,  // hasConstants
-                false,  // isCxxModule
-                isTurboModule // isTurboModule
-            )
-            moduleInfos[DdLogs.NAME] = ReactModuleInfo(
-                DdLogs.NAME,
-                DdLogs.NAME,
-                false,  // canOverrideExistingModule
-                false,  // needsEagerInit
-                true,  // hasConstants
-                false,  // isCxxModule
-                isTurboModule // isTurboModule
-            )
+            val moduleInfos = listOf(
+                DdSdkImplementation.NAME,
+                DdRumImplementation.NAME,
+                DdTraceImplementation.NAME,
+                DdLogsImplementation.NAME
+            ).associateWith {
+                ReactModuleInfo(
+                    it,
+                    it,
+                    false,  // canOverrideExistingModule
+                    false,  // needsEagerInit
+                    true,  // hasConstants
+                    false,  // isCxxModule
+                    isTurboModule // isTurboModule
+                )
+            }
 
             moduleInfos
         }
