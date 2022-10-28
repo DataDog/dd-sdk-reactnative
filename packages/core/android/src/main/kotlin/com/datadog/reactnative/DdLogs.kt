@@ -19,7 +19,7 @@ import com.facebook.react.bridge.ReadableMap
 class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     ReactContextBaseJavaModule(reactContext) {
 
-    override fun getName(): String = "DdLogs"
+    override fun getName(): String = NAME
 
     private val reactNativeLogger: Logger by lazy {
         logger ?: Logger.Builder()
@@ -83,5 +83,9 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
         promise.resolve(null)
+    }
+
+    companion object {
+        const val NAME = "DdLogs"
     }
 }

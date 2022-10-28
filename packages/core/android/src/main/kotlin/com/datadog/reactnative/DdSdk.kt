@@ -43,7 +43,7 @@ class DdSdk(
     internal val initialized = AtomicBoolean(false)
     internal val longTaskThresholdNS = TimeUnit.MILLISECONDS.toNanos(100L)
 
-    override fun getName(): String = "DdSdk"
+    override fun getName(): String = NAME
 
     // region DdSdk
 
@@ -357,5 +357,6 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        const val NAME = "DdSdk"
     }
 }
