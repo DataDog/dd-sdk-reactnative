@@ -49,7 +49,7 @@ class DdSdk(
     internal val reactContext: ReactApplicationContext = reactContext
     internal val initialized = AtomicBoolean(false)
 
-    override fun getName(): String = "DdSdk"
+    override fun getName(): String = NAME
 
     // region DdSdk
 
@@ -536,5 +536,6 @@ class DdSdk(
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
+        const val NAME = "DdSdk"
     }
 }

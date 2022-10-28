@@ -80,7 +80,7 @@
     "codegenConfig": {
         "name": "DdSdkReactNative",
         "type": "modules",
-        "jsSrcsDir": "src/specs",
+        "jsSrcsDir": "./src/specs",
         "android": {
             "javaPackageName": "com.datadog.reactnative"
         }

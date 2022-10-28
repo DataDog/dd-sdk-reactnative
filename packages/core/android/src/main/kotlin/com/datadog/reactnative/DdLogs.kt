@@ -23,7 +23,7 @@ class DdLogs(
     private val datadog: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    override fun getName(): String = "DdLogs"
+    override fun getName(): String = NAME
 
     private val reactNativeLogger: Logger by lazy {
         logger ?: Logger.Builder()
@@ -239,5 +239,6 @@ class DdLogs(
 
     companion object {
         private const val SDK_NOT_INITIALIZED_MESSAGE = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
+        const val NAME = "DdLogs"
     }
 }

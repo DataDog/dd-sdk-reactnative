@@ -30,7 +30,7 @@ class DdTrace(
     // before Sdk.initialize is called, but Tracer can be created only after SDK is initialized.
     private val tracer by lazy { tracerProvider.invoke() }
 
-    override fun getName(): String = "DdTrace"
+    override fun getName(): String = NAME
 
     /**
      * Start a span, and returns a unique identifier for the span.
@@ -82,5 +82,9 @@ class DdTrace(
                 else -> setTag(key, value?.toString())
             }
         }
+    }
+
+    companion object {
+        const val NAME = "DdTrace"
     }
 }

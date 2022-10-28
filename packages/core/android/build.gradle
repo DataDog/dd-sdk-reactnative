@@ -20,7 +20,15 @@ buildscript {
 
 
 apply plugin: 'de.mobilej.unmock'
+
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
 apply plugin: 'com.android.library'
+if (isNewArchitectureEnabled()) {
+  apply plugin: 'com.facebook.react'
+}
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: "io.gitlab.arturbosch.detekt"
@@ -81,11 +89,15 @@ android {
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
-
+    buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
   }
 
   sourceSets.named("main") {
-    java.srcDir("src/main/kotlin")
+    if (isNewArchitectureEnabled()) {
+      java.srcDirs += ['src/main/kotlin/newarch']
+    } else {
+      java.srcDirs += ['src/main/kotlin/oldarch']
+    }
   }
 
   sourceSets.named("test") {

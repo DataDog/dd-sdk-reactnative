@@ -24,7 +24,7 @@ import java.util.Locale
 @Suppress("TooManyFunctions")
 class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
-    override fun getName(): String = "DdRum"
+    override fun getName(): String = NAME
 
     /**
      * Start tracking a RUM View.
@@ -326,5 +326,6 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
 
     companion object {
         private const val MISSING_RESOURCE_SIZE = -1L
+        const val NAME = "DdRum"
     }
 }
