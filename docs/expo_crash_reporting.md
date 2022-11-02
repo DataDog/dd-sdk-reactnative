@@ -43,7 +43,9 @@ You can disable some files from uploading by setting the `iosDsyms`, `iosSourcem
             [
                 "expo-datadog",
                 {
-                    "iosDsyms": false
+                    "errorTracking": {
+                        "iosDsyms": false
+                    }
                 }
             ]
         ]
