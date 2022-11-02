@@ -64,6 +64,21 @@ Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, 
 | `androidProguardMappingFiles` | `true`  | Enables the uploading of Proguard mapping files to deobfuscate native Android crashes (is only applied if obfuscation is enabled). |
 | `androidSourcemaps`           | `true`  | Enables the uploading of JavaScript source maps on Android builds.                                                                 |
 
+### Using with Sentry
+
+Both Datadog and Sentry config plugins use regular expressions to modify the "Bundle React Native code and images" iOS build phase to send the sourcemap. This can make your EAS builds fail with a `error: Found argument 'datadog-ci' which wasn't expected, or isn't valid in this context` error.
+
+To use both plugins, make sure to add the `expo-datadog` plugin first in order in your `app.json` file:
+
+```
+"plugins": [
+    "expo-datadog",
+    "sentry-expo"
+]
+```
+
+If you are using the `expo-dev-client` and already have the `expo-datadog` plugin, revert its changes to the `project.pbxproj` file before adding `sentry-expo` and running `npx expo prebuild` with both plugins.
+
 ## Further reading
 
 {{< partial name="whats-next/whats-next.html" >}}
