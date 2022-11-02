@@ -68,7 +68,7 @@ Run `eas secret:create` to set `DATADOG_SITE` to the host of your Datadog site, 
 
 Both Datadog and Sentry config plugins use regular expressions to modify the "Bundle React Native code and images" iOS build phase to send the sourcemap. This can make your EAS builds fail with a `error: Found argument 'datadog-ci' which wasn't expected, or isn't valid in this context` error.
 
-To use both plugins, make sure to add the `expo-datadog` plugin first in order in your app.json:
+To use both plugins, make sure to add the `expo-datadog` plugin first in order in your `app.json` file:
 
 ```
 "plugins": [
