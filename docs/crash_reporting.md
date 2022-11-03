@@ -191,7 +191,7 @@ Change the script by adding this after the `set -e` line:
 
 ```bash
 set -e
-export SOURCEMAP_FILE=./build/main.jsbundle.map # <- add this line to output sourcemaps
+export SOURCEMAP_FILE=./build/main.jsbundle.map # <- add this line to output source maps
 # leave the rest of the script unchanged
 ```
 
@@ -223,13 +223,21 @@ Edit your build phase like so:
 
 ```bash
 set -e
-export SOURCEMAP_FILE=./build/main.jsbundle.map # <- add this line to output sourcemaps
+export SOURCEMAP_FILE=./build/main.jsbundle.map # <- add this line to output source maps
+# For React Native 0.70, you need to set USE_HERMES to true for source maps to be generated
+export USE_HERMES=true
 
 # keep the rest of the script unchanged
 
-# add these lines to compose the packager and compiler sourcemaps into one file
+# add these lines to compose the packager and compiler source maps into one file
 REACT_NATIVE_DIR=../node_modules/react-native
-source "$REACT_NATIVE_DIR/scripts/find-node.sh"
+
+if [ -f "$REACT_NATIVE_DIR/scripts/find-node-for-xcode.sh" ]; then
+    source "$REACT_NATIVE_DIR/scripts/find-node-for-xcode.sh"
+else
+    # Before RN 0.70, the script was named find-node.sh
+    source "$REACT_NATIVE_DIR/scripts/find-node.sh"
+fi
 source "$REACT_NATIVE_DIR/scripts/node-binary.sh"
 "$NODE_BINARY" "$REACT_NATIVE_DIR/scripts/compose-source-maps.js" "$CONFIGURATION_BUILD_DIR/main.jsbundle.map" "$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/main.jsbundle.map" -o "../$SOURCEMAP_FILE"
 ```
