@@ -39,7 +39,8 @@ const formatResourceStartContext = (
         ? undefined
         : {
               '_dd.span_id': tracingAttributes.spanId,
-              '_dd.trace_id': tracingAttributes.traceId
+              '_dd.trace_id': tracingAttributes.traceId,
+              '_dd.rule_psr': tracingAttributes.rulePsr
           };
 };
 
