@@ -311,7 +311,7 @@ In your `android/app/build.gradle` file, add the plugin and configure it **at th
 
 ```groovy
 plugins {
-    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.0"
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.5.1"
 }
 
 datadog {
