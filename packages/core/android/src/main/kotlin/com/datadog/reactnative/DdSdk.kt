@@ -323,8 +323,9 @@ class DdSdk(
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
-                // This can happen if the SDK is initialized on a Thread with no looper
-                // TODO: log here
+                // This should never happen as the React Native thread always has a Looper
+                val errorMessage = e.message
+                datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e.stackTraceToString(), MONITOR_JS_ERROR_KIND)
             }
         }
     }
@@ -357,5 +358,6 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        internal const val MONITOR_JS_ERROR_KIND = "Error monitoring JS refresh rate"
     }
 }
