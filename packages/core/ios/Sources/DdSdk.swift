@@ -48,6 +48,10 @@ class RNDdSdk: NSObject {
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
                 Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                
+                // This block is called when SDK is reinitialized and the javascript has been wiped out.
+                // In this case, we need to restart the refresh rate monitor, as the javascript thread 
+                // appears to change at that moment.
                 JsRefreshRate.init().start(frameTimeCallback)
                 resolve(nil)
                 return
