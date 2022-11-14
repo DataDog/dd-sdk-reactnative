@@ -41,7 +41,7 @@ class DdSdk(
     internal val appContext: Context = reactContext.applicationContext
     internal val reactContext: ReactApplicationContext = reactContext
     internal val initialized = AtomicBoolean(false)
-    internal val longTaskThresholdNS = TimeUnit.MILLISECONDS.toNanos(100L)
+    internal val longTaskThresholdNs = TimeUnit.MILLISECONDS.toNanos(100L)
 
     override fun getName(): String = "DdSdk"
 
@@ -336,7 +336,7 @@ class DdSdk(
             if (monitorJsRefreshRate && it > 0.0) {
                 GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
             }
-            if (it > longTaskThresholdNS) {
+            if (it > longTaskThresholdNs) {
                 // TODO: report long task
             }
         }

@@ -1120,7 +1120,7 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {rare vitals frequenct update}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {rare vitals frequency update}`(
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
@@ -1150,7 +1150,7 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {never vitals frequenct update}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {never vitals frequency update}`(
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
