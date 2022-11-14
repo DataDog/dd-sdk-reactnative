@@ -3,7 +3,11 @@ package com.datadog.reactnative
 import android.util.Log
 import android.content.pm.PackageInfo
 import com.datadog.android.DatadogEndpoint
-import com.datadog.android.core.configuration.*
+import com.datadog.android.core.configuration.BatchSize
+import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.core.configuration.UploadFrequency
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.plugin.DatadogPlugin
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
