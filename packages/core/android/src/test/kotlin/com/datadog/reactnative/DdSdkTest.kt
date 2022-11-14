@@ -1183,6 +1183,36 @@ internal class DdSdkTest {
             }
     }
 
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "SOME_BAD_VALUE"
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
+            }
+    }
+
     // endregion
 
     // region version suffix
