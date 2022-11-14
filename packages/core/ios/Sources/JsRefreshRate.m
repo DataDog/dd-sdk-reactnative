@@ -58,7 +58,7 @@ static JsRefreshRate *_pluginSingleton = nil;
     }
     queue:RCTJSThread];
     
-    self->_isStarted = true;
+    self->_isStarted = YES;
 }
 
 - (void)stop
@@ -67,7 +67,7 @@ static JsRefreshRate *_pluginSingleton = nil;
         [self->_jsDisplayLink invalidate];
         self->_jsDisplayLink = nil;
     }
-    self->_isStarted = false;
+    self->_isStarted = NO;
 }
 
 - (BOOL)isStarted {
@@ -90,7 +90,7 @@ static JsRefreshRate *_pluginSingleton = nil;
 }
 
 + (BOOL)requiresMainQueueSetup {
-  return TRUE;
+  return YES;
 }
 
 - (void)appWillResignActive {
