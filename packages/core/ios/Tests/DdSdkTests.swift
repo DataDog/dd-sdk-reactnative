@@ -446,7 +446,7 @@ internal class DdSdkTests: XCTestCase {
     func testJsRefreshRateInitialization() {
         RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertTrue(JsRefreshRate.init().isStarted())
+        XCTAssertTrue(JSRefreshRate.init().isStarted())
         
         Datadog.flushAndDeinitialize()
     }
@@ -454,7 +454,7 @@ internal class DdSdkTests: XCTestCase {
     func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
         RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertTrue(JsRefreshRate.init().isStarted())
+        XCTAssertTrue(JSRefreshRate.init().isStarted())
         
         Datadog.flushAndDeinitialize()
     }

@@ -52,7 +52,7 @@ class RNDdSdk: NSObject {
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
                 // appears to change at that moment.
-                JsRefreshRate.init().start(frameTimeCallback)
+                JSRefreshRate.init().start(frameTimeCallback)
                 resolve(nil)
                 return
             }
@@ -64,7 +64,7 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            JsRefreshRate.init().start(frameTimeCallback)
+            JSRefreshRate.init().start(frameTimeCallback)
             
             resolve(nil)
         }

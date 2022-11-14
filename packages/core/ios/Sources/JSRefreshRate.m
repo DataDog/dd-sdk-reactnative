@@ -6,11 +6,11 @@
 
 // This ensures we can use [_bridge dispatchBlock]
 #import <React/RCTBridge+Private.h>
-#import "JsRefreshRate.h"
+#import "JSRefreshRate.h"
 
 typedef void (^frame_time_callback)(double frameTime);
 
-@implementation JsRefreshRate {
+@implementation JSRefreshRate {
   CADisplayLink *_jsDisplayLink;
   NSTimeInterval _lastFrameTimestamp;
   frame_time_callback _frameTimeCallback;
@@ -25,7 +25,7 @@ RCT_EXPORT_MODULE()
 // and that is the moment the bridge is set.
 // The second time in DdSdk when we start it. This singleton pattern ensures we only have one instance running and
 // it is initialized.
-static JsRefreshRate *_pluginSingleton = nil;
+static JSRefreshRate *_pluginSingleton = nil;
 - (instancetype)init {
   self->_isStarted = false;
 

@@ -6,7 +6,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface JsRefreshRate : NSObject<RCTBridgeModule>
+@interface JSRefreshRate : NSObject<RCTBridgeModule>
 
 -(void)start:(nonnull void (^)(double frameTime))frameTimeCallback;
 -(void)stop;
