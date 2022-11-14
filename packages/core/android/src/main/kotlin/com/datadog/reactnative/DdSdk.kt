@@ -151,6 +151,7 @@ class DdSdk(
         val packageInfo = try {
             appContext.packageManager.getPackageInfo(packageName, 0)
         } catch (e: PackageManager.NameNotFoundException) {
+            datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
             return DEFAULT_APP_VERSION
         }
 
@@ -355,5 +356,6 @@ class DdSdk(
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
+        internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
     }
 }
