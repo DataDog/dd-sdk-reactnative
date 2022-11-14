@@ -14,8 +14,6 @@ func getDefaultAppVersion() -> String {
     return bundleShortVersion ?? bundleVersion ?? "0.0.0"
 }
 
-let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
-
 @objc(DdSdk)
 class RNDdSdk: NSObject {
     @objc(requiresMainQueueSetup)
@@ -26,6 +24,8 @@ class RNDdSdk: NSObject {
     let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
+    
+    private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
     
     convenience override init() {
         self.init(mainDispatchQueue: DispatchQueue.main)
@@ -280,7 +280,7 @@ class RNDdSdk: NSObject {
             if (vitalsUpdateFrequency != .never && frameTime > 0) {
                 Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
             }
-            if (frameTime > jsLongTaskThresholdInSeconds) {
+            if (frameTime > self.jsLongTaskThresholdInSeconds) {
                 // TODO: report long task
             }
         }
