@@ -19,30 +19,18 @@ typedef void (^frame_time_callback)(double frameTime);
 
 @synthesize bridge = _bridge;
 // This ensures we can use [_bridge dispatchBlock]
-RCT_EXPORT_MODULE()
+RCT_EXPORT_MODULE(_DATADOG_JS_REFRESH_RATE)
 
 // The plugin is initialized twice: the first time by React (as we registered this with RCT_EXPORT_MODULE),
 // and that is the moment the bridge is set.
 // The second time in DdSdk when we start it. This singleton pattern ensures we only have one instance running and
 // it is initialized.
-static JSRefreshRate *_pluginSingleton = nil;
 - (instancetype)init {
-  self->_isStarted = false;
+    self = [super init];
 
-  if (!_pluginSingleton) {
-    self = [self initSingleton];
-    _pluginSingleton = self;
-  }
+    self->_lastFrameTimestamp = -1;
 
-  return _pluginSingleton;
-}
-
-- (instancetype)initSingleton {
-  self = [super init];
-
-  self->_lastFrameTimestamp = -1;
-
-  return self;
+    return self;
 }
 
 - (void)start:(frame_time_callback)frameTimeCallback {

@@ -16,6 +16,8 @@ func getDefaultAppVersion() -> String {
 
 @objc(DdSdk)
 class RNDdSdk: NSObject {
+    @objc var moduleRegistry: RCTModuleRegistry!
+    
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
         return false
@@ -42,6 +44,7 @@ class RNDdSdk: NSObject {
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
             let frameTimeCallback = self.buildFrameTimeCallback(vitalsUpdateFrequency: self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency))
+            let JSRefreshRateModule = self.moduleRegistry.module(forName: "_DATADOG_JS_REFRESH_RATE") as! JSRefreshRate
             
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
@@ -52,7 +55,7 @@ class RNDdSdk: NSObject {
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
                 // appears to change at that moment.
-                JSRefreshRate.init().start(frameTimeCallback)
+                JSRefreshRateModule.start(frameTimeCallback)
                 resolve(nil)
                 return
             }
@@ -64,7 +67,7 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            JSRefreshRate.init().start(frameTimeCallback)
+            JSRefreshRateModule.start(frameTimeCallback)
             
             resolve(nil)
         }
