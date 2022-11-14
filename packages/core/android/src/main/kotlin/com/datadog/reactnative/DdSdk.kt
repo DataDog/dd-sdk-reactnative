@@ -315,10 +315,10 @@ class DdSdk(
                 VitalFrameCallback(frameTimeCallback) { initialized.get() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
-            } catch (e: IllegalStateException) {
+            } catch (e: IllegalStateException) {    
                 // This should never happen as the React Native thread always has a Looper
                 val errorMessage = e.message
-                datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e.stackTraceToString(), MONITOR_JS_ERROR_KIND)
+                datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e)
             }
         }
     }

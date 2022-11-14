@@ -93,4 +93,9 @@ interface DatadogWrapper {
      * Sends telemetry error.
      */
     fun telemetryError(message: String, stack: String?, kind: String?)
+
+    /**
+     * Sends telemetry error.
+     */
+    fun telemetryError(message: String, throwable: Throwable?)
 }

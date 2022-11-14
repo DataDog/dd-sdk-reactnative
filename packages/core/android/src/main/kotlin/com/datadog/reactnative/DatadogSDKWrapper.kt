@@ -59,4 +59,8 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun telemetryError(message: String, stack: String?, kind: String?) {
         Datadog._internal._telemetry.error(message, stack, kind)
     }
+
+    override fun telemetryError(message: String, throwable: Throwable?) {
+        Datadog._internal._telemetry.error(message, throwable)
+    }
 }
