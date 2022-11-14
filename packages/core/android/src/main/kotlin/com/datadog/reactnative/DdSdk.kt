@@ -70,13 +70,6 @@ class DdSdk(
     }
 
     /**
-     * Stops JS FPS measurement when false.
-     */
-    fun isInitialized(): Boolean {
-        return initialized.get()
-    }
-
-    /**
      * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
      * @param attributes The global context attributes.
      */
@@ -319,7 +312,7 @@ class DdSdk(
         val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
         reactContext.runOnJSQueueThread {
             val vitalFrameCallback =
-                VitalFrameCallback(frameTimeCallback) { isInitialized() }
+                VitalFrameCallback(frameTimeCallback) { initialized.get() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
