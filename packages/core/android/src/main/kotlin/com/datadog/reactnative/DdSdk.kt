@@ -309,8 +309,7 @@ class DdSdk(
     }
 
     private fun handlePostFrameCallbackError(e: IllegalStateException) {
-        val errorMessage = e.message
-        datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e)
+        datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
     }
 
     private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
@@ -355,6 +354,6 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
-        internal const val MONITOR_JS_ERROR_KIND = "Error monitoring JS refresh rate"
+        internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
     }
 }
