@@ -45,8 +45,7 @@ static JsRefreshRate *_pluginSingleton = nil;
   return self;
 }
 
-- (void)start:(frame_time_callback)frameTimeCallback
-{
+- (void)start:(frame_time_callback)frameTimeCallback {
     if (self->_jsDisplayLink != nil) {
         [self->_jsDisplayLink invalidate];
     }
@@ -61,8 +60,7 @@ static JsRefreshRate *_pluginSingleton = nil;
     self->_isStarted = YES;
 }
 
-- (void)stop
-{
+- (void)stop {
     if (self->_jsDisplayLink) {
         [self->_jsDisplayLink invalidate];
         self->_jsDisplayLink = nil;
@@ -74,13 +72,11 @@ static JsRefreshRate *_pluginSingleton = nil;
     return self->_isStarted;
 }
 
-- (void)onJSFrame:(CADisplayLink *)displayLink
-{
+- (void)onJSFrame:(CADisplayLink *)displayLink {
   [self onFrameTick:displayLink];
 }
 
-- (void)onFrameTick:(CADisplayLink *)displayLink
-{
+- (void)onFrameTick:(CADisplayLink *)displayLink {
   NSTimeInterval frameTimestamp = displayLink.timestamp;
   if (self->_lastFrameTimestamp != -1) {
       NSTimeInterval frameDuration = frameTimestamp - self->_lastFrameTimestamp;
