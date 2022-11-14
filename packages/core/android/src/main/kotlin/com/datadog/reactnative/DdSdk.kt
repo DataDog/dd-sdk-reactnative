@@ -165,7 +165,7 @@ class DdSdk(
 
     @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
-        val additionalConfig = configuration.additionalConfig?.toMutableMap();
+        val additionalConfig = configuration.additionalConfig?.toMutableMap()
 
         val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
         if (versionSuffix != null && additionalConfig != null) {
@@ -189,7 +189,9 @@ class DdSdk(
         }
 
         configBuilder.useSite(buildSite(configuration.site))
-        configBuilder.setVitalsUpdateFrequency(buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency))
+        configBuilder.setVitalsUpdateFrequency(
+            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+        )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
@@ -317,7 +319,12 @@ class DdSdk(
         val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
         reactContext.runOnJSQueueThread {
             val vitalFrameCallback =
-                VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) { initialized.get() }
+                VitalFrameCallback(
+                    frameTimeCallback,
+                    ::handlePostFrameCallbackError
+                ) {
+                    initialized.get()
+                }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
             } catch (e: IllegalStateException) {
@@ -327,11 +334,15 @@ class DdSdk(
         }
     }
 
-    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency): (frameTime: Double) -> Unit {
+    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency):
+        (frameTime: Double) -> Unit {
         val monitorJsRefreshRate = vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER
         return {
             if (monitorJsRefreshRate && it > 0.0) {
-                GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+                GlobalRum.get()._getInternal()?.updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    it
+                )
             }
             if (it > longTaskThresholdNs) {
                 // TODO: report long task
