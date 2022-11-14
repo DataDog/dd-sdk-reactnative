@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
  */
 internal class VitalFrameCallback(
     private val frameTimeCallback: (Double) -> Unit,
+    private val errorHandler: (IllegalStateException) -> Unit,
     private val keepRunning: () -> Boolean
 ) : Choreographer.FrameCallback {
 
@@ -32,7 +33,7 @@ internal class VitalFrameCallback(
             try {
                 Choreographer.getInstance().postFrameCallback(this)
             } catch (e: IllegalStateException) {
-                // TODO: log error here
+                errorHandler(e)
             }
         }
     }

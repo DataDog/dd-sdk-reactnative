@@ -308,17 +308,21 @@ class DdSdk(
         }
     }
 
+    private fun handlePostFrameCallbackError(e: IllegalStateException) {
+        val errorMessage = e.message
+        datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e)
+    }
+
     private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
         val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
         reactContext.runOnJSQueueThread {
             val vitalFrameCallback =
-                VitalFrameCallback(frameTimeCallback) { initialized.get() }
+                VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) { initialized.get() }
             try {
                 Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
-            } catch (e: IllegalStateException) {    
+            } catch (e: IllegalStateException) {
                 // This should never happen as the React Native thread always has a Looper
-                val errorMessage = e.message
-                datadog.telemetryError(errorMessage ?: MONITOR_JS_ERROR_KIND, e)
+                handlePostFrameCallbackError(e)
             }
         }
     }
