@@ -98,7 +98,11 @@ internal class DdTraceTest {
     @BeforeEach
     fun `set up`() {
         whenever(mockTracer.buildSpan(fakeOperation)) doReturn mockSpanBuilder
-        whenever(mockSpanBuilder.withStartTimestamp(fakeTimestamp.toLong() * 1000)) doReturn mockSpanBuilder
+        whenever(
+            mockSpanBuilder.withStartTimestamp(
+                fakeTimestamp.toLong() * 1000
+            )
+        ) doReturn mockSpanBuilder
         whenever(mockSpanBuilder.start()) doReturn mockSpan
         whenever(mockSpan.context()) doReturn mockSpanContext
         whenever(mockSpanContext.toSpanId()) doReturn fakeSpanId

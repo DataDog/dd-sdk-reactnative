@@ -1,7 +1,13 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 package com.datadog.reactnative
 
-import android.util.Log
 import android.content.pm.PackageInfo
+import android.util.Log
 import com.datadog.android.DatadogEndpoint
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
@@ -46,8 +52,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
-import org.mockito.Mock
 import org.mockito.Answers
+import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
@@ -81,7 +87,12 @@ internal class DdSdkTest {
     fun `set up`() {
         whenever(mockContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
-        whenever(mockContext.packageManager.getPackageInfo("packageName", 0)) doReturn mockPackageInfo
+        whenever(
+            mockContext.packageManager.getPackageInfo(
+                "packageName",
+                0
+            )
+        ) doReturn mockPackageInfo
         testedBridgeSdk = DdSdk(mockContext, mockDatadog)
     }
 
@@ -278,7 +289,10 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
                 it.hasFieldEqualTo("samplingRate", expectedRumSampleRate)
-                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
+                it.hasFieldEqualTo(
+                    "vitalsMonitorUpdateFrequency",
+                    VitalsUpdateFrequency.AVERAGE
+                )
             }
             .hasFieldEqualTo(
                 "additionalConfig",
@@ -1219,14 +1233,14 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set version 𝕎 initialize() {versionSuffix}`(
-            @Forgery configuration: DdSdkConfiguration,
-            @StringForgery versionSuffix: String
+        @Forgery configuration: DdSdkConfiguration,
+        @StringForgery versionSuffix: String
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-                additionalConfig = mapOf(
-                        DdSdk.DD_VERSION_SUFFIX to versionSuffix
-                )
+            additionalConfig = mapOf(
+                DdSdk.DD_VERSION_SUFFIX to versionSuffix
+            )
         )
         val configCaptor = argumentCaptor<Configuration>()
 
@@ -1235,19 +1249,19 @@ internal class DdSdkTest {
 
         // Then
         verify(mockDatadog).initialize(
-                same(mockContext),
-                any(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
         )
         assertThat(configCaptor.firstValue)
-                .hasFieldEqualTo(
-                        "additionalConfig",
-                        mapOf(
-                            DdSdk.DD_VERSION_SUFFIX to versionSuffix,
-                            DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
-                        )
+            .hasFieldEqualTo(
+                "additionalConfig",
+                mapOf(
+                    DdSdk.DD_VERSION_SUFFIX to versionSuffix,
+                    DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
                 )
+            )
     }
 
     // endregion
