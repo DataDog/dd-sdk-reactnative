@@ -5,4 +5,3 @@
  */
 
  #import <React/RCTBridgeModule.h>
-#import "JsRefreshRate.h"
