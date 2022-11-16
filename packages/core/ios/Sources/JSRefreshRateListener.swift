@@ -9,8 +9,6 @@ import Foundation
 typealias frame_time_callback = (Double) -> Void
 
 class JSRefreshRateListener: NSObject {
-    public var isStarted: Bool = false
-
     private var runBlockOnJSThread: (@escaping () -> Void) -> Void
     private var frameTimeCallback: frame_time_callback
     private var lastFrameTimestamp: TimeInterval = -1
@@ -29,14 +27,11 @@ class JSRefreshRateListener: NSObject {
             self.jsDisplayLink = CADisplayLink(target: self, selector: #selector(self.onFrameTick))
             self.jsDisplayLink?.add(to: .current, forMode: .common)
         })
-
-        isStarted = true
     }
 
     public func stop() {
         jsDisplayLink?.invalidate()
         jsDisplayLink = nil
-        isStarted = false
     }
 
     @objc func onFrameTick(displayLink: CADisplayLink) {
