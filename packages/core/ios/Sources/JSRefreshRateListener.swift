@@ -8,22 +8,27 @@ import Foundation
 
 typealias frame_time_callback = (Double) -> Void
 
-class JSRefreshRateListener: NSObject {
-    private var runBlockOnJSThread: (@escaping () -> Void) -> Void
-    private var frameTimeCallback: frame_time_callback
+internal protocol RefreshRateListener {
+    func build(runBlockOnJSThread: @escaping (@escaping () -> Void) -> Void, frameTimeCallback: @escaping frame_time_callback)
+    func start()
+    func stop()
+}
+
+internal final class JSRefreshRateListener: RefreshRateListener {
+    private var runBlockOnJSThread: ((@escaping () -> Void) -> Void)?
+    private var frameTimeCallback: frame_time_callback?
     private var lastFrameTimestamp: TimeInterval = -1
     private var jsDisplayLink: CADisplayLink?
-
-    init(runBlockOnJSThread: @escaping (@escaping () -> Void) -> Void, frameTimeCallback: @escaping frame_time_callback) {
+    
+    public func build(runBlockOnJSThread: @escaping (@escaping () -> Void) -> Void, frameTimeCallback: @escaping frame_time_callback) {
         self.runBlockOnJSThread = runBlockOnJSThread
         self.frameTimeCallback = frameTimeCallback
-        super.init()
     }
 
     public func start() {
         jsDisplayLink?.invalidate()
 
-        self.runBlockOnJSThread({
+        self.runBlockOnJSThread?({
             self.jsDisplayLink = CADisplayLink(target: self, selector: #selector(self.onFrameTick))
             self.jsDisplayLink?.add(to: .current, forMode: .common)
         })
@@ -38,7 +43,7 @@ class JSRefreshRateListener: NSObject {
         let frameTimestamp = displayLink.timestamp
         if lastFrameTimestamp != -1 {
             let frameDuration = frameTimestamp - lastFrameTimestamp
-            frameTimeCallback(frameDuration)
+            frameTimeCallback?(frameDuration)
         }
         lastFrameTimestamp = frameTimestamp
     }
