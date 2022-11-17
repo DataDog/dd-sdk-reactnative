@@ -14,7 +14,41 @@ internal protocol RefreshRateListener {
     func stop()
 }
 
-internal final class JSRefreshRateListener: RefreshRateListener {
+internal final class JSRefreshRateMonitor: NSObject {
+    private var refreshRateListener: RefreshRateListener
+    
+    override init() {
+        self.refreshRateListener = NoOpRefreshRateListener.init()
+        super.init()
+    }
+    
+    public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+        self.refreshRateListener = JSRefreshRateListener.init()
+        self.refreshRateListener.build(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
+        self.refreshRateListener.start()
+    }
+    
+    func appWillResignActive() {
+        self.refreshRateListener.stop()
+    }
+
+    func appDidBecomeActive() {
+        self.refreshRateListener.start()
+    }
+
+    class func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+}
+
+private final class NoOpRefreshRateListener: RefreshRateListener {
+    func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {}
+    func start() {}
+    func stop() {}
+
+}
+
+private final class JSRefreshRateListener: RefreshRateListener {
     private var jsQueue: DispatchQueueType?
     private var frameTimeCallback: frame_time_callback?
     private var lastFrameTimestamp: TimeInterval = -1

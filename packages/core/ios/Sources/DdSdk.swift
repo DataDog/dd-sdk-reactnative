@@ -24,7 +24,7 @@ class RNDdSdk: NSObject {
         return false
     }
     
-    let refreshRateListener: RefreshRateListener
+    let jsRefreshRateMonitor: JSRefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
@@ -32,12 +32,12 @@ class RNDdSdk: NSObject {
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
     
     convenience override init() {
-        self.init(mainDispatchQueue: DispatchQueue.main, refreshRateListener: JSRefreshRateListener.init())
+        self.init(mainDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
     }
     
-    init(mainDispatchQueue: DispatchQueueType, refreshRateListener: RefreshRateListener) {
+    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: JSRefreshRateMonitor) {
         self.mainDispatchQueue = mainDispatchQueue
-        self.refreshRateListener = refreshRateListener
+        self.jsRefreshRateMonitor = jsRefreshRateMonitor
         super.init()
     }
     
@@ -46,7 +46,6 @@ class RNDdSdk: NSObject {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
-            self.buildJSRefreshRateListener(sdkConfiguration: sdkConfiguration)
             
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
@@ -57,7 +56,7 @@ class RNDdSdk: NSObject {
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
                 // appears to change at that moment.
-                self.refreshRateListener.start()
+                self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
                 resolve(nil)
                 return
             }
@@ -69,7 +68,7 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
-            self.refreshRateListener.start()
+            self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
             
             resolve(nil)
         }
@@ -280,10 +279,10 @@ class RNDdSdk: NSObject {
         }
     }
     
-    func buildJSRefreshRateListener(sdkConfiguration: DdSdkConfiguration) {
+    func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
         let frameTimeCallback = self.buildFrameTimeCallback(vitalsUpdateFrequency: self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency))
 
-        self.refreshRateListener.build(jsQueue: bridge, frameTimeCallback: frameTimeCallback)
+        self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge, frameTimeCallback: frameTimeCallback)
     }
 
     func buildFrameTimeCallback(vitalsUpdateFrequency: Datadog.Configuration.VitalsFrequency) -> (Double) -> () {
