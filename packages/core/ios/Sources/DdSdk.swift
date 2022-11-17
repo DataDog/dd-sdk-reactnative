@@ -280,22 +280,20 @@ class RNDdSdk: NSObject {
     }
     
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
-        let frameTimeCallback = self.buildFrameTimeCallback(vitalsUpdateFrequency: self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency))
-
-        // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
-        self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
-    }
-
-    func buildFrameTimeCallback(vitalsUpdateFrequency: Datadog.Configuration.VitalsFrequency) -> (Double) -> () {
-        func frameTimeCallback(frameTime: Double) {
-            if (vitalsUpdateFrequency != .never && frameTime > 0) {
-                Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
-            }
-            if (frameTime > self.jsLongTaskThresholdInSeconds) {
-                // TODO: report long task
-            }
+        let vitalsUpdateFrequency = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency)
+        if (vitalsUpdateFrequency != .never) {
+            // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: self.frameTimeCallback)
         }
-
-        return frameTimeCallback
     }
+
+    func frameTimeCallback(frameTime: Double) {
+        if (frameTime > 0) {
+            Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
+        }
+        if (frameTime > self.jsLongTaskThresholdInSeconds) {
+            // TODO: report long task
+        }
+    }
+
 }

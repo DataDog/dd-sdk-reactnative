@@ -465,7 +465,7 @@ internal class DdSdkTests: XCTestCase {
         RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
-        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+        XCTAssertFalse(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
