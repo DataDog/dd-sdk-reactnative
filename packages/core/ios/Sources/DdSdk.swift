@@ -24,7 +24,7 @@ class RNDdSdk: NSObject {
         return false
     }
     
-    let jsRefreshRateMonitor: JSRefreshRateMonitor
+    let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
@@ -35,7 +35,7 @@ class RNDdSdk: NSObject {
         self.init(mainDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
     }
     
-    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: JSRefreshRateMonitor) {
+    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
         super.init()
@@ -282,7 +282,8 @@ class RNDdSdk: NSObject {
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
         let frameTimeCallback = self.buildFrameTimeCallback(vitalsUpdateFrequency: self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency))
 
-        self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge, frameTimeCallback: frameTimeCallback)
+        // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
+        self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
     }
 
     func buildFrameTimeCallback(vitalsUpdateFrequency: Datadog.Configuration.VitalsFrequency) -> (Double) -> () {

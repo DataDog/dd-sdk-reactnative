@@ -14,12 +14,16 @@ internal protocol RefreshRateListener {
     func stop()
 }
 
-internal final class JSRefreshRateMonitor: NSObject {
+internal protocol RefreshRateMonitor {
+    init()
+    func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
+}
+
+internal final class JSRefreshRateMonitor: RefreshRateMonitor {
     private var refreshRateListener: RefreshRateListener
     
-    override init() {
+    init() {
         self.refreshRateListener = NoOpRefreshRateListener.init(jsQueue: DispatchQueue.main, frameTimeCallback: { double in })
-        super.init()
     }
     
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
