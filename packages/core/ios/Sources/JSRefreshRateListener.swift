@@ -9,34 +9,35 @@ import Foundation
 typealias frame_time_callback = (Double) -> Void
 
 internal protocol RefreshRateListener {
-    func build(runBlockOnJSThread: @escaping (@escaping () -> Void) -> Void, frameTimeCallback: @escaping frame_time_callback)
+    func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
     func start()
     func stop()
 }
 
 internal final class JSRefreshRateListener: RefreshRateListener {
-    private var runBlockOnJSThread: ((@escaping () -> Void) -> Void)?
+    private var jsQueue: DispatchQueueType?
     private var frameTimeCallback: frame_time_callback?
     private var lastFrameTimestamp: TimeInterval = -1
     private var jsDisplayLink: CADisplayLink?
-    
-    public func build(runBlockOnJSThread: @escaping (@escaping () -> Void) -> Void, frameTimeCallback: @escaping frame_time_callback) {
-        self.runBlockOnJSThread = runBlockOnJSThread
+
+    public func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+        self.jsQueue = jsQueue
         self.frameTimeCallback = frameTimeCallback
     }
 
     public func start() {
-        jsDisplayLink?.invalidate()
-
-        self.runBlockOnJSThread?({
+        jsQueue?.async {
+            self.jsDisplayLink?.invalidate()
             self.jsDisplayLink = CADisplayLink(target: self, selector: #selector(self.onFrameTick))
             self.jsDisplayLink?.add(to: .current, forMode: .common)
-        })
+        }
     }
 
     public func stop() {
-        jsDisplayLink?.invalidate()
-        jsDisplayLink = nil
+        jsQueue?.async {
+            self.jsDisplayLink?.invalidate()
+            self.jsDisplayLink = nil
+        }
     }
 
     @objc func onFrameTick(displayLink: CADisplayLink) {

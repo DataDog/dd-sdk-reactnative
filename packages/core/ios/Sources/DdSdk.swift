@@ -283,11 +283,7 @@ class RNDdSdk: NSObject {
     func buildJSRefreshRateListener(sdkConfiguration: DdSdkConfiguration) {
         let frameTimeCallback = self.buildFrameTimeCallback(vitalsUpdateFrequency: self.buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency))
 
-        self.refreshRateListener.build(runBlockOnJSThread: runBlockOnJSThread, frameTimeCallback: frameTimeCallback)
-    }
-
-    func runBlockOnJSThread (block: @escaping () -> Void) -> Void {
-        self.bridge.dispatchBlock(block, queue: RCTJSThread)
+        self.refreshRateListener.build(jsQueue: bridge, frameTimeCallback: frameTimeCallback)
     }
 
     func buildFrameTimeCallback(vitalsUpdateFrequency: Datadog.Configuration.VitalsFrequency) -> (Double) -> () {
