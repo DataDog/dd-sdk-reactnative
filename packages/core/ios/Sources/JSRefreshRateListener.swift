@@ -9,7 +9,7 @@ import Foundation
 typealias frame_time_callback = (Double) -> Void
 
 internal protocol RefreshRateListener {
-    func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
+    init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
     func start()
     func stop()
 }
@@ -18,13 +18,12 @@ internal final class JSRefreshRateMonitor: NSObject {
     private var refreshRateListener: RefreshRateListener
     
     override init() {
-        self.refreshRateListener = NoOpRefreshRateListener.init()
+        self.refreshRateListener = NoOpRefreshRateListener.init(jsQueue: DispatchQueue.main, frameTimeCallback: { double in })
         super.init()
     }
     
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
-        self.refreshRateListener = JSRefreshRateListener.init()
-        self.refreshRateListener.build(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
+        self.refreshRateListener = JSRefreshRateListener.init(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
         self.refreshRateListener.start()
     }
     
@@ -42,25 +41,25 @@ internal final class JSRefreshRateMonitor: NSObject {
 }
 
 private final class NoOpRefreshRateListener: RefreshRateListener {
-    func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {}
+    init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {}
     func start() {}
     func stop() {}
 
 }
 
 private final class JSRefreshRateListener: RefreshRateListener {
-    private var jsQueue: DispatchQueueType?
-    private var frameTimeCallback: frame_time_callback?
+    private var jsQueue: DispatchQueueType
+    private var frameTimeCallback: frame_time_callback
     private var lastFrameTimestamp: TimeInterval = -1
     private var jsDisplayLink: CADisplayLink?
 
-    public func build(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+    init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
         self.jsQueue = jsQueue
         self.frameTimeCallback = frameTimeCallback
     }
 
     public func start() {
-        jsQueue?.async {
+        jsQueue.async {
             self.jsDisplayLink?.invalidate()
             self.jsDisplayLink = CADisplayLink(target: self, selector: #selector(self.onFrameTick))
             self.jsDisplayLink?.add(to: .current, forMode: .common)
@@ -68,7 +67,7 @@ private final class JSRefreshRateListener: RefreshRateListener {
     }
 
     public func stop() {
-        jsQueue?.async {
+        jsQueue.async {
             self.jsDisplayLink?.invalidate()
             self.jsDisplayLink = nil
         }
@@ -78,20 +77,8 @@ private final class JSRefreshRateListener: RefreshRateListener {
         let frameTimestamp = displayLink.timestamp
         if lastFrameTimestamp != -1 {
             let frameDuration = frameTimestamp - lastFrameTimestamp
-            frameTimeCallback?(frameDuration)
+            frameTimeCallback(frameDuration)
         }
         lastFrameTimestamp = frameTimestamp
-    }
-
-    func appWillResignActive() {
-        stop()
-    }
-
-    func appDidBecomeActive() {
-        start()
-    }
-
-    class func requiresMainQueueSetup() -> Bool {
-        return true
     }
 }
