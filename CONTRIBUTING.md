@@ -17,7 +17,7 @@ yarn install
 
 This repository contains 2 main projects:
 
-* SDK project (in the `packages` folder), which consists of 3 workspaces:
+* SDK project (in the `packages` folder), which consists of 4 workspaces:
     * `codepush`: an integration for the [react-native-code-push](https://github.com/microsoft/react-native-code-push) library.
     * `core`: the core React Native SDK allowing tracking of logs, spans and RUM events.
     * `react-native-navigation`: an integration for the [react-native-navigation](https://github.com/wix/react-native-navigation) library.

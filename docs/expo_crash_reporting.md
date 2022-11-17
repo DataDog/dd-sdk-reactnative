@@ -86,5 +86,5 @@ If you are using the `expo-dev-client` and already have the `expo-datadog` plugi
 {{< partial name="whats-next/whats-next.html" >}}
 
 [1]: https://app.datadoghq.com/rum/error-tracking
-[2]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/expo/README.md
+[2]: https://github.com/DataDog/expo-datadog
 [3]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/#usage
