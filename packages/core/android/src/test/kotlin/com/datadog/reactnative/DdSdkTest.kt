@@ -1185,11 +1185,12 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update}`(
+        @StringForgery fakeFrequency: String,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = "SOME_BAD_VALUE"
+            vitalsUpdateFrequency = fakeFrequency
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
