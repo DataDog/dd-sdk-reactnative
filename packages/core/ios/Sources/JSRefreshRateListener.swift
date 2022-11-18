@@ -9,13 +9,11 @@ import Foundation
 typealias frame_time_callback = (Double) -> Void
 
 internal protocol RefreshRateListener {
-    init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
     func start()
     func stop()
 }
 
 internal protocol RefreshRateMonitor {
-    init()
     func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback)
 }
 
@@ -23,11 +21,11 @@ internal final class JSRefreshRateMonitor: RefreshRateMonitor {
     private var refreshRateListener: RefreshRateListener
     
     init() {
-        self.refreshRateListener = NoOpRefreshRateListener.init(jsQueue: DispatchQueue.main, frameTimeCallback: { double in })
+        self.refreshRateListener = NoOpRefreshRateListener()
     }
     
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
-        self.refreshRateListener = JSRefreshRateListener.init(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
+        self.refreshRateListener = JSRefreshRateListener(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
         self.refreshRateListener.start()
     }
     
@@ -45,7 +43,7 @@ internal final class JSRefreshRateMonitor: RefreshRateMonitor {
 }
 
 private final class NoOpRefreshRateListener: RefreshRateListener {
-    init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {}
+    init() {}
     func start() {}
     func stop() {}
 
