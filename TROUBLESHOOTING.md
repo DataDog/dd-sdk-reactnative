@@ -1,5 +1,9 @@
 # TROUBLESHOOTING
 
+### No data is being sent to Datadog
+
+See the [dedicated troubleshooting guide](./docs/troubleshooting.md).
+
 ### `Undefined symbols: Swift`
 
 Original issue: https://github.com/DataDog/dd-sdk-reactnative/issues/41
