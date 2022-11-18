@@ -6,9 +6,6 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-def reactConfig = project.hasProperty("react") ? project.react : [:]
-def reactRoot = file(reactConfig.root ?: "../../")
-
 afterEvaluate {
 
     def androidExtension = extensions.findByName("android")
@@ -33,7 +30,10 @@ afterEvaluate {
         def targetName = variant.name.capitalize()
         def targetPath = variant.dirName
 
-        def bundleTask = tasks.findByName("bundle${targetName}JsAndAssets")
+        def reactConfig = getReactConfig(buildDir, targetName)
+        def reactRoot = file(reactConfig.root)
+
+        def bundleTask = tasks.findByName(reactConfig.bundleTaskName)
 
         if (bundleTask == null) {
             logger.info("Cannot find JS bundle task for variant=${targetName}.")
@@ -47,10 +47,7 @@ afterEvaluate {
         def serviceName = getServiceName(variant)
         logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
 
-        def bundleAssetName = reactConfig.bundleAssetName ?: "index.android.bundle"
-
-        def jsBundleDir = file("$buildDir/generated/assets/react/${targetPath}")
-        def jsBundleFile = file("$jsBundleDir/$bundleAssetName")
+        def bundleAssetName = reactConfig.bundleAssetName
 
         def jsSourceMapsDir = file("$buildDir/generated/sourcemaps/react/${targetPath}")
         def jsOutputSourceMapFile = file("$jsSourceMapsDir/${bundleAssetName}.map")
@@ -59,27 +56,30 @@ afterEvaluate {
             group = "datadog"
             description = "Uploads sourcemaps to Datadog."
 
-            def execCommand = [
-                    "yarn",
-                    "datadog-ci",
-                    "react-native",
-                    "upload",
-                    "--platform",
-                    "android",
-                    "--service",
-                    serviceName,
-                    "--bundle",
-                    jsBundleFile.absolutePath,
-                    "--sourcemap",
-                    jsOutputSourceMapFile.absolutePath,
-                    "--release-version",
-                    releaseVersion,
-                    "--build-version",
-                    buildVersion
-            ]
+            def execCommand = { jsBundleFile ->
+                return [
+                        "yarn",
+                        "datadog-ci",
+                        "react-native",
+                        "upload",
+                        "--platform",
+                        "android",
+                        "--service",
+                        serviceName,
+                        "--bundle",
+                        jsBundleFile.absolutePath,
+                        "--sourcemap",
+                        jsOutputSourceMapFile.absolutePath,
+                        "--release-version",
+                        releaseVersion,
+                        "--build-version",
+                        buildVersion
+                ]
+            }
 
             doFirst {
-                if (!jsBundleFile.exists()) {
+                def jsBundleFile = reactConfig.bundleFileResolver()
+                if (jsBundleFile == null) {
                     throw new GradleException("JS bundle file doesn't exist, aborting upload.")
                 }
 
@@ -87,7 +87,7 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                runShellCommand(execCommand, reactRoot)
+                runShellCommand(execCommand(jsBundleFile), reactRoot)
 
             }
         }
@@ -96,6 +96,63 @@ afterEvaluate {
         bundleTask.finalizedBy uploadTask
 
     }
+}
+
+/**
+ * We use a function here to resolve the correct bundle location after the bundle task
+ * is over, as its location can depend on the Android Gradle Plugin version.
+ */
+private def getBundleFileResolver(String[] jsBundleDirs, String bundleAssetName) {
+    def resolver = { ->
+        return jsBundleDirs.collect {
+            file("$it/$bundleAssetName") 
+        }.find {
+            it.exists()
+        }
+    }
+
+    return resolver
+}
+
+/** 
+ * From RN 0.71, the following things changed in the RN gradle plugin:
+ * - bundle task name changed from "bundle${targetName}JsAndAssets" to "createBundle${targetName}JsAndAssets"
+ * - bundle dir changed from "$buildDir/generated/assets/react/${targetPath}" to "$buildDir/ASSETS/createBundle${targetPath}JsAndAssets"
+ *   (and then "$buildDir/generated/assets/createBundle${targetPath}JsAndAssets" with the release of Android Gradle Plugin 7.4, see https://github.com/facebook/react-native/issues/35439)
+ * - config was in "project.react" and is now in "project.extensions.react"
+ * - accessing parameters values requires calling a getter 
+ */
+private def getReactConfig(File buildDir, String targetName) {
+    def reactConfig = [:]
+
+    if (project.extensions.findByName("react")) {
+        // From RN 0.71
+        def bundleAssetName = project.extensions.react.bundleAssetName.get() ?: "index.android.bundle"
+        reactConfig['bundleTaskName'] = "createBundle${targetName}JsAndAssets"
+        reactConfig['bundleFileResolver'] = getBundleFileResolver([
+            "$buildDir/ASSETS/createBundle${targetName}JsAndAssets", // Android Gradle Plugin 7.3
+            "$buildDir/generated/assets/createBundle${targetName}JsAndAssets" // Android Gradle Plugin 7.4 and up
+        ] as String[], bundleAssetName)
+        reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['root'] = project.extensions.react.root.get() ?: "../../"
+    } else if (project.hasProperty("react")) {
+        // WARNING: on RN 0.71, `project.react` is an empty map, so this `if` must go after the previous one.
+        // Legacy way, before RN 0.71
+        def bundleAssetName = project.react.bundleAssetName ?: "index.android.bundle"
+        reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
+        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetName}"] as String[], bundleAssetName)
+        reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['root'] = project.react.root ?: "../../"
+    } else {
+        // We assume this cannot happen with RN >= 0.71, so we use the legacy default values
+        def bundleAssetName = "index.android.bundle"
+        reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
+        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetName}"] as String[], bundleAssetName)
+        reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['root'] = "../../"
+    }
+
+    return reactConfig
 }
 
 private def runShellCommand(
