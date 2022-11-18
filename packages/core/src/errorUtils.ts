@@ -20,6 +20,14 @@ export const getErrorMessage = (error: any | undefined): string => {
     return message;
 };
 
+/**
+ * Will extract the stack from the error, taking the first key found among:
+ * `stacktrace`, `stack`, `componentStack` (component tree for component errors,
+ * which contains only native components names in production).
+ *
+ * In last resort and if `sourceURL`, `line` and `column` are present, it will
+ * generate a stack from this information.
+ */
 export const getErrorStackTrace = (error: any | undefined): string => {
     let stack = EMPTY_STACK_TRACE;
 
@@ -29,12 +37,12 @@ export const getErrorStackTrace = (error: any | undefined): string => {
         } else if (typeof error === 'string') {
             stack = EMPTY_STACK_TRACE;
         } else if (typeof error === 'object') {
-            if ('componentStack' in error) {
-                stack = String(error.componentStack);
-            } else if ('stacktrace' in error) {
+            if ('stacktrace' in error) {
                 stack = String(error.stacktrace);
             } else if ('stack' in error) {
                 stack = String(error.stack);
+            } else if ('componentStack' in error) {
+                stack = String(error.componentStack);
             } else if (
                 'sourceURL' in error &&
                 'line' in error &&
