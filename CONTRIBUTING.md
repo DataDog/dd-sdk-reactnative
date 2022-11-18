@@ -17,7 +17,8 @@ yarn install
 
 This repository contains 2 main projects:
 
-* SDK project (in the `packages` folder), which consists of 3 workspaces:
+* SDK project (in the `packages` folder), which consists of 4 workspaces:
+    * `codepush`: an integration for the [react-native-code-push](https://github.com/microsoft/react-native-code-push) library.
     * `core`: the core React Native SDK allowing tracking of logs, spans and RUM events.
     * `react-native-navigation`: an integration for the [react-native-navigation](https://github.com/wix/react-native-navigation) library.
     * `react-navigation`: an integration for the [react-navigation](https://github.com/react-navigation/react-navigation) library.
@@ -31,9 +32,7 @@ If you are using Visual Studio Code, please make sure to set workspace version o
 
 ### Native Module development
 
-By default, the iOS and Android source files are automatically generated based on the [dd-mobile-bridge](https://github.com/DataDog/dd-mobile-bridge) repository. 
-
-To edit the Objective-C files, open `example/ios/DdSdkReactNativeExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > DdSdkReactNative`.
+To edit the Objective-C and Swift files, open `example/ios/DdSdkReactNativeExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > DdSdkReactNative`.
 
 To edit the Kotlin files, open `example/android` in Android studio and find the source files at `ddsdkreactnative` under `Android`.
 
@@ -51,24 +50,6 @@ yarn lint
 # Run a command for the particular workspace (ex. @datadog/mobile-react-native)
 yarn workspace @datadog/mobile-react-native <command>
 ```
-
-Before you run tests locally, make sure you modify the local version of `node_modules/react-native-gesture-handler/jestSetup.js` to be:
-
-```javascript
-import { NativeModules as RNNativeModules } from "react-native";
-
-RNNativeModules.RNGestureHandlerModule = RNNativeModules.RNGestureHandlerModule || {
-  State: { BEGAN: "BEGAN", FAILED: "FAILED", ACTIVE: "ACTIVE", END: "END" },
-  attachGestureHandler: jest.fn(),
-  createGestureHandler: jest.fn(),
-  dropGestureHandler: jest.fn(),
-  updateGestureHandler: jest.fn(),
-
-};
-RNNativeModules.PlatformConstants = RNNativeModules.PlatformConstants || {
-  forceTouchAvailable: false
-};
-``` 
 
 ### Example App
 
@@ -95,13 +76,13 @@ yarn ios
 
 ## Releasing
 
-To bump your SDK version, run the following command:
+To bump your SDK version, run the following command, where `x.y.z` is the new version you want to set:
 
 ```sh
-yarn run lerna version <version> --ignore-changes --skip-git
+./update-version x.y.z
 ```
 
-This bumps the versions in the `lerna.json` and related `package.json` files, and then they need to be committed.
+This bumps the versions in the `lerna.json` and related `package.json` files, and commits them.
 
 To publish the packages, run the following command:
 
