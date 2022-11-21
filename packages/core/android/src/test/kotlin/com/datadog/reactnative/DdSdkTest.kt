@@ -8,6 +8,7 @@ package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
 import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogEndpoint
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
@@ -19,6 +20,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
@@ -26,9 +28,11 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.doNothing
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.verify
@@ -58,6 +62,17 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
 
+fun mockChoreographerInstance(mock: Choreographer = mock()) {
+    Choreographer::class.java.setStaticValue(
+        "sThreadInstance",
+        object : ThreadLocal<Choreographer>() {
+            override fun initialValue(): Choreographer {
+                return mock
+            }
+        }
+    )
+}
+
 @Extensions(
     ExtendWith(MockitoExtension::class),
     ExtendWith(ForgeExtension::class)
@@ -83,8 +98,13 @@ internal class DdSdkTest {
     @Forgery
     lateinit var mockPackageInfo: PackageInfo
 
+    @Mock
+    lateinit var mockChoreographer: Choreographer
+
     @BeforeEach
     fun `set up`() {
+        doNothing().whenever(mockChoreographer).postFrameCallback(any())
+        mockChoreographerInstance(mockChoreographer)
         whenever(mockContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
         whenever(
@@ -1226,7 +1246,7 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
             }
-    }
+        }
 
     // endregion
 
