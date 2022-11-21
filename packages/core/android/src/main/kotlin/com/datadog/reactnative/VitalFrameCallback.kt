@@ -7,7 +7,6 @@
 package com.datadog.reactnative
 
 import android.view.Choreographer
-import java.util.concurrent.TimeUnit
 
 /**
  * Reads the javascript framerate based on the [Choreographer.FrameCallback].

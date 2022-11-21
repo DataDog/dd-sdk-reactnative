@@ -6,8 +6,6 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.core.configuration.VitalsUpdateFrequency
-
 /**
  * A configuration object to initialize Datadog's features.
  * @param clientToken A valid Datadog client token.
