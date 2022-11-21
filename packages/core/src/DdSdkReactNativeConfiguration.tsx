@@ -8,6 +8,13 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 
+export enum VitalsUpdateFrequency {
+    FREQUENT = 'FREQUENT',
+    AVERAGE = 'AVERAGE',
+    RARE = 'RARE',
+    NEVER = 'NEVER'
+}
+
 const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
@@ -17,7 +24,8 @@ const DEFAULTS = {
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
-    telemetrySampleRate: 20.0
+    telemetrySampleRate: 20.0,
+    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
 };
 
 /**
@@ -77,6 +85,9 @@ export class DdSdkReactNativeConfiguration {
      * Android SDK is used, which is 20.
      */
     public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
+
+    public vitalsUpdateFrequency: VitalsUpdateFrequency =
+        DEFAULTS.vitalsUpdateFrequency;
 
     public additionalConfig: {
         [k: string]: any;
@@ -149,6 +160,7 @@ export type PartialInitializationConfiguration = {
     readonly trackingConsent?: TrackingConsent;
     readonly nativeCrashReportEnabled?: boolean;
     readonly telemetrySampleRate?: number;
+    readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
 };
 
 const setConfigurationAttribute = <

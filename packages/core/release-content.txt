@@ -24,6 +24,7 @@ package/android/src/main/kotlin/com/datadog/reactnative/DdTrace.kt
 package/android/src/main/kotlin/com/datadog/reactnative/GlobalState.kt
 package/android/src/main/kotlin/com/datadog/reactnative/NoOpViewTrackingStrategy.kt
 package/android/src/main/kotlin/com/datadog/reactnative/ProxyAuthenticator.kt
+package/android/src/main/kotlin/com/datadog/reactnative/VitalFrameCallback.kt
 package/android/src/test
 package/android/src/test/kotlin
 package/android/src/test/kotlin/com
@@ -70,6 +71,8 @@ package/ios/Sources/DdSdkReactNative-Bridging-Header.h
 package/ios/Sources/DdTrace.m
 package/ios/Sources/DdTrace.swift
 package/ios/Sources/GlobalState.swift
+package/ios/Sources/JsRefreshRate.h
+package/ios/Sources/JsRefreshRate.m
 package/ios/Sources/QueueHolder.swift
 package/ios/Sources/RNDdSdkConfiguration.swift
 package/lib

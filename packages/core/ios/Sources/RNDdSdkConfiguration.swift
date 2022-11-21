@@ -17,6 +17,7 @@ extension NSDictionary {
         let site = object(forKey: "site") as? NSString
         let trackingConsent = object(forKey: "trackingConsent") as? NSString
         let telemetrySampleRate = object(forKey: "telemetrySampleRate") as? Double
+        let vitalsUpdateFrequency = object(forKey: "vitalsUpdateFrequency") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -27,6 +28,7 @@ extension NSDictionary {
             site: site,
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
+            vitalsUpdateFrequency: vitalsUpdateFrequency,
             additionalConfig: additionalConfig
         )
     }

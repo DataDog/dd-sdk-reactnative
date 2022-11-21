@@ -7,6 +7,7 @@
 import Foundation
 import Datadog
 import DatadogCrashReporting
+import React
 
 func getDefaultAppVersion() -> String {
     let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -16,38 +17,49 @@ func getDefaultAppVersion() -> String {
 
 @objc(DdSdk)
 class RNDdSdk: NSObject {
+    @objc var bridge: RCTBridge!
+
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
         return false
     }
     
+    let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
     
+    private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
+    
     convenience override init() {
-        self.init(mainDispatchQueue: DispatchQueue.main)
+        self.init(mainDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
     }
     
-    init(mainDispatchQueue: DispatchQueueType) {
+    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
         self.mainDispatchQueue = mainDispatchQueue
+        self.jsRefreshRateMonitor = jsRefreshRateMonitor
         super.init()
     }
-
-
+    
     @objc(initialize:withResolver:withRejecter:)
     func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
+            let sdkConfiguration = configuration.asDdSdkConfiguration()
+            
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
                 Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                
+                // This block is called when SDK is reinitialized and the javascript has been wiped out.
+                // In this case, we need to restart the refresh rate monitor, as the javascript thread 
+                // appears to change at that moment.
+                self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
                 resolve(nil)
                 return
             }
-            let sdkConfiguration = configuration.asDdSdkConfiguration()
             self.setVerbosityLevel(additionalConfig: sdkConfiguration.additionalConfig)
 
             let ddConfig = self.buildConfiguration(configuration: sdkConfiguration)
@@ -56,6 +68,8 @@ class RNDdSdk: NSObject {
 
             Global.rum = RUMMonitor.initialize()
 
+            self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
+            
             resolve(nil)
         }
     }
@@ -131,6 +145,8 @@ class RNDdSdk: NSObject {
         default:
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
+        
+        _ = ddConfigBuilder.set(mobileVitalsFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency))
 
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
@@ -230,6 +246,23 @@ class RNDdSdk: NSObject {
         return trackingConsent
     }
 
+    func buildVitalsUpdateFrequency(frequency: NSString?) -> Datadog.Configuration.VitalsFrequency {
+        let vitalsFrequency: Datadog.Configuration.VitalsFrequency
+        switch frequency?.lowercased {
+        case "never":
+            vitalsFrequency = .never
+        case "rare":
+            vitalsFrequency = .rare
+        case "average":
+            vitalsFrequency = .average
+        case "frequent":
+            vitalsFrequency = .frequent
+        default:
+            vitalsFrequency = .average
+        }
+        return vitalsFrequency
+    }
+
     func setVerbosityLevel(additionalConfig: NSDictionary?) {
         let verbosityLevel = (additionalConfig?[InternalConfigurationAttributes.sdkVerbosity]) as? NSString
         switch verbosityLevel?.lowercased {
@@ -245,4 +278,22 @@ class RNDdSdk: NSObject {
             Datadog.verbosityLevel = nil
         }
     }
+    
+    func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
+        let vitalsUpdateFrequency = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency)
+        if (vitalsUpdateFrequency != .never) {
+            // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: self.frameTimeCallback)
+        }
+    }
+
+    func frameTimeCallback(frameTime: Double) {
+        if (frameTime > 0) {
+            Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
+        }
+        if (frameTime > self.jsLongTaskThresholdInSeconds) {
+            // TODO: report long task
+        }
+    }
+
 }

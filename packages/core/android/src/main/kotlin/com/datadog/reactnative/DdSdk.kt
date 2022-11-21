@@ -9,11 +9,15 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -23,6 +27,8 @@ import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The entry point to initialize Datadog's features.
@@ -33,6 +39,9 @@ class DdSdk(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
+    internal val reactContext: ReactApplicationContext = reactContext
+    internal val initialized = AtomicBoolean(false)
+    internal val longTaskThresholdNs = TimeUnit.MILLISECONDS.toNanos(100L)
 
     override fun getName(): String = "DdSdk"
 
@@ -54,6 +63,8 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
+        monitorJsRefreshRate(buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency))
+        initialized.set(true)
 
         promise.resolve(null)
     }
@@ -140,6 +151,7 @@ class DdSdk(
         val packageInfo = try {
             appContext.packageManager.getPackageInfo(packageName, 0)
         } catch (e: PackageManager.NameNotFoundException) {
+            datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
             return DEFAULT_APP_VERSION
         }
 
@@ -177,6 +189,7 @@ class DdSdk(
         }
 
         configBuilder.useSite(buildSite(configuration.site))
+        configBuilder.setVitalsUpdateFrequency(buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency))
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
@@ -285,6 +298,47 @@ class DdSdk(
         }
     }
 
+    private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
+        val vitalUpdateFrequencyLower = vitalsUpdateFrequency?.lowercase(Locale.US)
+        return when (vitalUpdateFrequencyLower) {
+            "never" -> VitalsUpdateFrequency.NEVER
+            "rare" -> VitalsUpdateFrequency.RARE
+            "average" -> VitalsUpdateFrequency.AVERAGE
+            "frequent" -> VitalsUpdateFrequency.FREQUENT
+            else -> VitalsUpdateFrequency.AVERAGE
+        }
+    }
+
+    private fun handlePostFrameCallbackError(e: IllegalStateException) {
+        datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
+    }
+
+    private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
+        val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
+        reactContext.runOnJSQueueThread {
+            val vitalFrameCallback =
+                VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) { initialized.get() }
+            try {
+                Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
+            } catch (e: IllegalStateException) {
+                // This should never happen as the React Native thread always has a Looper
+                handlePostFrameCallbackError(e)
+            }
+        }
+    }
+
+    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency): (frameTime: Double) -> Unit {
+        val monitorJsRefreshRate = vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER
+        return {
+            if (monitorJsRefreshRate && it > 0.0) {
+                GlobalRum.get()._getInternal()?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+            }
+            if (it > longTaskThresholdNs) {
+                // TODO: report long task
+            }
+        }
+    }
+
     // endregion
 
     companion object {
@@ -301,5 +355,7 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
+        internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
     }
 }
