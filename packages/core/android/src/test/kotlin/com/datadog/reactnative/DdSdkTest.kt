@@ -318,10 +318,6 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
                 it.hasFieldEqualTo("samplingRate", expectedRumSampleRate)
-                it.hasFieldEqualTo(
-                    "vitalsMonitorUpdateFrequency",
-                    VitalsUpdateFrequency.AVERAGE
-                )
             }
             .hasFieldEqualTo(
                 "additionalConfig",
