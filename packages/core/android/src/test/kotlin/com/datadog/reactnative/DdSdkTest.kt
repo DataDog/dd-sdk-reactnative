@@ -29,6 +29,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doNothing
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.isNull
@@ -36,6 +37,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
@@ -84,6 +86,9 @@ internal class DdSdkTest {
     lateinit var testedBridgeSdk: DdSdk
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    lateinit var mockReactContext: ReactApplicationContext
+
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockContext: ReactApplicationContext
 
     @Mock
@@ -105,7 +110,7 @@ internal class DdSdkTest {
     fun `set up`() {
         doNothing().whenever(mockChoreographer).postFrameCallback(any())
         mockChoreographerInstance(mockChoreographer)
-        whenever(mockContext.applicationContext) doReturn mockContext
+        whenever(mockReactContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
         whenever(
             mockContext.packageManager.getPackageInfo(
@@ -113,7 +118,11 @@ internal class DdSdkTest {
                 0
             )
         ) doReturn mockPackageInfo
-        testedBridgeSdk = DdSdk(mockContext, mockDatadog)
+        whenever(mockReactContext.runOnJSQueueThread(any())).thenAnswer { answer ->
+            answer.getArgument<Runnable>(0).run()
+            true
+        }
+        testedBridgeSdk = DdSdk(mockReactContext, mockDatadog)
     }
 
     @AfterEach
@@ -1185,6 +1194,10 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
             }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+        }
     }
 
     @Test
@@ -1192,6 +1205,7 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "NEVER"
         )
@@ -1215,6 +1229,7 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
             }
+        verifyZeroInteractions(mockChoreographer)
     }
 
     @Test
@@ -1246,7 +1261,11 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
             }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
         }
+    }
 
     // endregion
 
