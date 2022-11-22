@@ -292,7 +292,7 @@ class RNDdSdk: NSObject {
             Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
         }
         if (frameTime > self.jsLongTaskThresholdInSeconds) {
-            // TODO: report long task
+            Global.rum._internal?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
         }
     }
 
