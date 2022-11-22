@@ -33,6 +33,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "env": "fake-env",
                   "firstPartyHosts": Array [],
                   "nativeCrashReportEnabled": false,
+                  "nativeLongTaskThresholdMs": 200,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
                   "resourceTracingSamplingRate": 20,
@@ -78,7 +79,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         versionSuffix: 'codepush-3',
                         additionalConfig: { additionalField: 'fake-value' },
                         trackingConsent: TrackingConsent.PENDING,
-                        nativeCrashReportEnabled: true
+                        nativeCrashReportEnabled: true,
+                        nativeLongTaskThresholdMs: 345
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -93,6 +95,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "api.com",
                   ],
                   "nativeCrashReportEnabled": true,
+                  "nativeLongTaskThresholdMs": 345,
                   "nativeViewTracking": true,
                   "proxyConfig": ProxyConfiguration {
                     "address": "api.com",
@@ -138,7 +141,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         version: '',
                         versionSuffix: '',
                         additionalConfig: {},
-                        nativeCrashReportEnabled: false
+                        nativeCrashReportEnabled: false,
+                        nativeLongTaskThresholdMs: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -149,6 +153,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "env": "",
                   "firstPartyHosts": Array [],
                   "nativeCrashReportEnabled": false,
+                  "nativeLongTaskThresholdMs": false,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
                   "resourceTracingSamplingRate": 0,

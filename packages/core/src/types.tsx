@@ -13,6 +13,7 @@ export class DdSdkConfiguration {
         readonly env: string,
         readonly applicationId: string,
         readonly nativeCrashReportEnabled: boolean,
+        readonly nativeLongTaskThresholdMs: number,
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,

@@ -656,6 +656,43 @@ describe('DdSdkReactNative', () => {
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
+
+        it('enables native view tracking when initialize { native long task custom threshold }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeLongTaskThresholdMs = 234;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.long_task.threshold': 234,
+                '_dd.first_party_hosts': []
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('setAttributes', () => {

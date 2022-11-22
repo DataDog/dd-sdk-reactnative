@@ -24,6 +24,7 @@ import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
+import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
@@ -52,7 +53,6 @@ export class DdSdkReactNative {
 
     private static readonly DD_NATIVE_LONG_TASK_THRESHOLD_KEY =
         '_dd.long_task.threshold';
-    private static readonly NATIVE_LONG_TASK_THRESHOLD_MS = 200;
 
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
@@ -97,6 +97,7 @@ export class DdSdkReactNative {
                 configuration.env,
                 configuration.applicationId,
                 configuration.nativeCrashReportEnabled,
+                adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
                 configuration.sampleRate === undefined
                     ? configuration.sessionSamplingRate
                     : configuration.sampleRate,
@@ -288,7 +289,7 @@ export class DdSdkReactNative {
 
         configuration.additionalConfig[
             DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
-        ] = DdSdkReactNative.NATIVE_LONG_TASK_THRESHOLD_MS;
+        ] = configuration.nativeLongTaskThresholdMs;
 
         configuration.additionalConfig['_dd.first_party_hosts'] =
             configuration.firstPartyHosts;
