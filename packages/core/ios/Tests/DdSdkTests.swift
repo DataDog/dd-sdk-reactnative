@@ -472,20 +472,50 @@ internal class DdSdkTests: XCTestCase {
         
         Datadog.flushAndDeinitialize()
     }
+    
+    func testLongTaskCollection() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.05)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.20)
+
+        Datadog.flushAndDeinitialize()
+    }
 }
 
-private class MockRUMMonitor: DDRUMMonitor {
+private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
     private(set) var receivedAttributes = [AttributeKey: AttributeValue]()
     private(set) var lastReceivedPerformanceMetrics = [PerformanceMetric: Double]()
+    private(set) var receivedLongTasks = [Date: TimeInterval]()
+
+    override init() {
+        super.init()
+        self._internal = _RUMInternalProxy(subscriber: self)
+    }
 
     override func addAttribute(forKey key: AttributeKey, value: AttributeValue) {
         receivedAttributes[key] = value
     }
-    
+
     override func updatePerformanceMetric(metric: PerformanceMetric, value: Double, attributes: [AttributeKey : AttributeValue] = [:]) {
         lastReceivedPerformanceMetrics[.jsFrameTimeSeconds] = value
     }
+
+    func process(command: RUMCommand) {
+        if (command is RUMAddLongTaskCommand) {
+            receivedLongTasks[(command as! RUMAddLongTaskCommand).time] = (command as! RUMAddLongTaskCommand).duration
+        }
+    }
 }
+
 
 private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
     private var refreshRateListener: RefreshRateListener?
