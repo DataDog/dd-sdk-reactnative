@@ -1283,8 +1283,8 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 send long tasks 𝕎 frame time is over threshold() {}`(
-        @LongForgery timestampNs: Long,
-        @LongForgery(ONE_HUNDRED_MILLISSECOND_NS, ONE_SECOND_NS) frameDurationNs: Long,
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS + 1, max = ONE_SECOND_NS) frameDurationNs: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
@@ -1306,7 +1306,7 @@ internal class DdSdkTest {
             // then
             verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
                 RumPerformanceMetric.JS_FRAME_TIME,
-                frameDurationNs.toDouble()
+                    frameDurationNs.toDouble()
             )
             verify(mockRumMonitor._getInternal()!!).addLongTask(
                 frameDurationNs,
