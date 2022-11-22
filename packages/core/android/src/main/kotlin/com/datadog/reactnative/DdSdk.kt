@@ -316,29 +316,30 @@ class DdSdk(
     }
 
     private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
-        val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
-        reactContext.runOnJSQueueThread {
-            val vitalFrameCallback =
-                VitalFrameCallback(
-                    frameTimeCallback,
-                    ::handlePostFrameCallbackError
-                ) {
-                    initialized.get()
+        if (vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER) {
+            val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
+            reactContext.runOnJSQueueThread {
+                val vitalFrameCallback =
+                    VitalFrameCallback(
+                        frameTimeCallback,
+                        ::handlePostFrameCallbackError
+                    ) {
+                        initialized.get()
+                    }
+                try {
+                    Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
+                } catch (e: IllegalStateException) {
+                    // This should never happen as the React Native thread always has a Looper
+                    handlePostFrameCallbackError(e)
                 }
-            try {
-                Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
-            } catch (e: IllegalStateException) {
-                // This should never happen as the React Native thread always has a Looper
-                handlePostFrameCallbackError(e)
             }
         }
     }
 
     private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency):
         (frameTime: Double) -> Unit {
-        val monitorJsRefreshRate = vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER
         return {
-            if (monitorJsRefreshRate && it > 0.0) {
+            if (it > 0.0) {
                 GlobalRum.get()._getInternal()?.updatePerformanceMetric(
                     RumPerformanceMetric.JS_FRAME_TIME,
                     it

@@ -8,6 +8,7 @@ package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
 import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogEndpoint
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
@@ -19,6 +20,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
@@ -26,12 +28,16 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.doNothing
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
@@ -58,6 +64,17 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
 
+fun mockChoreographerInstance(mock: Choreographer = mock()) {
+    Choreographer::class.java.setStaticValue(
+        "sThreadInstance",
+        object : ThreadLocal<Choreographer>() {
+            override fun initialValue(): Choreographer {
+                return mock
+            }
+        }
+    )
+}
+
 @Extensions(
     ExtendWith(MockitoExtension::class),
     ExtendWith(ForgeExtension::class)
@@ -67,6 +84,9 @@ import org.mockito.quality.Strictness
 internal class DdSdkTest {
 
     lateinit var testedBridgeSdk: DdSdk
+
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    lateinit var mockReactContext: ReactApplicationContext
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockContext: ReactApplicationContext
@@ -83,9 +103,14 @@ internal class DdSdkTest {
     @Forgery
     lateinit var mockPackageInfo: PackageInfo
 
+    @Mock
+    lateinit var mockChoreographer: Choreographer
+
     @BeforeEach
     fun `set up`() {
-        whenever(mockContext.applicationContext) doReturn mockContext
+        doNothing().whenever(mockChoreographer).postFrameCallback(any())
+        mockChoreographerInstance(mockChoreographer)
+        whenever(mockReactContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
         whenever(
             mockContext.packageManager.getPackageInfo(
@@ -93,7 +118,11 @@ internal class DdSdkTest {
                 0
             )
         ) doReturn mockPackageInfo
-        testedBridgeSdk = DdSdk(mockContext, mockDatadog)
+        whenever(mockReactContext.runOnJSQueueThread(any())).thenAnswer { answer ->
+            answer.getArgument<Runnable>(0).run()
+            true
+        }
+        testedBridgeSdk = DdSdk(mockReactContext, mockDatadog)
     }
 
     @AfterEach
@@ -289,10 +318,6 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
                 it.hasFieldEqualTo("samplingRate", expectedRumSampleRate)
-                it.hasFieldEqualTo(
-                    "vitalsMonitorUpdateFrequency",
-                    VitalsUpdateFrequency.AVERAGE
-                )
             }
             .hasFieldEqualTo(
                 "additionalConfig",
@@ -1165,6 +1190,10 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
             }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+        }
     }
 
     @Test
@@ -1172,6 +1201,7 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "NEVER"
         )
@@ -1195,6 +1225,7 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
             }
+        verifyZeroInteractions(mockChoreographer)
     }
 
     @Test
@@ -1226,6 +1257,10 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
             }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+        }
     }
 
     // endregion
