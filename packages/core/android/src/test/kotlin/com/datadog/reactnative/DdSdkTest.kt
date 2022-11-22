@@ -17,9 +17,14 @@ import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.plugin.DatadogPlugin
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRum
+import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
@@ -43,6 +48,7 @@ import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
+import fr.xgouchet.elmyr.annotation.LongForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
@@ -63,6 +69,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
+import java.util.concurrent.atomic.AtomicBoolean
 
 fun mockChoreographerInstance(mock: Choreographer = mock()) {
     Choreographer::class.java.setStaticValue(
@@ -92,6 +99,12 @@ internal class DdSdkTest {
     lateinit var mockContext: ReactApplicationContext
 
     @Mock
+    lateinit var mockRumMonitor: RumMonitor
+
+    @Mock
+    lateinit var mockRumInternalProxy: _RumInternalProxy
+
+    @Mock
     lateinit var mockDatadog: DatadogWrapper
 
     @Forgery
@@ -108,6 +121,9 @@ internal class DdSdkTest {
 
     @BeforeEach
     fun `set up`() {
+        GlobalRum.registerIfAbsent(mockRumMonitor)
+        whenever(mockRumMonitor._getInternal()) doReturn mockRumInternalProxy
+
         doNothing().whenever(mockChoreographer).postFrameCallback(any())
         mockChoreographerInstance(mockChoreographer)
         whenever(mockReactContext.applicationContext) doReturn mockContext
@@ -128,6 +144,8 @@ internal class DdSdkTest {
     @AfterEach
     fun `tear down`() {
         GlobalState.globalAttributes.clear()
+        GlobalRum.javaClass.setStaticValue("monitor", mock<RumMonitor>())
+        GlobalRum.javaClass.getStaticValue<GlobalRum, AtomicBoolean>("isRegistered").set(false)
     }
 
     // region initialize / nativeCrashReportEnabled
@@ -1263,6 +1281,40 @@ internal class DdSdkTest {
         }
     }
 
+    @Test
+    fun `𝕄 send long tasks 𝕎 frame time is over threshold() {}`(
+        @LongForgery timestampNs: Long,
+        @LongForgery(ONE_HUNDRED_MILLISSECOND_NS, ONE_SECOND_NS) frameDurationNs: Long,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "AVERAGE"
+        )
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // then
+            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+            verify(mockRumMonitor._getInternal()!!).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
+        }
+    }
+
     // endregion
 
     // region version suffix
@@ -1738,4 +1790,9 @@ internal class DdSdkTest {
     }
 
     // endregion
+
+    companion object {
+        const val ONE_HUNDRED_MILLISSECOND_NS: Long = 100 * 1000L * 1000L
+        const val ONE_SECOND_NS: Long = 1000L * 1000L * 1000L
+    }
 }

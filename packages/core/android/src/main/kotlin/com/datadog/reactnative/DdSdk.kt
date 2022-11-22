@@ -346,7 +346,7 @@ class DdSdk(
                 )
             }
             if (it > longTaskThresholdNs) {
-                // TODO: report long task
+                GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
     }
