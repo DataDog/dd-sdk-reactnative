@@ -173,7 +173,6 @@ unMock {
   keep("android.os.SystemProperties")
   keep("android.view.Choreographer")
   keep("android.view.DisplayEventReceiver")
-  keepStartingWith("org.json")
 }
 
 tasks.withType(Test) {
