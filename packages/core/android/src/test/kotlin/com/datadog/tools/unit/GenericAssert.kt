@@ -12,6 +12,16 @@ import org.assertj.core.api.Assertions.assertThat
 class GenericAssert(actual: Any) :
     AbstractAssert<GenericAssert, Any>(actual, GenericAssert::class.java) {
 
+    fun doesNotHaveField(name: String): GenericAssert {
+        val field: Any? = actual.getFieldValue(name)
+        assertThat(field)
+            .overridingErrorMessage(
+                "Expecting object to not have $name, but found $field"
+            )
+            .isNull()
+        return this
+    }
+
     fun hasField(name: String, nestedAssert: (GenericAssert) -> Unit = {}): GenericAssert {
         val field: Any? = actual.getFieldValue(name)
         assertThat(field)

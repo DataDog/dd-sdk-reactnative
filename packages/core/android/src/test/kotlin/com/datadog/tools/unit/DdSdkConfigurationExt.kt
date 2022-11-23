@@ -20,6 +20,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     } else {
         nativeCrashReportEnabled
     }
+    map["nativeLongTaskThresholdMs"] = if (nativeLongTaskThresholdMs == null) {
+        0f
+    } else {
+        nativeLongTaskThresholdMs
+    }
     if (sampleRate != null) {
         map["sampleRate"] = sampleRate
     } else {

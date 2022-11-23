@@ -1111,17 +1111,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration,
         forge: Forge
     ) {
-        // floating-point type (coming from JS) and integer type (other frameworks)
-        val threshold = forge.anElementFrom(
-            forge.aLong(min = 0, max = 65536),
-            forge.aDouble(min = 0.0, max = 65536.0)
-        )
+        val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdk.DD_LONG_TASK_THRESHOLD to threshold
-            )
+            nativeLongTaskThresholdMs = threshold
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1146,6 +1140,34 @@ internal class DdSdkTest {
                         )
                         .hasFieldEqualTo("thresholdMs", threshold.toLong())
                 }
+            }
+    }
+
+    @Test
+    fun `𝕄 not set long task threshold 𝕎 initialize() {long task threshold is 0}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            nativeLongTaskThresholdMs = 0.0
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            credentialCaptor.capture(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") { rumConfig ->
+                rumConfig.doesNotHaveField("longTaskTrackingStrategy")
             }
     }
 

@@ -15,6 +15,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         env = getString("env").orEmpty(),
         applicationId = getString("applicationId"),
         nativeCrashReportEnabled = getBoolean("nativeCrashReportEnabled"),
+        nativeLongTaskThresholdMs = getDouble("nativeLongTaskThresholdMs"),
         sampleRate = getDouble("sampleRate"),
         site = getString("site"),
         trackingConsent = getString("trackingConsent"),
@@ -30,6 +31,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     map.putString("env", env)
     applicationId?.let { map.putString("applicationId", it) }
     nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
+    nativeLongTaskThresholdMs?.let { map.putDouble("nativeLongTaskThresholdMs", it) }
     sampleRate?.let { map.putDouble("sampleRate", it) }
     site?.let { map.putString("site", it) }
     trackingConsent?.let { map.putString("trackingConsent", it) }

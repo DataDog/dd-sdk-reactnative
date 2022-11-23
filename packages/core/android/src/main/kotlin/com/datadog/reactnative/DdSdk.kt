@@ -196,18 +196,17 @@ class DdSdk(
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
 
+        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        if (longTask != null) {
+            configBuilder.trackLongTasks(longTask)
+        }
+
         val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
         if (viewTracking == true) {
             // Use sensible default
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
-        }
-
-        val longTask =
-            (configuration.additionalConfig?.get(DD_LONG_TASK_THRESHOLD) as? Number)?.toLong()
-        if (longTask != null) {
-            configBuilder.trackLongTasks(longTask)
         }
 
         val firstPartyHosts =
@@ -358,7 +357,6 @@ class DdSdk(
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
-        internal const val DD_LONG_TASK_THRESHOLD = "_dd.long_task.threshold"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
