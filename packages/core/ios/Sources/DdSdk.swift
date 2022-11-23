@@ -152,6 +152,13 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
         }
 
+        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
+            if (threshold != 0) {
+                // `nativeLongTaskThresholdMs` attribute is in milliseconds
+                _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
+            }
+        }
+
         let additionalConfig = configuration.additionalConfig
 
         if var additionalConfiguration = additionalConfig as? [String: Any] {
@@ -169,11 +176,6 @@ class RNDdSdk: NSObject {
 
         if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
-        }
-
-        if let threshold = additionalConfig?[InternalConfigurationAttributes.longTaskThreshold] as? TimeInterval {
-            // `_dd.long_task.threshold` attribute is in milliseconds
-            _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
         }
 
         if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? [String] {

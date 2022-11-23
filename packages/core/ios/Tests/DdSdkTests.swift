@@ -343,11 +343,19 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildLongTaskThreshold() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.long_task.threshold": 2_500])
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2_500)
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
 
         XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, 2.5)
+    }
+    
+    func testBuildNoLongTaskTracking() {
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, nil)
     }
 
     func testBuildFirstPartyHosts() {
@@ -540,6 +548,7 @@ extension DdSdkConfiguration {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
@@ -552,6 +561,7 @@ extension DdSdkConfiguration {
             env: env as String,
             applicationId: applicationId as String,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
@@ -568,6 +578,7 @@ extension NSDictionary {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
@@ -581,6 +592,7 @@ extension NSDictionary {
                 "env": env,
                 "applicationId": applicationId,
                 "nativeCrashReportEnabled": nativeCrashReportEnabled,
+                "nativeLongTaskThresholdMs": nativeLongTaskThresholdMs,
                 "sampleRate": sampleRate,
                 "site": site,
                 "trackingConsent": trackingConsent,

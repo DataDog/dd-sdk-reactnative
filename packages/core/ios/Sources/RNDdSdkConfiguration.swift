@@ -13,6 +13,7 @@ extension NSDictionary {
         let env = object(forKey: "env") as? String
         let applicationId = object(forKey: "applicationId") as? String
         let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
+        let nativeLongTaskThresholdMs = object(forKey: "nativeLongTaskThresholdMs") as? Double
         let sampleRate = object(forKey: "sampleRate") as? Double
         let site = object(forKey: "site") as? NSString
         let trackingConsent = object(forKey: "trackingConsent") as? NSString
@@ -24,6 +25,7 @@ extension NSDictionary {
             env: (env != nil) ? env! : String(),
             applicationId: applicationId,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,

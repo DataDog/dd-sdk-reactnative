@@ -81,10 +81,6 @@ internal struct InternalConfigurationAttributes {
     /// Expects `String?` value
     static let serviceName = "_dd.service_name"
     
-    /// Enable overriding the long task threshold for long task detection.
-    /// Expects `Double?` value
-    static let longTaskThreshold = "_dd.long_task.threshold"
-    
     /// Specify first party hosts for distributed tracing.
     /// Even if the requests are intercepted at the javascript level, we have to pass this parameter to make sure the headers are
     /// correctly set when sending the traces to the intake.

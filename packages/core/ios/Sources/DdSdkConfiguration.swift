@@ -13,6 +13,7 @@ import Foundation
      - env: The application’s environment, for example: prod, pre-prod, staging, etc.
      - applicationId: The RUM application ID.
      - nativeCrashReportEnabled: Whether the SDK should track native (pure iOS or pure Android) crashes (default is false).
+     - nativeLongTaskThresholdMs: The threshold for native long tasks reporting in milliseconds.
      - sampleRate: The sample rate (between 0 and 100) of RUM sessions kept.
      - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
      - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
@@ -25,6 +26,7 @@ public class DdSdkConfiguration: NSObject {
     public var env: String = ""
     public var applicationId: String? = nil
     public var nativeCrashReportEnabled: Bool? = nil
+    public var nativeLongTaskThresholdMs: Double? = nil
     public var sampleRate: Double? = nil
     public var site: NSString? = nil
     public var trackingConsent: NSString? = nil
@@ -37,6 +39,7 @@ public class DdSdkConfiguration: NSObject {
         env: String,
         applicationId: String?,
         nativeCrashReportEnabled: Bool?,
+        nativeLongTaskThresholdMs: Double?,
         sampleRate: Double?,
         site: NSString?,
         trackingConsent: NSString?,
@@ -48,6 +51,7 @@ public class DdSdkConfiguration: NSObject {
         self.env = env
         self.applicationId = applicationId
         self.nativeCrashReportEnabled = nativeCrashReportEnabled
+        self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.sampleRate = sampleRate
         self.site = site
         self.trackingConsent = trackingConsent
