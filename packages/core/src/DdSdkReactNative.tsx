@@ -51,9 +51,6 @@ export class DdSdkReactNative {
     private static readonly DD_PROXY_USERNAME_KEY = '_dd.proxy.username';
     private static readonly DD_PROXY_PASSWORD_KEY = '_dd.proxy.password';
 
-    private static readonly DD_NATIVE_LONG_TASK_THRESHOLD_KEY =
-        '_dd.long_task.threshold';
-
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
     private static configuration?: DdSdkReactNativeConfiguration;
@@ -286,10 +283,6 @@ export class DdSdkReactNative {
                 DdSdkReactNative.DD_VERSION_SUFFIX
             ] = `-${configuration.versionSuffix}`;
         }
-
-        configuration.additionalConfig[
-            DdSdkReactNative.DD_NATIVE_LONG_TASK_THRESHOLD_KEY
-        ] = configuration.nativeLongTaskThresholdMs;
 
         configuration.additionalConfig['_dd.first_party_hosts'] =
             configuration.firstPartyHosts;
