@@ -18,6 +18,8 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             env = forge.anAlphabeticalString(),
             applicationId = forge.aNullable { getForgery<UUID>().toString() },
             nativeCrashReportEnabled = forge.aNullable { aBool() },
+            nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
+            longTaskThresholdMs = forge.aDouble(0.0, 100.0),
             sampleRate = forge.aNullable { aDouble(0.0, 100.0) },
             telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
             vitalsUpdateFrequency = forge.aNullable {

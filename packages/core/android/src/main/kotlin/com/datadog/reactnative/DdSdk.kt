@@ -63,7 +63,7 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
-        monitorJsRefreshRate(buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency))
+        monitorJsRefreshRate(ddSdkConfiguration)
         initialized.set(true)
 
         promise.resolve(null)
@@ -314,9 +314,9 @@ class DdSdk(
         datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
     }
 
-    private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
-        if (vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER) {
-            val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
+    private fun monitorJsRefreshRate(ddSdkConfiguration: DdSdkConfiguration) {
+        val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration)
+        if (frameTimeCallback != null) {
             reactContext.runOnJSQueueThread {
                 val vitalFrameCallback =
                     VitalFrameCallback(
@@ -335,16 +335,23 @@ class DdSdk(
         }
     }
 
-    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency):
-        (frameTime: Double) -> Unit {
+    private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
+            ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+
+        if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
+            return null
+        }
+
         return {
-            if (it > 0.0) {
+            if (jsRefreshRateMonitoringEnabled && it > 0.0) {
                 GlobalRum.get()._getInternal()?.updatePerformanceMetric(
                     RumPerformanceMetric.JS_FRAME_TIME,
                     it
                 )
             }
-            if (it > longTaskThresholdNs) {
+            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(ddSdkConfiguration.longTaskThresholdMs.toLong())) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
