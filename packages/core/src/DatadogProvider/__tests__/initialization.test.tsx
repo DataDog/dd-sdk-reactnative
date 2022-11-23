@@ -66,6 +66,7 @@ describe('DatadogProvider', () => {
                   "applicationId": "fakeApplicationId",
                   "clientToken": "fakeToken",
                   "env": "fakeEnv",
+                  "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "sampleRate": 100,

@@ -95,6 +95,7 @@ export class DdSdkReactNative {
                 configuration.applicationId,
                 configuration.nativeCrashReportEnabled,
                 adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
+                adaptLongTaskThreshold(configuration.longTaskThresholdMs),
                 configuration.sampleRate === undefined
                     ? configuration.sessionSamplingRate
                     : configuration.sampleRate,

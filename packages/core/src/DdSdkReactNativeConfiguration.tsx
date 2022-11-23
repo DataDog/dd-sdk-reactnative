@@ -20,6 +20,7 @@ const DEFAULTS = {
     sessionSamplingRate: 100.0,
     resourceTracingSamplingRate: 20.0,
     site: 'US1',
+    longTaskThresholdMs: 0,
     nativeLongTaskThresholdMs: 200,
     nativeViewTracking: false,
     getFirstPartyHosts: () => [],
@@ -97,6 +98,15 @@ export class DdSdkReactNativeConfiguration {
     public nativeLongTaskThresholdMs: number | false =
         DEFAULTS.nativeLongTaskThresholdMs;
 
+    /**
+     * The threshold for javascript long tasks reporting in milliseconds.
+     *
+     * - Setting it to `0` or `false` disables javascript long task reporting.
+     * - Values below `100` will be raised to `100`.
+     * - Values above `5000` will be lowered to `5000`.
+     */
+    public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
+
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
 
@@ -169,6 +179,7 @@ export type PartialInitializationConfiguration = {
     versionSuffix?: string;
     readonly additionalConfig?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
+    readonly longTaskThresholdMs?: number | false;
     readonly nativeLongTaskThresholdMs?: number | false;
     readonly nativeCrashReportEnabled?: boolean;
     readonly telemetrySampleRate?: number;

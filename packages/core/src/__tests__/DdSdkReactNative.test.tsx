@@ -646,7 +646,7 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
 
-        it('enables native view tracking when initialize { native long task custom threshold }', async () => {
+        it('enables long task tracking when initialize { native and javascript long task custom threshold }', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -660,6 +660,7 @@ describe('DdSdkReactNative', () => {
                 true
             );
             configuration.nativeLongTaskThresholdMs = 234;
+            configuration.longTaskThresholdMs = 456;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -670,6 +671,35 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(234);
+            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(456);
+        });
+
+        it('enables long task tracking when initialize { native and javascript long task false threshold }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeLongTaskThresholdMs = false;
+            configuration.longTaskThresholdMs = false;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
+            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(0);
         });
     });
 
