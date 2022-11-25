@@ -39,9 +39,9 @@ DdRum.startView('<view-key>', 'View Name', {}, Date.now());
 DdRum.stopView('<view-key>', { custom: 42 }, Date.now());
 
 // Track RUM Actions manually
-DdRum.addAction(RumActionType.TAP, 'button name', {}, Date.now());
+DdRum.addAction(RumActionType.TAP, 'action name', {}, Date.now());
 // Or in case of continuous action
-DdRum.startAction(RumActionType.TAP, 'button name', {}, Date.now());
+DdRum.startAction(RumActionType.TAP, 'action name', {}, Date.now());
 // To stop action above
 DdRum.stopAction({}, Date.now());
 
