@@ -17,7 +17,8 @@ import type {
     AutoInstrumentationParameters,
     DatadogProviderConfiguration,
     PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration
+    AutoInstrumentationConfiguration,
+    InitializationModeForTelemetry
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
@@ -64,12 +65,17 @@ export class DdSdkReactNative {
     static async initialize(
         configuration: DdSdkReactNativeConfiguration
     ): Promise<void> {
-        await DdSdkReactNative.initializeNativeSDK(configuration);
+        await DdSdkReactNative.initializeNativeSDK(configuration, {
+            initializationModeForTelemetry: 'LEGACY'
+        });
         DdSdkReactNative.enableFeatures(configuration);
     }
 
     private static initializeNativeSDK = async (
-        configuration: DdSdkReactNativeConfiguration
+        configuration: DdSdkReactNativeConfiguration,
+        params: {
+            initializationModeForTelemetry: InitializationModeForTelemetry;
+        }
     ): Promise<void> => {
         if (DdSdkReactNative.wasInitialized) {
             InternalLog.log(
@@ -103,7 +109,13 @@ export class DdSdkReactNative {
                 configuration.trackingConsent,
                 configuration.additionalConfig,
                 configuration.telemetrySampleRate,
-                configuration.vitalsUpdateFrequency
+                configuration.vitalsUpdateFrequency,
+                {
+                    initializationType: params.initializationModeForTelemetry,
+                    trackErrors: configuration.trackErrors,
+                    trackInteractions: configuration.trackInteractions,
+                    trackNetworkRequests: configuration.trackResources
+                }
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
@@ -120,16 +132,22 @@ export class DdSdkReactNative {
         DdSdkReactNative.enableFeatures(configuration);
         DdSdkReactNative.configuration = configuration;
         if (configuration.initializationMode === InitializationMode.SYNC) {
-            return DdSdkReactNative.initializeNativeSDK(configuration);
+            return DdSdkReactNative.initializeNativeSDK(configuration, {
+                initializationModeForTelemetry: 'SYNC'
+            });
         }
         if (configuration.initializationMode === InitializationMode.ASYNC) {
             return InteractionManager.runAfterInteractions(() => {
-                return DdSdkReactNative.initializeNativeSDK(configuration);
+                return DdSdkReactNative.initializeNativeSDK(configuration, {
+                    initializationModeForTelemetry: 'ASYNC'
+                });
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
         if (configuration instanceof DdSdkReactNativeConfiguration) {
-            return DdSdkReactNative.initializeNativeSDK(configuration);
+            return DdSdkReactNative.initializeNativeSDK(configuration, {
+                initializationModeForTelemetry: 'SYNC'
+            });
         }
     }
 
@@ -179,7 +197,8 @@ export class DdSdkReactNative {
             buildConfigurationFromPartialConfiguration(
                 DdSdkReactNative.features,
                 configuration
-            )
+            ),
+            { initializationModeForTelemetry: 'PARTIAL' }
         );
     };
 

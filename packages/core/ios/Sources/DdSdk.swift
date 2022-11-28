@@ -65,6 +65,7 @@ class RNDdSdk: NSObject {
             let ddConfig = self.buildConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
             Datadog.initialize(appContext: Datadog.AppContext(), trackingConsent: consent, configuration: ddConfig)
+            self.sendConfigurationAsTelemetry(rnConfiguration: sdkConfiguration)
 
             Global.rum = RUMMonitor.initialize()
 
@@ -113,6 +114,28 @@ class RNDdSdk: NSObject {
     func telemetryDebug(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
+    }
+    
+    func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
+        Datadog._internal.telemetry.setConfigurationMapper {event in
+            var event = event
+
+            var configuration = event.telemetry.configuration
+            configuration.initializationType = rnConfiguration.configurationForTelemetry?.initializationType as? String
+            configuration.trackErrors = rnConfiguration.configurationForTelemetry?.trackErrors
+            configuration.trackInteractions = rnConfiguration.configurationForTelemetry?.trackInteractions
+            configuration.trackResources = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+            configuration.trackNetworkRequests = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+
+            // trackCrossPlatformLongTasks will be deprecated for trackLongTask
+            configuration.trackCrossPlatformLongTasks = rnConfiguration.longTaskThresholdMs != 0
+            configuration.trackLongTask = rnConfiguration.longTaskThresholdMs != 0
+            configuration.trackNativeErrors = rnConfiguration.nativeCrashReportEnabled
+            configuration.trackNativeLongTasks = rnConfiguration.nativeLongTaskThresholdMs != 0
+            event.telemetry.configuration = configuration
+
+            return event
+        }
     }
 
     func buildConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {

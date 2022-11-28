@@ -21,6 +21,7 @@ extension NSDictionary {
         let telemetrySampleRate = object(forKey: "telemetrySampleRate") as? Double
         let vitalsUpdateFrequency = object(forKey: "vitalsUpdateFrequency") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
+        let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
             env: (env != nil) ? env! : String(),
@@ -33,7 +34,22 @@ extension NSDictionary {
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
             vitalsUpdateFrequency: vitalsUpdateFrequency,
-            additionalConfig: additionalConfig
+            additionalConfig: additionalConfig,
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
+        )
+    }
+    
+    func asConfigurationForTelemetry() -> ConfigurationForTelemetry {
+        let initializationType = object(forKey: "initializationType") as? NSString
+        let trackErrors = object(forKey: "trackErrors") as? Bool
+        let trackInteractions = object(forKey: "trackInteractions") as? Bool
+        let trackNetworkRequests = object(forKey: "trackNetworkRequests") as? Bool
+
+        return ConfigurationForTelemetry(
+            initializationType: initializationType,
+            trackErrors: trackErrors,
+            trackInteractions: trackInteractions,
+            trackNetworkRequests: trackNetworkRequests
         )
     }
 }

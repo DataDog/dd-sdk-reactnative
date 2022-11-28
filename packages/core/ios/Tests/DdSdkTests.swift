@@ -522,6 +522,25 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+    
+    func testConfigurationTelemetryEventMapper() throws {
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(nativeCrashReportEnabled: false, nativeLongTaskThresholdMs: 0.0, longTaskThresholdMs: 0.1, configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true]), resolve: mockResolve, reject: mockReject)
+        
+        
+        guard let configurationEventMapper = try XCTUnwrap(DD.telemetry as? RUMTelemetry).configurationEventMapper else { return }
+
+        let mappedEvent = configurationEventMapper(TelemetryConfigurationEvent(dd: TelemetryConfigurationEvent.DD(), action: nil, application: nil, date: Int64(), experimentalFeatures: nil, service: "mockService", session: nil ,source: .reactNative, telemetry: TelemetryConfigurationEvent.Telemetry(configuration: TelemetryConfigurationEvent.Telemetry.Configuration(actionNameAttribute: nil, batchSize: nil, batchUploadFrequency: nil, forwardConsoleLogs: nil, forwardErrorsToLogs: nil, forwardReports: nil, premiumSampleRate: nil, replaySampleRate: nil, sessionSampleRate: nil, silentMultipleInit: nil, telemetryConfigurationSampleRate: nil, telemetrySampleRate: nil, traceSampleRate: nil, trackSessionAcrossSubdomains: nil, useAllowedTracingOrigins: nil, useBeforeSend: nil, useCrossSiteSessionCookie: nil, useExcludedActivityUrls: nil, useLocalEncryption: nil, useSecureSessionCookie: nil, useTracing: nil, viewTrackingStrategy: nil)), version: "1.0.0", view: nil))
+        
+        XCTAssertEqual(mappedEvent.telemetry.configuration.initializationType, "LEGACY")
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackErrors, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackInteractions, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNetworkRequests, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeErrors, false)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeLongTasks, false)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackLongTask, true)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
@@ -574,7 +593,8 @@ extension DdSdkConfiguration {
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
         vitalsUpdateFrequency: NSString = "average",
-        additionalConfig: NSDictionary? = nil
+        additionalConfig: NSDictionary? = nil,
+        configurationForTelemetry: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -588,7 +608,8 @@ extension DdSdkConfiguration {
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
             vitalsUpdateFrequency: vitalsUpdateFrequency,
-            additionalConfig: additionalConfig
+            additionalConfig: additionalConfig,
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
     }
 }
@@ -606,7 +627,8 @@ extension NSDictionary {
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
         vitalsUpdateFrequency: NSString = "average",
-        additionalConfig: NSDictionary? = nil
+        additionalConfig: NSDictionary? = nil,
+        configurationForTelemetry: NSDictionary? = nil
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -621,7 +643,8 @@ extension NSDictionary {
                 "trackingConsent": trackingConsent,
                 "telemetrySampleRate": telemetrySampleRate,
                 "vitalsUpdateFrequency": vitalsUpdateFrequency,
-                "additionalConfig": additionalConfig
+                "additionalConfig": additionalConfig,
+                "configurationForTelemetry": configurationForTelemetry
             ]
         )
     }
