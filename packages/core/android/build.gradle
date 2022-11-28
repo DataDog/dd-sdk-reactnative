@@ -77,6 +77,9 @@ repositories {
   google()
   maven { url "https://jitpack.io" }
   mavenLocal()
+  maven {
+    url "https://oss.sonatype.org/content/repositories/snapshots/"
+  }
 
   def found = false
   def defaultDir = null
@@ -152,7 +155,7 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android:1.15.0"
+  implementation "com.datadoghq:dd-sdk-android:1+"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
