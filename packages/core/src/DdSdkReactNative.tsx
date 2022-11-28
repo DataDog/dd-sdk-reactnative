@@ -54,7 +54,6 @@ export class DdSdkReactNative {
 
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
-    private static configuration?: DdSdkReactNativeConfiguration;
     private static features?: AutoInstrumentationConfiguration;
 
     /**
@@ -130,7 +129,6 @@ export class DdSdkReactNative {
         configuration: DatadogProviderConfiguration
     ): Promise<void> {
         DdSdkReactNative.enableFeatures(configuration);
-        DdSdkReactNative.configuration = configuration;
         if (configuration.initializationMode === InitializationMode.SYNC) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
                 initializationModeForTelemetry: 'SYNC'
@@ -162,22 +160,6 @@ export class DdSdkReactNative {
             addDefaultValuesToAutoInstrumentationConfiguration(features)
         );
     }
-
-    /**
-     * FOR INTERNAL USE ONLY.
-     */
-    static _initializeFromDatadogProviderAsync = async (): Promise<void> => {
-        if (!DdSdkReactNative.configuration) {
-            InternalLog.log(
-                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
-                SdkVerbosity.WARN
-            );
-            return new Promise(resolve => resolve());
-        }
-        return DdSdkReactNative.initializeNativeSDK(
-            DdSdkReactNative.configuration
-        );
-    };
 
     /**
      * FOR INTERNAL USE ONLY.
