@@ -8,6 +8,7 @@ import Foundation
 import Datadog
 import DatadogCrashReporting
 import React
+import DatadogSessionReplay
 
 func getDefaultAppVersion() -> String {
     let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -18,6 +19,7 @@ func getDefaultAppVersion() -> String {
 @objc(DdSdk)
 class RNDdSdk: NSObject {
     @objc var bridge: RCTBridge!
+    internal var sessionReplayController: SessionReplayController! // swiftlint:disable:this implicitly_unwrapped_optional
 
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
@@ -69,6 +71,12 @@ class RNDdSdk: NSObject {
             Global.rum = RUMMonitor.initialize()
 
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
+            
+            // Enable session replay
+            let configuration = SessionReplayConfiguration()
+
+            self.sessionReplayController = SessionReplay.initialize(with: configuration)
+            self.sessionReplayController.start()
             
             resolve(nil)
         }
