@@ -18,7 +18,10 @@ target 'DdSdkReactNativeExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDK', :git => 'https://github.com/DataDog/dd-sdk-ios', :branch => 'dogfooding'
+  pod 'DatadogSDKCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios', :branch => 'dogfooding'
+  pod 'DatadogSessionReplay', :git => 'https://github.com/DataDog/dd-sdk-ios', :branch => 'louiszawadzki/add-podspec-for-session-replay'
 
   post_install do |installer|
     react_native_post_install(installer)

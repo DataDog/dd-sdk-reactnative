@@ -7,7 +7,15 @@ PODS:
   - DatadogSDKReactNative (1.2.0-beta1):
     - DatadogSDK (~> 1.13.0)
     - DatadogSDKCrashReporting (~> 1.13.0)
+    - DatadogSessionReplay (~> 1.13.0)
     - React-Core
+  - DatadogSDKReactNative/Tests (1.2.0-beta1):
+    - DatadogSDK (~> 1.13.0)
+    - DatadogSDKCrashReporting (~> 1.13.0)
+    - DatadogSessionReplay (~> 1.13.0)
+    - React-Core
+  - DatadogSessionReplay (1.13.0):
+    - DatadogSDK (= 1.13.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.68.2)
   - FBReactNativeSpec (0.68.2):
@@ -320,7 +328,11 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - "DatadogSDKReactNative (from `../node_modules/@datadog/mobile-react-native`)"
+  - DatadogSDK (from `https://github.com/DataDog/dd-sdk-ios`, branch `dogfooding`)
+  - DatadogSDKCrashReporting (from `https://github.com/DataDog/dd-sdk-ios`, branch `dogfooding`)
+  - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSessionReplay (from `https://github.com/DataDog/dd-sdk-ios`, branch `louiszawadzki/add-podspec-for-session-replay`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -363,8 +375,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - DatadogSDK
-    - DatadogSDKCrashReporting
     - fmt
     - HMSegmentedControl
     - PLCrashReporter
@@ -372,8 +382,17 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
+  DatadogSDK:
+    :branch: dogfooding
+    :git: https://github.com/DataDog/dd-sdk-ios
+  DatadogSDKCrashReporting:
+    :branch: dogfooding
+    :git: https://github.com/DataDog/dd-sdk-ios
   DatadogSDKReactNative:
-    :path: "../node_modules/@datadog/mobile-react-native"
+    :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogSessionReplay:
+    :branch: louiszawadzki/add-podspec-for-session-replay
+    :git: https://github.com/DataDog/dd-sdk-ios
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -449,11 +468,23 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  DatadogSDK:
+    :commit: 9de1a1a4fe861e0b832eea707727320d10129217
+    :git: https://github.com/DataDog/dd-sdk-ios
+  DatadogSDKCrashReporting:
+    :commit: 9de1a1a4fe861e0b832eea707727320d10129217
+    :git: https://github.com/DataDog/dd-sdk-ios
+  DatadogSessionReplay:
+    :commit: 5899417d629fe8f6f1125ebfb2a1379469182fec
+    :git: https://github.com/DataDog/dd-sdk-ios
+
 SPEC CHECKSUMS:
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   DatadogSDK: f0e6d65f5a26f2fe3530c657a86a2118240d3995
   DatadogSDKCrashReporting: 7ac8b9e98bb880aadc7ce90f1a03ec57a9f9026f
-  DatadogSDKReactNative: 2162b38e197c2b56d2d7e0a0d03cf55c2bde319f
+  DatadogSDKReactNative: 1e2009617d13578569d9b02410b86f118f3a9f96
+  DatadogSessionReplay: 04da8c4f95e14ba8a99fb832d17cf55f9570ccfe
   DoubleConversion: 831926d9b8bf8166fd87886c4abab286c2422662
   FBLazyVector: a7a655862f6b09625d11c772296b01cd5164b648
   FBReactNativeSpec: 81ce99032d5b586fddd6a38d450f8595f7e04be4
@@ -495,6 +526,6 @@ SPEC CHECKSUMS:
   RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   Yoga: 99652481fcd320aefa4a7ef90095b95acd181952
 
-PODFILE CHECKSUM: c0c1302f7ca46aaa85a36443be376ac39c7d30e0
+PODFILE CHECKSUM: 4eafdb72dabcaf17b8ee3ef9142789141e57c662
 
 COCOAPODS: 1.11.3

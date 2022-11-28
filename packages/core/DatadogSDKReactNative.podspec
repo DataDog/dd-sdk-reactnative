@@ -19,6 +19,7 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
   s.dependency 'DatadogSDK', '~> 1.13.0'
   s.dependency 'DatadogSDKCrashReporting', '~> 1.13.0'
+  s.dependency 'DatadogSessionReplay', '~> 1.13.0'
 
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'
