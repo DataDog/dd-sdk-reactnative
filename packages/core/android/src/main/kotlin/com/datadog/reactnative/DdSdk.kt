@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.view.Choreographer
+import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
@@ -60,9 +61,9 @@ class DdSdk(
 
         configureSdkVerbosity(ddSdkConfiguration)
 
-        datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
+        Datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
-        datadog.registerRumMonitor(RumMonitor.Builder().build())
+        GlobalRum.registerIfAbsent(RumMonitor.Builder().build())
         monitorJsRefreshRate(buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency))
         initialized.set(true)
 
@@ -177,7 +178,8 @@ class DdSdk(
             logsEnabled = true,
             tracesEnabled = true,
             crashReportsEnabled = configuration.nativeCrashReportEnabled ?: false,
-            rumEnabled = true
+            rumEnabled = true,
+            sessionReplayEnabled = true
         )
             .setAdditionalConfiguration(
                 additionalConfig
