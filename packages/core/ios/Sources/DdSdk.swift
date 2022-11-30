@@ -73,8 +73,7 @@ class RNDdSdk: NSObject {
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
             
             // Enable session replay
-            let configuration = SessionReplayConfiguration()
-
+            let configuration = SessionReplayConfiguration(privacy: .allowAll, additionalNodeRecorders: [RCTTextViewRecorder()])
             self.sessionReplayController = SessionReplay.initialize(with: configuration)
             self.sessionReplayController.start()
             
@@ -303,5 +302,69 @@ class RNDdSdk: NSObject {
             Global.rum._internal?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
         }
     }
-
 }
+
+func parseRCTTextViewDescription(description: String) -> String? {
+    // TODO: check performance of range for long texts, play with options
+    let startIndex = description.range(of: "text: ")
+    let endIndex = description.range(of: " frame =", options: .backwards)
+    
+    if (startIndex == nil || endIndex == nil) {
+        return nil
+    }
+    
+    let range = startIndex!.upperBound..<endIndex!.lowerBound
+    
+    let substr = description[range]
+    return String(substr)
+}
+
+internal struct RCTTextViewRecorder: NodeRecorder {
+    func semantics(of view: UIView, with attributes: ViewAttributes, in context: ViewTreeSnapshotBuilder.Context) -> NodeSemantics? {
+        guard let textView = view as? RCTTextView else {
+            return nil
+        }
+
+        guard let textContent = parseRCTTextViewDescription(description: textView.description) else {
+            return InvisibleElement.constant
+        }
+
+        let builder = RCTTextViewWireframesBuilder(
+            wireframeID: context.ids.nodeID(for: textView),
+            attributes: attributes,
+            text: textContent,
+            frame: textView.frame,
+            textObfuscator: context.recorder.privacy == .maskAll ? context.textObfuscator : nopTextObfuscator
+        )
+        return SpecificElement(wireframesBuilder: builder)
+    }
+}
+
+internal struct RCTTextViewWireframesBuilder: NodeWireframesBuilder {
+    let wireframeID: WireframeID
+    /// Attributes of the base `UIView`.
+    let attributes: ViewAttributes
+    /// The text inside label.
+    let text: String
+    /// The frame
+    let frame: CGRect
+    /// Text obfuscator for masking text.
+    let textObfuscator: TextObfuscating
+
+    func buildWireframes(with builder: WireframesBuilder) -> [SRWireframe] {
+        return [
+            builder.createTextWireframe(
+                id: wireframeID,
+                frame: attributes.frame,
+                text: textObfuscator.mask(text: text),
+                textFrame: frame,
+                borderColor: attributes.layerBorderColor,
+                borderWidth: attributes.layerBorderWidth,
+                backgroundColor: attributes.backgroundColor,
+                cornerRadius: attributes.layerCornerRadius,
+                opacity: attributes.alpha
+            )
+        ]
+    }
+}
+
