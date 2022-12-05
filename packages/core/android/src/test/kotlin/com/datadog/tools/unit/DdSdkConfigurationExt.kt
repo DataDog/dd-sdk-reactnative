@@ -7,7 +7,9 @@
 package com.datadog.tools.unit
 
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
+import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
 
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
@@ -54,5 +56,17 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         map["vitalsUpdateFrequency"] = VitalsUpdateFrequency.AVERAGE.toString()
     }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
+    configurationForTelemetry?.let {
+        map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
+    }
+    return map.toReadableMap()
+}
+
+internal fun ConfigurationForTelemetry.toReadableJavaOnlyMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    initializationType?.let { map.put("initializationType", it) }
+    trackErrors?.let { map.put("trackErrors", it) }
+    trackInteractions?.let { map.put("trackInteractions", it) }
+    trackNetworkRequests?.let { map.put("trackNetworkRequests", it) }
     return map.toReadableMap()
 }

@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit.forge
 
+import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -38,7 +39,13 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     null
                 )
             },
-            trackingConsent = forge.aNullable { anElementFrom("pending", "granted", "not_granted") }
+            trackingConsent = forge.aNullable { anElementFrom("pending", "granted", "not_granted") },
+            configurationForTelemetry = ConfigurationForTelemetry(
+                initializationType = forge.anAlphabeticalString(),
+                trackErrors = forge.aBool(),
+                trackInteractions = forge.aBool(),
+                trackNetworkRequests = forge.aBool()
+            )
         )
     }
 }

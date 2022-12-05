@@ -15,6 +15,7 @@ import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.android.event.EventMapper
 import com.datadog.android.plugin.DatadogPlugin
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRum
@@ -22,6 +23,7 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.getStaticValue
@@ -32,8 +34,8 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doNothing
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
@@ -46,6 +48,7 @@ import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
+import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
 import fr.xgouchet.elmyr.annotation.LongForgery
@@ -57,6 +60,7 @@ import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -69,7 +73,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
-import java.util.concurrent.atomic.AtomicBoolean
 
 fun mockChoreographerInstance(mock: Choreographer = mock()) {
     Choreographer::class.java.setStaticValue(
@@ -1270,7 +1273,7 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update, long task threshold is 0}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed frequency update, long task 0}`(
         @StringForgery fakeFrequency: String,
         @LongForgery(min = 0L) timestampNs: Long,
         @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
@@ -1351,7 +1354,7 @@ internal class DdSdkTest {
             // then
             verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
                 RumPerformanceMetric.JS_FRAME_TIME,
-                    frameDurationNs.toDouble()
+                frameDurationNs.toDouble()
             )
             verify(mockRumMonitor._getInternal()!!).addLongTask(
                 frameDurationNs,
@@ -1397,7 +1400,6 @@ internal class DdSdkTest {
         }
     }
 
-
     // endregion
 
     // region version suffix
@@ -1433,6 +1435,69 @@ internal class DdSdkTest {
                     DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
                 )
             )
+    }
+
+    // endregion
+
+    // region configuration telemetry mapper
+
+    @Test
+    fun `𝕄 set telemetry configuration mapper 𝕎 initialize() {}`(
+        @Forgery configuration: DdSdkConfiguration,
+        @Forgery telemetryConfigurationEvent: TelemetryConfigurationEvent,
+        @BoolForgery trackNativeViews: Boolean,
+        @BoolForgery trackNativeErrors: Boolean,
+        @StringForgery initializationType: String,
+        @BoolForgery trackInteractions: Boolean,
+        @BoolForgery trackErrors: Boolean,
+        @BoolForgery trackNetworkRequests: Boolean
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            nativeCrashReportEnabled = trackNativeErrors,
+            longTaskThresholdMs = 0.0,
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_VIEW_TRACKING to trackNativeViews
+            ),
+            configurationForTelemetry = ConfigurationForTelemetry(
+                initializationType = initializationType,
+                trackErrors = trackErrors,
+                trackInteractions = trackInteractions,
+                trackNetworkRequests = trackNetworkRequests
+            )
+        )
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val configurationMapper = it.getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
+                val result = configurationMapper.map(telemetryConfigurationEvent)!!
+                assertThat(result.telemetry.configuration.trackNativeViews!!).isEqualTo(
+                    trackNativeViews
+                )
+                assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
+                    trackNativeErrors
+                )
+                assertThat(result.telemetry.configuration.trackCrossPlatformLongTasks!!)
+                    .isEqualTo(false)
+                assertThat(result.telemetry.configuration.trackInteractions!!).isEqualTo(
+                    trackInteractions
+                )
+                assertThat(result.telemetry.configuration.trackErrors!!).isEqualTo(trackErrors)
+                assertThat(result.telemetry.configuration.trackNetworkRequests!!).isEqualTo(
+                    trackNetworkRequests
+                )
+            }
     }
 
     // endregion
