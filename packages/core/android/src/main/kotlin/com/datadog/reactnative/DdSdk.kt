@@ -351,7 +351,9 @@ class DdSdk(
                     it
                 )
             }
-            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(ddSdkConfiguration.longTaskThresholdMs.toLong())) {
+            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }

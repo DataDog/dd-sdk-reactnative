@@ -27,7 +27,7 @@ data class DdSdkConfiguration(
     val applicationId: String? = null,
     val nativeCrashReportEnabled: Boolean? = null,
     val nativeLongTaskThresholdMs: Double? = null,
-    val longTaskThresholdMs: Double,
+    val longTaskThresholdMs: Double? = null,
     val sampleRate: Double? = null,
     val site: String? = null,
     val trackingConsent: String? = null,
