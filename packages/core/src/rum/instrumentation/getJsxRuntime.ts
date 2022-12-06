@@ -26,7 +26,7 @@ export const getJsxRuntime = () => {
     if (!jsxRuntime.jsx) {
         throw new Error('React jsx runtime does not export new jsx transform');
     }
-    return jsxRuntime.jsx;
+    return jsxRuntime;
 };
 
 /**
