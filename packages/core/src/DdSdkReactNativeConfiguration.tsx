@@ -94,6 +94,8 @@ export class DdSdkReactNativeConfiguration {
      * - Setting it to `0` or `false` disables native long task reporting.
      * - Values below `100` will be raised to `100`.
      * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `200`.
      */
     public nativeLongTaskThresholdMs: number | false =
         DEFAULTS.nativeLongTaskThresholdMs;
@@ -104,6 +106,8 @@ export class DdSdkReactNativeConfiguration {
      * - Setting it to `0` or `false` disables javascript long task reporting.
      * - Values below `100` will be raised to `100`.
      * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `0`
      */
     public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
 
