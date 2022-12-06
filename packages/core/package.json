@@ -19,6 +19,7 @@
   "files": [
     "src",
     "lib",
+    "scripts",
     "android/build.gradle",
     "android/gradle.properties",
     "android/src",
@@ -39,7 +40,8 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "rm -rf lib && yarn bob build"
+    "prepare": "rm -rf lib && yarn bob build",
+    "postinstall": "scripts/replace-react-require.js"
   },
   "peerDependencies": {
     "react": ">=16.13.1",
