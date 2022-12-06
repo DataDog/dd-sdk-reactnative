@@ -1272,6 +1272,9 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update, long task threshold is 0}`(
         @StringForgery fakeFrequency: String,
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
@@ -1281,6 +1284,7 @@ internal class DdSdkTest {
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
+        val frameDurationNs = threshold + frameDurationOverThreshold
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1302,6 +1306,20 @@ internal class DdSdkTest {
         argumentCaptor<Choreographer.FrameCallback> {
             verify(mockChoreographer).postFrameCallback(capture())
             assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // then
+            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
         }
     }
 
@@ -1367,10 +1385,14 @@ internal class DdSdkTest {
             firstValue.doFrame(timestampNs)
             firstValue.doFrame(timestampNs + frameDurationNs)
 
-            // then
+            // Then
             verify(mockRumMonitor._getInternal()!!).addLongTask(
                 frameDurationNs,
                 "javascript"
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
             )
         }
     }

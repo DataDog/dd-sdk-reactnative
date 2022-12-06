@@ -16,7 +16,7 @@ class GenericAssert(actual: Any) :
         val field: Any? = actual.getFieldValue(name)
         assertThat(field)
             .overridingErrorMessage(
-                "Expecting object to not have $name, but found $field"
+                "Expecting object to not have $name, but found it having value $field"
             )
             .isNull()
         return this
