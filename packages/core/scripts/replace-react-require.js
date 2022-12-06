@@ -26,7 +26,7 @@
 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
 const { readFileSync, writeFileSync } = require('fs');
 
-process.stdout.write('RUNNING');
+process.stdout.write('[datadog] postinstall replace-react-require starts\n');
 
 const GET_JSX_RUNTIME_RELATIVE_PATH = 'rum/instrumentation/getJsxRuntime';
 
@@ -41,6 +41,7 @@ const isJsxExportedInReactVersion = (major, minor) => {
 };
 
 const replaceReactJsxRequire = () => {
+    process.stdout.write('[datadog] replacing react/jsx-runtime by react\n');
     const datadogPath = `${__dirname}/..`;
     const locations = [
         { directory: `${datadogPath}/src`, extension: 'ts' },
@@ -64,14 +65,14 @@ try {
     // Get React version
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     const [major, minor] = require('react/package.json').version.split('.');
-    process.stdout.write(`${major}${minor}`);
+    process.stdout.write(`[datadog] found react version ${major}${minor}\n`);
 
     if (!isJsxExportedInReactVersion(major, minor)) {
         replaceReactJsxRequire();
     }
-    console.warn('made it');
+    process.stdout.write('[datadog] postinstall replace-react-require end\n');
 } catch (error) {
-    // TODO: Improve error message
-    console.warn(error);
-    process.stderr.write('Error running @datadog');
+    process.stderr.write(
+        `[datadog] Error running replace-react-require: ${error}\n`
+    );
 }
