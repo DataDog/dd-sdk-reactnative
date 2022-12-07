@@ -360,8 +360,10 @@ class DdSdk(
     }
 
     private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
-            ((Double) -> Unit)? {
-        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER
+        ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(
+            ddSdkConfiguration.vitalsUpdateFrequency
+        ) != VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -377,7 +379,8 @@ class DdSdk(
             }
             if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
                     ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                )) {
+                )
+            ) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
