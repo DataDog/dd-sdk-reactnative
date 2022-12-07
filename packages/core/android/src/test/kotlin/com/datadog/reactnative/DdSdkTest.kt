@@ -1455,10 +1455,8 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             nativeCrashReportEnabled = trackNativeErrors,
+            nativeLongTaskThresholdMs = 0.0,
             longTaskThresholdMs = 0.0,
-            additionalConfig = mapOf(
-                DdSdk.DD_NATIVE_VIEW_TRACKING to trackNativeViews
-            ),
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = initializationType,
                 trackErrors = trackErrors,
@@ -1482,21 +1480,25 @@ internal class DdSdkTest {
             .hasField("rumConfig") {
                 val configurationMapper = it.getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
                 val result = configurationMapper.map(telemetryConfigurationEvent)!!
-                assertThat(result.telemetry.configuration.trackNativeViews!!).isEqualTo(
-                    trackNativeViews
-                )
                 assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
                     trackNativeErrors
                 )
                 assertThat(result.telemetry.configuration.trackCrossPlatformLongTasks!!)
                     .isEqualTo(false)
-                assertThat(result.telemetry.configuration.trackInteractions!!).isEqualTo(
-                    trackInteractions
-                )
+                assertThat(result.telemetry.configuration.trackLongTask!!)
+                    .isEqualTo(false)
+                assertThat(result.telemetry.configuration.trackNativeLongTasks!!)
+                    .isEqualTo(false)
+
+                assertThat(result.telemetry.configuration.initializationType!!)
+                    .isEqualTo(initializationType)
+                assertThat(result.telemetry.configuration.trackInteractions!!)
+                    .isEqualTo(trackInteractions)
                 assertThat(result.telemetry.configuration.trackErrors!!).isEqualTo(trackErrors)
-                assertThat(result.telemetry.configuration.trackNetworkRequests!!).isEqualTo(
-                    trackNetworkRequests
-                )
+                assertThat(result.telemetry.configuration.trackResources!!)
+                    .isEqualTo(trackNetworkRequests)
+                assertThat(result.telemetry.configuration.trackNetworkRequests!!)
+                    .isEqualTo(trackNetworkRequests)
             }
     }
 

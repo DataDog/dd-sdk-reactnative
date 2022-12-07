@@ -225,16 +225,25 @@ class DdSdk(
             configBuilder,
             object : EventMapper<TelemetryConfigurationEvent> {
                 override fun map(event: TelemetryConfigurationEvent): TelemetryConfigurationEvent? {
-                    event.telemetry.configuration.trackNativeViews = viewTracking
                     event.telemetry.configuration.trackNativeErrors =
                         configuration.nativeCrashReportEnabled
+                    // trackCrossPlatformLongTasks will be deprecated for trackLongTask
                     event.telemetry.configuration.trackCrossPlatformLongTasks =
                         configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackLongTask =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackNativeLongTasks =
+                        configuration.nativeLongTaskThresholdMs != 0.0
 
+
+                    event.telemetry.configuration.initializationType =
+                        configuration.configurationForTelemetry?.initializationType
                     event.telemetry.configuration.trackInteractions =
                         configuration.configurationForTelemetry?.trackInteractions
                     event.telemetry.configuration.trackErrors =
                         configuration.configurationForTelemetry?.trackErrors
+                    event.telemetry.configuration.trackResources =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
                     event.telemetry.configuration.trackNetworkRequests =
                         configuration.configurationForTelemetry?.trackNetworkRequests
 
