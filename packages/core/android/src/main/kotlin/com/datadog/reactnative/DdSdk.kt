@@ -63,7 +63,7 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
-        monitorJsRefreshRate(buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency))
+        monitorJsRefreshRate(ddSdkConfiguration)
         initialized.set(true)
 
         promise.resolve(null)
@@ -196,18 +196,17 @@ class DdSdk(
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
 
+        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        if (longTask != null) {
+            configBuilder.trackLongTasks(longTask)
+        }
+
         val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
         if (viewTracking == true) {
             // Use sensible default
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
-        }
-
-        val longTask =
-            (configuration.additionalConfig?.get(DD_LONG_TASK_THRESHOLD) as? Number)?.toLong()
-        if (longTask != null) {
-            configBuilder.trackLongTasks(longTask)
         }
 
         val firstPartyHosts =
@@ -315,9 +314,9 @@ class DdSdk(
         datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
     }
 
-    private fun monitorJsRefreshRate(vitalsUpdateFrequency: VitalsUpdateFrequency) {
-        if (vitalsUpdateFrequency != VitalsUpdateFrequency.NEVER) {
-            val frameTimeCallback = buildFrameTimeCallback(vitalsUpdateFrequency)
+    private fun monitorJsRefreshRate(ddSdkConfiguration: DdSdkConfiguration) {
+        val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration)
+        if (frameTimeCallback != null) {
             reactContext.runOnJSQueueThread {
                 val vitalFrameCallback =
                     VitalFrameCallback(
@@ -336,16 +335,25 @@ class DdSdk(
         }
     }
 
-    private fun buildFrameTimeCallback(vitalsUpdateFrequency: VitalsUpdateFrequency):
-        (frameTime: Double) -> Unit {
+    private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
+            ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+
+        if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
+            return null
+        }
+
         return {
-            if (it > 0.0) {
+            if (jsRefreshRateMonitoringEnabled && it > 0.0) {
                 GlobalRum.get()._getInternal()?.updatePerformanceMetric(
                     RumPerformanceMetric.JS_FRAME_TIME,
                     it
                 )
             }
-            if (it > longTaskThresholdNs) {
+            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
@@ -358,7 +366,6 @@ class DdSdk(
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
-        internal const val DD_LONG_TASK_THRESHOLD = "_dd.long_task.threshold"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"

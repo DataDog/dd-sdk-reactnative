@@ -32,7 +32,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "firstPartyHosts": Array [],
+                  "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
+                  "nativeLongTaskThresholdMs": 200,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
                   "resourceTracingSamplingRate": 20,
@@ -78,7 +80,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                         versionSuffix: 'codepush-3',
                         additionalConfig: { additionalField: 'fake-value' },
                         trackingConsent: TrackingConsent.PENDING,
-                        nativeCrashReportEnabled: true
+                        nativeCrashReportEnabled: true,
+                        nativeLongTaskThresholdMs: 345,
+                        longTaskThresholdMs: 567
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -92,7 +96,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "firstPartyHosts": Array [
                     "api.com",
                   ],
+                  "longTaskThresholdMs": 567,
                   "nativeCrashReportEnabled": true,
+                  "nativeLongTaskThresholdMs": 345,
                   "nativeViewTracking": true,
                   "proxyConfig": ProxyConfiguration {
                     "address": "api.com",
@@ -138,7 +144,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                         version: '',
                         versionSuffix: '',
                         additionalConfig: {},
-                        nativeCrashReportEnabled: false
+                        nativeCrashReportEnabled: false,
+                        nativeLongTaskThresholdMs: false,
+                        longTaskThresholdMs: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -148,7 +156,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "clientToken": "",
                   "env": "",
                   "firstPartyHosts": Array [],
+                  "longTaskThresholdMs": false,
                   "nativeCrashReportEnabled": false,
+                  "nativeLongTaskThresholdMs": false,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
                   "resourceTracingSamplingRate": 0,

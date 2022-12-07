@@ -343,11 +343,19 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildLongTaskThreshold() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.long_task.threshold": 2_500])
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2_500)
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
 
         XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, 2.5)
+    }
+    
+    func testBuildNoLongTaskTracking() {
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, nil)
     }
 
     func testBuildFirstPartyHosts() {
@@ -443,17 +451,18 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.mobileVitalsFrequency, .never)
     }
     
-    func testJsRefreshRateInitialization() {
+    func testJsRefreshRateInitializationWithLongTaskDisabled() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.20)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
         Datadog.flushAndDeinitialize()
     }
@@ -462,30 +471,51 @@ internal class DdSdkTests: XCTestCase {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertFalse(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
-        
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
         Datadog.flushAndDeinitialize()
     }
     
-    func testLongTaskCollection() {
+    func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUploadFrequency() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
+
+        Datadog.flushAndDeinitialize()
+    }
+    
+    func testJsLongTaskCollection() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+        
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.05)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
-        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
-        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.20)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
 
         Datadog.flushAndDeinitialize()
     }
@@ -540,6 +570,8 @@ extension DdSdkConfiguration {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
+        longTaskThresholdMs: Double = 0.0,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
@@ -552,6 +584,8 @@ extension DdSdkConfiguration {
             env: env as String,
             applicationId: applicationId as String,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
+            longTaskThresholdMs: longTaskThresholdMs,
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
@@ -568,6 +602,8 @@ extension NSDictionary {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
+        longTaskThresholdMs: Double = 0.0,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
@@ -581,6 +617,8 @@ extension NSDictionary {
                 "env": env,
                 "applicationId": applicationId,
                 "nativeCrashReportEnabled": nativeCrashReportEnabled,
+                "nativeLongTaskThresholdMs": nativeLongTaskThresholdMs,
+                "longTaskThresholdMs": longTaskThresholdMs,
                 "sampleRate": sampleRate,
                 "site": site,
                 "trackingConsent": trackingConsent,

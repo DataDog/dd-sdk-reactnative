@@ -152,6 +152,13 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
         }
 
+        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
+            if (threshold != 0) {
+                // `nativeLongTaskThresholdMs` attribute is in milliseconds
+                _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
+            }
+        }
+
         let additionalConfig = configuration.additionalConfig
 
         if var additionalConfiguration = additionalConfig as? [String: Any] {
@@ -169,11 +176,6 @@ class RNDdSdk: NSObject {
 
         if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
-        }
-
-        if let threshold = additionalConfig?[InternalConfigurationAttributes.longTaskThreshold] as? TimeInterval {
-            // `_dd.long_task.threshold` attribute is in milliseconds
-            _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
         }
 
         if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? [String] {
@@ -280,20 +282,30 @@ class RNDdSdk: NSObject {
     }
     
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
-        let vitalsUpdateFrequency = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency)
-        if (vitalsUpdateFrequency != .never) {
+        if let frameTimeCallback = buildFrameTimeCallback(sdkConfiguration: sdkConfiguration) {
             // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
-            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: self.frameTimeCallback)
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
         }
     }
 
-    func frameTimeCallback(frameTime: Double) {
-        if (frameTime > 0) {
-            Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
+    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
+        let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != .never
+        let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
+        
+        if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {
+            return nil
         }
-        if (frameTime > self.jsLongTaskThresholdInSeconds) {
-            Global.rum._internal?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+
+        func frameTimeCallback(frameTime: Double) {
+            if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
+                Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
+            }
+            if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
+                Global.rum._internal?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+            }
         }
+        
+        return frameTimeCallback
     }
 
 }

@@ -1111,17 +1111,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration,
         forge: Forge
     ) {
-        // floating-point type (coming from JS) and integer type (other frameworks)
-        val threshold = forge.anElementFrom(
-            forge.aLong(min = 0, max = 65536),
-            forge.aDouble(min = 0.0, max = 65536.0)
-        )
+        val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdk.DD_LONG_TASK_THRESHOLD to threshold
-            )
+            nativeLongTaskThresholdMs = threshold
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1146,6 +1140,34 @@ internal class DdSdkTest {
                         )
                         .hasFieldEqualTo("thresholdMs", threshold.toLong())
                 }
+            }
+    }
+
+    @Test
+    fun `𝕄 not set long task threshold 𝕎 initialize() {long task threshold is 0}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            nativeLongTaskThresholdMs = 0.0
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            credentialCaptor.capture(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") { rumConfig ->
+                rumConfig.doesNotHaveField("longTaskTrackingStrategy")
             }
     }
 
@@ -1221,7 +1243,8 @@ internal class DdSdkTest {
         // Given
         doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = "NEVER"
+            vitalsUpdateFrequency = "NEVER",
+            longTaskThresholdMs = 0.0
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1247,16 +1270,21 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed vitals frequency update, long task threshold is 0}`(
         @StringForgery fakeFrequency: String,
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = fakeFrequency
+            vitalsUpdateFrequency = fakeFrequency,
+            longTaskThresholdMs = 0.0
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
+        val frameDurationNs = threshold + frameDurationOverThreshold
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1278,19 +1306,36 @@ internal class DdSdkTest {
         argumentCaptor<Choreographer.FrameCallback> {
             verify(mockChoreographer).postFrameCallback(capture())
             assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // then
+            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
         }
     }
 
     @Test
     fun `𝕄 send long tasks 𝕎 frame time is over threshold() {}`(
         @LongForgery(min = 0L) timestampNs: Long,
-        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS + 1, max = ONE_SECOND_NS) frameDurationNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = "AVERAGE"
+            vitalsUpdateFrequency = "AVERAGE",
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
         )
+        val frameDurationNs = threshold + frameDurationOverThreshold
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1314,6 +1359,44 @@ internal class DdSdkTest {
             )
         }
     }
+
+    @Test
+    fun `𝕄 send long tasks 𝕎 frame time is over threshold() { never vitals frequency update }`(
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "NEVER",
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+        )
+        val frameDurationNs = threshold + frameDurationOverThreshold
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // Then
+            verify(mockRumMonitor._getInternal()!!).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+        }
+    }
+
 
     // endregion
 
