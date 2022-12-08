@@ -253,6 +253,8 @@ package/lib/typescript/rum/instrumentation/resourceTracking/implementation/respo
 package/lib/typescript/types.d.ts
 package/lib/typescript/version.d.ts
 package/package.json
+package/scripts
+package/scripts/replace-react-require.js
 package/src
 package/src/DdSdkReactNative.tsx
 package/src/DdSdkReactNativeConfiguration.tsx
