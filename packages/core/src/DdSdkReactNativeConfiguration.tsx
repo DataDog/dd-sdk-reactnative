@@ -35,6 +35,9 @@ const DEFAULTS = {
  * It will be used to configure the SDK functionality at initialization.
  */
 export class DdSdkReactNativeConfiguration {
+    /**
+     * Enables crash reporting for native plaforms (iOS, Android). Default `false`.
+     */
     public nativeCrashReportEnabled: boolean =
         DEFAULTS.nativeCrashReportEnabled;
     /**
@@ -51,10 +54,24 @@ export class DdSdkReactNativeConfiguration {
     public resourceTracingSamplingRate: number =
         DEFAULTS.resourceTracingSamplingRate;
     public site: string = DEFAULTS.site;
+    /**
+     * Verbosity for internal SDK logging.
+     * Set to `SdkVerbosity.DEBUG` to debug your SDK implementation.
+     */
     public verbosity: SdkVerbosity | undefined = undefined;
+    /**
+     * Enables native views tracking.
+     * Set to `true` if you use a custom navigation system relying on native views.
+     */
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
+    /**
+     * List of your backends hosts to enable tracing with.
+     * Regular expressions are NOT supported.
+     *
+     * Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`.
+     */
     public firstPartyHosts: string[] = DEFAULTS.getFirstPartyHosts();
     /**
      * Overrides the reported version of the app.
@@ -111,6 +128,9 @@ export class DdSdkReactNativeConfiguration {
      */
     public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
 
+    /**
+     * Sets the preferred frequency for collecting mobile vitals.
+     */
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
 
