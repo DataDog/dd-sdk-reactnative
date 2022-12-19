@@ -61,6 +61,7 @@ class DdSdk(
         configureSdkVerbosity(ddSdkConfiguration)
 
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
+        datadog.setVerbosity(Log.VERBOSE)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
         monitorJsRefreshRate(ddSdkConfiguration)
