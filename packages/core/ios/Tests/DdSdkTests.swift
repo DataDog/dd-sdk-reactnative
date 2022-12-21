@@ -33,7 +33,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildConfigurationNoUIKitByDefault() {
@@ -67,7 +67,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.debug)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityInfo() {
@@ -77,7 +77,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.info)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityWarn() {
@@ -87,7 +87,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.warn)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityError() {
@@ -97,7 +97,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.error)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityNil() {
@@ -107,7 +107,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNil(Datadog.verbosityLevel)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityUnknown() {
@@ -117,7 +117,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNil(Datadog.verbosityLevel)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildConfigurationDefaultEndpoint() {
@@ -272,7 +272,7 @@ internal class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        let receivedUserInfo = try XCTUnwrap(defaultDatadogCore as? DatadogCore).dependencies.userInfoProvider.value
+        let receivedUserInfo = try XCTUnwrap(defaultDatadogCore as? DatadogCore).userInfoProvider.value
         XCTAssertEqual(receivedUserInfo.id, "abc-123")
         XCTAssertEqual(receivedUserInfo.name, "John Doe")
         XCTAssertEqual(receivedUserInfo.email, "john@doe.com")
@@ -280,7 +280,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(receivedUserInfo.extraInfo["extra-info-2"] as? String, "abc")
         XCTAssertEqual(receivedUserInfo.extraInfo["extra-info-3"] as? Bool, true)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSettingAttributes() {
@@ -311,7 +311,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
 
         GlobalState.globalAttributes.removeAll()
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildTrackingConsentPending() {
@@ -362,8 +362,11 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": ["example.com", "datadog.com"]])
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+        
+        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [TracingHeaderType.datadog]])
+        firstPartyHosts += FirstPartyHosts(["datadog.com": [TracingHeaderType.datadog]])
 
-        XCTAssertEqual(ddConfig.firstPartyHosts, ["example.com", "datadog.com"])
+        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
     }
 
     func testBuildTelemetrySampleRate() {
@@ -464,7 +467,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.20)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
@@ -480,7 +483,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
     
     func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUploadFrequency() {
@@ -497,7 +500,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
     
     func testJsLongTaskCollection() {
@@ -517,7 +520,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 }
 
@@ -526,22 +529,16 @@ private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
     private(set) var lastReceivedPerformanceMetrics = [PerformanceMetric: Double]()
     private(set) var receivedLongTasks = [Date: TimeInterval]()
 
-    override init() {
-        super.init()
-        self._internal = _RUMInternalProxy(subscriber: self)
-    }
-
     override func addAttribute(forKey key: AttributeKey, value: AttributeValue) {
         receivedAttributes[key] = value
-    }
-
-    override func updatePerformanceMetric(metric: PerformanceMetric, value: Double, attributes: [AttributeKey : AttributeValue] = [:]) {
-        lastReceivedPerformanceMetrics[.jsFrameTimeSeconds] = value
     }
 
     func process(command: RUMCommand) {
         if (command is RUMAddLongTaskCommand) {
             receivedLongTasks[(command as! RUMAddLongTaskCommand).time] = (command as! RUMAddLongTaskCommand).duration
+        }
+        if (command is RUMUpdatePerformanceMetric) {
+            lastReceivedPerformanceMetrics[.jsFrameTimeSeconds] = (command as! RUMUpdatePerformanceMetric).value
         }
     }
 }
