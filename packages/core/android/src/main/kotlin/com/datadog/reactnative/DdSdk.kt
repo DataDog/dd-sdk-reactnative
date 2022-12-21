@@ -134,17 +134,7 @@ class DdSdk(
     // region Internal
 
     private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {
-        val verbosityConfig = configuration.additionalConfig?.get(DD_SDK_VERBOSITY) as? String
-        val verbosity = when (verbosityConfig?.lowercase(Locale.US)) {
-            "debug" -> Log.DEBUG
-            "info" -> Log.INFO
-            "warn" -> Log.WARN
-            "error" -> Log.ERROR
-            else -> null
-        }
-        if (verbosity != null) {
-            datadog.setVerbosity(verbosity)
-        }
+        datadog.setVerbosity(Log.VERBOSE)
     }
 
     private fun getDefaultAppVersion(): String {

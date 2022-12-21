@@ -84,7 +84,7 @@ export class DdSdkReactNative {
             return new Promise(resolve => resolve());
         }
 
-        InternalLog.verbosity = configuration.verbosity;
+        InternalLog.verbosity = SdkVerbosity.DEBUG;
 
         DdSdkReactNative.buildConfiguration(configuration);
 
