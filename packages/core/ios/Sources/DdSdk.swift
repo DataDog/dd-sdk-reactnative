@@ -51,7 +51,7 @@ class RNDdSdk: NSObject {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
-                Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                Datadog._internal.telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
                 
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
@@ -105,13 +105,13 @@ class RNDdSdk: NSObject {
     
     @objc(telemetryDebug:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
+        Datadog._internal.telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc(telemetryError:withStack:withKind:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }
 
@@ -298,10 +298,10 @@ class RNDdSdk: NSObject {
 
         func frameTimeCallback(frameTime: Double) {
             if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
-                Global.rum.updatePerformanceMetric(metric: .jsFrameTimeSeconds, value: frameTime)
+                Global.rum._internal.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime)
             }
             if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
-                Global.rum._internal?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+                Global.rum._internal.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
             }
         }
         
