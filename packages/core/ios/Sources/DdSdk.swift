@@ -117,7 +117,7 @@ class RNDdSdk: NSObject {
     }
     
     func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
-        Datadog._internal.telemetry.setConfigurationMapper {event in
+        Datadog._internal.telemetry.setConfigurationMapper { event in
             var event = event
 
             var configuration = event.telemetry.configuration
