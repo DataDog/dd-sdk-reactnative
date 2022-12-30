@@ -66,6 +66,39 @@ To set your project up to send the symbolication files automatically, run `npx d
 
 See the wizard [official documentation][13] for options.
 
+## Test your implementation of crash reporting
+
+To make sure your sourcemaps are correctly sent and linked to your application, you can generate crashes with the [`react-native-performance-limiter`][14] package.
+
+Install it with yarn or npm then re-install your pods:
+
+```shell
+yarn install react-native-performance-limiter # or npm install react-native-performance-limiter
+(cd ios && pod install)
+```
+
+Crash the javascript thread from your app:
+
+```javascript
+import { crashJavascriptThread } from 'react-native-performance-limiter';
+
+const crashApp = () => {
+    crashJavascriptThread('custom error message');
+};
+```
+
+Re-build your application for release to send the new sourcemaps, trigger the crash and wait on the [Error Tracking][1] page for the error to appear.
+
+To test your dSYMs and Proguard mapping files upload, crash the native main thread instead:
+
+```javascript
+import { crashNativeMainThread } from 'react-native-performance-limiter';
+
+const crashApp = () => {
+    crashNativeMainThread('custom error message');
+};
+```
+
 ## Alternatives to `datadog-react-native-wizard`
 
 If using `datadog-react-native-wizard` did not succeed or if you don't want to upload your symbolication files automatically on each release, follow the next steps to symbolicate crash reports.
@@ -366,3 +399,4 @@ To verify your React Native Crash Reporting and Error Tracking configuration, yo
 [11]: https://www.bitrise.io/
 [12]: https://github.com/DataDog/datadog-ci/tree/master/src/commands/react-native#xcode
 [13]: https://github.com/DataDog/datadog-react-native-wizard
+[14]: https://github.com/DataDog/react-native-performance-limiter
