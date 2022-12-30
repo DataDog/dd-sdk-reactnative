@@ -22,7 +22,19 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         trackingConsent = getString("trackingConsent"),
         telemetrySampleRate = getDouble("telemetrySampleRate"),
         vitalsUpdateFrequency = getString("vitalsUpdateFrequency"),
-        additionalConfig = getMap("additionalConfig")?.toHashMap()
+        additionalConfig = getMap("additionalConfig")?.toHashMap(),
+        configurationForTelemetry = getMap(
+            "configurationForTelemetry"
+        )?.asConfigurationForTelemetry()
+    )
+}
+
+internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetry {
+    return ConfigurationForTelemetry(
+        initializationType = getString("initializationType"),
+        trackErrors = getBoolean("trackErrors"),
+        trackInteractions = getBoolean("trackInteractions"),
+        trackNetworkRequests = getBoolean("trackNetworkRequests"),
     )
 }
 
@@ -40,5 +52,14 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     telemetrySampleRate?.let { map.putDouble("telemetrySampleRate", it) }
     vitalsUpdateFrequency?.let { map.putString("vitalsUpdateFrequency", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
+    return map
+}
+
+internal fun ConfigurationForTelemetry.toReadableMap(): ReadableMap {
+    val map = WritableNativeMap()
+    initializationType?.let { map.putString("initializationType", it) }
+    trackErrors?.let { map.putBoolean("trackErrors", it) }
+    trackInteractions?.let { map.putBoolean("trackInteractions", it) }
+    trackNetworkRequests?.let { map.putBoolean("trackNetworkRequests", it) }
     return map
 }

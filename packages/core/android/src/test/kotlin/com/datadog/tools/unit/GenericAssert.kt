@@ -22,6 +22,16 @@ class GenericAssert(actual: Any) :
         return this
     }
 
+    fun <T> getActualValue(name: String): T {
+        val field: Any? = actual.getFieldValue(name)
+        assertThat(field)
+            .overridingErrorMessage(
+                "Expecting object to have a non null field named $name, but field was null"
+            )
+            .isNotNull()
+        return field!! as T
+    }
+
     fun hasField(name: String, nestedAssert: (GenericAssert) -> Unit = {}): GenericAssert {
         val field: Any? = actual.getFieldValue(name)
         assertThat(field)

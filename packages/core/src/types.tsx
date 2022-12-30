@@ -20,7 +20,13 @@ export class DdSdkConfiguration {
         readonly trackingConsent: string,
         readonly additionalConfig: object,
         readonly telemetrySampleRate: number,
-        readonly vitalsUpdateFrequency: string
+        readonly vitalsUpdateFrequency: string,
+        readonly configurationForTelemetry: {
+            initializationType: string;
+            trackErrors: boolean;
+            trackInteractions: boolean;
+            trackNetworkRequests: boolean;
+        }
     ) {}
 }
 

@@ -276,3 +276,9 @@ export enum InitializationMode {
     SYNC = 'SYNC',
     ASYNC = 'ASYNC'
 }
+
+export type InitializationModeForTelemetry =
+    | 'LEGACY'
+    | 'SYNC'
+    | 'ASYNC'
+    | 'PARTIAL';

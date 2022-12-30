@@ -33,5 +33,13 @@ data class DdSdkConfiguration(
     val trackingConsent: String? = null,
     val telemetrySampleRate: Double? = null,
     val vitalsUpdateFrequency: String? = null,
-    val additionalConfig: Map<String, Any?>? = null
+    val additionalConfig: Map<String, Any?>? = null,
+    val configurationForTelemetry: ConfigurationForTelemetry? = null
+)
+
+data class ConfigurationForTelemetry(
+    val initializationType: String? = null,
+    val trackErrors: Boolean? = null,
+    val trackInteractions: Boolean? = null,
+    val trackNetworkRequests: Boolean? = null
 )

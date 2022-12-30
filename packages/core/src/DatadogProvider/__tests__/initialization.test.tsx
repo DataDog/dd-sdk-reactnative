@@ -65,6 +65,12 @@ describe('DatadogProvider', () => {
                   },
                   "applicationId": "fakeApplicationId",
                   "clientToken": "fakeToken",
+                  "configurationForTelemetry": Object {
+                    "initializationType": "SYNC",
+                    "trackErrors": true,
+                    "trackInteractions": true,
+                    "trackNetworkRequests": false,
+                  },
                   "env": "fakeEnv",
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,

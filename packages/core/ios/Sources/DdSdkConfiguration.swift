@@ -35,6 +35,7 @@ public class DdSdkConfiguration: NSObject {
     public var telemetrySampleRate: Double? = nil
     public var vitalsUpdateFrequency: NSString? = nil
     public var additionalConfig: NSDictionary? = nil
+    public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
     public init(
         clientToken: String,
@@ -48,7 +49,8 @@ public class DdSdkConfiguration: NSObject {
         trackingConsent: NSString?,
         telemetrySampleRate: Double?,
         vitalsUpdateFrequency: NSString?,
-        additionalConfig: NSDictionary?
+        additionalConfig: NSDictionary?,
+        configurationForTelemetry: ConfigurationForTelemetry?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -62,5 +64,25 @@ public class DdSdkConfiguration: NSObject {
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.additionalConfig = additionalConfig
+        self.configurationForTelemetry = configurationForTelemetry
+    }
+}
+
+public class ConfigurationForTelemetry: NSObject {
+    public var initializationType: NSString?
+    public var trackErrors: Bool?
+    public var trackInteractions: Bool?
+    public var trackNetworkRequests: Bool?
+    
+    public init(
+        initializationType: NSString?,
+        trackErrors: Bool?,
+        trackInteractions: Bool?,
+        trackNetworkRequests: Bool?
+    ) {
+        self.initializationType = initializationType
+        self.trackErrors = trackErrors
+        self.trackInteractions = trackInteractions
+        self.trackNetworkRequests = trackNetworkRequests
     }
 }

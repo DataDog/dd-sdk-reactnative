@@ -17,7 +17,8 @@ import type {
     AutoInstrumentationParameters,
     DatadogProviderConfiguration,
     PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration
+    AutoInstrumentationConfiguration,
+    InitializationModeForTelemetry
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
@@ -53,7 +54,6 @@ export class DdSdkReactNative {
 
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
-    private static configuration?: DdSdkReactNativeConfiguration;
     private static features?: AutoInstrumentationConfiguration;
 
     /**
@@ -64,12 +64,17 @@ export class DdSdkReactNative {
     static async initialize(
         configuration: DdSdkReactNativeConfiguration
     ): Promise<void> {
-        await DdSdkReactNative.initializeNativeSDK(configuration);
+        await DdSdkReactNative.initializeNativeSDK(configuration, {
+            initializationModeForTelemetry: 'LEGACY'
+        });
         DdSdkReactNative.enableFeatures(configuration);
     }
 
     private static initializeNativeSDK = async (
-        configuration: DdSdkReactNativeConfiguration
+        configuration: DdSdkReactNativeConfiguration,
+        params: {
+            initializationModeForTelemetry: InitializationModeForTelemetry;
+        }
     ): Promise<void> => {
         if (DdSdkReactNative.wasInitialized) {
             InternalLog.log(
@@ -103,7 +108,13 @@ export class DdSdkReactNative {
                 configuration.trackingConsent,
                 configuration.additionalConfig,
                 configuration.telemetrySampleRate,
-                configuration.vitalsUpdateFrequency
+                configuration.vitalsUpdateFrequency,
+                {
+                    initializationType: params.initializationModeForTelemetry,
+                    trackErrors: configuration.trackErrors,
+                    trackInteractions: configuration.trackInteractions,
+                    trackNetworkRequests: configuration.trackResources
+                }
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
@@ -118,18 +129,23 @@ export class DdSdkReactNative {
         configuration: DatadogProviderConfiguration
     ): Promise<void> {
         DdSdkReactNative.enableFeatures(configuration);
-        DdSdkReactNative.configuration = configuration;
         if (configuration.initializationMode === InitializationMode.SYNC) {
-            return DdSdkReactNative.initializeNativeSDK(configuration);
+            return DdSdkReactNative.initializeNativeSDK(configuration, {
+                initializationModeForTelemetry: 'SYNC'
+            });
         }
         if (configuration.initializationMode === InitializationMode.ASYNC) {
             return InteractionManager.runAfterInteractions(() => {
-                return DdSdkReactNative.initializeNativeSDK(configuration);
+                return DdSdkReactNative.initializeNativeSDK(configuration, {
+                    initializationModeForTelemetry: 'ASYNC'
+                });
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
         if (configuration instanceof DdSdkReactNativeConfiguration) {
-            return DdSdkReactNative.initializeNativeSDK(configuration);
+            return DdSdkReactNative.initializeNativeSDK(configuration, {
+                initializationModeForTelemetry: 'SYNC'
+            });
         }
     }
 
@@ -144,22 +160,6 @@ export class DdSdkReactNative {
             addDefaultValuesToAutoInstrumentationConfiguration(features)
         );
     }
-
-    /**
-     * FOR INTERNAL USE ONLY.
-     */
-    static _initializeFromDatadogProviderAsync = async (): Promise<void> => {
-        if (!DdSdkReactNative.configuration) {
-            InternalLog.log(
-                "Can't initialize Datadog, make sure the DatadogProvider component is mounted before calling this function",
-                SdkVerbosity.WARN
-            );
-            return new Promise(resolve => resolve());
-        }
-        return DdSdkReactNative.initializeNativeSDK(
-            DdSdkReactNative.configuration
-        );
-    };
 
     /**
      * FOR INTERNAL USE ONLY.
@@ -179,7 +179,8 @@ export class DdSdkReactNative {
             buildConfigurationFromPartialConfiguration(
                 DdSdkReactNative.features,
                 configuration
-            )
+            ),
+            { initializationModeForTelemetry: 'PARTIAL' }
         );
     };
 

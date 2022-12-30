@@ -21,6 +21,7 @@ open class BaseConfigurator :
         forge.addFactory(ThrowableForgeryFactory())
         forge.addFactory(DdSdkConfigurationForgeryFactory())
         forge.addFactory(PackageInfoForgeryFactory())
+        forge.addFactory(TelemetryConfigurationEventForgeryFactory())
         forge.useJvmFactories()
     }
 }

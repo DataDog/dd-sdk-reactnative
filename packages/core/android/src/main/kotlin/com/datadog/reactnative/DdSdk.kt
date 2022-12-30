@@ -11,14 +11,17 @@ import android.content.pm.PackageManager
 import android.util.Log
 import android.view.Choreographer
 import com.datadog.android.DatadogSite
+import com.datadog.android._InternalProxy
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.android.event.EventMapper
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -41,7 +44,6 @@ class DdSdk(
     internal val appContext: Context = reactContext.applicationContext
     internal val reactContext: ReactApplicationContext = reactContext
     internal val initialized = AtomicBoolean(false)
-    internal val longTaskThresholdNs = TimeUnit.MILLISECONDS.toNanos(100L)
 
     override fun getName(): String = "DdSdk"
 
@@ -219,6 +221,37 @@ class DdSdk(
             configBuilder.setProxy(proxy, authenticator)
         }
 
+        _InternalProxy.setTelemetryConfigurationEventMapper(
+            configBuilder,
+            object : EventMapper<TelemetryConfigurationEvent> {
+                override fun map(event: TelemetryConfigurationEvent): TelemetryConfigurationEvent? {
+                    event.telemetry.configuration.trackNativeErrors =
+                        configuration.nativeCrashReportEnabled
+                    // trackCrossPlatformLongTasks will be deprecated for trackLongTask
+                    event.telemetry.configuration.trackCrossPlatformLongTasks =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackLongTask =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackNativeLongTasks =
+                        configuration.nativeLongTaskThresholdMs != 0.0
+
+
+                    event.telemetry.configuration.initializationType =
+                        configuration.configurationForTelemetry?.initializationType
+                    event.telemetry.configuration.trackInteractions =
+                        configuration.configurationForTelemetry?.trackInteractions
+                    event.telemetry.configuration.trackErrors =
+                        configuration.configurationForTelemetry?.trackErrors
+                    event.telemetry.configuration.trackResources =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
+                    event.telemetry.configuration.trackNetworkRequests =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
+
+                    return event
+                }
+            }
+        )
+
         return configBuilder.build()
     }
 
@@ -336,8 +369,10 @@ class DdSdk(
     }
 
     private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
-            ((Double) -> Unit)? {
-        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) != VitalsUpdateFrequency.NEVER
+        ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(
+            ddSdkConfiguration.vitalsUpdateFrequency
+        ) != VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -353,7 +388,8 @@ class DdSdk(
             }
             if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
                     ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                )) {
+                )
+            ) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
