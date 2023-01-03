@@ -1478,7 +1478,8 @@ internal class DdSdkTest {
         )
         assertThat(configCaptor.firstValue)
             .hasField("rumConfig") {
-                val configurationMapper = it.getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
+                val configurationMapper = it
+                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
                 val result = configurationMapper.map(telemetryConfigurationEvent)!!
                 assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
                     trackNativeErrors

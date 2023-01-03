@@ -39,7 +39,9 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     null
                 )
             },
-            trackingConsent = forge.aNullable { anElementFrom("pending", "granted", "not_granted") },
+            trackingConsent = forge.aNullable {
+                anElementFrom("pending", "granted", "not_granted")
+            },
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),
