@@ -212,7 +212,7 @@ For the upload to work, you need to provide your Datadog API key. If you use a c
 
 You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
 
-#### Manually on each build (without Hermes)
+#### Manually on each build
 
 To output a source map, you need to edit the XCode build phase "Bundle React Native Code and Images".
 
@@ -246,9 +246,9 @@ export BUNDLE_PATH= # fill with your bundle path
 yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $BUNDLE_PATH --sourcemap ./build/main.jsbundle.map --release-version $VERSION --build-version $BUILD
 ```
 
-#### Manually on each build (with Hermes)
+#### Manually on each build (with Hermes for React Native < 0.71)
 
-There is currently a bug in React Native that generates an incorrect source map when using Hermes.
+There is a bug in React Native versions up to 0.71 that generates an incorrect source map when using Hermes.
 
 To resolve this, you need to add more lines **at the very end** of the build phase to generate a correct source map file.
 
@@ -289,7 +289,25 @@ yarn datadog-ci react-native upload --platform ios --service $SERVICE --bundle $
 
 ### Upload JavaScript source maps on Android builds
 
-#### Automatically on each release build
+#### Automatically on each release build (React Native >= 0.71)
+
+In your `android/app/build.gradle` file, add the following after the `apply plugin: "com.facebook.react"` line:
+
+```groovy
+apply from: "../../node_modules/@datadog/mobile-react-native/datadog-sourcemaps.gradle"
+```
+
+For the upload to work, you need to provide your Datadog API key. You can specify it as a `DATADOG_API_KEY` environment variable, or create a `datadog-ci.json` file at the root of your project containing the API key:
+
+```json
+{
+    "apiKey": "<YOUR_DATADOG_API_KEY>"
+}
+```
+
+You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SITE` environment variable, or as a `datadogSite` key in your `datadog-ci.json` file.
+
+#### Automatically on each release build (React Native < 0.71)
 
 In your `android/app/build.gradle` file, add the following after the `apply from: "../../node_modules/react-native/react.gradle"` line:
 
@@ -309,7 +327,17 @@ You can also specify the Datadog site (such as `datadoghq.eu`) as a `DATADOG_SIT
 
 #### Manually on each build
 
-On Android, the bundle file is located at `android/app/build/generated/assets/react/release/index.android.bundle` and the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`. If your application has more comprehensive variants, replace `release` by your variant's name in the paths.
+On Android, the source map file is located at `android/app/build/generated/sourcemaps/react/release/index.android.bundle.map`.
+The bundle file location depends on your React Native (RN) and Android Gradle Plugin (AGP) versions:
+
+-   RN >= 0.71 and AGP >= 7.4.0: `android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle`
+-   RN >= 0.71 and AGP < 7.4.0: `android/app/build/ASSETS/createBundleReleaseJsAndAssets/index.android.bundle`
+-   RN < 0.71: `android/app/build/generated/assets/react/release/index.android.bundle`
+
+The Android Gradle Plugin version is specified in the `android/build.gradle` file under `com.android.tools.build:gradle`, for instance: `classpath("com.android.tools.build:gradle:7.3.1")`.
+
+If your application has more comprehensive variants, replace `release` by your variant's name in the paths.
+If you specified a `bundleAssetName` in your react config in `android/app/build.gradle`, replace `index.android.bundle` by its value.
 
 After running your build, upload your source map by running this from your React Native project root:
 
