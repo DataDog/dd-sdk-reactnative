@@ -20,6 +20,7 @@ package com.datadog.reactnative
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
  * @param additionalConfig Additional configuration parameters.
+ * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -37,6 +38,13 @@ data class DdSdkConfiguration(
     val configurationForTelemetry: ConfigurationForTelemetry? = null
 )
 
+/**
+ * Additional configuration data for Datadog telemetry.
+ * @param initializationType Type of initialization used.
+ * @param trackErrors Whether JS errors are tracked.
+ * @param trackInteractions Whether interactions are tracked.
+ * @param trackNetworkRequests Whether network requests are tracked.
+ */
 data class ConfigurationForTelemetry(
     val initializationType: String? = null,
     val trackErrors: Boolean? = null,
