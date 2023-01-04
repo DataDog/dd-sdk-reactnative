@@ -21,6 +21,7 @@
     "lib",
     "scripts",
     "android/build.gradle",
+    "android/detekt.yml",
     "android/gradle.properties",
     "android/src",
     "ios/Sources",

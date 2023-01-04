@@ -235,7 +235,6 @@ class DdSdk(
                     event.telemetry.configuration.trackNativeLongTasks =
                         configuration.nativeLongTaskThresholdMs != 0.0
 
-
                     event.telemetry.configuration.initializationType =
                         configuration.configurationForTelemetry?.initializationType
                     event.telemetry.configuration.trackInteractions =

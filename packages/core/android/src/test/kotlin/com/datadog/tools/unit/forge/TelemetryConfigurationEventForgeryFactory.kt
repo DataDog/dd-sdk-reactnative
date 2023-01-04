@@ -70,7 +70,9 @@ internal class TelemetryConfigurationEventForgeryFactory :
                     forge.aNullable { aList { aString() } },
                     forge.aNullable { aList { aString() } },
                     forge.aNullable { aBool() },
-                    forge.aNullable { aValueFrom(TelemetryConfigurationEvent.ViewTrackingStrategy::class.java) },
+                    forge.aNullable {
+                        aValueFrom(TelemetryConfigurationEvent.ViewTrackingStrategy::class.java)
+                    },
                     forge.aNullable { aBool() },
                     forge.aNullable { aLong() },
                     forge.aNullable { aBool() },

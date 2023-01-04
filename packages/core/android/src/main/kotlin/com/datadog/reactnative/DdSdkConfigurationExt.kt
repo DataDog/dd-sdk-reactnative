@@ -38,6 +38,7 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
     )
 }
 
+@Suppress("ComplexMethod")
 internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)

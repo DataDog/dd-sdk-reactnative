@@ -205,8 +205,14 @@ ktlint {
 
 detekt {
   input = files("$projectDir/src/main/kotlin")
-  config = files("${project.rootDir}/detekt.yml")
+  config = files({
+    if (file("${project.rootDir}/detekt.yml").exists()) {
+      return "${project.rootDir}/detekt.yml"
+    }
 
+    // Fallback to our configuration if there is no user-specified one
+    return "$projectDir/detekt.yml"
+  })
   reports {
     xml {
       enabled = true
