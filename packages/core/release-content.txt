@@ -3,6 +3,7 @@ package/DatadogSDKReactNative.podspec
 package/README.md
 package/android
 package/android/build.gradle
+package/android/detekt.yml
 package/android/gradle.properties
 package/android/src
 package/android/src/main
@@ -46,6 +47,7 @@ package/android/src/test/kotlin/com/datadog/tools/unit/forge
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/BaseConfigurator.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/DdSdkConfigurationForgeryFactory.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/PackageInfoForgeryFactory.kt
+package/android/src/test/kotlin/com/datadog/tools/unit/forge/TelemetryConfigurationEventForgeryFactory.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/Throwable.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/ThrowableForgeryFactory.kt
 package/android/src/test/resources
@@ -71,8 +73,7 @@ package/ios/Sources/DdSdkReactNative-Bridging-Header.h
 package/ios/Sources/DdTrace.m
 package/ios/Sources/DdTrace.swift
 package/ios/Sources/GlobalState.swift
-package/ios/Sources/JsRefreshRate.h
-package/ios/Sources/JsRefreshRate.m
+package/ios/Sources/JSRefreshRateListener.swift
 package/ios/Sources/QueueHolder.swift
 package/ios/Sources/RNDdSdkConfiguration.swift
 package/lib
@@ -113,6 +114,8 @@ package/lib/commonjs/foundation.js
 package/lib/commonjs/foundation.js.map
 package/lib/commonjs/index.js
 package/lib/commonjs/index.js.map
+package/lib/commonjs/longTasksUtils.js
+package/lib/commonjs/longTasksUtils.js.map
 package/lib/commonjs/nativeModulesTypes.js
 package/lib/commonjs/nativeModulesTypes.js.map
 package/lib/commonjs/rum
@@ -199,6 +202,8 @@ package/lib/module/foundation.js
 package/lib/module/foundation.js.map
 package/lib/module/index.js
 package/lib/module/index.js.map
+package/lib/module/longTasksUtils.js
+package/lib/module/longTasksUtils.js.map
 package/lib/module/nativeModulesTypes.js
 package/lib/module/nativeModulesTypes.js.map
 package/lib/module/rum
@@ -268,6 +273,7 @@ package/lib/typescript/TrackingConsent.d.ts
 package/lib/typescript/errorUtils.d.ts
 package/lib/typescript/foundation.d.ts
 package/lib/typescript/index.d.ts
+package/lib/typescript/longTasksUtils.d.ts
 package/lib/typescript/nativeModulesTypes.d.ts
 package/lib/typescript/rum
 package/lib/typescript/rum/instrumentation
@@ -297,6 +303,8 @@ package/lib/typescript/rum/instrumentation/resourceTracking/implementation/respo
 package/lib/typescript/types.d.ts
 package/lib/typescript/version.d.ts
 package/package.json
+package/scripts
+package/scripts/replace-react-require.js
 package/src
 package/src/DatadogProvider
 package/src/DatadogProvider/Buffer
@@ -332,6 +340,7 @@ package/src/__tests__/InternalLog.test.tsx
 package/src/__tests__/TimeProvider.test.tsx
 package/src/__tests__/Timer.test.ts
 package/src/__tests__/foundation.test.ts
+package/src/__tests__/longTasksUtils.ts
 package/src/__tests__/rum
 package/src/__tests__/rum/instrumentation
 package/src/__tests__/rum/instrumentation/DdEventsInterceptor.test.tsx
@@ -341,6 +350,7 @@ package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
 package/src/errorUtils.ts
 package/src/foundation.tsx
 package/src/index.tsx
+package/src/longTasksUtils.ts
 package/src/nativeModulesTypes.ts
 package/src/rum
 package/src/rum/instrumentation

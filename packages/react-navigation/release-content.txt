@@ -41,6 +41,7 @@ package/lib/typescript/core/src/TrackingConsent.d.ts
 package/lib/typescript/core/src/errorUtils.d.ts
 package/lib/typescript/core/src/foundation.d.ts
 package/lib/typescript/core/src/index.d.ts
+package/lib/typescript/core/src/longTasksUtils.d.ts
 package/lib/typescript/core/src/nativeModulesTypes.d.ts
 package/lib/typescript/core/src/rum
 package/lib/typescript/core/src/rum/instrumentation
