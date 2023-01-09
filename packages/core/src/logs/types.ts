@@ -37,9 +37,18 @@ export type DdLogsType = {
     error(message: string, context?: object): Promise<void>;
 };
 
+export type RawLog = {
+    message: string;
+    context?: object;
+};
+
+export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
+
 export type LogEvent = {
     message: string;
     context?: object;
+    // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
+    readonly status: LogStatus;
     readonly userInfo?: object;
     readonly attributes?: object;
 };
