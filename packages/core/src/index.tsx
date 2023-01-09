@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DatadogProvider } from './DatadogProvider/DatadogProvider';
+import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,

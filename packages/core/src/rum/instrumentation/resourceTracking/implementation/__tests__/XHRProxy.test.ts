@@ -6,9 +6,9 @@
 
 import { Platform, NativeModules } from 'react-native';
 
-import { BufferSingleton } from '../../../../../DatadogProvider/Buffer/BufferSingleton';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
+import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';

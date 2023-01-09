@@ -6,7 +6,6 @@
 
 import { InteractionManager } from 'react-native';
 
-import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
 import {
     DdSdkReactNativeConfiguration,
     buildConfigurationFromPartialConfiguration,
@@ -30,6 +29,7 @@ import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
 

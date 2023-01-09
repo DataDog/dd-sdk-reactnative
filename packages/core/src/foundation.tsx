@@ -10,7 +10,7 @@ import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 import {TimeProvider} from "./TimeProvider";
 import type { DdNativeRumType, DdNativeSdkType, DdNativeTraceType } from './nativeModulesTypes';
-import { bufferNativeCallReturningId, bufferNativeCallWithId, bufferVoidNativeCall } from './DatadogProvider/Buffer/bufferNativeCall';
+import { bufferNativeCallReturningId, bufferNativeCallWithId, bufferVoidNativeCall } from './sdk/DatadogProvider/Buffer/bufferNativeCall';
 
 const timeProvider = new TimeProvider();
 

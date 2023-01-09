@@ -7,10 +7,10 @@
 import { fireEvent } from '@testing-library/react-native';
 import { NativeModules } from 'react-native';
 
-import { InitializationMode } from '../../DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from '../../DdSdkReactNative';
-import { TimeProvider } from '../../TimeProvider';
-import { DdRumUserInteractionTracking } from '../../rum/instrumentation/DdRumUserInteractionTracking';
+import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../../../DdSdkReactNative';
+import { TimeProvider } from '../../../TimeProvider';
+import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/DdRumUserInteractionTracking';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -24,7 +24,7 @@ import {
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
 
-jest.mock('../../TimeProvider', () => {
+jest.mock('../../../TimeProvider', () => {
     const now = jest.fn();
     return {
         TimeProvider: jest.fn().mockImplementation(() => {
