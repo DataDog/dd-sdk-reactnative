@@ -6,3 +6,10 @@ export type UserInfo = {
         [key: string]: unknown;
     };
 };
+
+export type RawUserInfo = {
+    id?: string;
+    name?: string;
+    email?: string;
+    [key: string]: unknown;
+};
