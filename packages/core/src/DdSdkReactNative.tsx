@@ -30,6 +30,8 @@ import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
+import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
+import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
 
@@ -205,12 +207,13 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static setUser(user: object): Promise<void> {
+    static async setUser(user: UserInfo): Promise<void> {
         InternalLog.log(
             `Setting user ${JSON.stringify(user)}`,
             SdkVerbosity.DEBUG
         );
-        return DdSdk.setUser(user);
+        await DdSdk.setUser(user);
+        UserInfoSingleton.getInstance().setUserInfo(user);
     }
 
     /**

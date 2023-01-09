@@ -16,6 +16,7 @@ import { DdLogs } from '../logs/DdLogs';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
@@ -66,6 +67,8 @@ beforeEach(async () => {
         typeof DdRumErrorTracking.startTracking
     >).mockClear();
     DdLogs.unregisterLogEventMapper();
+
+    UserInfoSingleton.reset();
 });
 
 describe('DdSdkReactNative', () => {
@@ -752,17 +755,20 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('setUser', () => {
-        it('calls SDK method when setUser', async () => {
+        it('calls SDK method when setUser, and sets the user in UserProvider', async () => {
             // GIVEN
-            const user = { foo: 'bar' };
+            const user = { id: 'id', foo: 'bar' };
 
             // WHEN
-
-            DdSdkReactNative.setUser(user);
+            await DdSdkReactNative.setUser(user);
 
             // THEN
             expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
             expect(DdSdk.setUser).toHaveBeenCalledWith(user);
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+                id: 'id',
+                foo: 'bar'
+            });
         });
     });
 
