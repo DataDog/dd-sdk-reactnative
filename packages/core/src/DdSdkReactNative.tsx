@@ -25,6 +25,7 @@ import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
+import { DdLogs } from './logs/DdLogs';
 import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
@@ -314,6 +315,11 @@ export class DdSdkReactNative {
         if (configuration.trackErrors) {
             DdRumErrorTracking.startTracking();
         }
+
+        if (configuration.logEventMapper) {
+            DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        }
+
         DdSdkReactNative.wasAutoInstrumented = true;
     }
 }

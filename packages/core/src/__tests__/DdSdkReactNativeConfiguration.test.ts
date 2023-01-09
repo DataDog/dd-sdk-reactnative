@@ -32,6 +32,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "firstPartyHosts": Array [],
+                  "logEventMapper": null,
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
@@ -60,7 +61,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackInteractions: true,
                         trackResources: true,
                         firstPartyHosts: ['api.com'],
-                        resourceTracingSamplingRate: 100
+                        resourceTracingSamplingRate: 100,
+                        logEventMapper: log => log
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -96,6 +98,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "firstPartyHosts": Array [
                     "api.com",
                   ],
+                  "logEventMapper": [Function],
                   "longTaskThresholdMs": 567,
                   "nativeCrashReportEnabled": true,
                   "nativeLongTaskThresholdMs": 345,
@@ -156,6 +159,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "clientToken": "",
                   "env": "",
                   "firstPartyHosts": Array [],
+                  "logEventMapper": null,
                   "longTaskThresholdMs": false,
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": false,

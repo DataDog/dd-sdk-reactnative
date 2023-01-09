@@ -12,6 +12,7 @@ import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 import { DdSdk } from '../foundation';
+import { DdLogs } from '../logs/DdLogs';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
@@ -64,6 +65,7 @@ beforeEach(async () => {
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
     >).mockClear();
+    DdLogs.unregisterLogEventMapper();
 });
 
 describe('DdSdkReactNative', () => {
@@ -533,6 +535,37 @@ describe('DdSdkReactNative', () => {
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
+
+        it('enables logs mapping when initialize { logs mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.logEventMapper = log => {
+                log.message = 'new message';
+                return log;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdLogs.debug('original message');
+
+            // THEN
+            expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
+                'new message',
+                {}
+            );
         });
 
         it('enables custom service name when initialize { service name }', async () => {
