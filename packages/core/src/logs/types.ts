@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { UserInfo } from '../sdk/UserInfoSingleton/types';
+
 /**
  * The entry point to use Datadog's Logs feature.
  */
@@ -49,7 +51,7 @@ export type LogEvent = {
     context: object;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
-    readonly userInfo?: object;
+    readonly userInfo: UserInfo;
     readonly attributes?: object;
 };
 
