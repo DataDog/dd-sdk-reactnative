@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { DdSdk } from '../../foundation';
 import { applyLogEventMapper, formatLogEvent } from '../eventMapper';
 import type { LogEventMapper } from '../types';
 
@@ -65,5 +66,26 @@ describe('applyLogEventMapper', () => {
             context: {},
             status: 'info'
         });
+    });
+
+    it('returns the original log when the event log mapper crashes', () => {
+        const logEventMapper: LogEventMapper = log => {
+            throw new Error('crashed');
+        };
+
+        expect(
+            applyLogEventMapper(logEventMapper, {
+                message: 'original',
+                context: {},
+                status: 'info'
+            })
+        ).toEqual({
+            message: 'original',
+            context: {},
+            status: 'info'
+        });
+        expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+            'Error while running the log event mapper'
+        );
     });
 });
