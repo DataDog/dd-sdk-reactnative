@@ -39,14 +39,14 @@ export type DdLogsType = {
 
 export type RawLog = {
     message: string;
-    context?: object;
+    context: object;
 };
 
 export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
 
 export type LogEvent = {
     message: string;
-    context?: object;
+    context: object;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
     readonly userInfo?: object;

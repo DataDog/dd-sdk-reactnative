@@ -4,8 +4,11 @@ import type { LogEventMapper } from '../types';
 
 describe('formatLogEvent', () => {
     it('formats a raw log without context to a LogEvent', () => {
-        expect(formatLogEvent({ message: 'original' }, 'info')).toEqual({
+        expect(
+            formatLogEvent({ message: 'original', context: {} }, 'info')
+        ).toEqual({
             message: 'original',
+            context: {},
             status: 'info'
         });
     });
@@ -54,10 +57,12 @@ describe('applyLogEventMapper', () => {
         expect(
             applyLogEventMapper(logEventMapper, {
                 message: 'original',
+                context: {},
                 status: 'info'
             })
         ).toEqual({
             message: 'original',
+            context: {},
             status: 'info'
         });
     });
