@@ -36,3 +36,12 @@ export type DdLogsType = {
      */
     error(message: string, context?: object): Promise<void>;
 };
+
+export type LogEvent = {
+    message: string;
+    context?: object;
+    readonly userInfo?: object;
+    readonly attributes?: object;
+};
+
+export type LogEventMapper = (logEvent: LogEvent) => LogEvent;

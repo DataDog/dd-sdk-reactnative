@@ -7,6 +7,7 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
+import type { LogEventMapper } from './logs/types';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
@@ -27,7 +28,8 @@ const DEFAULTS = {
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
     telemetrySampleRate: 20.0,
-    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
+    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
+    logEventMapper: null
 };
 
 /**
@@ -133,6 +135,8 @@ export class DdSdkReactNativeConfiguration {
      */
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
+
+    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public additionalConfig: {
         [k: string]: any;
