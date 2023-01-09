@@ -42,7 +42,7 @@
     "test": "jest",
     "lint": "eslint .",
     "prepare": "rm -rf lib && yarn bob build",
-    "postinstall": "scripts/replace-react-require.js"
+    "postinstall": "node scripts/replace-react-require.js # Use node to execute the script for Windows, see https://github.com/DataDog/dd-sdk-reactnative/issues/358"
   },
   "peerDependencies": {
     "react": ">=16.13.1",
