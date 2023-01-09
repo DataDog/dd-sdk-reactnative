@@ -4,8 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { DdLogsType } from '../src/logs/types';
 import type { DdNativeSdkType } from '../src/nativeModulesTypes';
-import type { DdLogsType, DdRumType, DdTraceType } from '../src/types';
+import type { DdRumType, DdTraceType } from '../src/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const actualRN = require('react-native');

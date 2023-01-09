@@ -5,40 +5,14 @@
  */
 
 import { NativeModules } from 'react-native';
-import { DdSdkConfiguration, DdLogsType, DdTraceType, DdRumType, RumActionType, ResourceKind, ErrorSource } from './types';
+import { DdSdkConfiguration, DdTraceType, DdRumType, RumActionType, ResourceKind, ErrorSource } from './types';
 import {InternalLog} from "./InternalLog"
 import {SdkVerbosity} from "./SdkVerbosity";
 import {TimeProvider} from "./TimeProvider";
-import type { DdNativeLogsType, DdNativeRumType, DdNativeSdkType, DdNativeTraceType } from './nativeModulesTypes';
+import type { DdNativeRumType, DdNativeSdkType, DdNativeTraceType } from './nativeModulesTypes';
 import { bufferNativeCallReturningId, bufferNativeCallWithId, bufferVoidNativeCall } from './DatadogProvider/Buffer/bufferNativeCall';
 
 const timeProvider = new TimeProvider();
-
-class DdLogsWrapper implements DdLogsType {
-
-    private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
-
-    debug(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking debug log “" +  message + "”", SdkVerbosity.DEBUG);
-        return this.nativeLogs.debug(message, context);
-    }
-
-    info(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking info log “" +  message + "”", SdkVerbosity.DEBUG);
-        return this.nativeLogs.info(message, context);
-    }
-
-    warn(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking warn log “" +  message + "”", SdkVerbosity.DEBUG);
-        return this.nativeLogs.warn(message, context);
-    }
-
-    error(message: string, context: object = {}): Promise<void> {
-        InternalLog.log("Tracking error log “" +  message + "”", SdkVerbosity.DEBUG);
-        return this.nativeLogs.error(message, context);
-    }
-
-}
 
 class DdTraceWrapper implements DdTraceType {
 
@@ -139,8 +113,7 @@ class DdRumWrapper implements DdRumType {
 }
 
 const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
-const DdLogs: DdLogsType = new DdLogsWrapper();
 const DdTrace: DdTraceType = new DdTraceWrapper();
 const DdRum: DdRumType = new DdRumWrapper();
 
-export { DdSdkConfiguration, DdSdk, DdLogs, DdTrace, DdRum };
+export { DdSdkConfiguration, DdSdk, DdTrace, DdRum };
