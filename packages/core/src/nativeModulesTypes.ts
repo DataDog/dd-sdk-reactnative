@@ -72,7 +72,11 @@ export type DdNativeLogsType = {
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    debug(message: string, context?: object): Promise<void>;
+    debug(
+        message: string,
+        context: object,
+        attributes?: { userInfo: object }
+    ): Promise<void>;
 
     /**
      * Send a log with level info.

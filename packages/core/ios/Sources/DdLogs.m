@@ -10,6 +10,7 @@
 
 RCT_EXTERN_METHOD(debug:(NSString)message
                  withContext:(NSDictionary)context
+                 withUserInfo:(NSDictionary)userInfo
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 

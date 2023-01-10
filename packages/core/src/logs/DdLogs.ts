@@ -15,7 +15,9 @@ class DdLogsWrapper implements DdLogsType {
     debug(message: string, context: object = {}): Promise<void> {
         InternalLog.log(`Tracking debug log “${message}”`, SdkVerbosity.DEBUG);
         const event = this.applyLogEventMapper(message, context, 'debug');
-        return this.nativeLogs.debug(event.message, event.context);
+        return this.nativeLogs.debug(event.message, event.context, {
+            userInfo: event.userInfo
+        });
     }
 
     info(message: string, context: object = {}): Promise<void> {

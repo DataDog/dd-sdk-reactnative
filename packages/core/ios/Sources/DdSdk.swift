@@ -212,6 +212,9 @@ class RNDdSdk: NSObject {
         if configuration.nativeCrashReportEnabled ?? false {
             _ = ddConfigBuilder.enableCrashReporting(using: DDCrashReportingPlugin())
         }
+        
+        // Add if condition to not register the mapper if none is registered on the JS side
+        _ = ddConfigBuilder.setLogEventMapper(logEventMapper)
 
         return ddConfigBuilder.build()
     }
