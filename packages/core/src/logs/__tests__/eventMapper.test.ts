@@ -146,4 +146,19 @@ describe('applyLogEventMapper', () => {
             'Error while running the log event mapper'
         );
     });
+
+    it('returns null when the mappers returns null', () => {
+        const logEventMapper: LogEventMapper = log => {
+            return null;
+        };
+
+        expect(
+            applyLogEventMapper(logEventMapper, {
+                message: 'original',
+                context: {},
+                status: 'info',
+                userInfo: {}
+            })
+        ).toBeNull();
+    });
 });

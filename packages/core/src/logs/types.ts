@@ -55,4 +55,4 @@ export type LogEvent = {
     readonly attributes?: object;
 };
 
-export type LogEventMapper = (logEvent: LogEvent) => LogEvent;
+export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;

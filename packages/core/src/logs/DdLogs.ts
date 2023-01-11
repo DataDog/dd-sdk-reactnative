@@ -8,6 +8,8 @@ import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import { applyLogEventMapper, formatLogEvent } from './eventMapper';
 import type { DdLogsType, LogEvent, LogEventMapper, LogStatus } from './types';
 
+const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
+
 class DdLogsWrapper implements DdLogsType {
     private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
     private logEventMapper: LogEventMapper | null = null;
@@ -15,24 +17,36 @@ class DdLogsWrapper implements DdLogsType {
     debug(message: string, context: object = {}): Promise<void> {
         InternalLog.log(`Tracking debug log “${message}”`, SdkVerbosity.DEBUG);
         const event = this.applyLogEventMapper(message, context, 'debug');
+        if (!event) {
+            return generateEmptyPromise();
+        }
         return this.nativeLogs.debug(event.message, event.context);
     }
 
     info(message: string, context: object = {}): Promise<void> {
         InternalLog.log(`Tracking info log “${message}”`, SdkVerbosity.DEBUG);
         const event = this.applyLogEventMapper(message, context, 'info');
+        if (!event) {
+            return generateEmptyPromise();
+        }
         return this.nativeLogs.info(event.message, event.context);
     }
 
     warn(message: string, context: object = {}): Promise<void> {
         InternalLog.log(`Tracking warn log “${message}”`, SdkVerbosity.DEBUG);
         const event = this.applyLogEventMapper(message, context, 'warn');
+        if (!event) {
+            return generateEmptyPromise();
+        }
         return this.nativeLogs.warn(event.message, event.context);
     }
 
     error(message: string, context: object = {}): Promise<void> {
         InternalLog.log(`Tracking error log “${message}”`, SdkVerbosity.DEBUG);
         const event = this.applyLogEventMapper(message, context, 'error');
+        if (!event) {
+            return generateEmptyPromise();
+        }
         return this.nativeLogs.error(event.message, event.context);
     }
 
@@ -48,7 +62,7 @@ class DdLogsWrapper implements DdLogsType {
         message: string,
         context: object,
         logStatus: LogStatus
-    ): LogEvent => {
+    ): LogEvent | null => {
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
         const initialLogEvent = formatLogEvent(
             { message, context },

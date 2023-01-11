@@ -40,5 +40,15 @@ describe('DdLogs', () => {
                 {}
             );
         });
+
+        it('drops the event if the mapper returns null', async () => {
+            const logEventMapper: LogEventMapper = log => {
+                return null;
+            };
+            DdLogs.registerLogEventMapper(logEventMapper);
+
+            await DdLogs.info('original message', {});
+            expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+        });
     });
 });

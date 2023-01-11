@@ -15,11 +15,15 @@ import { deepClone } from './utils/deepClone';
 export const applyLogEventMapper = (
     logEventMapper: LogEventMapper,
     log: LogEvent
-): LogEvent => {
+): LogEvent | null => {
     const originalLog = deepClone(log);
 
     try {
         const mappedEvent = logEventMapper(log);
+
+        if (!mappedEvent) {
+            return null;
+        }
 
         return {
             message: mappedEvent.message,
