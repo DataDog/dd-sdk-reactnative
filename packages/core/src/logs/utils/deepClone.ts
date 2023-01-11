@@ -40,15 +40,17 @@ const isMap = (object: unknown): object is Map<string, unknown> => {
  */
 export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
     if (isDate(originalObject)) {
-        return new Date(originalObject.getTime()) as T;
+        return (new Date(originalObject.getTime()) as unknown) as T;
     }
     if (isSet(originalObject)) {
-        return new Set([...originalObject].map(value => deepClone(value))) as T;
+        return (new Set(
+            [...originalObject].map(value => deepClone(value))
+        ) as unknown) as T;
     }
     if (isMap(originalObject)) {
-        return new Map(
+        return (new Map(
             [...originalObject].map(kv => [deepClone(kv[0]), deepClone(kv[1])])
-        ) as T;
+        ) as unknown) as T;
     }
     if (isArray(originalObject)) {
         if (depth >= 7) {
@@ -62,7 +64,7 @@ export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
             result[key] = deepClone(originalObject[key], depth + 1);
         }
 
-        return result as T;
+        return (result as unknown) as T;
     }
     if (isObject(originalObject)) {
         if (depth >= 7) {
@@ -76,7 +78,7 @@ export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
             result[key] = deepClone(originalObject[key], depth + 1);
         }
 
-        return result as T;
+        return (result as unknown) as T;
     }
 
     // primitives and non-supported objects (e.g. functions) land here
