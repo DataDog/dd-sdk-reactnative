@@ -10,14 +10,13 @@ import { DdSdk } from '../foundation';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
 import type { LogEvent, LogEventMapper, LogStatus, RawLog } from './types';
+import { deepClone } from './utils/deepClone';
 
 export const applyLogEventMapper = (
     logEventMapper: LogEventMapper,
     log: LogEvent
 ): LogEvent => {
-    // TODO when adding user attributes: Make a deep copy of the event to prevent
-    // nested properties to be overwrittern
-    const originalLog = { ...log };
+    const originalLog = deepClone(log);
 
     try {
         const mappedEvent = logEventMapper(log);
