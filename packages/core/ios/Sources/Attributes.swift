@@ -95,3 +95,10 @@ internal struct InternalConfigurationAttributes {
     /// Expects `NSString?` value
     static let versionSuffix = "_dd.version_suffix"
 }
+
+/// Internal attributes used to pass information set from the JS event mapper to the native event mapper.
+internal struct LogMapperAttributes {
+    /// Holds the extra user info for the mapper
+    /// Expects `[String: Encodable]?` value
+    static let extraUserInfo = "_dd.extraUserInfo"
+}

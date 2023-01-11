@@ -600,7 +600,7 @@ internal class DdSdkTests: XCTestCase {
         let logEventMapper = try XCTUnwrap(ddConfig.logEventMapper)
         let expectation = XCTestExpectation(description: "Map LogEvent.")
 
-        let mockLogEvent = LogEvent.mockWith(attributes: LogEvent.Attributes.mockWith(userAttributes: ["_dd.extraUserInfo": ["someKey": "someValue"]]))
+        let mockLogEvent = LogEvent.mockWith(attributes: LogEvent.Attributes.mockWith(userAttributes: [LogMapperAttributes.extraUserInfo: ["someKey": "someValue"]]))
         let result = LogEvent.mockWith(userInfo: LogEvent.UserInfo(id: nil, name: nil, email:nil, extraInfo: ["someKey": "someValue"]))
 
         logEventMapper.map(event: mockLogEvent, callback: { mappedEvent in

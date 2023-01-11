@@ -43,8 +43,7 @@ class RNDdLogs: NSObject {
     @objc(debug:withContext:withUserInfo:withResolver:withRejecter:)
     func debug(message: String, context: NSDictionary, userInfo: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         var attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
-        // TODO: prevent code below from crashing
-        attributes["_dd.extraUserInfo"] = userInfo["extraUserInfo"] as! any Encodable
+        attributes[LogMapperAttributes.extraUserInfo] = userInfo["extraUserInfo"] as? any Encodable
 
         logger.debug(message, error: nil, attributes: attributes)
         resolve(nil)

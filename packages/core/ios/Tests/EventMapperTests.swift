@@ -16,7 +16,7 @@ class EventMapperTests: XCTestCase {
     }
 
     func testMappedLogWithExtraInfo() throws {
-        let mockLogEvent = LogEvent.mockWith(attributes: LogEvent.Attributes.mockWith(userAttributes: ["_dd.extraUserInfo": ["someKey": "someValue"]]))
+        let mockLogEvent = LogEvent.mockWith(attributes: LogEvent.Attributes.mockWith(userAttributes: [LogMapperAttributes.extraUserInfo: ["someKey": "someValue"]]))
         let mappedEvent = logEventMapper(event: mockLogEvent)
 
         let result = LogEvent.mockWith(userInfo: LogEvent.UserInfo(id: nil, name: nil, email:nil, extraInfo: ["someKey": "someValue"]))

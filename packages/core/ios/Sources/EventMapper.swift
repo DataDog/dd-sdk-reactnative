@@ -10,7 +10,7 @@ import Datadog
 internal func logEventMapper(event: LogEvent) -> LogEvent {
     var log = event
 
-    if let extraUserInfo = log.attributes.userAttributes.removeValue(forKey: "_dd.extraUserInfo") as? [String: Encodable] {
+    if let extraUserInfo = log.attributes.userAttributes.removeValue(forKey: LogMapperAttributes.extraUserInfo) as? [String: Encodable] {
         log.userInfo.extraInfo = extraUserInfo
     }
 
