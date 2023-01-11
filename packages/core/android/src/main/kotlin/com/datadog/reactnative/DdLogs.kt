@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.core.model.UserInfo
 import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -35,10 +36,12 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      * @param context The additional context to send.
      */
     @ReactMethod
-    fun debug(message: String, context: ReadableMap, promise: Promise) {
+    fun debug(message: String, context: ReadableMap, userInfo: ReadableMap, promise: Promise) {
+        val attributes = (context.toHashMap() + GlobalState.globalAttributes).toMutableMap()
+        attributes["_dd.extraUserInfo"] = userInfo.getMap("userInfo")?.getMap("extraInfo")?.toHashMap()
         reactNativeLogger.d(
             message = message,
-            attributes = context.toHashMap() + GlobalState.globalAttributes
+            attributes = attributes
         )
         promise.resolve(null)
     }

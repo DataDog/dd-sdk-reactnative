@@ -251,6 +251,8 @@ class DdSdk(
             }
         )
 
+        configBuilder.setLogEventMapper(LogEventMapper())
+
         return configBuilder.build()
     }
 
