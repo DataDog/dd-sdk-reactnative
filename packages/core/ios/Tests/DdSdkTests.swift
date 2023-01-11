@@ -592,6 +592,27 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+
+    func testLogEventMapper() throws {
+        let configuration: DdSdkConfiguration = .mockAny()
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        let logEventMapper = try XCTUnwrap(ddConfig.logEventMapper)
+        let expectation = XCTestExpectation(description: "Map LogEvent.")
+
+        let mockLogEvent = LogEvent.mockWith(attributes: LogEvent.Attributes.mockWith(userAttributes: ["_dd.extraUserInfo": ["someKey": "someValue"]]))
+        let result = LogEvent.mockWith(userInfo: LogEvent.UserInfo(id: nil, name: nil, email:nil, extraInfo: ["someKey": "someValue"]))
+
+        logEventMapper.map(event: mockLogEvent, callback: { mappedEvent in
+            do {
+                try self.AssertEncodedRepresentationsEqual(result, mappedEvent)
+            }
+            catch {}
+            expectation.fulfill()
+        })
+
+        wait(for: [expectation], timeout: 2.0)
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {

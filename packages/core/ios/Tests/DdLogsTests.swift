@@ -48,14 +48,14 @@ internal class DdLogsTests: XCTestCase {
         }
 
         // When
-        (0..<10).forEach { _ in logger.debug(message: "foo", context: [:], resolve: mockResolve, reject: mockReject)}
+        (0..<10).forEach { _ in logger.debug(message: "foo", context: [:], userInfo: [:], resolve: mockResolve, reject: mockReject)}
 
         // Then
         waitForExpectations(timeout: 0.5, handler: nil)
     }
 
     func testLoggerDebug_validAttributes() throws {
-        logger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
+        logger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, userInfo: [:], resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
@@ -107,7 +107,7 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testLoggerDebug_invalidAttributes() throws {
-        logger.debug(message: testMessage_objc as String, context: invalidTestAttributes, resolve: mockResolve, reject: mockReject)
+        logger.debug(message: testMessage_objc as String, context: invalidTestAttributes, userInfo: [:], resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 1)
         let received = try XCTUnwrap(mockNativeLogger.receivedMethodCalls.first)
