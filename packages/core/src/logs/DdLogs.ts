@@ -15,40 +15,36 @@ class DdLogsWrapper implements DdLogsType {
     private logEventMapper: LogEventMapper | null = null;
 
     debug(message: string, context: object = {}): Promise<void> {
-        InternalLog.log(`Tracking debug log “${message}”`, SdkVerbosity.DEBUG);
-        const event = this.applyLogEventMapper(message, context, 'debug');
-        if (!event) {
-            return generateEmptyPromise();
-        }
-        return this.nativeLogs.debug(event.message, event.context);
+        return this.log(message, context, 'debug');
     }
 
     info(message: string, context: object = {}): Promise<void> {
-        InternalLog.log(`Tracking info log “${message}”`, SdkVerbosity.DEBUG);
-        const event = this.applyLogEventMapper(message, context, 'info');
-        if (!event) {
-            return generateEmptyPromise();
-        }
-        return this.nativeLogs.info(event.message, event.context);
+        return this.log(message, context, 'info');
     }
 
     warn(message: string, context: object = {}): Promise<void> {
-        InternalLog.log(`Tracking warn log “${message}”`, SdkVerbosity.DEBUG);
-        const event = this.applyLogEventMapper(message, context, 'warn');
-        if (!event) {
-            return generateEmptyPromise();
-        }
-        return this.nativeLogs.warn(event.message, event.context);
+        return this.log(message, context, 'warn');
     }
 
     error(message: string, context: object = {}): Promise<void> {
-        InternalLog.log(`Tracking error log “${message}”`, SdkVerbosity.DEBUG);
-        const event = this.applyLogEventMapper(message, context, 'error');
+        return this.log(message, context, 'error');
+    }
+
+    private log = (
+        message: string,
+        context: object,
+        status: keyof DdNativeLogsType
+    ): Promise<void> => {
+        InternalLog.log(
+            `Tracking ${status} log “${message}”`,
+            SdkVerbosity.DEBUG
+        );
+        const event = this.applyLogEventMapper(message, context, status);
         if (!event) {
             return generateEmptyPromise();
         }
-        return this.nativeLogs.error(event.message, event.context);
-    }
+        return this.nativeLogs[status](event.message, event.context);
+    };
 
     registerLogEventMapper(logEventMapper: LogEventMapper) {
         this.logEventMapper = logEventMapper;
