@@ -555,6 +555,7 @@ describe('DdSdkReactNative', () => {
             );
             configuration.logEventMapper = log => {
                 log.message = 'new message';
+                log.userInfo.extraInfo = { loggedIn: true };
                 return log;
             };
 
@@ -567,7 +568,10 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
                 'new message',
-                {}
+                {},
+                {
+                    userInfo: { extraInfo: { loggedIn: true } }
+                }
             );
         });
 
