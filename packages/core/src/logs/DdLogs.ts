@@ -3,6 +3,7 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
+import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 
 import { applyLogEventMapper, formatLogEvent } from './eventMapper';
@@ -60,9 +61,10 @@ class DdLogsWrapper implements DdLogsType {
         logStatus: LogStatus
     ): LogEvent | null => {
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        const attributes = AttributesSingleton.getInstance().getAttributes();
         const initialLogEvent = formatLogEvent(
             { message, context },
-            { logStatus, userInfo }
+            { logStatus, userInfo, attributes }
         );
 
         if (!this.logEventMapper) {

@@ -14,17 +14,18 @@ describe('formatLogEvent', () => {
         expect(
             formatLogEvent(
                 { message: 'original', context: {} },
-                { logStatus: 'info', userInfo: {} }
+                { logStatus: 'info', userInfo: {}, attributes: {} }
             )
         ).toEqual({
             message: 'original',
             context: {},
             status: 'info',
-            userInfo: {}
+            userInfo: {},
+            attributes: {}
         });
     });
 
-    it('formats a raw log with context and userInfo to a LogEvent', () => {
+    it('formats a raw log with context, userInfo and attributes to a LogEvent', () => {
         expect(
             formatLogEvent(
                 { message: 'original', context: { loggedIn: true } },
@@ -33,7 +34,8 @@ describe('formatLogEvent', () => {
                     userInfo: {
                         name: 'userName',
                         extraInfo: { loggedIn: true }
-                    }
+                    },
+                    attributes: { appType: 'student' }
                 }
             )
         ).toEqual({
@@ -43,7 +45,8 @@ describe('formatLogEvent', () => {
             userInfo: {
                 name: 'userName',
                 extraInfo: { loggedIn: true }
-            }
+            },
+            attributes: { appType: 'student' }
         });
     });
 });

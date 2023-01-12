@@ -7,6 +7,7 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { DdSdk } from '../foundation';
+import type { Attributes } from '../sdk/AttributesSingleton/types';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
 import type { LogEvent, LogEventMapper, LogStatus, RawLog } from './types';
@@ -46,11 +47,16 @@ export const applyLogEventMapper = (
 
 export const formatLogEvent = (
     rawLog: RawLog,
-    additionalInformation: { logStatus: LogStatus; userInfo: UserInfo }
+    additionalInformation: {
+        logStatus: LogStatus;
+        userInfo: UserInfo;
+        attributes: Attributes;
+    }
 ): LogEvent => {
     return {
         ...rawLog,
         status: additionalInformation.logStatus,
-        userInfo: additionalInformation.userInfo
+        userInfo: additionalInformation.userInfo,
+        attributes: additionalInformation.attributes
     };
 };
