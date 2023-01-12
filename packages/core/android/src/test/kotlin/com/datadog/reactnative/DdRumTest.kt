@@ -24,7 +24,6 @@ import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
-import fr.xgouchet.elmyr.annotation.LongForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
@@ -281,7 +280,13 @@ internal class DdRumTest {
         )
 
         // Then
-        verify(mockRumMonitor).stopResource(key, statusCode, resourceSize.toLong(), kind, updatedContext)
+        verify(mockRumMonitor).stopResource(
+            key,
+            statusCode,
+            resourceSize.toLong(),
+            kind,
+            updatedContext
+        )
     }
 
     @Test

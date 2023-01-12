@@ -3,10 +3,13 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
- 
+
 package com.datadog.tools.unit
 
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
+import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
 
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
@@ -18,6 +21,16 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         false
     } else {
         nativeCrashReportEnabled
+    }
+    map["nativeLongTaskThresholdMs"] = if (nativeLongTaskThresholdMs == null) {
+        0f
+    } else {
+        nativeLongTaskThresholdMs
+    }
+    map["longTaskThresholdMs"] = if (longTaskThresholdMs == null) {
+        0f
+    } else {
+        longTaskThresholdMs
     }
     if (sampleRate != null) {
         map["sampleRate"] = sampleRate
@@ -35,6 +48,25 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     }
     site?.let { map.put("site", it) }
     trackingConsent?.let { map.put("trackingConsent", it) }
+    if (vitalsUpdateFrequency != null) {
+        map["vitalsUpdateFrequency"] = vitalsUpdateFrequency
+    } else {
+        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
+        // ReadableMap#getString which doesn't allow having null value
+        map["vitalsUpdateFrequency"] = VitalsUpdateFrequency.AVERAGE.toString()
+    }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
+    configurationForTelemetry?.let {
+        map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
+    }
+    return map.toReadableMap()
+}
+
+internal fun ConfigurationForTelemetry.toReadableJavaOnlyMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    initializationType?.let { map.put("initializationType", it) }
+    trackErrors?.let { map.put("trackErrors", it) }
+    trackInteractions?.let { map.put("trackInteractions", it) }
+    trackNetworkRequests?.let { map.put("trackNetworkRequests", it) }
     return map.toReadableMap()
 }

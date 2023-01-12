@@ -25,15 +25,15 @@ internal class DdSdkTests: XCTestCase {
         var printedMessage = ""
         consolePrint = { msg in printedMessage += msg }
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "")
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildConfigurationNoUIKitByDefault() {
@@ -63,61 +63,61 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityDebug() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "debug"])
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.debug)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityInfo() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "info"])
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.info)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityWarn() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "warn"])
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.warn)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityError() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "error"])
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.error)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityNil() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: nil)
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityUnknown() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "foo"])
 
-        RNDdSdk(mainDispatchQueue: DispatchQueueMock()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildConfigurationDefaultEndpoint() {
@@ -254,7 +254,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSettingUserInfo() throws {
-        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
+        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         bridge.setUser(
@@ -272,7 +272,7 @@ internal class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        let receivedUserInfo = try XCTUnwrap(defaultDatadogCore as? DatadogCore).dependencies.userInfoProvider.value
+        let receivedUserInfo = try XCTUnwrap(defaultDatadogCore as? DatadogCore).userInfoProvider.value
         XCTAssertEqual(receivedUserInfo.id, "abc-123")
         XCTAssertEqual(receivedUserInfo.name, "John Doe")
         XCTAssertEqual(receivedUserInfo.email, "john@doe.com")
@@ -280,11 +280,11 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(receivedUserInfo.extraInfo["extra-info-2"] as? String, "abc")
         XCTAssertEqual(receivedUserInfo.extraInfo["extra-info-3"] as? Bool, true)
 
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSettingAttributes() {
-        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock())
+        let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         let rumMonitorMock = MockRUMMonitor()
@@ -311,7 +311,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
 
         GlobalState.globalAttributes.removeAll()
-        Datadog.flushAndDeinitialize()
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildTrackingConsentPending() {
@@ -343,19 +343,30 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildLongTaskThreshold() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.long_task.threshold": 2_500])
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2_500)
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
 
         XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, 2.5)
+    }
+    
+    func testBuildNoLongTaskTracking() {
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumLongTaskDurationThreshold, nil)
     }
 
     func testBuildFirstPartyHosts() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": ["example.com", "datadog.com"]])
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+        
+        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [TracingHeaderType.datadog]])
+        firstPartyHosts += FirstPartyHosts(["datadog.com": [TracingHeaderType.datadog]])
 
-        XCTAssertEqual(ddConfig.firstPartyHosts, ["example.com", "datadog.com"])
+        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
     }
 
     func testBuildTelemetrySampleRate() {
@@ -426,13 +437,197 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.proxyConfiguration?[kCFProxyUsernameKey] as? String, "username")
         XCTAssertEqual(ddConfig.proxyConfiguration?[kCFProxyPasswordKey] as? String, "pwd")
     }
+
+    func testBuildConfigurationAverageVitalsUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "average")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.mobileVitalsFrequency, .average)
+    }
+
+    func testBuildConfigurationNeverVitalsUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "never")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.mobileVitalsFrequency, .never)
+    }
+    
+    func testJsRefreshRateInitializationWithLongTaskDisabled() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.20)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+
+    func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        XCTAssertFalse(mockRefreshRateMonitor.isStarted)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+    
+    func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUploadFrequency() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+    
+    func testJsLongTaskCollection() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"), resolve: mockResolve, reject: mockReject)
+        Global.rum = rumMonitorMock
+
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+        
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.05)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+    
+    func testConfigurationTelemetryEventMapper() throws {
+        RNDdSdk(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor())
+        .initialize(
+            configuration: .mockAny(
+                nativeCrashReportEnabled: false,
+                nativeLongTaskThresholdMs: 0.0,
+                longTaskThresholdMs: 0.1,
+                configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+        
+        
+        guard let configurationEventMapper = try XCTUnwrap(DD.telemetry as? RUMTelemetry).configurationEventMapper else { return }
+
+        let mappedEvent = configurationEventMapper(
+            TelemetryConfigurationEvent(
+                dd: TelemetryConfigurationEvent.DD(),
+                action: nil,
+                application: nil,
+                date: Int64(),
+                experimentalFeatures: nil,
+                service: "mockService",
+                session: nil,
+                source: .reactNative,
+                telemetry: TelemetryConfigurationEvent.Telemetry(
+                    configuration: TelemetryConfigurationEvent.Telemetry.Configuration(
+                        actionNameAttribute: nil,
+                        batchSize: nil,
+                        batchUploadFrequency: nil,
+                        forwardConsoleLogs: nil,
+                        forwardErrorsToLogs: nil,
+                        forwardReports: nil,
+                        premiumSampleRate: nil,
+                        replaySampleRate: nil,
+                        sessionSampleRate: nil,
+                        silentMultipleInit: nil,
+                        telemetryConfigurationSampleRate: nil,
+                        telemetrySampleRate: nil,
+                        traceSampleRate: nil,
+                        trackSessionAcrossSubdomains: nil,
+                        useAllowedTracingOrigins: nil,
+                        useBeforeSend: nil,
+                        useCrossSiteSessionCookie: nil,
+                        useExcludedActivityUrls: nil,
+                        useLocalEncryption: nil,
+                        useSecureSessionCookie: nil,
+                        useTracing: nil,
+                        viewTrackingStrategy: nil
+                    )
+                ),
+                version: "1.0.0",
+                view: nil
+            )
+        )
+        
+        XCTAssertEqual(mappedEvent.telemetry.configuration.initializationType, "LEGACY")
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackErrors, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackInteractions, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNetworkRequests, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeErrors, false)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeLongTasks, false)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.trackLongTask, true)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
 }
 
-private class MockRUMMonitor: DDRUMMonitor {
+private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
     private(set) var receivedAttributes = [AttributeKey: AttributeValue]()
+    private(set) var lastReceivedPerformanceMetrics = [PerformanceMetric: Double]()
+    private(set) var receivedLongTasks = [Date: TimeInterval]()
 
     override func addAttribute(forKey key: AttributeKey, value: AttributeValue) {
         receivedAttributes[key] = value
+    }
+
+    func process(command: RUMCommand) {
+        if (command is RUMAddLongTaskCommand) {
+            receivedLongTasks[(command as! RUMAddLongTaskCommand).time] = (command as! RUMAddLongTaskCommand).duration
+        }
+        if (command is RUMUpdatePerformanceMetric) {
+            lastReceivedPerformanceMetrics[.jsFrameTimeSeconds] = (command as! RUMUpdatePerformanceMetric).value
+        }
+    }
+}
+
+
+private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
+    private var refreshRateListener: RefreshRateListener?
+    private var frameTimeCallback: frame_time_callback?
+    var isStarted: Bool = false
+    
+    init() {}
+    
+    public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+        self.frameTimeCallback = frameTimeCallback
+        isStarted = true
+    }
+    
+    func executeFrameCallback(frameTime: TimeInterval) {
+        self.frameTimeCallback?(frameTime)
     }
 }
 
@@ -442,22 +637,30 @@ extension DdSdkConfiguration {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
+        longTaskThresholdMs: Double = 0.0,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
-        additionalConfig: NSDictionary? = nil
+        vitalsUpdateFrequency: NSString = "average",
+        additionalConfig: NSDictionary? = nil,
+        configurationForTelemetry: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
             env: env as String,
             applicationId: applicationId as String,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
+            longTaskThresholdMs: longTaskThresholdMs,
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
-            additionalConfig: additionalConfig
+            vitalsUpdateFrequency: vitalsUpdateFrequency,
+            additionalConfig: additionalConfig,
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
     }
 }
@@ -468,11 +671,15 @@ extension NSDictionary {
         env: NSString = "env",
         applicationId: NSString = "app-id",
         nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
+        longTaskThresholdMs: Double = 0.0,
         sampleRate: Double = 75.0,
         site: NSString? = nil,
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
-        additionalConfig: NSDictionary? = nil
+        vitalsUpdateFrequency: NSString = "average",
+        additionalConfig: NSDictionary? = nil,
+        configurationForTelemetry: NSDictionary? = nil
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -480,11 +687,15 @@ extension NSDictionary {
                 "env": env,
                 "applicationId": applicationId,
                 "nativeCrashReportEnabled": nativeCrashReportEnabled,
+                "nativeLongTaskThresholdMs": nativeLongTaskThresholdMs,
+                "longTaskThresholdMs": longTaskThresholdMs,
                 "sampleRate": sampleRate,
                 "site": site,
                 "trackingConsent": trackingConsent,
                 "telemetrySampleRate": telemetrySampleRate,
-                "additionalConfig": additionalConfig
+                "vitalsUpdateFrequency": vitalsUpdateFrequency,
+                "additionalConfig": additionalConfig,
+                "configurationForTelemetry": configurationForTelemetry
             ]
         )
     }

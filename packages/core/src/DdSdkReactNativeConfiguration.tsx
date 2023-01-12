@@ -8,16 +8,26 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 
+export enum VitalsUpdateFrequency {
+    FREQUENT = 'FREQUENT',
+    AVERAGE = 'AVERAGE',
+    RARE = 'RARE',
+    NEVER = 'NEVER'
+}
+
 const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
     resourceTracingSamplingRate: 20.0,
     site: 'US1',
+    longTaskThresholdMs: 0,
+    nativeLongTaskThresholdMs: 200,
     nativeViewTracking: false,
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
-    telemetrySampleRate: 20.0
+    telemetrySampleRate: 20.0,
+    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
 };
 
 /**
@@ -25,6 +35,9 @@ const DEFAULTS = {
  * It will be used to configure the SDK functionality at initialization.
  */
 export class DdSdkReactNativeConfiguration {
+    /**
+     * Enables crash reporting for native plaforms (iOS, Android). Default `false`.
+     */
     public nativeCrashReportEnabled: boolean =
         DEFAULTS.nativeCrashReportEnabled;
     /**
@@ -41,10 +54,24 @@ export class DdSdkReactNativeConfiguration {
     public resourceTracingSamplingRate: number =
         DEFAULTS.resourceTracingSamplingRate;
     public site: string = DEFAULTS.site;
+    /**
+     * Verbosity for internal SDK logging.
+     * Set to `SdkVerbosity.DEBUG` to debug your SDK implementation.
+     */
     public verbosity: SdkVerbosity | undefined = undefined;
+    /**
+     * Enables native views tracking.
+     * Set to `true` if you use a custom navigation system relying on native views.
+     */
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
+    /**
+     * List of your backends hosts to enable tracing with.
+     * Regular expressions are NOT supported.
+     *
+     * Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`.
+     */
     public firstPartyHosts: string[] = DEFAULTS.getFirstPartyHosts();
     /**
      * Overrides the reported version of the app.
@@ -77,6 +104,35 @@ export class DdSdkReactNativeConfiguration {
      * Android SDK is used, which is 20.
      */
     public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
+
+    /**
+     * The threshold for native long tasks reporting in milliseconds.
+     *
+     * - Setting it to `0` or `false` disables native long task reporting.
+     * - Values below `100` will be raised to `100`.
+     * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `200`.
+     */
+    public nativeLongTaskThresholdMs: number | false =
+        DEFAULTS.nativeLongTaskThresholdMs;
+
+    /**
+     * The threshold for javascript long tasks reporting in milliseconds.
+     *
+     * - Setting it to `0` or `false` disables javascript long task reporting.
+     * - Values below `100` will be raised to `100`.
+     * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `0`
+     */
+    public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
+
+    /**
+     * Sets the preferred frequency for collecting mobile vitals.
+     */
+    public vitalsUpdateFrequency: VitalsUpdateFrequency =
+        DEFAULTS.vitalsUpdateFrequency;
 
     public additionalConfig: {
         [k: string]: any;
@@ -147,8 +203,11 @@ export type PartialInitializationConfiguration = {
     versionSuffix?: string;
     readonly additionalConfig?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
+    readonly longTaskThresholdMs?: number | false;
+    readonly nativeLongTaskThresholdMs?: number | false;
     readonly nativeCrashReportEnabled?: boolean;
     readonly telemetrySampleRate?: number;
+    readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
 };
 
 const setConfigurationAttribute = <
@@ -217,3 +276,9 @@ export enum InitializationMode {
     SYNC = 'SYNC',
     ASYNC = 'ASYNC'
 }
+
+export type InitializationModeForTelemetry =
+    | 'LEGACY'
+    | 'SYNC'
+    | 'ASYNC'
+    | 'PARTIAL';

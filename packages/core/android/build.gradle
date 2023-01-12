@@ -14,9 +14,12 @@ buildscript {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jlleitschuh.gradle:ktlint-gradle:10.2.1"
     classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
+    classpath 'com.github.bjoernq:unmockplugin:0.7.9'
   }
 }
 
+
+apply plugin: 'de.mobilej.unmock'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
@@ -149,7 +152,7 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android:1.15.0"
+  implementation "com.datadoghq:dd-sdk-android:1.16.+"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
@@ -161,6 +164,15 @@ dependencies {
   testImplementation "com.github.xgouchet.Elmyr:jvm:1.3.1"
   testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
   testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+  unmock 'org.robolectric:android-all:4.4_r1-robolectric-r2'
+}
+
+unMock {
+  keep("android.os.Looper")
+  keep("android.os.MessageQueue")
+  keep("android.os.SystemProperties")
+  keep("android.view.Choreographer")
+  keep("android.view.DisplayEventReceiver")
 }
 
 tasks.withType(Test) {
@@ -193,12 +205,25 @@ ktlint {
 
 detekt {
   input = files("$projectDir/src/main/kotlin")
-  config = files("${project.rootDir}/detekt.yml")
-
+  config = files("$projectDir/detekt.yml")
   reports {
     xml {
       enabled = true
       destination = file("build/reports/detekt.xml")
     }
+  }
+}
+
+// This is needed to make unmock work. Choreographer class was loaded from android.jar of Android SDK
+// (which contains only public API and no internals), which with unmock plugin it should be loaded from the special jar provided by unmock.
+// The code below is from the unmock plugin. It seems like something (from RN tooling maybe?) overwrites the location of Choreographer
+// to the default one, so we apply the unmock code once again
+project.afterEvaluate {
+  def outputJarPath = "${project.buildDir}/intermediates/unmocked-android${project.name}.jar"
+  def unMockTask = project.tasks.findByName("unMock")
+  def outputJarDependency = project.files(outputJarPath).builtBy(unMockTask)
+
+  project.android.unitTestVariants.all { variant ->
+    variant.registerPreJavacGeneratedBytecode(outputJarDependency)
   }
 }

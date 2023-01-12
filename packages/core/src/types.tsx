@@ -13,11 +13,20 @@ export class DdSdkConfiguration {
         readonly env: string,
         readonly applicationId: string,
         readonly nativeCrashReportEnabled: boolean,
+        readonly nativeLongTaskThresholdMs: number,
+        readonly longTaskThresholdMs: number,
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
         readonly additionalConfig: object,
-        readonly telemetrySampleRate: number
+        readonly telemetrySampleRate: number,
+        readonly vitalsUpdateFrequency: string,
+        readonly configurationForTelemetry: {
+            initializationType: string;
+            trackErrors: boolean;
+            trackInteractions: boolean;
+            trackNetworkRequests: boolean;
+        }
     ) {}
 }
 

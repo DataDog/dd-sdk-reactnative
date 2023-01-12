@@ -60,18 +60,26 @@ describe('DatadogProvider', () => {
                 DdSdkConfiguration {
                   "additionalConfig": Object {
                     "_dd.first_party_hosts": Array [],
-                    "_dd.long_task.threshold": 200,
                     "_dd.native_view_tracking": false,
                     "_dd.source": "react-native",
                   },
                   "applicationId": "fakeApplicationId",
                   "clientToken": "fakeToken",
+                  "configurationForTelemetry": Object {
+                    "initializationType": "SYNC",
+                    "trackErrors": true,
+                    "trackInteractions": true,
+                    "trackNetworkRequests": false,
+                  },
                   "env": "fakeEnv",
+                  "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
+                  "nativeLongTaskThresholdMs": 200,
                   "sampleRate": 100,
                   "site": "US1",
                   "telemetrySampleRate": 20,
                   "trackingConsent": "granted",
+                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
 

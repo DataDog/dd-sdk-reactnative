@@ -9,12 +9,19 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogSite
+import com.datadog.android._InternalProxy
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.android.event.EventMapper
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -23,6 +30,8 @@ import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The entry point to initialize Datadog's features.
@@ -33,6 +42,8 @@ class DdSdk(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
+    internal val reactContext: ReactApplicationContext = reactContext
+    internal val initialized = AtomicBoolean(false)
 
     override fun getName(): String = "DdSdk"
 
@@ -54,6 +65,8 @@ class DdSdk(
         datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
 
         datadog.registerRumMonitor(RumMonitor.Builder().build())
+        monitorJsRefreshRate(ddSdkConfiguration)
+        initialized.set(true)
 
         promise.resolve(null)
     }
@@ -140,6 +153,7 @@ class DdSdk(
         val packageInfo = try {
             appContext.packageManager.getPackageInfo(packageName, 0)
         } catch (e: PackageManager.NameNotFoundException) {
+            datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
             return DEFAULT_APP_VERSION
         }
 
@@ -153,7 +167,7 @@ class DdSdk(
 
     @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
-        val additionalConfig = configuration.additionalConfig?.toMutableMap();
+        val additionalConfig = configuration.additionalConfig?.toMutableMap()
 
         val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
         if (versionSuffix != null && additionalConfig != null) {
@@ -177,9 +191,17 @@ class DdSdk(
         }
 
         configBuilder.useSite(buildSite(configuration.site))
+        configBuilder.setVitalsUpdateFrequency(
+            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+        )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
+
+        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        if (longTask != null) {
+            configBuilder.trackLongTasks(longTask)
+        }
 
         val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
         if (viewTracking == true) {
@@ -187,12 +209,6 @@ class DdSdk(
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
-        }
-
-        val longTask =
-            (configuration.additionalConfig?.get(DD_LONG_TASK_THRESHOLD) as? Number)?.toLong()
-        if (longTask != null) {
-            configBuilder.trackLongTasks(longTask)
         }
 
         val firstPartyHosts =
@@ -204,6 +220,36 @@ class DdSdk(
         buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
+
+        _InternalProxy.setTelemetryConfigurationEventMapper(
+            configBuilder,
+            object : EventMapper<TelemetryConfigurationEvent> {
+                override fun map(event: TelemetryConfigurationEvent): TelemetryConfigurationEvent? {
+                    event.telemetry.configuration.trackNativeErrors =
+                        configuration.nativeCrashReportEnabled
+                    // trackCrossPlatformLongTasks will be deprecated for trackLongTask
+                    event.telemetry.configuration.trackCrossPlatformLongTasks =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackLongTask =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackNativeLongTasks =
+                        configuration.nativeLongTaskThresholdMs != 0.0
+
+                    event.telemetry.configuration.initializationType =
+                        configuration.configurationForTelemetry?.initializationType
+                    event.telemetry.configuration.trackInteractions =
+                        configuration.configurationForTelemetry?.trackInteractions
+                    event.telemetry.configuration.trackErrors =
+                        configuration.configurationForTelemetry?.trackErrors
+                    event.telemetry.configuration.trackResources =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
+                    event.telemetry.configuration.trackNetworkRequests =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
+
+                    return event
+                }
+            }
+        )
 
         return configBuilder.build()
     }
@@ -285,6 +331,69 @@ class DdSdk(
         }
     }
 
+    private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
+        val vitalUpdateFrequencyLower = vitalsUpdateFrequency?.lowercase(Locale.US)
+        return when (vitalUpdateFrequencyLower) {
+            "never" -> VitalsUpdateFrequency.NEVER
+            "rare" -> VitalsUpdateFrequency.RARE
+            "average" -> VitalsUpdateFrequency.AVERAGE
+            "frequent" -> VitalsUpdateFrequency.FREQUENT
+            else -> VitalsUpdateFrequency.AVERAGE
+        }
+    }
+
+    private fun handlePostFrameCallbackError(e: IllegalStateException) {
+        datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
+    }
+
+    private fun monitorJsRefreshRate(ddSdkConfiguration: DdSdkConfiguration) {
+        val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration)
+        if (frameTimeCallback != null) {
+            reactContext.runOnJSQueueThread {
+                val vitalFrameCallback =
+                    VitalFrameCallback(
+                        frameTimeCallback,
+                        ::handlePostFrameCallbackError
+                    ) {
+                        initialized.get()
+                    }
+                try {
+                    Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
+                } catch (e: IllegalStateException) {
+                    // This should never happen as the React Native thread always has a Looper
+                    handlePostFrameCallbackError(e)
+                }
+            }
+        }
+    }
+
+    private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
+        ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(
+            ddSdkConfiguration.vitalsUpdateFrequency
+        ) != VitalsUpdateFrequency.NEVER
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+
+        if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
+            return null
+        }
+
+        return {
+            if (jsRefreshRateMonitoringEnabled && it > 0.0) {
+                GlobalRum.get()._getInternal()?.updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    it
+                )
+            }
+            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )
+            ) {
+                GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
+            }
+        }
+    }
+
     // endregion
 
     companion object {
@@ -292,7 +401,6 @@ class DdSdk(
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
-        internal const val DD_LONG_TASK_THRESHOLD = "_dd.long_task.threshold"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
@@ -301,5 +409,7 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
+        internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
     }
 }

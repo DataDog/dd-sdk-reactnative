@@ -13,21 +13,43 @@ extension NSDictionary {
         let env = object(forKey: "env") as? String
         let applicationId = object(forKey: "applicationId") as? String
         let nativeCrashReportEnabled = object(forKey: "nativeCrashReportEnabled") as? Bool
+        let nativeLongTaskThresholdMs = object(forKey: "nativeLongTaskThresholdMs") as? Double
+        let longTaskThresholdMs = object(forKey: "longTaskThresholdMs") as? Double
         let sampleRate = object(forKey: "sampleRate") as? Double
         let site = object(forKey: "site") as? NSString
         let trackingConsent = object(forKey: "trackingConsent") as? NSString
         let telemetrySampleRate = object(forKey: "telemetrySampleRate") as? Double
+        let vitalsUpdateFrequency = object(forKey: "vitalsUpdateFrequency") as? NSString
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
+        let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
             env: (env != nil) ? env! : String(),
             applicationId: applicationId,
             nativeCrashReportEnabled: nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
+            longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : Double(),
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
-            additionalConfig: additionalConfig
+            vitalsUpdateFrequency: vitalsUpdateFrequency,
+            additionalConfig: additionalConfig,
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
+        )
+    }
+    
+    func asConfigurationForTelemetry() -> ConfigurationForTelemetry {
+        let initializationType = object(forKey: "initializationType") as? NSString
+        let trackErrors = object(forKey: "trackErrors") as? Bool
+        let trackInteractions = object(forKey: "trackInteractions") as? Bool
+        let trackNetworkRequests = object(forKey: "trackNetworkRequests") as? Bool
+
+        return ConfigurationForTelemetry(
+            initializationType: initializationType,
+            trackErrors: trackErrors,
+            trackInteractions: trackInteractions,
+            trackNetworkRequests: trackNetworkRequests
         )
     }
 }

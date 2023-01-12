@@ -3,7 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
- 
+
 package com.datadog.tools.unit
 
 import org.assertj.core.api.AbstractAssert
@@ -11,6 +11,26 @@ import org.assertj.core.api.Assertions.assertThat
 
 class GenericAssert(actual: Any) :
     AbstractAssert<GenericAssert, Any>(actual, GenericAssert::class.java) {
+
+    fun doesNotHaveField(name: String): GenericAssert {
+        val field: Any? = actual.getFieldValue(name)
+        assertThat(field)
+            .overridingErrorMessage(
+                "Expecting object to not have $name, but found it having value $field"
+            )
+            .isNull()
+        return this
+    }
+
+    fun <T> getActualValue(name: String): T {
+        val field: Any? = actual.getFieldValue(name)
+        assertThat(field)
+            .overridingErrorMessage(
+                "Expecting object to have a non null field named $name, but field was null"
+            )
+            .isNotNull()
+        return field!! as T
+    }
 
     fun hasField(name: String, nestedAssert: (GenericAssert) -> Unit = {}): GenericAssert {
         val field: Any? = actual.getFieldValue(name)

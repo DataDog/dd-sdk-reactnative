@@ -1,35 +1,57 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 package com.datadog.reactnative
 
-import android.util.Log
 import android.content.pm.PackageInfo
+import android.util.Log
+import android.view.Choreographer
 import com.datadog.android.DatadogEndpoint
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.UploadFrequency
+import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.android.event.EventMapper
 import com.datadog.android.plugin.DatadogPlugin
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRum
+import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.getStaticValue
+import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.doNothing
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
+import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
+import fr.xgouchet.elmyr.annotation.LongForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
@@ -38,6 +60,7 @@ import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -45,11 +68,22 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
-import org.mockito.Mock
 import org.mockito.Answers
+import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
+
+fun mockChoreographerInstance(mock: Choreographer = mock()) {
+    Choreographer::class.java.setStaticValue(
+        "sThreadInstance",
+        object : ThreadLocal<Choreographer>() {
+            override fun initialValue(): Choreographer {
+                return mock
+            }
+        }
+    )
+}
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -62,7 +96,16 @@ internal class DdSdkTest {
     lateinit var testedBridgeSdk: DdSdk
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    lateinit var mockReactContext: ReactApplicationContext
+
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockContext: ReactApplicationContext
+
+    @Mock
+    lateinit var mockRumMonitor: RumMonitor
+
+    @Mock
+    lateinit var mockRumInternalProxy: _RumInternalProxy
 
     @Mock
     lateinit var mockDatadog: DatadogWrapper
@@ -76,17 +119,36 @@ internal class DdSdkTest {
     @Forgery
     lateinit var mockPackageInfo: PackageInfo
 
+    @Mock
+    lateinit var mockChoreographer: Choreographer
+
     @BeforeEach
     fun `set up`() {
-        whenever(mockContext.applicationContext) doReturn mockContext
+        GlobalRum.registerIfAbsent(mockRumMonitor)
+        whenever(mockRumMonitor._getInternal()) doReturn mockRumInternalProxy
+
+        doNothing().whenever(mockChoreographer).postFrameCallback(any())
+        mockChoreographerInstance(mockChoreographer)
+        whenever(mockReactContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
-        whenever(mockContext.packageManager.getPackageInfo("packageName", 0)) doReturn mockPackageInfo
-        testedBridgeSdk = DdSdk(mockContext, mockDatadog)
+        whenever(
+            mockContext.packageManager.getPackageInfo(
+                "packageName",
+                0
+            )
+        ) doReturn mockPackageInfo
+        whenever(mockReactContext.runOnJSQueueThread(any())).thenAnswer { answer ->
+            answer.getArgument<Runnable>(0).run()
+            true
+        }
+        testedBridgeSdk = DdSdk(mockReactContext, mockDatadog)
     }
 
     @AfterEach
     fun `tear down`() {
         GlobalState.globalAttributes.clear()
+        GlobalRum.javaClass.setStaticValue("monitor", mock<RumMonitor>())
+        GlobalRum.javaClass.getStaticValue<GlobalRum, AtomicBoolean>("isRegistered").set(false)
     }
 
     // region initialize / nativeCrashReportEnabled
@@ -1052,17 +1114,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration,
         forge: Forge
     ) {
-        // floating-point type (coming from JS) and integer type (other frameworks)
-        val threshold = forge.anElementFrom(
-            forge.aLong(min = 0, max = 65536),
-            forge.aDouble(min = 0.0, max = 65536.0)
-        )
+        val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdk.DD_LONG_TASK_THRESHOLD to threshold
-            )
+            nativeLongTaskThresholdMs = threshold
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1087,6 +1143,34 @@ internal class DdSdkTest {
                         )
                         .hasFieldEqualTo("thresholdMs", threshold.toLong())
                 }
+            }
+    }
+
+    @Test
+    fun `𝕄 not set long task threshold 𝕎 initialize() {long task threshold is 0}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            nativeLongTaskThresholdMs = 0.0
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            credentialCaptor.capture(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") { rumConfig ->
+                rumConfig.doesNotHaveField("longTaskTrackingStrategy")
             }
     }
 
@@ -1121,20 +1205,215 @@ internal class DdSdkTest {
             }
     }
 
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {rare vitals frequency update}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "RARE"
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
+            }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+        }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {never vitals frequency update}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "NEVER",
+            longTaskThresholdMs = 0.0
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
+            }
+        verifyZeroInteractions(mockChoreographer)
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {malformed frequency update, long task 0}`(
+        @StringForgery fakeFrequency: String,
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = fakeFrequency,
+            longTaskThresholdMs = 0.0
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+        val frameDurationNs = threshold + frameDurationOverThreshold
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
+            }
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+            assertThat(firstValue).isInstanceOf(VitalFrameCallback::class.java)
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // then
+            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
+        }
+    }
+
+    @Test
+    fun `𝕄 send long tasks 𝕎 frame time is over threshold() {}`(
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "AVERAGE",
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+        )
+        val frameDurationNs = threshold + frameDurationOverThreshold
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // then
+            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+            verify(mockRumMonitor._getInternal()!!).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
+        }
+    }
+
+    @Test
+    fun `𝕄 send long tasks 𝕎 frame time is over threshold() { never vitals frequency update }`(
+        @LongForgery(min = 0L) timestampNs: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            vitalsUpdateFrequency = "NEVER",
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+        )
+        val frameDurationNs = threshold + frameDurationOverThreshold
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Choreographer.FrameCallback> {
+            verify(mockChoreographer).postFrameCallback(capture())
+
+            // When
+            firstValue.doFrame(timestampNs)
+            firstValue.doFrame(timestampNs + frameDurationNs)
+
+            // Then
+            verify(mockRumMonitor._getInternal()!!).addLongTask(
+                frameDurationNs,
+                "javascript"
+            )
+            verify(mockRumMonitor._getInternal()!!, never()).updatePerformanceMetric(
+                RumPerformanceMetric.JS_FRAME_TIME,
+                frameDurationNs.toDouble()
+            )
+        }
+    }
+
     // endregion
 
     // region version suffix
 
     @Test
     fun `𝕄 set version 𝕎 initialize() {versionSuffix}`(
-            @Forgery configuration: DdSdkConfiguration,
-            @StringForgery versionSuffix: String
+        @Forgery configuration: DdSdkConfiguration,
+        @StringForgery versionSuffix: String
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-                additionalConfig = mapOf(
-                        DdSdk.DD_VERSION_SUFFIX to versionSuffix
-                )
+            additionalConfig = mapOf(
+                DdSdk.DD_VERSION_SUFFIX to versionSuffix
+            )
         )
         val configCaptor = argumentCaptor<Configuration>()
 
@@ -1143,19 +1422,85 @@ internal class DdSdkTest {
 
         // Then
         verify(mockDatadog).initialize(
-                same(mockContext),
-                any(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
         )
         assertThat(configCaptor.firstValue)
-                .hasFieldEqualTo(
-                        "additionalConfig",
-                        mapOf(
-                            DdSdk.DD_VERSION_SUFFIX to versionSuffix,
-                            DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
-                        )
+            .hasFieldEqualTo(
+                "additionalConfig",
+                mapOf(
+                    DdSdk.DD_VERSION_SUFFIX to versionSuffix,
+                    DdSdk.DD_VERSION to mockPackageInfo.versionName + versionSuffix
                 )
+            )
+    }
+
+    // endregion
+
+    // region configuration telemetry mapper
+
+    @Test
+    fun `𝕄 set telemetry configuration mapper 𝕎 initialize() {}`(
+        @Forgery configuration: DdSdkConfiguration,
+        @Forgery telemetryConfigurationEvent: TelemetryConfigurationEvent,
+        @BoolForgery trackNativeViews: Boolean,
+        @BoolForgery trackNativeErrors: Boolean,
+        @StringForgery initializationType: String,
+        @BoolForgery trackInteractions: Boolean,
+        @BoolForgery trackErrors: Boolean,
+        @BoolForgery trackNetworkRequests: Boolean
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            nativeCrashReportEnabled = trackNativeErrors,
+            nativeLongTaskThresholdMs = 0.0,
+            longTaskThresholdMs = 0.0,
+            configurationForTelemetry = ConfigurationForTelemetry(
+                initializationType = initializationType,
+                trackErrors = trackErrors,
+                trackInteractions = trackInteractions,
+                trackNetworkRequests = trackNetworkRequests
+            )
+        )
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val configurationMapper = it
+                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
+                val result = configurationMapper.map(telemetryConfigurationEvent)!!
+                assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
+                    trackNativeErrors
+                )
+                assertThat(result.telemetry.configuration.trackCrossPlatformLongTasks!!)
+                    .isEqualTo(false)
+                assertThat(result.telemetry.configuration.trackLongTask!!)
+                    .isEqualTo(false)
+                assertThat(result.telemetry.configuration.trackNativeLongTasks!!)
+                    .isEqualTo(false)
+
+                assertThat(result.telemetry.configuration.initializationType!!)
+                    .isEqualTo(initializationType)
+                assertThat(result.telemetry.configuration.trackInteractions!!)
+                    .isEqualTo(trackInteractions)
+                assertThat(result.telemetry.configuration.trackErrors!!).isEqualTo(trackErrors)
+                assertThat(result.telemetry.configuration.trackResources!!)
+                    .isEqualTo(trackNetworkRequests)
+                assertThat(result.telemetry.configuration.trackNetworkRequests!!)
+                    .isEqualTo(trackNetworkRequests)
+            }
     }
 
     // endregion
@@ -1596,4 +1941,9 @@ internal class DdSdkTest {
     }
 
     // endregion
+
+    companion object {
+        const val ONE_HUNDRED_MILLISSECOND_NS: Long = 100 * 1000L * 1000L
+        const val ONE_SECOND_NS: Long = 1000L * 1000L * 1000L
+    }
 }

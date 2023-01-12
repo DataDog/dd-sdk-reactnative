@@ -1,6 +1,6 @@
 {
   "name": "@datadog/mobile-react-native",
-  "version": "1.2.0-beta1",
+  "version": "1.2.0",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
@@ -19,7 +19,9 @@
   "files": [
     "src",
     "lib",
+    "scripts",
     "android/build.gradle",
+    "android/detekt.yml",
     "android/gradle.properties",
     "android/src",
     "ios/Sources",
@@ -39,7 +41,8 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "prepare": "rm -rf lib && yarn bob build"
+    "prepare": "rm -rf lib && yarn bob build",
+    "postinstall": "node scripts/replace-react-require.js # Use node to execute the script for Windows, see https://github.com/DataDog/dd-sdk-reactnative/issues/358"
   },
   "peerDependencies": {
     "react": ">=16.13.1",

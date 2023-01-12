@@ -3,9 +3,10 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
- 
+
 package com.datadog.tools.unit.forge
 
+import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -18,8 +19,18 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             env = forge.anAlphabeticalString(),
             applicationId = forge.aNullable { getForgery<UUID>().toString() },
             nativeCrashReportEnabled = forge.aNullable { aBool() },
+            nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
+            longTaskThresholdMs = forge.aDouble(0.0, 100.0),
             sampleRate = forge.aNullable { aDouble(0.0, 100.0) },
             telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+            vitalsUpdateFrequency = forge.aNullable {
+                anElementFrom(
+                    "RARE",
+                    "NEVER",
+                    "FREQUENT",
+                    "AVERAGE"
+                )
+            },
             site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
             additionalConfig = forge.aMap {
                 forge.anAsciiString() to forge.anElementFrom(
@@ -28,7 +39,15 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     null
                 )
             },
-            trackingConsent = forge.aNullable { anElementFrom("pending", "granted", "not_granted") }
+            trackingConsent = forge.aNullable {
+                anElementFrom("pending", "granted", "not_granted")
+            },
+            configurationForTelemetry = ConfigurationForTelemetry(
+                initializationType = forge.anAlphabeticalString(),
+                trackErrors = forge.aBool(),
+                trackInteractions = forge.aBool(),
+                trackNetworkRequests = forge.aBool()
+            )
         )
     }
 }

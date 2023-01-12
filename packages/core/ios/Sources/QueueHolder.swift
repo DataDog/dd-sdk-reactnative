@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import React
 
 internal let sharedQueue = DispatchQueue(label: "dd-react-native-sdk")
 
@@ -15,5 +16,11 @@ protocol DispatchQueueType {
 extension DispatchQueue: DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void) {
         async(group: nil, qos: .unspecified, flags: [], execute: work)
+    }
+}
+
+extension RCTBridge: DispatchQueueType {
+    func async(execute work: @escaping @convention(block) () -> Void) {
+        self.dispatchBlock(work, queue: RCTJSThread)
     }
 }

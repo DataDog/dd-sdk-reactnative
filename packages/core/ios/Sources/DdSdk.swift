@@ -7,6 +7,7 @@
 import Foundation
 import Datadog
 import DatadogCrashReporting
+import React
 
 func getDefaultAppVersion() -> String {
     let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -16,46 +17,60 @@ func getDefaultAppVersion() -> String {
 
 @objc(DdSdk)
 class RNDdSdk: NSObject {
+    @objc var bridge: RCTBridge!
+
     @objc(requiresMainQueueSetup)
     static func requiresMainQueueSetup() -> Bool {
         return false
     }
     
+    let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
     @objc(methodQueue)
     let methodQueue: DispatchQueue = sharedQueue
     
+    private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
+    
     convenience override init() {
-        self.init(mainDispatchQueue: DispatchQueue.main)
+        self.init(mainDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
     }
     
-    init(mainDispatchQueue: DispatchQueueType) {
+    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
         self.mainDispatchQueue = mainDispatchQueue
+        self.jsRefreshRateMonitor = jsRefreshRateMonitor
         super.init()
     }
-
-
+    
     @objc(initialize:withResolver:withRejecter:)
     func initialize(configuration: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
+            let sdkConfiguration = configuration.asDdSdkConfiguration()
+            
             if Datadog.isInitialized {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
-                Datadog._internal._telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                Datadog._internal.telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                
+                // This block is called when SDK is reinitialized and the javascript has been wiped out.
+                // In this case, we need to restart the refresh rate monitor, as the javascript thread 
+                // appears to change at that moment.
+                self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
                 resolve(nil)
                 return
             }
-            let sdkConfiguration = configuration.asDdSdkConfiguration()
             self.setVerbosityLevel(additionalConfig: sdkConfiguration.additionalConfig)
 
             let ddConfig = self.buildConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
             Datadog.initialize(appContext: Datadog.AppContext(), trackingConsent: consent, configuration: ddConfig)
+            self.sendConfigurationAsTelemetry(rnConfiguration: sdkConfiguration)
 
             Global.rum = RUMMonitor.initialize()
 
+            self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
+            
             resolve(nil)
         }
     }
@@ -91,14 +106,36 @@ class RNDdSdk: NSObject {
     
     @objc(telemetryDebug:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
+        Datadog._internal.telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc(telemetryError:withStack:withKind:withResolver:withRejecter:)
     func telemetryDebug(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal._telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
+    }
+    
+    func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
+        Datadog._internal.telemetry.setConfigurationMapper { event in
+            var event = event
+
+            var configuration = event.telemetry.configuration
+            configuration.initializationType = rnConfiguration.configurationForTelemetry?.initializationType as? String
+            configuration.trackErrors = rnConfiguration.configurationForTelemetry?.trackErrors
+            configuration.trackInteractions = rnConfiguration.configurationForTelemetry?.trackInteractions
+            configuration.trackResources = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+            configuration.trackNetworkRequests = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+
+            // trackCrossPlatformLongTasks will be deprecated for trackLongTask
+            configuration.trackCrossPlatformLongTasks = rnConfiguration.longTaskThresholdMs != 0
+            configuration.trackLongTask = rnConfiguration.longTaskThresholdMs != 0
+            configuration.trackNativeErrors = rnConfiguration.nativeCrashReportEnabled
+            configuration.trackNativeLongTasks = rnConfiguration.nativeLongTaskThresholdMs != 0
+            event.telemetry.configuration = configuration
+
+            return event
+        }
     }
 
     func buildConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
@@ -131,9 +168,18 @@ class RNDdSdk: NSObject {
         default:
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
+        
+        _ = ddConfigBuilder.set(mobileVitalsFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency))
 
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
+        }
+
+        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
+            if (threshold != 0) {
+                // `nativeLongTaskThresholdMs` attribute is in milliseconds
+                _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
+            }
         }
 
         let additionalConfig = configuration.additionalConfig
@@ -153,11 +199,6 @@ class RNDdSdk: NSObject {
 
         if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
-        }
-
-        if let threshold = additionalConfig?[InternalConfigurationAttributes.longTaskThreshold] as? TimeInterval {
-            // `_dd.long_task.threshold` attribute is in milliseconds
-            _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
         }
 
         if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? [String] {
@@ -230,6 +271,23 @@ class RNDdSdk: NSObject {
         return trackingConsent
     }
 
+    func buildVitalsUpdateFrequency(frequency: NSString?) -> Datadog.Configuration.VitalsFrequency {
+        let vitalsFrequency: Datadog.Configuration.VitalsFrequency
+        switch frequency?.lowercased {
+        case "never":
+            vitalsFrequency = .never
+        case "rare":
+            vitalsFrequency = .rare
+        case "average":
+            vitalsFrequency = .average
+        case "frequent":
+            vitalsFrequency = .frequent
+        default:
+            vitalsFrequency = .average
+        }
+        return vitalsFrequency
+    }
+
     func setVerbosityLevel(additionalConfig: NSDictionary?) {
         let verbosityLevel = (additionalConfig?[InternalConfigurationAttributes.sdkVerbosity]) as? NSString
         switch verbosityLevel?.lowercased {
@@ -245,4 +303,32 @@ class RNDdSdk: NSObject {
             Datadog.verbosityLevel = nil
         }
     }
+    
+    func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
+        if let frameTimeCallback = buildFrameTimeCallback(sdkConfiguration: sdkConfiguration) {
+            // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
+        }
+    }
+
+    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
+        let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != .never
+        let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
+        
+        if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {
+            return nil
+        }
+
+        func frameTimeCallback(frameTime: Double) {
+            if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
+                Global.rum._internal.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime)
+            }
+            if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
+                Global.rum._internal.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+            }
+        }
+        
+        return frameTimeCallback
+    }
+
 }

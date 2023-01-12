@@ -98,7 +98,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
         });
@@ -135,7 +134,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
 
@@ -180,7 +178,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
         });
@@ -215,7 +212,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
         });
@@ -272,7 +268,6 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
-                    '_dd.long_task.threshold': 200,
                     '_dd.first_party_hosts': []
                 });
                 expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
@@ -455,7 +450,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
             expect(
@@ -494,7 +488,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': ['api.example.com']
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
@@ -537,7 +530,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -576,7 +568,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.service_name': fakeServiceName,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -614,7 +605,6 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
                 '_dd.native_view_tracking': false,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -651,10 +641,65 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': true,
-                '_dd.long_task.threshold': 200,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
+
+        it('enables long task tracking when initialize { native and javascript long task custom threshold }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeLongTaskThresholdMs = 234;
+            configuration.longTaskThresholdMs = 456;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(234);
+            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(456);
+        });
+
+        it('enables long task tracking when initialize { native and javascript long task false threshold }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeLongTaskThresholdMs = false;
+            configuration.longTaskThresholdMs = false;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
+            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(0);
         });
     });
 
@@ -750,7 +795,6 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
-                    '_dd.long_task.threshold': 200,
                     '_dd.first_party_hosts': []
                 });
             });
@@ -811,7 +855,6 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.port': proxyPort,
                     '_dd.proxy.username': proxyUsername,
                     '_dd.proxy.password': proxyPassword,
-                    '_dd.long_task.threshold': 200,
                     '_dd.first_party_hosts': []
                 });
             });
