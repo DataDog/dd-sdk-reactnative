@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
@@ -17,6 +16,7 @@ import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DdTrace, DdRum } from './foundation';
 import { DdLogs } from './logs/DdLogs';
+import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { RumActionType, ErrorSource } from './types';
 
 export {
