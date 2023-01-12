@@ -16,6 +16,7 @@ import { DdLogs } from '../logs/DdLogs';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
@@ -69,6 +70,7 @@ beforeEach(async () => {
     DdLogs.unregisterLogEventMapper();
 
     UserInfoSingleton.reset();
+    AttributesSingleton.reset();
 });
 
 describe('DdSdkReactNative', () => {
@@ -746,11 +748,14 @@ describe('DdSdkReactNative', () => {
 
             // WHEN
 
-            DdSdkReactNative.setAttributes(attributes);
+            await DdSdkReactNative.setAttributes(attributes);
 
             // THEN
             expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1);
             expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes);
+            expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+                foo: 'bar'
+            });
         });
     });
 

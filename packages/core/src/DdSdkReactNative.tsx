@@ -29,6 +29,8 @@ import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
+import type { Attributes } from './sdk/AttributesSingleton/types';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from './sdk/UserInfoSingleton/types';
@@ -188,17 +190,19 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+     * Adds a set of attributes to the global context attached with all future Logs, Spans and RUM events.
+     * To remove an attribute, set it to `undefined` in a call to `setAttributes`.
      * @param attributes: The global context attributes.
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static setAttributes(attributes: object): Promise<void> {
+    static async setAttributes(attributes: Attributes): Promise<void> {
         InternalLog.log(
             `Setting attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
-        return DdSdk.setAttributes(attributes);
+        await DdSdk.setAttributes(attributes);
+        AttributesSingleton.getInstance().setAttributes(attributes);
     }
 
     /**
