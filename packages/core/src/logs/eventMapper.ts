@@ -10,13 +10,19 @@ import { DdSdk } from '../foundation';
 import type { Attributes } from '../sdk/AttributesSingleton/types';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
-import type { LogEvent, LogEventMapper, LogStatus, RawLog } from './types';
+import type {
+    LogEvent,
+    LogEventMapper,
+    LogStatus,
+    NativeLog,
+    RawLog
+} from './types';
 import { deepClone } from './utils/deepClone';
 
 export const applyLogEventMapper = (
     logEventMapper: LogEventMapper,
     log: LogEvent
-): LogEvent | null => {
+): NativeLog | null => {
     const originalLog = deepClone(log);
 
     try {
@@ -28,10 +34,7 @@ export const applyLogEventMapper = (
 
         return {
             message: mappedEvent.message,
-            context: mappedEvent.context,
-            status: originalLog.status,
-            userInfo: originalLog.userInfo,
-            attributes: originalLog.attributes
+            context: mappedEvent.context
         };
     } catch (error) {
         InternalLog.log(

@@ -7,7 +7,7 @@ import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingle
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 
 import { applyLogEventMapper, formatLogEvent } from './eventMapper';
-import type { DdLogsType, LogEvent, LogEventMapper, LogStatus } from './types';
+import type { DdLogsType, LogEventMapper, LogStatus, NativeLog } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
@@ -59,17 +59,17 @@ class DdLogsWrapper implements DdLogsType {
         message: string,
         context: object,
         logStatus: LogStatus
-    ): LogEvent | null => {
+    ): NativeLog | null => {
+        if (!this.logEventMapper) {
+            return { message, context };
+        }
+
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
         const attributes = AttributesSingleton.getInstance().getAttributes();
         const initialLogEvent = formatLogEvent(
             { message, context },
             { logStatus, userInfo, attributes }
         );
-
-        if (!this.logEventMapper) {
-            return initialLogEvent;
-        }
 
         return applyLogEventMapper(this.logEventMapper, initialLogEvent);
     };

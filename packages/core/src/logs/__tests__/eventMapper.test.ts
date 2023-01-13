@@ -68,9 +68,7 @@ describe('applyLogEventMapper', () => {
             })
         ).toEqual({
             message: 'new message',
-            context: { loggedIn: true },
-            status: 'info',
-            userInfo: { extraInfo: { userType: 'admin' } }
+            context: { loggedIn: true }
         });
     });
 
@@ -96,9 +94,7 @@ describe('applyLogEventMapper', () => {
             })
         ).toEqual({
             message: 'new message',
-            context: { loggedIn: true },
-            status: 'info',
-            userInfo: {}
+            context: { loggedIn: true }
         });
     });
 
@@ -120,9 +116,7 @@ describe('applyLogEventMapper', () => {
             })
         ).toEqual({
             message: 'original',
-            context: {},
-            status: 'info',
-            userInfo: {}
+            context: {}
         });
     });
 

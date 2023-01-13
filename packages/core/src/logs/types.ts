@@ -39,7 +39,18 @@ export type DdLogsType = {
     error(message: string, context?: object): Promise<void>;
 };
 
+/**
+ * Log input from developers
+ */
 export type RawLog = {
+    message: string;
+    context: object;
+};
+
+/**
+ * Log input for native SDKs
+ */
+export type NativeLog = {
     message: string;
     context: object;
 };
