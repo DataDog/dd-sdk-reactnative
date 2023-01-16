@@ -13,6 +13,8 @@ import { DdSdk } from '../foundation';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 
+import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
+import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type {
     DdRumType,
     RumActionType,
@@ -22,9 +24,12 @@ import type {
 
 const timeProvider = new TimeProvider();
 
+const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
+
 class DdRumWrapper implements DdRumType {
     private nativeRum: DdNativeRumType = NativeModules.DdRum;
     private lastActionData?: { type: RumActionType; name: string };
+    private errorEventMapper = generateErrorEventMapper(undefined);
 
     startView(
         key: string,
@@ -195,16 +200,26 @@ class DdRumWrapper implements DdRumType {
         context: object = {},
         timestampMs: number = timeProvider.now()
     ): Promise<void> {
+        const mappedEvent = this.errorEventMapper.applyEventMapper({
+            message,
+            source,
+            stacktrace,
+            context,
+            timestampMs
+        });
+        if (!mappedEvent) {
+            return generateEmptyPromise();
+        }
         InternalLog.log(`Adding RUM Error “${message}”`, SdkVerbosity.DEBUG);
-        const updatedContext: any = context;
+        const updatedContext: any = mappedEvent.context;
         updatedContext['_dd.error.source_type'] = 'react-native';
         return bufferVoidNativeCall(() =>
             this.nativeRum.addError(
-                message,
-                source,
-                stacktrace,
+                mappedEvent.message,
+                mappedEvent.source,
+                mappedEvent.stacktrace,
                 updatedContext,
-                timestampMs
+                mappedEvent.timestampMs
             )
         );
     }
@@ -215,6 +230,14 @@ class DdRumWrapper implements DdRumType {
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() => this.nativeRum.addTiming(name));
+    }
+
+    registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {
+        this.errorEventMapper = generateErrorEventMapper(errorEventMapper);
+    }
+
+    unregisterErrorEventMapper() {
+        this.errorEventMapper = generateErrorEventMapper(undefined);
     }
 }
 
@@ -249,4 +272,4 @@ const isOldStopActionAPI = (
     return typeof args[0] === 'object' || typeof args[0] === 'undefined';
 };
 
-export const DdRum: DdRumType = new DdRumWrapper();
+export const DdRum = new DdRumWrapper();

@@ -9,6 +9,8 @@ import { NativeModules } from 'react-native';
 import { DdSdk } from '../../foundation';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../DdRum';
+import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
+import { ErrorSource } from '../types';
 
 jest.mock('../../TimeProvider', () => {
     return {
@@ -142,6 +144,51 @@ describe('DdRum', () => {
             );
             expect(context['foo']).toStrictEqual('bar');
             expect(context['spam']).toStrictEqual(random);
+        });
+    });
+
+    describe('DdRum.addError', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdRum.unregisterErrorEventMapper();
+        });
+
+        it('registers event mapper and maps error', async () => {
+            const errorEventMapper: ErrorEventMapper = error => {
+                error.message = 'New message';
+                error.context = {
+                    isFatal: true
+                };
+                return error;
+            };
+            DdRum.registerErrorEventMapper(errorEventMapper);
+
+            await DdRum.addError('Old message', ErrorSource.CUSTOM, 'stack', {
+                isFatal: false
+            });
+            expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                'New message',
+                'CUSTOM',
+                'stack',
+                {
+                    '_dd.error.source_type': 'react-native',
+                    isFatal: true
+                },
+                456
+            );
+        });
+
+        it('drops the event if the mapper returns null', async () => {
+            const errorEventMapper: ErrorEventMapper = error => {
+                return null;
+            };
+
+            DdRum.registerErrorEventMapper(errorEventMapper);
+
+            await DdRum.addError('Old message', ErrorSource.CUSTOM, 'stack', {
+                isFatal: false
+            });
+            expect(NativeModules.DdRum.addError).not.toHaveBeenCalled();
         });
     });
 });
