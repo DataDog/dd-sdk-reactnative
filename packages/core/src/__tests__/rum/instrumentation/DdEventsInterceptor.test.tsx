@@ -11,9 +11,9 @@ import {
     DdEventsInterceptor,
     UNKNOWN_TARGET_NAME
 } from '../../../rum/instrumentation/DdEventsInterceptor';
-import { RumActionType } from '../../../types';
+import { RumActionType } from '../../../rum/types';
 
-jest.mock('../../../foundation', () => {
+jest.mock('../../../rum/DdRum', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function

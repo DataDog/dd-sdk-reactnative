@@ -6,10 +6,11 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdRum, DdSdk } from '../foundation';
-import { BufferSingleton } from '../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdSdk } from '../../foundation';
+import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdRum } from '../DdRum';
 
-jest.mock('../TimeProvider', () => {
+jest.mock('../../TimeProvider', () => {
     return {
         TimeProvider: jest.fn().mockImplementation(() => {
             return { now: jest.fn().mockReturnValue(456) };
@@ -17,7 +18,7 @@ jest.mock('../TimeProvider', () => {
     };
 });
 
-describe('foundation', () => {
+describe('DdRum', () => {
     describe('DdRum.stopAction', () => {
         beforeEach(() => {
             jest.clearAllMocks();
@@ -83,6 +84,64 @@ describe('foundation', () => {
             await DdRum.stopAction();
             await DdRum.stopAction();
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('DdRumWrapper', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            BufferSingleton.onInitialization();
+        });
+
+        it('M add error source type W addError()', async () => {
+            // Given
+            const message = 'Oops I did it again!';
+            const source = 'SOURCE';
+            const stacktrace = 'doSomething() at ./path/to/file.js:67:3';
+
+            // When
+            DdRum.addError(message, source, stacktrace);
+
+            // Then
+            expect(NativeModules.DdRum.addError.mock.calls.length).toBe(1);
+            expect(NativeModules.DdRum.addError.mock.calls[0][0]).toBe(message);
+            expect(NativeModules.DdRum.addError.mock.calls[0][1]).toBe(source);
+            expect(NativeModules.DdRum.addError.mock.calls[0][2]).toBe(
+                stacktrace
+            );
+            const context = NativeModules.DdRum.addError.mock.calls[0][3];
+            expect(context['_dd.error.source_type']).toStrictEqual(
+                'react-native'
+            );
+        });
+
+        it('M add error source type W addError() {with custom attributes}', async () => {
+            // Given
+            const message = 'Oops I did it again!';
+            const source = 'SOURCE';
+            const stacktrace = 'doSomething() at ./path/to/file.js:67:3';
+            const random = Math.random();
+            const attributes = {
+                foo: 'bar',
+                spam: random
+            };
+
+            // When
+            DdRum.addError(message, source, stacktrace, attributes);
+
+            // Then
+            expect(NativeModules.DdRum.addError.mock.calls.length).toBe(1);
+            expect(NativeModules.DdRum.addError.mock.calls[0][0]).toBe(message);
+            expect(NativeModules.DdRum.addError.mock.calls[0][1]).toBe(source);
+            expect(NativeModules.DdRum.addError.mock.calls[0][2]).toBe(
+                stacktrace
+            );
+            const context = NativeModules.DdRum.addError.mock.calls[0][3];
+            expect(context['_dd.error.source_type']).toStrictEqual(
+                'react-native'
+            );
+            expect(context['foo']).toStrictEqual('bar');
+            expect(context['spam']).toStrictEqual(random);
         });
     });
 });

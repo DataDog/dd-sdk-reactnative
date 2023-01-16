@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../../../../foundation';
+import { DdRum } from '../../../../DdRum';
 import type { RUMResource } from '../../domain/interfaces/RumResource';
 
 import { createTimings } from './resourceTiming';

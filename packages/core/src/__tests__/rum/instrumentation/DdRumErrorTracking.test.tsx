@@ -9,7 +9,7 @@ import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTrack
 
 jest.useFakeTimers();
 
-jest.mock('../../../foundation', () => {
+jest.mock('../../../rum/DdRum', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function

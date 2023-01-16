@@ -14,10 +14,11 @@ import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import { DdTrace, DdRum } from './foundation';
+import { DdTrace } from './foundation';
 import { DdLogs } from './logs/DdLogs';
+import { DdRum } from './rum/DdRum';
+import { RumActionType, ErrorSource } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
-import { RumActionType, ErrorSource } from './types';
 
 export {
     DatadogProvider,

@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { ResourceKind } from '../../../../../../src/types';
+import type { ResourceKind } from '../../../../types';
 import type { DdRumResourceTracingAttributes } from '../distributedTracing';
 
 export interface RUMResource {
