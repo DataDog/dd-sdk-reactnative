@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /*
  * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
@@ -10,6 +11,7 @@ import { DdSdk } from '../../foundation';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../DdRum';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
+import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
 import { ErrorSource } from '../types';
 
 jest.mock('../../TimeProvider', () => {
@@ -188,6 +190,65 @@ describe('DdRum', () => {
             await DdRum.addError('Old message', ErrorSource.CUSTOM, 'stack', {
                 isFatal: false
             });
+            expect(NativeModules.DdRum.addError).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('DdRum.stopResource', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdRum.unregisterResourceEventMapper();
+        });
+
+        it('registers event mapper and maps resource', async () => {
+            const resourceEventMapper: ResourceEventMapper = resource => {
+                resource.context = { retryAttempts: 3 };
+                // @ts-ignore
+                resource.key = 'bad key';
+                // @ts-ignore
+                resource.statusCode = 500;
+                // @ts-ignore
+                resource.kind = 'document';
+                // @ts-ignore
+                resource.size = 2000;
+                return resource;
+            };
+            DdRum.registerResourceEventMapper(resourceEventMapper);
+
+            await DdRum.startResource(
+                'key',
+                'GET',
+                'https://my-api.com/',
+                { retry: false },
+                234
+            );
+            await DdRum.stopResource('key', 200, 'xhr', 302, {}, 245);
+            expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                'key',
+                200,
+                'xhr',
+                302,
+                { retryAttempts: 3 },
+                245
+            );
+        });
+
+        it.skip('adds the drop context key to the event if the mapper returns null', async () => {
+            const resourceEventMapper: ResourceEventMapper = resource => {
+                return null;
+            };
+
+            DdRum.registerResourceEventMapper(resourceEventMapper);
+
+            await DdRum.startResource(
+                'key',
+                'GET',
+                'https://my-api.com/',
+                { retry: false },
+                234
+            );
+            await DdRum.stopResource('key', 200, 'xhr', 302, {}, 245);
+
             expect(NativeModules.DdRum.addError).not.toHaveBeenCalled();
         });
     });

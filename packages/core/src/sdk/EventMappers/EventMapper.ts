@@ -35,7 +35,10 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
         event: RawEvent,
         additionalData: AdditionalEventDataForMapper
     ) => MapperEvent;
-    private formatMapperEventForNative: (event: MapperEvent) => NativeEvent;
+    private formatMapperEventForNative: (
+        event: MapperEvent,
+        originalEvent: MapperEvent
+    ) => NativeEvent;
     private formatRawEventForNative: (event: RawEvent) => NativeEvent;
 
     constructor(
@@ -44,7 +47,10 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
             event: RawEvent,
             additionalData: AdditionalEventDataForMapper
         ) => MapperEvent,
-        formatMapperEventForNative: (event: MapperEvent) => NativeEvent,
+        formatMapperEventForNative: (
+            event: MapperEvent,
+            originalEvent: MapperEvent
+        ) => NativeEvent,
         formatRawEventForNative: (event: RawEvent) => NativeEvent
     ) {
         this.eventMapper = eventMapper;
@@ -73,7 +79,7 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
             if (!mappedEvent) {
                 return null;
             }
-            return this.formatMapperEventForNative(mappedEvent);
+            return this.formatMapperEventForNative(mappedEvent, backupEvent);
         } catch (error) {
             InternalLog.log(
                 `The event mapper crashed when mapping ${JSON.stringify(
@@ -82,7 +88,7 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
                 SdkVerbosity.WARN
             );
             DdSdk.telemetryDebug('Error while running the event mapper');
-            return this.formatMapperEventForNative(backupEvent);
+            return this.formatMapperEventForNative(backupEvent, backupEvent);
         }
     };
 }

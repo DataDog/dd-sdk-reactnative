@@ -15,6 +15,8 @@ import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNative
 
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
 import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
+import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
 import type {
     DdRumType,
     RumActionType,
@@ -30,6 +32,7 @@ class DdRumWrapper implements DdRumType {
     private nativeRum: DdNativeRumType = NativeModules.DdRum;
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
+    private resourceEventMapper = generateResourceEventMapper(undefined);
 
     startView(
         key: string,
@@ -175,20 +178,35 @@ class DdRumWrapper implements DdRumType {
         kind: ResourceKind,
         size: number = -1,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = timeProvider.now(),
+        resourceContext?: XMLHttpRequest
     ): Promise<void> {
+        const mappedEvent = this.resourceEventMapper.applyEventMapper({
+            key,
+            statusCode,
+            kind,
+            size,
+            context,
+            timestampMs,
+            resourceContext
+        });
+        if (!mappedEvent) {
+            // TODO: add drop context if resource is dropped
+            return generateEmptyPromise();
+        }
+
         InternalLog.log(
             `Stopping RUM Resource #${key} status:${statusCode}`,
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() =>
             this.nativeRum.stopResource(
-                key,
-                statusCode,
-                kind,
-                size,
-                context,
-                timestampMs
+                mappedEvent.key,
+                mappedEvent.statusCode,
+                mappedEvent.kind,
+                mappedEvent.size,
+                mappedEvent.context,
+                mappedEvent.timestampMs
             )
         );
     }
@@ -238,6 +256,16 @@ class DdRumWrapper implements DdRumType {
 
     unregisterErrorEventMapper() {
         this.errorEventMapper = generateErrorEventMapper(undefined);
+    }
+
+    registerResourceEventMapper(resourceEventMapper: ResourceEventMapper) {
+        this.resourceEventMapper = generateResourceEventMapper(
+            resourceEventMapper
+        );
+    }
+
+    unregisterResourceEventMapper() {
+        this.resourceEventMapper = generateResourceEventMapper(undefined);
     }
 }
 
