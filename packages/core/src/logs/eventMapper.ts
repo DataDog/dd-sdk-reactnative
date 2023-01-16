@@ -8,6 +8,7 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { DdSdk } from '../foundation';
 import type { Attributes } from '../sdk/AttributesSingleton/types';
+import { deepClone } from '../sdk/EventMappers/utils/deepClone';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
 import type {
@@ -17,7 +18,6 @@ import type {
     NativeLog,
     RawLog
 } from './types';
-import { deepClone } from './utils/deepClone';
 
 export const applyLogEventMapper = (
     logEventMapper: LogEventMapper,
