@@ -4,10 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import { getErrorStackTrace } from '../../errorUtils';
-import { DdSdk } from '../../foundation';
+import { InternalLog } from '../../../InternalLog';
+import { SdkVerbosity } from '../../../SdkVerbosity';
+import { getErrorStackTrace } from '../../../errorUtils';
+import { DdSdk } from '../../../foundation';
 
 import { DatadogBuffer } from './DatadogBuffer';
 

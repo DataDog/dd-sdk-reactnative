@@ -7,6 +7,7 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
+import type { LogEventMapper } from './logs/types';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
@@ -27,7 +28,8 @@ const DEFAULTS = {
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
     telemetrySampleRate: 20.0,
-    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
+    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
+    logEventMapper: null
 };
 
 /**
@@ -134,6 +136,8 @@ export class DdSdkReactNativeConfiguration {
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
 
+    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+
     public additionalConfig: {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfig();
@@ -159,6 +163,7 @@ export type AutoInstrumentationConfiguration = {
     readonly firstPartyHosts?: string[];
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
+    readonly logEventMapper?: LogEventMapper | null;
 };
 
 /**
@@ -170,6 +175,7 @@ export type AutoInstrumentationParameters = {
     readonly firstPartyHosts: string[];
     readonly resourceTracingSamplingRate: number;
     readonly trackErrors: boolean;
+    readonly logEventMapper: LogEventMapper | null;
 };
 
 /**
@@ -184,8 +190,13 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
         firstPartyHosts:
             features.firstPartyHosts || DEFAULTS.getFirstPartyHosts(),
         resourceTracingSamplingRate:
-            features.resourceTracingSamplingRate ||
-            DEFAULTS.resourceTracingSamplingRate
+            features.resourceTracingSamplingRate === undefined
+                ? DEFAULTS.resourceTracingSamplingRate
+                : features.resourceTracingSamplingRate,
+        logEventMapper:
+            features.logEventMapper === undefined
+                ? DEFAULTS.logEventMapper
+                : features.logEventMapper
     };
 };
 
@@ -262,6 +273,13 @@ export const buildConfigurationFromPartialConfiguration = (
     );
     setConfigurationAttribute(
         { name: 'firstPartyHosts', value: features.firstPartyHosts },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'logEventMapper',
+            value: features.logEventMapper
+        },
         SdkConfiguration
     );
 

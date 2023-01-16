@@ -9,14 +9,14 @@ import type { PropsWithChildren } from 'react';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration
-} from '../DdSdkReactNativeConfiguration';
+} from '../../DdSdkReactNativeConfiguration';
 import type {
     PartialInitializationConfiguration,
     AutoInstrumentationConfiguration
-} from '../DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from '../DdSdkReactNative';
-import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+} from '../../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../../DdSdkReactNative';
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
 
 let isInitialized = false;
 

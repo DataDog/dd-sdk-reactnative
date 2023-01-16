@@ -6,8 +6,8 @@
 
 import { NativeModules } from 'react-native';
 
-import { BufferSingleton } from '../DatadogProvider/Buffer/BufferSingleton';
 import { DdRum, DdSdk } from '../foundation';
+import { BufferSingleton } from '../sdk/DatadogProvider/Buffer/BufferSingleton';
 
 jest.mock('../TimeProvider', () => {
     return {

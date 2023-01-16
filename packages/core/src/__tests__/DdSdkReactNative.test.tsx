@@ -12,9 +12,12 @@ import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 import { DdSdk } from '../foundation';
+import { DdLogs } from '../logs/DdLogs';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
+import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
@@ -64,6 +67,10 @@ beforeEach(async () => {
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
     >).mockClear();
+    DdLogs.unregisterLogEventMapper();
+
+    UserInfoSingleton.reset();
+    AttributesSingleton.reset();
 });
 
 describe('DdSdkReactNative', () => {
@@ -535,6 +542,37 @@ describe('DdSdkReactNative', () => {
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
 
+        it('enables logs mapping when initialize { logs mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.logEventMapper = log => {
+                log.message = 'new message';
+                return log;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdLogs.debug('original message');
+
+            // THEN
+            expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
+                'new message',
+                {}
+            );
+        });
+
         it('enables custom service name when initialize { service name }', async () => {
             // GIVEN
             const fakeAppId = '1';
@@ -710,26 +748,32 @@ describe('DdSdkReactNative', () => {
 
             // WHEN
 
-            DdSdkReactNative.setAttributes(attributes);
+            await DdSdkReactNative.setAttributes(attributes);
 
             // THEN
             expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1);
             expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes);
+            expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+                foo: 'bar'
+            });
         });
     });
 
     describe('setUser', () => {
-        it('calls SDK method when setUser', async () => {
+        it('calls SDK method when setUser, and sets the user in UserProvider', async () => {
             // GIVEN
-            const user = { foo: 'bar' };
+            const user = { id: 'id', foo: 'bar' };
 
             // WHEN
-
-            DdSdkReactNative.setUser(user);
+            await DdSdkReactNative.setUser(user);
 
             // THEN
             expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
             expect(DdSdk.setUser).toHaveBeenCalledWith(user);
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+                id: 'id',
+                foo: 'bar'
+            });
         });
     });
 

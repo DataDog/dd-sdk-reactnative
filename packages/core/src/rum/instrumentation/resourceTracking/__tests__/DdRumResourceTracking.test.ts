@@ -6,7 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
-import { BufferSingleton } from '../../../../DatadogProvider/Buffer/BufferSingleton';
+import { BufferSingleton } from '../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';

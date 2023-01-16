@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DatadogProvider } from './DatadogProvider/DatadogProvider';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
@@ -15,7 +14,9 @@ import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import { DdLogs, DdTrace, DdRum } from './foundation';
+import { DdTrace, DdRum } from './foundation';
+import { DdLogs } from './logs/DdLogs';
+import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { RumActionType, ErrorSource } from './types';
 
 export {
