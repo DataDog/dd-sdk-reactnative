@@ -4,62 +4,40 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
-import { DdSdk } from '../foundation';
 import type { Attributes } from '../sdk/AttributesSingleton/types';
-import { deepClone } from '../sdk/EventMappers/utils/deepClone';
+import { EventMapper } from '../sdk/EventMappers/EventMapper';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
-import type {
-    LogEvent,
-    LogEventMapper,
-    LogStatus,
-    NativeLog,
-    RawLog
-} from './types';
+import type { LogEvent, LogEventMapper, NativeLog, RawLog } from './types';
 
-export const applyLogEventMapper = (
-    logEventMapper: LogEventMapper,
-    log: LogEvent
-): NativeLog | null => {
-    const originalLog = deepClone(log);
-
-    try {
-        const mappedEvent = logEventMapper(log);
-
-        if (!mappedEvent) {
-            return null;
-        }
-
-        return {
-            message: mappedEvent.message,
-            context: mappedEvent.context
-        };
-    } catch (error) {
-        InternalLog.log(
-            `The log event mapper crashed when mapping log ${JSON.stringify(
-                originalLog
-            )}: ${error}`,
-            SdkVerbosity.WARN
-        );
-        DdSdk.telemetryDebug('Error while running the log event mapper');
-        return originalLog;
-    }
+export const formatLogEventToNativeLog = (logEvent: LogEvent): NativeLog => {
+    return logEvent;
 };
 
-export const formatLogEvent = (
+export const formatRawLogToNativeEvent = (rawLog: RawLog): NativeLog => {
+    return rawLog;
+};
+
+export const formatRawLogToLogEvent = (
     rawLog: RawLog,
     additionalInformation: {
-        logStatus: LogStatus;
         userInfo: UserInfo;
         attributes: Attributes;
     }
 ): LogEvent => {
     return {
         ...rawLog,
-        status: additionalInformation.logStatus,
         userInfo: additionalInformation.userInfo,
         attributes: additionalInformation.attributes
     };
 };
+
+export const generateEventMapper = (
+    logEventMapper: LogEventMapper | undefined
+) =>
+    new EventMapper(
+        logEventMapper,
+        formatRawLogToLogEvent,
+        formatLogEventToNativeLog,
+        formatRawLogToNativeEvent
+    );
