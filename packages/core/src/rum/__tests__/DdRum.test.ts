@@ -198,6 +198,7 @@ describe('DdRum', () => {
         beforeEach(() => {
             jest.clearAllMocks();
             DdRum.unregisterResourceEventMapper();
+            BufferSingleton.onInitialization();
         });
 
         it('registers event mapper and maps resource', async () => {
@@ -233,7 +234,7 @@ describe('DdRum', () => {
             );
         });
 
-        it.skip('adds the drop context key to the event if the mapper returns null', async () => {
+        it('adds the drop context key to the event if the mapper returns null', async () => {
             const resourceEventMapper: ResourceEventMapper = resource => {
                 return null;
             };
@@ -247,9 +248,23 @@ describe('DdRum', () => {
                 { retry: false },
                 234
             );
-            await DdRum.stopResource('key', 200, 'xhr', 302, {}, 245);
+            await DdRum.stopResource(
+                'key',
+                200,
+                'xhr',
+                302,
+                { someLargeUselessObject: {} },
+                245
+            );
 
-            expect(NativeModules.DdRum.addError).not.toHaveBeenCalled();
+            expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                'key',
+                200,
+                'xhr',
+                302,
+                { '_dd.resource.drop_resource': true },
+                245
+            );
         });
     });
 });

@@ -191,7 +191,23 @@ class DdRumWrapper implements DdRumType {
             resourceContext
         });
         if (!mappedEvent) {
-            // TODO: add drop context if resource is dropped
+            /**
+             * To drop the resource we call `stopResource` and pass the `_dd.drop_resource` attribute in the context.
+             * It will be picked up by the resource mappers we implement on the native side that will drop the resource.
+             * This ensures we don't have any "started" resource left in memory on the native side.
+             */
+            bufferVoidNativeCall(() =>
+                this.nativeRum.stopResource(
+                    key,
+                    statusCode,
+                    kind,
+                    size,
+                    {
+                        '_dd.resource.drop_resource': true
+                    },
+                    timestampMs
+                )
+            );
             return generateEmptyPromise();
         }
 

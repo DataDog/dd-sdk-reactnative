@@ -20,6 +20,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.facebook.react.bridge.Promise
@@ -221,6 +222,15 @@ class DdSdk(
             configBuilder.setProxy(proxy, authenticator)
         }
 
+        configBuilder.setRumResourceEventMapper(object : EventMapper<ResourceEvent> {
+            override fun map(event: ResourceEvent): ResourceEvent? {
+                if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) == true) {
+                    return null
+                }
+                return event
+            }
+        })
+
         _InternalProxy.setTelemetryConfigurationEventMapper(
             configBuilder,
             object : EventMapper<TelemetryConfigurationEvent> {
@@ -409,6 +419,7 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        internal const val DD_DROP_RESOURCE = "_dd.resource.drop_resource"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
     }

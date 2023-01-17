@@ -94,4 +94,9 @@ internal struct InternalConfigurationAttributes {
     /// Specify version suffix.
     /// Expects `NSString?` value
     static let versionSuffix = "_dd.version_suffix"
+    
+    /// Custom attribute of the resource passed from bridge SDK.
+    /// It flags the resource as dropped by the user so it can be dropped in the resource mapper.
+    /// Expects `Bool` value.
+    static let dropResource = "_dd.resource.drop_resource"
 }

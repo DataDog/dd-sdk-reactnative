@@ -592,6 +592,22 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+
+    func testDropsResourceMarkedAsDropped() throws {
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        let resourceEventMapper = try XCTUnwrap(ddConfig.rumResourceEventMapper)
+
+        let mockDroppedResourceEvent = RUMResourceEvent.mockRandomDropped()
+        let mappedDroppedEvent = resourceEventMapper(mockDroppedResourceEvent)
+        XCTAssertNil(mappedDroppedEvent)
+
+        let mockResourceEvent = RUMResourceEvent.mockRandom()
+        let mappedEvent = resourceEventMapper(mockResourceEvent)
+        XCTAssertNotNil(mappedEvent)
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
