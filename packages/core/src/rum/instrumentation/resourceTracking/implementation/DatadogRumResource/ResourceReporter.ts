@@ -74,6 +74,7 @@ const reportResource = async (resource: RUMResource) => {
         resource.request.kind,
         resource.response.size,
         formatResourceStopContext(resource.timings),
-        resource.timings.stopTime
+        resource.timings.stopTime,
+        resource.resourceContext
     );
 };

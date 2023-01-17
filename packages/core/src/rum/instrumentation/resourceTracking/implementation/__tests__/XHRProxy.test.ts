@@ -9,6 +9,7 @@ import { Platform, NativeModules } from 'react-native';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdRum } from '../../../../DdRum';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
@@ -32,7 +33,7 @@ const mockedInternalLog = (InternalLog as unknown) as {
 };
 jest.spyOn(global.Math, 'random');
 
-const DdRum = NativeModules.DdRum;
+const DdNativeRum = NativeModules.DdRum;
 
 function randomInt(max: number): number {
     return Math.floor(Math.random() * max);
@@ -42,8 +43,8 @@ const flushPromises = () => new Promise(setImmediate);
 let xhrProxy;
 
 beforeEach(() => {
-    DdRum.startResource.mockClear();
-    DdRum.stopResource.mockClear();
+    DdNativeRum.startResource.mockClear();
+    DdNativeRum.stopResource.mockClear();
     BufferSingleton.onInitialization();
 
     xhrProxy = new XHRProxy({
@@ -66,6 +67,7 @@ afterEach(() => {
     xhrProxy.onTrackingStop();
     (Date.now as jest.MockedFunction<typeof Date.now>).mockClear();
     jest.spyOn(global.Math, 'random').mockRestore();
+    DdRum.unregisterResourceEventMapper();
 });
 
 describe('XHRPr', () => {
@@ -88,17 +90,19 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(DdRum.startResource.mock.calls.length).toBe(1);
-            expect(DdRum.startResource.mock.calls[0][1]).toBe(method);
-            expect(DdRum.startResource.mock.calls[0][2]).toBe(url);
+            expect(DdNativeRum.startResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.startResource.mock.calls[0][1]).toBe(method);
+            expect(DdNativeRum.startResource.mock.calls[0][2]).toBe(url);
 
-            expect(DdRum.stopResource.mock.calls.length).toBe(1);
-            expect(DdRum.stopResource.mock.calls[0][0]).toBe(
-                DdRum.startResource.mock.calls[0][0]
+            expect(DdNativeRum.stopResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.stopResource.mock.calls[0][0]).toBe(
+                DdNativeRum.startResource.mock.calls[0][0]
             );
-            expect(DdRum.stopResource.mock.calls[0][1]).toBe(200);
-            expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
-            expect(DdRum.stopResource.mock.calls[0][3]).toBeGreaterThan(0);
+            expect(DdNativeRum.stopResource.mock.calls[0][1]).toBe(200);
+            expect(DdNativeRum.stopResource.mock.calls[0][2]).toBe('xhr');
+            expect(DdNativeRum.stopResource.mock.calls[0][3]).toBeGreaterThan(
+                0
+            );
 
             expect(xhr.originalOpenCalled).toBe(true);
             expect(xhr.originalSendCalled).toBe(true);
@@ -123,17 +127,19 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(DdRum.startResource.mock.calls.length).toBe(1);
-            expect(DdRum.startResource.mock.calls[0][1]).toBe(method);
-            expect(DdRum.startResource.mock.calls[0][2]).toBe(url);
+            expect(DdNativeRum.startResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.startResource.mock.calls[0][1]).toBe(method);
+            expect(DdNativeRum.startResource.mock.calls[0][2]).toBe(url);
 
-            expect(DdRum.stopResource.mock.calls.length).toBe(1);
-            expect(DdRum.stopResource.mock.calls[0][0]).toBe(
-                DdRum.startResource.mock.calls[0][0]
+            expect(DdNativeRum.stopResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.stopResource.mock.calls[0][0]).toBe(
+                DdNativeRum.startResource.mock.calls[0][0]
             );
-            expect(DdRum.stopResource.mock.calls[0][1]).toBe(500);
-            expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
-            expect(DdRum.stopResource.mock.calls[0][3]).toBeGreaterThan(0);
+            expect(DdNativeRum.stopResource.mock.calls[0][1]).toBe(500);
+            expect(DdNativeRum.stopResource.mock.calls[0][2]).toBe('xhr');
+            expect(DdNativeRum.stopResource.mock.calls[0][3]).toBeGreaterThan(
+                0
+            );
 
             expect(xhr.originalOpenCalled).toBe(true);
             expect(xhr.originalSendCalled).toBe(true);
@@ -158,17 +164,17 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(DdRum.startResource.mock.calls.length).toBe(1);
-            expect(DdRum.startResource.mock.calls[0][1]).toBe(method);
-            expect(DdRum.startResource.mock.calls[0][2]).toBe(url);
+            expect(DdNativeRum.startResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.startResource.mock.calls[0][1]).toBe(method);
+            expect(DdNativeRum.startResource.mock.calls[0][2]).toBe(url);
 
-            expect(DdRum.stopResource.mock.calls.length).toBe(1);
-            expect(DdRum.stopResource.mock.calls[0][0]).toBe(
-                DdRum.startResource.mock.calls[0][0]
+            expect(DdNativeRum.stopResource.mock.calls.length).toBe(1);
+            expect(DdNativeRum.stopResource.mock.calls[0][0]).toBe(
+                DdNativeRum.startResource.mock.calls[0][0]
             );
-            expect(DdRum.stopResource.mock.calls[0][1]).toBe(0);
-            expect(DdRum.stopResource.mock.calls[0][2]).toBe('xhr');
-            expect(DdRum.stopResource.mock.calls[0][3]).toBe(-1);
+            expect(DdNativeRum.stopResource.mock.calls[0][1]).toBe(0);
+            expect(DdNativeRum.stopResource.mock.calls[0][2]).toBe('xhr');
+            expect(DdNativeRum.stopResource.mock.calls[0][3]).toBe(-1);
 
             expect(xhr.originalOpenCalled).toBe(true);
             expect(xhr.originalSendCalled).toBe(true);
@@ -439,17 +445,18 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            const spanId = DdRum.startResource.mock.calls[0][3]['_dd.span_id'];
+            const spanId =
+                DdNativeRum.startResource.mock.calls[0][3]['_dd.span_id'];
             expect(spanId).toBeDefined();
             expect(spanId).toMatch(/[1-9].+/);
 
             const traceId =
-                DdRum.startResource.mock.calls[0][3]['_dd.trace_id'];
+                DdNativeRum.startResource.mock.calls[0][3]['_dd.trace_id'];
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
 
             const rulePsr =
-                DdRum.startResource.mock.calls[0][3]['_dd.rule_psr'];
+                DdNativeRum.startResource.mock.calls[0][3]['_dd.rule_psr'];
             expect(rulePsr).toBe(1);
 
             // Check traceId and spanId are different
@@ -477,7 +484,7 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(DdRum.startResource).not.toHaveBeenCalledWith(
+            expect(DdNativeRum.startResource).not.toHaveBeenCalledWith(
                 expect.anything(),
                 expect.anything(),
                 expect.anything(),
@@ -488,7 +495,9 @@ describe('XHRPr', () => {
                 }),
                 expect.anything()
             );
-            expect(DdRum.startResource.mock.calls[0][3]).toStrictEqual({});
+            expect(DdNativeRum.startResource.mock.calls[0][3]).toStrictEqual(
+                {}
+            );
         });
     });
 
@@ -516,7 +525,9 @@ describe('XHRPr', () => {
 
             // THEN
             const timings =
-                DdRum.stopResource.mock.calls[0][4]['_dd.resource_timings'];
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.resource_timings'
+                ];
 
             if (Platform.OS === 'ios') {
                 expect(timings['firstByte']['startTime']).toBeGreaterThan(0);
@@ -560,7 +571,9 @@ describe('XHRPr', () => {
 
             // THEN
             const timings =
-                DdRum.stopResource.mock.calls[0][4]['_dd.resource_timings'];
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.resource_timings'
+                ];
 
             if (Platform.OS === 'ios') {
                 expect(timings['firstByte']['startTime']).toBeGreaterThan(0);
@@ -600,9 +613,40 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            const attributes = DdRum.stopResource.mock.calls[0][4];
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
 
             expect(attributes['_dd.resource_timings']).toBeNull();
+        });
+
+        it('attaches the XMLHttpRequest object containing response to the event mapper', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+            });
+            DdRum.registerResourceEventMapper(event => {
+                event.context['body'] = JSON.parse(
+                    event.resourceContext?.response
+                );
+                return event;
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.abort();
+            xhr.complete(200, JSON.stringify({ body: 'content' }));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+
+            expect(attributes['body']).toEqual({
+                body: 'content'
+            });
         });
     });
 

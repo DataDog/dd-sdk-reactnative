@@ -24,4 +24,5 @@ export interface RUMResource {
         stopTime: number;
         responseStartTime?: number;
     };
+    resourceContext?: XMLHttpRequest;
 }
