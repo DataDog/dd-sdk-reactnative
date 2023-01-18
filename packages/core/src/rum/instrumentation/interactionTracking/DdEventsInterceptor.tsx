@@ -4,10 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdRum } from '../DdRum';
-import { RumActionType } from '../types';
+import { InternalLog } from '../../../InternalLog';
+import { SdkVerbosity } from '../../../SdkVerbosity';
+import { DdRum } from '../../DdRum';
+import { RumActionType } from '../../types';
 
 import type EventsInterceptor from './EventsInterceptor';
 

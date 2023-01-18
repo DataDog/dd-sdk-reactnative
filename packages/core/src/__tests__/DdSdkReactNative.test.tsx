@@ -15,7 +15,7 @@ import { DdSdk } from '../foundation';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
-import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { ErrorSource } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
@@ -25,13 +25,16 @@ import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
 
-jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
-    return {
-        DdRumUserInteractionTracking: {
-            startTracking: jest.fn().mockImplementation(() => {})
-        }
-    };
-});
+jest.mock(
+    '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',
+    () => {
+        return {
+            DdRumUserInteractionTracking: {
+                startTracking: jest.fn().mockImplementation(() => {})
+            }
+        };
+    }
+);
 
 jest.mock(
     '../rum/instrumentation/resourceTracking/DdRumResourceTracking',

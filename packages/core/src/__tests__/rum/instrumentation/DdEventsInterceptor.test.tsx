@@ -10,7 +10,7 @@ import { DdRum } from '../../../index';
 import {
     DdEventsInterceptor,
     UNKNOWN_TARGET_NAME
-} from '../../../rum/instrumentation/DdEventsInterceptor';
+} from '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor';
 import { RumActionType } from '../../../rum/types';
 
 jest.mock('../../../rum/DdRum', () => {

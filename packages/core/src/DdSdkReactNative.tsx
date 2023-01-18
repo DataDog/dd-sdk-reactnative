@@ -28,7 +28,7 @@ import { DdLogs } from './logs/DdLogs';
 import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
-import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
