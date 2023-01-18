@@ -31,6 +31,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
+                  "errorEventMapper": null,
                   "firstPartyHosts": Array [],
                   "logEventMapper": null,
                   "longTaskThresholdMs": 0,
@@ -38,6 +39,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "nativeLongTaskThresholdMs": 200,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
+                  "resourceEventMapper": null,
                   "resourceTracingSamplingRate": 20,
                   "serviceName": undefined,
                   "sessionSamplingRate": 100,
@@ -62,7 +64,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackResources: true,
                         firstPartyHosts: ['api.com'],
                         resourceTracingSamplingRate: 100,
-                        logEventMapper: log => log
+                        logEventMapper: event => event,
+                        errorEventMapper: event => event,
+                        resourceEventMapper: event => event
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -95,6 +99,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
+                  "errorEventMapper": [Function],
                   "firstPartyHosts": Array [
                     "api.com",
                   ],
@@ -110,6 +115,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "type": "https",
                     "username": undefined,
                   },
+                  "resourceEventMapper": [Function],
                   "resourceTracingSamplingRate": 100,
                   "serviceName": "com.test.app",
                   "sessionSamplingRate": 80,
@@ -158,6 +164,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "",
                   "clientToken": "",
                   "env": "",
+                  "errorEventMapper": null,
                   "firstPartyHosts": Array [],
                   "logEventMapper": null,
                   "longTaskThresholdMs": false,
@@ -165,6 +172,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "nativeLongTaskThresholdMs": false,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
+                  "resourceEventMapper": null,
                   "resourceTracingSamplingRate": 0,
                   "serviceName": "",
                   "sessionSamplingRate": 0,

@@ -26,6 +26,7 @@ import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
 import { DdLogs } from './logs/DdLogs';
 import { adaptLongTaskThreshold } from './longTasksUtils';
+import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
@@ -325,6 +326,16 @@ export class DdSdkReactNative {
 
         if (configuration.logEventMapper) {
             DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        }
+
+        if (configuration.errorEventMapper) {
+            DdRum.registerErrorEventMapper(configuration.errorEventMapper);
+        }
+
+        if (configuration.resourceEventMapper) {
+            DdRum.registerResourceEventMapper(
+                configuration.resourceEventMapper
+            );
         }
 
         DdSdkReactNative.wasAutoInstrumented = true;
