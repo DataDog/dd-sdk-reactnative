@@ -1509,7 +1509,7 @@ internal class DdSdkTest {
     // region resource mapper
 
     @Test
-    fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
+    fun `𝕄 set a resource mapper that does not drop resources 𝕎 initialize() {}`(
         @Forgery resourceEvent: ResourceEvent,
     ) {
         // Given
@@ -1531,8 +1531,31 @@ internal class DdSdkTest {
                     .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
                 val notDroppedEvent = resourceMapper.map(resourceEvent)
                 assertThat(notDroppedEvent).isNotNull
+            }
+    }
 
-                resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
+    @Test
+    fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
+        @Forgery resourceEvent: ResourceEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+        resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val resourceMapper = it
+                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
                 val droppedEvent = resourceMapper.map(resourceEvent)
                 assertThat(droppedEvent).isNull()
             }

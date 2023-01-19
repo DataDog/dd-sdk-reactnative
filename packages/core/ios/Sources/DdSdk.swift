@@ -214,9 +214,7 @@ class RNDdSdk: NSObject {
         }
 
         _ = ddConfigBuilder.setRUMResourceEventMapper({ resourceEvent in
-            if ((resourceEvent.context?.contextInfo.contains(where: { (key: String, value: Encodable) in
-                key == InternalConfigurationAttributes.dropResource
-            })) ?? false == true) {
+            if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
                 return nil
             }
             return resourceEvent

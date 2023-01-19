@@ -92,15 +92,15 @@ internal class ResourceEventForgeryFactory :
                 ResourceEvent.CiTest(anHexadecimalString())
             },
             os = ResourceEvent.Os(
-                name = "android",
-                version = "11.3",
-                versionMajor = "11"
+                name = forge.anAlphabeticalString(),
+                version = forge.aNumericalString(),
+                versionMajor = forge.aNumericalString()
             ),
             device = ResourceEvent.Device(
-                name = "deviceName",
-                model = "model",
-                brand = "brand",
-                type = ResourceEvent.DeviceType.MOBILE,
+                name = forge.anAlphabeticalString(),
+                model = forge.anAlphabeticalString(),
+                brand = forge.anAlphabeticalString(),
+                type = forge.aValueFrom(ResourceEvent.DeviceType::class.java),
             ),
             context = ResourceEvent.Context(
                 additionalProperties = mutableMapOf()
