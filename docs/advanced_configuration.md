@@ -2,6 +2,35 @@
 
 If you have not set up the SDK yet, follow the [in-app setup instructions][1] or refer to the [React Native RUM setup documentation][2].
 
+## Testing with Jest
+
+Testing apps using `'@datadog/mobile-react-native'` may require some extra steps since Native Modules are non existent in testing environments.
+
+We provide mocks for the `'@datadog/mobile-react-native'` package. To use them with [Jest][jest], add the following in your Jest setup file:
+
+```javascript
+jest.mock('@datadog/mobile-react-native', () => {
+    return require('@datadog/mobile-react-native/jest/mock');
+});
+```
+
+This disables interaction, error and resource automated tracking if you use the `DatadogProvider`.
+
+All SDK methods are mocked by `jest.fn()`, so you can assert that a Datadog SDK method was called:
+
+```javascript
+import { DdLogs } from '@datadog/mobile-react-native';
+
+describe('App', () => {
+    it('calls DdLogs.debug on mount', () => {
+        renderer.create(<App />);
+        expect(DdLogs.debug).toHaveBeenCalledWith('app started');
+    });
+});
+```
+
+If you use an other test runner than Jest, you will need to create the mocks for your test runner.
+
 ## Manual instrumentation
 
 If automatic instrumentation doesn't suit your needs, you can manually create RUM Events and Logs:
@@ -180,3 +209,4 @@ const configuration = {
 [1]: https://app.datadoghq.com/rum/application/create
 [2]: https://docs.datadoghq.com/real_user_monitoring/reactnative
 [3]: https://reactnative.dev/docs/interactionmanager#runafterinteractions
+[jest]: https://jestjs.io/
