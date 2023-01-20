@@ -213,6 +213,13 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.enableCrashReporting(using: DDCrashReportingPlugin())
         }
 
+        _ = ddConfigBuilder.setRUMResourceEventMapper({ resourceEvent in
+            if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                return nil
+            }
+            return resourceEvent
+        })
+
         return ddConfigBuilder.build()
     }
 

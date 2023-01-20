@@ -9,8 +9,9 @@ import { NativeModules } from 'react-native';
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { TimeProvider } from '../../../TimeProvider';
-import { DdRum, DdTrace } from '../../../foundation';
-import { RumActionType } from '../../../types';
+import { DdTrace } from '../../../foundation';
+import { DdRum } from '../../../rum/DdRum';
+import { RumActionType } from '../../../rum/types';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,

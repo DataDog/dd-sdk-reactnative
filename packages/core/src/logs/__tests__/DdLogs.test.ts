@@ -12,11 +12,8 @@ import type { LogEventMapper } from '../types';
 describe('DdLogs', () => {
     describe('log event mapper', () => {
         beforeEach(() => {
+            jest.clearAllMocks();
             DdLogs.unregisterLogEventMapper();
-            NativeModules.DdLogs.debug.mockClear();
-            NativeModules.DdLogs.info.mockClear();
-            NativeModules.DdLogs.warn.mockClear();
-            NativeModules.DdLogs.error.mockClear();
         });
 
         it('registers event mapper and maps logs', async () => {

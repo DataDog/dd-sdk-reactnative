@@ -45,6 +45,7 @@ export type DdLogsType = {
 export type RawLog = {
     message: string;
     context: object;
+    status: LogStatus;
 };
 
 /**

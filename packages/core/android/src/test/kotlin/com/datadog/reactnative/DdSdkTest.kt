@@ -22,6 +22,7 @@ import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
@@ -1500,6 +1501,63 @@ internal class DdSdkTest {
                     .isEqualTo(trackNetworkRequests)
                 assertThat(result.telemetry.configuration.trackNetworkRequests!!)
                     .isEqualTo(trackNetworkRequests)
+            }
+    }
+
+    // endregion
+
+    // region resource mapper
+
+    @Test
+    fun `𝕄 set a resource mapper that does not drop resources 𝕎 initialize() {}`(
+        @Forgery resourceEvent: ResourceEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val resourceMapper = it
+                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                val notDroppedEvent = resourceMapper.map(resourceEvent)
+                assertThat(notDroppedEvent).isNotNull
+            }
+    }
+
+    @Test
+    fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
+        @Forgery resourceEvent: ResourceEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+        resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val resourceMapper = it
+                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                val droppedEvent = resourceMapper.map(resourceEvent)
+                assertThat(droppedEvent).isNull()
             }
     }
 

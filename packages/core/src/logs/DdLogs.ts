@@ -1,19 +1,23 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
-import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
-import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 
-import { applyLogEventMapper, formatLogEvent } from './eventMapper';
-import type { DdLogsType, LogEventMapper, LogStatus, NativeLog } from './types';
+import { generateEventMapper } from './eventMapper';
+import type { DdLogsType, LogEventMapper } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
 class DdLogsWrapper implements DdLogsType {
     private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
-    private logEventMapper: LogEventMapper | null = null;
+    private logEventMapper = generateEventMapper(undefined);
 
     debug(message: string, context: object = {}): Promise<void> {
         return this.log(message, context, 'debug');
@@ -40,7 +44,11 @@ class DdLogsWrapper implements DdLogsType {
             `Tracking ${status} log “${message}”`,
             SdkVerbosity.DEBUG
         );
-        const event = this.applyLogEventMapper(message, context, status);
+        const event = this.logEventMapper.applyEventMapper({
+            message,
+            context,
+            status
+        });
         if (!event) {
             return generateEmptyPromise();
         }
@@ -48,31 +56,12 @@ class DdLogsWrapper implements DdLogsType {
     };
 
     registerLogEventMapper(logEventMapper: LogEventMapper) {
-        this.logEventMapper = logEventMapper;
+        this.logEventMapper = generateEventMapper(logEventMapper);
     }
 
     unregisterLogEventMapper() {
-        this.logEventMapper = null;
+        this.logEventMapper = generateEventMapper(undefined);
     }
-
-    private applyLogEventMapper = (
-        message: string,
-        context: object,
-        logStatus: LogStatus
-    ): NativeLog | null => {
-        if (!this.logEventMapper) {
-            return { message, context };
-        }
-
-        const userInfo = UserInfoSingleton.getInstance().getUserInfo();
-        const attributes = AttributesSingleton.getInstance().getAttributes();
-        const initialLogEvent = formatLogEvent(
-            { message, context },
-            { logStatus, userInfo, attributes }
-        );
-
-        return applyLogEventMapper(this.logEventMapper, initialLogEvent);
-    };
 }
 
 export const DdLogs = new DdLogsWrapper();

@@ -8,6 +8,8 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import type { LogEventMapper } from './logs/types';
+import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
+import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
@@ -29,7 +31,9 @@ const DEFAULTS = {
     trackingConsent: TrackingConsent.GRANTED,
     telemetrySampleRate: 20.0,
     vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
-    logEventMapper: null
+    logEventMapper: null,
+    errorEventMapper: null,
+    resourceEventMapper: null
 };
 
 /**
@@ -138,6 +142,12 @@ export class DdSdkReactNativeConfiguration {
 
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
+    public errorEventMapper: ErrorEventMapper | null =
+        DEFAULTS.errorEventMapper;
+
+    public resourceEventMapper: ResourceEventMapper | null =
+        DEFAULTS.resourceEventMapper;
+
     public additionalConfig: {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfig();
@@ -164,6 +174,8 @@ export type AutoInstrumentationConfiguration = {
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
     readonly logEventMapper?: LogEventMapper | null;
+    readonly errorEventMapper?: ErrorEventMapper | null;
+    readonly resourceEventMapper?: ResourceEventMapper | null;
 };
 
 /**
@@ -176,6 +188,8 @@ export type AutoInstrumentationParameters = {
     readonly resourceTracingSamplingRate: number;
     readonly trackErrors: boolean;
     readonly logEventMapper: LogEventMapper | null;
+    readonly errorEventMapper: ErrorEventMapper | null;
+    readonly resourceEventMapper: ResourceEventMapper | null;
 };
 
 /**
@@ -196,7 +210,15 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
         logEventMapper:
             features.logEventMapper === undefined
                 ? DEFAULTS.logEventMapper
-                : features.logEventMapper
+                : features.logEventMapper,
+        errorEventMapper:
+            features.errorEventMapper === undefined
+                ? DEFAULTS.errorEventMapper
+                : features.errorEventMapper,
+        resourceEventMapper:
+            features.resourceEventMapper === undefined
+                ? DEFAULTS.resourceEventMapper
+                : features.resourceEventMapper
     };
 };
 
@@ -279,6 +301,20 @@ export const buildConfigurationFromPartialConfiguration = (
         {
             name: 'logEventMapper',
             value: features.logEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'errorEventMapper',
+            value: features.errorEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'resourceEventMapper',
+            value: features.resourceEventMapper
         },
         SdkConfiguration
     );

@@ -192,6 +192,7 @@ const reportXhr = async (
             responseStartTime: context.timer.hasTickFor(RESPONSE_START_LABEL)
                 ? context.timer.timeAt(RESPONSE_START_LABEL)
                 : undefined
-        }
+        },
+        resourceContext: xhrProxy
     });
 };

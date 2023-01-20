@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../../../../foundation';
+import { DdRum } from '../../../../DdRum';
 import type { RUMResource } from '../../domain/interfaces/RumResource';
 
 import { createTimings } from './resourceTiming';
@@ -74,6 +74,7 @@ const reportResource = async (resource: RUMResource) => {
         resource.request.kind,
         resource.response.size,
         formatResourceStopContext(resource.timings),
-        resource.timings.stopTime
+        resource.timings.stopTime,
+        resource.resourceContext
     );
 };
