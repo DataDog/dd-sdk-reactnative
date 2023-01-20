@@ -150,12 +150,26 @@ class DdRumWrapper implements DdRumType {
         context: object = {},
         timestampMs: number = timeProvider.now()
     ): Promise<void> {
+        const mappedEvent = this.actionEventMapper.applyEventMapper({
+            type,
+            name,
+            context,
+            timestampMs
+        });
+        if (!mappedEvent) {
+            return generateEmptyPromise();
+        }
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() =>
-            this.nativeRum.addAction(type, name, context, timestampMs)
+            this.nativeRum.addAction(
+                mappedEvent.type,
+                mappedEvent.name,
+                mappedEvent.context,
+                mappedEvent.timestampMs
+            )
         );
     }
 
