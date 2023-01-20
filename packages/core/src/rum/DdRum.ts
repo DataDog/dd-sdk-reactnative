@@ -130,11 +130,12 @@ class DdRumWrapper implements DdRumType {
                         args[1] || timeProvider.now()
                     )
                 );
+            } else {
+                InternalLog.log(
+                    'DdRum.startAction needs to be called before DdRum.stopAction',
+                    SdkVerbosity.WARN
+                );
             }
-            InternalLog.log(
-                'DdRum.startAction needs to be called before DdRum.stopAction',
-                SdkVerbosity.WARN
-            );
         } else {
             InternalLog.log(
                 'DdRum.stopAction was called with wrong arguments',
