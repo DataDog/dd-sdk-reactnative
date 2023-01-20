@@ -53,6 +53,14 @@ const formatRawActionToNativeAction = (action: RawAction): NativeAction => {
     return action;
 };
 
-const formatActionEventToNativeAction = (action: ActionEvent): NativeAction => {
-    return action;
+const formatActionEventToNativeAction = (
+    action: ActionEvent,
+    originalEvent: ActionEvent
+): NativeAction => {
+    return {
+        ...action,
+        type: originalEvent.type,
+        name: originalEvent.name,
+        timestampMs: originalEvent.timestampMs
+    };
 };

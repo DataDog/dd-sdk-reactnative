@@ -316,4 +316,71 @@ describe('DdRum', () => {
             expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
         });
     });
+
+    describe('DdRum.stopAction', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdRum.unregisterActionEventMapper();
+            BufferSingleton.onInitialization();
+        });
+
+        it('registers event mapper and maps action', async () => {
+            const actionEventMapper: ActionEventMapper = action => {
+                action.context = { frustration: true };
+                // @ts-ignore
+                action.type = 'bad type';
+                // @ts-ignore
+                action.name = 'bad name';
+                return action;
+            };
+            DdRum.registerActionEventMapper(actionEventMapper);
+
+            await DdRum.startAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                { frustration: false },
+                234
+            );
+            await DdRum.stopAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                { frustration: false },
+                234
+            );
+            expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                'CUSTOM',
+                'Click on button',
+                { frustration: true },
+                234
+            );
+        });
+
+        it.skip('adds the drop context key to the event if the mapper returns null', async () => {
+            const actionEventMapper: ActionEventMapper = action => {
+                return null;
+            };
+
+            DdRum.registerActionEventMapper(actionEventMapper);
+
+            await DdRum.startAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                { frustration: false },
+                234
+            );
+            await DdRum.stopAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                { frustration: false },
+                234
+            );
+
+            expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                'CUSTOM',
+                'Click on button',
+                { '_dd.action.drop_action': true },
+                234
+            );
+        });
+    });
 });

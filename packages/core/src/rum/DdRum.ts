@@ -105,8 +105,26 @@ class DdRumWrapper implements DdRumType {
         context: object,
         timestampMs: number
     ): Promise<void> => {
+        const mappedEvent = this.actionEventMapper.applyEventMapper({
+            type,
+            name,
+            context,
+            timestampMs
+        });
+        if (!mappedEvent) {
+            // TODO: add field to drop action
+            return bufferVoidNativeCall(() =>
+                this.nativeRum.stopAction(type, name, context, timestampMs)
+            );
+        }
+
         return bufferVoidNativeCall(() =>
-            this.nativeRum.stopAction(type, name, context, timestampMs)
+            this.nativeRum.stopAction(
+                mappedEvent.type,
+                mappedEvent.name,
+                mappedEvent.context,
+                mappedEvent.timestampMs
+            )
         );
     };
 
