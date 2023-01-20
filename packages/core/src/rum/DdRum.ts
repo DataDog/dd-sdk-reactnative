@@ -251,7 +251,7 @@ class DdRumWrapper implements DdRumType {
              * It will be picked up by the resource mappers we implement on the native side that will drop the resource.
              * This ensures we don't have any "started" resource left in memory on the native side.
              */
-            bufferVoidNativeCall(() =>
+            return bufferVoidNativeCall(() =>
                 this.nativeRum.stopResource(
                     key,
                     statusCode,
@@ -263,7 +263,6 @@ class DdRumWrapper implements DdRumType {
                     timestampMs
                 )
             );
-            return generateEmptyPromise();
         }
 
         InternalLog.log(
