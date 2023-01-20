@@ -91,12 +91,26 @@ class DdRumWrapper implements DdRumType {
             | [context?: object, timestampMs?: number]
     ): Promise<void> {
         InternalLog.log('Stopping current RUM Action', SdkVerbosity.DEBUG);
-        const returnPromise = this.getStopActionNativeCall(args);
+        const nativeCallArgs = this.getStopActionNativeCallArgs(args);
         this.lastActionData = undefined;
-        return returnPromise;
+        if (!nativeCallArgs) {
+            return generateEmptyPromise();
+        }
+        return this.callNativeStopAction(...nativeCallArgs);
     }
 
-    private getStopActionNativeCall = (
+    private callNativeStopAction = (
+        type: RumActionType,
+        name: string,
+        context: object,
+        timestampMs: number
+    ): Promise<void> => {
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.stopAction(type, name, context, timestampMs)
+        );
+    };
+
+    private getStopActionNativeCallArgs = (
         args:
             | [
                   type: RumActionType,
@@ -105,16 +119,21 @@ class DdRumWrapper implements DdRumType {
                   timestampMs?: number
               ]
             | [context?: object, timestampMs?: number]
-    ): Promise<void> => {
+    ):
+        | [
+              type: RumActionType,
+              name: string,
+              context: object,
+              timestampMs: number
+          ]
+        | null => {
         if (isNewStopActionAPI(args)) {
-            return bufferVoidNativeCall(() =>
-                this.nativeRum.stopAction(
-                    args[0],
-                    args[1],
-                    args[2] || {},
-                    args[3] || timeProvider.now()
-                )
-            );
+            return [
+                args[0],
+                args[1],
+                args[2] || {},
+                args[3] || timeProvider.now()
+            ];
         }
         if (isOldStopActionAPI(args)) {
             if (this.lastActionData) {
@@ -122,20 +141,17 @@ class DdRumWrapper implements DdRumType {
                     'DDdRum.stopAction called with the old signature'
                 );
                 const { type, name } = this.lastActionData;
-                return bufferVoidNativeCall(() =>
-                    this.nativeRum.stopAction(
-                        type,
-                        name,
-                        args[0] || {},
-                        args[1] || timeProvider.now()
-                    )
-                );
-            } else {
-                InternalLog.log(
-                    'DdRum.startAction needs to be called before DdRum.stopAction',
-                    SdkVerbosity.WARN
-                );
+                return [
+                    type,
+                    name,
+                    args[0] || {},
+                    args[1] || timeProvider.now()
+                ];
             }
+            InternalLog.log(
+                'DdRum.startAction needs to be called before DdRum.stopAction',
+                SdkVerbosity.WARN
+            );
         } else {
             InternalLog.log(
                 'DdRum.stopAction was called with wrong arguments',
@@ -143,7 +159,7 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
-        return new Promise<void>(resolve => resolve());
+        return null;
     };
 
     addAction(
