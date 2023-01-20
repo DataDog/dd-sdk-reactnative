@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { GestureResponderEvent } from 'react-native';
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
@@ -148,13 +149,15 @@ class DdRumWrapper implements DdRumType {
         type: RumActionType,
         name: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = timeProvider.now(),
+        actionContext?: GestureResponderEvent
     ): Promise<void> {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
             type,
             name,
             context,
-            timestampMs
+            timestampMs,
+            actionContext
         });
         if (!mappedEvent) {
             return generateEmptyPromise();
