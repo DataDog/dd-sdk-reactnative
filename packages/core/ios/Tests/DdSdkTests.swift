@@ -608,6 +608,22 @@ internal class DdSdkTests: XCTestCase {
         let mappedEvent = resourceEventMapper(mockResourceEvent)
         XCTAssertNotNil(mappedEvent)
     }
+
+    func testDropsActionMarkedAsDropped() throws {
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        let actionEventMapper = try XCTUnwrap(ddConfig.rumActionEventMapper)
+
+        let mockDroppedActionEvent = RUMActionEvent.mockRandomDropped()
+        let mappedDroppedEvent = actionEventMapper(mockDroppedActionEvent)
+        XCTAssertNil(mappedDroppedEvent)
+
+        let mockActionEvent = RUMActionEvent.mockRandom()
+        let mappedEvent = actionEventMapper(mockActionEvent)
+        XCTAssertNotNil(mappedEvent)
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {

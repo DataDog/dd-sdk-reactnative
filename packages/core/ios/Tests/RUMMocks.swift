@@ -366,3 +366,109 @@ extension RUMResourceEvent: RandomMockable {
         )
     }
 }
+
+extension RUMActionEvent: RandomMockable {
+    static func mockRandomDropped() -> RUMActionEvent {
+        return RUMActionEvent(
+            dd: .init(
+                action: .init(
+                    position: nil,
+                    target: .init(
+                        height: nil,
+                        selector: nil,
+                        width: .mockRandom()
+                    )
+                ),
+                browserSdkVersion: nil,
+                session: .init(plan: .plan1)
+            ),
+            action: .init(
+                crash: .init(count: .mockRandom()),
+                error: .init(count: .mockRandom()),
+                frustration: nil,
+                id: .mockRandom(),
+                loadingTime: .mockRandom(),
+                longTask: .init(count: .mockRandom()),
+                resource: .init(count: .mockRandom()),
+                target: .init(name: .mockRandom()),
+                type: [.tap, .swipe, .scroll].randomElement()!
+            ),
+            application: .init(id: .mockRandom()),
+            ciTest: nil,
+            connectivity: .mockRandom(),
+            context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
+            date: .mockRandom(),
+            device: .mockRandom(),
+            display: nil,
+            os: .mockRandom(),
+            service: .mockRandom(),
+            session: .init(
+                hasReplay: nil,
+                id: .mockRandom(),
+                type: .user
+            ),
+            source: .ios,
+            synthetics: nil,
+            usr: .mockRandom(),
+            version: .mockRandom(),
+            view: .init(
+                id: .mockRandom(),
+                inForeground: .random(),
+                referrer: .mockRandom(),
+                url: .mockRandom()
+            )
+        )
+    }
+
+    static func mockRandom() -> RUMActionEvent {
+        return RUMActionEvent(
+            dd: .init(
+                action: .init(
+                    position: nil,
+                    target: .init(
+                        height: nil,
+                        selector: nil,
+                        width: .mockRandom()
+                    )
+                ),
+                browserSdkVersion: nil,
+                session: .init(plan: .plan1)
+            ),
+            action: .init(
+                crash: .init(count: .mockRandom()),
+                error: .init(count: .mockRandom()),
+                frustration: nil,
+                id: .mockRandom(),
+                loadingTime: .mockRandom(),
+                longTask: .init(count: .mockRandom()),
+                resource: .init(count: .mockRandom()),
+                target: .init(name: .mockRandom()),
+                type: [.tap, .swipe, .scroll].randomElement()!
+            ),
+            application: .init(id: .mockRandom()),
+            ciTest: nil,
+            connectivity: .mockRandom(),
+            context: .mockRandom(),
+            date: .mockRandom(),
+            device: .mockRandom(),
+            display: nil,
+            os: .mockRandom(),
+            service: .mockRandom(),
+            session: .init(
+                hasReplay: nil,
+                id: .mockRandom(),
+                type: .user
+            ),
+            source: .ios,
+            synthetics: nil,
+            usr: .mockRandom(),
+            version: .mockRandom(),
+            view: .init(
+                id: .mockRandom(),
+                inForeground: .random(),
+                referrer: .mockRandom(),
+                url: .mockRandom()
+            )
+        )
+    }
+}

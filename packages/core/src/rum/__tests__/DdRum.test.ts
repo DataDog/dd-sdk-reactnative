@@ -355,7 +355,7 @@ describe('DdRum', () => {
             );
         });
 
-        it.skip('adds the drop context key to the event if the mapper returns null', async () => {
+        it('adds the drop context key to the event if the mapper returns null', async () => {
             const actionEventMapper: ActionEventMapper = action => {
                 return null;
             };

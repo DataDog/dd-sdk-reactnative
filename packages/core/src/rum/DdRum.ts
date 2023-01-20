@@ -112,9 +112,15 @@ class DdRumWrapper implements DdRumType {
             timestampMs
         });
         if (!mappedEvent) {
-            // TODO: add field to drop action
             return bufferVoidNativeCall(() =>
-                this.nativeRum.stopAction(type, name, context, timestampMs)
+                this.nativeRum.stopAction(
+                    type,
+                    name,
+                    {
+                        '_dd.action.drop_action': true
+                    },
+                    timestampMs
+                )
             );
         }
 
