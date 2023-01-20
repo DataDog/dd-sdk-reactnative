@@ -4,9 +4,9 @@ If you have not set up the SDK yet, follow the [in-app setup instructions][1] or
 
 ## Testing with Jest
 
-Testing apps using `'@datadog/mobile-react-native'` may require some extra steps since Native Modules are non existent in testing environments.
+Testing apps using `'@datadog/mobile-react-native'` might require completing extra steps, since Native Modules do not exist in testing environments.
 
-We provide mocks for the `'@datadog/mobile-react-native'` package. To use them with [Jest][jest], add the following in your Jest setup file:
+Datadog provides mocks for the `'@datadog/mobile-react-native'` package. To use them with [Jest][4], add the following in your Jest setup file:
 
 ```javascript
 jest.mock('@datadog/mobile-react-native', () => {
@@ -29,7 +29,7 @@ describe('App', () => {
 });
 ```
 
-If you use an other test runner than Jest, you will need to create the mocks for your test runner.
+If you use a test runner other than Jest, you need to create the mocks for your test runner.
 
 ## Manual instrumentation
 
@@ -209,4 +209,4 @@ const configuration = {
 [1]: https://app.datadoghq.com/rum/application/create
 [2]: https://docs.datadoghq.com/real_user_monitoring/reactnative
 [3]: https://reactnative.dev/docs/interactionmanager#runafterinteractions
-[jest]: https://jestjs.io/
+[4]: https://jestjs.io/
