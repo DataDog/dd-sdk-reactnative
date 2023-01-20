@@ -13,6 +13,8 @@ import { DdSdk } from '../foundation';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 
+import type { ActionEventMapper } from './eventMappers/actionEventMapper';
+import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
 import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
@@ -33,6 +35,7 @@ class DdRumWrapper implements DdRumType {
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);
+    private actionEventMapper = generateActionEventMapper(undefined);
 
     startView(
         key: string,
@@ -282,6 +285,14 @@ class DdRumWrapper implements DdRumType {
 
     unregisterResourceEventMapper() {
         this.resourceEventMapper = generateResourceEventMapper(undefined);
+    }
+
+    registerActionEventMapper(actionEventMapper: ActionEventMapper) {
+        this.actionEventMapper = generateActionEventMapper(actionEventMapper);
+    }
+
+    unregisterActionEventMapper() {
+        this.actionEventMapper = generateActionEventMapper(undefined);
     }
 }
 

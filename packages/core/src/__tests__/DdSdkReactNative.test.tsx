@@ -17,7 +17,7 @@ import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { ErrorSource } from '../rum/types';
+import { ErrorSource, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
@@ -664,6 +664,49 @@ describe('DdSdkReactNative', () => {
                     body: 'content'
                 },
                 345
+            );
+        });
+
+        it('enables action mapping when initialize { action mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.actionEventMapper = event => {
+                event.context = {
+                    ...event.context,
+                    body: 'content'
+                };
+                return event;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdRum.addAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                {},
+                234
+            );
+
+            // THEN
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                'CUSTOM',
+                'Click on button',
+                {
+                    body: 'content'
+                },
+                234
             );
         });
 

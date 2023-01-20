@@ -338,6 +338,10 @@ export class DdSdkReactNative {
             );
         }
 
+        if (configuration.actionEventMapper) {
+            DdRum.registerActionEventMapper(configuration.actionEventMapper);
+        }
+
         DdSdkReactNative.wasAutoInstrumented = true;
     }
 }

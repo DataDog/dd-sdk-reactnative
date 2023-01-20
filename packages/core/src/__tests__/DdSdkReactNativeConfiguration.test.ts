@@ -27,6 +27,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": null,
                   "additionalConfig": Object {},
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
@@ -66,7 +67,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         resourceTracingSamplingRate: 100,
                         logEventMapper: event => event,
                         errorEventMapper: event => event,
-                        resourceEventMapper: event => event
+                        resourceEventMapper: event => event,
+                        actionEventMapper: event => event
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -93,6 +95,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": [Function],
                   "additionalConfig": Object {
                     "additionalField": "fake-value",
                   },
@@ -160,6 +163,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": null,
                   "additionalConfig": Object {},
                   "applicationId": "",
                   "clientToken": "",

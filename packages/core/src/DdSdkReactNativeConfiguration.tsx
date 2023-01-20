@@ -8,6 +8,7 @@ import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import type { LogEventMapper } from './logs/types';
+import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
 
@@ -33,7 +34,8 @@ const DEFAULTS = {
     vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
     logEventMapper: null,
     errorEventMapper: null,
-    resourceEventMapper: null
+    resourceEventMapper: null,
+    actionEventMapper: null
 };
 
 /**
@@ -148,6 +150,9 @@ export class DdSdkReactNativeConfiguration {
     public resourceEventMapper: ResourceEventMapper | null =
         DEFAULTS.resourceEventMapper;
 
+    public actionEventMapper: ActionEventMapper | null =
+        DEFAULTS.actionEventMapper;
+
     public additionalConfig: {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfig();
@@ -176,6 +181,7 @@ export type AutoInstrumentationConfiguration = {
     readonly logEventMapper?: LogEventMapper | null;
     readonly errorEventMapper?: ErrorEventMapper | null;
     readonly resourceEventMapper?: ResourceEventMapper | null;
+    readonly actionEventMapper?: ActionEventMapper | null;
 };
 
 /**
@@ -190,6 +196,7 @@ export type AutoInstrumentationParameters = {
     readonly logEventMapper: LogEventMapper | null;
     readonly errorEventMapper: ErrorEventMapper | null;
     readonly resourceEventMapper: ResourceEventMapper | null;
+    readonly actionEventMapper: ActionEventMapper | null;
 };
 
 /**
@@ -218,7 +225,11 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
         resourceEventMapper:
             features.resourceEventMapper === undefined
                 ? DEFAULTS.resourceEventMapper
-                : features.resourceEventMapper
+                : features.resourceEventMapper,
+        actionEventMapper:
+            features.actionEventMapper === undefined
+                ? DEFAULTS.actionEventMapper
+                : features.actionEventMapper
     };
 };
 
@@ -315,6 +326,13 @@ export const buildConfigurationFromPartialConfiguration = (
         {
             name: 'resourceEventMapper',
             value: features.resourceEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'actionEventMapper',
+            value: features.actionEventMapper
         },
         SdkConfiguration
     );
