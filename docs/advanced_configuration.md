@@ -14,7 +14,7 @@ jest.mock('@datadog/mobile-react-native', () => {
 });
 ```
 
-This disables interaction, error and resource automated tracking if you use the `DatadogProvider`.
+Interaction, error and resource automated tracking is disabled in your tests if you initialize the SDK with the `DatadogProvider` component.
 
 All SDK methods are mocked by `jest.fn()`, so you can assert that a Datadog SDK method was called:
 
