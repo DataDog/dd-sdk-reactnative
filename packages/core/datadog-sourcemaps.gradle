@@ -27,10 +27,10 @@ afterEvaluate {
         }
 
         // locations and names are defined in "../../node_modules/react-native/react.gradle"
-        def targetName = variant.name.capitalize()
-        def targetPath = variant.dirName
+        def targetName = variant.name.capitalize() // e.g. Release
+        def targetPath = variant.dirName // e.g. release
 
-        def reactConfig = getReactConfig(buildDir, targetName)
+        def reactConfig = getReactConfig(buildDir, targetName, targetPath)
         def reactRoot = file(reactConfig.root)
 
         def bundleTask = tasks.findByName(reactConfig.bundleTaskName)
@@ -117,12 +117,12 @@ private def getBundleFileResolver(String[] jsBundleDirs, String bundleAssetName)
 /** 
  * From RN 0.71, the following things changed in the RN gradle plugin:
  * - bundle task name changed from "bundle${targetName}JsAndAssets" to "createBundle${targetName}JsAndAssets"
- * - bundle dir changed from "$buildDir/generated/assets/react/${targetPath}" to "$buildDir/ASSETS/createBundle${targetPath}JsAndAssets"
+ * - bundle dir changed from "$buildDir/generated/assets/react/${targetPath}" to "$buildDir/ASSETS/createBundle${targetName}JsAndAssets"
  *   (and then "$buildDir/generated/assets/createBundle${targetPath}JsAndAssets" with the release of Android Gradle Plugin 7.4, see https://github.com/facebook/react-native/issues/35439)
  * - config was in "project.react" and is now in "project.extensions.react"
  * - accessing parameters values requires calling a getter 
  */
-private def getReactConfig(File buildDir, String targetName) {
+private def getReactConfig(File buildDir, String targetName, String targetPath) {
     def reactConfig = [:]
 
     if (project.extensions.findByName("react")) {
@@ -140,14 +140,14 @@ private def getReactConfig(File buildDir, String targetName) {
         // Legacy way, before RN 0.71
         def bundleAssetName = project.react.bundleAssetName ?: "index.android.bundle"
         reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
-        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetName}"] as String[], bundleAssetName)
+        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetPath}"] as String[], bundleAssetName)
         reactConfig['bundleAssetName'] = bundleAssetName
         reactConfig['root'] = project.react.root ?: "../../"
     } else {
         // We assume this cannot happen with RN >= 0.71, so we use the legacy default values
         def bundleAssetName = "index.android.bundle"
         reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
-        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetName}"] as String[], bundleAssetName)
+        reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetPath}"] as String[], bundleAssetName)
         reactConfig['bundleAssetName'] = bundleAssetName
         reactConfig['root'] = "../../"
     }
