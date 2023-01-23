@@ -76,6 +76,8 @@ package/ios/Sources/GlobalState.swift
 package/ios/Sources/JSRefreshRateListener.swift
 package/ios/Sources/QueueHolder.swift
 package/ios/Sources/RNDdSdkConfiguration.swift
+package/jest
+package/jest/mock.js
 package/lib
 package/lib/commonjs
 package/lib/commonjs/DatadogProvider
