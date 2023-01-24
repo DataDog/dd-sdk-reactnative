@@ -1,10 +1,4 @@
-/*
- * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
- * This product includes software developed at Datadog (https://www.datadoghq.com/).
- * Copyright 2016-Present Datadog, Inc.
- */
-
-package com.example.ddsdkreactnative.newarchitecture;
+package com.ddsdkreactnativeexample.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -22,12 +16,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.fabric.ComponentFactory;
 import com.facebook.react.fabric.CoreComponentsRegistry;
-import com.facebook.react.fabric.EmptyReactNativeConfig;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
+import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.example.ddsdkreactnative.BuildConfig;
-import com.example.ddsdkreactnative.newarchitecture.components.MainComponentsRegistry;
-import com.example.ddsdkreactnative.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.ddsdkreactnativeexample.BuildConfig;
+import com.ddsdkreactnativeexample.newarchitecture.components.MainComponentsRegistry;
+import com.ddsdkreactnativeexample.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +105,7 @@ public class MainApplicationReactNativeHost extends ReactNativeHost {
                 return new FabricJSIModuleProvider(
                     reactApplicationContext,
                     componentFactory,
-                    new EmptyReactNativeConfig(),
+                    ReactNativeConfig.DEFAULT_CONFIG,
                     viewManagerRegistry);
               }
             });

@@ -3,7 +3,7 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const pakCore = require('../packages/core/package.json');
 
-const root = path.resolve(__dirname, '..')
+const root = path.resolve(__dirname, '..');
 
 const modules = Object.keys({
   ...pakCore.peerDependencies,
@@ -21,9 +21,8 @@ module.exports = {
   resolver: {
     blacklistRE: exclusionList(
       modules.map(
-        (m) =>
-          new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`)
-      )
+        m => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`),
+      ),
     ),
 
     extraNodeModules: modules.reduce((acc, name) => {
