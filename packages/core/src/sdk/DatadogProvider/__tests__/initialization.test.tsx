@@ -59,15 +59,15 @@ describe('DatadogProvider', () => {
             delete receivedConfiguration.additionalConfig['_dd.sdk_version'];
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkConfiguration {
-                  "additionalConfig": Object {
-                    "_dd.first_party_hosts": Array [],
+                  "additionalConfig": {
+                    "_dd.first_party_hosts": [],
                     "_dd.native_interaction_tracking": false,
                     "_dd.native_view_tracking": false,
                     "_dd.source": "react-native",
                   },
                   "applicationId": "fakeApplicationId",
                   "clientToken": "fakeToken",
-                  "configurationForTelemetry": Object {
+                  "configurationForTelemetry": {
                     "initializationType": "SYNC",
                     "trackErrors": true,
                     "trackInteractions": true,

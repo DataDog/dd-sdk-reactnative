@@ -28,12 +28,12 @@ describe('DdSdkReactNativeConfiguration', () => {
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": null,
-                  "additionalConfig": Object {},
+                  "additionalConfig": {},
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "errorEventMapper": null,
-                  "firstPartyHosts": Array [],
+                  "firstPartyHosts": [],
                   "logEventMapper": null,
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
@@ -85,6 +85,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                             'api.com',
                             443
                         ),
+
                         serviceName: 'com.test.app',
                         version: '1.4.5',
                         versionSuffix: 'codepush-3',
@@ -98,14 +99,14 @@ describe('DdSdkReactNativeConfiguration', () => {
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": [Function],
-                  "additionalConfig": Object {
+                  "additionalConfig": {
                     "additionalField": "fake-value",
                   },
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "errorEventMapper": [Function],
-                  "firstPartyHosts": Array [
+                  "firstPartyHosts": [
                     "api.com",
                   ],
                   "logEventMapper": [Function],
@@ -168,12 +169,12 @@ describe('DdSdkReactNativeConfiguration', () => {
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": null,
-                  "additionalConfig": Object {},
+                  "additionalConfig": {},
                   "applicationId": "",
                   "clientToken": "",
                   "env": "",
                   "errorEventMapper": null,
-                  "firstPartyHosts": Array [],
+                  "firstPartyHosts": [],
                   "logEventMapper": null,
                   "longTaskThresholdMs": false,
                   "nativeCrashReportEnabled": false,
