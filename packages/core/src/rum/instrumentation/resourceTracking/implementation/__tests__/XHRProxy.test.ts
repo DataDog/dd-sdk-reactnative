@@ -39,7 +39,8 @@ function randomInt(max: number): number {
     return Math.floor(Math.random() * max);
 }
 
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 let xhrProxy;
 
 beforeEach(() => {
@@ -519,7 +520,9 @@ describe('XHRPr', () => {
             const xhr = new XMLHttpRequestMock();
             xhr.open(method, url);
             xhr.send();
+            jest.advanceTimersByTime(50);
             xhr.notifyResponseArrived();
+            jest.advanceTimersByTime(50);
             xhr.complete(200, 'ok');
             await flushPromises();
 
@@ -564,7 +567,9 @@ describe('XHRPr', () => {
             const xhr = new XMLHttpRequestMock();
             xhr.open(method, url);
             xhr.send();
+            jest.advanceTimersByTime(50);
             xhr.notifyResponseArrived();
+            jest.advanceTimersByTime(50);
             xhr.abort();
             xhr.complete(0, undefined);
             await flushPromises();

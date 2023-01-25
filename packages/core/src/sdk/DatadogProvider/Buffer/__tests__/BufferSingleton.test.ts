@@ -6,7 +6,8 @@
 
 import { BufferSingleton } from '../BufferSingleton';
 
-const flushPromises = () => new Promise<void>(setImmediate);
+const flushPromises = () =>
+    new Promise<void>(jest.requireActual('timers').setImmediate);
 
 describe('BufferSingleton', () => {
     afterEach(() => {

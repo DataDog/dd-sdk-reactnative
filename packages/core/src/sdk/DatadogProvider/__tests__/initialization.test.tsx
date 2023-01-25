@@ -34,7 +34,8 @@ jest.mock('../../../TimeProvider', () => {
 });
 const nowMock = new TimeProvider().now;
 
-const flushPromises = () => new Promise<void>(setImmediate);
+const flushPromises = () =>
+    new Promise<void>(jest.requireActual('timers').setImmediate);
 
 describe('DatadogProvider', () => {
     afterEach(() => {
