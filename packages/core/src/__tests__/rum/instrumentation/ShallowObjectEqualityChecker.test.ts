@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { areObjectShallowEqual } from '../../../rum/instrumentation/ShallowObjectEqualityChecker';
+import { areObjectShallowEqual } from '../../../rum/instrumentation/interactionTracking/ShallowObjectEqualityChecker';
 
 describe('areObjectValuesEqual', () => {
     it('returns false for different object values', () => {

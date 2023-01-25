@@ -10,7 +10,7 @@ import { NativeModules } from 'react-native';
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { TimeProvider } from '../../../TimeProvider';
-import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,

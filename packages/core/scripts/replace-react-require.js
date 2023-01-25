@@ -7,7 +7,7 @@
  */
 
 /**
- * This script replaces the inline require of 'react' in src/rum/instrumentation/getJsxRuntime.ts
+ * This script replaces the inline require of 'react' in src/rum/instrumentation/interactionTracking/getJsxRuntime.ts
  * to 'react/jsx-runtime'.
  *
  * Context:
@@ -28,7 +28,8 @@ const { readFileSync, writeFileSync } = require('fs');
 
 process.stdout.write('[datadog] postinstall replace-react-require starts\n');
 
-const GET_JSX_RUNTIME_RELATIVE_PATH = 'rum/instrumentation/getJsxRuntime';
+const GET_JSX_RUNTIME_RELATIVE_PATH =
+    'rum/instrumentation/interactionTracking/getJsxRuntime';
 
 const isJsxExportedInReactVersion = (major, minor) => {
     if (Number(major) > 16) {

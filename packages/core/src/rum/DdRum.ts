@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { GestureResponderEvent } from 'react-native';
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
@@ -13,6 +14,8 @@ import { DdSdk } from '../foundation';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 
+import type { ActionEventMapper } from './eventMappers/actionEventMapper';
+import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
 import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
@@ -33,6 +36,7 @@ class DdRumWrapper implements DdRumType {
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);
+    private actionEventMapper = generateActionEventMapper(undefined);
 
     startView(
         key: string,
@@ -87,12 +91,50 @@ class DdRumWrapper implements DdRumType {
             | [context?: object, timestampMs?: number]
     ): Promise<void> {
         InternalLog.log('Stopping current RUM Action', SdkVerbosity.DEBUG);
-        const returnPromise = this.getStopActionNativeCall(args);
+        const nativeCallArgs = this.getStopActionNativeCallArgs(args);
         this.lastActionData = undefined;
-        return returnPromise;
+        if (!nativeCallArgs) {
+            return generateEmptyPromise();
+        }
+        return this.callNativeStopAction(...nativeCallArgs);
     }
 
-    private getStopActionNativeCall = (
+    private callNativeStopAction = (
+        type: RumActionType,
+        name: string,
+        context: object,
+        timestampMs: number
+    ): Promise<void> => {
+        const mappedEvent = this.actionEventMapper.applyEventMapper({
+            type,
+            name,
+            context,
+            timestampMs
+        });
+        if (!mappedEvent) {
+            return bufferVoidNativeCall(() =>
+                this.nativeRum.stopAction(
+                    type,
+                    name,
+                    {
+                        '_dd.action.drop_action': true
+                    },
+                    timestampMs
+                )
+            );
+        }
+
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.stopAction(
+                mappedEvent.type,
+                mappedEvent.name,
+                mappedEvent.context,
+                mappedEvent.timestampMs
+            )
+        );
+    };
+
+    private getStopActionNativeCallArgs = (
         args:
             | [
                   type: RumActionType,
@@ -101,16 +143,21 @@ class DdRumWrapper implements DdRumType {
                   timestampMs?: number
               ]
             | [context?: object, timestampMs?: number]
-    ): Promise<void> => {
+    ):
+        | [
+              type: RumActionType,
+              name: string,
+              context: object,
+              timestampMs: number
+          ]
+        | null => {
         if (isNewStopActionAPI(args)) {
-            return bufferVoidNativeCall(() =>
-                this.nativeRum.stopAction(
-                    args[0],
-                    args[1],
-                    args[2] || {},
-                    args[3] || timeProvider.now()
-                )
-            );
+            return [
+                args[0],
+                args[1],
+                args[2] || {},
+                args[3] || timeProvider.now()
+            ];
         }
         if (isOldStopActionAPI(args)) {
             if (this.lastActionData) {
@@ -118,14 +165,12 @@ class DdRumWrapper implements DdRumType {
                     'DDdRum.stopAction called with the old signature'
                 );
                 const { type, name } = this.lastActionData;
-                return bufferVoidNativeCall(() =>
-                    this.nativeRum.stopAction(
-                        type,
-                        name,
-                        args[0] || {},
-                        args[1] || timeProvider.now()
-                    )
-                );
+                return [
+                    type,
+                    name,
+                    args[0] || {},
+                    args[1] || timeProvider.now()
+                ];
             }
             InternalLog.log(
                 'DdRum.startAction needs to be called before DdRum.stopAction',
@@ -138,21 +183,37 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
-        return new Promise<void>(resolve => resolve());
+        return null;
     };
 
     addAction(
         type: RumActionType,
         name: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = timeProvider.now(),
+        actionContext?: GestureResponderEvent
     ): Promise<void> {
+        const mappedEvent = this.actionEventMapper.applyEventMapper({
+            type,
+            name,
+            context,
+            timestampMs,
+            actionContext
+        });
+        if (!mappedEvent) {
+            return generateEmptyPromise();
+        }
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() =>
-            this.nativeRum.addAction(type, name, context, timestampMs)
+            this.nativeRum.addAction(
+                mappedEvent.type,
+                mappedEvent.name,
+                mappedEvent.context,
+                mappedEvent.timestampMs
+            )
         );
     }
 
@@ -196,7 +257,7 @@ class DdRumWrapper implements DdRumType {
              * It will be picked up by the resource mappers we implement on the native side that will drop the resource.
              * This ensures we don't have any "started" resource left in memory on the native side.
              */
-            bufferVoidNativeCall(() =>
+            return bufferVoidNativeCall(() =>
                 this.nativeRum.stopResource(
                     key,
                     statusCode,
@@ -208,7 +269,6 @@ class DdRumWrapper implements DdRumType {
                     timestampMs
                 )
             );
-            return generateEmptyPromise();
         }
 
         InternalLog.log(
@@ -282,6 +342,14 @@ class DdRumWrapper implements DdRumType {
 
     unregisterResourceEventMapper() {
         this.resourceEventMapper = generateResourceEventMapper(undefined);
+    }
+
+    registerActionEventMapper(actionEventMapper: ActionEventMapper) {
+        this.actionEventMapper = generateActionEventMapper(actionEventMapper);
+    }
+
+    unregisterActionEventMapper() {
+        this.actionEventMapper = generateActionEventMapper(undefined);
     }
 }
 

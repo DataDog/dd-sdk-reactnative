@@ -220,6 +220,13 @@ class RNDdSdk: NSObject {
             return resourceEvent
         })
 
+        _ = ddConfigBuilder.setRUMActionEventMapper({ actionEvent in
+            if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                return nil
+            }
+            return actionEvent
+        })
+
         return ddConfigBuilder.build()
     }
 

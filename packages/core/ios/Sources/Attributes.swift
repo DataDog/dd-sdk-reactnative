@@ -99,4 +99,9 @@ internal struct InternalConfigurationAttributes {
     /// It flags the resource as dropped by the user so it can be dropped in the resource mapper.
     /// Expects `Bool` value.
     static let dropResource = "_dd.resource.drop_resource"
+
+    /// Custom attribute of the action passed from bridge SDK.
+    /// It flags the action as dropped by the user so it can be dropped in the action mapper.
+    /// Expects `Bool` value.
+    static let dropAction = "_dd.action.drop_action"
 }
