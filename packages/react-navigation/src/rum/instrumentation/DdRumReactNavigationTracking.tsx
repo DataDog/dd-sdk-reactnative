@@ -25,7 +25,7 @@ declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null;
 export type ViewNamePredicate = (
     route: Route<string, any | undefined>,
     trackedName: string
-) => string;
+) => string | null;
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
@@ -167,7 +167,7 @@ export class DdRumReactNavigationTracking {
         const key = route.key;
 
         const predicate = DdRumReactNavigationTracking.viewNamePredicate;
-        const screenName = predicate(route, route.name) ?? route.name;
+        const screenName = predicate(route, route.name);
 
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {

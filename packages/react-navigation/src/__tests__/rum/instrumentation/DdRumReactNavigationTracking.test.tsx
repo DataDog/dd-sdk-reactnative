@@ -154,6 +154,35 @@ describe.each([
                 );
             });
 
+            it('sends a related RUM ViewEvent when switching screens { viewPredicate returns null }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                const predicate: ViewNamePredicate = function (
+                    _route: Route<string, any | undefined>,
+                    _trackedName: string
+                ) {
+                    return null;
+                };
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    predicate
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).not.toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+            });
+
             it('only registers once when startTrackingViews{ multiple times }', async () => {
                 // GIVEN
                 const navigationRef = createRef<any>();
