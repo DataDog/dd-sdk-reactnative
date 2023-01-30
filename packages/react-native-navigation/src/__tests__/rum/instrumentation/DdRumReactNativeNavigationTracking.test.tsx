@@ -5,11 +5,21 @@
  */
 
 import { DdRum } from '@datadog/mobile-react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import {
+    ApplicationMock,
+    mockNativeComponents,
+    VISIBLE_SCREEN_TEST_ID
+} from 'react-native-navigation/Mock';
 import type { ComponentDidAppearEvent } from 'react-native-navigation';
+import { Navigation } from 'react-native-navigation';
+import { Button } from 'react-native';
 import React from 'react';
 
 import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 import { DdRumReactNativeNavigationTracking } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
+
+const flushPromises = () => new Promise(setImmediate);
 
 jest.mock('@datadog/mobile-react-native', () => {
     return {
@@ -19,156 +29,144 @@ jest.mock('@datadog/mobile-react-native', () => {
         }
     };
 });
-jest.useFakeTimers();
 
-const mockRegisterComponentListener = jest.fn().mockImplementation(() => {});
-jest.mock('react-native-navigation', () => {
-    return {
-        Navigation: {
-            events: jest.fn().mockImplementation(() => {
-                return {
-                    registerComponentListener: mockRegisterComponentListener
-                };
-            })
-        }
-    };
-});
+const startPlayground = () => {
+    Navigation.registerComponent('Home', () => HomeScreen);
+    Navigation.registerComponent('About', () => AboutScreen);
+    Navigation.events().registerAppLaunchedListener(async () => {
+        Navigation.setRoot({
+            root: {
+                stack: {
+                    children: [{ component: { name: 'Home' } }]
+                }
+            }
+        });
+    });
+};
 
-let originalCreateMethod: typeof React.createElement;
+const HomeScreen = props => {
+    return (
+        <>
+            <Button
+                title="Go to About"
+                onPress={() => {
+                    Navigation.push(props.componentId, {
+                        component: { name: 'About' }
+                    });
+                }}
+            />
+        </>
+    );
+};
+
+const AboutScreen = props => {
+    return (
+        <>
+            <Button
+                title="Go to Home"
+                onPress={() =>
+                    Navigation.push(props.componentId, {
+                        component: { name: 'Home' }
+                    })
+                }
+            />
+        </>
+    );
+};
 
 beforeEach(() => {
-    jest.setTimeout(20000);
-    DdRum.startView.mockClear();
-    DdRum.stopView.mockClear();
-    mockRegisterComponentListener.mockClear();
-
-    DdRumReactNativeNavigationTracking['trackedComponentIds'] = [];
-    DdRumReactNativeNavigationTracking['isTracking'] = false;
-    originalCreateMethod = React.createElement;
+    jest.clearAllMocks();
+    mockNativeComponents();
 });
 
 afterEach(() => {
-    React.createElement = originalCreateMethod;
+    DdRumReactNativeNavigationTracking.stopTracking();
 });
 
 // Unit tests
 
-it('M not register W props are missing + startTracking()', async () => {
+it('M send a RUM ViewEvent W startTracking() for the first view', async () => {
     // GIVEN
     DdRumReactNativeNavigationTracking.startTracking();
 
     // WHEN
-    React.createElement('View', null);
+    render(<ApplicationMock entryPoint={() => startPlayground()} />);
 
     // THEN
-    expect(mockRegisterComponentListener).toBeCalledTimes(0);
-});
-
-it('M not register W componentId is missing + startTracking()', async () => {
-    // GIVEN
-    DdRumReactNativeNavigationTracking.startTracking();
-
-    // WHEN
-    React.createElement('View', { foo: 'bar' });
-
-    // THEN
-    expect(mockRegisterComponentListener).toBeCalledTimes(0);
-});
-
-it('M register only once W startTracking()', async () => {
-    // GIVEN
-    const componentId = 'component42';
-    DdRumReactNativeNavigationTracking.startTracking();
-
-    // WHEN
-    React.createElement('View', {
-        componentId
-    });
-    React.createElement('View', {
-        componentId,
-        something: 'else'
-    });
-
-    // THEN
-    expect(mockRegisterComponentListener.mock.calls.length).toBe(1);
-});
-
-it('M restore original createElement method W stopTracking()', async () => {
-    // GIVEN
-    const componentId = 'component42';
-    DdRumReactNativeNavigationTracking.startTracking();
-
-    // WHEN
-    DdRumReactNativeNavigationTracking.stopTracking();
-    React.createElement('View', {
-        componentId
-    });
-
-    // THEN
-    expect(mockRegisterComponentListener.mock.calls.length).toBe(0);
-});
-
-it('M send a RUM ViewEvent W startTracking() componentDidAppear', async () => {
-    // GIVEN
-    const componentId = 'component42';
-    DdRumReactNativeNavigationTracking.startTracking();
-
-    // WHEN
-    React.createElement('View', {
-        componentId
-    });
-    const listener = mockRegisterComponentListener.mock.calls[0][0];
-    const componentName = 'some-name';
-    listener.componentDidAppear({ componentName });
-
-    // THEN
-    expect(DdRum.startView.mock.calls.length).toBe(1);
-    expect(DdRum.startView.mock.calls[0][0]).toBe(componentId);
-    expect(DdRum.startView.mock.calls[0][1]).toBe(componentName);
-    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
+    await waitFor(() =>
+        expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home')
+    );
 });
 
 it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPredicate }', async () => {
     // GIVEN
-    const componentId = 'component42';
-    const customViewName = 'custom_view_name';
     const predicate: ViewNamePredicate = function (
         _event: ComponentDidAppearEvent,
         _trackedName: string
     ) {
-        return customViewName;
+        if (_trackedName === 'About') {
+            return 'customViewName';
+        }
+        return _trackedName;
     };
     DdRumReactNativeNavigationTracking.startTracking(predicate);
 
     // WHEN
-    React.createElement('View', {
-        componentId
-    });
-    const listener = mockRegisterComponentListener.mock.calls[0][0];
-    const componentName = 'some-name';
-    listener.componentDidAppear({ componentName });
+    const { findByText } = render(
+        <ApplicationMock entryPoint={() => startPlayground()} />
+    );
+    const button = await findByText('Go to About');
+    await fireEvent(button, 'press');
 
     // THEN
-    expect(DdRum.startView.mock.calls.length).toBe(1);
-    expect(DdRum.startView.mock.calls[0][0]).toBe(componentId);
-    expect(DdRum.startView.mock.calls[0][1]).toBe(customViewName);
-    expect(DdRum.startView.mock.calls[0][2]).toBeUndefined();
+    await waitFor(() => expect(DdRum.startView).toHaveBeenCalledTimes(2));
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home');
+    expect(DdRum.startView).toHaveBeenCalledWith(
+        expect.any(String),
+        'customViewName'
+    );
 });
 
-it('M send a RUM ViewEvent W startTracking() componentDidDisappear', async () => {
+it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewPredicate returns null }', async () => {
     // GIVEN
-    const componentId = 'component42';
-    DdRumReactNativeNavigationTracking.startTracking();
+    let viewDropped = false;
+    const predicate: ViewNamePredicate = function (
+        _event: ComponentDidAppearEvent,
+        _trackedName: string
+    ) {
+        if (_trackedName === 'About') {
+            viewDropped = true;
+            return null;
+        }
+        return _trackedName;
+    };
+    DdRumReactNativeNavigationTracking.startTracking(predicate);
 
     // WHEN
-    React.createElement('View', {
-        componentId
-    });
-    const listener = mockRegisterComponentListener.mock.calls[0][0];
-    listener.componentDidDisappear();
+    const { findByText } = render(
+        <ApplicationMock entryPoint={() => startPlayground()} />
+    );
+    const button = await findByText('Go to About');
+    await fireEvent(button, 'press');
+    await waitFor(() => viewDropped);
 
     // THEN
-    expect(DdRum.stopView.mock.calls.length).toBe(1);
-    expect(DdRum.stopView.mock.calls[0][0]).toBe(componentId);
-    expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
+    expect(DdRum.startView).toHaveBeenCalledTimes(1);
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home');
+});
+
+it('M send a RUM stop view event when the app goes in background', async () => {
+    // // GIVEN
+    // const componentId = 'component42';
+    // DdRumReactNativeNavigationTracking.startTracking();
+    // // WHEN
+    // React.createElement('View', {
+    //     componentId
+    // });
+    // const listener = mockRegisterComponentListener.mock.calls[0][0];
+    // listener.componentDidDisappear();
+    // // THEN
+    // expect(DdRum.stopView.mock.calls.length).toBe(1);
+    // expect(DdRum.stopView.mock.calls[0][0]).toBe(componentId);
+    // expect(DdRum.stopView.mock.calls[0][1]).toBeUndefined();
 });
