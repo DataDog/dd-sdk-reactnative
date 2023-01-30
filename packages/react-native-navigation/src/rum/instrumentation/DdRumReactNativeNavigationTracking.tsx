@@ -63,14 +63,14 @@ export class DdRumReactNativeNavigationTracking {
             (event: ComponentDidAppearEvent) => {
                 const predicate =
                     DdRumReactNativeNavigationTracking.viewNamePredicate;
-                const screenName =
-                    predicate(event, event.componentName) ??
-                    event.componentName;
-                DdRum.startView(event.componentId, screenName);
-                DdRumReactNativeNavigationTracking.lastView = {
-                    key: event.componentId,
-                    name: screenName
-                };
+                const screenName = predicate(event, event.componentName);
+                if (screenName !== null) {
+                    DdRum.startView(event.componentId, screenName);
+                    DdRumReactNativeNavigationTracking.lastView = {
+                        key: event.componentId,
+                        name: screenName
+                    };
+                }
             }
         );
 
