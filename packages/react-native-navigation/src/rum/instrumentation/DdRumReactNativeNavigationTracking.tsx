@@ -103,6 +103,7 @@ export class DdRumReactNativeNavigationTracking {
             );
         }
 
+        DdRumReactNativeNavigationTracking.lastView = undefined;
         DdRumReactNativeNavigationTracking.isTracking = false;
         DdRumReactNativeNavigationTracking.viewNamePredicate = function (
             _event: ComponentDidAppearEvent,
