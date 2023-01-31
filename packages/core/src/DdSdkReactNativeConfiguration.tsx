@@ -27,6 +27,7 @@ const DEFAULTS = {
     longTaskThresholdMs: 0,
     nativeLongTaskThresholdMs: 200,
     nativeViewTracking: false,
+    nativeInteractionTracking: false,
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
@@ -72,6 +73,12 @@ export class DdSdkReactNativeConfiguration {
      * Set to `true` if you use a custom navigation system relying on native views.
      */
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
+    /**
+     * Enables native interaction tracking.
+     * Set to `true` if you want to track interactions on native screens.
+     */
+    public nativeInteractionTracking: boolean =
+        DEFAULTS.nativeInteractionTracking;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
     /**
@@ -241,6 +248,7 @@ export type PartialInitializationConfiguration = {
     readonly site?: string;
     readonly verbosity?: SdkVerbosity | undefined;
     readonly nativeViewTracking?: boolean;
+    readonly nativeInteractionTracking?: boolean;
     readonly proxyConfig?: ProxyConfiguration;
     readonly serviceName?: string;
     readonly version?: string;

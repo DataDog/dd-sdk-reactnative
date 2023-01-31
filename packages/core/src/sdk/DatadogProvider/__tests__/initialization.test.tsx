@@ -61,6 +61,7 @@ describe('DatadogProvider', () => {
                 DdSdkConfiguration {
                   "additionalConfig": Object {
                     "_dd.first_party_hosts": Array [],
+                    "_dd.native_interaction_tracking": false,
                     "_dd.native_view_tracking": false,
                     "_dd.source": "react-native",
                   },
