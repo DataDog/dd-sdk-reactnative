@@ -38,10 +38,12 @@ export class DdRumReactNativeNavigationTracking {
     private static appStateSubscription?: NativeEventSubscription;
 
     private static viewNamePredicate: ViewNamePredicate;
-    private static lastView?: {
-        key: string;
-        name: string;
-    };
+    private static lastView?:
+        | {
+              key: string;
+              name: string;
+          }
+        | 'tracking_not_started' = 'tracking_not_started';
 
     /**
      * Starts tracking the Navigation and sends a RUM View event every time a root View component appear/disappear.
@@ -122,6 +124,11 @@ export class DdRumReactNativeNavigationTracking {
                 `We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`,
                 SdkVerbosity.ERROR
             );
+            return;
+        }
+
+        if (lastView === 'tracking_not_started') {
+            // Do nothing as no view has been tracked already
             return;
         }
 
