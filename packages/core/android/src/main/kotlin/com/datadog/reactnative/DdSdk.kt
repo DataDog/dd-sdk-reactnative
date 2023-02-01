@@ -167,7 +167,7 @@ class DdSdk(
         } ?: DEFAULT_APP_VERSION
     }
 
-    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
+    @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
         val additionalConfig = configuration.additionalConfig?.toMutableMap()
 
