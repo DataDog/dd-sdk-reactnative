@@ -6552,12 +6552,17 @@ hermes-profile-transformer@^0.0.6:
   dependencies:
     source-map "^0.7.3"
 
-hoist-non-react-statics@3.x.x, hoist-non-react-statics@^3.3.0, hoist-non-react-statics@^3.3.2:
+hoist-non-react-statics@3.x.x, hoist-non-react-statics@^3.0.0, hoist-non-react-statics@^3.3.0, hoist-non-react-statics@^3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
   integrity sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==
   dependencies:
     react-is "^16.7.0"
+
+hoist-non-react-statics@^2.5.5:
+  version "2.5.5"
+  resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
+  integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
 
 hosted-git-info@^2.1.4:
   version "2.8.9"
@@ -8145,10 +8150,20 @@ lodash.debounce@^4.0.8:
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha1-gteb/zCmfEAF/9XiUVMArZyk168=
 
+lodash.isfunction@^3.0.9:
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/lodash.isfunction/-/lodash.isfunction-3.0.9.tgz#06de25df4db327ac931981d1bdb067e5af68d051"
+  integrity sha512-AirXNj15uRIMMPihnkInB4i3NHeb4iBtNg9WRWuK2o31S+ePwwNmDPaTL3o7dTJ+VXNZim7rFs4rxN4YU1oUJw==
+
 lodash.ismatch@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/lodash.ismatch/-/lodash.ismatch-4.4.0.tgz#756cb5150ca3ba6f11085a78849645f188f85f37"
   integrity sha1-dWy1FQyjum8RCFp4hJZF8Yj4Xzc=
+
+lodash.isobjectlike@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/lodash.isobjectlike/-/lodash.isobjectlike-4.0.0.tgz#742c5fc65add27924d3d24191681aa9a17b2b60d"
+  integrity sha512-bbRt0Dief0yqjkTgpvzisSxnsmY3ZgVJvokHL30UE+ytsvnpNfiNaCJL4XBEWek8koQmrwZidBHb7coXC5vXlA==
 
 lodash.kebabcase@^4.1.1:
   version "4.1.1"
@@ -8884,6 +8899,19 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+mobx-react@^5.2.3:
+  version "5.4.4"
+  resolved "https://registry.yarnpkg.com/mobx-react/-/mobx-react-5.4.4.tgz#b3de9c6eabcd0ed8a40036888cb0221ab9568b80"
+  integrity sha512-2mTzpyEjVB/RGk2i6KbcmP4HWcAUFox5ZRCrGvSyz49w20I4C4qql63grPpYrS9E9GKwgydBHQlA4y665LuRCQ==
+  dependencies:
+    hoist-non-react-statics "^3.0.0"
+    react-lifecycles-compat "^3.0.2"
+
+"mobx@4.0.0 - 4.3.1":
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/mobx/-/mobx-4.3.1.tgz#334e5aab4916b1d43f0faf3605a64b1b4b3ccb8d"
+  integrity sha512-v0AmLALk7hyKU6PIJyiQ0/JUfUKmeHBrKApXdV214KpYxiZxRaRn81Ucb+cL8LvaBldL0dQVOOskbdZlWxh7dQ==
 
 modify-values@^1.0.0:
   version "1.0.1"
@@ -10134,6 +10162,11 @@ react-lifecycles-compat@2.0.0:
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-2.0.0.tgz#71d9c4cde47114c4102454f76da055c2bc48c948"
   integrity sha512-txfpPCQYiazVdcbMRhatqWKcAxJweUu2wDXvts5/7Wyp6+Y9cHojqXHsLPEckzutfHlxZhG8Oiundbmp8Fd6eQ==
 
+react-lifecycles-compat@^3.0.2:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
+  integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
+
 react-native-builder-bob@0.17.1:
   version "0.17.1"
   resolved "https://registry.yarnpkg.com/react-native-builder-bob/-/react-native-builder-bob-0.17.1.tgz#4bb12f721acf9417d62065232d42e0201b673315"
@@ -10208,10 +10241,10 @@ react-native-iphone-x-helper@^1.3.0:
   resolved "https://registry.yarnpkg.com/react-native-iphone-x-helper/-/react-native-iphone-x-helper-1.3.1.tgz#20c603e9a0e765fd6f97396638bdeb0e5a60b010"
   integrity sha512-HOf0jzRnq2/aFUcdCJ9w9JGzN3gdEg0zFE4FyYlp4jtidqU03D5X7ZegGKfT1EWteR0gPBGp9ye5T5FvSWi9Yg==
 
-react-native-navigation@7.13.0:
-  version "7.13.0"
-  resolved "https://registry.yarnpkg.com/react-native-navigation/-/react-native-navigation-7.13.0.tgz#3d3d97be1825034effab2a1deb5402a1fe1ba33e"
-  integrity sha512-/mdNuTlz9YVplJRB7Rv3g5cDgHCtw4RyG6ATdvrIJvMJOCU57ivCHuZkZDI/YQv7Txm48XD/EUkNahFFUATFZg==
+react-native-navigation@7.31.1:
+  version "7.31.1"
+  resolved "https://registry.yarnpkg.com/react-native-navigation/-/react-native-navigation-7.31.1.tgz#915f1bd3af083137a904feea6207984d7f8d5b70"
+  integrity sha512-thChSqaoi/QHGGofG/4CEyO2v6ko41RsbjQrJzAnHkp7iw1K8pjxkW3KX0qx2rlR/A69kA31VskOLj8kl+7sQw==
   dependencies:
     hoist-non-react-statics "3.x.x"
     lodash "4.17.x"
@@ -10538,6 +10571,18 @@ remove-trailing-separator@^1.0.1:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/remove-trailing-separator/-/remove-trailing-separator-1.1.0.tgz#c24bce2a283adad5bc3f58e0d48249b92379d8ef"
   integrity sha1-wkvOKig62tW8P1jg1IJJuSN52O8=
+
+remx@3.x.x:
+  version "3.0.611"
+  resolved "https://registry.yarnpkg.com/remx/-/remx-3.0.611.tgz#51e84c75601ec6e7aff7e24b3210fb787803bc05"
+  integrity sha512-CIVaNrwIkKRpmYFnA/OOI49T8OBN6NIHUOzefK3G3VEb4mvu3EblMqeBUbnAuY17KahYEE8xtsBR5pxcWBps6Q==
+  dependencies:
+    hoist-non-react-statics "^2.5.5"
+    lodash.isfunction "^3.0.9"
+    lodash.isobjectlike "^4.0.0"
+    mobx "4.0.0 - 4.3.1"
+    mobx-react "^5.2.3"
+    snyk "^1.192.3"
 
 repeat-element@^1.1.2:
   version "1.1.4"
@@ -11028,6 +11073,11 @@ snapdragon@^0.8.1:
     source-map "^0.5.6"
     source-map-resolve "^0.5.0"
     use "^3.1.0"
+
+snyk@^1.192.3:
+  version "1.1092.0"
+  resolved "https://registry.yarnpkg.com/snyk/-/snyk-1.1092.0.tgz#a291d485d40b9d846aa210dbbf79e550fe59ba8e"
+  integrity sha512-UwkCAkqFmGXdHmlygPqgLoGyn2FXPhIMN/htk9QmzqPUSlVz2z6aZDbKrCoWdVs6OHsCTm9mccdnEGxc3OSNMA==
 
 socks-proxy-agent@5, socks-proxy-agent@^5.0.0:
   version "5.0.1"

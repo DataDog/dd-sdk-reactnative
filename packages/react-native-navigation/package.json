@@ -37,8 +37,10 @@
   },
   "devDependencies": {
     "@datadog/mobile-react-native": "^1.2.0",
+    "@testing-library/react-native": "7.0.2",
     "react-native-gesture-handler": "1.10.3",
-    "react-native-navigation": "7.13.0"
+    "react-native-navigation": "7.31.1",
+    "remx": "3.x.x"
   },
   "peerDependencies": {
     "@datadog/mobile-react-native": "^1.0.0-beta4",
