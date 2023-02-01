@@ -177,10 +177,7 @@ describe.each([
                 fireEvent(goToAboutButton, 'press');
 
                 // THEN
-                expect(DdRum.startView).not.toHaveBeenCalledWith(
-                    expect.any(String),
-                    'About'
-                );
+                expect(DdRum.startView).not.toHaveBeenCalled();
             });
 
             it('only registers once when startTrackingViews{ multiple times }', async () => {
