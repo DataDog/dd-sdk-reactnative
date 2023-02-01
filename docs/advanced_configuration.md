@@ -97,6 +97,67 @@ const spanId = await DdTrace.startSpan('foo', { custom: 42 }, Date.now());
 DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 ```
 
+## Modify or drop RUM events
+
+To modify attributes of a RUM event before it is sent to Datadog or to drop an event entirely, use the Event Mappers API when configuring the RUM React Native SDK:
+
+```javascript
+const config = new DdSdkReactNativeConfiguration(
+    '<CLIENT_TOKEN>',
+    '<ENVIRONMENT_NAME>',
+    '<RUM_APPLICATION_ID>',
+    true, // track user interactions (such as a tap on buttons)
+    true, // track XHR resources
+    true // track errors
+);
+config.logEventMapper = event => event;
+config.errorEventMapper = event => event;
+config.resourceEventMapper = event => event;
+config.actionEventMapper = event => event;
+```
+
+Each mapper is a function with a signature of `(T) -> T?`, where `T` is a concrete RUM event type. This allows changing portions of the event before it is sent, or dropping the event entirely.
+
+For example, to redact sensitive information in a RUM Error's `message`, implement a custom `redacted` function and use it in `errorEventMapper`:
+
+```javascript
+config.errorEventMapper = event => {
+    event.message = redacted(event.message);
+    return event;
+};
+```
+
+Returning `null` from the error, resource, or action mapper drops the event entirely; the event is not sent to Datadog.
+
+Depending on the event’s type, only some specific properties can be modified:
+
+| Event Type    | Attribute key            | Description                        |
+| ------------- | ------------------------ | ---------------------------------- |
+| LogEvent      | `logEvent.message`       | Message of the log.                |
+|               | `logEvent.context`       | Custom attributes of the log.      |
+| ActionEvent   | `actionEvent.context`    | Custom attributes of the action.   |
+| ErrorEvent    | `errorEvent.message`     | Error message.                     |
+|               | `errorEvent.source`      | Source of the error.               |
+|               | `errorEvent.stacktrace`  | Stacktrace of the error.           |
+|               | `errorEvent.context`     | Custom attributes of the error.    |
+|               | `errorEvent.timestampMs` | Timestamp of the error.            |
+| ResourceEvent | `resourceEvent.context`  | Custom attributes of the resource. |
+
+Events include additional context:
+
+| Event Type    | Context attribute key                            | Description                                                             |
+| ------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| LogEvent      | `logEvent.additionalInformation.userInfo`        | Contains the global user info set by `DdSdkReactNative.setUser`.        |
+|               | `logEvent.additionalInformation.attributes`      | Contains the global attributes set by `DdSdkReactNative.setAttributes`. |
+| ActionEvent   | `actionEvent.actionContext`                      | [GestureResponderEvent][5] corresponding to the action or `undefined`.  |
+|               | `actionEvent.additionalInformation.userInfo`     | Contains the global user info set by `DdSdkReactNative.setUser`.        |
+|               | `actionEvent.additionalInformation.attributes`   | Contains the global attributes set by `DdSdkReactNative.setAttributes`. |
+| ErrorEvent    | `errorEvent.additionalInformation.userInfo`      | Contains the global user info set by `DdSdkReactNative.setUser`.        |
+|               | `errorEvent.additionalInformation.attributes`    | Contains the global attributes set by `DdSdkReactNative.setAttributes`. |
+| ResourceEvent | `resourceEvent.resourceContext`                  | [XMLHttpRequest][6] corresponding to the resource or `undefined`.       |
+|               | `resourceEvent.additionalInformation.userInfo`   | Contains the global user info set by `DdSdkReactNative.setUser`.        |
+|               | `resourceEvent.additionalInformation.attributes` | Contains the global attributes set by `DdSdkReactNative.setAttributes`. |
+
 ## Resource timings
 
 Resource tracking provides the following timings:
@@ -210,3 +271,5 @@ const configuration = {
 [2]: https://docs.datadoghq.com/real_user_monitoring/reactnative
 [3]: https://reactnative.dev/docs/interactionmanager#runafterinteractions
 [4]: https://jestjs.io/
+[5]: https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react-native/v0.70/index.d.ts#L548
+[6]: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
