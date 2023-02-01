@@ -1039,7 +1039,6 @@ internal class DdSdkTest {
             }
     }
 
-    // TODO: Fix the next 2 tests to match with interactionTracking
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {no user action tracking}`(
         @Forgery configuration: DdSdkConfiguration
@@ -1068,7 +1067,10 @@ internal class DdSdkTest {
         }
         assertThat(configCaptor.firstValue)
             .hasField("rumConfig") {
-                it.hasFieldClassEqualTo("userActionTrackingStrategy", "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy")
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy"
+                )
             }
     }
 
@@ -1100,7 +1102,47 @@ internal class DdSdkTest {
         }
         assertThat(configCaptor.firstValue)
             .hasField("rumConfig") {
-                it.hasFieldClassEqualTo("userActionTrackingStrategy", "com.datadog.android.rum.internal.instrumentation.UserActionTrackingStrategyLegacy")
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {invalid user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to null
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
             }
     }
     @Test

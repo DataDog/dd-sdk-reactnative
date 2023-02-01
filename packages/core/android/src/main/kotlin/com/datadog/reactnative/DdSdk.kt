@@ -212,8 +212,10 @@ class DdSdk(
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
-        
-        val interactionTracking = configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
+
+        val interactionTracking = configuration.additionalConfig?.get(
+            DD_NATIVE_INTERACTION_TRACKING
+        ) as? Boolean
         if (interactionTracking == false) {
             configBuilder.disableInteractionTracking()
         }
