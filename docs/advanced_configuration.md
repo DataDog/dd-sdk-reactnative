@@ -99,7 +99,7 @@ DdTrace.finishSpan(spanId, { custom: 21 }, Date.now());
 
 ## Modify or drop RUM events
 
-To modify attributes of a RUM event before it is sent to Datadog or to drop an event entirely, use the Event Mappers API when configuring the RUM React Native SDK:
+To modify attributes of a RUM event before it is sent to Datadog, or to drop an event entirely, use the Event Mappers API when configuring the RUM React Native SDK:
 
 ```javascript
 const config = new DdSdkReactNativeConfiguration(
@@ -118,7 +118,7 @@ config.actionEventMapper = event => event;
 
 Each mapper is a function with a signature of `(T) -> T?`, where `T` is a concrete RUM event type. This allows changing portions of the event before it is sent, or dropping the event entirely.
 
-For example, to redact sensitive information in a RUM Error's `message`, implement a custom `redacted` function and use it in `errorEventMapper`:
+For example, to redact sensitive information from a RUM error `message`, implement a custom `redacted` function and use it in `errorEventMapper`:
 
 ```javascript
 config.errorEventMapper = event => {
@@ -129,7 +129,7 @@ config.errorEventMapper = event => {
 
 Returning `null` from the error, resource, or action mapper drops the event entirely; the event is not sent to Datadog.
 
-Depending on the event’s type, only some specific properties can be modified:
+Depending on the event type, only some specific properties can be modified:
 
 | Event Type    | Attribute key            | Description                        |
 | ------------- | ------------------------ | ---------------------------------- |
