@@ -49,6 +49,12 @@ class GenericAssert(actual: Any) :
         return this
     }
 
+    fun hasFieldWithClass(name: String, expectedClassName: String): GenericAssert {
+        val field: Any? = actual.getFieldValue(name)
+        assertThat(field?.javaClass?.name).isEqualTo(expectedClassName)
+        return this
+    }
+
     fun isInstanceOf(expectedClassName: String): GenericAssert {
         val className = actual.javaClass.canonicalName!!
         assertThat(className).isEqualTo(expectedClassName)

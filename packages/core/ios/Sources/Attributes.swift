@@ -77,6 +77,10 @@ internal struct InternalConfigurationAttributes {
     /// Expects `Bool?` value
     static let nativeViewTracking = "_dd.native_view_tracking"
     
+    /// Enables native interaction tracking.
+    /// Expects `Bool?` value
+    static let nativeInteractionTracking = "_dd.native_interaction_tracking"
+
     /// Enable overriding the service name.
     /// Expects `String?` value
     static let serviceName = "_dd.service_name"

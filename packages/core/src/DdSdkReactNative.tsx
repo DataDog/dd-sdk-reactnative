@@ -48,6 +48,8 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERBOSITY_KEY = '_dd.sdk_verbosity';
     private static readonly DD_NATIVE_VIEW_TRACKING_KEY =
         '_dd.native_view_tracking';
+    private static readonly DD_NATIVE_INTERACTION_TRACKING_KEY =
+        '_dd.native_interaction_tracking';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
 
@@ -242,6 +244,10 @@ export class DdSdkReactNative {
         configuration.additionalConfig[
             DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
         ] = configuration.nativeViewTracking;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_INTERACTION_TRACKING_KEY
+        ] = configuration.nativeInteractionTracking;
+
         if (configuration.verbosity) {
             configuration.additionalConfig[
                 DdSdkReactNative.DD_SDK_VERBOSITY_KEY

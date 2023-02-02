@@ -167,7 +167,7 @@ class DdSdk(
         } ?: DEFAULT_APP_VERSION
     }
 
-    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
+    @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
         val additionalConfig = configuration.additionalConfig?.toMutableMap()
 
@@ -211,6 +211,13 @@ class DdSdk(
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
+        }
+
+        val interactionTracking = configuration.additionalConfig?.get(
+            DD_NATIVE_INTERACTION_TRACKING
+        ) as? Boolean
+        if (interactionTracking == false) {
+            configBuilder.disableInteractionTracking()
         }
 
         val firstPartyHosts =
@@ -419,6 +426,7 @@ class DdSdk(
     companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
+        internal const val DD_NATIVE_INTERACTION_TRACKING = "_dd.native_interaction_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"

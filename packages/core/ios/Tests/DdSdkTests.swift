@@ -36,7 +36,7 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
 
-    func testBuildConfigurationNoUIKitByDefault() {
+    func testBuildConfigurationNoUIKitViewsByDefault() {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
@@ -44,7 +44,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertNil(ddConfig.rumUIKitViewsPredicate)
     }
 
-    func testBuildConfigurationUIKitTrackingDisabled() {
+    func testBuildConfigurationUIKitViewsTrackingDisabled() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_view_tracking": false])
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
@@ -52,12 +52,36 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertNil(ddConfig.rumUIKitViewsPredicate)
     }
 
-    func testBuildConfigurationUIKitTrackingEnabled() {
+    func testBuildConfigurationUIKitViewsTrackingEnabled() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_view_tracking": true])
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
 
         XCTAssertNotNil(ddConfig.rumUIKitViewsPredicate)
+    }
+    
+    func testBuildConfigurationNoUIKitUserActionsByDefault() {
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertNil(ddConfig.rumUIKitUserActionsPredicate)
+    }
+
+    func testBuildConfigurationUIKitUserActionsTrackingDisabled() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_interaction_tracking": false])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertNil(ddConfig.rumUIKitUserActionsPredicate)
+    }
+
+    func testBuildConfigurationUIKitUserActionsTrackingEnabled() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_interaction_tracking": true])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertNotNil(ddConfig.rumUIKitUserActionsPredicate)
     }
 
     func testSDKInitializationWithVerbosityDebug() {

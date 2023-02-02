@@ -197,6 +197,10 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.trackUIKitRUMViews()
         }
 
+        if let enableInteractionTracking = additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
+            _ = ddConfigBuilder.trackUIKitRUMActions()
+        }
+
         if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
         }

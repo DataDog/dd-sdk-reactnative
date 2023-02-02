@@ -1040,6 +1040,112 @@ internal class DdSdkTest {
     }
 
     @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {no user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to false
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {with user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to true
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {invalid user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to null
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
+            }
+    }
+    @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {sdk verbosity}`(
         @Forgery configuration: DdSdkConfiguration,
         @IntForgery(Log.DEBUG, Log.ASSERT) verbosity: Int
