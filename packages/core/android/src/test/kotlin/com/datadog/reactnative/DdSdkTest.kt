@@ -26,6 +26,7 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
+import com.datadog.android.tracing.TracingHeaderType
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.getStaticValue
@@ -178,7 +179,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -228,7 +229,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -276,7 +277,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -328,7 +329,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -380,7 +381,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -432,7 +433,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -475,7 +476,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -528,7 +529,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -585,7 +586,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -642,7 +643,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -699,7 +700,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -756,7 +757,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -813,7 +814,7 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHosts", emptyList<String>())
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
@@ -1309,7 +1310,12 @@ internal class DdSdkTest {
         )
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo("firstPartyHosts", firstPartyHosts)
+                coreConfig.hasFieldEqualTo(
+                    "firstPartyHostsWithHeaderTypes",
+                    firstPartyHosts.associateWith {
+                        setOf(TracingHeaderType.DATADOG)
+                    }
+                )
             }
     }
 
