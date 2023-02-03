@@ -14,7 +14,8 @@ import { ResourceMockFactory } from './__utils__/ResourceMockFactory';
 
 const resourceMockFactory = new ResourceMockFactory();
 const DdRum = NativeModules.DdRum;
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 
 beforeEach(() => {
     DdRum.startResource.mockClear();

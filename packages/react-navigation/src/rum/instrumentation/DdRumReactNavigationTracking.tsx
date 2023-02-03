@@ -145,6 +145,8 @@ export class DdRumReactNavigationTracking {
         if (this.appStateSubscription) {
             this.appStateSubscription.remove();
         } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             AppState.removeEventListener(
                 'change',
                 DdRumReactNavigationTracking.appStateListener

@@ -25,6 +25,46 @@ apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: "io.gitlab.arturbosch.detekt"
 
+def resolveReactNativeDirectory() {
+  def reactNativeLocation = rootProject.hasProperty("reactNativeDir") ? rootProject.getProperty("reactNativeDir") : null
+
+  if (reactNativeLocation != null) {
+    return file(reactNativeLocation)
+  }
+
+  try {
+    // Resolve React Native location with Node
+    // This will make sure that we get installation location correctly in monorepos
+    def reactNativePackageJsonPathStdout = new ByteArrayOutputStream()
+
+    exec {
+      commandLine("node", "-p", "require.resolve('react-native/package.json')")
+      ignoreExitValue true
+      standardOutput = reactNativePackageJsonPathStdout
+    }
+
+    def reactNativeFromProjectNodeModules = file(reactNativePackageJsonPathStdout.toString().trim()).getParentFile();
+
+    if (reactNativeFromProjectNodeModules.exists()) {
+      return reactNativeFromProjectNodeModules
+    }
+  } catch (e) {
+    // Ignore
+  }
+
+  throw new Exception(
+    "${project.name}: Failed to resolve 'react-native' in the project. " +
+    "Altenatively, you can specify 'reactNativeDir' with the path to 'react-native' in your 'gradle.properties' file."
+  )
+}
+
+def reactNativeRootDir = resolveReactNativeDirectory()
+def reactProperties = new Properties()
+file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+
+def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+def (reactNativeMajorVersion, reactNativeMinorVersion) = reactNativeVersion.split("\\.").collect { it.isInteger() ? it.toInteger() : it }
+
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['DdSdkReactNative_' + name]
 }
@@ -78,77 +118,31 @@ repositories {
   maven { url "https://jitpack.io" }
   mavenLocal()
 
-  def found = false
-  def defaultDir = null
-  def androidSourcesName = 'React Native sources'
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
+    def androidSourcesDir = file("$reactNativeRootDir/android")
+    def androidSourcesName = "React Native sources"
 
-  if (rootProject.ext.has('reactNativeAndroidRoot')) {
-    defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
-  } else {
-    defaultDir = new File(
-            projectDir,
-            '/../../../node_modules/react-native/android'
-    )
-  }
-
-  if (defaultDir.exists()) {
-    maven {
-      url defaultDir.toString()
-      name androidSourcesName
-    }
-
-    logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
-    found = true
-  } else {
-    def parentDir = rootProject.projectDir
-
-    1.upto(5, {
-      if (found) return true
-      parentDir = parentDir.parentFile
-
-      def androidSourcesDir = new File(
-              parentDir,
-              'node_modules/react-native'
-      )
-
-      def androidPrebuiltBinaryDir = new File(
-              parentDir,
-              'node_modules/react-native/android'
-      )
-
-      if (androidPrebuiltBinaryDir.exists()) {
-        maven {
-          url androidPrebuiltBinaryDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
-        found = true
-      } else if (androidSourcesDir.exists()) {
-        maven {
-          url androidSourcesDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
-        found = true
+    if (androidSourcesDir.exists()) {
+      maven {
+        url androidSourcesDir.toString()
+        name androidSourcesName
       }
-    })
-  }
-
-  if (!found) {
-    throw new GradleException(
-            "${project.name}: unable to locate React Native android sources. " +
-                    "Ensure you have you installed React Native as a dependency in your project and try again."
-    )
+    }
   }
 }
 
 def kotlin_version = getExtOrDefault('kotlinVersion')
 
 dependencies {
-  // noinspection GradleDynamicVersion
-  api 'com.facebook.react:react-native:+'
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
+    // noinspection GradleDynamicVersion
+    api 'com.facebook.react:react-native:+'
+  } else {
+    // We specify the $reactNativeVersion, like it's done on the react-native-gradle-plugin, as the plugin is not applied in tests.
+    // There is no impact for apps as we apply the same logic:
+    // https://github.com/facebook/react-native/blob/e1a1e6aa8030bf11d691c3dcf7abd13b25175027/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/utils/DependencyUtils.kt
+    api "com.facebook.react:react-android:$reactNativeVersion"
+  }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   

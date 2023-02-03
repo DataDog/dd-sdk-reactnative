@@ -26,6 +26,7 @@ export class DdRumUserInteractionTracking {
     private static eventsInterceptor: EventsInterceptor = new NoOpEventsInterceptor();
     private static originalCreateElement = React.createElement;
     private static originalMemo = React.memo;
+    private static originalJsx = null;
 
     private static patchCreateElementFunction = (
         originalFunction: typeof React.createElement,
@@ -78,6 +79,7 @@ export class DdRumUserInteractionTracking {
         try {
             const jsxRuntime = getJsxRuntime();
             const originaljsx = jsxRuntime.jsx;
+            this.originalJsx = originaljsx;
             jsxRuntime.jsx = (
                 ...args: Parameters<typeof React.createElement>
             ): ReturnType<typeof React.createElement> => {
@@ -88,6 +90,7 @@ export class DdRumUserInteractionTracking {
         }
 
         const originalMemo = React.memo;
+
         React.memo = (
             component: any,
             propsAreEqual?: (prevProps: any, newProps: any) => boolean
@@ -129,5 +132,10 @@ export class DdRumUserInteractionTracking {
         React.createElement = this.originalCreateElement;
         React.memo = this.originalMemo;
         DdRumUserInteractionTracking.isTracking = false;
+        if (this.originalJsx) {
+            const jsxRuntime = getJsxRuntime();
+            jsxRuntime.jsx = this.originalJsx;
+            this.originalJsx = null;
+        }
     }
 }

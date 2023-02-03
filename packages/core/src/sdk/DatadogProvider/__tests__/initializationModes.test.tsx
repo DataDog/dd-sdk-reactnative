@@ -11,6 +11,7 @@ import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { TimeProvider } from '../../../TimeProvider';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
+import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -34,7 +35,8 @@ jest.mock('../../../TimeProvider', () => {
 });
 const nowMock = new TimeProvider().now;
 
-const flushPromises = () => new Promise<void>(setImmediate);
+const flushPromises = () =>
+    new Promise<void>(jest.requireActual('timers').setImmediate);
 
 describe('DatadogProvider', () => {
     beforeEach(() => {
@@ -45,6 +47,7 @@ describe('DatadogProvider', () => {
         BufferSingleton.reset();
         DdRumUserInteractionTracking.stopTracking();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
+        global.XMLHttpRequest = XMLHttpRequestMock;
     });
 
     describe('initializationMode SYNC', () => {
@@ -106,6 +109,7 @@ describe('DatadogProvider', () => {
         });
 
         it('starts auto-instrumentation after animations are done (with InteractionManager)', async () => {
+            jest.useRealTimers();
             const configuration = getDefaultConfiguration();
             configuration.initializationMode = InitializationMode.ASYNC;
 
