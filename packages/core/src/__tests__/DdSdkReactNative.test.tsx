@@ -6,7 +6,10 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
+import {
+    DdSdkReactNativeConfiguration,
+    PropagatorType
+} from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -488,7 +491,13 @@ describe('DdSdkReactNative', () => {
                 true
             );
             configuration.resourceTracingSamplingRate = 42;
-            configuration.firstPartyHosts = ['api.example.com'];
+            configuration.firstPartyHosts = [
+                'api.example.com',
+                {
+                    match: 'something.fr',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ];
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -507,14 +516,20 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': ['api.example.com']
+                '_dd.first_party_hosts': [
+                    { match: 'api.example.com', propagatorTypes: ['datadog'] },
+                    { match: 'something.fr', propagatorTypes: ['datadog'] }
+                ]
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
                 1
             );
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
                 tracingSamplingRate: 42,
-                firstPartyHosts: ['api.example.com']
+                firstPartyHosts: [
+                    { match: 'api.example.com', propagatorTypes: ['datadog'] },
+                    { match: 'something.fr', propagatorTypes: ['datadog'] }
+                ]
             });
         });
 

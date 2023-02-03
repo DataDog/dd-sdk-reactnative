@@ -24,10 +24,12 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
+import com.datadog.android.tracing.TracingHeaderType
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -220,10 +222,14 @@ class DdSdk(
             configBuilder.disableInteractionTracking()
         }
 
+        @Suppress("UNCHECKED_CAST")
         val firstPartyHosts =
-            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? List<String>)
+            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
+                ?.toArrayList() as? List<ReadableMap>
         if (firstPartyHosts != null) {
-            configBuilder.setFirstPartyHosts(firstPartyHosts)
+            val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
+
+            configBuilder.setFirstPartyHostsWithHeaderType(firstPartyHostsWithHeaderTypes)
         }
 
         buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
@@ -279,6 +285,34 @@ class DdSdk(
         )
 
         return configBuilder.build()
+    }
+
+    private fun buildFirstPartyHosts(
+        firstPartyHosts: List<ReadableMap>
+    ): Map<String, Set<TracingHeaderType>> {
+        /**
+         * Adapts the data format from the React Native SDK configuration to match with the
+         * Android SDK configuration. For example:
+         *
+         * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }]
+         * Android config: { "example.com": [DATADOG, B3] }
+         */
+        val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
+
+        firstPartyHosts.forEach {
+            val match = it.getString("match")
+            val propagatorTypes = it.getArray("propagatorTypes")?.asTracingHeaderTypes()
+            if (match != null && propagatorTypes != null && propagatorTypes.isNotEmpty()) {
+                val hostMatch = firstPartyHostsWithHeaderTypes[match]
+                if (hostMatch != null) {
+                    hostMatch.addAll(propagatorTypes)
+                } else {
+                    firstPartyHostsWithHeaderTypes[match] = propagatorTypes.toMutableSet()
+                }
+            }
+        }
+
+        return firstPartyHostsWithHeaderTypes
     }
 
     private fun buildCredentials(configuration: DdSdkConfiguration): Credentials {

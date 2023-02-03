@@ -31,10 +31,12 @@ import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
+import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableMap
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doNothing
@@ -1288,12 +1290,37 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration,
         forge: Forge
     ) {
-        val firstPartyHosts = forge.aList { forge.aStringMatching("[a-z]+\\.[a-z]{3}") }
+        val tracingHosts = forge.aMap {
+            Pair(
+                forge.aStringMatching("[a-z]+\\.[a-z]{3}"),
+                forge.aSubSetOf(
+                    setOf(
+                        TracingHeaderType.DATADOG,
+                        TracingHeaderType.B3MULTI,
+                        TracingHeaderType.TRACECONTEXT,
+                        TracingHeaderType.B3
+                    ),
+                    anInt(1, 4)
+                )
+            )
+        }
+
+        val firstPartyHosts = mutableListOf<ReadableMap>()
+        tracingHosts.forEach { (match, headerTypes) ->
+            firstPartyHosts.add(
+                mapOf(
+                    "match" to match,
+                    "propagatorTypes" to headerTypes.map {
+                        it.name.lowercase()
+                    }.toReadableArray()
+                ).toReadableMap()
+            )
+        }
 
         // Given
         val bridgeConfiguration = configuration.copy(
             additionalConfig = mapOf(
-                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts
+                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
         val configCaptor = argumentCaptor<Configuration>()
@@ -1312,9 +1339,122 @@ internal class DdSdkTest {
             .hasField("coreConfig") { coreConfig ->
                 coreConfig.hasFieldEqualTo(
                     "firstPartyHostsWithHeaderTypes",
-                    firstPartyHosts.associateWith {
-                        setOf(TracingHeaderType.DATADOG)
-                    }
+                    tracingHosts
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 set first party hosts 𝕎 initialize() {wrong first party hosts}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        val tracingHosts = forge.aMap {
+            Pair(
+                forge.aStringMatching("[a-z]+\\.[a-z]{3}"),
+                setOf(
+                    TracingHeaderType.DATADOG,
+                )
+            )
+        }
+
+        val firstPartyHosts = mutableListOf<ReadableMap>()
+        tracingHosts.forEach { (match) ->
+            firstPartyHosts.add(
+                mapOf(
+                    "match" to match,
+                    "propagatorTypes" to listOf(
+                        TracingHeaderType.DATADOG.name.lowercase(),
+                        forge.aString()
+                    ).toReadableArray()
+                ).toReadableMap()
+            )
+        }
+
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
+            )
+        )
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") { coreConfig ->
+                coreConfig.hasFieldEqualTo(
+                    "firstPartyHostsWithHeaderTypes",
+                    tracingHosts
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 set first party hosts 𝕎 initialize() {duplicated first party hosts}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        val host = forge.aStringMatching("[a-z]+\\.[a-z]{3}")
+        val tracingHosts = mapOf(
+            Pair(
+                host,
+                setOf(
+                    TracingHeaderType.DATADOG,
+                    TracingHeaderType.B3,
+                )
+            ),
+        )
+
+        val firstPartyHosts = mutableListOf<ReadableMap>()
+        firstPartyHosts.add(
+            mapOf(
+                "match" to host,
+                "propagatorTypes" to listOf(
+                    TracingHeaderType.DATADOG.name.lowercase(),
+                ).toReadableArray()
+            ).toReadableMap()
+        )
+        firstPartyHosts.add(
+            mapOf(
+                "match" to host,
+                "propagatorTypes" to listOf(
+                    TracingHeaderType.B3.name.lowercase(),
+                ).toReadableArray()
+            ).toReadableMap()
+        )
+
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
+            )
+        )
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            eq(configuration.trackingConsent.asTrackingConsent())
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") { coreConfig ->
+                coreConfig.hasFieldEqualTo(
+                    "firstPartyHostsWithHeaderTypes",
+                    tracingHosts
                 )
             }
     }

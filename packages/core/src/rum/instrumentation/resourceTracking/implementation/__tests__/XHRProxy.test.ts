@@ -6,6 +6,7 @@
 
 import { Platform, NativeModules } from 'react-native';
 
+import { PropagatorType } from '../../../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
@@ -191,7 +192,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -216,7 +220,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -241,8 +248,14 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'something.fr',
-                    'example.com'
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -289,8 +302,14 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'google.com',
-                    'api.example.co'
+                    {
+                        match: 'google.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'api.example.co',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -314,7 +333,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'example.com'
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -338,7 +360,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
@@ -384,7 +409,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -407,7 +435,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
@@ -433,7 +464,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -471,7 +505,10 @@ describe('XHRPr', () => {
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
                 firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);

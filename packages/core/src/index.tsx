@@ -7,7 +7,9 @@
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
-    InitializationMode
+    InitializationMode,
+    VitalsUpdateFrequency,
+    PropagatorType
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
@@ -35,5 +37,7 @@ export {
     ProxyConfiguration,
     ProxyType,
     TrackingConsent,
-    SdkVerbosity
+    SdkVerbosity,
+    VitalsUpdateFrequency,
+    PropagatorType
 };

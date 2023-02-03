@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FirstPartyHost } from '../../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
 
@@ -18,7 +19,7 @@ const escapeRegExp = (string: string) => {
 };
 
 export const firstPartyHostsRegexBuilder = (
-    firstPartyHosts: string[]
+    firstPartyHosts: FirstPartyHost[]
 ): RegExp => {
     if (firstPartyHosts.length === 0) {
         return NO_MATCH_REGEX;
@@ -28,7 +29,7 @@ export const firstPartyHostsRegexBuilder = (
         // "example.com", "api.example.com", but not "foo.com".
         const firstPartyHostsRegex = new RegExp(
             `^(.*\\.)*(${firstPartyHosts
-                .map(host => `${escapeRegExp(host)}$`)
+                .map(host => `${escapeRegExp(host.match)}$`)
                 .join('|')})`
         );
         firstPartyHostsRegex.test('test_the_regex_is_valid');

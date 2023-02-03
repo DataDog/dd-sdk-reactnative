@@ -6,6 +6,8 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.tracing.TracingHeaderType
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
 
@@ -36,6 +38,18 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
         trackInteractions = getBoolean("trackInteractions"),
         trackNetworkRequests = getBoolean("trackNetworkRequests"),
     )
+}
+
+internal fun ReadableArray.asTracingHeaderTypes(): Set<TracingHeaderType> {
+    return this.toArrayList().mapNotNull {
+        when (it) {
+            "datadog" -> TracingHeaderType.DATADOG
+            "b3" -> TracingHeaderType.B3
+            "b3multi" -> TracingHeaderType.B3MULTI
+            "tracecontext" -> TracingHeaderType.TRACECONTEXT
+            else -> null
+        }
+    }.toSet()
 }
 
 @Suppress("ComplexMethod")

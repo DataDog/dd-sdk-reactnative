@@ -19,6 +19,44 @@ export enum VitalsUpdateFrequency {
     NEVER = 'NEVER'
 }
 
+export enum PropagatorType {
+    DATADOG = 'datadog'
+}
+
+export type FirstPartyHostsConfiguration = (
+    | FirstPartyHost
+    | LegacyFirstPartyHost
+)[];
+export type FirstPartyHost = {
+    match: string;
+    propagatorTypes: PropagatorType[];
+};
+export type LegacyFirstPartyHost = string;
+
+const isLegacyFirstPartyHost = (
+    firstPartyHost: FirstPartyHost | LegacyFirstPartyHost
+): firstPartyHost is LegacyFirstPartyHost => {
+    return typeof firstPartyHost === 'string';
+};
+
+/**
+ * Defaults legacy first party hosts format to Datadog first party hosts to keep
+ * retro-compatibility before OTel support was introduced.
+ */
+export const formatFirstPartyHosts = (
+    firstPartyHosts: FirstPartyHostsConfiguration
+): FirstPartyHost[] => {
+    return firstPartyHosts.map(host => {
+        if (isLegacyFirstPartyHost(host)) {
+            return {
+                match: host,
+                propagatorTypes: [PropagatorType.DATADOG]
+            };
+        }
+        return host;
+    });
+};
+
 const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
@@ -87,7 +125,7 @@ export class DdSdkReactNativeConfiguration {
      *
      * Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`.
      */
-    public firstPartyHosts: string[] = DEFAULTS.getFirstPartyHosts();
+    public firstPartyHosts: FirstPartyHostsConfiguration = DEFAULTS.getFirstPartyHosts();
     /**
      * Overrides the reported version of the app.
      * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
@@ -182,7 +220,7 @@ export class DdSdkReactNativeConfiguration {
 export type AutoInstrumentationConfiguration = {
     readonly trackInteractions: boolean;
     readonly trackResources: boolean;
-    readonly firstPartyHosts?: string[];
+    readonly firstPartyHosts?: FirstPartyHostsConfiguration;
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
     readonly logEventMapper?: LogEventMapper | null;
@@ -197,7 +235,7 @@ export type AutoInstrumentationConfiguration = {
 export type AutoInstrumentationParameters = {
     readonly trackInteractions: boolean;
     readonly trackResources: boolean;
-    readonly firstPartyHosts: string[];
+    readonly firstPartyHosts: FirstPartyHostsConfiguration;
     readonly resourceTracingSamplingRate: number;
     readonly trackErrors: boolean;
     readonly logEventMapper: LogEventMapper | null;

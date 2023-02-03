@@ -171,7 +171,7 @@ describe('DatadogProvider', () => {
             expect(
                 NativeModules.DdSdk.initialize.mock.calls[0][0]
                     .additionalConfig['_dd.first_party_hosts']
-            ).toEqual(['api.com']);
+            ).toEqual([{ match: 'api.com', propagatorTypes: ['datadog'] }]);
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
     });

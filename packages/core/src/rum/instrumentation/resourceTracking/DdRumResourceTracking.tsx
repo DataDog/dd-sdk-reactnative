@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FirstPartyHost } from '../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 
@@ -28,7 +29,7 @@ export class DdRumResourceTracking {
         firstPartyHosts
     }: {
         tracingSamplingRate: number;
-        firstPartyHosts: string[];
+        firstPartyHosts: FirstPartyHost[];
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
