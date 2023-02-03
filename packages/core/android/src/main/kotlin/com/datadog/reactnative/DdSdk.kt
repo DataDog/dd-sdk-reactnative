@@ -20,6 +20,8 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum.model.ActionEvent
+import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.facebook.react.bridge.Promise
@@ -165,7 +167,7 @@ class DdSdk(
         } ?: DEFAULT_APP_VERSION
     }
 
-    @Suppress("ComplexMethod", "UnsafeCallOnNullableType")
+    @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
     private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
         val additionalConfig = configuration.additionalConfig?.toMutableMap()
 
@@ -211,6 +213,13 @@ class DdSdk(
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
 
+        val interactionTracking = configuration.additionalConfig?.get(
+            DD_NATIVE_INTERACTION_TRACKING
+        ) as? Boolean
+        if (interactionTracking == false) {
+            configBuilder.disableInteractionTracking()
+        }
+
         val firstPartyHosts =
             (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? List<String>)
         if (firstPartyHosts != null) {
@@ -220,6 +229,24 @@ class DdSdk(
         buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
+
+        configBuilder.setRumResourceEventMapper(object : EventMapper<ResourceEvent> {
+            override fun map(event: ResourceEvent): ResourceEvent? {
+                if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) == true) {
+                    return null
+                }
+                return event
+            }
+        })
+
+        configBuilder.setRumActionEventMapper(object : EventMapper<ActionEvent> {
+            override fun map(event: ActionEvent): ActionEvent? {
+                if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true) {
+                    return null
+                }
+                return event
+            }
+        })
 
         _InternalProxy.setTelemetryConfigurationEventMapper(
             configBuilder,
@@ -399,6 +426,7 @@ class DdSdk(
     companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
+        internal const val DD_NATIVE_INTERACTION_TRACKING = "_dd.native_interaction_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
@@ -409,6 +437,8 @@ class DdSdk(
         internal const val DD_PROXY_TYPE = "_dd.proxy.type"
         internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
         internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
+        internal const val DD_DROP_RESOURCE = "_dd.resource.drop_resource"
+        internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
     }

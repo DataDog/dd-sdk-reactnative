@@ -12,21 +12,29 @@ import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 import { DdSdk } from '../foundation';
+import { DdLogs } from '../logs/DdLogs';
+import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
-import { DdRumUserInteractionTracking } from '../rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { ErrorSource, RumActionType } from '../rum/types';
+import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
+import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
 
-jest.mock('../rum/instrumentation/DdRumUserInteractionTracking', () => {
-    return {
-        DdRumUserInteractionTracking: {
-            startTracking: jest.fn().mockImplementation(() => {})
-        }
-    };
-});
+jest.mock(
+    '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',
+    () => {
+        return {
+            DdRumUserInteractionTracking: {
+                startTracking: jest.fn().mockImplementation(() => {})
+            }
+        };
+    }
+);
 
 jest.mock(
     '../rum/instrumentation/resourceTracking/DdRumResourceTracking',
@@ -64,6 +72,10 @@ beforeEach(async () => {
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
     >).mockClear();
+    DdLogs.unregisterLogEventMapper();
+
+    UserInfoSingleton.reset();
+    AttributesSingleton.reset();
 });
 
 describe('DdSdkReactNative', () => {
@@ -98,6 +110,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
         });
@@ -134,6 +147,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
 
@@ -178,6 +192,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
         });
@@ -212,6 +227,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
         });
@@ -265,6 +281,7 @@ describe('DdSdkReactNative', () => {
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion,
                     '_dd.native_view_tracking': false,
+                    '_dd.native_interaction_tracking': false,
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
@@ -450,6 +467,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
             expect(
@@ -488,6 +506,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': ['api.example.com']
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
@@ -530,9 +549,173 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
+
+        it('enables logs mapping when initialize { logs mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.logEventMapper = log => {
+                log.message = 'new message';
+                return log;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdLogs.debug('original message');
+
+            // THEN
+            expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
+                'new message',
+                {}
+            );
+        });
+
+        it('enables error mapping when initialize { error mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.errorEventMapper = event => {
+                event.message = 'new error massage';
+                return event;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdRum.addError(
+                'original message',
+                ErrorSource.CUSTOM,
+                'stack',
+                {},
+                456
+            );
+
+            // THEN
+            expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                'new error massage',
+                'CUSTOM',
+                'stack',
+                {
+                    '_dd.error.source_type': 'react-native'
+                },
+                456
+            );
+        });
+
+        it('enables resource mapping when initialize { resource mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.resourceEventMapper = event => {
+                event.context = {
+                    ...event.context,
+                    body: 'content'
+                };
+                return event;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdRum.startResource(
+                'key',
+                'GET',
+                'https://datadoghq.com',
+                {},
+                234
+            );
+            await DdRum.stopResource('key', 200, 'xhr', 22, {}, 345);
+
+            // THEN
+            expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                'key',
+                200,
+                'xhr',
+                22,
+                {
+                    body: 'content'
+                },
+                345
+            );
+        });
+
+        it('enables action mapping when initialize { action mapper enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.actionEventMapper = event => {
+                event.context = {
+                    ...event.context,
+                    body: 'content'
+                };
+                return event;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+            await DdRum.addAction(
+                RumActionType.CUSTOM,
+                'Click on button',
+                {},
+                234
+            );
+
+            // THEN
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                'CUSTOM',
+                'Click on button',
+                {
+                    body: 'content'
+                },
+                234
+            );
         });
 
         it('enables custom service name when initialize { service name }', async () => {
@@ -568,6 +751,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.service_name': fakeServiceName,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -605,6 +789,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
                 '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -641,6 +826,44 @@ describe('DdSdkReactNative', () => {
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': true,
+                '_dd.native_interaction_tracking': false,
+                '_dd.first_party_hosts': []
+            });
+            expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
+        });
+
+        it('enables native interaction tracking when initialize { native_interaction_tracking enabled }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.nativeInteractionTracking = true;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
+            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.env).toBe(fakeEnvName);
+            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                '_dd.source': 'react-native',
+                '_dd.sdk_version': sdkVersion,
+                '_dd.native_view_tracking': false,
+                '_dd.native_interaction_tracking': true,
                 '_dd.first_party_hosts': []
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
@@ -710,26 +933,32 @@ describe('DdSdkReactNative', () => {
 
             // WHEN
 
-            DdSdkReactNative.setAttributes(attributes);
+            await DdSdkReactNative.setAttributes(attributes);
 
             // THEN
             expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1);
             expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes);
+            expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+                foo: 'bar'
+            });
         });
     });
 
     describe('setUser', () => {
-        it('calls SDK method when setUser', async () => {
+        it('calls SDK method when setUser, and sets the user in UserProvider', async () => {
             // GIVEN
-            const user = { foo: 'bar' };
+            const user = { id: 'id', foo: 'bar' };
 
             // WHEN
-
-            DdSdkReactNative.setUser(user);
+            await DdSdkReactNative.setUser(user);
 
             // THEN
             expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
             expect(DdSdk.setUser).toHaveBeenCalledWith(user);
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+                id: 'id',
+                foo: 'bar'
+            });
         });
     });
 
@@ -792,6 +1021,7 @@ describe('DdSdkReactNative', () => {
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion,
                     '_dd.native_view_tracking': false,
+                    '_dd.native_interaction_tracking': false,
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
@@ -850,6 +1080,7 @@ describe('DdSdkReactNative', () => {
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion,
                     '_dd.native_view_tracking': false,
+                    '_dd.native_interaction_tracking': false,
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,

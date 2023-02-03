@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../../InternalLog';
-import { DdSdk } from '../../../foundation';
+import { InternalLog } from '../../../../InternalLog';
+import { DdSdk } from '../../../../foundation';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {

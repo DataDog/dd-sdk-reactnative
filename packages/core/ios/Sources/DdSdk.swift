@@ -197,6 +197,10 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.trackUIKitRUMViews()
         }
 
+        if let enableInteractionTracking = additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
+            _ = ddConfigBuilder.trackUIKitRUMActions()
+        }
+
         if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
             _ = ddConfigBuilder.set(serviceName: serviceName)
         }
@@ -212,6 +216,20 @@ class RNDdSdk: NSObject {
         if configuration.nativeCrashReportEnabled ?? false {
             _ = ddConfigBuilder.enableCrashReporting(using: DDCrashReportingPlugin())
         }
+
+        _ = ddConfigBuilder.setRUMResourceEventMapper({ resourceEvent in
+            if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                return nil
+            }
+            return resourceEvent
+        })
+
+        _ = ddConfigBuilder.setRUMActionEventMapper({ actionEvent in
+            if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                return nil
+            }
+            return actionEvent
+        })
 
         return ddConfigBuilder.build()
     }

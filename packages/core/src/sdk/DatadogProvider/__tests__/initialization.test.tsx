@@ -6,11 +6,12 @@
 
 import { NativeModules } from 'react-native';
 
-import { InitializationMode } from '../../DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from '../../DdSdkReactNative';
-import { TimeProvider } from '../../TimeProvider';
-import { DdRum, DdTrace } from '../../foundation';
-import { RumActionType } from '../../types';
+import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../../../DdSdkReactNative';
+import { TimeProvider } from '../../../TimeProvider';
+import { DdTrace } from '../../../foundation';
+import { DdRum } from '../../../rum/DdRum';
+import { RumActionType } from '../../../rum/types';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -23,7 +24,7 @@ import {
     renderWithProvider
 } from './__utils__/renderWithProvider';
 
-jest.mock('../../TimeProvider', () => {
+jest.mock('../../../TimeProvider', () => {
     const now = jest.fn();
     return {
         TimeProvider: jest.fn().mockImplementation(() => {
@@ -60,6 +61,7 @@ describe('DatadogProvider', () => {
                 DdSdkConfiguration {
                   "additionalConfig": Object {
                     "_dd.first_party_hosts": Array [],
+                    "_dd.native_interaction_tracking": false,
                     "_dd.native_view_tracking": false,
                     "_dd.source": "react-native",
                   },

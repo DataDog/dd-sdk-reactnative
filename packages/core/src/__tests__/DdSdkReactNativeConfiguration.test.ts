@@ -27,16 +27,21 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": null,
                   "additionalConfig": Object {},
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
+                  "errorEventMapper": null,
                   "firstPartyHosts": Array [],
+                  "logEventMapper": null,
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
+                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
+                  "resourceEventMapper": null,
                   "resourceTracingSamplingRate": 20,
                   "serviceName": undefined,
                   "sessionSamplingRate": 100,
@@ -60,7 +65,11 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackInteractions: true,
                         trackResources: true,
                         firstPartyHosts: ['api.com'],
-                        resourceTracingSamplingRate: 100
+                        resourceTracingSamplingRate: 100,
+                        logEventMapper: event => event,
+                        errorEventMapper: event => event,
+                        resourceEventMapper: event => event,
+                        actionEventMapper: event => event
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -70,6 +79,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                         site: 'EU',
                         verbosity: SdkVerbosity.DEBUG,
                         nativeViewTracking: true,
+                        nativeInteractionTracking: true,
                         proxyConfig: new ProxyConfiguration(
                             ProxyType.HTTPS,
                             'api.com',
@@ -87,17 +97,21 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": [Function],
                   "additionalConfig": Object {
                     "additionalField": "fake-value",
                   },
                   "applicationId": "fake-app-id",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
+                  "errorEventMapper": [Function],
                   "firstPartyHosts": Array [
                     "api.com",
                   ],
+                  "logEventMapper": [Function],
                   "longTaskThresholdMs": 567,
                   "nativeCrashReportEnabled": true,
+                  "nativeInteractionTracking": true,
                   "nativeLongTaskThresholdMs": 345,
                   "nativeViewTracking": true,
                   "proxyConfig": ProxyConfiguration {
@@ -107,6 +121,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "type": "https",
                     "username": undefined,
                   },
+                  "resourceEventMapper": [Function],
                   "resourceTracingSamplingRate": 100,
                   "serviceName": "com.test.app",
                   "sessionSamplingRate": 80,
@@ -140,6 +155,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                         sessionSamplingRate: 0,
                         site: '',
                         nativeViewTracking: false,
+                        nativeInteractionTracking: false,
                         serviceName: '',
                         version: '',
                         versionSuffix: '',
@@ -151,16 +167,21 @@ describe('DdSdkReactNativeConfiguration', () => {
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
+                  "actionEventMapper": null,
                   "additionalConfig": Object {},
                   "applicationId": "",
                   "clientToken": "",
                   "env": "",
+                  "errorEventMapper": null,
                   "firstPartyHosts": Array [],
+                  "logEventMapper": null,
                   "longTaskThresholdMs": false,
                   "nativeCrashReportEnabled": false,
+                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": false,
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
+                  "resourceEventMapper": null,
                   "resourceTracingSamplingRate": 0,
                   "serviceName": "",
                   "sessionSamplingRate": 0,

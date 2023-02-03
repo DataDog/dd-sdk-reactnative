@@ -40,7 +40,7 @@ export type DdNativeSdkType = {
      * Set the user information.
      * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
      */
-    setUser(user: object): Promise<void>;
+    setUser(user: object): Promise<object>;
 
     /**
      * Set the tracking consent regarding the data collection.

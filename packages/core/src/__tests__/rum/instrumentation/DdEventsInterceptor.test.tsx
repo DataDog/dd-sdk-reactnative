@@ -10,10 +10,10 @@ import { DdRum } from '../../../index';
 import {
     DdEventsInterceptor,
     UNKNOWN_TARGET_NAME
-} from '../../../rum/instrumentation/DdEventsInterceptor';
-import { RumActionType } from '../../../types';
+} from '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor';
+import { RumActionType } from '../../../rum/types';
 
-jest.mock('../../../foundation', () => {
+jest.mock('../../../rum/DdRum', () => {
     return {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -63,6 +63,7 @@ it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name
     expect(DdRum.addAction.mock.calls.length).toBe(1);
     expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
     expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel);
+    expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeArguments);
 });
 
 it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name on a parent node} ', async () => {

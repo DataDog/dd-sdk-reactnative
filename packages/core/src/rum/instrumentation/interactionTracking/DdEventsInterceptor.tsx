@@ -4,9 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdRum } from '../../foundation';
+import type { GestureResponderEvent } from 'react-native';
+
+import { InternalLog } from '../../../InternalLog';
+import { SdkVerbosity } from '../../../SdkVerbosity';
+import { DdRum } from '../../DdRum';
 import { RumActionType } from '../../types';
 
 import type EventsInterceptor from './EventsInterceptor';
@@ -31,7 +33,7 @@ export class DdEventsInterceptor implements EventsInterceptor {
             );
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
                 const targetNode = args[0]._targetInst;
-                this.handleTargetEvent(targetNode);
+                this.handleTargetEvent(targetNode, args[0]);
                 // we add an approximated 1 millisecond for the execution time of the `handleTargetEvent` function
                 this.debouncingStartedTimestamp =
                     currentTime + HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS;
@@ -44,10 +46,16 @@ export class DdEventsInterceptor implements EventsInterceptor {
         }
     }
 
-    private handleTargetEvent(targetNode: any | null) {
+    private handleTargetEvent(targetNode: any, event: unknown) {
         if (targetNode) {
             const resolvedTargetName = this.resolveTargetName(targetNode);
-            DdRum.addAction(RumActionType.TAP, resolvedTargetName);
+            DdRum.addAction(
+                RumActionType.TAP,
+                resolvedTargetName,
+                {},
+                undefined,
+                event as GestureResponderEvent
+            );
         }
     }
 

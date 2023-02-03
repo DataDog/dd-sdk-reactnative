@@ -22,6 +22,8 @@ import com.datadog.android.rum.GlobalRum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.model.ActionEvent
+import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
@@ -1038,6 +1040,112 @@ internal class DdSdkTest {
     }
 
     @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {no user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to false
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {with user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to true
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {invalid user action tracking}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            additionalConfig = mapOf(
+                DdSdk.DD_NATIVE_INTERACTION_TRACKING to null
+            )
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldWithClass(
+                    "userActionTrackingStrategy",
+                    "com.datadog.android.rum.internal" +
+                        ".instrumentation.UserActionTrackingStrategyLegacy"
+                )
+            }
+    }
+    @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {sdk verbosity}`(
         @Forgery configuration: DdSdkConfiguration,
         @IntForgery(Log.DEBUG, Log.ASSERT) verbosity: Int
@@ -1500,6 +1608,120 @@ internal class DdSdkTest {
                     .isEqualTo(trackNetworkRequests)
                 assertThat(result.telemetry.configuration.trackNetworkRequests!!)
                     .isEqualTo(trackNetworkRequests)
+            }
+    }
+
+    // endregion
+
+    // region resource mapper
+
+    @Test
+    fun `𝕄 set a resource mapper that does not drop resources 𝕎 initialize() {}`(
+        @Forgery resourceEvent: ResourceEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val resourceMapper = it
+                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                val notDroppedEvent = resourceMapper.map(resourceEvent)
+                assertThat(notDroppedEvent).isNotNull
+            }
+    }
+
+    @Test
+    fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
+        @Forgery resourceEvent: ResourceEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+        resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val resourceMapper = it
+                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                val droppedEvent = resourceMapper.map(resourceEvent)
+                assertThat(droppedEvent).isNull()
+            }
+    }
+
+    // endregion
+
+    // region action mapper
+
+    @Test
+    fun `𝕄 set a action mapper that does not drop actions 𝕎 initialize() {}`(
+        @Forgery actionEvent: ActionEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val actionMapper = it
+                    .getActualValue<EventMapper<ActionEvent>>("rumEventMapper")
+                val notDroppedEvent = actionMapper.map(actionEvent)
+                assertThat(notDroppedEvent).isNotNull
+            }
+    }
+
+    @Test
+    fun `𝕄 set a action mapper that drops flagged actions 𝕎 initialize() {}`(
+        @Forgery actionEvent: ActionEvent,
+    ) {
+        // Given
+        val configCaptor = argumentCaptor<Configuration>()
+        actionEvent.context?.additionalProperties?.put("_dd.action.drop_action", true)
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockDatadog).initialize(
+            same(mockContext),
+            any(),
+            configCaptor.capture(),
+            any()
+        )
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                val actionMapper = it
+                    .getActualValue<EventMapper<ActionEvent>>("rumEventMapper")
+                val droppedEvent = actionMapper.map(actionEvent)
+                assertThat(droppedEvent).isNull()
             }
     }
 

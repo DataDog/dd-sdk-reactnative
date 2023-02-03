@@ -13,8 +13,8 @@ import {
     getErrorStackTrace,
     EMPTY_STACK_TRACE
 } from '../../errorUtils';
-import { DdRum } from '../../foundation';
-import { ErrorSource } from '../../types';
+import { DdRum } from '../DdRum';
+import { ErrorSource } from '../types';
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.

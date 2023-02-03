@@ -18,8 +18,8 @@ import {
 import React from 'react';
 
 import { DdSdk } from '../../../foundation';
-import { DdEventsInterceptor } from '../../../rum/instrumentation/DdEventsInterceptor';
-import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/DdRumUserInteractionTracking';
+import { DdEventsInterceptor } from '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor';
+import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 
 const styles = StyleSheet.create({
     button: {
@@ -29,7 +29,9 @@ const styles = StyleSheet.create({
     }
 });
 
-jest.mock('../../../rum/instrumentation/DdEventsInterceptor');
+jest.mock(
+    '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor'
+);
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');

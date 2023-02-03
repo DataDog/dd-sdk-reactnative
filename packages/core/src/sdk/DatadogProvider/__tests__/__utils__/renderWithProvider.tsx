@@ -8,8 +8,8 @@ import { render } from '@testing-library/react-native';
 import { Animated, Button, InteractionManager, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
-import type { AutoInstrumentationConfiguration } from '../../../DdSdkReactNativeConfiguration';
-import { DatadogProviderConfiguration } from '../../../DdSdkReactNativeConfiguration';
+import type { AutoInstrumentationConfiguration } from '../../../../DdSdkReactNativeConfiguration';
+import { DatadogProviderConfiguration } from '../../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
 
 const DefaultTestApp = () => {

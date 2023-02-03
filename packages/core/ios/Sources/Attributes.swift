@@ -77,6 +77,10 @@ internal struct InternalConfigurationAttributes {
     /// Expects `Bool?` value
     static let nativeViewTracking = "_dd.native_view_tracking"
     
+    /// Enables native interaction tracking.
+    /// Expects `Bool?` value
+    static let nativeInteractionTracking = "_dd.native_interaction_tracking"
+
     /// Enable overriding the service name.
     /// Expects `String?` value
     static let serviceName = "_dd.service_name"
@@ -94,4 +98,14 @@ internal struct InternalConfigurationAttributes {
     /// Specify version suffix.
     /// Expects `NSString?` value
     static let versionSuffix = "_dd.version_suffix"
+    
+    /// Custom attribute of the resource passed from bridge SDK.
+    /// It flags the resource as dropped by the user so it can be dropped in the resource mapper.
+    /// Expects `Bool` value.
+    static let dropResource = "_dd.resource.drop_resource"
+
+    /// Custom attribute of the action passed from bridge SDK.
+    /// It flags the action as dropped by the user so it can be dropped in the action mapper.
+    /// Expects `Bool` value.
+    static let dropAction = "_dd.action.drop_action"
 }

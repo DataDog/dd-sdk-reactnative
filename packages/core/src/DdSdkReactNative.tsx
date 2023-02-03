@@ -6,7 +6,6 @@
 
 import { InteractionManager } from 'react-native';
 
-import { BufferSingleton } from './DatadogProvider/Buffer/BufferSingleton';
 import {
     DdSdkReactNativeConfiguration,
     buildConfigurationFromPartialConfiguration,
@@ -25,10 +24,17 @@ import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdSdk } from './foundation';
+import { DdLogs } from './logs/DdLogs';
 import { adaptLongTaskThreshold } from './longTasksUtils';
+import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
-import { DdRumUserInteractionTracking } from './rum/instrumentation/DdRumUserInteractionTracking';
+import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
+import type { Attributes } from './sdk/AttributesSingleton/types';
+import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
+import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
+import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';
 import { version as sdkVersion } from './version';
 
@@ -42,6 +48,8 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERBOSITY_KEY = '_dd.sdk_verbosity';
     private static readonly DD_NATIVE_VIEW_TRACKING_KEY =
         '_dd.native_view_tracking';
+    private static readonly DD_NATIVE_INTERACTION_TRACKING_KEY =
+        '_dd.native_interaction_tracking';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
 
@@ -185,17 +193,19 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+     * Adds a set of attributes to the global context attached with all future Logs, Spans and RUM events.
+     * To remove an attribute, set it to `undefined` in a call to `setAttributes`.
      * @param attributes: The global context attributes.
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static setAttributes(attributes: object): Promise<void> {
+    static async setAttributes(attributes: Attributes): Promise<void> {
         InternalLog.log(
             `Setting attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
-        return DdSdk.setAttributes(attributes);
+        await DdSdk.setAttributes(attributes);
+        AttributesSingleton.getInstance().setAttributes(attributes);
     }
 
     /**
@@ -204,12 +214,13 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static setUser(user: object): Promise<void> {
+    static async setUser(user: UserInfo): Promise<void> {
         InternalLog.log(
             `Setting user ${JSON.stringify(user)}`,
             SdkVerbosity.DEBUG
         );
-        return DdSdk.setUser(user);
+        await DdSdk.setUser(user);
+        UserInfoSingleton.getInstance().setUserInfo(user);
     }
 
     /**
@@ -233,6 +244,10 @@ export class DdSdkReactNative {
         configuration.additionalConfig[
             DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
         ] = configuration.nativeViewTracking;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_NATIVE_INTERACTION_TRACKING_KEY
+        ] = configuration.nativeInteractionTracking;
+
         if (configuration.verbosity) {
             configuration.additionalConfig[
                 DdSdkReactNative.DD_SDK_VERBOSITY_KEY
@@ -314,6 +329,25 @@ export class DdSdkReactNative {
         if (configuration.trackErrors) {
             DdRumErrorTracking.startTracking();
         }
+
+        if (configuration.logEventMapper) {
+            DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        }
+
+        if (configuration.errorEventMapper) {
+            DdRum.registerErrorEventMapper(configuration.errorEventMapper);
+        }
+
+        if (configuration.resourceEventMapper) {
+            DdRum.registerResourceEventMapper(
+                configuration.resourceEventMapper
+            );
+        }
+
+        if (configuration.actionEventMapper) {
+            DdRum.registerActionEventMapper(configuration.actionEventMapper);
+        }
+
         DdSdkReactNative.wasAutoInstrumented = true;
     }
 }

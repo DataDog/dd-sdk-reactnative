@@ -7,6 +7,10 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
+import type { LogEventMapper } from './logs/types';
+import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
+import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
+import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
@@ -23,11 +27,16 @@ const DEFAULTS = {
     longTaskThresholdMs: 0,
     nativeLongTaskThresholdMs: 200,
     nativeViewTracking: false,
+    nativeInteractionTracking: false,
     getFirstPartyHosts: () => [],
     getAdditionalConfig: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
     telemetrySampleRate: 20.0,
-    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
+    vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
+    logEventMapper: null,
+    errorEventMapper: null,
+    resourceEventMapper: null,
+    actionEventMapper: null
 };
 
 /**
@@ -64,6 +73,12 @@ export class DdSdkReactNativeConfiguration {
      * Set to `true` if you use a custom navigation system relying on native views.
      */
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
+    /**
+     * Enables native interaction tracking.
+     * Set to `true` if you want to track interactions on native screens.
+     */
+    public nativeInteractionTracking: boolean =
+        DEFAULTS.nativeInteractionTracking;
     public proxyConfig?: ProxyConfiguration = undefined;
     public serviceName?: string = undefined;
     /**
@@ -134,6 +149,17 @@ export class DdSdkReactNativeConfiguration {
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
 
+    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+
+    public errorEventMapper: ErrorEventMapper | null =
+        DEFAULTS.errorEventMapper;
+
+    public resourceEventMapper: ResourceEventMapper | null =
+        DEFAULTS.resourceEventMapper;
+
+    public actionEventMapper: ActionEventMapper | null =
+        DEFAULTS.actionEventMapper;
+
     public additionalConfig: {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfig();
@@ -159,6 +185,10 @@ export type AutoInstrumentationConfiguration = {
     readonly firstPartyHosts?: string[];
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
+    readonly logEventMapper?: LogEventMapper | null;
+    readonly errorEventMapper?: ErrorEventMapper | null;
+    readonly resourceEventMapper?: ResourceEventMapper | null;
+    readonly actionEventMapper?: ActionEventMapper | null;
 };
 
 /**
@@ -170,6 +200,10 @@ export type AutoInstrumentationParameters = {
     readonly firstPartyHosts: string[];
     readonly resourceTracingSamplingRate: number;
     readonly trackErrors: boolean;
+    readonly logEventMapper: LogEventMapper | null;
+    readonly errorEventMapper: ErrorEventMapper | null;
+    readonly resourceEventMapper: ResourceEventMapper | null;
+    readonly actionEventMapper: ActionEventMapper | null;
 };
 
 /**
@@ -184,8 +218,25 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
         firstPartyHosts:
             features.firstPartyHosts || DEFAULTS.getFirstPartyHosts(),
         resourceTracingSamplingRate:
-            features.resourceTracingSamplingRate ||
-            DEFAULTS.resourceTracingSamplingRate
+            features.resourceTracingSamplingRate === undefined
+                ? DEFAULTS.resourceTracingSamplingRate
+                : features.resourceTracingSamplingRate,
+        logEventMapper:
+            features.logEventMapper === undefined
+                ? DEFAULTS.logEventMapper
+                : features.logEventMapper,
+        errorEventMapper:
+            features.errorEventMapper === undefined
+                ? DEFAULTS.errorEventMapper
+                : features.errorEventMapper,
+        resourceEventMapper:
+            features.resourceEventMapper === undefined
+                ? DEFAULTS.resourceEventMapper
+                : features.resourceEventMapper,
+        actionEventMapper:
+            features.actionEventMapper === undefined
+                ? DEFAULTS.actionEventMapper
+                : features.actionEventMapper
     };
 };
 
@@ -197,6 +248,7 @@ export type PartialInitializationConfiguration = {
     readonly site?: string;
     readonly verbosity?: SdkVerbosity | undefined;
     readonly nativeViewTracking?: boolean;
+    readonly nativeInteractionTracking?: boolean;
     readonly proxyConfig?: ProxyConfiguration;
     readonly serviceName?: string;
     readonly version?: string;
@@ -262,6 +314,34 @@ export const buildConfigurationFromPartialConfiguration = (
     );
     setConfigurationAttribute(
         { name: 'firstPartyHosts', value: features.firstPartyHosts },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'logEventMapper',
+            value: features.logEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'errorEventMapper',
+            value: features.errorEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'resourceEventMapper',
+            value: features.resourceEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'actionEventMapper',
+            value: features.actionEventMapper
+        },
         SdkConfiguration
     );
 
