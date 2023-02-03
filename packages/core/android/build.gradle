@@ -138,12 +138,10 @@ dependencies {
     // noinspection GradleDynamicVersion
     api 'com.facebook.react:react-native:+'
   } else {
-    if (project.getPluginManager().hasPlugin("com.facebook.react")) {
-      api "com.facebook.react:react-android"
-    } else {
-      // if we're outside of a react native application (e.g. running tests for the package)
-      api "com.facebook.react:react-android:0.71.1"
-    }
+    // We specify the $reactNativeVersion, like it's done on the react-native-gradle-plugin, as the plugin is not applied in tests.
+    // There is no impact for apps as we apply the same logic:
+    // https://github.com/facebook/react-native/blob/e1a1e6aa8030bf11d691c3dcf7abd13b25175027/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/utils/DependencyUtils.kt
+    api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
