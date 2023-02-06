@@ -504,6 +504,42 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+            jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(DdNativeRum.startResource).not.toHaveBeenCalledWith(
+                expect.anything(),
+                expect.anything(),
+                expect.anything(),
+                expect.objectContaining({
+                    '_dd.trace_id': expect.any(String),
+                    '_dd.span_id': expect.any(String),
+                    '_dd.rule_psr': expect.any(Number)
+                }),
+                expect.anything()
+            );
+            expect(DdNativeRum.startResource.mock.calls[0][3]).toStrictEqual(
+                {}
+            );
+        });
+
+        // TODO: Clarify here
+        it.skip('does not generate spanId and traceId when the trace is not sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 50,
                 firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',

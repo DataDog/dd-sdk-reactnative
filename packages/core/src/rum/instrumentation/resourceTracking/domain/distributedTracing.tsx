@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { PropagatorType } from '../../../../../src/DdSdkReactNativeConfiguration';
+
 import type { Hostname } from './firstPartyHosts';
 import { isHostFirstParty } from './firstPartyHosts';
 import type { RegexMap } from './interfaces/RequestProxy';
@@ -13,8 +15,11 @@ export type DdRumResourceTracingAttributes =
           tracingStrategy: 'KEEP';
           traceId: string;
           spanId: string;
-          samplingPriorityHeader: '1';
+          samplingPriorityHeader: '1' | '0';
           rulePsr: number;
+          propagators: Partial<
+              Record<PropagatorType, 'SAMPLED' | 'NOT_SAMPLED'>
+          >;
       }
     | {
           tracingStrategy: 'DISCARD';
@@ -40,25 +45,40 @@ export const getTracingAttributes = ({
     if (hostname === null) {
         return DISCARDED_TRACE_ATTRIBUTES;
     }
-    if (isHostFirstParty(hostname, firstPartyHostsRegexMap)) {
-        return generateTracingAttributesWithSampling(tracingSamplingRate);
+    const propagatorsForHost = isHostFirstParty(
+        hostname,
+        firstPartyHostsRegexMap
+    );
+    if (propagatorsForHost) {
+        return generateTracingAttributesWithSampling(
+            tracingSamplingRate,
+            propagatorsForHost
+        );
     }
     return DISCARDED_TRACE_ATTRIBUTES;
 };
 
 const generateTracingAttributesWithSampling = (
-    tracingSamplingRate: number
+    tracingSamplingRate: number,
+    propagators: PropagatorType[]
 ): DdRumResourceTracingAttributes => {
-    if (Math.random() * 100 <= tracingSamplingRate) {
-        return {
-            traceId: generateTraceId(),
-            spanId: generateTraceId(),
-            samplingPriorityHeader: '1',
-            tracingStrategy: 'KEEP',
-            rulePsr: tracingSamplingRate / 100
-        };
-    }
-    return DISCARDED_TRACE_ATTRIBUTES;
+    const isSampled = Math.random() * 100 <= tracingSamplingRate;
+    const tracingAttributes: DdRumResourceTracingAttributes = {
+        traceId: generateTraceId(),
+        spanId: generateTraceId(),
+        samplingPriorityHeader: isSampled ? '1' : '0',
+        tracingStrategy: 'KEEP',
+        rulePsr: tracingSamplingRate / 100,
+        propagators: {}
+    };
+
+    propagators.forEach(propagator => {
+        tracingAttributes.propagators[propagator] = isSampled
+            ? 'SAMPLED'
+            : 'NOT_SAMPLED';
+    });
+
+    return tracingAttributes;
 };
 
 /*
