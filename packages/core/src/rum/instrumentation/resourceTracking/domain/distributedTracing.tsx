@@ -6,6 +6,7 @@
 
 import type { Hostname } from './firstPartyHosts';
 import { isHostFirstParty } from './firstPartyHosts';
+import type { RegexMap } from './interfaces/RequestProxy';
 
 export type DdRumResourceTracingAttributes =
     | {
@@ -29,17 +30,17 @@ const DISCARDED_TRACE_ATTRIBUTES: DdRumResourceTracingAttributes = {
 
 export const getTracingAttributes = ({
     hostname,
-    firstPartyHostsRegex,
+    firstPartyHostsRegexMap,
     tracingSamplingRate
 }: {
     hostname: Hostname | null;
-    firstPartyHostsRegex: RegExp;
+    firstPartyHostsRegexMap: RegexMap;
     tracingSamplingRate: number;
 }): DdRumResourceTracingAttributes => {
     if (hostname === null) {
         return DISCARDED_TRACE_ATTRIBUTES;
     }
-    if (isHostFirstParty(hostname, firstPartyHostsRegex)) {
+    if (isHostFirstParty(hostname, firstPartyHostsRegexMap)) {
         return generateTracingAttributesWithSampling(tracingSamplingRate);
     }
     return DISCARDED_TRACE_ATTRIBUTES;

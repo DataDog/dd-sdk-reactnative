@@ -8,7 +8,7 @@ import type { FirstPartyHost } from '../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 
-import { firstPartyHostsRegexBuilder } from './domain/firstPartyHosts';
+import { firstPartyHostsRegexMapBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';
 import { ResourceReporter } from './implementation/DatadogRumResource/ResourceReporter';
 import { filterDevResource } from './implementation/DatadogRumResource/internalDevResourceBlocklist';
@@ -46,7 +46,9 @@ export class DdRumResourceTracking {
         });
         this.requestProxy.onTrackingStart({
             tracingSamplingRate,
-            firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
+            firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
+                firstPartyHosts
+            )
         });
 
         InternalLog.log(

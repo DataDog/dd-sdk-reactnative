@@ -77,7 +77,7 @@ const proxyOpen = (
     context: RequestProxyOptions
 ): void => {
     const originalXhrOpen = xhrType.prototype.open;
-    const firstPartyHostsRegex = context.firstPartyHostsRegex;
+    const firstPartyHostsRegexMap = context.firstPartyHostsRegexMap;
     const tracingSamplingRate = context.tracingSamplingRate;
 
     xhrType.prototype.open = function (
@@ -95,7 +95,7 @@ const proxyOpen = (
             timer: new Timer(),
             tracingAttributes: getTracingAttributes({
                 hostname,
-                firstPartyHostsRegex,
+                firstPartyHostsRegexMap,
                 tracingSamplingRate
             })
         };

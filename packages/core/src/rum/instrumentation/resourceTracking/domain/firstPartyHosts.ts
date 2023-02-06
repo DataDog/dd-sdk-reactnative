@@ -4,9 +4,14 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { FirstPartyHost } from '../../../../DdSdkReactNativeConfiguration';
+import type {
+    FirstPartyHost,
+    PropagatorType
+} from '../../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
+
+import type { RegexMap } from './interfaces/RequestProxy';
 
 export type Hostname = { _type: 'Hostname' } & string;
 
@@ -18,9 +23,33 @@ const escapeRegExp = (string: string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 
-export const firstPartyHostsRegexBuilder = (
+export const firstPartyHostsRegexMapBuilder = (
     firstPartyHosts: FirstPartyHost[]
-): RegExp => {
+): RegexMap => {
+    const hostsMap: Record<PropagatorType, string[]> = {
+        datadog: []
+    };
+
+    firstPartyHosts.forEach(host => {
+        host.propagatorTypes.forEach(propagatorType => {
+            hostsMap[propagatorType].push(host.match);
+        });
+    });
+
+    const regexMap: { regex: RegExp; propagatorType: PropagatorType }[] = [];
+    Object.entries(hostsMap).forEach(([propagatorType, hosts]) => {
+        if (hosts.length > 0) {
+            regexMap.push({
+                propagatorType: propagatorType as PropagatorType,
+                regex: firstPartyHostsRegexBuilder(hosts)
+            });
+        }
+    });
+
+    return regexMap;
+};
+
+const firstPartyHostsRegexBuilder = (firstPartyHosts: string[]): RegExp => {
     if (firstPartyHosts.length === 0) {
         return NO_MATCH_REGEX;
     }
@@ -29,7 +58,7 @@ export const firstPartyHostsRegexBuilder = (
         // "example.com", "api.example.com", but not "foo.com".
         const firstPartyHostsRegex = new RegExp(
             `^(.*\\.)*(${firstPartyHosts
-                .map(host => `${escapeRegExp(host.match)}$`)
+                .map(host => `${escapeRegExp(host)}$`)
                 .join('|')})`
         );
         firstPartyHostsRegex.test('test_the_regex_is_valid');
@@ -47,7 +76,13 @@ export const firstPartyHostsRegexBuilder = (
 
 export const isHostFirstParty = (
     hostname: Hostname,
-    firstPartyHostsRegex: RegExp
-): boolean => {
-    return firstPartyHostsRegex.test(hostname);
+    firstPartyHostsRegexMap: RegexMap
+): PropagatorType[] | null => {
+    const matchedPropagatorTypes: PropagatorType[] = [];
+    firstPartyHostsRegexMap.forEach(({ regex, propagatorType }) => {
+        if (regex.test(hostname)) {
+            matchedPropagatorTypes.push(propagatorType);
+        }
+    });
+    return matchedPropagatorTypes.length > 0 ? matchedPropagatorTypes : null;
 };

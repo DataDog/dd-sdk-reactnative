@@ -4,10 +4,17 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { PropagatorType } from '../../../../../../src/DdSdkReactNativeConfiguration';
+
 export interface RequestProxyOptions {
     tracingSamplingRate: number;
-    firstPartyHostsRegex: RegExp;
+    firstPartyHostsRegexMap: RegexMap;
 }
+
+export type RegexMap = {
+    regex: RegExp;
+    propagatorType: PropagatorType;
+}[];
 
 export abstract class RequestProxy {
     abstract onTrackingStart: (context: RequestProxyOptions) => void;

@@ -5,29 +5,30 @@
  */
 
 import { PropagatorType } from '../../../../../DdSdkReactNativeConfiguration';
-import { firstPartyHostsRegexBuilder } from '../firstPartyHosts';
+import { firstPartyHostsRegexMapBuilder } from '../firstPartyHosts';
 
 describe('firstPartyHosts', () => {
-    describe('firstPartyHostsRegexBuilder', () => {
+    describe('firstPartyHostsRegexMapBuilder', () => {
         it('returns a RegExp that matches hosts', () => {
-            const regex = firstPartyHostsRegexBuilder([
+            const regexMap = firstPartyHostsRegexMapBuilder([
                 {
                     match: 'api.example.com',
                     propagatorTypes: [PropagatorType.DATADOG]
                 }
             ]);
-            expect(regex.test('api.example.com')).toBe(true);
-            expect(regex.test('api.myapi.com')).toBe(false);
+            expect(regexMap[0].propagatorType).toBe('datadog');
+            expect(regexMap[0].regex.test('api.example.com')).toBe(true);
+            expect(regexMap[0].regex.test('api.myapi.com')).toBe(false);
         });
 
         it('escapes special characters in hosts', () => {
-            const regex = firstPartyHostsRegexBuilder([
+            const regexMap = firstPartyHostsRegexMapBuilder([
                 {
                     match: 'api.example.com',
                     propagatorTypes: [PropagatorType.DATADOG]
                 }
             ]);
-            expect(regex.test('apiiexample.com')).toBe(false);
+            expect(regexMap[0].regex.test('apiiexample.com')).toBe(false);
         });
     });
 });

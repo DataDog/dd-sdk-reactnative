@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { PropagatorType } from '../../../../DdSdkReactNativeConfiguration';
 import { BufferSingleton } from '../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
 
@@ -41,7 +42,12 @@ describe('DdRumResourceTracking', () => {
         global.XMLHttpRequest = XMLHttpRequestMock;
         DdRumResourceTracking.startTracking({
             tracingSamplingRate: 100,
-            firstPartyHosts: ['example.com']
+            firstPartyHosts: [
+                {
+                    match: 'example.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]
         });
 
         // WHEN
@@ -68,7 +74,12 @@ describe('DdRumResourceTracking', () => {
         global.XMLHttpRequest = XMLHttpRequestMock;
         DdRumResourceTracking.startTracking({
             tracingSamplingRate: 100,
-            firstPartyHosts: ['example.com']
+            firstPartyHosts: [
+                {
+                    match: 'example.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]
         });
 
         // WHEN

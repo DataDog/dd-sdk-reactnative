@@ -12,7 +12,7 @@ import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../DdRum';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
-import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
+import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import {
     PARENT_ID_HEADER_KEY,
@@ -80,7 +80,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -117,7 +117,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -154,7 +154,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -191,7 +191,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -219,7 +219,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -247,7 +247,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com:443/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'something.fr',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -279,7 +279,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -301,7 +301,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'google.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -332,7 +332,7 @@ describe('XHRPr', () => {
             const url = 'crash';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -359,7 +359,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -387,7 +387,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -408,7 +408,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -434,7 +434,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -463,7 +463,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -504,7 +504,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
                     {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
@@ -546,7 +546,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
@@ -593,7 +593,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
@@ -643,7 +643,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -666,7 +666,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
             DdRum.registerResourceEventMapper(event => {
                 event.context['body'] = JSON.parse(
