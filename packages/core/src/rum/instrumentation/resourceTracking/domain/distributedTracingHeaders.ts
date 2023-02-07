@@ -23,6 +23,9 @@ export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
  */
 export const TRACECONTEXT_HEADER_KEY = 'traceparent';
 export const B3_HEADER_KEY = 'b3';
+export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
+export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
+export const B3_MULTI_SAMPLED_HEADER_KEY = 'X-B3-Sampled';
 
 export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
@@ -67,6 +70,20 @@ export const getTracingHeaders = (
                 spanId: tracingAttributes.spanId,
                 isSampled: true
             })
+        });
+    }
+    if (tracingAttributes.propagators[PropagatorType.B3MULTI] === 'SAMPLED') {
+        headers.push({
+            header: B3_MULTI_TRACE_ID_HEADER_KEY,
+            value: tracingAttributes.traceId.toPaddedString(16, 32)
+        });
+        headers.push({
+            header: B3_MULTI_SPAN_ID_HEADER_KEY,
+            value: tracingAttributes.spanId.toPaddedString(16, 16)
+        });
+        headers.push({
+            header: B3_MULTI_SAMPLED_HEADER_KEY,
+            value: '1'
         });
     }
     return headers;
