@@ -12,16 +12,14 @@ import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../DdRum';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
-import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
-import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
-    ORIGIN_RUM,
-    ORIGIN_HEADER_KEY,
-    SAMPLING_PRIORITY_HEADER_KEY,
-    XHRProxy
-} from '../XHRProxy';
+    SAMPLING_PRIORITY_HEADER_KEY
+} from '../../domain/distributedTracingHeaders';
+import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
+import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
+import { ORIGIN_RUM, ORIGIN_HEADER_KEY, XHRProxy } from '../XHRProxy';
 import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
