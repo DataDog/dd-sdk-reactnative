@@ -32,53 +32,52 @@ export const B3_MULTI_SAMPLED_HEADER_KEY = 'X-B3-Sampled';
 export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
 ): { header: string; value: string }[] => {
-    const headers: { header: string; value: string }[] = [
-        {
-            header: ORIGIN_HEADER_KEY,
-            value: ORIGIN_RUM
-        },
-        {
-            header: SAMPLING_PRIORITY_HEADER_KEY,
-            value: tracingAttributes.samplingPriorityHeader
-        }
-    ];
+    const headers: { header: string; value: string }[] = [];
     if (tracingAttributes.tracingStrategy === 'DISCARD') {
         return headers;
     }
-    if (tracingAttributes.propagators[PropagatorType.DATADOG] === 'SAMPLED') {
-        headers.push({
-            header: TRACE_ID_HEADER_KEY,
-            value: tracingAttributes.traceId.toString(10)
-        });
-        headers.push({
-            header: PARENT_ID_HEADER_KEY,
-            value: tracingAttributes.spanId.toString(10)
-        });
+    if (tracingAttributes.propagators[PropagatorType.DATADOG]) {
+        headers.push(
+            {
+                header: ORIGIN_HEADER_KEY,
+                value: ORIGIN_RUM
+            },
+            {
+                header: SAMPLING_PRIORITY_HEADER_KEY,
+                value: tracingAttributes.samplingPriorityHeader
+            },
+            {
+                header: TRACE_ID_HEADER_KEY,
+                value: tracingAttributes.traceId.toString(10)
+            },
+            {
+                header: PARENT_ID_HEADER_KEY,
+                value: tracingAttributes.spanId.toString(10)
+            }
+        );
     }
-    if (
-        tracingAttributes.propagators[PropagatorType.TRACECONTEXT] === 'SAMPLED'
-    ) {
+    if (tracingAttributes.propagators[PropagatorType.TRACECONTEXT]) {
         headers.push({
             header: TRACECONTEXT_HEADER_KEY,
             value: generateTraceContextHeader({
                 version: '00',
                 traceId: tracingAttributes.traceId,
                 parentId: tracingAttributes.spanId,
-                isSampled: true
+                isSampled: tracingAttributes.samplingPriorityHeader === '1'
             })
         });
     }
-    if (tracingAttributes.propagators[PropagatorType.B3] === 'SAMPLED') {
+    if (tracingAttributes.propagators[PropagatorType.B3]) {
         headers.push({
             header: B3_HEADER_KEY,
             value: generateB3Header({
                 traceId: tracingAttributes.traceId,
                 spanId: tracingAttributes.spanId,
-                isSampled: true
+                isSampled: tracingAttributes.samplingPriorityHeader === '1'
             })
         });
     }
-    if (tracingAttributes.propagators[PropagatorType.B3MULTI] === 'SAMPLED') {
+    if (tracingAttributes.propagators[PropagatorType.B3MULTI]) {
         headers.push({
             header: B3_MULTI_TRACE_ID_HEADER_KEY,
             value: tracingAttributes.traceId.toPaddedString(16, 32)
@@ -89,7 +88,7 @@ export const getTracingHeaders = (
         });
         headers.push({
             header: B3_MULTI_SAMPLED_HEADER_KEY,
-            value: '1'
+            value: tracingAttributes.samplingPriorityHeader
         });
     }
     return headers;

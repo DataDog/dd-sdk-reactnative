@@ -20,11 +20,13 @@ import {
     B3_HEADER_KEY,
     B3_MULTI_TRACE_ID_HEADER_KEY,
     B3_MULTI_SPAN_ID_HEADER_KEY,
-    B3_MULTI_SAMPLED_HEADER_KEY
+    B3_MULTI_SAMPLED_HEADER_KEY,
+    ORIGIN_RUM,
+    ORIGIN_HEADER_KEY
 } from '../../domain/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
-import { ORIGIN_RUM, ORIGIN_HEADER_KEY, XHRProxy } from '../XHRProxy';
+import { XHRProxy } from '../XHRProxy';
 import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
@@ -356,7 +358,7 @@ describe('XHRPr', () => {
             expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
         });
 
-        it('does not generate spanId and traceId in request headers when tracing is disabled', async () => {
+        it('generates spanId and traceId with 0 sampling priority in request headers when trace is not sampled', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -380,11 +382,15 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
-            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('0');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
         });
 
-        it('adds origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('does not origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -402,7 +408,7 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBeUndefined();
         });
 
         it('forces the agent to keep the request generated trace when startTracking() + XHR.open() + XHR.send()', async () => {
@@ -633,8 +639,7 @@ describe('XHRPr', () => {
             );
         });
 
-        // TODO: Clarify here
-        it.skip('does not generate spanId and traceId when the trace is not sampled', async () => {
+        it('generates spanId and traceId when the trace is not sampled', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
