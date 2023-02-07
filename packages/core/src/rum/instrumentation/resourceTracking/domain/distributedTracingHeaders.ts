@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { PropagatorType } from '../../../../../src/DdSdkReactNativeConfiguration';
+import { PropagatorType } from '../../../../DdSdkReactNativeConfiguration';
 
 import type {
     DdRumResourceTracingAttributes,

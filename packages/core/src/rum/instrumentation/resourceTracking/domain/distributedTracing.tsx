@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { PropagatorType } from '../../../../../src/DdSdkReactNativeConfiguration';
+import type { PropagatorType } from '../../../../DdSdkReactNativeConfiguration';
 
 import type { Hostname } from './firstPartyHosts';
 import { isHostFirstParty } from './firstPartyHosts';
