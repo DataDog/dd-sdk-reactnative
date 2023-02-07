@@ -15,9 +15,6 @@ import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';
 import { calculateResponseSize } from './responseSize';
 
-export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
-export const ORIGIN_RUM = 'rum';
-
 const RESPONSE_START_LABEL = 'response_start';
 
 interface DdRumXhr extends XMLHttpRequest {
@@ -110,7 +107,6 @@ const proxySend = (providers: XHRProxyProviders): void => {
         if (this._datadog_xhr) {
             // keep track of start time
             this._datadog_xhr.timer.start();
-            this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
 
             const tracingHeaders = getTracingHeaders(
                 this._datadog_xhr.tracingAttributes

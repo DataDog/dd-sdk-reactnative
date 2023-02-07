@@ -16,6 +16,8 @@ export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 /**
  * Datadog headers
  */
+export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
+export const ORIGIN_RUM = 'rum';
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 /**
@@ -31,6 +33,10 @@ export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
 ): { header: string; value: string }[] => {
     const headers: { header: string; value: string }[] = [
+        {
+            header: ORIGIN_HEADER_KEY,
+            value: ORIGIN_RUM
+        },
         {
             header: SAMPLING_PRIORITY_HEADER_KEY,
             value: tracingAttributes.samplingPriorityHeader
