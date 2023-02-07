@@ -21,7 +21,8 @@ export enum VitalsUpdateFrequency {
 
 export enum PropagatorType {
     DATADOG = 'datadog',
-    TRACECONTEXT = 'tracecontext'
+    TRACECONTEXT = 'tracecontext',
+    B3 = 'b3'
 }
 
 export type FirstPartyHostsConfiguration = (

@@ -22,6 +22,7 @@ export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
  * OTel headers
  */
 export const TRACECONTEXT_HEADER_KEY = 'traceparent';
+export const B3_HEADER_KEY = 'b3';
 
 export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
@@ -58,6 +59,16 @@ export const getTracingHeaders = (
             })
         });
     }
+    if (tracingAttributes.propagators[PropagatorType.B3] === 'SAMPLED') {
+        headers.push({
+            header: B3_HEADER_KEY,
+            value: generateB3Header({
+                traceId: tracingAttributes.traceId,
+                spanId: tracingAttributes.spanId,
+                isSampled: true
+            })
+        });
+    }
     return headers;
 };
 
@@ -77,4 +88,20 @@ const generateTraceContextHeader = ({
         16,
         32
     )}-${parentId.toPaddedString(16, 16)}-${flags}`;
+};
+
+const generateB3Header = ({
+    traceId,
+    spanId,
+    isSampled
+}: {
+    traceId: TraceId;
+    spanId: SpanId;
+    isSampled: boolean;
+}) => {
+    const flags = isSampled ? '1' : '0';
+    return `${traceId.toPaddedString(16, 32)}-${spanId.toPaddedString(
+        16,
+        16
+    )}-${flags}`;
 };

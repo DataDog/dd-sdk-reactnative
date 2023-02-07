@@ -28,7 +28,8 @@ export const firstPartyHostsRegexMapBuilder = (
 ): RegexMap => {
     const hostsMap: Record<PropagatorType, string[]> = {
         datadog: [],
-        tracecontext: []
+        tracecontext: [],
+        b3: []
     };
 
     firstPartyHosts.forEach(host => {

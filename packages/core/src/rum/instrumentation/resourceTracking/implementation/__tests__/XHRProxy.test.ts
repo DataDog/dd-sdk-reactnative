@@ -16,7 +16,8 @@ import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
     SAMPLING_PRIORITY_HEADER_KEY,
-    TRACECONTEXT_HEADER_KEY
+    TRACECONTEXT_HEADER_KEY,
+    B3_HEADER_KEY
 } from '../../domain/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
@@ -483,6 +484,37 @@ describe('XHRPr', () => {
             // THEN
             const headerValue = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
             expect(headerValue).toMatch(/00-[0-9]{32}-[0-9]{16}-01/);
+        });
+
+        it('adds tracecontext request headers when the host is instrumented with b3 and request is sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
+            expect(headerValue).toMatch(/[0-9]{32}-[0-9]{16}-1/);
         });
     });
 
