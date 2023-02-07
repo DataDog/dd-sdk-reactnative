@@ -85,18 +85,20 @@ export const getTracingHeaders = (
                 break;
             }
             case PropagatorType.B3MULTI: {
-                headers.push({
-                    header: B3_MULTI_TRACE_ID_HEADER_KEY,
-                    value: tracingAttributes.traceId.toPaddedString(16, 32)
-                });
-                headers.push({
-                    header: B3_MULTI_SPAN_ID_HEADER_KEY,
-                    value: tracingAttributes.spanId.toPaddedString(16, 16)
-                });
-                headers.push({
-                    header: B3_MULTI_SAMPLED_HEADER_KEY,
-                    value: tracingAttributes.samplingPriorityHeader
-                });
+                headers.push(
+                    {
+                        header: B3_MULTI_TRACE_ID_HEADER_KEY,
+                        value: tracingAttributes.traceId.toPaddedString(16, 32)
+                    },
+                    {
+                        header: B3_MULTI_SPAN_ID_HEADER_KEY,
+                        value: tracingAttributes.spanId.toPaddedString(16, 16)
+                    },
+                    {
+                        header: B3_MULTI_SAMPLED_HEADER_KEY,
+                        value: tracingAttributes.samplingPriorityHeader
+                    }
+                );
             }
         }
     });
