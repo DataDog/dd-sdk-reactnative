@@ -34,14 +34,14 @@ export class ResourceReporter {
 
 const formatResourceStartContext = (
     tracingAttributes: RUMResource['tracingAttributes']
-): Record<string, unknown> | undefined => {
+): Record<string, string | number> | undefined => {
     // TODO: Clarify here. It could happen that no trace is sampled (but we could still send headers for non sampled ones).
     // Do we still have to send the "span_id", "trace_id" and "rule_psr" ?
     return tracingAttributes.tracingStrategy === 'DISCARD'
         ? undefined
         : {
-              '_dd.span_id': tracingAttributes.spanId,
-              '_dd.trace_id': tracingAttributes.traceId,
+              '_dd.span_id': tracingAttributes.spanId.toString(10),
+              '_dd.trace_id': tracingAttributes.traceId.toString(10),
               '_dd.rule_psr': tracingAttributes.rulePsr
           };
 };

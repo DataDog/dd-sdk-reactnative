@@ -1,4 +1,4 @@
-import { generateTraceId } from '../distributedTracing';
+import { TraceIdentifier } from '../distributedTracing';
 
 it('M return an unique identifier W toString', async () => {
     // GIVEN
@@ -8,7 +8,7 @@ it('M return an unique identifier W toString', async () => {
 
     // WHEN
     while (counter-- > 0) {
-        generatedIds.add(generateTraceId());
+        generatedIds.add(new TraceIdentifier().toString(10));
     }
 
     // THEN
@@ -19,7 +19,7 @@ it('M return an 64 bits positive integer W toString', async () => {
     let iterations = 100;
     while (iterations-- > 0) {
         // GIVEN
-        const id = generateTraceId();
+        const id = new TraceIdentifier().toString(10);
 
         // THEN
         expect(id).toMatch(/[1-9]{1,19}/);

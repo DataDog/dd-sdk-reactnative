@@ -13,8 +13,8 @@ import type { RegexMap } from './interfaces/RequestProxy';
 export type DdRumResourceTracingAttributes =
     | {
           tracingStrategy: 'KEEP';
-          traceId: string;
-          spanId: string;
+          traceId: TraceId;
+          spanId: SpanId;
           samplingPriorityHeader: '1' | '0';
           rulePsr: number;
           propagators: Partial<
@@ -64,8 +64,8 @@ const generateTracingAttributesWithSampling = (
 ): DdRumResourceTracingAttributes => {
     const isSampled = Math.random() * 100 <= tracingSamplingRate;
     const tracingAttributes: DdRumResourceTracingAttributes = {
-        traceId: generateTraceId(),
-        spanId: generateTraceId(),
+        traceId: new TraceIdentifier() as TraceId,
+        spanId: new TraceIdentifier() as SpanId,
         samplingPriorityHeader: isSampled ? '1' : '0',
         tracingStrategy: 'KEEP',
         rulePsr: tracingSamplingRate / 100,
@@ -81,30 +81,51 @@ const generateTracingAttributesWithSampling = (
     return tracingAttributes;
 };
 
+/**
+ * Using branded types will ensure we don't accidentally use
+ * traceId for spanId when generating headers.
+ */
+export type TraceId = TraceIdentifier & {
+    _brand: 'traceId';
+};
+
+export type SpanId = TraceIdentifier & {
+    _brand: 'spanId';
+};
+
 /*
  * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/master/packages/rum-core/src/domain/tracing/tracer.ts#L107)
  */
-export function generateTraceId(): string {
-    const radix = 10;
-    const MAX_32_BITS_NUMBER = 4294967295; // 2^32-1
-    let low: number = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
-    let high: number = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
-    let str = '';
+const MAX_32_BITS_NUMBER = 4294967295; // 2^32-1
+export class TraceIdentifier {
+    private low: number;
+    private high: number;
 
-    while (high > 0 && low > 0) {
-        // Create an intermediate value with the same modulo as the combined high and low value
-        // but requiring 36 bits max (32 for the low value + 4 for the high part)
-        const modH = high % radix;
-        const temp = (modH << 32) + low;
-        const digit = temp % radix;
-
-        // update the high value
-        high = (high - modH) / radix; // we reuse the modH to avoid the need of a floor op
-        // the low value reuses the previous temp value to account for the "missing mod" in the high update
-        low = (temp - digit) / radix; // we reuse the digit to avoid the need of a floor op
-
-        // update the string from right to left
-        str = digit.toString() + str;
+    constructor() {
+        this.low = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
+        this.high = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
     }
-    return str;
+
+    toString = (radix: number) => {
+        let low = this.low;
+        let high = this.high;
+        let str = '';
+
+        while (high > 0 && low > 0) {
+            // Create an intermediate value with the same modulo as the combined high and low value
+            // but requiring 36 bits max (32 for the low value + 4 for the high part)
+            const modH = high % radix;
+            const temp = (modH << 32) + low;
+            const digit = temp % radix;
+
+            // update the high value
+            high = (high - modH) / radix; // we reuse the modH to avoid the need of a floor op
+            // the low value reuses the previous temp value to account for the "missing mod" in the high update
+            low = (temp - digit) / radix; // we reuse the digit to avoid the need of a floor op
+
+            // update the string from right to left
+            str = digit.toString() + str;
+        }
+        return str;
+    };
 }

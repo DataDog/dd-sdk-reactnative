@@ -8,9 +8,12 @@ import { PropagatorType } from '../../../../../src/DdSdkReactNativeConfiguration
 
 import type { DdRumResourceTracingAttributes } from './distributedTracing';
 
+export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
+/**
+ * Datadog headers
+ */
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
-export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 
 export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
@@ -27,12 +30,13 @@ export const getTracingHeaders = (
     if (tracingAttributes.propagators[PropagatorType.DATADOG] === 'SAMPLED') {
         headers.push({
             header: TRACE_ID_HEADER_KEY,
-            value: tracingAttributes.traceId
+            value: tracingAttributes.traceId.toString(10)
         });
         headers.push({
             header: PARENT_ID_HEADER_KEY,
-            value: tracingAttributes.spanId
+            value: tracingAttributes.spanId.toString(10)
         });
     }
+
     return headers;
 };
