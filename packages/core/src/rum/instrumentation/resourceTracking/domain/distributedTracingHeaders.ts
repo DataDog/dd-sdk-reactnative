@@ -6,7 +6,11 @@
 
 import { PropagatorType } from '../../../../../src/DdSdkReactNativeConfiguration';
 
-import type { DdRumResourceTracingAttributes } from './distributedTracing';
+import type {
+    DdRumResourceTracingAttributes,
+    SpanId,
+    TraceId
+} from './distributedTracing';
 
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 /**
@@ -14,6 +18,10 @@ export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
  */
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
+/**
+ * OTel headers
+ */
+export const TRACECONTEXT_HEADER_KEY = 'traceparent';
 
 export const getTracingHeaders = (
     tracingAttributes: DdRumResourceTracingAttributes
@@ -37,6 +45,36 @@ export const getTracingHeaders = (
             value: tracingAttributes.spanId.toString(10)
         });
     }
-
+    if (
+        tracingAttributes.propagators[PropagatorType.TRACECONTEXT] === 'SAMPLED'
+    ) {
+        headers.push({
+            header: TRACECONTEXT_HEADER_KEY,
+            value: generateTraceContextHeader({
+                version: '00',
+                traceId: tracingAttributes.traceId,
+                parentId: tracingAttributes.spanId,
+                isSampled: true
+            })
+        });
+    }
     return headers;
+};
+
+const generateTraceContextHeader = ({
+    version,
+    traceId,
+    parentId,
+    isSampled
+}: {
+    version: string;
+    traceId: TraceId;
+    parentId: SpanId;
+    isSampled: boolean;
+}) => {
+    const flags = isSampled ? '01' : '00';
+    return `${version}-${traceId.toPaddedString(
+        16,
+        32
+    )}-${parentId.toPaddedString(16, 16)}-${flags}`;
 };

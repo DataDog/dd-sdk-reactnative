@@ -128,4 +128,12 @@ export class TraceIdentifier {
         }
         return str;
     };
+
+    toPaddedString = (radix: number, length: number) => {
+        const traceId = this.toString(radix);
+        if (traceId.length > length) {
+            return traceId;
+        }
+        return Array(length - traceId.length + 1).join('0') + traceId;
+    };
 }
