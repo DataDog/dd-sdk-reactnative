@@ -17,9 +17,7 @@ export type DdRumResourceTracingAttributes =
           spanId: SpanId;
           samplingPriorityHeader: '1' | '0';
           rulePsr: number;
-          propagators: Partial<
-              Record<PropagatorType, 'SAMPLED' | 'NOT_SAMPLED'>
-          >;
+          propagators: PropagatorType[];
       }
     | {
           tracingStrategy: 'DISCARD';
@@ -69,14 +67,8 @@ const generateTracingAttributesWithSampling = (
         samplingPriorityHeader: isSampled ? '1' : '0',
         tracingStrategy: 'KEEP',
         rulePsr: tracingSamplingRate / 100,
-        propagators: {}
+        propagators
     };
-
-    propagators.forEach(propagator => {
-        tracingAttributes.propagators[propagator] = isSampled
-            ? 'SAMPLED'
-            : 'NOT_SAMPLED';
-    });
 
     return tracingAttributes;
 };

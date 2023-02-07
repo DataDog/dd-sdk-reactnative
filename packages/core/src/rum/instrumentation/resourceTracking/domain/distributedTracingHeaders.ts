@@ -36,61 +36,71 @@ export const getTracingHeaders = (
     if (tracingAttributes.tracingStrategy === 'DISCARD') {
         return headers;
     }
-    if (tracingAttributes.propagators[PropagatorType.DATADOG]) {
-        headers.push(
-            {
-                header: ORIGIN_HEADER_KEY,
-                value: ORIGIN_RUM
-            },
-            {
-                header: SAMPLING_PRIORITY_HEADER_KEY,
-                value: tracingAttributes.samplingPriorityHeader
-            },
-            {
-                header: TRACE_ID_HEADER_KEY,
-                value: tracingAttributes.traceId.toString(10)
-            },
-            {
-                header: PARENT_ID_HEADER_KEY,
-                value: tracingAttributes.spanId.toString(10)
+    tracingAttributes.propagators.forEach(propagator => {
+        switch (propagator) {
+            case PropagatorType.DATADOG: {
+                headers.push(
+                    {
+                        header: ORIGIN_HEADER_KEY,
+                        value: ORIGIN_RUM
+                    },
+                    {
+                        header: SAMPLING_PRIORITY_HEADER_KEY,
+                        value: tracingAttributes.samplingPriorityHeader
+                    },
+                    {
+                        header: TRACE_ID_HEADER_KEY,
+                        value: tracingAttributes.traceId.toString(10)
+                    },
+                    {
+                        header: PARENT_ID_HEADER_KEY,
+                        value: tracingAttributes.spanId.toString(10)
+                    }
+                );
+                break;
             }
-        );
-    }
-    if (tracingAttributes.propagators[PropagatorType.TRACECONTEXT]) {
-        headers.push({
-            header: TRACECONTEXT_HEADER_KEY,
-            value: generateTraceContextHeader({
-                version: '00',
-                traceId: tracingAttributes.traceId,
-                parentId: tracingAttributes.spanId,
-                isSampled: tracingAttributes.samplingPriorityHeader === '1'
-            })
-        });
-    }
-    if (tracingAttributes.propagators[PropagatorType.B3]) {
-        headers.push({
-            header: B3_HEADER_KEY,
-            value: generateB3Header({
-                traceId: tracingAttributes.traceId,
-                spanId: tracingAttributes.spanId,
-                isSampled: tracingAttributes.samplingPriorityHeader === '1'
-            })
-        });
-    }
-    if (tracingAttributes.propagators[PropagatorType.B3MULTI]) {
-        headers.push({
-            header: B3_MULTI_TRACE_ID_HEADER_KEY,
-            value: tracingAttributes.traceId.toPaddedString(16, 32)
-        });
-        headers.push({
-            header: B3_MULTI_SPAN_ID_HEADER_KEY,
-            value: tracingAttributes.spanId.toPaddedString(16, 16)
-        });
-        headers.push({
-            header: B3_MULTI_SAMPLED_HEADER_KEY,
-            value: tracingAttributes.samplingPriorityHeader
-        });
-    }
+            case PropagatorType.TRACECONTEXT: {
+                headers.push({
+                    header: TRACECONTEXT_HEADER_KEY,
+                    value: generateTraceContextHeader({
+                        version: '00',
+                        traceId: tracingAttributes.traceId,
+                        parentId: tracingAttributes.spanId,
+                        isSampled:
+                            tracingAttributes.samplingPriorityHeader === '1'
+                    })
+                });
+                break;
+            }
+            case PropagatorType.B3: {
+                headers.push({
+                    header: B3_HEADER_KEY,
+                    value: generateB3Header({
+                        traceId: tracingAttributes.traceId,
+                        spanId: tracingAttributes.spanId,
+                        isSampled:
+                            tracingAttributes.samplingPriorityHeader === '1'
+                    })
+                });
+                break;
+            }
+            case PropagatorType.B3MULTI: {
+                headers.push({
+                    header: B3_MULTI_TRACE_ID_HEADER_KEY,
+                    value: tracingAttributes.traceId.toPaddedString(16, 32)
+                });
+                headers.push({
+                    header: B3_MULTI_SPAN_ID_HEADER_KEY,
+                    value: tracingAttributes.spanId.toPaddedString(16, 16)
+                });
+                headers.push({
+                    header: B3_MULTI_SAMPLED_HEADER_KEY,
+                    value: tracingAttributes.samplingPriorityHeader
+                });
+            }
+        }
+    });
+
     return headers;
 };
 
