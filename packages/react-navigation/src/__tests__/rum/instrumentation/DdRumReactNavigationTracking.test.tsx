@@ -38,6 +38,16 @@ jest.mock(
     () => mockBackHandler
 );
 
+/**
+ * Fix for @react-navigation/native v5 which calls the `Linking.removeEventListener` API
+ * which has been removed in RN 0.71.
+ */
+jest.mock('react-native', () => {
+    const reactNative = jest.requireActual('react-native');
+    reactNative.Linking.removeEventListener = jest.fn();
+    return reactNative;
+});
+
 jest.mock('@datadog/mobile-react-native', () => {
     return {
         DdRum: {
@@ -59,7 +69,6 @@ jest.mock('@datadog/mobile-react-native', () => {
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
-jest.useFakeTimers();
 
 beforeEach(() => {
     mocked(InternalLog.log).mockClear();

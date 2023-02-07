@@ -4,11 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.example.ddsdkreactnative;
+package com.ddsdkreactnativeexample;
 
 import com.reactnativenavigation.NavigationActivity;
 
 public class MainActivity extends NavigationActivity {
 
-  
 }

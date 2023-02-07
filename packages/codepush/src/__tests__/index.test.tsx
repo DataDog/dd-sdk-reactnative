@@ -20,7 +20,8 @@ jest.mock('@datadog/mobile-react-native', () => {
     return actualPackage;
 });
 
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 
 const createCodepushPackageMock = label => ({
     label,
@@ -101,7 +102,7 @@ describe('AppCenter Codepush integration', () => {
                 'env',
                 'appId',
                 true,
-                true,
+                false,
                 true
             );
             render(<DatadogCodepushProvider configuration={configuration} />);

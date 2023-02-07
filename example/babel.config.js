@@ -10,11 +10,23 @@ module.exports = {
       'module-resolver',
       {
         alias: {
-          [pakCore.name]: path.join(__dirname, '../packages/core', pakCore.source),
-          [pakNavigation.name]: path.join(__dirname, '../packages/react-navigation', pakNavigation.source),
-          [pakNativeNavigation.name]: path.join(__dirname, '../packages/react-native-navigation', pakNativeNavigation.source),
+          [pakCore.name]: path.join(
+            __dirname,
+            '../packages/core',
+            pakCore.source,
+          ),
+          [pakNavigation.name]: path.join(
+            __dirname,
+            '../packages/react-navigation',
+            pakNavigation.source,
+          ),
+          [pakNativeNavigation.name]: path.join(
+            __dirname,
+            '../packages/react-native-navigation',
+            pakNativeNavigation.source,
+          ),
         },
       },
-    ]
+    ],
   ],
 };

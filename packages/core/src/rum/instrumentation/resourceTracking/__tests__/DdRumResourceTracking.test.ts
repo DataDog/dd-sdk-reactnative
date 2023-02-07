@@ -13,7 +13,8 @@ import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
 const DdRum = NativeModules.DdRum;
 
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 
 beforeEach(() => {
     DdRum.startResource.mockClear();

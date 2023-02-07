@@ -32,7 +32,8 @@ const baseConsoleError = (...params: unknown) => {
 };
 let originalConsoleError;
 
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 
 beforeEach(() => {
     DdRum.addError.mockClear();
