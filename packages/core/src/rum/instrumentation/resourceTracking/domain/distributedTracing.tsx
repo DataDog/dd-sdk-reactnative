@@ -7,7 +7,7 @@
 import type { PropagatorType } from '../../../../DdSdkReactNativeConfiguration';
 
 import type { Hostname } from './firstPartyHosts';
-import { isHostFirstParty } from './firstPartyHosts';
+import { getPropagatorsForHost } from './firstPartyHosts';
 import type { RegexMap } from './interfaces/RequestProxy';
 
 export type DdRumResourceTracingAttributes =
@@ -43,7 +43,7 @@ export const getTracingAttributes = ({
     if (hostname === null) {
         return DISCARDED_TRACE_ATTRIBUTES;
     }
-    const propagatorsForHost = isHostFirstParty(
+    const propagatorsForHost = getPropagatorsForHost(
         hostname,
         firstPartyHostsRegexMap
     );

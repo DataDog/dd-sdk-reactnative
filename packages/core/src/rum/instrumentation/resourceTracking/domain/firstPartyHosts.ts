@@ -77,7 +77,7 @@ const firstPartyHostsRegexBuilder = (firstPartyHosts: string[]): RegExp => {
     }
 };
 
-export const isHostFirstParty = (
+export const getPropagatorsForHost = (
     hostname: Hostname,
     firstPartyHostsRegexMap: RegexMap
 ): PropagatorType[] | null => {
