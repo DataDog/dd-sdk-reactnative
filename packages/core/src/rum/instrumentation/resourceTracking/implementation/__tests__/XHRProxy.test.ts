@@ -440,7 +440,7 @@ describe('XHRPr', () => {
 
             // THEN
             const headerValue = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
-            expect(headerValue).toMatch(/00-[0-9]{32}-[0-9]{16}-01/);
+            expect(headerValue).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
         });
 
         it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {
@@ -473,8 +473,8 @@ describe('XHRPr', () => {
             const traceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
             const spanId = xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
             const sampled = xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY];
-            expect(traceId).toMatch(/[0-9]{32}/);
-            expect(spanId).toMatch(/[0-9]{16}/);
+            expect(traceId).toMatch(/^[0-9a-f]{32}$/);
+            expect(spanId).toMatch(/^[0-9a-f]{16}$/);
             expect(sampled).toBe('1');
         });
 
@@ -506,7 +506,7 @@ describe('XHRPr', () => {
 
             // THEN
             const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
-            expect(headerValue).toMatch(/[0-9]{32}-[0-9]{16}-1/);
+            expect(headerValue).toMatch(/^[0-9a-f]{32}-[0-9a-f]{16}-1$/);
         });
 
         it('adds all headers when the host is matched for different propagators', async () => {

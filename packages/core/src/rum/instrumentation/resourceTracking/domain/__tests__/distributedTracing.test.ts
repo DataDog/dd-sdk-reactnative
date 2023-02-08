@@ -35,10 +35,13 @@ describe('TraceIdentifier', () => {
         let iterations = 100;
         while (iterations-- > 0) {
             // GIVEN
-            const id = new TraceIdentifier().toString(16);
+            const trace = new TraceIdentifier();
+            const id = trace.toString(16);
+            const paddedId = trace.toPaddedString(16, 16);
 
             // THEN
-            expect(id).toMatch(/[1-9]{1,16}/);
+            expect(id).toMatch(/[1-9a-f]{1,16}/);
+            expect(paddedId).toMatch(/[0-9a-f]{16}/);
         }
     });
 
@@ -50,7 +53,7 @@ describe('TraceIdentifier', () => {
 
             // THEN
             expect(id).not.toMatch(/[0]{32}/);
-            expect(id).toMatch(/[0]{16}[0-9]{16}/);
+            expect(id).toMatch(/[0]{16}[0-9a-f]{16}/);
         }
     });
 
@@ -62,7 +65,7 @@ describe('TraceIdentifier', () => {
 
             // THEN
             expect(id).not.toMatch(/[0]{10}/);
-            expect(id).toMatch(/[0-9]{10}/);
+            expect(id).toMatch(/[0-9a-f]{10}/);
         }
     });
 });

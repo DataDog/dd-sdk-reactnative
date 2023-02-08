@@ -89,13 +89,15 @@ export type SpanId = TraceIdentifier & {
  * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/0e9722d5b06f6d49264bc82cd254a207d647d66c/packages/rum-core/src/domain/tracing/tracer.ts#L190)
  */
 const MAX_32_BITS_NUMBER = 4294967295; // 2^32-1
+const MAX_31_BITS_NUMBER = 2147483647; // 2^31-1
 export class TraceIdentifier {
     private low: number;
     private high: number;
 
     constructor() {
+        // We need to have a 63 bits number max
+        this.high = Math.floor(Math.random() * MAX_31_BITS_NUMBER);
         this.low = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
-        this.high = Math.floor(Math.random() * MAX_32_BITS_NUMBER);
     }
 
     toString = (radix: number) => {
@@ -103,20 +105,11 @@ export class TraceIdentifier {
         let high = this.high;
         let str = '';
 
-        while (high > 0 && low > 0) {
-            // Create an intermediate value with the same modulo as the combined high and low value
-            // but requiring 36 bits max (32 for the low value + 4 for the high part)
-            const modH = high % radix;
-            const temp = (modH << 32) + low;
-            const digit = temp % radix;
-
-            // update the high value
-            high = (high - modH) / radix; // we reuse the modH to avoid the need of a floor op
-            // the low value reuses the previous temp value to account for the "missing mod" in the high update
-            low = (temp - digit) / radix; // we reuse the digit to avoid the need of a floor op
-
-            // update the string from right to left
-            str = digit.toString() + str;
+        while (high > 0 || low > 0) {
+            const mod = (high % radix) * (MAX_32_BITS_NUMBER + 1) + low;
+            high = Math.floor(high / radix);
+            low = Math.floor(mod / radix);
+            str = (mod % radix).toString(radix) + str;
         }
         return str;
     };
