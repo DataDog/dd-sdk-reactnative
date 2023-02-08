@@ -86,7 +86,7 @@ export type SpanId = TraceIdentifier & {
 };
 
 /*
- * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/master/packages/rum-core/src/domain/tracing/tracer.ts#L107)
+ * This code was inspired from browser-sdk at (https://github.com/DataDog/browser-sdk/blob/0e9722d5b06f6d49264bc82cd254a207d647d66c/packages/rum-core/src/domain/tracing/tracer.ts#L190)
  */
 const MAX_32_BITS_NUMBER = 4294967295; // 2^32-1
 export class TraceIdentifier {
