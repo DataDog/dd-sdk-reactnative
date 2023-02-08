@@ -190,7 +190,7 @@ describe('XHRPr', () => {
     });
 
     describe('request headers', () => {
-        it('adds the span id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id and trace Id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -216,66 +216,14 @@ describe('XHRPr', () => {
             const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
             expect(spanId).toBeDefined();
             expect(spanId).toMatch(/[1-9].+/);
-        });
-
-        it('adds the trace id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ])
-            });
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
             const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
-        });
 
-        it('generates different ids for spanId and traceId in request headers', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com:443/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
-                    {
-                        match: 'something.fr',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    },
-                    {
-                        match: 'example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ])
-            });
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
-            const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
-            const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
             expect(traceId !== spanId).toBeTruthy();
+
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
         });
 
         it('does not generate spanId and traceId in request headers when no first party hosts are provided', async () => {
