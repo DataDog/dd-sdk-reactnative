@@ -508,6 +508,58 @@ describe('XHRPr', () => {
             const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
             expect(headerValue).toMatch(/[0-9]{32}-[0-9]{16}-1/);
         });
+
+        it('adds all headers when the host is matched for different propagators', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[B3_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY]).toBe('1');
+            expect(
+                xhr.requestHeaders[TRACECONTEXT_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+        });
     });
 
     describe('DdRum.startResource calls', () => {
