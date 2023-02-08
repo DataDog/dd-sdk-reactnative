@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { FirstPartyHost } from '../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
+import type { FirstPartyHost } from '../../types';
 
 import { firstPartyHostsRegexMapBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';

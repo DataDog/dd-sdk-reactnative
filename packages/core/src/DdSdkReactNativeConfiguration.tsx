@@ -11,6 +11,8 @@ import type { LogEventMapper } from './logs/types';
 import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
+import type { FirstPartyHost } from './rum/types';
+import { PropagatorType } from './rum/types';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
@@ -19,21 +21,11 @@ export enum VitalsUpdateFrequency {
     NEVER = 'NEVER'
 }
 
-export enum PropagatorType {
-    DATADOG = 'datadog',
-    TRACECONTEXT = 'tracecontext',
-    B3 = 'b3',
-    B3MULTI = 'b3multi'
-}
-
 export type FirstPartyHostsConfiguration = (
     | FirstPartyHost
     | LegacyFirstPartyHost
 )[];
-export type FirstPartyHost = {
-    match: string;
-    propagatorTypes: PropagatorType[];
-};
+
 export type LegacyFirstPartyHost = string;
 
 const isLegacyFirstPartyHost = (

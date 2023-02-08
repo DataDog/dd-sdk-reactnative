@@ -6,10 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
-import {
-    DdSdkReactNativeConfiguration,
-    PropagatorType
-} from '../DdSdkReactNativeConfiguration';
+import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -20,7 +17,7 @@ import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { ErrorSource, RumActionType } from '../rum/types';
+import { ErrorSource, PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';

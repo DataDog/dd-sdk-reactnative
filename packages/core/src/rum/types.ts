@@ -180,3 +180,15 @@ export enum ErrorSource {
     WEBVIEW = 'WEBVIEW',
     CUSTOM = 'CUSTOM'
 }
+
+export enum PropagatorType {
+    DATADOG = 'datadog',
+    TRACECONTEXT = 'tracecontext',
+    B3 = 'b3',
+    B3MULTI = 'b3multi'
+}
+
+export type FirstPartyHost = {
+    match: string;
+    propagatorTypes: PropagatorType[];
+};

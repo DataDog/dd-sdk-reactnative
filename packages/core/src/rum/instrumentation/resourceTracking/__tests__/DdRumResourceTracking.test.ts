@@ -6,8 +6,8 @@
 
 import { NativeModules } from 'react-native';
 
-import { PropagatorType } from '../../../../DdSdkReactNativeConfiguration';
 import { BufferSingleton } from '../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { PropagatorType } from '../../../types';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';

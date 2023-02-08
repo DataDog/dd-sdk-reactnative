@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { PropagatorType } from '../../../../../DdSdkReactNativeConfiguration';
+import type { PropagatorType } from '../../../../types';
 
 export interface RequestProxyOptions {
     tracingSamplingRate: number;

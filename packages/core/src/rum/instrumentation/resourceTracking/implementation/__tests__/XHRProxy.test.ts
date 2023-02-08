@@ -6,11 +6,11 @@
 
 import { Platform, NativeModules } from 'react-native';
 
-import { PropagatorType } from '../../../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../DdRum';
+import { PropagatorType } from '../../../../types';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import {
     PARENT_ID_HEADER_KEY,

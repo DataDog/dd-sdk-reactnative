@@ -4,12 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type {
-    FirstPartyHost,
-    PropagatorType
-} from '../../../../DdSdkReactNativeConfiguration';
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
+import type { FirstPartyHost, PropagatorType } from '../../../types';
 
 import type { RegexMap } from './interfaces/RequestProxy';
 
