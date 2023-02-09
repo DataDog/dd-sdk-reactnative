@@ -82,7 +82,7 @@ describe('XHRPr', () => {
         it('intercepts XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
+            const url = 'https://api.example.com:443/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
                 firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
@@ -248,7 +248,7 @@ describe('XHRPr', () => {
             expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
         });
 
-        it('does not generate spanId and traceId in request headers when no the url does not match first party hosts', async () => {
+        it('does not generate spanId and traceId in request headers when the url does not match first party hosts', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';

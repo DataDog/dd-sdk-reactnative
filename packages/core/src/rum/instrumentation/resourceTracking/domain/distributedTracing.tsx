@@ -17,7 +17,7 @@ export type DdRumResourceTracingAttributes =
           spanId: SpanId;
           samplingPriorityHeader: '1' | '0';
           rulePsr: number;
-          propagators: PropagatorType[];
+          propagatorTypes: PropagatorType[];
       }
     | {
           tracingStrategy: 'DISCARD';
@@ -58,7 +58,7 @@ export const getTracingAttributes = ({
 
 const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number,
-    propagators: PropagatorType[]
+    propagatorTypes: PropagatorType[]
 ): DdRumResourceTracingAttributes => {
     const isSampled = Math.random() * 100 <= tracingSamplingRate;
     const tracingAttributes: DdRumResourceTracingAttributes = {
@@ -67,7 +67,7 @@ const generateTracingAttributesWithSampling = (
         samplingPriorityHeader: isSampled ? '1' : '0',
         tracingStrategy: 'KEEP',
         rulePsr: tracingSamplingRate / 100,
-        propagators
+        propagatorTypes
     };
 
     return tracingAttributes;
@@ -114,6 +114,13 @@ export class TraceIdentifier {
         return str;
     };
 
+    /**
+     * This function pads the trace with `0`.
+     * It should not be used with a `length` lower than the trace, as we return the full trace in this case.
+     * @param radix radix for the trace
+     * @param length minimum length
+     * @returns padded string
+     */
     toPaddedString = (radix: number, length: number) => {
         const traceId = this.toString(radix);
         if (traceId.length > length) {

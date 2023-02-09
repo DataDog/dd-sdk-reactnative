@@ -36,7 +36,7 @@ export const getTracingHeaders = (
     if (tracingAttributes.tracingStrategy === 'DISCARD') {
         return headers;
     }
-    tracingAttributes.propagators.forEach(propagator => {
+    tracingAttributes.propagatorTypes.forEach(propagator => {
         switch (propagator) {
             case PropagatorType.DATADOG: {
                 headers.push(
