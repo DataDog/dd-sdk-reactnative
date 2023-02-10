@@ -4,12 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Timer from '../../../../Timer';
-import { getTracingHeaders } from '../domain/distributedTracingHeaders';
-import type { DdRumResourceTracingAttributes } from '../domain/distributedTracing';
-import { getTracingAttributes } from '../domain/distributedTracing';
-import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
-import { RequestProxy } from '../domain/interfaces/RequestProxy';
+import Timer from '../../../../../Timer';
+import { getTracingHeaders } from '../../distributedTracing/distributedTracingHeaders';
+import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
+import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
+import type { RequestProxyOptions } from '../interfaces/RequestProxy';
+import { RequestProxy } from '../interfaces/RequestProxy';
 
 import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';

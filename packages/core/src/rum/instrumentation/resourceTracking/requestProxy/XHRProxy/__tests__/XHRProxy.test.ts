@@ -6,12 +6,12 @@
 
 import { Platform, NativeModules } from 'react-native';
 
-import { InternalLog } from '../../../../../InternalLog';
-import { SdkVerbosity } from '../../../../../SdkVerbosity';
-import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { DdRum } from '../../../../DdRum';
-import { PropagatorType } from '../../../../types';
-import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
+import { InternalLog } from '../../../../../../InternalLog';
+import { SdkVerbosity } from '../../../../../../SdkVerbosity';
+import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdRum } from '../../../../../DdRum';
+import { PropagatorType } from '../../../../../types';
+import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
@@ -23,8 +23,8 @@ import {
     B3_MULTI_SAMPLED_HEADER_KEY,
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY
-} from '../../domain/distributedTracingHeaders';
-import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
+} from '../../../distributedTracing/distributedTracingHeaders';
+import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import { XHRProxy } from '../XHRProxy';
 import {
@@ -33,7 +33,7 @@ import {
 } from '../responseSize';
 
 jest.useFakeTimers();
-jest.mock('../../../../../InternalLog');
+jest.mock('../../../../../../InternalLog');
 const mockedInternalLog = (InternalLog as unknown) as {
     log: jest.MockedFunction<typeof InternalLog.log>;
 };

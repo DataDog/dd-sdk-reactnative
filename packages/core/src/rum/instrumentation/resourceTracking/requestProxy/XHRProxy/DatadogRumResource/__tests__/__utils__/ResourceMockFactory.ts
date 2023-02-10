@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { RUMResource } from '../../../../domain/interfaces/RumResource';
+import type { RUMResource } from '../../../../interfaces/RumResource';
 
 /**
  * This method returns a new object each time to avoid overriding the same object

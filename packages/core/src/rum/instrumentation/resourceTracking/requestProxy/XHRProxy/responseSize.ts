@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../../../InternalLog';
-import { SdkVerbosity } from '../../../../SdkVerbosity';
+import { InternalLog } from '../../../../../InternalLog';
+import { SdkVerbosity } from '../../../../../SdkVerbosity';
 
 const MISSING_RESOURCE_SIZE = -1;
 export const RESOURCE_SIZE_ERROR_MESSAGE =
