@@ -5,6 +5,7 @@
  */
 
 import Timer from '../../../../Timer';
+import { getTracingHeaders } from '../domain/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../domain/distributedTracing';
 import { getTracingAttributes } from '../domain/distributedTracing';
 import type { RequestProxyOptions } from '../domain/interfaces/RequestProxy';
@@ -13,12 +14,6 @@ import { RequestProxy } from '../domain/interfaces/RequestProxy';
 import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';
 import { calculateResponseSize } from './responseSize';
-
-export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
-export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
-export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
-export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
-export const ORIGIN_RUM = 'rum';
 
 const RESPONSE_START_LABEL = 'response_start';
 
@@ -77,7 +72,7 @@ const proxyOpen = (
     context: RequestProxyOptions
 ): void => {
     const originalXhrOpen = xhrType.prototype.open;
-    const firstPartyHostsRegex = context.firstPartyHostsRegex;
+    const firstPartyHostsRegexMap = context.firstPartyHostsRegexMap;
     const tracingSamplingRate = context.tracingSamplingRate;
 
     xhrType.prototype.open = function (
@@ -95,7 +90,7 @@ const proxyOpen = (
             timer: new Timer(),
             tracingAttributes: getTracingAttributes({
                 hostname,
-                firstPartyHostsRegex,
+                firstPartyHostsRegexMap,
                 tracingSamplingRate
             })
         };
@@ -112,23 +107,13 @@ const proxySend = (providers: XHRProxyProviders): void => {
         if (this._datadog_xhr) {
             // keep track of start time
             this._datadog_xhr.timer.start();
-            this.setRequestHeader(ORIGIN_HEADER_KEY, ORIGIN_RUM);
 
-            const tracingAttributes = this._datadog_xhr.tracingAttributes;
-            this.setRequestHeader(
-                SAMPLING_PRIORITY_HEADER_KEY,
-                tracingAttributes.samplingPriorityHeader
+            const tracingHeaders = getTracingHeaders(
+                this._datadog_xhr.tracingAttributes
             );
-            if (tracingAttributes.tracingStrategy !== 'DISCARD') {
-                this.setRequestHeader(
-                    TRACE_ID_HEADER_KEY,
-                    tracingAttributes.traceId
-                );
-                this.setRequestHeader(
-                    PARENT_ID_HEADER_KEY,
-                    tracingAttributes.spanId
-                );
-            }
+            tracingHeaders.forEach(({ header, value }) => {
+                this.setRequestHeader(header, value);
+            });
         }
 
         proxyOnReadyStateChange(this, providers);

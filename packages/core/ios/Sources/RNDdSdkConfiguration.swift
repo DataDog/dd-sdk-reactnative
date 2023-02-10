@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import Datadog
 import Foundation
 
 extension NSDictionary {
@@ -51,5 +52,46 @@ extension NSDictionary {
             trackInteractions: trackInteractions,
             trackNetworkRequests: trackNetworkRequests
         )
+    }
+}
+
+extension NSArray {
+    /*
+     * Adapts the data format from the React Native SDK configuration to match with the
+     * iOS SDK configuration. For example:
+     *
+     * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }]
+     * iOS config: { "example.com": [DATADOG, B3] }
+     */
+    func asFirstPartyHosts() -> [String: Set<TracingHeaderType>] {
+        return reduce(into: [:], { firstPartyHosts, h in
+           let host = (h as? NSDictionary)
+
+            if let match = (host?.value(forKey: "match") as? String),
+               let propagatorTypes = (host?.value(forKey: "propagatorTypes") as? NSArray) {
+                if let hostPropagatorTypes = firstPartyHosts[match] {
+                    firstPartyHosts[match] = hostPropagatorTypes.union(propagatorTypes.asTracingHeaderType())
+                } else {
+                    firstPartyHosts[match] = propagatorTypes.asTracingHeaderType()
+                }
+            }
+        })
+    }
+    
+    func asTracingHeaderType() -> Set<TracingHeaderType> {
+        return Set(compactMap { headerType in
+            switch(headerType as? String) {
+            case "datadog":
+                return TracingHeaderType.datadog
+            case "b3":
+                return TracingHeaderType.b3
+            case "b3multi":
+                return TracingHeaderType.b3multi
+            case "tracecontext":
+                return TracingHeaderType.tracecontext
+            default:
+                return nil
+            }
+        })
     }
 }

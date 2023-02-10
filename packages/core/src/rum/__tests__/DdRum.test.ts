@@ -13,7 +13,7 @@ import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
-import { ErrorSource, RumActionType } from '../types';
+import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
 jest.mock('../../TimeProvider', () => {
     return {
@@ -381,6 +381,22 @@ describe('DdRum', () => {
                 { '_dd.action.drop_action': true },
                 234
             );
+        });
+    });
+
+    describe('PropagatorTypes', () => {
+        it('matches with the native name of propagators', () => {
+            /**
+             * If you break this test by changing the value of the enum,
+             * be sure to update the native implementation of
+             * - ReadableArray.asTracingHeaderTypes (Android)
+             * - asTracingHeaderType (iOS)
+             * so that it uses the new values
+             */
+            expect(PropagatorType.DATADOG).toBe('datadog');
+            expect(PropagatorType.B3).toBe('b3');
+            expect(PropagatorType.B3MULTI).toBe('b3multi');
+            expect(PropagatorType.TRACECONTEXT).toBe('tracecontext');
         });
     });
 });

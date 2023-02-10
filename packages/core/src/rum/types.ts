@@ -180,3 +180,22 @@ export enum ErrorSource {
     WEBVIEW = 'WEBVIEW',
     CUSTOM = 'CUSTOM'
 }
+
+/**
+ * Type of instrumentation on the host.
+ * - DATADOG: Datadog’s propagator (`x-datadog-*`)
+ * - TRACECONTEXT: W3C Trace Context (`traceparent`)
+ * - B3: B3 single header (`b3`)
+ * - B3MULTI: B3 multiple headers (`X-B3-*`)
+ */
+export enum PropagatorType {
+    DATADOG = 'datadog',
+    TRACECONTEXT = 'tracecontext',
+    B3 = 'b3',
+    B3MULTI = 'b3multi'
+}
+
+export type FirstPartyHost = {
+    match: string;
+    propagatorTypes: PropagatorType[];
+};

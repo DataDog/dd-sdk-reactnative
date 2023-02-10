@@ -383,12 +383,40 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildFirstPartyHosts() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": ["example.com", "datadog.com"]])
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
+            ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
+            ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
+        ]])
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
         
-        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [TracingHeaderType.datadog]])
-        firstPartyHosts += FirstPartyHosts(["datadog.com": [TracingHeaderType.datadog]])
+        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.datadog, .b3]])
+        firstPartyHosts += FirstPartyHosts(["datadog.com": [.b3multi, .tracecontext]])
+
+        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
+    }
+    
+    func testBuildMalformedFirstPartyHosts() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
+            ["match": "example.com", "propagatorTypes": ["badPropagatorType", "b3"]],
+        ]])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+        
+        let firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.b3]])
+
+        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
+    }
+    
+    func testBuildFirstPartyHostsWithDuplicatedMatchKey() {
+        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
+            ["match": "example.com", "propagatorTypes": ["b3"]],
+            ["match": "example.com", "propagatorTypes": ["tracecontext"]],
+        ]])
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+        
+        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.b3, .tracecontext]])
 
         XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
     }

@@ -205,8 +205,8 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(serviceName: serviceName)
         }
 
-        if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? [String] {
-            _ = ddConfigBuilder.trackURLSession(firstPartyHosts: Set(firstPartyHosts))
+        if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
+            _ = ddConfigBuilder.trackURLSession(firstPartyHostsWithHeaderTypes: firstPartyHosts.asFirstPartyHosts())
         }
 
         if let proxyConfiguration = buildProxyConfiguration(config: additionalConfig) {

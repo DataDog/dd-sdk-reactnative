@@ -7,7 +7,8 @@
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
-    InitializationMode
+    InitializationMode,
+    VitalsUpdateFrequency
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
@@ -17,7 +18,7 @@ import { TrackingConsent } from './TrackingConsent';
 import { DdTrace } from './foundation';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
-import { RumActionType, ErrorSource } from './rum/types';
+import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 
 export {
@@ -35,5 +36,7 @@ export {
     ProxyConfiguration,
     ProxyType,
     TrackingConsent,
-    SdkVerbosity
+    SdkVerbosity,
+    VitalsUpdateFrequency,
+    PropagatorType
 };

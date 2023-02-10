@@ -34,12 +34,12 @@ export class ResourceReporter {
 
 const formatResourceStartContext = (
     tracingAttributes: RUMResource['tracingAttributes']
-): Record<string, unknown> | undefined => {
-    return tracingAttributes.tracingStrategy === 'DISCARD'
+): Record<string, string | number> | undefined => {
+    return tracingAttributes.samplingPriorityHeader === '0'
         ? undefined
         : {
-              '_dd.span_id': tracingAttributes.spanId,
-              '_dd.trace_id': tracingAttributes.traceId,
+              '_dd.span_id': tracingAttributes.spanId.toString(10),
+              '_dd.trace_id': tracingAttributes.traceId.toString(10),
               '_dd.rule_psr': tracingAttributes.rulePsr
           };
 };
