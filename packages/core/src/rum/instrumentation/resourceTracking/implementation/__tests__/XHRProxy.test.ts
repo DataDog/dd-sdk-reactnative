@@ -10,17 +10,23 @@ import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../DdRum';
+import { PropagatorType } from '../../../../types';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
-import { firstPartyHostsRegexBuilder } from '../../domain/firstPartyHosts';
-import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
-    ORIGIN_RUM,
-    ORIGIN_HEADER_KEY,
     SAMPLING_PRIORITY_HEADER_KEY,
-    XHRProxy
-} from '../XHRProxy';
+    TRACECONTEXT_HEADER_KEY,
+    B3_HEADER_KEY,
+    B3_MULTI_TRACE_ID_HEADER_KEY,
+    B3_MULTI_SPAN_ID_HEADER_KEY,
+    B3_MULTI_SAMPLED_HEADER_KEY,
+    ORIGIN_RUM,
+    ORIGIN_HEADER_KEY
+} from '../../domain/distributedTracingHeaders';
+import { firstPartyHostsRegexMapBuilder } from '../../domain/firstPartyHosts';
+import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
+import { XHRProxy } from '../XHRProxy';
 import {
     calculateResponseSize,
     RESOURCE_SIZE_ERROR_MESSAGE
@@ -76,10 +82,10 @@ describe('XHRPr', () => {
         it('intercepts XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
+            const url = 'https://api.example.com:443/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -116,7 +122,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -153,7 +159,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -184,14 +190,17 @@ describe('XHRPr', () => {
     });
 
     describe('request headers', () => {
-        it('adds the span id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('adds the span id and trace Id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -207,57 +216,14 @@ describe('XHRPr', () => {
             const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
             expect(spanId).toBeDefined();
             expect(spanId).toMatch(/[1-9].+/);
-        });
-
-        it('adds the trace id in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
-                ])
-            });
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
             const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
-        });
 
-        it('generates different ids for spanId and traceId in request headers', async () => {
-            // GIVEN
-            const method = 'GET';
-            const url = 'https://api.example.com:443/v2/user';
-            xhrProxy.onTrackingStart({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'something.fr',
-                    'example.com'
-                ])
-            });
-
-            // WHEN
-            const xhr = new XMLHttpRequestMock();
-            xhr.open(method, url);
-            xhr.send();
-            xhr.notifyResponseArrived();
-            xhr.complete(200, 'ok');
-            await flushPromises();
-
-            // THEN
-            const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
-            const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
             expect(traceId !== spanId).toBeTruthy();
+
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
         });
 
         it('does not generate spanId and traceId in request headers when no first party hosts are provided', async () => {
@@ -266,7 +232,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -282,15 +248,21 @@ describe('XHRPr', () => {
             expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
         });
 
-        it('does not generate spanId and traceId in request headers when no the url does not match first party hosts', async () => {
+        it('does not generate spanId and traceId in request headers when the url does not match first party hosts', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'google.com',
-                    'api.example.co'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'google.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'api.example.co',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -313,8 +285,11 @@ describe('XHRPr', () => {
             const url = 'crash';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -331,14 +306,17 @@ describe('XHRPr', () => {
             expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
         });
 
-        it('does not generate spanId and traceId in request headers when tracing is disabled', async () => {
+        it('generates spanId and traceId with 0 sampling priority in request headers when trace is not sampled', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
@@ -352,17 +330,21 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
-            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('0');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
         });
 
-        it('adds origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
+        it('does not origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -374,7 +356,7 @@ describe('XHRPr', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBeUndefined();
         });
 
         it('forces the agent to keep the request generated trace when startTracking() + XHR.open() + XHR.send()', async () => {
@@ -383,8 +365,11 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -406,8 +391,11 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
@@ -423,6 +411,155 @@ describe('XHRPr', () => {
             // THEN
             expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('0');
         });
+
+        it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.TRACECONTEXT]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            const headerValue = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
+            expect(headerValue).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+        });
+
+        it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3MULTI]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            const traceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
+            const spanId = xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
+            const sampled = xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY];
+            expect(traceId).toMatch(/^[0-9a-f]{32}$/);
+            expect(spanId).toMatch(/^[0-9a-f]{16}$/);
+            expect(sampled).toBe('1');
+        });
+
+        it('adds tracecontext request headers when the host is instrumented with b3 and request is sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
+            expect(headerValue).toMatch(/^[0-9a-f]{32}-[0-9a-f]{16}-1$/);
+        });
+
+        it('adds all headers when the host is matched for different propagators', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[B3_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY]).toBe('1');
+            expect(
+                xhr.requestHeaders[TRACECONTEXT_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
+            expect(
+                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+        });
     });
 
     describe('DdRum.startResource calls', () => {
@@ -432,8 +569,11 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
 
@@ -470,8 +610,46 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 50,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([
-                    'api.example.com'
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+            jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(DdNativeRum.startResource).not.toHaveBeenCalledWith(
+                expect.anything(),
+                expect.anything(),
+                expect.anything(),
+                expect.objectContaining({
+                    '_dd.trace_id': expect.any(String),
+                    '_dd.span_id': expect.any(String),
+                    '_dd.rule_psr': expect.any(Number)
+                }),
+                expect.anything()
+            );
+            expect(DdNativeRum.startResource.mock.calls[0][3]).toStrictEqual(
+                {}
+            );
+        });
+
+        it('generates spanId and traceId when the trace is not sampled', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 50,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
                 ])
             });
             jest.spyOn(global.Math, 'random').mockReturnValue(0.7);
@@ -509,7 +687,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
@@ -556,7 +734,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
@@ -606,7 +784,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
 
             // WHEN
@@ -629,7 +807,7 @@ describe('XHRPr', () => {
             const url = 'https://api.example.com/v2/user';
             xhrProxy.onTrackingStart({
                 tracingSamplingRate: 100,
-                firstPartyHostsRegex: firstPartyHostsRegexBuilder([])
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
             DdRum.registerResourceEventMapper(event => {
                 event.context['body'] = JSON.parse(

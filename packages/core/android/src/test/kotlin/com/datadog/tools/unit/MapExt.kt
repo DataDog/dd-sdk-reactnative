@@ -6,7 +6,9 @@
 
 package com.datadog.tools.unit
 
+import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 fun Map<*, *>.toReadableMap(): ReadableMap {
@@ -19,4 +21,9 @@ fun Map<*, *>.toReadableMap(): ReadableMap {
 
     // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
     return JavaOnlyMap.of(*keysAndValues.toTypedArray())
+}
+
+fun List<*>.toReadableArray(): ReadableArray {
+    // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
+    return JavaOnlyArray.from(this)
 }

@@ -6,6 +6,9 @@
 
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
+import type { FirstPartyHost, PropagatorType } from '../../../types';
+
+import type { RegexMap } from './interfaces/RequestProxy';
 
 export type Hostname = { _type: 'Hostname' } & string;
 
@@ -17,9 +20,36 @@ const escapeRegExp = (string: string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 
-export const firstPartyHostsRegexBuilder = (
-    firstPartyHosts: string[]
-): RegExp => {
+export const firstPartyHostsRegexMapBuilder = (
+    firstPartyHosts: FirstPartyHost[]
+): RegexMap => {
+    const hostsMap: Record<PropagatorType, string[]> = {
+        datadog: [],
+        tracecontext: [],
+        b3: [],
+        b3multi: []
+    };
+
+    firstPartyHosts.forEach(host => {
+        host.propagatorTypes.forEach(propagatorType => {
+            hostsMap[propagatorType].push(host.match);
+        });
+    });
+
+    const regexMap: { regex: RegExp; propagatorType: PropagatorType }[] = [];
+    Object.entries(hostsMap).forEach(([propagatorType, hosts]) => {
+        if (hosts.length > 0) {
+            regexMap.push({
+                propagatorType: propagatorType as PropagatorType,
+                regex: firstPartyHostsRegexBuilder(hosts)
+            });
+        }
+    });
+
+    return regexMap;
+};
+
+const firstPartyHostsRegexBuilder = (firstPartyHosts: string[]): RegExp => {
     if (firstPartyHosts.length === 0) {
         return NO_MATCH_REGEX;
     }
@@ -44,9 +74,15 @@ export const firstPartyHostsRegexBuilder = (
     }
 };
 
-export const isHostFirstParty = (
+export const getPropagatorsForHost = (
     hostname: Hostname,
-    firstPartyHostsRegex: RegExp
-): boolean => {
-    return firstPartyHostsRegex.test(hostname);
+    firstPartyHostsRegexMap: RegexMap
+): PropagatorType[] | null => {
+    const matchedPropagatorTypes: PropagatorType[] = [];
+    firstPartyHostsRegexMap.forEach(({ regex, propagatorType }) => {
+        if (regex.test(hostname)) {
+            matchedPropagatorTypes.push(propagatorType);
+        }
+    });
+    return matchedPropagatorTypes.length > 0 ? matchedPropagatorTypes : null;
 };

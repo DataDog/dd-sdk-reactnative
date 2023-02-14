@@ -6,8 +6,9 @@
 
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
+import type { FirstPartyHost } from '../../types';
 
-import { firstPartyHostsRegexBuilder } from './domain/firstPartyHosts';
+import { firstPartyHostsRegexMapBuilder } from './domain/firstPartyHosts';
 import type { RequestProxy } from './domain/interfaces/RequestProxy';
 import { ResourceReporter } from './implementation/DatadogRumResource/ResourceReporter';
 import { filterDevResource } from './implementation/DatadogRumResource/internalDevResourceBlocklist';
@@ -28,7 +29,7 @@ export class DdRumResourceTracking {
         firstPartyHosts
     }: {
         tracingSamplingRate: number;
-        firstPartyHosts: string[];
+        firstPartyHosts: FirstPartyHost[];
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (DdRumResourceTracking.isTracking) {
@@ -45,7 +46,9 @@ export class DdRumResourceTracking {
         });
         this.requestProxy.onTrackingStart({
             tracingSamplingRate,
-            firstPartyHostsRegex: firstPartyHostsRegexBuilder(firstPartyHosts)
+            firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
+                firstPartyHosts
+            )
         });
 
         InternalLog.log(

@@ -4,19 +4,31 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { firstPartyHostsRegexBuilder } from '../firstPartyHosts';
+import { PropagatorType } from '../../../../types';
+import { firstPartyHostsRegexMapBuilder } from '../firstPartyHosts';
 
 describe('firstPartyHosts', () => {
-    describe('firstPartyHostsRegexBuilder', () => {
+    describe('firstPartyHostsRegexMapBuilder', () => {
         it('returns a RegExp that matches hosts', () => {
-            const regex = firstPartyHostsRegexBuilder(['api.example.com']);
-            expect(regex.test('api.example.com')).toBe(true);
-            expect(regex.test('api.myapi.com')).toBe(false);
+            const regexMap = firstPartyHostsRegexMapBuilder([
+                {
+                    match: 'api.example.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]);
+            expect(regexMap[0].propagatorType).toBe('datadog');
+            expect(regexMap[0].regex.test('api.example.com')).toBe(true);
+            expect(regexMap[0].regex.test('api.myapi.com')).toBe(false);
         });
 
         it('escapes special characters in hosts', () => {
-            const regex = firstPartyHostsRegexBuilder(['api.example.com']);
-            expect(regex.test('apiiexample.com')).toBe(false);
+            const regexMap = firstPartyHostsRegexMapBuilder([
+                {
+                    match: 'api.example.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]);
+            expect(regexMap[0].regex.test('apiiexample.com')).toBe(false);
         });
     });
 });

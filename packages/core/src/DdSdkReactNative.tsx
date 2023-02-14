@@ -10,7 +10,8 @@ import {
     DdSdkReactNativeConfiguration,
     buildConfigurationFromPartialConfiguration,
     addDefaultValuesToAutoInstrumentationConfiguration,
-    InitializationMode
+    InitializationMode,
+    formatFirstPartyHosts
 } from './DdSdkReactNativeConfiguration';
 import type {
     AutoInstrumentationParameters,
@@ -301,8 +302,9 @@ export class DdSdkReactNative {
             ] = `-${configuration.versionSuffix}`;
         }
 
-        configuration.additionalConfig['_dd.first_party_hosts'] =
-            configuration.firstPartyHosts;
+        configuration.additionalConfig[
+            '_dd.first_party_hosts'
+        ] = formatFirstPartyHosts(configuration.firstPartyHosts);
     };
 
     private static enableFeatures(
@@ -322,7 +324,9 @@ export class DdSdkReactNative {
         if (configuration.trackResources) {
             DdRumResourceTracking.startTracking({
                 tracingSamplingRate: configuration.resourceTracingSamplingRate,
-                firstPartyHosts: configuration.firstPartyHosts
+                firstPartyHosts: formatFirstPartyHosts(
+                    configuration.firstPartyHosts
+                )
             });
         }
 
