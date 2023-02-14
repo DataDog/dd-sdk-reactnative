@@ -5,10 +5,10 @@
  */
 
 import type { PropagatorType } from '../../../types';
+import type { RegexMap } from '../requestProxy/interfaces/RequestProxy';
 
 import type { Hostname } from './firstPartyHosts';
 import { getPropagatorsForHost } from './firstPartyHosts';
-import type { RegexMap } from './interfaces/RequestProxy';
 
 export type DdRumResourceTracingAttributes =
     | {

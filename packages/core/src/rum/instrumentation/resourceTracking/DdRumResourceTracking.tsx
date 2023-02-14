@@ -8,11 +8,11 @@ import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import type { FirstPartyHost } from '../../types';
 
-import { firstPartyHostsRegexMapBuilder } from './domain/firstPartyHosts';
-import type { RequestProxy } from './domain/interfaces/RequestProxy';
-import { ResourceReporter } from './implementation/DatadogRumResource/ResourceReporter';
-import { filterDevResource } from './implementation/DatadogRumResource/internalDevResourceBlocklist';
-import { XHRProxy } from './implementation/XHRProxy';
+import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import { ResourceReporter } from './requestProxy/XHRProxy/DatadogRumResource/ResourceReporter';
+import { filterDevResource } from './requestProxy/XHRProxy/DatadogRumResource/internalDevResourceBlocklist';
+import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
+import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.

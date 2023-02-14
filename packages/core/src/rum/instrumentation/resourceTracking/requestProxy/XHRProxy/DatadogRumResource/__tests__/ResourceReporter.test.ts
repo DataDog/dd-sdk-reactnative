@@ -6,8 +6,8 @@
 
 import { NativeModules } from 'react-native';
 
-import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import type { RUMResource } from '../../../domain/interfaces/RumResource';
+import { BufferSingleton } from '../../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import type { RUMResource } from '../../../interfaces/RumResource';
 import { ResourceReporter } from '../ResourceReporter';
 
 import { ResourceMockFactory } from './__utils__/ResourceMockFactory';
