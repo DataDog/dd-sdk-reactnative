@@ -147,6 +147,8 @@ package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/distributedTracing.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/distributedTracing.js.map
+package/lib/commonjs/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/firstPartyHosts.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/firstPartyHosts.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/domain/interfaces
@@ -271,6 +273,8 @@ package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/module/rum/instrumentation/resourceTracking/domain
 package/lib/module/rum/instrumentation/resourceTracking/domain/distributedTracing.js
 package/lib/module/rum/instrumentation/resourceTracking/domain/distributedTracing.js.map
+package/lib/module/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.js
+package/lib/module/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.js.map
 package/lib/module/rum/instrumentation/resourceTracking/domain/firstPartyHosts.js
 package/lib/module/rum/instrumentation/resourceTracking/domain/firstPartyHosts.js.map
 package/lib/module/rum/instrumentation/resourceTracking/domain/interfaces
@@ -366,6 +370,7 @@ package/lib/typescript/rum/instrumentation/resourceTracking
 package/lib/typescript/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/distributedTracing.d.ts
+package/lib/typescript/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/firstPartyHosts.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/typescript/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.d.ts
@@ -467,6 +472,7 @@ package/src/rum/instrumentation/resourceTracking/domain/__tests__
 package/src/rum/instrumentation/resourceTracking/domain/__tests__/distributedTracing.test.ts
 package/src/rum/instrumentation/resourceTracking/domain/__tests__/firstPartyHosts.test.ts
 package/src/rum/instrumentation/resourceTracking/domain/distributedTracing.tsx
+package/src/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.ts
 package/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.ts
 package/src/rum/instrumentation/resourceTracking/domain/interfaces
 package/src/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.ts

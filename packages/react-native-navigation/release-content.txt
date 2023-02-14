@@ -54,6 +54,7 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/distributedTracing.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/distributedTracingHeaders.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/firstPartyHosts.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/domain/interfaces/RequestProxy.d.ts
