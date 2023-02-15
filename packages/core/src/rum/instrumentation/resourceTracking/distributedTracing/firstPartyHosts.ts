@@ -7,8 +7,7 @@
 import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../SdkVerbosity';
 import type { FirstPartyHost, PropagatorType } from '../../../types';
-
-import type { RegexMap } from './interfaces/RequestProxy';
+import type { RegexMap } from '../requestProxy/interfaces/RequestProxy';
 
 export type Hostname = { _type: 'Hostname' } & string;
 

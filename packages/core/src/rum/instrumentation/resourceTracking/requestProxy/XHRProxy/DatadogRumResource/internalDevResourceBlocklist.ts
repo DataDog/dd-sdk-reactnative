@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { RUMResource } from '../../domain/interfaces/RumResource';
+import type { RUMResource } from '../../interfaces/RumResource';
 
 /**
  * Expo sends all console.* calls to the packager. As we log all API calls
