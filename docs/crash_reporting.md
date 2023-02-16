@@ -123,30 +123,12 @@ Create a script file named `datadog-sourcemaps.sh` at the root of your project c
 #!/bin/sh
 set -e
 
-# If the build runs from XCode, we cannot use yarn.
-# Check first which yarn executable is appropriate
-package_manager_test_command="bin" # both `yarn bin` and `npm bin` are valid commands
-test_and_set_package_manager_bin()
-{
-  $(echo $1 $package_manager_test_command) && export PACKAGE_MANAGER_BIN=$1
-}
+DATADOG_XCODE="../node_modules/.bin/datadog-ci react-native xcode"
 
-test_and_set_package_manager_bin "yarn" || # Replace yarn by npm if you use npm
-test_and_set_package_manager_bin "/opt/homebrew/bin/node /opt/homebrew/bin/yarn" || # Replace yarn by npm if you use npm
-echo "package manager not found"
-
-REACT_NATIVE_XCODE="node_modules/react-native/scripts/react-native-xcode.sh"
-DATADOG_XCODE="$(echo $PACKAGE_MANAGER_BIN) datadog-ci react-native xcode"
-
-/bin/sh -c "$DATADOG_XCODE $REACT_NATIVE_XCODE"
+/bin/sh -c "$DATADOG_XCODE"
 ```
 
-This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
-
--   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
--   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
-
-It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
+It runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
 Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like the following:
 
@@ -155,7 +137,7 @@ set -e
 WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
 # Add these two lines
 REACT_NATIVE_XCODE="./datadog-sourcemaps.sh"
-export SOURCEMAP_FILE=./main.jsbundle.map
+export SOURCEMAP_FILE=$DERIVED_FILE_DIR/main.jsbundle.map
 
 # Edit the next line
 /bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
@@ -179,28 +161,11 @@ Open your `.xcworkspace` with XCode, then select your project > Build Phases > B
 set -e
 
 export NODE_BINARY=node
-# If the build runs from XCode, we cannot use ${this.packageManager}.
-# Therefore we need to check first which ${this.packageManager} command is appropriate
-package_manager_test_command="bin" # both `yarn bin` and `npm bin` are valid commands
-test_and_set_package_manager_bin()
-{
-  $(echo $1 $package_manager_test_command) && export PACKAGE_MANAGER_BIN=$1
-}
-
-test_and_set_package_manager_bin "yarn" || # Replace yarn by npm if you use npm
-test_and_set_package_manager_bin "/opt/homebrew/bin/node /opt/homebrew/bin/yarn" || # Replace yarn by npm if you use npm
-echo "package manager not found"
-
-export SOURCEMAP_FILE=./build/main.jsbundle.map
-$(echo $PACKAGE_MANAGER_BIN datadog-ci react-native xcode)
+export SOURCEMAP_FILE=$DERIVED_FILE_DIR/main.jsbundle.map
+../node_modules/.bin/datadog-ci react-native xcode
 ```
 
-This script finds the best way to run the `yarn datadog-ci react-native xcode` command:
-
--   `yarn` can be used if you use a tool like [fastlane][9] or a service like [Bitrise][10] or [AppCenter][11] to build your app
--   `/opt/homebrew/bin/node /opt/homebrew/bin/yarn` must be used on Mac if you run the release build from XCode directly
-
-It runs this command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
+It runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
 For the upload to work, you need to provide your Datadog API key. If you use a command-line tool or an external service, you can specify it as a `DATADOG_API_KEY` environment variable. If you run the build from XCode, create a `datadog-ci.json` file at the root of your project containing the API key:
 
