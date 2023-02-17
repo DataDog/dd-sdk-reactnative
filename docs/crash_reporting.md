@@ -128,7 +128,7 @@ DATADOG_XCODE="../node_modules/.bin/datadog-ci react-native xcode"
 /bin/sh -c "$DATADOG_XCODE"
 ```
 
-It runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
+This script runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
 Open your `.xcworkspace` with XCode, then select your project > Build Phases > Bundle React Native code and images. Edit the script to look like the following:
 
@@ -165,7 +165,7 @@ export SOURCEMAP_FILE=$DERIVED_FILE_DIR/main.jsbundle.map
 ../node_modules/.bin/datadog-ci react-native xcode
 ```
 
-It runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
+This script runs a command that takes care of uploading the source maps with all the correct parameters. For more information, see the [datadog-ci documentation][12].
 
 For the upload to work, you need to provide your Datadog API key. If you use a command-line tool or an external service, you can specify it as a `DATADOG_API_KEY` environment variable. If you run the build from XCode, create a `datadog-ci.json` file at the root of your project containing the API key:
 
