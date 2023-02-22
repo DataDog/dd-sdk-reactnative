@@ -134,6 +134,23 @@ const RNApp = props => {
 AppRegistry.registerComponent('RNApp', () => RNApp);
 ```
 
+To remove duplicated interactions on Android, filter out the React Native interactions on the native side with an `EventMapper`:
+
+```kotlin
+class RNActionEventMapper : EventMapper<ActionEvent> {
+    override fun map(event: ActionEvent): ActionEvent? {
+        var targetClassName = (event.context?.additionalProperties?.get("action.target.classname") as? String)
+        if(targetClassName?.startsWith("com.facebook.react") == true) {
+            return null
+        }
+        return event
+    }
+}
+
+// Use it in your configuration
+configuration.setRumActionEventMapper(RNActionEventMapper())
+```
+
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
 [3]: https://docs.datadoghq.com/real_user_monitoring/android/
