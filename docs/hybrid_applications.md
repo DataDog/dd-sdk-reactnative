@@ -10,10 +10,10 @@ RUM Events are reported as coming from the same application and the same source 
 
 A few constraints to keep in mind:
 
-1. For **errors, resources, and interactions tracking**, SDKs can work in 2 ways: 
-   - Through _auto-instrumentation_ - Some React classes and methods are modified to automate this. 
-   - Through _manual instrumentation_ - For example, if you want to report something you consider an error but that is not going to crash the app. 
-   Auto-instrumentation for JavaScript errors, resources, and interactions can only be started from JavaScript code.
+1. For **errors, resources, and interactions tracking**, SDKs can work in 2 ways:
+    - Through _auto-instrumentation_ - Some React classes and methods are modified to automate this.
+    - Through _manual instrumentation_ - For example, if you want to report something you consider an error but that is not going to crash the app.
+      Auto-instrumentation for JavaScript errors, resources, and interactions can only be started from JavaScript code.
 2. You cannot initialize more than one instance of the native `DatadogSDK` because it uses a singleton pattern on the native side. That means that once you initialize the native SDK on the native side or on the ReactNative side (by calling `DdSdkReactNative.initialize`) it is initialized for both.
    This means that you can use _manual instrumentation_ on both sides, but _auto-instrumentation_ will only be activated for the side on which the SDK was initialized.
 3. If you try to report Datadog RUM events or logs before the initialization, they and future RUM events and logs will not be sent.
@@ -21,7 +21,7 @@ A few constraints to keep in mind:
 
 ## Solutions
 
-### Recommended: Initialize the SDK on the React Native side only
+### React Native apps with native content: Initialize the SDK on the React Native
 
 Initialize the React Native Datadog SDK for RUM, by following the [official documentation][1].
 
@@ -35,39 +35,104 @@ If you are sure that you don't call the native SDK before the React Native SDK t
 
 You can mitigate it by creating a queue on the native side to check if the SDK has been initialized before calling it, saving events with their timestamps to replay them once the SDK has been initialized.
 
-### Initialize the SDK on the native side only
+### Native apps with React Native screensL Initialize the SDK on the native side only
 
 Initialize the SDK on the native side, by using the official documentation [for iOS][2] and [for Android][3].
 
-If you have to call the native SDK before the React Native SDK and don't need the auto instrumentation for JavaScript errors, resources, or user interactions, you can initialized the SDK on the native side only.
+#### Instrumenting React Native RUM Views
 
-#### Potential issues
+On iOS, use a `UIKitRUMViewsPredicate` to filter out native views created by your navigation libraries:
 
-**You won't have auto instrumentation for JS errors, resources or interactions.**
+```swift
+class RNHybridPredicate: UIKitRUMViewsPredicate {
+    var defaultPredicate = DefaultUIKitRUMViewsPredicate()
 
-You can mitigate this by starting the auto-instrumentation by copying [what the `enableFeatures` function does][4] at the start of your React Native application.
+    func rumView(for viewController: UIViewController) -> RUMView? {
+        let canonicalClassName = NSStringFromClass(type(of: viewController))
+        // Dropping RN Views
+        if (canonicalClassName.starts(with: "RN")) {
+            return nil
+        }
 
-You must use imports to the full path to some of the files (for example, `import {DdRumErrorTracking} from '@datadog/mobile-react-native/src/rum/instrumentation/DdRumErrorTracking';`), and the path to these files might change across SDK versions:
+        return defaultPredicate.rumView(for: viewController)
+    }
+}
 
-```javascript
-import { DdRumErrorTracking } from '@datadog/mobile-react-native/src/rum/instrumentation/DdRumErrorTracking';
-import { DdRumUserInteractionTracking } from '@datadog/mobile-react-native/src/rum/instrumentation/DdRumUserInteractionTracking';
-import { DdRumResourceTracking } from '@datadog/mobile-react-native/src/rum/instrumentation/resourceTracking/DdRumResourceTracking';
-
-DdRumUserInteractionTracking.startTracking();
-DdRumResourceTracking.startTracking({
-    tracingSamplingRate: 80, // Percentage of tracing integrations for network calls between your app and your backend.
-    firstPartyHosts: ['api.example.com'] // Specify the hosts of your backends to enable tracing with these backends
-});
-DdRumErrorTracking.startTracking();
+// Use it when calling trackUIKitRUMViews
+Datadog.Configuration.trackUIKitRUMViews(using: RNHybridPredicate())
 ```
 
-### Initialize the SDK on both sides
+On Android, use a `ComponentPredicate` to filter out native views created by your navigation libraries:
 
-Initialize first the native SDK, then the React Native SDK to get auto-instrumentation on React Native user interactions, errors, and resources.
+```kotlin
+// Adapt the Fragment type to your View tracking strategy
+class RNComponentPredicate : ComponentPredicate<Fragment> {
+    override fun accept(component: Fragment): Boolean {
+        // Identify and drop react native screen views
+        if (component.javaClass.toString().startsWith("class com.swmansion.rnscreens")) {
+            return false
+        }
+        if (component.javaClass.toString().startsWith("class com.facebook.react")) {
+            return false
+        }
+        return true
+    }
 
-The native SDK configuration is used, except for `firstPartyHosts` and `resourceTracingSamplingRate`, which are used for tracing integrations for JavaScript network calls between your app and your backend.
-If you want to have this integration both from the native and the React Native sides, make sure you set `firstPartyHosts` and `resourceTracingSamplingRate` to the same values in both configurations.
+    override fun getViewName(component: Fragment): String? {
+        return null
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
+}
+
+// Use it in your configuration
+configuration.useViewTrackingStrategy(FragmentViewTrackingStrategy(true, RNComponentPredicate()))
+```
+
+Then use `@datadog/mobile-react-navigation` to track your views.
+
+#### Instrumenting React Native errors, interactions and resources
+
+Wrap your React Native app with the `DatadogProvider` component to automatically register React Native RUM errors, interactions and resources:
+
+```javascript
+const configuration = {
+    trackResources: true,
+    trackErrors: true,
+    trackInteractions: true
+};
+
+const RNApp = props => {
+    useEffect(() => {
+        /**
+         * In here we can put fake values. The only goal of this call
+         * is to empty the buffer of RUM events.
+         */
+        DatadogProvider.initialize({
+            clientToken: 'fake_value',
+            env: 'fake_value',
+            applicationId: 'fake_value'
+        });
+    }, []);
+    const navigationRef = useRef(null);
+
+    return (
+        <DatadogProvider configuration={configuration}>
+            {/* Content of your app goes here */}
+        </DatadogProvider>
+    );
+};
+
+AppRegistry.registerComponent('RNApp', () => RNApp);
+```
 
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
