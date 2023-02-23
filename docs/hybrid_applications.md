@@ -35,7 +35,7 @@ If you are sure that you don't call the native SDK before the React Native SDK t
 
 You can mitigate it by creating a queue on the native side to check if the SDK has been initialized before calling it, saving events with their timestamps to replay them once the SDK has been initialized.
 
-### Native apps with React Native screensL Initialize the SDK on the native side only
+### Native apps with React Native screens: Initialize the SDK on the native side only
 
 Initialize the SDK on the native side, by using the official documentation [for iOS][2] and [for Android][3].
 
