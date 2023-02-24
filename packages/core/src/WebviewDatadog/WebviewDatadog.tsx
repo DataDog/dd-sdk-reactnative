@@ -1,33 +1,36 @@
-import type { WebViewProps } from 'react-native-webview';
+import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { WebView as RNWebView } from 'react-native-webview';
+import { NativeModules } from 'react-native';
 import React from 'react';
 
-import { formatAllowedHosts } from './formatAllowedHosts';
+import {
+    DATADOG_MESSAGE_PREFIX,
+    getInjectedJavaScriptBeforeContentLoaded
+} from './__utils__/getInjectedJavaScriptBeforeContentLoaded';
 
 type Props = WebViewProps & {
-    allowedHosts: string[];
+    allowedHosts?: string[];
 };
 
 export const Webview = (props: Props) => {
+    const onMessage = (event: WebViewMessageEvent) => {
+        const message = event.nativeEvent.data;
+
+        if (message.startsWith(DATADOG_MESSAGE_PREFIX)) {
+            NativeModules.DdSdk.consumeWebviewEvent(
+                message.substring(DATADOG_MESSAGE_PREFIX.length + 1)
+            );
+        } else {
+            props.onMessage?.(event);
+        }
+    };
     return (
         <RNWebView
             {...props}
-            onMessage={event => {
-                const message = event.nativeEvent.data;
-                // eslint-disable-next-line no-console
-                console.log(message);
-            }}
-            injectedJavaScriptBeforeContentLoaded={`
-              window.DatadogEventBridge = {
-                send(msg) {
-                  // TODO: add watermark to message
-                  window.ReactNativeWebView.postMessage(msg)
-                },
-                getAllowedWebViewHosts() {
-                  return ${formatAllowedHosts(props.allowedHosts)}
-                }
-              };
-            `}
+            onMessage={onMessage}
+            injectedJavaScriptBeforeContentLoaded={getInjectedJavaScriptBeforeContentLoaded(
+                props.allowedHosts
+            )}
         />
     );
 };

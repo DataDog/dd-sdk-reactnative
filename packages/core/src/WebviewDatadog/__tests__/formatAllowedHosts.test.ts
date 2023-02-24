@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { formatAllowedHosts } from '../formatAllowedHosts';
+import { formatAllowedHosts } from '../__utils__/formatAllowedHosts';
 
 describe('Format allowed hosts', () => {
     it('returns the host in expected format', () => {
@@ -8,17 +8,17 @@ describe('Format allowed hosts', () => {
             '\'["host1.com","example.fr","api.com"]\''
         );
     });
-    it('returns an error when the host is a number', () => {
+    it('returns an empty array when the host is a number', () => {
         const allowedHosts = 1240;
         // @ts-ignore
         expect(formatAllowedHosts(allowedHosts)).toBe("'[]'");
     });
-    it('returns an error when the host is a BigInt', () => {
+    it('returns an empty arrary when the host is a BigInt', () => {
         const allowedHosts = BigInt(1240);
         // @ts-ignore
         expect(formatAllowedHosts(allowedHosts)).toBe("'[]'");
     });
-    it('returns an error when the host is a circular reference', () => {
+    it('returns an empty array when the host is a circular reference', () => {
         type circularReference = {
             host: string;
             name?: circularReference | string;
@@ -27,5 +27,8 @@ describe('Format allowed hosts', () => {
         allowedHosts.name = allowedHosts;
         // @ts-ignore
         expect(formatAllowedHosts(allowedHosts)).toBe("'[]'");
+    });
+    it('returns an empty array when the hosts are not given', () => {
+        expect(formatAllowedHosts()).toBe("'[]'");
     });
 });
