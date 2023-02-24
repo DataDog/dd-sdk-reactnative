@@ -61,6 +61,12 @@ export type DdNativeSdkType = {
      * @param kind error kind
      */
     telemetryError(message: string, stack: string, kind: string): Promise<void>;
+
+    /**
+     * Send webview telemetry logs
+     * @param message event description
+     */
+    consumeWebViewEvent(message: string): Promise<void>;
 };
 
 /**
