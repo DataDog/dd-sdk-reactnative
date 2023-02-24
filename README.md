@@ -31,7 +31,7 @@ Versions `1.0.0-rc5` and higher require you to have `compileSdkVersion = 31` in 
 3. Provide an application name to generate a unique Datadog application ID and client token.
 4. To disable automatic user data collection for either client IP or geolocation data, uncheck the boxes for those settings.
 
-   {{< img src="real_user_monitoring/react_native/new-rum-app-react.png" alt="Create a RUM application for React Native in Datadog" style="width:90%;">}}
+   {{< img src="real_user_monitoring/react_native/reactnative_setup.png" alt="Create a RUM application for React Native in Datadog" style="width:90%;">}}
 
 To ensure the safety of your data, you must use a client token. If you used only [Datadog API keys][3] to configure the `@datadog/mobile-react-native` library, they would be exposed client-side in the React Native application's code.
 
