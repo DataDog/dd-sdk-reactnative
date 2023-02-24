@@ -21,9 +21,9 @@ A few constraints to keep in mind:
 
 ## Solutions
 
-### React Native apps with native content: Initialize the SDK on the React Native
+### React Native apps with native content: Initialize the React Native SDK
 
-Initialize the React Native Datadog SDK for RUM, by following the [official documentation][1].
+To initialize the React Native Datadog SDK for RUM, see the [React Native Monitoring documentation][1].
 
 This also initializes the SDK on the native side. You are able to call both the native and React Native SDKs for logs, traces and RUM.
 
@@ -99,9 +99,9 @@ configuration.useViewTrackingStrategy(FragmentViewTrackingStrategy(true, RNCompo
 
 Then use `@datadog/mobile-react-navigation` to track your views.
 
-#### Instrumenting React Native errors, interactions and resources
+#### Instrumenting React Native errors, interactions, and resources
 
-Wrap your React Native app with the `DatadogProvider` component to automatically register React Native RUM errors, interactions and resources:
+Wrap your React Native app with the `DatadogProvider` component to automatically register React Native RUM errors, interactions, and resources:
 
 ```javascript
 const configuration = {
