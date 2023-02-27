@@ -34,5 +34,3 @@ export const Webview = (props: Props) => {
         />
     );
 };
-
-export default Webview;
