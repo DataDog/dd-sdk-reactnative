@@ -116,6 +116,16 @@ class RNDdSdk: NSObject {
         resolve(nil)
     }
     
+    @objc(consumeWebviewEvent:withResolver:withRejecter:)
+    func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        do{
+            try Datadog._internal.webEventBridge.send(message)
+        } catch {
+            Datadog._internal.telemetry.debug(id: "datadog_react_native:\(error)", message: error.localizedDescription as String)
+        }
+        resolve(nil)
+    }
+    
     func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
         Datadog._internal.telemetry.setConfigurationMapper { event in
             var event = event
