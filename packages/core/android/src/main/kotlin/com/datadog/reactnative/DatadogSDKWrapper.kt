@@ -63,4 +63,8 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun telemetryError(message: String, throwable: Throwable?) {
         Datadog._internal._telemetry.error(message, throwable)
     }
+
+    override fun consumeWebviewEvent(message: String) {
+        Datadog._internal.consumeWebviewEvent(message)
+    }
 }

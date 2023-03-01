@@ -39,8 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
-        reactContext: ReactApplicationContext,
-        private val datadog: DatadogWrapper = DatadogSDKWrapper()
+    reactContext: ReactApplicationContext,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
     internal val appContext: Context = reactContext.applicationContext
@@ -133,11 +133,13 @@ class DdSdk(
         promise.resolve(null)
     }
 
+    /**
+     * Sends Webview Events
+     * @param message User action
+     */
     @ReactMethod
     fun consumeWebviewEvent(message: String, promise: Promise) {
-        // TODO:
-        // datadog.consumeWebviewEvent()
-        Log.d(message, "Client action")
+        datadog.consumeWebviewEvent(message)
         promise.resolve(null)
     }
 
@@ -148,13 +150,13 @@ class DdSdk(
     private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {
         val verbosityConfig = configuration.additionalConfig?.get(DD_SDK_VERBOSITY) as? String
         val verbosity =
-                when (verbosityConfig?.lowercase(Locale.US)) {
-                    "debug" -> Log.DEBUG
-                    "info" -> Log.INFO
-                    "warn" -> Log.WARN
-                    "error" -> Log.ERROR
-                    else -> null
-                }
+            when (verbosityConfig?.lowercase(Locale.US)) {
+                "debug" -> Log.DEBUG
+                "info" -> Log.INFO
+                "warn" -> Log.WARN
+                "error" -> Log.ERROR
+                else -> null
+            }
         if (verbosity != null) {
             datadog.setVerbosity(verbosity)
         }
@@ -163,19 +165,19 @@ class DdSdk(
     private fun getDefaultAppVersion(): String {
         val packageName = appContext.packageName
         val packageInfo =
-                try {
-                    appContext.packageManager.getPackageInfo(packageName, 0)
-                } catch (e: PackageManager.NameNotFoundException) {
-                    datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
-                    return DEFAULT_APP_VERSION
-                }
+            try {
+                appContext.packageManager.getPackageInfo(packageName, 0)
+            } catch (e: PackageManager.NameNotFoundException) {
+                datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
+                return DEFAULT_APP_VERSION
+            }
 
         return packageInfo?.let {
             // we need to use the deprecated method because getLongVersionCode method is only
             // available from API 28 and above
             @Suppress("DEPRECATION") it.versionName ?: it.versionCode.toString()
         }
-                ?: DEFAULT_APP_VERSION
+            ?: DEFAULT_APP_VERSION
     }
 
     @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
@@ -189,19 +191,19 @@ class DdSdk(
         }
 
         val configBuilder =
-                Configuration.Builder(
-                                logsEnabled = true,
-                                tracesEnabled = true,
-                                crashReportsEnabled = configuration.nativeCrashReportEnabled
-                                                ?: false,
-                                rumEnabled = true
-                        )
-                        .setAdditionalConfiguration(
-                                additionalConfig?.filterValues { it != null }?.mapValues {
-                                    it.value!!
-                                }
-                                        ?: emptyMap()
-                        )
+            Configuration.Builder(
+                logsEnabled = true,
+                tracesEnabled = true,
+                crashReportsEnabled = configuration.nativeCrashReportEnabled
+                    ?: false,
+                rumEnabled = true
+            )
+                .setAdditionalConfiguration(
+                    additionalConfig?.filterValues { it != null }?.mapValues {
+                        it.value!!
+                    }
+                        ?: emptyMap()
+                )
         if (configuration.sampleRate != null) {
             configBuilder.sampleRumSessions(configuration.sampleRate.toFloat())
         }
@@ -210,7 +212,7 @@ class DdSdk(
 
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setVitalsUpdateFrequency(
-                buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
         )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
@@ -230,16 +232,16 @@ class DdSdk(
         }
 
         val interactionTracking =
-                configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
+            configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
         if (interactionTracking == false) {
             configBuilder.disableInteractionTracking()
         }
 
         @Suppress("UNCHECKED_CAST")
         val firstPartyHosts =
-                (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
-                        ?.toArrayList() as?
-                        List<ReadableMap>
+            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
+                ?.toArrayList() as?
+                List<ReadableMap>
         if (firstPartyHosts != null) {
             val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
 
@@ -251,67 +253,67 @@ class DdSdk(
         }
 
         configBuilder.setRumResourceEventMapper(
-                object : EventMapper<ResourceEvent> {
-                    override fun map(event: ResourceEvent): ResourceEvent? {
-                        if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) ==
-                                        true
-                        ) {
-                            return null
-                        }
-                        return event
+            object : EventMapper<ResourceEvent> {
+                override fun map(event: ResourceEvent): ResourceEvent? {
+                    if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) ==
+                        true
+                    ) {
+                        return null
                     }
+                    return event
                 }
+            }
         )
 
         configBuilder.setRumActionEventMapper(
-                object : EventMapper<ActionEvent> {
-                    override fun map(event: ActionEvent): ActionEvent? {
-                        if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true
-                        ) {
-                            return null
-                        }
-                        return event
+            object : EventMapper<ActionEvent> {
+                override fun map(event: ActionEvent): ActionEvent? {
+                    if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true
+                    ) {
+                        return null
                     }
+                    return event
                 }
+            }
         )
 
         _InternalProxy.setTelemetryConfigurationEventMapper(
-                configBuilder,
-                object : EventMapper<TelemetryConfigurationEvent> {
-                    override fun map(
-                            event: TelemetryConfigurationEvent
-                    ): TelemetryConfigurationEvent? {
-                        event.telemetry.configuration.trackNativeErrors =
-                                configuration.nativeCrashReportEnabled
-                        // trackCrossPlatformLongTasks will be deprecated for trackLongTask
-                        event.telemetry.configuration.trackCrossPlatformLongTasks =
-                                configuration.longTaskThresholdMs != 0.0
-                        event.telemetry.configuration.trackLongTask =
-                                configuration.longTaskThresholdMs != 0.0
-                        event.telemetry.configuration.trackNativeLongTasks =
-                                configuration.nativeLongTaskThresholdMs != 0.0
+            configBuilder,
+            object : EventMapper<TelemetryConfigurationEvent> {
+                override fun map(
+                    event: TelemetryConfigurationEvent
+                ): TelemetryConfigurationEvent? {
+                    event.telemetry.configuration.trackNativeErrors =
+                        configuration.nativeCrashReportEnabled
+                    // trackCrossPlatformLongTasks will be deprecated for trackLongTask
+                    event.telemetry.configuration.trackCrossPlatformLongTasks =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackLongTask =
+                        configuration.longTaskThresholdMs != 0.0
+                    event.telemetry.configuration.trackNativeLongTasks =
+                        configuration.nativeLongTaskThresholdMs != 0.0
 
-                        event.telemetry.configuration.initializationType =
-                                configuration.configurationForTelemetry?.initializationType
-                        event.telemetry.configuration.trackInteractions =
-                                configuration.configurationForTelemetry?.trackInteractions
-                        event.telemetry.configuration.trackErrors =
-                                configuration.configurationForTelemetry?.trackErrors
-                        event.telemetry.configuration.trackResources =
-                                configuration.configurationForTelemetry?.trackNetworkRequests
-                        event.telemetry.configuration.trackNetworkRequests =
-                                configuration.configurationForTelemetry?.trackNetworkRequests
+                    event.telemetry.configuration.initializationType =
+                        configuration.configurationForTelemetry?.initializationType
+                    event.telemetry.configuration.trackInteractions =
+                        configuration.configurationForTelemetry?.trackInteractions
+                    event.telemetry.configuration.trackErrors =
+                        configuration.configurationForTelemetry?.trackErrors
+                    event.telemetry.configuration.trackResources =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
+                    event.telemetry.configuration.trackNetworkRequests =
+                        configuration.configurationForTelemetry?.trackNetworkRequests
 
-                        return event
-                    }
+                    return event
                 }
+            }
         )
 
         return configBuilder.build()
     }
 
     private fun buildFirstPartyHosts(
-            firstPartyHosts: List<ReadableMap>
+        firstPartyHosts: List<ReadableMap>
     ): Map<String, Set<TracingHeaderType>> {
         /**
          * Adapts the data format from the React Native SDK configuration to match with the Android
@@ -341,11 +343,11 @@ class DdSdk(
     private fun buildCredentials(configuration: DdSdkConfiguration): Credentials {
         val serviceName = configuration.additionalConfig?.get(DD_SERVICE_NAME) as? String
         return Credentials(
-                clientToken = configuration.clientToken,
-                envName = configuration.env,
-                rumApplicationId = configuration.applicationId,
-                variant = "",
-                serviceName = serviceName
+            clientToken = configuration.clientToken,
+            envName = configuration.env,
+            rumApplicationId = configuration.applicationId,
+            variant = "",
+            serviceName = serviceName
         )
     }
 
@@ -356,9 +358,9 @@ class DdSdk(
             "not_granted" -> TrackingConsent.NOT_GRANTED
             else -> {
                 Log.w(
-                        DdSdk::class.java.canonicalName,
-                        "Unknown consent given: $trackingConsent, " +
-                                "using ${TrackingConsent.PENDING} as default"
+                    DdSdk::class.java.canonicalName,
+                    "Unknown consent given: $trackingConsent, " +
+                        "using ${TrackingConsent.PENDING} as default"
                 )
                 TrackingConsent.PENDING
             }
@@ -366,43 +368,43 @@ class DdSdk(
     }
 
     internal fun buildProxyConfiguration(
-            configuration: DdSdkConfiguration
+        configuration: DdSdkConfiguration
     ): Pair<Proxy, ProxyAuthenticator?>? {
         val additionalConfig = configuration.additionalConfig ?: return null
 
         val address = additionalConfig[DD_PROXY_ADDRESS] as? String
         val port = (additionalConfig[DD_PROXY_PORT] as? Number)?.toInt()
         val type =
-                (additionalConfig[DD_PROXY_TYPE] as? String)?.let {
-                    when (it.lowercase(Locale.US)) {
-                        "http", "https" -> Proxy.Type.HTTP
-                        "socks" -> Proxy.Type.SOCKS
-                        else -> {
-                            Log.w(
-                                    DdSdk::class.java.canonicalName,
-                                    "Unknown proxy type given: $it, skipping proxy configuration."
-                            )
-                            null
-                        }
+            (additionalConfig[DD_PROXY_TYPE] as? String)?.let {
+                when (it.lowercase(Locale.US)) {
+                    "http", "https" -> Proxy.Type.HTTP
+                    "socks" -> Proxy.Type.SOCKS
+                    else -> {
+                        Log.w(
+                            DdSdk::class.java.canonicalName,
+                            "Unknown proxy type given: $it, skipping proxy configuration."
+                        )
+                        null
                     }
                 }
+            }
 
         val proxy =
-                if (address != null && port != null && type != null) {
-                    Proxy(type, InetSocketAddress(address, port))
-                } else {
-                    return null
-                }
+            if (address != null && port != null && type != null) {
+                Proxy(type, InetSocketAddress(address, port))
+            } else {
+                return null
+            }
 
         val username = additionalConfig[DD_PROXY_USERNAME] as? String
         val password = additionalConfig[DD_PROXY_PASSWORD] as? String
 
         val authenticator =
-                if (username != null && password != null) {
-                    ProxyAuthenticator(username, password)
-                } else {
-                    null
-                }
+            if (username != null && password != null) {
+                ProxyAuthenticator(username, password)
+            } else {
+                null
+            }
 
         return Pair(proxy, authenticator)
     }
@@ -439,9 +441,9 @@ class DdSdk(
         if (frameTimeCallback != null) {
             reactContext.runOnJSQueueThread {
                 val vitalFrameCallback =
-                        VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) {
-                            initialized.get()
-                        }
+                    VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) {
+                        initialized.get()
+                    }
                 try {
                     Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
                 } catch (e: IllegalStateException) {
@@ -453,11 +455,11 @@ class DdSdk(
     }
 
     private fun buildFrameTimeCallback(
-            ddSdkConfiguration: DdSdkConfiguration
+        ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
-                buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
-                        VitalsUpdateFrequency.NEVER
+            buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
+                VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -467,14 +469,14 @@ class DdSdk(
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
                 GlobalRum.get()
-                        ._getInternal()
-                        ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+                    ._getInternal()
+                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
             }
             if (jsLongTasksMonitoringEnabled &&
-                            it >
-                                    TimeUnit.MILLISECONDS.toNanos(
-                                            ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                                    )
+                it >
+                TimeUnit.MILLISECONDS.toNanos(
+                        ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                    )
             ) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
