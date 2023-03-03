@@ -206,6 +206,7 @@ class RNDdSdk: NSObject {
         }
 
         if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
+            // We will always fall under this condition as firstPartyHosts is an empty array by default
             _ = ddConfigBuilder.trackURLSession(firstPartyHostsWithHeaderTypes: firstPartyHosts.asFirstPartyHosts())
         }
 
