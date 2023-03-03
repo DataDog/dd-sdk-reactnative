@@ -35,19 +35,6 @@ describe('Webview', () => {
         expect(onMessage).not.toHaveBeenCalledWith(datadogEvent);
     });
     it('calls consumeWebviewEvent with Datadog logs', async () => {
-        jest.mock('react-native', () => {
-            const actual = jest.requireActual('react-native');
-            return {
-                ...actual,
-                NativeModules: {
-                    ...actual.NativeModules,
-                    DdSdk: {
-                        consumeWebviewEvent: () => jest.fn()
-                    }
-                }
-            };
-        });
-
         const { findByTestId } = render(
             <Webview testID="webview" allowedHosts={[]} />
         );

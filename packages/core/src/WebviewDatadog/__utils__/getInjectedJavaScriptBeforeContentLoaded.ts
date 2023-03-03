@@ -8,8 +8,6 @@ export const getInjectedJavaScriptBeforeContentLoaded = (
     `
       window.DatadogEventBridge = {
         send(msg) {
-
-          if(typeof msg === 'undefined') throw new Error('')
           window.ReactNativeWebView.postMessage("${DATADOG_MESSAGE_PREFIX} " + msg)
         },
         getAllowedWebViewHosts() {

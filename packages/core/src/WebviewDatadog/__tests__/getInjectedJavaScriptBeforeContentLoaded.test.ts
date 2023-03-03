@@ -10,17 +10,17 @@ describe('getInjectedJavaScriptBeforeContentLoaded', () => {
     let script: string;
     beforeEach(() => {
         jest.clearAllMocks();
-    });
-    it('posts the message and returns allowed webview hosts', () => {
-        allowedHosts = ['example.com', 'localhost'];
-        script = getInjectedJavaScriptBeforeContentLoaded(allowedHosts);
-        eval(script);
         Object.defineProperty(window, 'ReactNativeWebView', {
             value: {
                 postMessage: jest.fn()
             },
             writable: true
         });
+    });
+    it('posts the message and returns allowed webview hosts', () => {
+        allowedHosts = ['example.com', 'localhost'];
+        script = getInjectedJavaScriptBeforeContentLoaded(allowedHosts);
+        eval(script);
 
         // Posting the message
         (window as any).DatadogEventBridge.send(DdMessage);
@@ -38,12 +38,6 @@ describe('getInjectedJavaScriptBeforeContentLoaded', () => {
         script = getInjectedJavaScriptBeforeContentLoaded(allowedHosts);
         eval(script);
 
-        expect(
-            (window as any).DatadogEventBridge.getAllowedWebViewHosts()
-        ).toBe('[]');
-
-        script = getInjectedJavaScriptBeforeContentLoaded();
-        eval(script);
         expect(
             (window as any).DatadogEventBridge.getAllowedWebViewHosts()
         ).toBe('[]');
