@@ -134,8 +134,8 @@ class DdSdk(
     }
 
     /**
-     * Sends WebView Events
-     * @param message User action
+     * Sends WebView Events.
+     * @param message User action.
      */
     @ReactMethod
     fun consumeWebviewEvent(message: String, promise: Promise) {

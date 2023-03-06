@@ -121,7 +121,7 @@ class RNDdSdk: NSObject {
         do{
             try Datadog._internal.webEventBridge.send(message)
         } catch {
-            Datadog._internal.telemetry.debug(id: "datadog_react_native:\(error)", message: error.localizedDescription as String)
+            Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
         resolve(nil)
     }
