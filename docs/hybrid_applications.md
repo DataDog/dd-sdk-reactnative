@@ -29,6 +29,20 @@ This also initializes the SDK on the native side. You are able to call both the 
 
 If you are sure that you don't call the native SDK before the React Native SDK this is the solution we recommend.
 
+On Android, add the Datadog Android SDK to your dependencies in your `android/app/build.gradle` file:
+
+```groovy
+    // The version will be set by @datadog/mobile-react-native
+    implementation "com.datadoghq:dd-sdk-android"
+```
+
+On iOS, add the Datadog iOS SDK to your dependencies in your `ios/Podfile` to use it in Objective C files:
+
+```ruby
+# Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
+pod 'DatadogSDKObjc', '~> 1.15.0'
+```
+
 #### Tracking native RUM Views
 
 Using the `nativeViewTracking` configuration option will create many duplicate views you use a navigation library for your React Native app like `react-navigation`.
@@ -50,6 +64,22 @@ If you have enabled tracing with your backend, first party hosts for your native
 In this case, initialize the SDK on the native side.
 
 ### Native apps with React Native screens: Initialize the SDK on the native side
+
+Install the React Native Datadog SDK with `yarn add @datadog/mobile-react-native` or `npm install @datadog/mobile-react-native`.
+
+On Android, add the Datadog Android SDK to your dependencies in your `android/app/build.gradle` file:
+
+```groovy
+    // The version will be set by @datadog/mobile-react-native
+    implementation "com.datadoghq:dd-sdk-android"
+```
+
+On iOS, add the Datadog iOS SDK to your dependencies in your `ios/Podfile` to use it in Objective C files:
+
+```ruby
+# Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
+pod 'DatadogSDKObjc', '~> 1.15.0'
+```
 
 Initialize the SDK on the native side, by using the official documentation [for iOS][2] and [for Android][3].
 
