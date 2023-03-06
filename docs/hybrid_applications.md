@@ -83,10 +83,10 @@ On Android, use a `ComponentPredicate` to filter out native views created by you
 class RNComponentPredicate : ComponentPredicate<Fragment> {
     override fun accept(component: Fragment): Boolean {
         // Identify and drop react native screen views
-        if (component.javaClass.toString().startsWith("class com.swmansion.rnscreens")) {
+        if (component.javaClass.name.startsWith("com.swmansion.rnscreens")) {
             return false
         }
-        if (component.javaClass.toString().startsWith("class com.facebook.react")) {
+        if (component.javaClass.name.startsWith("com.facebook.react")) {
             return false
         }
         return true
@@ -95,16 +95,6 @@ class RNComponentPredicate : ComponentPredicate<Fragment> {
     override fun getViewName(component: Fragment): String? {
         return null
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
-    }
 }
 
 // Use it in your configuration
@@ -112,6 +102,8 @@ configuration.useViewTrackingStrategy(FragmentViewTrackingStrategy(true, RNCompo
 ```
 
 Then use `@datadog/mobile-react-navigation` to track your views.
+
+If you have enabled ProGuard obfuscation, add rules to prevent obfuscation of the target packages in release builds.
 
 #### Instrumenting React Native errors, interactions, and resources
 
@@ -164,6 +156,8 @@ class RNActionEventMapper : EventMapper<ActionEvent> {
 // Use it in your configuration
 configuration.setRumActionEventMapper(RNActionEventMapper())
 ```
+
+If you have enabled ProGuard obfuscation, add rules to prevent obfuscation of the target packages in release builds.
 
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
