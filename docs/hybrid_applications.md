@@ -29,13 +29,27 @@ This also initializes the SDK on the native side. You are able to call both the 
 
 If you are sure that you don't call the native SDK before the React Native SDK this is the solution we recommend.
 
+#### Tracking native RUM Views
+
+Using the `nativeViewTracking` configuration option will create many duplicate views you use a navigation library for your React Native app like `react-navigation`.
+
+If this is the case, track your native RUM Views manually. See our documentation [for iOS][5] and [for Android][6].
+
+#### Tracking native RUM Resources
+
+On iOS, you can track network [requests by monitoring your `URLSession`][9].
+
+On Android, if you use okHttp you can [use our interceptor to automatically track network requests][7]. Alternatively, you can [manually track resources][8].
+
+If you have enabled tracing with your backend, first party hosts for your native RUM Resources will be the same as for your React Native RUM Resources.
+
 #### Potential issues
 
 **You cannot call the native SDK before the React Native SDK has been initialized.**
 
-You can mitigate it by creating a queue on the native side to check if the SDK has been initialized before calling it, saving events with their timestamps to replay them once the SDK has been initialized.
+In this case, initialize the SDK on the native side.
 
-### Native apps with React Native screens: Initialize the SDK on the native side only
+### Native apps with React Native screens: Initialize the SDK on the native side
 
 Initialize the SDK on the native side, by using the official documentation [for iOS][2] and [for Android][3].
 
@@ -155,3 +169,8 @@ configuration.setRumActionEventMapper(RNActionEventMapper())
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
 [3]: https://docs.datadoghq.com/real_user_monitoring/android/
 [4]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/packages/core/src/DdSdkReactNative.tsx#L184
+[5]: https://docs.datadoghq.com/real_user_monitoring/ios/advanced_configuration/?tab=swift#custom-views
+[6]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#custom-views
+[7]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#automatically-track-network-requests
+[8]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#custom-resources
+[9]: https://docs.datadoghq.com/real_user_monitoring/ios/advanced_configuration/?tab=objectivec#automatically-track-network-requests
