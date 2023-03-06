@@ -12,7 +12,7 @@ type Props = WebViewProps & {
     allowedHosts?: string[];
 };
 
-export const Webview = (props: Props) => {
+export const WebView = (props: Props) => {
     const userDefinedOnMessage = props.onMessage;
     const onMessage = useCallback(
         (event: WebViewMessageEvent) => {

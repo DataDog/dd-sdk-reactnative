@@ -66,7 +66,7 @@ export type DdNativeSdkType = {
      * Send webview telemetry logs
      * @param message event description
      */
-    consumeWebViewEvent(message: string): Promise<void>;
+    consumeWebviewEvent(message: string): Promise<void>;
 };
 
 /**

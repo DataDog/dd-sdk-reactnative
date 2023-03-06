@@ -134,7 +134,7 @@ class DdSdk(
     }
 
     /**
-     * Sends Webview Events
+     * Sends WebView Events
      * @param message User action
      */
     @ReactMethod

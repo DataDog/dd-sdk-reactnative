@@ -2,9 +2,9 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { NativeModules } from 'react-native';
 import React from 'react';
 
-import { Webview } from '../WebviewDatadog';
+import { WebView } from '../WebViewDatadog';
 
-describe('Webview', () => {
+describe('WebView', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -23,24 +23,24 @@ describe('Webview', () => {
     it('calls provided onMessage props', async () => {
         const onMessage = jest.fn();
         const { findByTestId } = render(
-            <Webview onMessage={onMessage} testID="webview" allowedHosts={[]} />
+            <WebView onMessage={onMessage} testID="webView" allowedHosts={[]} />
         );
 
-        const webview = await findByTestId('webview');
+        const webView = await findByTestId('webView');
 
-        fireEvent(webview, 'message', userDefinedEvent);
+        fireEvent(webView, 'message', userDefinedEvent);
         expect(onMessage).toHaveBeenCalledWith(userDefinedEvent);
 
-        fireEvent(webview, 'message', datadogEvent);
+        fireEvent(webView, 'message', datadogEvent);
         expect(onMessage).toHaveBeenCalledTimes(1);
         expect(onMessage).not.toHaveBeenCalledWith(datadogEvent);
     });
     it('calls consumeWebviewEvent with Datadog logs', async () => {
         const { findByTestId } = render(
-            <Webview testID="webview" allowedHosts={[]} />
+            <WebView testID="webView" allowedHosts={[]} />
         );
-        const webview = await findByTestId('webview');
-        fireEvent(webview, 'message', datadogEvent);
+        const webView = await findByTestId('webView');
+        fireEvent(webView, 'message', datadogEvent);
 
         expect(NativeModules.DdSdk.consumeWebviewEvent).toHaveBeenCalledWith(
             DdMessage

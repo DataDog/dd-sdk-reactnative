@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native';
 import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
 
-import { Webview } from '../WebviewDatadog';
+import { WebView } from '../WebViewDatadog';
 
 jest.mock('react-native-webview', () => {
     return {
@@ -10,7 +10,7 @@ jest.mock('react-native-webview', () => {
     };
 });
 
-describe('Webview performance', () => {
+describe('WebView performance', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -18,16 +18,16 @@ describe('Webview performance', () => {
         const onMessage = jest.fn();
         const allowedHosts = ['localhost', 'example.com'];
         const { rerender } = render(
-            <Webview onMessage={onMessage} allowedHosts={allowedHosts} />
+            <WebView onMessage={onMessage} allowedHosts={allowedHosts} />
         );
 
         // Render the component with a new onMessage prop
-        rerender(<Webview onMessage={onMessage} allowedHosts={allowedHosts} />);
+        rerender(<WebView onMessage={onMessage} allowedHosts={allowedHosts} />);
 
         // Render the component with a new onMessage prop
         const newOnMessage = jest.fn();
         rerender(
-            <Webview onMessage={newOnMessage} allowedHosts={allowedHosts} />
+            <WebView onMessage={newOnMessage} allowedHosts={allowedHosts} />
         );
         const mockedWebView = jest.mocked(RNWebView);
         // Verify that the onMessage prop of the RNWebView component has changed
