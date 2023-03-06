@@ -1,7 +1,7 @@
 import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { WebView as RNWebView } from 'react-native-webview';
 import { NativeModules } from 'react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
     DATADOG_MESSAGE_PREFIX,
@@ -13,17 +13,20 @@ type Props = WebViewProps & {
 };
 
 export const Webview = (props: Props) => {
-    const onMessage = (event: WebViewMessageEvent) => {
-        const message = event.nativeEvent.data;
-
-        if (message.startsWith(DATADOG_MESSAGE_PREFIX)) {
-            NativeModules.DdSdk.consumeWebviewEvent(
-                message.substring(DATADOG_MESSAGE_PREFIX.length + 1)
-            );
-        } else {
-            props.onMessage?.(event);
-        }
-    };
+    const userDefinedOnMessage = props.onMessage;
+    const onMessage = useCallback(
+        (event: WebViewMessageEvent) => {
+            const message = event.nativeEvent.data;
+            if (message.startsWith(DATADOG_MESSAGE_PREFIX)) {
+                NativeModules.DdSdk.consumeWebviewEvent(
+                    message.substring(DATADOG_MESSAGE_PREFIX.length + 1)
+                );
+            } else {
+                userDefinedOnMessage?.(event);
+            }
+        },
+        [userDefinedOnMessage]
+    );
     return (
         <RNWebView
             {...props}

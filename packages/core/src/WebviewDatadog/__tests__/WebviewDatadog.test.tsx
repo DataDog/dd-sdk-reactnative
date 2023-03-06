@@ -15,16 +15,17 @@ describe('Webview', () => {
             data: `${DATADOG_MESSAGE_PREFIX} ${DdMessage}`
         }
     };
+    const userDefinedEvent = {
+        nativeEvent: {
+            data: 'custom user-defined message'
+        }
+    };
     it('calls provided onMessage props', async () => {
         const onMessage = jest.fn();
         const { findByTestId } = render(
             <Webview onMessage={onMessage} testID="webview" allowedHosts={[]} />
         );
-        const userDefinedEvent = {
-            nativeEvent: {
-                data: 'custom user-defined message'
-            }
-        };
+
         const webview = await findByTestId('webview');
 
         fireEvent(webview, 'message', userDefinedEvent);
