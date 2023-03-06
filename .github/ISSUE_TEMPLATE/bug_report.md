@@ -6,12 +6,13 @@ labels: bug
 assignees: ''
 ---
 
-Thanks for taking the time for reporting an issue!
+<!-- Thanks for taking the time for reporting an issue!
 
-If you are having trouble sending data from the SDK but don't see any error, please reach out first [through our support team](https://www.datadoghq.com/support/).
+If you are having trouble sending data from the SDK but don't see any error, please reach out first [through our support team](https://www.datadoghq.com/support/). -->
 
 **Describe what happened**
-Include any error message or stack trace if available.
+
+<!-- Include any error message or stack trace if available. -->
 
 **Steps to reproduce the issue:**
 
@@ -19,7 +20,8 @@ Include any error message or stack trace if available.
 
 **Additional context**
 
--   Version of the SDK
+-   Version of the SDK:
+-   Version of React Native:
 -   `package.json`
 -   `Podfile` and `Podfile.lock`
 -   `android/build.gradle` and `android/app/build.gradle`
