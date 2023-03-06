@@ -57,7 +57,7 @@ On Android, if you use okHttp you can [use our interceptor to automatically trac
 
 If you have enabled tracing with your backend, first party hosts for your native RUM Resources will be the same as for your React Native RUM Resources.
 
-#### Potential issues
+#### Limitations
 
 **You cannot call the native SDK before the React Native SDK has been initialized.**
 
@@ -188,6 +188,56 @@ configuration.setRumActionEventMapper(RNActionEventMapper())
 ```
 
 If you have enabled ProGuard obfuscation, add rules to prevent obfuscation of the target packages in release builds.
+
+#### Limitations
+
+If you specified a `resourceEventMapper` or `actionEventMapper` in your React Native configuration, resources and actions won't be dropped if you return `null` in the mapper.
+
+To keep this functionality, add the following snippets in your native configuration for iOS:
+
+```swift
+Datadog.Configuration
+    .builderUsing(...)
+    .setRUMResourceEventMapper { resourceEvent in
+        if resourceEvent.context?.contextInfo["_dd.resource.drop_resource"] != nil {
+            return nil
+        }
+        // You can add your custom event mapper logic here
+        return resourceEvent
+    }
+    .setRUMActionEventMapper { actionEvent in
+        if actionEvent.context?.contextInfo["_dd.resource.drop_action"] != nil {
+            return nil
+        }
+        // You can add your custom event mapper logic here
+        return resourceEvent
+    }
+```
+
+And for Android:
+
+```kotlin
+    val config = Configuration.Builder(true, true, true, true)
+     .setRumResourceEventMapper(object : EventMapper<ResourceEvent> {
+            override fun map(event: ResourceEvent): ResourceEvent? {
+                if (event.context?.additionalProperties?.containsKey("_dd.resource.drop_resource") == true) {
+                    return null
+                }
+                // You can add your custom event mapper logic here
+                return event
+            }
+        })
+     .setRumActionEventMapper(object : EventMapper<ActionEvent> {
+            override fun map(event: ActionEvent): ActionEvent? {
+                if (event.context?.additionalProperties?.containsKey("_dd.action.drop_action") == true) {
+                    return null
+                }
+                // You can add your custom event mapper logic here
+                return event
+            }
+        })
+
+```
 
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
