@@ -17,7 +17,7 @@ describe('Format allowed hosts', () => {
         const allowedHosts = BigInt(1240);
         // @ts-ignore
         const result = formatAllowedHosts(allowedHosts);
-        expect(NativeModules.DdSdk.telemetryError).toBeCalled();
+        expect(NativeModules.DdSdk.telemetryError).toHaveBeenCalled();
         expect(result).toBe("'[]'");
     });
     it('returns an empty array when the host is a circular reference', () => {
@@ -29,7 +29,7 @@ describe('Format allowed hosts', () => {
         allowedHosts.name = allowedHosts;
         // @ts-ignore
         const result = formatAllowedHosts(allowedHosts);
-        expect(NativeModules.DdSdk.telemetryError).toBeCalled();
+        expect(NativeModules.DdSdk.telemetryError).toHaveBeenCalled();
         expect(result).toBe("'[]'");
     });
 });

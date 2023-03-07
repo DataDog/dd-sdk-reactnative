@@ -16,6 +16,7 @@ describe('getInjectedJavaScriptBeforeContentLoaded', () => {
             },
             writable: true
         });
+        delete (window as any).DatadogEventBridge;
     });
     it('posts the message and returns allowed webview hosts', () => {
         allowedHosts = ['example.com', 'localhost'];
@@ -41,5 +42,39 @@ describe('getInjectedJavaScriptBeforeContentLoaded', () => {
         expect(
             (window as any).DatadogEventBridge.getAllowedWebViewHosts()
         ).toBe('[]');
+    });
+    it('uses our injected javascript and the user provided implementation', () => {
+        allowedHosts = ['example.com', 'localhost'];
+        const callfunction = jest.fn();
+        const injectedJavaScriptBeforeContentLoaded = 'callfunction()';
+        script = getInjectedJavaScriptBeforeContentLoaded(
+            allowedHosts,
+            injectedJavaScriptBeforeContentLoaded
+        );
+        eval(script);
+        expect(callfunction).toHaveBeenCalled();
+        // Posting the message
+        (window as any).DatadogEventBridge.send(DdMessage);
+        expect((window as any).ReactNativeWebView.postMessage).toBeCalledWith(
+            `${DATADOG_MESSAGE_PREFIX} ${DdMessage}`
+        );
+    });
+    it('executes our injected javascript when the user provided implementation throws an error', () => {
+        allowedHosts = ['example.com', 'localhost'];
+        const callfunction = jest.fn().mockImplementation(() => {
+            throw new Error('The user functions throws an error');
+        });
+        const injectedJavaScriptBeforeContentLoaded = 'callfunction()';
+        script = getInjectedJavaScriptBeforeContentLoaded(
+            allowedHosts,
+            injectedJavaScriptBeforeContentLoaded
+        );
+        eval(script);
+        expect(() => eval(injectedJavaScriptBeforeContentLoaded)).toThrow();
+        // Posting the message
+        (window as any).DatadogEventBridge.send(DdMessage);
+        expect((window as any).ReactNativeWebView.postMessage).toBeCalledWith(
+            `${DATADOG_MESSAGE_PREFIX} ${DdMessage}`
+        );
     });
 });

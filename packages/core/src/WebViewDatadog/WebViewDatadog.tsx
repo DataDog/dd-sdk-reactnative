@@ -10,6 +10,7 @@ import {
 
 type Props = WebViewProps & {
     allowedHosts?: string[];
+    injectedJavaScriptBeforeContentLoaded?: string;
 };
 
 export const WebView = (props: Props) => {
@@ -32,7 +33,8 @@ export const WebView = (props: Props) => {
             {...props}
             onMessage={onMessage}
             injectedJavaScriptBeforeContentLoaded={getInjectedJavaScriptBeforeContentLoaded(
-                props.allowedHosts
+                props.allowedHosts,
+                props.injectedJavaScriptBeforeContentLoaded
             )}
         />
     );
