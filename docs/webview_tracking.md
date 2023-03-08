@@ -2,7 +2,7 @@
 
 ## Overview
 
-Real User Monitoring allows you to monitor web views and eliminate blind spots in your hybrid React Native applications.
+Real User Monitoring (RUM) allows you to monitor web views and eliminate blind spots in your hybrid React Native applications.
 
 You can perform the following:
 
@@ -10,15 +10,15 @@ You can perform the following:
 -   Scope the root cause of latency to web pages or native components in mobile applications
 -   Support users that have difficulty loading web pages on mobile devices
 
-We only support web views created using [react-native-webview](3).
+RUM supports web views created using [react-native-webview][3].
 
 ## Setup
 
 ### Prerequisites
 
-Set up the web page you want rendered on your mobile React Native application with the RUM Browser SDK first. For more information, see [RUM Browser Monitoring](1).
+Set up the RUM Browser SDK on the web page you want rendered on your mobile React Native application. For more information, see [RUM Browser Monitoring][1].
 
-Add `react-native-webview` to your application following the [official installation documentation](4).
+Add `react-native-webview` to your application following the [official installation documentation][4].
 
 ### Instrument your web views
 
@@ -41,7 +41,7 @@ Provide the list of hosts to be tracked by Datadog inside the web view by using 
 
 ## Access your web views
 
-Your web views appear in the [RUM Explorer](2) with associated `service` and `source` attributes. The `service` attribute indicates the web component the web view is generated from, and the `source` attribute denotes the mobile application’s platform, such as React Native.
+Your web views appear in the [RUM Explorer][2] with associated `service` and `source` attributes. The `service` attribute indicates the web component the web view is generated from, and the `source` attribute denotes the mobile application’s platform, such as React Native.
 
 Filter on your React Native applications, and click a session. A side panel with a list of events in the session appears.
 
