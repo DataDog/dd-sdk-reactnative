@@ -116,9 +116,6 @@ repositories {
   mavenCentral()
   google()
   maven { url "https://jitpack.io" }
-  maven {
-    url "https://oss.sonatype.org/content/repositories/snapshots/"
-  }
   mavenLocal()
 
   if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
