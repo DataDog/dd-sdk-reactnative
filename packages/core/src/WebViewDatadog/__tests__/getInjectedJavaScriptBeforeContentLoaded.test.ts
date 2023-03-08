@@ -1,3 +1,8 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
 /* eslint-disable no-eval */
 import {
     getInjectedJavaScriptBeforeContentLoaded,
@@ -61,6 +66,7 @@ describe('getInjectedJavaScriptBeforeContentLoaded', () => {
     });
     it('executes our injected javascript when the user provided implementation throws an error', () => {
         allowedHosts = ['example.com', 'localhost'];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const callfunction = jest.fn().mockImplementation(() => {
             throw new Error('The user functions throws an error');
         });
