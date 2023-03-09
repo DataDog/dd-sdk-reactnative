@@ -66,6 +66,22 @@ To set your project up to send the symbolication files automatically, run `npx d
 
 See the wizard [official documentation][13] for options.
 
+## Passing options for your uploads
+
+### On Android using the `datadog-sourcemaps.gradle` script
+
+To specify a different service name, add the following code to your `android/app/build.gradle` file, before the `apply from: "../../node_modules/@datadog/mobile-react-native/datadog-sourcemaps.gradle"` line:
+
+```groovy
+project.ext.datadog = [
+    serviceName: "com.my.custom.service"
+]
+```
+
+### On iOS using the `datadog-ci react-native xcode` command
+
+Available options for the `datadog-ci react-native xcode` command are available on the [command documentation page][12].
+
 ## Test your implementation of crash reporting
 
 To make sure your sourcemaps are correctly sent and linked to your application, you can generate crashes with the [`react-native-performance-limiter`][14] package.
@@ -73,7 +89,7 @@ To make sure your sourcemaps are correctly sent and linked to your application, 
 Install it with yarn or npm then re-install your pods:
 
 ```shell
-yarn install react-native-performance-limiter # or npm install react-native-performance-limiter
+yarn add react-native-performance-limiter # or npm install react-native-performance-limiter
 (cd ios && pod install)
 ```
 
@@ -371,10 +387,6 @@ Inside the loop, add the following snippet:
             tasks["minify${variant.name.capitalize()}WithR8"].finalizedBy { tasks["uploadMapping${variant.name.capitalize()}"] }
         }
 ```
-
-### Verify crash reports
-
-To verify your React Native Crash Reporting and Error Tracking configuration, you can install a package like the [`react-native-crash-tester`][7] to crash your app from the native or JavaScript side.
 
 ## Further reading
 
