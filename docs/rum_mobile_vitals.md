@@ -2,7 +2,7 @@
 
 Real User Monitoring offers Mobile Vitals, a set of metrics that can help compute insights about your mobile application's responsiveness, stability, and resource consumption. Mobile Vitals range from poor, moderate, to good. 
 
-Mobile Vitals appear in your application's **Overview** tab and in the side panel under **Performance** > **Event Timings and Mobile Vitals** when you click on an individual view in the [RUM Explorer][2]. Click on a graph in **Mobile Vitals** to apply a filter by version or examine filtered sessions. 
+Mobile Vitals appear on your your application's **Performance Overview** page when you navigate to **UX Monitoring > Performance Monitoring** and click your application. From the mobile performance dashboard for your application, click on a graph in **Mobile Vitals** to apply a filter by version or examine filtered sessions. 
 
 {{< img src="real_user_monitoring/react_native/react-native-mobile-vitals-new.png" alt="Mobile Vitals in the Performance Tab" style="width:70%;">}}
 
