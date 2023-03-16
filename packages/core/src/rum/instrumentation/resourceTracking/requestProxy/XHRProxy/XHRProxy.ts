@@ -41,6 +41,7 @@ export class XHRProxy extends RequestProxy {
     private providers: XHRProxyProviders;
     private static originalXhrOpen: typeof XMLHttpRequest.prototype.open;
     private static originalXhrSend: typeof XMLHttpRequest.prototype.send;
+    private static originalXhrSetRequest: typeof XMLHttpRequest.prototype.setRequestHeader;
 
     constructor(providers: XHRProxyProviders) {
         super();
@@ -50,12 +51,15 @@ export class XHRProxy extends RequestProxy {
     onTrackingStart = (context: RequestProxyOptions) => {
         XHRProxy.originalXhrOpen = this.providers.xhrType.prototype.open;
         XHRProxy.originalXhrSend = this.providers.xhrType.prototype.send;
+        XHRProxy.originalXhrSetRequest = this.providers.xhrType.prototype.setRequestHeader;
         proxyRequests(this.providers, context);
     };
 
     onTrackingStop = () => {
         this.providers.xhrType.prototype.open = XHRProxy.originalXhrOpen;
         this.providers.xhrType.prototype.send = XHRProxy.originalXhrSend;
+        this.providers.xhrType.prototype.setRequestHeader =
+            XHRProxy.originalXhrSetRequest;
     };
 }
 
@@ -65,6 +69,7 @@ const proxyRequests = (
 ): void => {
     proxyOpen(providers, context);
     proxySend(providers);
+    proxySetRequestHeaders(providers);
 };
 
 const proxyOpen = (
@@ -96,6 +101,29 @@ const proxyOpen = (
         };
         // eslint-disable-next-line prefer-rest-params
         return originalXhrOpen.apply(this, arguments as any);
+    };
+};
+
+const proxySetRequestHeaders = (providers: XHRProxyProviders): void => {
+    const xhrType = providers.xhrType;
+    const originalXhrSetRequestHeader = xhrType.prototype.setRequestHeader;
+
+    xhrType.prototype.setRequestHeader = function (
+        this: DdRumXhr,
+        header: string,
+        value: string
+    ) {
+        if (header === '_dd-graph-ql-name') {
+            if (this._datadog_xhr) {
+                this._datadog_xhr.url = `${this._datadog_xhr.url}:${value}`;
+            } else {
+                console.log('noooo DATADOG_XHR');
+            }
+            return;
+        }
+        // eslint-disable-next-line prefer-rest-params
+        return originalXhrSetRequestHeader.apply(this, arguments as any);
+        // originalXhrSetRequestHeader.call(this, header, value);
     };
 };
 
