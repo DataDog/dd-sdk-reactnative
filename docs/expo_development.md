@@ -97,6 +97,28 @@ Run `eas secret:create` to set `DATADOG_API_KEY` to your Datadog API key.
 
 For information about tracking Expo crashes, see [Expo Crash Reporting and Error Tracking][6].
 
+## Tracking Expo Router screens
+
+If you are using [Expo Router][7], track your screens in your `app/_layout.js` file:
+
+```javascript
+import { useEffect } from 'react';
+import { usePathname, useSearchParams, useSegments, Slot } from 'expo-router';
+
+export default function Layout() {
+    const pathname = usePathname();
+    const segments = useSegments();
+    const viewKey = segments.join('/');
+
+    useEffect(() => {
+        DdRum.startView(viewKey, pathname);
+    }, [viewKey, pathname]);
+
+    // Export all the children routes in the most basic way.
+    return <Slot />;
+}
+```
+
 ## Expo Go
 
 If you are using Expo Go, switch to development builds (recommended), or keep using Expo Go without Datadog while having it run on your standalone application (not recommended).
@@ -169,3 +191,4 @@ DdSdkReactNative.initialize(config);
 [4]: https://docs.expo.dev/workflow/customizing/#releasing-apps-with-custom-native-code-to
 [5]: https://docs.expo.dev/development/getting-started/
 [6]: https://docs.datadoghq.com/real_user_monitoring/error_tracking/expo/
+[7]: https://expo.github.io/router/docs/
