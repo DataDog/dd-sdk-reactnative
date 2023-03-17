@@ -194,6 +194,8 @@ class DdSdk(
             configBuilder.sampleRumSessions(configuration.sampleRate.toFloat())
         }
 
+        configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
+
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setVitalsUpdateFrequency(
             buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)

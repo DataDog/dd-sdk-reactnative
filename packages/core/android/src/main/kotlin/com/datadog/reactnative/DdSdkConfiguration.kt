@@ -19,6 +19,7 @@ package com.datadog.reactnative
  * @param trackingConsent Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
+ * @param trackFrustrations Whether to track frustration signals or not.
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
@@ -34,6 +35,7 @@ data class DdSdkConfiguration(
     val trackingConsent: String? = null,
     val telemetrySampleRate: Double? = null,
     val vitalsUpdateFrequency: String? = null,
+    val trackFrustrations: Boolean? = null,
     val additionalConfig: Map<String, Any?>? = null,
     val configurationForTelemetry: ConfigurationForTelemetry? = null
 )
