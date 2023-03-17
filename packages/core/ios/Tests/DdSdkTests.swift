@@ -276,6 +276,30 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.additionalConfiguration["_dd.version"] as! String, "1.2.3:codepush-3")
     }
+    
+    func testBuildConfigurationFrustrationTrackingEnabledByDefault() {
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumFrustrationSignalsTrackingEnabled, true)
+    }
+    
+    func testBuildConfigurationFrustrationTrackingEnabledExplicitly() {
+        let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: true)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumFrustrationSignalsTrackingEnabled, true)
+    }
+    
+    func testBuildConfigurationFrustrationTrackingDisabled() {
+        let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: false)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumFrustrationSignalsTrackingEnabled, false)
+    }
 
     func testSettingUserInfo() throws {
         let bridge = RNDdSdk(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
@@ -728,6 +752,7 @@ extension DdSdkConfiguration {
         trackingConsent: NSString = "pending",
         telemetrySampleRate: Double = 45.0,
         vitalsUpdateFrequency: NSString = "average",
+        trackFrustrations: Bool? = nil,
         additionalConfig: NSDictionary? = nil,
         configurationForTelemetry: NSDictionary? = nil
     ) -> DdSdkConfiguration {
@@ -743,6 +768,7 @@ extension DdSdkConfiguration {
             trackingConsent: trackingConsent,
             telemetrySampleRate: telemetrySampleRate,
             vitalsUpdateFrequency: vitalsUpdateFrequency,
+            trackFrustrations: trackFrustrations,
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )

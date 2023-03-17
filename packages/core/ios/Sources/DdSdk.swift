@@ -174,6 +174,10 @@ class RNDdSdk: NSObject {
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
         }
+        
+        if var trackFrustrations = (configuration.trackFrustrations) {
+            _ = ddConfigBuilder.trackFrustrations(trackFrustrations)
+        }
 
         if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
             if (threshold != 0) {
