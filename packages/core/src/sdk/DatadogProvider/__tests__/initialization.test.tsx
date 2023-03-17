@@ -81,6 +81,7 @@ describe('DatadogProvider', () => {
                   "sampleRate": 100,
                   "site": "US1",
                   "telemetrySampleRate": 20,
+                  "trackFrustrations": true,
                   "trackingConsent": "granted",
                   "vitalsUpdateFrequency": "AVERAGE",
                 }

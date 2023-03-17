@@ -48,6 +48,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "site": "US1",
                   "telemetrySampleRate": 20,
                   "trackErrors": false,
+                  "trackFrustrations": true,
                   "trackInteractions": false,
                   "trackResources": false,
                   "trackingConsent": "granted",
@@ -93,7 +94,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackingConsent: TrackingConsent.PENDING,
                         nativeCrashReportEnabled: true,
                         nativeLongTaskThresholdMs: 345,
-                        longTaskThresholdMs: 567
+                        longTaskThresholdMs: 567,
+                        trackFrustrations: true
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -129,6 +131,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "site": "EU",
                   "telemetrySampleRate": 20,
                   "trackErrors": true,
+                  "trackFrustrations": true,
                   "trackInteractions": true,
                   "trackResources": true,
                   "trackingConsent": "pending",
@@ -163,7 +166,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         additionalConfig: {},
                         nativeCrashReportEnabled: false,
                         nativeLongTaskThresholdMs: false,
-                        longTaskThresholdMs: false
+                        longTaskThresholdMs: false,
+                        trackFrustrations: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -189,6 +193,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "site": "",
                   "telemetrySampleRate": 20,
                   "trackErrors": false,
+                  "trackFrustrations": false,
                   "trackInteractions": false,
                   "trackResources": false,
                   "trackingConsent": "granted",
