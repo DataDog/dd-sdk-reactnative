@@ -19,7 +19,10 @@ import Foundation
      - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
      - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
+     - vitalsUpdateFrequency: The frequency at which to measure vitals performance metrics.
+     - trackFrustrations: Whether to track frustration signals or not.
      - additionalConfig: Additional configuration parameters.
+     - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -34,6 +37,7 @@ public class DdSdkConfiguration: NSObject {
     public var trackingConsent: NSString? = nil
     public var telemetrySampleRate: Double? = nil
     public var vitalsUpdateFrequency: NSString? = nil
+    public var trackFrustrations: Bool? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
@@ -49,6 +53,7 @@ public class DdSdkConfiguration: NSObject {
         trackingConsent: NSString?,
         telemetrySampleRate: Double?,
         vitalsUpdateFrequency: NSString?,
+        trackFrustrations: Bool?,
         additionalConfig: NSDictionary?,
         configurationForTelemetry: ConfigurationForTelemetry?
     ) {
@@ -63,6 +68,7 @@ public class DdSdkConfiguration: NSObject {
         self.trackingConsent = trackingConsent
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
+        self.trackFrustrations = trackFrustrations
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }

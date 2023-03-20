@@ -69,7 +69,8 @@ const DEFAULTS = {
     logEventMapper: null,
     errorEventMapper: null,
     resourceEventMapper: null,
-    actionEventMapper: null
+    actionEventMapper: null,
+    trackFrustrations: true
 };
 
 /**
@@ -182,6 +183,11 @@ export class DdSdkReactNativeConfiguration {
     public vitalsUpdateFrequency: VitalsUpdateFrequency =
         DEFAULTS.vitalsUpdateFrequency;
 
+    /**
+     * Enables tracking of frustration signals (error taps). Defaults to `true`.
+     */
+    public trackFrustrations: boolean = DEFAULTS.trackFrustrations;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -293,6 +299,7 @@ export type PartialInitializationConfiguration = {
     readonly nativeCrashReportEnabled?: boolean;
     readonly telemetrySampleRate?: number;
     readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
+    readonly trackFrustrations?: boolean;
 };
 
 const setConfigurationAttribute = <
