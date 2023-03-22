@@ -378,11 +378,14 @@ describe.each([
                         // @ts-ignore
                         appStateMock.addEventListener
                     );
-                    // @ts-ignore
                     if (appStateMock.removeEventListener) {
+                        // @ts-ignore
                         AppState.removeEventListener = jest.fn(
                             appStateMock.removeEventListener
                         );
+                    } else {
+                        // @ts-ignore
+                        delete AppState.removeEventListener;
                     }
                 });
                 it('registers and unregisters AppState', async () => {
@@ -495,6 +498,25 @@ describe.each([
 
                     // THEN
                     expect(DdRum.stopView).not.toHaveBeenCalled();
+                });
+
+                it('does not crash when stopTrackingViews is called before startTrackingViews', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                    DdRumReactNavigationTracking.stopTrackingViews(
+                        navigationRef.current
+                    );
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+
+                    // WHEN
+                    appStateMock.changeValue('background');
+
+                    // THEN
+                    expect(DdRum.stopView).toHaveBeenCalled();
                 });
             }
         );
