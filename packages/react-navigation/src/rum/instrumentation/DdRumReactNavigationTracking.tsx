@@ -25,8 +25,13 @@ declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null;
 export type ViewNamePredicate = (
     route: Route<string, any | undefined>,
     trackedName: string
-) => string | null;
+) => string | { name: string; context?: object } | null;
 
+const isPredicateResultString = (
+    predicateResult: string | { name: string; context?: object } | null
+): predicateResult is string => {
+    return typeof predicateResult === 'string';
+};
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
  */
@@ -180,7 +185,11 @@ export class DdRumReactNavigationTracking {
             ) {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
-                DdRum.startView(key, screenName);
+                if (isPredicateResultString(screenName)) {
+                    DdRum.startView(key, screenName);
+                } else {
+                    DdRum.startView(key, screenName.name, screenName.context);
+                }
             }
         }
     }

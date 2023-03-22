@@ -163,6 +163,41 @@ describe.each([
                 );
             });
 
+            it('sends a related RUM ViewEvent when switching screens { viewPredicate returning context }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                const predicate: ViewNamePredicate = function (
+                    _route: Route<string, any | undefined>,
+                    _trackedName: string
+                ) {
+                    return {
+                        name: 'custom_view_name',
+                        context: _route.params
+                    };
+                };
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    predicate
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'custom_view_name',
+                    {
+                        user: 'super-user'
+                    }
+                );
+            });
+
             it('sends a related RUM ViewEvent when switching screens { viewPredicate returns null }', async () => {
                 // GIVEN
                 const navigationRef = createRef<any>();

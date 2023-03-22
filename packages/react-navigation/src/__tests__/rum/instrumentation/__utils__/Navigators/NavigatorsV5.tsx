@@ -27,7 +27,9 @@ export function FakeHomeScreen({ navigation }) {
             <Button
                 title="Go to About"
                 onPress={() => {
-                    navigation.navigate('About');
+                    navigation.navigate('About', {
+                        user: 'super-user'
+                    });
                 }}
             />
         </View>
