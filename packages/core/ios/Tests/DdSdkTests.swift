@@ -216,6 +216,14 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.datadogEndpoint, .eu1)
     }
 
+    func testBuildConfigurationAP1Endpoint() {
+        let configuration: DdSdkConfiguration = .mockAny(site: "AP1")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.datadogEndpoint, .ap1)
+    }
+
     func testBuildConfigurationAdditionalConfig() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["foo": "test", "bar": 42])
 
