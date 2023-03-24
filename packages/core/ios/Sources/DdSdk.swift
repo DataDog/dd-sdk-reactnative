@@ -165,6 +165,8 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(endpoint: .us5)
         case "us1_fed", "gov":
             _ = ddConfigBuilder.set(endpoint: .us1_fed)
+        case "ap1":
+            _ = ddConfigBuilder.set(endpoint: .ap1)
         default:
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
