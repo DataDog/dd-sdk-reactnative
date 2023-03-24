@@ -847,6 +847,63 @@ internal class DdSdkTest {
         assertThat(credentials.variant).isEqualTo("")
     }
 
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {site=ap1}`(
+        forge: Forge
+    ) {
+        // Given
+        val site = forge.randomizeCase("ap1")
+        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("needsClearTextHttp", false)
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
+            }
+            .hasField("logsConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("tracesConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("crashReportConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasFieldEqualTo(
+                "additionalConfig",
+                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+            )
+        val credentials = credentialCaptor.firstValue
+        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
+        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
+        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
+        assertThat(credentials.variant).isEqualTo("")
+    }
+
     // endregion
 
     // region initialize / additionalConfig
