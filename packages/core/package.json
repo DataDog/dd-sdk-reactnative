@@ -1,80 +1,86 @@
 {
-  "name": "@datadog/mobile-react-native",
-  "version": "1.4.0",
-  "description": "A client-side React Native module to interact with Datadog",
-  "keywords": [
-    "datadog",
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "author": "Datadog (https://github.com/DataDog)",
-  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
-  "repository": "https://github.com/DataDog/dd-sdk-reactnative",
-  "bugs": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
-  },
-  "license": "Apache-2.0",
-  "main": "lib/commonjs/index",
-  "files": [
-    "src",
-    "lib",
-    "scripts",
-    "android/build.gradle",
-    "android/detekt.yml",
-    "android/gradle.properties",
-    "android/src",
-    "ios/Sources",
-    "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/xcsharedata",
-    "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/*.xcworkspacedata",
-    "ios/DdSdkReactNative.xcodeproj/*.pbxproj",
-    "jest",
-    "DatadogSDKReactNative.podspec",
-    "datadog-sourcemaps.gradle"
-  ],
-  "types": "lib/typescript/index.d.ts",
-  "react-native": "src/index",
-  "source": "src",
-  "module": "lib/module/index",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
-    "prepare": "rm -rf lib && yarn bob build",
-    "postinstall": "node scripts/replace-react-require.js # Use node to execute the script for Windows, see https://github.com/DataDog/dd-sdk-reactnative/issues/358"
-  },
-  "peerDependencies": {
-    "react": ">=16.13.1",
-    "react-native": ">=0.63.4 <1.0"
-  },
-  "devDependencies": {
-    "@testing-library/react-native": "7.0.2"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/lib/"
+    "name": "@datadog/mobile-react-native",
+    "version": "1.4.0",
+    "description": "A client-side React Native module to interact with Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android"
     ],
-    "setupFiles": [
-      "./../../node_modules/react-native-gesture-handler/jestSetup.js",
-      "./../../jest.setup.js"
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src",
+        "lib",
+        "scripts",
+        "android/build.gradle",
+        "android/detekt.yml",
+        "android/gradle.properties",
+        "android/src",
+        "ios/Sources",
+        "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/xcsharedata",
+        "ios/DdSdkReactNative.xcodeproj/project.xcworkspace/*.xcworkspacedata",
+        "ios/DdSdkReactNative.xcodeproj/*.pbxproj",
+        "jest",
+        "DatadogSDKReactNative.podspec",
+        "datadog-sourcemaps.gradle"
     ],
-    "transformIgnorePatterns": []
-  },
-  "react-native-builder-bob": {
+    "types": "lib/typescript/index.d.ts",
+    "react-native": "src/index",
     "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      [
-        "typescript",
-        {
-          "tsc": "./../../node_modules/.bin/tsc"
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build",
+        "postinstall": "node scripts/replace-react-require.js # Use node to execute the script for Windows, see https://github.com/DataDog/dd-sdk-reactnative/issues/358"
+    },
+    "peerDependencies": {
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0",
+        "react-native-webview": "11.x.x"
+    },
+    "peerDependenciesMeta": {
+        "react-native-webview": {
+            "optional": true
         }
-      ]
-    ]
-  }
+    },
+    "devDependencies": {
+        "@testing-library/react-native": "7.0.2"
+    },
+    "jest": {
+        "preset": "react-native",
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "setupFiles": [
+            "./../../node_modules/react-native-gesture-handler/jestSetup.js",
+            "./../../jest.setup.js"
+        ],
+        "transformIgnorePatterns": []
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    }
 }

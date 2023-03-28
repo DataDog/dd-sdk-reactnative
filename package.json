@@ -1,81 +1,82 @@
 {
-  "name": "dd-sdk-reactnative",
-  "description": "A client-side React Native module to interact with Datadog",
-  "keywords": [
-    "datadog",
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "author": "Datadog (https://github.com/DataDog)",
-  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
-  "repository": "https://github.com/DataDog/dd-sdk-reactnative",
-  "bugs": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
-  },
-  "license": "Apache-2.0",
-  "private": true,
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
-  "scripts": {
-    "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna link && lerna run prepare",
-    "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
-    "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
-    "example": "yarn --cwd example",
-    "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
-  },
-  "devDependencies": {
-    "@babel/plugin-transform-runtime": "7.12.15",
-    "@testing-library/react-native": "7.0.2",
-    "@types/jest": "^29.2.1",
-    "@types/react": "^18.0.24",
-    "@types/react-native": "0.71.0",
-    "@types/react-test-renderer": "18.0.0",
-    "@typescript-eslint/eslint-plugin": "5.20.0",
-    "@typescript-eslint/parser": "5.20.0",
-    "dd-trace": "^3.3.1",
-    "eslint": "8.10.0",
-    "eslint-config-prettier": "6.0.0",
-    "eslint-plugin-arca": "0.15.0",
-    "eslint-plugin-import": "2.25.4",
-    "eslint-plugin-prettier": "4.0.0",
-    "eslint-plugin-react": "7.22.0",
-    "eslint-plugin-react-hooks": "4.3.0",
-    "eslint-plugin-react-native": "3.10.0",
-    "genversion": "3.0.2",
-    "jest": "29.2.1",
-    "lerna": "4.0.0",
-    "metro-react-native-babel-preset": "0.72.3",
-    "pod-install": "0.1.14",
-    "prettier": "2.2.0",
-    "react": "18.2.0",
-    "react-native": "0.71.2",
-    "react-native-builder-bob": "0.17.1",
-    "react-test-renderer": "18.1.0",
-    "typescript": "4.8.4"
-  },
-  "resolutions": {
-    "**/@types/react-native": "0.71.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/packages/.*/lib/"
+    "name": "dd-sdk-reactnative",
+    "description": "A client-side React Native module to interact with Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android"
     ],
-    "setupFiles": [
-      "./node_modules/react-native-gesture-handler/jestSetup.js",
-      "./jest.setup.js"
-    ],
-    "testPathIgnorePatterns": [
-      "/__utils__/",
-      "<rootDir>/expo/"
-    ],
-    "transformIgnorePatterns": [
-      "jest-runner"
-    ]
-  }
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "private": true,
+    "workspaces": {
+        "packages": [
+            "packages/*"
+        ]
+    },
+    "scripts": {
+        "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna link && lerna run prepare",
+        "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
+        "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
+        "example": "yarn --cwd example",
+        "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
+    },
+    "devDependencies": {
+        "@babel/plugin-transform-runtime": "7.12.15",
+        "@testing-library/react-native": "7.0.2",
+        "@types/jest": "^29.2.1",
+        "@types/react": "^18.0.24",
+        "@types/react-native": "0.71.0",
+        "@types/react-test-renderer": "18.0.0",
+        "@typescript-eslint/eslint-plugin": "5.20.0",
+        "@typescript-eslint/parser": "5.20.0",
+        "dd-trace": "^3.3.1",
+        "eslint": "8.10.0",
+        "eslint-config-prettier": "6.0.0",
+        "eslint-plugin-arca": "0.15.0",
+        "eslint-plugin-import": "2.25.4",
+        "eslint-plugin-prettier": "4.0.0",
+        "eslint-plugin-react": "7.22.0",
+        "eslint-plugin-react-hooks": "4.3.0",
+        "eslint-plugin-react-native": "3.10.0",
+        "genversion": "3.0.2",
+        "jest": "29.2.1",
+        "lerna": "4.0.0",
+        "metro-react-native-babel-preset": "0.72.3",
+        "pod-install": "0.1.14",
+        "prettier": "2.2.0",
+        "react": "18.2.0",
+        "react-native": "0.71.2",
+        "react-native-webview": "11.26.1",
+        "react-native-builder-bob": "0.17.1",
+        "react-test-renderer": "18.1.0",
+        "typescript": "4.8.4"
+    },
+    "resolutions": {
+        "**/@types/react-native": "0.71.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "modulePathIgnorePatterns": [
+            "<rootDir>/example/node_modules",
+            "<rootDir>/packages/.*/lib/"
+        ],
+        "setupFiles": [
+            "./node_modules/react-native-gesture-handler/jestSetup.js",
+            "./jest.setup.js"
+        ],
+        "testPathIgnorePatterns": [
+            "/__utils__/",
+            "<rootDir>/expo/"
+        ],
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
+    }
 }

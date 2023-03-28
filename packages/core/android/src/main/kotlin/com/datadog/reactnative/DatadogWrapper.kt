@@ -16,6 +16,7 @@ import java.lang.IllegalArgumentException
 /**
  * Wrapper around [Datadog].
  */
+@Suppress("ComplexInterface")
 interface DatadogWrapper {
 
     /**
@@ -98,4 +99,9 @@ interface DatadogWrapper {
      * Sends telemetry error.
      */
     fun telemetryError(message: String, throwable: Throwable?)
+
+    /**
+     * Sends Webview events.
+     */
+    fun consumeWebviewEvent(message: String)
 }

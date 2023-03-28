@@ -37,9 +37,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * The entry point to initialize Datadog's features.
- */
+/** The entry point to initialize Datadog's features. */
 class DdSdk(
     reactContext: ReactApplicationContext,
     private val datadog: DatadogWrapper = DatadogSDKWrapper()
@@ -76,21 +74,21 @@ class DdSdk(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
+     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
+     * events.
      * @param attributes The global context attributes.
      */
     @ReactMethod
     fun setAttributes(attributes: ReadableMap, promise: Promise) {
         datadog.addRumGlobalAttributes(attributes.toHashMap())
-        attributes.toHashMap().forEach { (k, v) ->
-            GlobalState.addAttribute(k, v)
-        }
+        attributes.toHashMap().forEach { (k, v) -> GlobalState.addAttribute(k, v) }
         promise.resolve(null)
     }
 
     /**
      * Set the user information.
-     * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom
+     * attribute).
      */
     @ReactMethod
     fun setUser(user: ReadableMap, promise: Promise) {
@@ -104,7 +102,8 @@ class DdSdk(
 
     /**
      * Set the tracking consent regarding the data collection.
-     * @param trackingConsent Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
+     * @param trackingConsent Consent, which can take one of the following values: 'pending',
+     * 'granted', 'not_granted'.
      */
     @ReactMethod
     fun setTrackingConsent(trackingConsent: String, promise: Promise) {
@@ -134,19 +133,30 @@ class DdSdk(
         promise.resolve(null)
     }
 
+    /**
+     * Sends WebView Events.
+     * @param message User action.
+     */
+    @ReactMethod
+    fun consumeWebviewEvent(message: String, promise: Promise) {
+        datadog.consumeWebviewEvent(message)
+        promise.resolve(null)
+    }
+
     // endregion
 
     // region Internal
 
     private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {
         val verbosityConfig = configuration.additionalConfig?.get(DD_SDK_VERBOSITY) as? String
-        val verbosity = when (verbosityConfig?.lowercase(Locale.US)) {
-            "debug" -> Log.DEBUG
-            "info" -> Log.INFO
-            "warn" -> Log.WARN
-            "error" -> Log.ERROR
-            else -> null
-        }
+        val verbosity =
+            when (verbosityConfig?.lowercase(Locale.US)) {
+                "debug" -> Log.DEBUG
+                "info" -> Log.INFO
+                "warn" -> Log.WARN
+                "error" -> Log.ERROR
+                else -> null
+            }
         if (verbosity != null) {
             datadog.setVerbosity(verbosity)
         }
@@ -154,19 +164,20 @@ class DdSdk(
 
     private fun getDefaultAppVersion(): String {
         val packageName = appContext.packageName
-        val packageInfo = try {
-            appContext.packageManager.getPackageInfo(packageName, 0)
-        } catch (e: PackageManager.NameNotFoundException) {
-            datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
-            return DEFAULT_APP_VERSION
-        }
+        val packageInfo =
+            try {
+                appContext.packageManager.getPackageInfo(packageName, 0)
+            } catch (e: PackageManager.NameNotFoundException) {
+                datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
+                return DEFAULT_APP_VERSION
+            }
 
         return packageInfo?.let {
             // we need to use the deprecated method because getLongVersionCode method is only
             // available from API 28 and above
-            @Suppress("DEPRECATION")
-            it.versionName ?: it.versionCode.toString()
-        } ?: DEFAULT_APP_VERSION
+            @Suppress("DEPRECATION") it.versionName ?: it.versionCode.toString()
+        }
+            ?: DEFAULT_APP_VERSION
     }
 
     @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
@@ -179,17 +190,20 @@ class DdSdk(
             additionalConfig.put(DD_VERSION, defaultVersion + versionSuffix)
         }
 
-        val configBuilder = Configuration.Builder(
-            logsEnabled = true,
-            tracesEnabled = true,
-            crashReportsEnabled = configuration.nativeCrashReportEnabled ?: false,
-            rumEnabled = true
-        )
-            .setAdditionalConfiguration(
-                additionalConfig
-                    ?.filterValues { it != null }
-                    ?.mapValues { it.value!! } ?: emptyMap()
+        val configBuilder =
+            Configuration.Builder(
+                logsEnabled = true,
+                tracesEnabled = true,
+                crashReportsEnabled = configuration.nativeCrashReportEnabled
+                    ?: false,
+                rumEnabled = true
             )
+                .setAdditionalConfiguration(
+                    additionalConfig?.filterValues { it != null }?.mapValues {
+                        it.value!!
+                    }
+                        ?: emptyMap()
+                )
         if (configuration.sampleRate != null) {
             configBuilder.sampleRumSessions(configuration.sampleRate.toFloat())
         }
@@ -217,9 +231,8 @@ class DdSdk(
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
 
-        val interactionTracking = configuration.additionalConfig?.get(
-            DD_NATIVE_INTERACTION_TRACKING
-        ) as? Boolean
+        val interactionTracking =
+            configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
         if (interactionTracking == false) {
             configBuilder.disableInteractionTracking()
         }
@@ -227,7 +240,8 @@ class DdSdk(
         @Suppress("UNCHECKED_CAST")
         val firstPartyHosts =
             (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
-                ?.toArrayList() as? List<ReadableMap>
+                ?.toArrayList() as?
+                List<ReadableMap>
         if (firstPartyHosts != null) {
             val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
 
@@ -238,28 +252,37 @@ class DdSdk(
             configBuilder.setProxy(proxy, authenticator)
         }
 
-        configBuilder.setRumResourceEventMapper(object : EventMapper<ResourceEvent> {
-            override fun map(event: ResourceEvent): ResourceEvent? {
-                if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) == true) {
-                    return null
+        configBuilder.setRumResourceEventMapper(
+            object : EventMapper<ResourceEvent> {
+                override fun map(event: ResourceEvent): ResourceEvent? {
+                    if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) ==
+                        true
+                    ) {
+                        return null
+                    }
+                    return event
                 }
-                return event
             }
-        })
+        )
 
-        configBuilder.setRumActionEventMapper(object : EventMapper<ActionEvent> {
-            override fun map(event: ActionEvent): ActionEvent? {
-                if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true) {
-                    return null
+        configBuilder.setRumActionEventMapper(
+            object : EventMapper<ActionEvent> {
+                override fun map(event: ActionEvent): ActionEvent? {
+                    if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true
+                    ) {
+                        return null
+                    }
+                    return event
                 }
-                return event
             }
-        })
+        )
 
         _InternalProxy.setTelemetryConfigurationEventMapper(
             configBuilder,
             object : EventMapper<TelemetryConfigurationEvent> {
-                override fun map(event: TelemetryConfigurationEvent): TelemetryConfigurationEvent? {
+                override fun map(
+                    event: TelemetryConfigurationEvent
+                ): TelemetryConfigurationEvent? {
                     event.telemetry.configuration.trackNativeErrors =
                         configuration.nativeCrashReportEnabled
                     // trackCrossPlatformLongTasks will be deprecated for trackLongTask
@@ -293,11 +316,11 @@ class DdSdk(
         firstPartyHosts: List<ReadableMap>
     ): Map<String, Set<TracingHeaderType>> {
         /**
-         * Adapts the data format from the React Native SDK configuration to match with the
-         * Android SDK configuration. For example:
+         * Adapts the data format from the React Native SDK configuration to match with the Android
+         * SDK configuration. For example:
          *
-         * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }]
-         * Android config: { "example.com": [DATADOG, B3] }
+         * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }] Android config: {
+         * "example.com": [DATADOG, B3] }
          */
         val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
 
@@ -344,40 +367,44 @@ class DdSdk(
         }
     }
 
-    internal fun buildProxyConfiguration(configuration: DdSdkConfiguration):
-        Pair<Proxy, ProxyAuthenticator?>? {
+    internal fun buildProxyConfiguration(
+        configuration: DdSdkConfiguration
+    ): Pair<Proxy, ProxyAuthenticator?>? {
         val additionalConfig = configuration.additionalConfig ?: return null
 
         val address = additionalConfig[DD_PROXY_ADDRESS] as? String
         val port = (additionalConfig[DD_PROXY_PORT] as? Number)?.toInt()
-        val type = (additionalConfig[DD_PROXY_TYPE] as? String)?.let {
-            when (it.lowercase(Locale.US)) {
-                "http", "https" -> Proxy.Type.HTTP
-                "socks" -> Proxy.Type.SOCKS
-                else -> {
-                    Log.w(
-                        DdSdk::class.java.canonicalName,
-                        "Unknown proxy type given: $it, skipping proxy configuration."
-                    )
-                    null
+        val type =
+            (additionalConfig[DD_PROXY_TYPE] as? String)?.let {
+                when (it.lowercase(Locale.US)) {
+                    "http", "https" -> Proxy.Type.HTTP
+                    "socks" -> Proxy.Type.SOCKS
+                    else -> {
+                        Log.w(
+                            DdSdk::class.java.canonicalName,
+                            "Unknown proxy type given: $it, skipping proxy configuration."
+                        )
+                        null
+                    }
                 }
             }
-        }
 
-        val proxy = if (address != null && port != null && type != null) {
-            Proxy(type, InetSocketAddress(address, port))
-        } else {
-            return null
-        }
+        val proxy =
+            if (address != null && port != null && type != null) {
+                Proxy(type, InetSocketAddress(address, port))
+            } else {
+                return null
+            }
 
         val username = additionalConfig[DD_PROXY_USERNAME] as? String
         val password = additionalConfig[DD_PROXY_PASSWORD] as? String
 
-        val authenticator = if (username != null && password != null) {
-            ProxyAuthenticator(username, password)
-        } else {
-            null
-        }
+        val authenticator =
+            if (username != null && password != null) {
+                ProxyAuthenticator(username, password)
+            } else {
+                null
+            }
 
         return Pair(proxy, authenticator)
     }
@@ -415,10 +442,7 @@ class DdSdk(
         if (frameTimeCallback != null) {
             reactContext.runOnJSQueueThread {
                 val vitalFrameCallback =
-                    VitalFrameCallback(
-                        frameTimeCallback,
-                        ::handlePostFrameCallbackError
-                    ) {
+                    VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) {
                         initialized.get()
                     }
                 try {
@@ -431,11 +455,12 @@ class DdSdk(
         }
     }
 
-    private fun buildFrameTimeCallback(ddSdkConfiguration: DdSdkConfiguration):
-        ((Double) -> Unit)? {
-        val jsRefreshRateMonitoringEnabled = buildVitalUpdateFrequency(
-            ddSdkConfiguration.vitalsUpdateFrequency
-        ) != VitalsUpdateFrequency.NEVER
+    private fun buildFrameTimeCallback(
+        ddSdkConfiguration: DdSdkConfiguration
+    ): ((Double) -> Unit)? {
+        val jsRefreshRateMonitoringEnabled =
+            buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
+                VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -444,14 +469,15 @@ class DdSdk(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
-                GlobalRum.get()._getInternal()?.updatePerformanceMetric(
-                    RumPerformanceMetric.JS_FRAME_TIME,
-                    it
-                )
+                GlobalRum.get()
+                    ._getInternal()
+                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
             }
-            if (jsLongTasksMonitoringEnabled && it > TimeUnit.MILLISECONDS.toNanos(
-                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                )
+            if (jsLongTasksMonitoringEnabled &&
+                it >
+                TimeUnit.MILLISECONDS.toNanos(
+                        ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                    )
             ) {
                 GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
