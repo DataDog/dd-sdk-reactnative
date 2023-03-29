@@ -15,7 +15,6 @@ import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import { WebView } from './WebViewDatadog/WebViewDatadog';
 import { DdTrace } from './foundation';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
@@ -24,7 +23,6 @@ import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 
 export {
     DatadogProvider,
-    WebView,
     DatadogProviderConfiguration,
     InitializationMode,
     DdLogs,
