@@ -2,7 +2,7 @@
 
 ### No data is being sent to Datadog
 
-See the [dedicated troubleshooting guide](./docs/troubleshooting.md).
+See the [dedicated troubleshooting guide](./docs/troubleshooting_no_data.md).
 
 ### `Undefined symbols: Swift`
 
