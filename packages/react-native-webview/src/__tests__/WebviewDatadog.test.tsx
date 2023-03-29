@@ -13,13 +13,6 @@ import { WebView } from '../index';
 describe('WebView', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        Object.defineProperty(window, 'ReactNativeWebView', {
-            value: {
-                postMessage: jest.fn()
-            },
-            writable: true
-        });
-        delete (window as any).DatadogEventBridge;
     });
     const DdMessage = 'custom datadog event';
     const datadogEvent = {
