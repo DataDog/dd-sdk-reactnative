@@ -214,8 +214,8 @@ private def getShouldUploadBundleFile(File reactRoot) {
         // We remove the leading "v" in the version number output
         List version = versionAsString.replace("v", "").tokenize('.').collect { it.toInteger() }
 
-        // First datadog-ci version allowing not uploading the bundle is 2.5.2
-        return !isVersionEqualOrAbove(version, [2, 5, 2])
+        // First datadog-ci version allowing not uploading the bundle is 2.6.0
+        return !isVersionEqualOrAbove(version, [2, 6, 0])
     } catch (Exception e) {
 
         return true
