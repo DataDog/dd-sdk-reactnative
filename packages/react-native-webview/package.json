@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-webview",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "A client-side React Native module to interact with react-native-webview and Datadog",
     "keywords": [
         "datadog",
@@ -25,7 +25,7 @@
         "src",
         "lib"
     ],
-    "types": "lib/typescript/react-native-webview/src/index.d.ts",
+    "types": "lib/typescript/index.d.ts",
     "react-native": "src/index",
     "source": "src/index",
     "module": "lib/module/index",
@@ -38,7 +38,6 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "devDependencies": {
-        "@datadog/mobile-react-native": "^1.4.0",
         "@testing-library/react-native": "7.0.2"
     },
     "peerDependencies": {
