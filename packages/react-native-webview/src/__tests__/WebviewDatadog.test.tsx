@@ -7,19 +7,12 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { NativeModules } from 'react-native';
 import React from 'react';
 
-import { WebView } from '../WebViewDatadog';
 import { DATADOG_MESSAGE_PREFIX } from '../__utils__/getInjectedJavaScriptBeforeContentLoaded';
+import { WebView } from '../index';
 
 describe('WebView', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        Object.defineProperty(window, 'ReactNativeWebView', {
-            value: {
-                postMessage: jest.fn()
-            },
-            writable: true
-        });
-        delete (window as any).DatadogEventBridge;
     });
     const DdMessage = 'custom datadog event';
     const datadogEvent = {

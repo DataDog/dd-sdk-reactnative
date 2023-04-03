@@ -7,7 +7,7 @@ import { render } from '@testing-library/react-native';
 import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
 
-import { WebView } from '../WebViewDatadog';
+import { WebView } from '../index';
 
 jest.mock('react-native-webview', () => {
     return {
