@@ -55,6 +55,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         // ReadableMap#getString which doesn't allow having null value
         map["vitalsUpdateFrequency"] = VitalsUpdateFrequency.AVERAGE.toString()
     }
+    map["trackFrustrations"] = if (trackFrustrations == null) {
+        false
+    } else {
+        trackFrustrations
+    }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     configurationForTelemetry?.let {
         map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())

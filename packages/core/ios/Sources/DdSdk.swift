@@ -116,6 +116,16 @@ class RNDdSdk: NSObject {
         resolve(nil)
     }
     
+    @objc(consumeWebviewEvent:withResolver:withRejecter:)
+    func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        do{
+            try Datadog._internal.webEventBridge.send(message)
+        } catch {
+            Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
+        }
+        resolve(nil)
+    }
+    
     func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
         Datadog._internal.telemetry.setConfigurationMapper { event in
             var event = event
@@ -165,6 +175,8 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.set(endpoint: .us5)
         case "us1_fed", "gov":
             _ = ddConfigBuilder.set(endpoint: .us1_fed)
+        case "ap1":
+            _ = ddConfigBuilder.set(endpoint: .ap1)
         default:
             _ = ddConfigBuilder.set(endpoint: .us1)
         }
@@ -173,6 +185,10 @@ class RNDdSdk: NSObject {
 
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
+        }
+        
+        if var trackFrustrations = (configuration.trackFrustrations) {
+            _ = ddConfigBuilder.trackFrustrations(trackFrustrations)
         }
 
         if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
@@ -206,6 +222,7 @@ class RNDdSdk: NSObject {
         }
 
         if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
+            // We will always fall under this condition as firstPartyHosts is an empty array by default
             _ = ddConfigBuilder.trackURLSession(firstPartyHostsWithHeaderTypes: firstPartyHosts.asFirstPartyHosts())
         }
 

@@ -118,6 +118,7 @@ export class DdSdkReactNative {
                 configuration.additionalConfig,
                 configuration.telemetrySampleRate,
                 configuration.vitalsUpdateFrequency,
+                configuration.trackFrustrations,
                 {
                     initializationType: params.initializationModeForTelemetry,
                     trackErrors: configuration.trackErrors,

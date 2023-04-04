@@ -11,7 +11,7 @@ const React = require('react');
 const actualDatadog = jest.requireActual('@datadog/mobile-react-native');
 
 /**
- * Explicitely mocking the provider prevents auto-instrumentation in tests.
+ * Explicitly mocking the provider prevents auto-instrumentation in tests.
  * This prevents errors in tests to be logged in the console, as well as needing
  * to mock XMLHttpRequest.
  */

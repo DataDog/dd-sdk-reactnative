@@ -73,15 +73,15 @@ def getExtOrIntegerDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['DdSdkReactNative_' + name]).toInteger()
 }
 
-android { 
+android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
   defaultConfig {
-    minSdkVersion 19
+    minSdkVersion 21
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
-    
+
   }
 
   sourceSets.named("main") {
@@ -97,7 +97,7 @@ android {
       returnDefaultValues = true
     }
   }
-  
+
   buildTypes {
     release {
       minifyEnabled false
@@ -146,7 +146,7 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android:1.17.0"
+  implementation "com.datadoghq:dd-sdk-android:1.18.1"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"

@@ -47,7 +47,8 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 trackErrors = forge.aBool(),
                 trackInteractions = forge.aBool(),
                 trackNetworkRequests = forge.aBool()
-            )
+            ),
+            trackFrustrations = forge.aNullable { aBool() },
         )
     }
 }

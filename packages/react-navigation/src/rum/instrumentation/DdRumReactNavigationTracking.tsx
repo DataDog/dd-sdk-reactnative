@@ -144,7 +144,12 @@ export class DdRumReactNavigationTracking {
         // We have to call AppState.removeEventListener instead.
         if (this.appStateSubscription) {
             this.appStateSubscription.remove();
-        } else {
+
+            // The next if check is important as users can call `stopTrackingViews` before `startTrackingViews`
+            // see https://github.com/DataDog/dd-sdk-reactnative/issues/422
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+        } else if (AppState.removeEventListener) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             AppState.removeEventListener(

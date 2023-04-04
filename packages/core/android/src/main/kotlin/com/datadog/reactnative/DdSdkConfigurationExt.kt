@@ -24,6 +24,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         trackingConsent = getString("trackingConsent"),
         telemetrySampleRate = getDouble("telemetrySampleRate"),
         vitalsUpdateFrequency = getString("vitalsUpdateFrequency"),
+        trackFrustrations = getBoolean("trackFrustrations"),
         additionalConfig = getMap("additionalConfig")?.toHashMap(),
         configurationForTelemetry = getMap(
             "configurationForTelemetry"
@@ -66,6 +67,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     trackingConsent?.let { map.putString("trackingConsent", it) }
     telemetrySampleRate?.let { map.putDouble("telemetrySampleRate", it) }
     vitalsUpdateFrequency?.let { map.putString("vitalsUpdateFrequency", it) }
+    trackFrustrations?.let { map.putBoolean("trackFrustrations", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }

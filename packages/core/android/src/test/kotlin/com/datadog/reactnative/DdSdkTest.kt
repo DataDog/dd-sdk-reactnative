@@ -9,7 +9,7 @@ package com.datadog.reactnative
 import android.content.pm.PackageInfo
 import android.util.Log
 import android.view.Choreographer
-import com.datadog.android.DatadogEndpoint
+import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
@@ -536,19 +536,19 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -593,19 +593,19 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -650,19 +650,19 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US3)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_US3)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_US3)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US3)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -707,19 +707,19 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US5)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_US5)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_US5)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US5)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -764,19 +764,19 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1_FED)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_US1_FED)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_US1_FED)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_US1_FED)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -821,19 +821,76 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_EU1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.TRACES_EU1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.RUM_EU1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogEndpoint.LOGS_EU1)
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasFieldEqualTo(
+                "additionalConfig",
+                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+            )
+        val credentials = credentialCaptor.firstValue
+        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
+        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
+        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
+        assertThat(credentials.variant).isEqualTo("")
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {site=ap1}`(
+        forge: Forge
+    ) {
+        // Given
+        val site = forge.randomizeCase("ap1")
+        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("needsClearTextHttp", false)
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
+            }
+            .hasField("logsConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("tracesConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
+                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
+            }
+            .hasField("crashReportConfig") {
+                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
             }
             .hasFieldEqualTo(
@@ -1073,6 +1130,72 @@ internal class DdSdkTest {
                 it.hasFieldWithClass(
                     "userActionTrackingStrategy",
                     "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy"
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {frustration tracking enabled}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            trackFrustrations = true
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo(
+                    "trackFrustrations",
+                    true
+                )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {frustration tracking disabled}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            trackFrustrations = false
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo(
+                    "trackFrustrations",
+                    false
                 )
             }
     }

@@ -33,5 +33,9 @@ RCT_EXTERN_METHOD(telemetryError:(NSString)message
                  withKind:(NSString)kind
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+                 
+RCT_EXTERN_METHOD(consumeWebviewEvent:(NSString)message
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 
 @end
