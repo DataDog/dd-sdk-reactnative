@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../../../InternalLog';
-import { DdSdk } from '../../../../foundation';
+import { DdSdk } from '../../../DdSdk';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {

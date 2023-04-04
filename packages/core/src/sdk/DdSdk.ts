@@ -5,9 +5,9 @@
  */
 
 import { NativeModules } from 'react-native';
-import { DdSdkConfiguration } from './types';
-import type { DdNativeSdkType } from './nativeModulesTypes';
+
+import type { DdNativeSdkType } from '../nativeModulesTypes';
 
 const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
 
-export { DdSdkConfiguration, DdSdk };
+export { DdSdk };
