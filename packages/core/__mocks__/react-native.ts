@@ -4,9 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { DdLogsType } from '../src/logs/types';
-import type { DdNativeSdkType } from '../src/nativeModulesTypes';
-import type { DdRumType, DdTraceType } from '../src/types';
+import type {
+    DdNativeSdkType,
+    DdNativeLogsType
+} from '../src/nativeModulesTypes';
+import type { DdRumType } from '../src/rum/types';
+import type { DdTraceType } from '../src/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const actualRN = require('react-native');
@@ -38,16 +41,28 @@ actualRN.NativeModules.DdSdk = {
 actualRN.NativeModules.DdLogs = {
     debug: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdLogsType['debug']>,
+    ) as jest.MockedFunction<DdNativeLogsType['debug']>,
     info: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdLogsType['info']>,
+    ) as jest.MockedFunction<DdNativeLogsType['info']>,
     warn: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdLogsType['warn']>,
+    ) as jest.MockedFunction<DdNativeLogsType['warn']>,
     error: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdLogsType['error']>
+    ) as jest.MockedFunction<DdNativeLogsType['error']>,
+    debugWithError: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeLogsType['debugWithError']>,
+    infoWithError: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeLogsType['infoWithError']>,
+    warnWithError: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeLogsType['warnWithError']>,
+    errorWithError: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeLogsType['errorWithError']>
 };
 
 actualRN.NativeModules.DdTrace = {

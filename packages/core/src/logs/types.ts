@@ -15,28 +15,28 @@ export type DdLogsType = {
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    debug(message: string, context?: object): Promise<void>;
+    debug(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
      * Send a log with level info.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    info(message: string, context?: object): Promise<void>;
+    info(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
      * Send a log with level warn.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    warn(message: string, context?: object): Promise<void>;
+    warn(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
      * Send a log with level error.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    error(message: string, context?: object): Promise<void>;
+    error(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 };
 
 /**
@@ -68,3 +68,13 @@ export type LogEvent = {
 };
 
 export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
+
+export type LogArguments = [message: string, context?: object];
+
+export type LogWithErrorArguments = [
+    message: string,
+    errorKind?: string,
+    errorMessage?: string,
+    stacktrace?: string,
+    context?: object
+];
