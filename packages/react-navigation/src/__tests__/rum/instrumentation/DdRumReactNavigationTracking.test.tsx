@@ -20,12 +20,14 @@ import { AppStateMock } from './__utils__/AppStateMock';
 import {
     FakeNavigator1 as FakeNavigator1v5,
     FakeNavigator2 as FakeNavigator2v5,
-    FakeNestedNavigator as FakeNestedNavigatorv5
+    FakeNestedNavigator as FakeNestedNavigatorv5,
+    FakeTogglableNavigator as FakeTogglableNavigatorv5
 } from './__utils__/Navigators/NavigatorsV5';
 import {
     FakeNavigator1 as FakeNavigator1v6,
     FakeNavigator2 as FakeNavigator2v6,
-    FakeNestedNavigator as FakeNestedNavigatorv6
+    FakeNestedNavigator as FakeNestedNavigatorv6,
+    FakeTogglableNavigator as FakeTogglableNavigatorv6
 } from './__utils__/Navigators/NavigatorsV6';
 
 // TODO: inject this as a global
@@ -53,7 +55,8 @@ jest.mock('@datadog/mobile-react-native', () => {
         DdRum: {
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             startView: jest.fn().mockImplementation(() => {}),
-            stopView: jest.fn().mockImplementation(() => {})
+            stopView: jest.fn().mockImplementation(() => {}),
+            addError: jest.fn().mockImplementation(() => {})
         },
         SdkVerbosity: {
             DEBUG: 'debug',
@@ -91,7 +94,8 @@ describe.each([
         {
             FakeNavigator1: FakeNavigator1v5,
             FakeNavigator2: FakeNavigator2v5,
-            FakeNestedNavigator: FakeNestedNavigatorv5
+            FakeNestedNavigator: FakeNestedNavigatorv5,
+            FakeTogglableNavigator: FakeTogglableNavigatorv5
         }
     ],
     [
@@ -99,12 +103,21 @@ describe.each([
         {
             FakeNavigator1: FakeNavigator1v6,
             FakeNavigator2: FakeNavigator2v6,
-            FakeNestedNavigator: FakeNestedNavigatorv6
+            FakeNestedNavigator: FakeNestedNavigatorv6,
+            FakeTogglableNavigator: FakeTogglableNavigatorv6
         }
     ]
 ])(
     'DdRumReactNavigationTracking on react-navigation v%s',
-    (version, { FakeNavigator1, FakeNavigator2, FakeNestedNavigator }) => {
+    (
+        version,
+        {
+            FakeNavigator1,
+            FakeNavigator2,
+            FakeNestedNavigator,
+            FakeTogglableNavigator
+        }
+    ) => {
         describe('startTrackingViews', () => {
             it('sends a related RUM ViewEvent when switching screens { navigationContainer listener attached }', async () => {
                 // GIVEN
@@ -520,6 +533,26 @@ describe.each([
                 });
             }
         );
+
+        describe('Togglable navigators', () => {
+            it('does not send an error when a navigator is toggled and tracking is stopped', async () => {
+                const navigationRef = createRef<any>();
+                const { findByText } = render(
+                    <FakeTogglableNavigator navigationRef={navigationRef} />
+                );
+
+                const hideNavButton = await findByText('display nav 2');
+                fireEvent(hideNavButton, 'press');
+
+                expect(DdRum.startView).toHaveBeenCalledTimes(1);
+
+                const switchNav = await findByText('display nav 1');
+                fireEvent(switchNav, 'press');
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+
+                expect(InternalLog.log).not.toHaveBeenCalled();
+            });
+        });
 
         describe('Android back handler', () => {
             it('does not send an error when the app closes with Android back button', async () => {
