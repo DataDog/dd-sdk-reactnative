@@ -11,7 +11,6 @@ import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
-import { DdSdk } from '../foundation';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
@@ -19,6 +18,7 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/interaction
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { ErrorSource, PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
+import { DdSdk } from '../sdk/DdSdk';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';

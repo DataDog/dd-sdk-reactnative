@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdSdk } from '../../../foundation';
+import { DdSdk } from '../../DdSdk';
 import { EventMapper } from '../EventMapper';
 
 describe('EventMapper', () => {
