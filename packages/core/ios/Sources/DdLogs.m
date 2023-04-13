@@ -28,4 +28,35 @@ RCT_EXTERN_METHOD(error:(NSString)message
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(debugWithError:(NSString)message
+                 withErrorKind:(NSString)errorKind
+                 withErrorMessage:(NSString)errorMessage
+                 withStacktrace:(NSString)stacktrace
+                 withContext:(NSDictionary)context
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(infoWithError:(NSString)message
+                 withErrorKind:(NSString)errorKind
+                 withErrorMessage:(NSString)errorMessage
+                 withStacktrace:(NSString)stacktrace
+                 withContext:(NSDictionary)context
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(warnWithError:(NSString)message
+                 withErrorKind:(NSString)errorKind
+                 withErrorMessage:(NSString)errorMessage
+                 withStacktrace:(NSString)stacktrace
+                 withContext:(NSDictionary)context
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(errorWithError:(NSString)message
+                 withErrorKind:(NSString)errorKind
+                 withErrorMessage:(NSString)errorMessage
+                 withStacktrace:(NSString)stacktrace
+                 withContext:(NSDictionary)context
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 @end
