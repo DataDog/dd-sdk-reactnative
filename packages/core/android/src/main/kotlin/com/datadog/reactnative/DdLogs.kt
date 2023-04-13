@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import android.util.Log as AndroidLog
 import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -80,6 +81,122 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     fun error(message: String, context: ReadableMap, promise: Promise) {
         reactNativeLogger.e(
             message = message,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
+        promise.resolve(null)
+    }
+
+    /**
+     * Send a log containing an error with level debug.
+     * @param message The message to send.
+     * @param errorKind The error kind to send.
+     * @param errorMessage The error message to send.
+     * @param stacktrace The error stacktrace to send.
+     * @param context The additional context to send.
+     */
+    @Suppress("LongParameterList")
+    @ReactMethod
+    fun debugWithError(
+        message: String,
+        errorKind: String?,
+        errorMessage: String?,
+        stacktrace: String?,
+        context: ReadableMap,
+        promise: Promise
+    ) {
+        reactNativeLogger.log(
+            priority = AndroidLog.DEBUG,
+            message = message,
+            errorKind = errorKind,
+            errorMessage = errorMessage,
+            errorStacktrace = stacktrace,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
+        promise.resolve(null)
+    }
+
+    /**
+     * Send a log with containing an error level info.
+     * @param message The message to send.
+     * @param errorKind The error kind to send.
+     * @param errorMessage The error message to send.
+     * @param stacktrace The error stacktrace to send.
+     * @param context The additional context to send.
+     */
+    @Suppress("LongParameterList")
+    @ReactMethod
+    fun infoWithError(
+        message: String,
+        errorKind: String?,
+        errorMessage: String?,
+        stacktrace: String?,
+        context: ReadableMap,
+        promise: Promise
+    ) {
+        reactNativeLogger.log(
+            priority = AndroidLog.INFO,
+            message = message,
+            errorKind = errorKind,
+            errorMessage = errorMessage,
+            errorStacktrace = stacktrace,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
+        promise.resolve(null)
+    }
+
+    /**
+     * Send a log containing an error with level warn.
+     * @param message The message to send.
+     * @param errorKind The error kind to send.
+     * @param errorMessage The error message to send.
+     * @param stacktrace The error stacktrace to send.
+     * @param context The additional context to send.
+     */
+    @Suppress("LongParameterList")
+    @ReactMethod
+    fun warnWithError(
+        message: String,
+        errorKind: String?,
+        errorMessage: String?,
+        stacktrace: String?,
+        context: ReadableMap,
+        promise: Promise
+    ) {
+        reactNativeLogger.log(
+            priority = AndroidLog.WARN,
+            message = message,
+            errorKind = errorKind,
+            errorMessage = errorMessage,
+            errorStacktrace = stacktrace,
+            attributes = context.toHashMap() + GlobalState.globalAttributes
+        )
+        promise.resolve(null)
+    }
+
+    /**
+     * Send a log containing an error with level error.
+     * @param message The message to send.
+     * @param errorKind The error kind to send.
+     * @param errorMessage The error message to send.
+     * @param stacktrace The error stacktrace to send.
+     * @param context The additional context to send.
+     */
+    @Suppress("LongParameterList")
+    @ReactMethod
+    fun errorWithError(
+        message: String,
+        errorKind: String?,
+        errorMessage: String?,
+        stacktrace: String?,
+        context: ReadableMap,
+        promise: Promise
+    ) {
+        reactNativeLogger.log(
+            priority = AndroidLog.ERROR,
+            message = message,
+            errorKind = errorKind,
+            errorMessage = errorMessage,
+            errorStacktrace = stacktrace,
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
         promise.resolve(null)
