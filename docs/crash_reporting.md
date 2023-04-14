@@ -80,7 +80,7 @@ project.ext.datadog = [
 
 ### On iOS using the `datadog-ci react-native xcode` command
 
-Options for the `datadog-ci react-native xcode` command are available on the [command documentation page][12].
+Available options for the `datadog-ci react-native xcode` command are available on the [command documentation page][12].
 
 ## Test your implementation of crash reporting
 
