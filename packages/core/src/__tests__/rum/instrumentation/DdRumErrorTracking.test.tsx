@@ -56,15 +56,18 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe(String(error));
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        '[object Object]',
+        'SOURCE',
+        'doSomething() at ./path/to/file.js:67:3',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -81,13 +84,18 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe('');
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        '',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
+    );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -102,18 +110,21 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toContain(
-        'Error: Something bad happened'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        expect.stringContaining('Error: Something bad happened'),
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
     expect(DdRum.addError.mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -133,15 +144,18 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'at ./path/to/file.js:1038:57'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'at ./path/to/file.js:1038:57',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -163,15 +177,18 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -193,15 +210,18 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -223,15 +243,18 @@ it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
 });
 
@@ -258,15 +281,18 @@ it('M not report error in console handler W onGlobalError() {with console report
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe('Something bad happened');
-    expect(DdRum.addError.mock.calls[0][1]).toBe('SOURCE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    const attributes = DdRum.addError.mock.calls[0][3];
-    expect(attributes['_dd.error.raw']).toStrictEqual(error);
-    expect(attributes['_dd.error.is_crash']).toStrictEqual(is_fatal);
     expect(consoleReportingErrorHandler).toBeCalledTimes(1);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
 });
@@ -287,17 +313,16 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe(
-        'Oops I did it again! Something bad happened'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Oops I did it again! Something bad happened',
+        'CONSOLE',
+        'at ./path/to/file.js:1038:57',
+        {
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'at ./path/to/file.js:1038:57'
-    );
-    expect(DdRum.addError.mock.calls[0][3]).toEqual({
-        '_dd.error.source_type': 'react-native'
-    });
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -319,17 +344,17 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe(
-        'Oops I did it again! Something bad happened'
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Oops I did it again! Something bad happened',
+        'CONSOLE',
+        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
+        {
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
     );
-    expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe(
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
-    );
-    expect(DdRum.addError.mock.calls[0][3]).toEqual({
-        '_dd.error.source_type': 'react-native'
-    });
+
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -343,13 +368,17 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
     await flushPromises();
 
     // THEN
-    expect(DdRum.addError.mock.calls.length).toBe(1);
-    expect(DdRum.addError.mock.calls[0][0]).toBe(message);
-    expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
-    expect(DdRum.addError.mock.calls[0][2]).toBe('');
-    expect(DdRum.addError.mock.calls[0][3]).toEqual({
-        '_dd.error.source_type': 'react-native'
-    });
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        message,
+        'CONSOLE',
+        '',
+        {
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
+    );
+
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -372,17 +401,18 @@ describe.each([
         await flushPromises();
 
         // THEN
-        expect(DdRum.addError.mock.calls.length).toBe(1);
-        expect(DdRum.addError.mock.calls[0][0]).toBe(
+        expect(DdRum.addError).toHaveBeenCalledTimes(1);
+        expect(DdRum.addError).toHaveBeenCalledWith(
             message === undefined || message === null
                 ? 'Unknown Error'
-                : String(message)
+                : String(message),
+            'CONSOLE',
+            '',
+            {
+                '_dd.error.source_type': 'react-native'
+            },
+            expect.any(Number)
         );
-        expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
-        expect(DdRum.addError.mock.calls[0][2]).toBe('');
-        expect(DdRum.addError.mock.calls[0][3]).toEqual({
-            '_dd.error.source_type': 'react-native'
-        });
         expect(baseConsoleErrorCalled).toStrictEqual(true);
     });
 });
