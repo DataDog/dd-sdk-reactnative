@@ -11,8 +11,11 @@ import { SdkVerbosity } from '../../SdkVerbosity';
 import {
     getErrorMessage,
     getErrorStackTrace,
-    EMPTY_STACK_TRACE
+    EMPTY_STACK_TRACE,
+    getErrorName,
+    DEFAULT_ERROR_NAME
 } from '../../errorUtils';
+import { DdLogs } from '../../logs/DdLogs';
 import { DdRum } from '../DdRum';
 import { ErrorSource } from '../types';
 
@@ -67,7 +70,8 @@ export class DdRumErrorTracking {
     static onGlobalError(error: any, isFatal?: boolean): void {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
-        this.reportError(message, ErrorSource.SOURCE, stacktrace, {
+        const errorName = getErrorName(error);
+        this.reportError(message, ErrorSource.SOURCE, stacktrace, errorName, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
         }).then(() => {
@@ -86,11 +90,24 @@ export class DdRumErrorTracking {
         }
 
         let stack: string = EMPTY_STACK_TRACE;
+        let errorName: string = DEFAULT_ERROR_NAME;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
+
             const paramStack = getErrorStackTrace(param);
             if (paramStack !== EMPTY_STACK_TRACE) {
                 stack = paramStack;
+            }
+
+            const paramErrorName = getErrorName(param);
+            if (paramErrorName !== DEFAULT_ERROR_NAME) {
+                errorName = paramErrorName;
+            }
+
+            if (
+                errorName !== DEFAULT_ERROR_NAME &&
+                stack !== EMPTY_STACK_TRACE
+            ) {
                 break;
             }
         }
@@ -105,17 +122,23 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        this.reportError(message, ErrorSource.CONSOLE, stack).then(() => {
-            DdRumErrorTracking.defaultConsoleError.apply(console, params);
-        });
+        this.reportError(message, ErrorSource.CONSOLE, stack, errorName).then(
+            () => {
+                DdRumErrorTracking.defaultConsoleError.apply(console, params);
+            }
+        );
     }
 
     private static reportError = (
         message: string,
         source: ErrorSource,
         stacktrace: string,
+        errorName: string,
         context?: object
-    ): Promise<void> => {
-        return DdRum.addError(message, source, stacktrace, context);
+    ): Promise<[void, void]> => {
+        return Promise.all([
+            DdRum.addError(message, source, stacktrace, context),
+            DdLogs.error(message, errorName, message, stacktrace, context)
+        ]);
     };
 }
