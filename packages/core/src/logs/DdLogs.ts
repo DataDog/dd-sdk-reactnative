@@ -144,7 +144,7 @@ class DdLogsWrapper implements DdLogsType {
             (event as NativeLogWithError).errorKind,
             (event as NativeLogWithError).errorMessage,
             (event as NativeLogWithError).stacktrace,
-            event.context
+            { ...event.context, '_dd.error.source_type': 'react-native' }
         );
     };
 

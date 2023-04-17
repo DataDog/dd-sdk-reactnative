@@ -38,14 +38,15 @@ describe('DdLogs', () => {
                 'stack',
                 {}
             );
-            expect(
-                NativeModules.DdLogs.infoWithError
-            ).toHaveBeenCalledWith(
+            expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
                 'new message',
                 undefined,
                 undefined,
                 undefined,
-                { newContext: 'context' }
+                {
+                    newContext: 'context',
+                    '_dd.error.source_type': 'react-native'
+                }
             );
         });
 
@@ -77,14 +78,15 @@ describe('DdLogs', () => {
                 'stack',
                 {}
             );
-            expect(
-                NativeModules.DdLogs.infoWithError
-            ).toHaveBeenCalledWith(
+            expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
                 'new message',
                 'NewErrorType',
                 'new error message',
                 'new stacktrace',
-                { newContext: 'context' }
+                {
+                    newContext: 'context',
+                    '_dd.error.source_type': 'react-native'
+                }
             );
         });
 
@@ -146,7 +148,10 @@ describe('DdLogs', () => {
                     errorKind,
                     errorMessage,
                     stacktrace,
-                    context || {}
+                    {
+                        ...(context || {}),
+                        '_dd.error.source_type': 'react-native'
+                    }
                 );
             }
         );
