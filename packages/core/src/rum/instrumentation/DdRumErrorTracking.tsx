@@ -67,7 +67,7 @@ export class DdRumErrorTracking {
     static onGlobalError(error: any, isFatal?: boolean): void {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
-        DdRum.addError(message, ErrorSource.SOURCE, stacktrace, {
+        this.reportError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
         }).then(() => {
@@ -105,8 +105,17 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        DdRum.addError(message, ErrorSource.CONSOLE, stack).then(() => {
+        this.reportError(message, ErrorSource.CONSOLE, stack).then(() => {
             DdRumErrorTracking.defaultConsoleError.apply(console, params);
         });
     }
+
+    private static reportError = (
+        message: string,
+        source: ErrorSource,
+        stacktrace: string,
+        context?: object
+    ): Promise<void> => {
+        return DdRum.addError(message, source, stacktrace, context);
+    };
 }
