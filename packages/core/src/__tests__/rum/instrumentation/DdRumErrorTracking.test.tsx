@@ -4,21 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../../index';
+import { NativeModules } from 'react-native';
+
 import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTracking';
+import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 
-jest.useFakeTimers();
-
-jest.mock('../../../rum/DdRum', () => {
-    return {
-        DdRum: {
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            addError: jest.fn().mockImplementation(() => {
-                return Promise.resolve();
-            })
-        }
-    };
-});
+const DdRum = NativeModules.DdRum;
 
 let baseErrorHandlerCalled = false;
 const baseErrorHandler = (error: any, isFatal?: boolean) => {
@@ -36,7 +27,8 @@ const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
 
 beforeEach(() => {
-    DdRum.addError.mockClear();
+    jest.clearAllMocks();
+    BufferSingleton.onInitialization();
     baseErrorHandlerCalled = false;
     originalErrorHandler = ErrorUtils.getGlobalHandler();
     ErrorUtils.setGlobalHandler(baseErrorHandler);
@@ -303,7 +295,9 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
     expect(DdRum.addError.mock.calls[0][2]).toBe(
         'at ./path/to/file.js:1038:57'
     );
-    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined();
+    expect(DdRum.addError.mock.calls[0][3]).toEqual({
+        '_dd.error.source_type': 'react-native'
+    });
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -333,7 +327,9 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
     expect(DdRum.addError.mock.calls[0][2]).toBe(
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1'
     );
-    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined();
+    expect(DdRum.addError.mock.calls[0][3]).toEqual({
+        '_dd.error.source_type': 'react-native'
+    });
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -351,7 +347,9 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
     expect(DdRum.addError.mock.calls[0][0]).toBe(message);
     expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
     expect(DdRum.addError.mock.calls[0][2]).toBe('');
-    expect(DdRum.addError.mock.calls[0][3]).toBeUndefined();
+    expect(DdRum.addError.mock.calls[0][3]).toEqual({
+        '_dd.error.source_type': 'react-native'
+    });
     expect(baseConsoleErrorCalled).toStrictEqual(true);
 });
 
@@ -382,7 +380,9 @@ describe.each([
         );
         expect(DdRum.addError.mock.calls[0][1]).toBe('CONSOLE');
         expect(DdRum.addError.mock.calls[0][2]).toBe('');
-        expect(DdRum.addError.mock.calls[0][3]).toBeUndefined();
+        expect(DdRum.addError.mock.calls[0][3]).toEqual({
+            '_dd.error.source_type': 'react-native'
+        });
         expect(baseConsoleErrorCalled).toStrictEqual(true);
     });
 });
