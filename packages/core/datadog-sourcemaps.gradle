@@ -56,8 +56,8 @@ afterEvaluate {
             group = "datadog"
             description = "Uploads sourcemaps to Datadog."
 
-            def execCommand = { jsBundleFile, shouldUploadBundleFile ->
-                def command = [
+            def execCommand = { jsBundleFile ->
+                return [
                         "yarn",
                         "datadog-ci",
                         "react-native",
@@ -66,6 +66,8 @@ afterEvaluate {
                         "android",
                         "--service",
                         serviceName,
+                        "--bundle",
+                        jsBundleFile.absolutePath,
                         "--sourcemap",
                         jsOutputSourceMapFile.absolutePath,
                         "--release-version",
@@ -73,18 +75,11 @@ afterEvaluate {
                         "--build-version",
                         buildVersion
                 ]
-                if (shouldUploadBundleFile) {
-                    command.add("--bundle")
-                    command.add(jsBundleFile.absolutePath)
-                }
-                return command
             }
 
             doFirst {
-                def shouldUploadBundleFile = getShouldUploadBundleFile(reactRoot)
-
                 def jsBundleFile = reactConfig.bundleFileResolver()
-                if (jsBundleFile == null && shouldUploadBundleFile) {
+                if (jsBundleFile == null) {
                     throw new GradleException("JS bundle file doesn't exist, aborting upload.")
                 }
 
@@ -92,7 +87,7 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                runShellCommand(execCommand(jsBundleFile, shouldUploadBundleFile), reactRoot)
+                runShellCommand(execCommand(jsBundleFile), reactRoot)
 
             }
         }
@@ -184,7 +179,6 @@ private def runShellCommand(
             result.rethrowFailure()
         } else {
             logger.lifecycle(outputStream.toString("UTF-8"))
-            return outputStream.toString("UTF-8")
         }
     } catch (Exception e) {
         def errorStreamContent = errorStream.toString("UTF-8")
@@ -193,43 +187,6 @@ private def runShellCommand(
                 " stderr=${errorStreamContent}, stdout=${standardStreamContent}")
         throw e
     }
-}
-
-private def getShouldUploadBundleFile(File reactRoot) {
-    // Provide a way to override bundle upload
-    if (project.hasProperty("datadog")) {
-        if (project.datadog.containsKey("shouldUploadBundle")) {
-            return project.datadog.shouldUploadBundle
-        }
-    }
-
-    def datadogCiVersionCommand = [
-        "yarn",
-        "--silent",
-        "datadog-ci",
-        "version"
-    ]
-    try {
-        def versionAsString = runShellCommand(datadogCiVersionCommand, reactRoot) // outputs: v2.5.1
-        // We remove the leading "v" in the version number output
-        List version = versionAsString.replace("v", "").tokenize('.').collect { it.toInteger() }
-
-        // First datadog-ci version allowing not uploading the bundle is 2.6.0
-        return !isVersionEqualOrAbove(version, [2, 6, 0])
-    } catch (Exception e) {
-
-        return true
-    }
-}
-
-private static isVersionEqualOrAbove(List version, List targetVersion) {
-    if (version[0] != targetVersion[0]) {
-        return version[0] > targetVersion[0]
-    }
-    if (version [1] != targetVersion[1]) {
-        return version[1] > targetVersion[1]
-    }
-    return version[2] >= targetVersion[2]
 }
 
 private def getServiceName(variant) {
