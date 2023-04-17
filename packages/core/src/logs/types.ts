@@ -47,6 +47,14 @@ export type RawLog = {
     context: object;
     status: LogStatus;
 };
+export type RawLogWithError = {
+    message: string;
+    errorKind: string;
+    errorMessage: string;
+    stacktrace: string;
+    context: object;
+    status: LogStatus;
+};
 
 /**
  * Log input for native SDKs
@@ -55,12 +63,22 @@ export type NativeLog = {
     message: string;
     context: object;
 };
+export type NativeLogWithError = {
+    message: string;
+    errorKind: string;
+    errorMessage: string;
+    stacktrace: string;
+    context: object;
+};
 
 export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
 
 export type LogEvent = {
     message: string;
     context: object;
+    errorKind?: string;
+    errorMessage?: string;
+    stacktrace?: string;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
     readonly userInfo: UserInfo;

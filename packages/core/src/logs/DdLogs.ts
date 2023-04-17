@@ -15,7 +15,8 @@ import type {
     DdLogsType,
     LogArguments,
     LogEventMapper,
-    LogWithErrorArguments
+    LogWithErrorArguments,
+    NativeLogWithError
 } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -127,9 +128,11 @@ class DdLogsWrapper implements DdLogsType {
             `Tracking ${status} log “${message}”`,
             SdkVerbosity.DEBUG
         );
-        // TODO: adapt log event mapper
         const event = this.logEventMapper.applyEventMapper({
             message,
+            errorKind,
+            errorMessage,
+            stacktrace,
             context,
             status
         });
@@ -138,9 +141,9 @@ class DdLogsWrapper implements DdLogsType {
         }
         return this.nativeLogs[`${status}WithError`](
             event.message,
-            errorKind,
-            errorMessage,
-            stacktrace,
+            (event as NativeLogWithError).errorKind,
+            (event as NativeLogWithError).errorMessage,
+            (event as NativeLogWithError).stacktrace,
             event.context
         );
     };

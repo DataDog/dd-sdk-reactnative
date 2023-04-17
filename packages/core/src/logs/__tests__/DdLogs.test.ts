@@ -18,7 +18,49 @@ describe('DdLogs', () => {
 
         it('registers event mapper and maps logs', async () => {
             const logEventMapper: LogEventMapper = log => {
+                return {
+                    message: 'new message',
+                    context: { newContext: 'context' },
+                    status: 'info',
+                    userInfo: {}
+                };
+            };
+            DdLogs.registerLogEventMapper(logEventMapper);
+
+            await DdLogs.info('original message', {});
+            expect(
+                NativeModules.DdLogs.info
+            ).toHaveBeenCalledWith('new message', { newContext: 'context' });
+            await DdLogs.info(
+                'original message',
+                'TypeError',
+                'error message',
+                'stack',
+                {}
+            );
+            expect(
+                NativeModules.DdLogs.infoWithError
+            ).toHaveBeenCalledWith(
+                'new message',
+                undefined,
+                undefined,
+                undefined,
+                { newContext: 'context' }
+            );
+        });
+
+        it('registers event mapper and maps logs with errors', async () => {
+            const logEventMapper: LogEventMapper = log => {
                 log.message = 'new message';
+                if (log.errorKind) {
+                    log.errorKind = 'NewErrorType';
+                }
+                if (log.errorMessage) {
+                    log.errorMessage = 'new error message';
+                }
+                if (log.stacktrace) {
+                    log.stacktrace = 'new stacktrace';
+                }
                 log.context = { newContext: 'context' };
                 return log;
             };
@@ -28,6 +70,22 @@ describe('DdLogs', () => {
             expect(
                 NativeModules.DdLogs.info
             ).toHaveBeenCalledWith('new message', { newContext: 'context' });
+            await DdLogs.info(
+                'original message',
+                'TypeError',
+                'error message',
+                'stack',
+                {}
+            );
+            expect(
+                NativeModules.DdLogs.infoWithError
+            ).toHaveBeenCalledWith(
+                'new message',
+                'NewErrorType',
+                'new error message',
+                'new stacktrace',
+                { newContext: 'context' }
+            );
         });
 
         it('sends initial log if no event mapper is registered', async () => {
