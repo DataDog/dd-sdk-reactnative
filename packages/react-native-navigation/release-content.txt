@@ -27,7 +27,6 @@ package/lib/typescript/core/src/TimeProvider.d.ts
 package/lib/typescript/core/src/Timer.d.ts
 package/lib/typescript/core/src/TrackingConsent.d.ts
 package/lib/typescript/core/src/errorUtils.d.ts
-package/lib/typescript/core/src/foundation.d.ts
 package/lib/typescript/core/src/index.d.ts
 package/lib/typescript/core/src/logs
 package/lib/typescript/core/src/logs/DdLogs.d.ts
@@ -81,6 +80,7 @@ package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/DatadogBuffer.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/PassThroughBuffer.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/bufferNativeCall.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/DatadogProvider.d.ts
+package/lib/typescript/core/src/sdk/DdSdk.d.ts
 package/lib/typescript/core/src/sdk/EventMappers
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/core/src/sdk/EventMappers/utils
@@ -88,6 +88,8 @@ package/lib/typescript/core/src/sdk/EventMappers/utils/deepClone.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton
 package/lib/typescript/core/src/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/types.d.ts
+package/lib/typescript/core/src/trace
+package/lib/typescript/core/src/trace/DdTrace.d.ts
 package/lib/typescript/core/src/types.d.ts
 package/lib/typescript/core/src/version.d.ts
 package/lib/typescript/react-native-navigation
