@@ -31,7 +31,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log with level debug.
+     * Send a log with Debug level.
      * @param message The message to send.
      * @param context The additional context to send.
      */
@@ -45,7 +45,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log with level info.
+     * Send a log with Info level.
      * @param message The message to send.
      * @param context The additional context to send.
      */
@@ -59,7 +59,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log with level warn.
+     * Send a log with Warn level.
      * @param message The message to send.
      * @param context The additional context to send.
      */
@@ -73,7 +73,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log with level error.
+     * Send a log with Error level.
      * @param message The message to send.
      * @param context The additional context to send.
      */
@@ -87,7 +87,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log containing an error with level debug.
+     * Send a log containing an error with Debug level.
      * @param message The message to send.
      * @param errorKind The error kind to send.
      * @param errorMessage The error message to send.
@@ -116,7 +116,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log with containing an error level info.
+     * Send a log with containing an error with Info level.
      * @param message The message to send.
      * @param errorKind The error kind to send.
      * @param errorMessage The error message to send.
@@ -145,7 +145,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log containing an error with level warn.
+     * Send a log containing an error with Warn level.
      * @param message The message to send.
      * @param errorKind The error kind to send.
      * @param errorMessage The error message to send.
@@ -174,7 +174,7 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
     }
 
     /**
-     * Send a log containing an error with level error.
+     * Send a log containing an error with Error level.
      * @param message The message to send.
      * @param errorKind The error kind to send.
      * @param errorMessage The error message to send.

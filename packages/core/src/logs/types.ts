@@ -11,28 +11,28 @@ import type { UserInfo } from '../sdk/UserInfoSingleton/types';
  */
 export type DdLogsType = {
     /**
-     * Send a log with level debug.
+     * Send a log with debug level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     debug(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level info.
+     * Send a log with info level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     info(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level warn.
+     * Send a log with warn level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     warn(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level error.
+     * Send a log with error level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
