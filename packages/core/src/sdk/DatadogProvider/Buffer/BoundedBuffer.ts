@@ -7,7 +7,7 @@
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import { getErrorStackTrace } from '../../../errorUtils';
-import { DdSdk } from '../../../foundation';
+import { DdSdk } from '../../../sdk/DdSdk';
 
 import { DatadogBuffer } from './DatadogBuffer';
 

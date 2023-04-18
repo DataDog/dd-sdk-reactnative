@@ -8,7 +8,9 @@ import type { NavigationContainerRef } from '@react-navigation/native-v6';
 import { NavigationContainer } from '@react-navigation/native-v6';
 import { createStackNavigator } from '@react-navigation/stack-v6';
 import { View, Text, Button } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { DdRumReactNavigationTracking } from '../../../../../rum/instrumentation/DdRumReactNavigationTracking';
 
 const { Screen, Navigator } = createStackNavigator();
 
@@ -101,5 +103,49 @@ export function FakeNestedNavigator(props: {
                 <Screen name="NestedStack" component={FakeNestedStack} />
             </Navigator>
         </NavigationContainer>
+    );
+}
+
+export function FakeTogglableNavigator(props: {
+    navigationRef: React.RefObject<NavigationContainerRef<unknown>>;
+}) {
+    const [showNavigator, setShowNavigator] = useState(true);
+    const FakeToggleScreen = (screenProps: any) => {
+        return (
+            <Button
+                title={screenProps.route.params.text || 'no text provided'}
+                onPress={() => setShowNavigator(s => !s)}
+            />
+        );
+    };
+
+    const navigationRef = props.navigationRef;
+
+    useEffect(() => {
+        DdRumReactNavigationTracking.stopTrackingViews(navigationRef.current);
+    }, [showNavigator]);
+
+    return showNavigator ? (
+        <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current
+                );
+            }}
+        >
+            <Navigator>
+                <Screen
+                    name="Profile1"
+                    component={FakeToggleScreen}
+                    initialParams={{ text: 'display nav 2' }}
+                />
+            </Navigator>
+        </NavigationContainer>
+    ) : (
+        <Button
+            title="display nav 1"
+            onPress={() => setShowNavigator(s => !s)}
+        />
     );
 }

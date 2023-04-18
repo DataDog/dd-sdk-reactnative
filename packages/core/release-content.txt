@@ -100,8 +100,6 @@ package/lib/commonjs/TrackingConsent.js
 package/lib/commonjs/TrackingConsent.js.map
 package/lib/commonjs/errorUtils.js
 package/lib/commonjs/errorUtils.js.map
-package/lib/commonjs/foundation.js
-package/lib/commonjs/foundation.js.map
 package/lib/commonjs/index.js
 package/lib/commonjs/index.js.map
 package/lib/commonjs/logs
@@ -193,6 +191,8 @@ package/lib/commonjs/sdk/DatadogProvider/Buffer/bufferNativeCall.js
 package/lib/commonjs/sdk/DatadogProvider/Buffer/bufferNativeCall.js.map
 package/lib/commonjs/sdk/DatadogProvider/DatadogProvider.js
 package/lib/commonjs/sdk/DatadogProvider/DatadogProvider.js.map
+package/lib/commonjs/sdk/DdSdk.js
+package/lib/commonjs/sdk/DdSdk.js.map
 package/lib/commonjs/sdk/EventMappers
 package/lib/commonjs/sdk/EventMappers/EventMapper.js
 package/lib/commonjs/sdk/EventMappers/EventMapper.js.map
@@ -204,6 +204,9 @@ package/lib/commonjs/sdk/UserInfoSingleton/UserInfoSingleton.js
 package/lib/commonjs/sdk/UserInfoSingleton/UserInfoSingleton.js.map
 package/lib/commonjs/sdk/UserInfoSingleton/types.js
 package/lib/commonjs/sdk/UserInfoSingleton/types.js.map
+package/lib/commonjs/trace
+package/lib/commonjs/trace/DdTrace.js
+package/lib/commonjs/trace/DdTrace.js.map
 package/lib/commonjs/types.js
 package/lib/commonjs/types.js.map
 package/lib/commonjs/version.js
@@ -227,8 +230,6 @@ package/lib/module/TrackingConsent.js
 package/lib/module/TrackingConsent.js.map
 package/lib/module/errorUtils.js
 package/lib/module/errorUtils.js.map
-package/lib/module/foundation.js
-package/lib/module/foundation.js.map
 package/lib/module/index.js
 package/lib/module/index.js.map
 package/lib/module/logs
@@ -320,6 +321,8 @@ package/lib/module/sdk/DatadogProvider/Buffer/bufferNativeCall.js
 package/lib/module/sdk/DatadogProvider/Buffer/bufferNativeCall.js.map
 package/lib/module/sdk/DatadogProvider/DatadogProvider.js
 package/lib/module/sdk/DatadogProvider/DatadogProvider.js.map
+package/lib/module/sdk/DdSdk.js
+package/lib/module/sdk/DdSdk.js.map
 package/lib/module/sdk/EventMappers
 package/lib/module/sdk/EventMappers/EventMapper.js
 package/lib/module/sdk/EventMappers/EventMapper.js.map
@@ -331,6 +334,9 @@ package/lib/module/sdk/UserInfoSingleton/UserInfoSingleton.js
 package/lib/module/sdk/UserInfoSingleton/UserInfoSingleton.js.map
 package/lib/module/sdk/UserInfoSingleton/types.js
 package/lib/module/sdk/UserInfoSingleton/types.js.map
+package/lib/module/trace
+package/lib/module/trace/DdTrace.js
+package/lib/module/trace/DdTrace.js.map
 package/lib/module/types.js
 package/lib/module/types.js.map
 package/lib/module/version.js
@@ -345,7 +351,6 @@ package/lib/typescript/TimeProvider.d.ts
 package/lib/typescript/Timer.d.ts
 package/lib/typescript/TrackingConsent.d.ts
 package/lib/typescript/errorUtils.d.ts
-package/lib/typescript/foundation.d.ts
 package/lib/typescript/index.d.ts
 package/lib/typescript/logs
 package/lib/typescript/logs/DdLogs.d.ts
@@ -399,6 +404,7 @@ package/lib/typescript/sdk/DatadogProvider/Buffer/DatadogBuffer.d.ts
 package/lib/typescript/sdk/DatadogProvider/Buffer/PassThroughBuffer.d.ts
 package/lib/typescript/sdk/DatadogProvider/Buffer/bufferNativeCall.d.ts
 package/lib/typescript/sdk/DatadogProvider/DatadogProvider.d.ts
+package/lib/typescript/sdk/DdSdk.d.ts
 package/lib/typescript/sdk/EventMappers
 package/lib/typescript/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/sdk/EventMappers/utils
@@ -406,6 +412,8 @@ package/lib/typescript/sdk/EventMappers/utils/deepClone.d.ts
 package/lib/typescript/sdk/UserInfoSingleton
 package/lib/typescript/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/sdk/UserInfoSingleton/types.d.ts
+package/lib/typescript/trace
+package/lib/typescript/trace/DdTrace.d.ts
 package/lib/typescript/types.d.ts
 package/lib/typescript/version.d.ts
 package/package.json
@@ -436,7 +444,6 @@ package/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
 package/src/errorUtils.ts
-package/src/foundation.tsx
 package/src/index.tsx
 package/src/logs
 package/src/logs/DdLogs.ts
@@ -520,6 +527,7 @@ package/src/sdk/DatadogProvider/__tests__/__utils__
 package/src/sdk/DatadogProvider/__tests__/__utils__/renderWithProvider.tsx
 package/src/sdk/DatadogProvider/__tests__/initialization.test.tsx
 package/src/sdk/DatadogProvider/__tests__/initializationModes.test.tsx
+package/src/sdk/DdSdk.ts
 package/src/sdk/EventMappers
 package/src/sdk/EventMappers/EventMapper.ts
 package/src/sdk/EventMappers/__tests__
@@ -533,5 +541,7 @@ package/src/sdk/UserInfoSingleton/UserInfoSingleton.ts
 package/src/sdk/UserInfoSingleton/__tests__
 package/src/sdk/UserInfoSingleton/__tests__/UserInfoSingleton.test.ts
 package/src/sdk/UserInfoSingleton/types.ts
+package/src/trace
+package/src/trace/DdTrace.ts
 package/src/types.tsx
 package/src/version.ts

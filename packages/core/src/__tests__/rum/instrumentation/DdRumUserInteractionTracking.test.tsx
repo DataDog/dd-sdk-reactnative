@@ -17,9 +17,9 @@ import {
 } from 'react-native';
 import React from 'react';
 
-import { DdSdk } from '../../../foundation';
 import { DdEventsInterceptor } from '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
+import { DdSdk } from '../../../sdk/DdSdk';
 
 const styles = StyleSheet.create({
     button: {

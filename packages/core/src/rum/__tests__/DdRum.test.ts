@@ -7,8 +7,8 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdSdk } from '../../foundation';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdSdk } from '../../sdk/DdSdk';
 import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';

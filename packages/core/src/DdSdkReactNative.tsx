@@ -24,7 +24,6 @@ import { InternalLog } from './InternalLog';
 import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
-import { DdSdk } from './foundation';
 import { DdLogs } from './logs/DdLogs';
 import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRum } from './rum/DdRum';
@@ -34,6 +33,7 @@ import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/Dd
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdSdk } from './sdk/DdSdk';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';

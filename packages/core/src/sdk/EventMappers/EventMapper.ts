@@ -6,7 +6,7 @@
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdSdk } from '../../foundation';
+import { DdSdk } from '../../sdk/DdSdk';
 import { AttributesSingleton } from '../AttributesSingleton/AttributesSingleton';
 import type { Attributes } from '../AttributesSingleton/types';
 import { UserInfoSingleton } from '../UserInfoSingleton/UserInfoSingleton';
