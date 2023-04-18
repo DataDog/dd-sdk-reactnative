@@ -162,8 +162,8 @@ Events include additional context:
 
 Resource tracking provides the following timings:
 
--   `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
--   `Download`: The time it took to receive a response.
+- `First Byte`: The time between the scheduled request and the first byte of the response. This includes time for the request preparation on the native level, network latency, and the time it took the server to prepare the response.
+- `Download`: The time it took to receive a response.
 
 ## Initializing asynchronously
 
@@ -200,6 +200,8 @@ This uses React Native's [InteractionManager.runAfterInteractions][3] to delay t
 All interactions with the RUM SDK (view tracking, actions, resources tracing, and so on) are still recorded and kept in a queue with a limit of 100 events.
 
 Logs are not recorded and calling a `DdLogs` method before the actual initialization might break logging.
+
+Refer to the [`example app`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rum-react-navigation-async) to see an asynchronous implementation of Datadog with React navigation.
 
 ## Delaying the initialization
 

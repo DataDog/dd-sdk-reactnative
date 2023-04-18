@@ -6,6 +6,14 @@ You can use Datadog on the same application both from the React Native and the n
 
 RUM Events are reported as coming from the same application and the same source in Datadog RUM.
 
+Refer to the [`example apps`](https://github.com/DataDog/dd-sdk-reactnative-examples) to see a few implementations of Datadog with hybrid applications. The following scenarios are present for now:
+
+1. [`android-app-with-rn`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/android-app-with-rn) app (android app with RN screens)
+
+2. [`ios-app-with-rn`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/ios-app-with-rn) app  (iOS app with RN screens)
+
+3. [`rn-app-with-native`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rn-app-with-native) app (RN app with native screens)
+
 ## Constraints
 
 A few constraints to keep in mind:
@@ -242,7 +250,6 @@ And for Android:
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
 [3]: https://docs.datadoghq.com/real_user_monitoring/android/
-[4]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/packages/core/src/DdSdkReactNative.tsx#L184
 [5]: https://docs.datadoghq.com/real_user_monitoring/ios/advanced_configuration/?tab=swift#custom-views
 [6]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#custom-views
 [7]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#automatically-track-network-requests

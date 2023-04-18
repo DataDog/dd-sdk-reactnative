@@ -271,6 +271,8 @@ Use one of Datadog's integrations to automatically track views for the following
 - If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
 - If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
 
+Refer to the [`react navigation example apps`](https://github.com/DataDog/dd-sdk-reactnative-examples) to see an implementation.
+
 ## Track custom attributes
 
 You can attach user information to all RUM events to get more detailed information from your RUM sessions.
@@ -322,7 +324,7 @@ While in development mode, your application can submit extra events related to t
 
 To prevent these events from showing in the dashboard, you can disable errors and resources tracking in dev mode using the `__DEV__` flag:
 
-```
+```js
 const config = new DdSdkReactNativeConfiguration(
  CLIENT_TOKEN,
  ENVIRONMENT,
