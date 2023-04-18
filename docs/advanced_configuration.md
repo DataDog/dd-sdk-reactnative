@@ -62,6 +62,12 @@ DdLogs.info('Lorem ipsum dolor sit amet…', {});
 DdLogs.warn('Lorem ipsum dolor sit amet…', {});
 DdLogs.error('Lorem ipsum dolor sit amet…', {});
 
+// Send logs with error details (use the debug, info, warn, or error methods)
+DdLogs.debug('Error log', error.name, error.message, error.stacktrace, {});
+DdLogs.info('Error log', error.name, error.message, error.stacktrace, {});
+DdLogs.warn('Error log', error.name, error.message, error.stacktrace, {});
+DdLogs.error('Error log', error.name, error.message, error.stacktrace, {});
+
 // Track RUM Views manually
 DdRum.startView('<view-key>', 'View Name', {}, Date.now());
 //…
