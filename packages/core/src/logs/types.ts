@@ -11,32 +11,32 @@ import type { UserInfo } from '../sdk/UserInfoSingleton/types';
  */
 export type DdLogsType = {
     /**
-     * Send a log with level debug.
+     * Send a log with debug level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    debug(message: string, context?: object): Promise<void>;
+    debug(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level info.
+     * Send a log with info level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    info(message: string, context?: object): Promise<void>;
+    info(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level warn.
+     * Send a log with warn level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    warn(message: string, context?: object): Promise<void>;
+    warn(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 
     /**
-     * Send a log with level error.
+     * Send a log with error level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    error(message: string, context?: object): Promise<void>;
+    error(...args: LogArguments | LogWithErrorArguments): Promise<void>;
 };
 
 /**
@@ -44,6 +44,14 @@ export type DdLogsType = {
  */
 export type RawLog = {
     message: string;
+    context: object;
+    status: LogStatus;
+};
+export type RawLogWithError = {
+    message: string;
+    errorKind: string;
+    errorMessage: string;
+    stacktrace: string;
     context: object;
     status: LogStatus;
 };
@@ -55,12 +63,22 @@ export type NativeLog = {
     message: string;
     context: object;
 };
+export type NativeLogWithError = {
+    message: string;
+    errorKind: string;
+    errorMessage: string;
+    stacktrace: string;
+    context: object;
+};
 
 export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
 
 export type LogEvent = {
     message: string;
     context: object;
+    errorKind?: string;
+    errorMessage?: string;
+    stacktrace?: string;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
     readonly userInfo: UserInfo;
@@ -68,3 +86,13 @@ export type LogEvent = {
 };
 
 export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
+
+export type LogArguments = [message: string, context?: object];
+
+export type LogWithErrorArguments = [
+    message: string,
+    errorKind?: string,
+    errorMessage?: string,
+    stacktrace?: string,
+    context?: object
+];

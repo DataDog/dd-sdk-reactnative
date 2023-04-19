@@ -74,32 +74,96 @@ export type DdNativeSdkType = {
  */
 export type DdNativeLogsType = {
     /**
-     * Send a log with level debug.
+     * Send a log with DEBUG level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     debug(message: string, context?: object): Promise<void>;
 
     /**
-     * Send a log with level info.
+     * Send a log with INFO level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     info(message: string, context?: object): Promise<void>;
 
     /**
-     * Send a log with level warn.
+     * Send a log with WARN level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     warn(message: string, context?: object): Promise<void>;
 
     /**
-     * Send a log with level error.
+     * Send a log with ERROR level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
     error(message: string, context?: object): Promise<void>;
+
+    /**
+     * Send a log containing an error with DEBUG level.
+     * @param message: The message to send.
+     * @param errorKind: The error kind to send.
+     * @param errorMessage: The error message to send.
+     * @param stacktrace: The stack trace to send.
+     * @param context: The additional context to send.
+     */
+    debugWithError(
+        message: string,
+        errorKind?: string,
+        errorMessage?: string,
+        stacktrace?: string,
+        context?: object
+    ): Promise<void>;
+
+    /**
+     * Send a log containing an error with INDO level.
+     * @param message: The message to send.
+     * @param errorKind: The error kind to send.
+     * @param errorMessage: The error message to send.
+     * @param stacktrace: The stack trace to send.
+     * @param context: The additional context to send.
+     */
+    infoWithError(
+        message: string,
+        errorKind?: string,
+        errorMessage?: string,
+        stacktrace?: string,
+        context?: object
+    ): Promise<void>;
+
+    /**
+     * Send a log containing an error with WARN level.
+     * @param message: The message to send.
+     * @param errorKind: The error kind to send.
+     * @param errorMessage: The error message to send.
+     * @param stacktrace: The stack trace to send.
+     * @param context: The additional context to send.
+     */
+    warnWithError(
+        message: string,
+        errorKind?: string,
+        errorMessage?: string,
+        stacktrace?: string,
+        context?: object
+    ): Promise<void>;
+
+    /**
+     * Send a log containing an error with ERROR level.
+     * @param message: The message to send.
+     * @param errorKind: The error kind to send.
+     * @param errorMessage: The error message to send.
+     * @param stacktrace: The stack trace to send.
+     * @param context: The additional context to send.
+     */
+    errorWithError(
+        message: string,
+        errorKind?: string,
+        errorMessage?: string,
+        stacktrace?: string,
+        context?: object
+    ): Promise<void>;
 };
 
 /**

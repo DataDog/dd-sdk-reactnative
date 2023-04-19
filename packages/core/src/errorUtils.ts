@@ -6,6 +6,7 @@
 
 export const EMPTY_MESSAGE = 'Unknown Error';
 export const EMPTY_STACK_TRACE = '';
+export const DEFAULT_ERROR_NAME = 'Error';
 
 export const getErrorMessage = (error: any | undefined): string => {
     let message = EMPTY_MESSAGE;
@@ -55,4 +56,18 @@ export const getErrorStackTrace = (error: any | undefined): string => {
         // Do nothing
     }
     return stack;
+};
+
+export const getErrorName = (error: unknown): string => {
+    try {
+        if (typeof error !== 'object' || error === null) {
+            return DEFAULT_ERROR_NAME;
+        }
+        if (typeof (error as any).name === 'string') {
+            return (error as any).name;
+        }
+    } catch (e) {
+        // Do nothing
+    }
+    return DEFAULT_ERROR_NAME;
 };

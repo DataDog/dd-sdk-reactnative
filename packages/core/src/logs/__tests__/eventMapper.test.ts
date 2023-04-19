@@ -50,4 +50,38 @@ describe('formatRawLogToLogEvent', () => {
             attributes: { appType: 'student' }
         });
     });
+
+    it('formats a raw log with error attributes and with context, userInfo and attributes to a LogEvent', () => {
+        expect(
+            formatRawLogToLogEvent(
+                {
+                    message: 'original',
+                    errorKind: 'TypeError',
+                    errorMessage: 'something went wrong',
+                    stacktrace: 'stacktrace',
+                    context: { loggedIn: true },
+                    status: 'info'
+                },
+                {
+                    userInfo: {
+                        name: 'userName',
+                        extraInfo: { loggedIn: true }
+                    },
+                    attributes: { appType: 'student' }
+                }
+            )
+        ).toEqual({
+            message: 'original',
+            errorKind: 'TypeError',
+            errorMessage: 'something went wrong',
+            stacktrace: 'stacktrace',
+            context: { loggedIn: true },
+            status: 'info',
+            userInfo: {
+                name: 'userName',
+                extraInfo: { loggedIn: true }
+            },
+            attributes: { appType: 'student' }
+        });
+    });
 });
