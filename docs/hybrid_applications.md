@@ -6,14 +6,6 @@ You can use Datadog on the same application both from the React Native and the n
 
 RUM Events are reported as coming from the same application and the same source in Datadog RUM.
 
-Refer to the [`example apps`](https://github.com/DataDog/dd-sdk-reactnative-examples) to see a few implementations of Datadog with hybrid applications. The following scenarios are present for now:
-
-1. [`android-app-with-rn`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/android-app-with-rn) app (android app with RN screens)
-
-2. [`ios-app-with-rn`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/ios-app-with-rn) app  (iOS app with RN screens)
-
-3. [`rn-app-with-native`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rn-app-with-native) app (RN app with native screens)
-
 ## Constraints
 
 A few constraints to keep in mind:
@@ -50,6 +42,10 @@ On iOS, add the Datadog iOS SDK to your dependencies in your `ios/Podfile` to us
 # Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
 pod 'DatadogSDKObjc', '~> 1.15.0'
 ```
+
+#### Example
+
+Check [`rn-app-with-native`][10] to see a ready implementation of Datadog with React native app containing native screens.
 
 #### Tracking native RUM Views
 
@@ -247,6 +243,11 @@ And for Android:
 
 ```
 
+#### Examples
+
+- [`ios-app-with-rn`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/ios-app-with-rn) app  (iOS app with RN screens)
+- [`android-app-with-rn`][12] app (android app with RN screens)
+
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.datadoghq.com/real_user_monitoring/ios/
 [3]: https://docs.datadoghq.com/real_user_monitoring/android/
@@ -255,3 +256,6 @@ And for Android:
 [7]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#automatically-track-network-requests
 [8]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#custom-resources
 [9]: https://docs.datadoghq.com/real_user_monitoring/ios/advanced_configuration/?tab=objectivec#automatically-track-network-requests
+[10]: https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rn-app-with-native
+[11]: https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/ios-app-with-rn
+[12]: https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/android-app-with-rn
