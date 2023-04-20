@@ -201,7 +201,7 @@ All interactions with the RUM SDK (view tracking, actions, resources tracing, an
 
 Logs are not recorded and calling a `DdLogs` method before the actual initialization might break logging.
 
-Refer to the [`example app`](https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rum-react-navigation-async) to see an asynchronous implementation of Datadog with React navigation.
+If you experience any issue setting up the asynchronous initialization of Datadog you can check out our [example application][7]
 
 ## Delaying the initialization
 
@@ -275,3 +275,4 @@ const configuration = {
 [4]: https://jestjs.io/
 [5]: https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react-native/v0.70/index.d.ts#L548
 [6]: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+[7]: https://github.com/DataDog/dd-sdk-reactnative-examples/tree/main/rum-react-navigation-async

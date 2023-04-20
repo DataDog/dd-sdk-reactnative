@@ -271,7 +271,7 @@ Use one of Datadog's integrations to automatically track views for the following
 - If you use the [`react-native-navigation`][5] library, then add the `@datadog/mobile-react-native-navigation` package and follow the [setup instructions][6].
 - If you use the [`react-navigation`][7] library, then add the `@datadog/mobile-react-navigation` package and follow the [setup instructions][8].
 
-Refer to the [`react navigation example apps`](https://github.com/DataDog/dd-sdk-reactnative-examples) to see an implementation.
+If you experience any issue setting up View tracking with `@datadog/mobile-react-navigation` you can check out our [example application][16]
 
 ## Track custom attributes
 
@@ -390,3 +390,4 @@ For more information, see [Apache License, v2.0][9]
 [13]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
 [14]: https://stackoverflow.com/questions/37388126/use-frameworks-for-only-some-pods-or-swift-pods/60914505#60914505
 [15]: https://docs.datadoghq.com/getting_started/tagging/#define-tags
+[16]: https://github.com/DataDog/dd-sdk-reactnative-examples
