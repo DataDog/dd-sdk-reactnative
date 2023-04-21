@@ -5,12 +5,20 @@
  */
 
 /**
- * Does a shallow comparison between 2 objects
+ * Does a shallow comparison between 2 objects.
+ *
+ * In some rare cases, one of the objects can be `undefined` or `null`.
+ * This is documented in https://github.com/DataDog/dd-sdk-reactnative/issues/419.
  */
 export const areObjectShallowEqual = (
-    objectA: Record<string, unknown>,
-    objectB: Record<string, unknown>
+    objectA: Record<string, unknown> | undefined | null,
+    objectB: Record<string, unknown> | undefined | null
 ): boolean => {
+    // Handle edge case when one object is `undefined` or `null`
+    if (!objectA || !objectB) {
+        return objectA === objectB;
+    }
+
     const keys = Object.keys(objectA);
     if (keys.length !== Object.keys(objectB).length) {
         return false;
