@@ -19,9 +19,12 @@ const HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS = 1;
 const DD_ACTION_NAME_PROP = 'dd-action-name';
 
 export class DdEventsInterceptor implements EventsInterceptor {
-    static ACTION_EVENT_DROPPED_WARN_MESSAGE =
+    static ACTION_EVENT_DROPPED_DEBUG_MESSAGE =
         'An action event was dropped because either the `onPress` method arguments' +
-        ' were undefined or they were missing the target information.';
+        ' were undefined or they were missing the target information.' +
+        ' This log can happen if you use an abstraction component with an `onPress` prop' +
+        ' that does not receive the native event is first argument.' +
+        ' In this case, you can ignore this log.';
 
     private debouncingStartedTimestamp = Number.MIN_VALUE;
 
@@ -40,8 +43,8 @@ export class DdEventsInterceptor implements EventsInterceptor {
             }
         } else {
             InternalLog.log(
-                DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE,
-                SdkVerbosity.WARN
+                DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE,
+                SdkVerbosity.DEBUG
             );
         }
     }
