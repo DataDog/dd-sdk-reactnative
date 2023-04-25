@@ -15,7 +15,8 @@ jest.mock('../../InternalLog', () => {
     return {
         InternalLog: {
             log: jest.fn()
-        }
+        },
+        DATADOG_MESSAGE_PREFIX: 'DATADOG:'
     };
 });
 
@@ -207,11 +208,10 @@ describe('DdLogs', () => {
             (NativeModules.DdLogs.info as jest.MockedFunction<
                 DdNativeLogsType['debug']
             >).mockRejectedValueOnce(new Error('Log sent before SDK init'));
+            const consoleSpy = jest.spyOn(console, 'warn');
             await DdLogs.info('original message', {});
-            expect(InternalLog.log).toHaveBeenNthCalledWith(
-                2,
-                'Dropping info log as the SDK is not initialized yet: "original message"',
-                'warn'
+            expect(consoleSpy).toHaveBeenCalledWith(
+                'DATADOG: Dropping info log as the SDK is not initialized yet: "original message"'
             );
         });
     });

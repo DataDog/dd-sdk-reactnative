@@ -6,7 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
-import { InternalLog } from '../InternalLog';
+import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 
@@ -98,14 +98,19 @@ class DdLogsWrapper implements DdLogsType {
         return this.log(args[0], args[1] || {}, 'error');
     }
 
+    /**
+     * Since the InternalLog does not have a verbosity set yet in this case,
+     * we use console.warn to warn the user in dev mode.
+     */
     private printLogDroppedSdkNotInitialized = (
         message: string,
         status: 'debug' | 'info' | 'warn' | 'error'
     ) => {
-        InternalLog.log(
-            `Dropping ${status} log as the SDK is not initialized yet: "${message}"`,
-            SdkVerbosity.WARN
-        );
+        if (__DEV__) {
+            console.warn(
+                `${DATADOG_MESSAGE_PREFIX} Dropping ${status} log as the SDK is not initialized yet: "${message}"`
+            );
+        }
     };
 
     private printlogDroppedByMapper = (
