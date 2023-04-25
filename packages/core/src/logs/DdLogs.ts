@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { DdSdkReactNative } from '../DdSdkReactNative';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
@@ -96,15 +97,37 @@ class DdLogsWrapper implements DdLogsType {
         return this.log(args[0], args[1] || {}, 'error');
     }
 
+    private printLogDroppedWarning = (
+        message: string,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
+        InternalLog.log(
+            `Dropping ${status} log as the SDK is not initialized yet “${message}”`,
+            SdkVerbosity.WARN
+        );
+    };
+
+    private printLogTracked = (
+        message: string,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
+        InternalLog.log(
+            `Tracking ${status} log “${message}”`,
+            SdkVerbosity.DEBUG
+        );
+    };
+
     private log = (
         message: string,
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
-        InternalLog.log(
-            `Tracking ${status} log “${message}”`,
-            SdkVerbosity.DEBUG
-        );
+        if (!DdSdkReactNative.isInitialized()) {
+            this.printLogDroppedWarning(message, status);
+            return generateEmptyPromise();
+        }
+        this.printLogTracked(message, status);
+
         const event = this.logEventMapper.applyEventMapper({
             message,
             context,
@@ -124,10 +147,12 @@ class DdLogsWrapper implements DdLogsType {
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
-        InternalLog.log(
-            `Tracking ${status} log “${message}”`,
-            SdkVerbosity.DEBUG
-        );
+        if (!DdSdkReactNative.isInitialized()) {
+            this.printLogDroppedWarning(message, status);
+            return generateEmptyPromise();
+        }
+        this.printLogTracked(message, status);
+
         const event = this.logEventMapper.applyEventMapper({
             message,
             errorKind,

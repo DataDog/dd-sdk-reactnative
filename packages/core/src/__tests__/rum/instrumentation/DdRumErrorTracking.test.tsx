@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import type {
     DdNativeLogsType,
     DdNativeRumType
@@ -30,6 +31,8 @@ let originalConsoleError;
 
 const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
+
+jest.spyOn(DdSdkReactNative, 'isInitialized').mockReturnValue(true);
 
 beforeEach(() => {
     jest.clearAllMocks();

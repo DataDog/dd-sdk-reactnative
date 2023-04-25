@@ -66,6 +66,14 @@ export class DdSdkReactNative {
     private static features?: AutoInstrumentationConfiguration;
 
     /**
+     * Internal function.
+     * Returns whether the SDK has been initialized on the native side.
+     */
+    static isInitialized = (): boolean => {
+        return this.wasInitialized;
+    };
+
+    /**
      * Initializes the Datadog SDK.
      * @param configuration the configuration for the SDK library
      * @returns a Promise.

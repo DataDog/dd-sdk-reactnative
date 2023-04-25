@@ -6,8 +6,13 @@
 
 import { NativeModules } from 'react-native';
 
+import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
+
+const sdkInitializedSpy = jest
+    .spyOn(DdSdkReactNative, 'isInitialized')
+    .mockReturnValue(true);
 
 describe('DdLogs', () => {
     describe('log event mapper', () => {
@@ -168,6 +173,25 @@ describe('DdLogs', () => {
                 'message',
                 {}
             );
+        });
+    });
+
+    describe('when SDK is not initialized', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdLogs.unregisterLogEventMapper();
+        });
+
+        it('does not call native logger', async () => {
+            sdkInitializedSpy.mockReturnValueOnce(false);
+            await DdLogs.info('original message', {});
+            expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+
+            sdkInitializedSpy.mockReturnValueOnce(false);
+            await DdLogs.info('message', 'kind', 'message', 'stacktrace', {
+                context: 'value'
+            });
+            expect(NativeModules.DdLogs.infoWithError).not.toHaveBeenCalled();
         });
     });
 });
