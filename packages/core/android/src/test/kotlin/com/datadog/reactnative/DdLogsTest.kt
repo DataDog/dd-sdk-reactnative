@@ -8,10 +8,13 @@ package com.datadog.reactnative
 
 import android.util.Log
 import com.datadog.android.log.Logger
+import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
+import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -322,6 +325,9 @@ internal class DdLogsTest {
 
         // Then
         verifyZeroInteractions(mockLogger)
+        val throwableCaptor = argumentCaptor<Throwable>()
+        verify(mockPromise, times(8)).reject(throwableCaptor.capture())
+        assertThat(throwableCaptor.firstValue).hasFieldEqualTo("detailMessage", "Log sent before SDK init")
 
         // When SDK is finally initialized
         whenever(mockDatadog.isInitialized()) doReturn true

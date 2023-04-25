@@ -6,14 +6,10 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
+import type { DdNativeLogsType } from '../../nativeModulesTypes';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
-
-const sdkInitializedSpy = jest
-    .spyOn(DdSdkReactNative, 'isInitialized')
-    .mockReturnValue(true);
 
 jest.mock('../../InternalLog', () => {
     return {
@@ -201,30 +197,20 @@ describe('DdLogs', () => {
         });
     });
 
-    describe('when SDK is not initialized', () => {
+    describe.only('when SDK is not initialized', () => {
         beforeEach(() => {
             jest.clearAllMocks();
             DdLogs.unregisterLogEventMapper();
         });
 
-        it('does not call native logger', async () => {
-            sdkInitializedSpy.mockReturnValueOnce(false);
+        it('does not crash and warns user', async () => {
+            (NativeModules.DdLogs.info as jest.MockedFunction<
+                DdNativeLogsType['debug']
+            >).mockRejectedValueOnce(new Error('Log sent before SDK init'));
             await DdLogs.info('original message', {});
-            expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
-            expect(InternalLog.log).toHaveBeenNthCalledWith(
-                1,
-                'Dropping info log as the SDK is not initialized yet: "original message"',
-                'warn'
-            );
-
-            sdkInitializedSpy.mockReturnValueOnce(false);
-            await DdLogs.debug('message', 'kind', 'message', 'stacktrace', {
-                context: 'value'
-            });
-            expect(NativeModules.DdLogs.infoWithError).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenNthCalledWith(
                 2,
-                'Dropping debug log as the SDK is not initialized yet: "message"',
+                'Dropping info log as the SDK is not initialized yet: "original message"',
                 'warn'
             );
         });

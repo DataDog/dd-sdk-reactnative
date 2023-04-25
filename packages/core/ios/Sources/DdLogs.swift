@@ -64,7 +64,7 @@ class RNDdLogs: NSObject {
     @objc(debug:withContext:withResolver:withRejecter:)
     func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -75,7 +75,7 @@ class RNDdLogs: NSObject {
     @objc(info:withContext:withResolver:withRejecter:)
     func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -86,7 +86,7 @@ class RNDdLogs: NSObject {
     @objc(warn:withContext:withResolver:withRejecter:)
     func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -97,7 +97,7 @@ class RNDdLogs: NSObject {
     @objc(error:withContext:withResolver:withRejecter:)
     func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -108,7 +108,7 @@ class RNDdLogs: NSObject {
     @objc(debugWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -119,7 +119,7 @@ class RNDdLogs: NSObject {
     @objc(infoWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -130,7 +130,7 @@ class RNDdLogs: NSObject {
     @objc(warnWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
@@ -141,7 +141,7 @@ class RNDdLogs: NSObject {
     @objc(errorWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
-            resolve(nil)
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
         }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()

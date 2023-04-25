@@ -6,7 +6,6 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdSdkReactNative } from '../DdSdkReactNative';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
@@ -19,6 +18,8 @@ import type {
     LogWithErrorArguments,
     NativeLogWithError
 } from './types';
+
+const SDK_NOT_INITIALIZED_MESSAGE = 'Log sent before SDK init';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
@@ -127,16 +128,11 @@ class DdLogsWrapper implements DdLogsType {
         );
     };
 
-    private log = (
+    private log = async (
         message: string,
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
-        if (!DdSdkReactNative.isInitialized()) {
-            this.printLogDroppedSdkNotInitialized(message, status);
-            return generateEmptyPromise();
-        }
-
         const event = this.logEventMapper.applyEventMapper({
             message,
             context,
@@ -148,10 +144,21 @@ class DdLogsWrapper implements DdLogsType {
         }
 
         this.printLogTracked(event.message, status);
-        return this.nativeLogs[status](event.message, event.context);
+        try {
+            return await this.nativeLogs[status](event.message, event.context);
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (error.message === SDK_NOT_INITIALIZED_MESSAGE) {
+                this.printLogDroppedSdkNotInitialized(message, status);
+                return generateEmptyPromise();
+            }
+
+            throw error;
+        }
     };
 
-    private logWithError = (
+    private logWithError = async (
         message: string,
         errorKind: string | undefined,
         errorMessage: string | undefined,
@@ -159,11 +166,6 @@ class DdLogsWrapper implements DdLogsType {
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
-        if (!DdSdkReactNative.isInitialized()) {
-            this.printLogDroppedSdkNotInitialized(message, status);
-            return generateEmptyPromise();
-        }
-
         const event = this.logEventMapper.applyEventMapper({
             message,
             errorKind,
@@ -178,13 +180,24 @@ class DdLogsWrapper implements DdLogsType {
         }
 
         this.printLogTracked(event.message, status);
-        return this.nativeLogs[`${status}WithError`](
-            event.message,
-            (event as NativeLogWithError).errorKind,
-            (event as NativeLogWithError).errorMessage,
-            (event as NativeLogWithError).stacktrace,
-            { ...event.context, '_dd.error.source_type': 'react-native' }
-        );
+        try {
+            return await this.nativeLogs[`${status}WithError`](
+                event.message,
+                (event as NativeLogWithError).errorKind,
+                (event as NativeLogWithError).errorMessage,
+                (event as NativeLogWithError).stacktrace,
+                { ...event.context, '_dd.error.source_type': 'react-native' }
+            );
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (error.message === SDK_NOT_INITIALIZED_MESSAGE) {
+                this.printLogDroppedSdkNotInitialized(message, status);
+                return generateEmptyPromise();
+            }
+
+            throw error;
+        }
     };
 
     registerLogEventMapper(logEventMapper: LogEventMapper) {
