@@ -97,13 +97,23 @@ class DdLogsWrapper implements DdLogsType {
         return this.log(args[0], args[1] || {}, 'error');
     }
 
-    private printLogDroppedWarning = (
+    private printLogDroppedSdkNotInitialized = (
         message: string,
         status: 'debug' | 'info' | 'warn' | 'error'
     ) => {
         InternalLog.log(
-            `Dropping ${status} log as the SDK is not initialized yet “${message}”`,
+            `Dropping ${status} log as the SDK is not initialized yet: "${message}"`,
             SdkVerbosity.WARN
+        );
+    };
+
+    private printlogDroppedByMapper = (
+        message: string,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
+        InternalLog.log(
+            `${status} log dropped by log mapper: "${message}"`,
+            SdkVerbosity.DEBUG
         );
     };
 
@@ -112,7 +122,7 @@ class DdLogsWrapper implements DdLogsType {
         status: 'debug' | 'info' | 'warn' | 'error'
     ) => {
         InternalLog.log(
-            `Tracking ${status} log “${message}”`,
+            `Tracking ${status} log "${message}"`,
             SdkVerbosity.DEBUG
         );
     };
@@ -123,7 +133,7 @@ class DdLogsWrapper implements DdLogsType {
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
         if (!DdSdkReactNative.isInitialized()) {
-            this.printLogDroppedWarning(message, status);
+            this.printLogDroppedSdkNotInitialized(message, status);
             return generateEmptyPromise();
         }
 
@@ -133,6 +143,7 @@ class DdLogsWrapper implements DdLogsType {
             status
         });
         if (!event) {
+            this.printlogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
 
@@ -149,7 +160,7 @@ class DdLogsWrapper implements DdLogsType {
         status: 'debug' | 'info' | 'warn' | 'error'
     ): Promise<void> => {
         if (!DdSdkReactNative.isInitialized()) {
-            this.printLogDroppedWarning(message, status);
+            this.printLogDroppedSdkNotInitialized(message, status);
             return generateEmptyPromise();
         }
 
@@ -162,6 +173,7 @@ class DdLogsWrapper implements DdLogsType {
             status
         });
         if (!event) {
+            this.printlogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
 

@@ -7,12 +7,21 @@
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../../DdSdkReactNative';
+import { InternalLog } from '../../InternalLog';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
 
 const sdkInitializedSpy = jest
     .spyOn(DdSdkReactNative, 'isInitialized')
     .mockReturnValue(true);
+
+jest.mock('../../InternalLog', () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        }
+    };
+});
 
 describe('DdLogs', () => {
     describe('log event mapper', () => {
@@ -36,14 +45,21 @@ describe('DdLogs', () => {
             expect(
                 NativeModules.DdLogs.info
             ).toHaveBeenCalledWith('new message', { newContext: 'context' });
-            await DdLogs.info(
+
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                1,
+                'Tracking info log "new message"',
+                'debug'
+            );
+
+            await DdLogs.debug(
                 'original message',
                 'TypeError',
                 'error message',
                 'stack',
                 {}
             );
-            expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
+            expect(NativeModules.DdLogs.debugWithError).toHaveBeenCalledWith(
                 'new message',
                 undefined,
                 undefined,
@@ -52,6 +68,11 @@ describe('DdLogs', () => {
                     newContext: 'context',
                     '_dd.error.source_type': 'react-native'
                 }
+            );
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                2,
+                'Tracking debug log "new message"',
+                'debug'
             );
         });
 
@@ -111,6 +132,10 @@ describe('DdLogs', () => {
 
             await DdLogs.info('original message', {});
             expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'info log dropped by log mapper: "original message"',
+                'debug'
+            );
         });
     });
 
@@ -186,12 +211,22 @@ describe('DdLogs', () => {
             sdkInitializedSpy.mockReturnValueOnce(false);
             await DdLogs.info('original message', {});
             expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                1,
+                'Dropping info log as the SDK is not initialized yet: "original message"',
+                'warn'
+            );
 
             sdkInitializedSpy.mockReturnValueOnce(false);
-            await DdLogs.info('message', 'kind', 'message', 'stacktrace', {
+            await DdLogs.debug('message', 'kind', 'message', 'stacktrace', {
                 context: 'value'
             });
             expect(NativeModules.DdLogs.infoWithError).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                2,
+                'Dropping debug log as the SDK is not initialized yet: "message"',
+                'warn'
+            );
         });
     });
 });
