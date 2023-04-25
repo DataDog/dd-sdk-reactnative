@@ -17,8 +17,11 @@ import com.facebook.react.bridge.ReadableMap
 /**
  * The entry point to use Datadog's Logs feature.
  */
-class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
-    ReactContextBaseJavaModule(reactContext) {
+class DdLogs(
+    reactContext: ReactApplicationContext,
+    logger: Logger? = null,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper()
+) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "DdLogs"
 
@@ -37,6 +40,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun debug(message: String, context: ReadableMap, promise: Promise) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.d(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
@@ -51,6 +58,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun info(message: String, context: ReadableMap, promise: Promise) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.i(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
@@ -65,6 +76,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun warn(message: String, context: ReadableMap, promise: Promise) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.w(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
@@ -79,6 +94,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
      */
     @ReactMethod
     fun error(message: String, context: ReadableMap, promise: Promise) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.e(
             message = message,
             attributes = context.toHashMap() + GlobalState.globalAttributes
@@ -104,6 +123,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
         context: ReadableMap,
         promise: Promise
     ) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.log(
             priority = AndroidLog.DEBUG,
             message = message,
@@ -133,6 +156,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
         context: ReadableMap,
         promise: Promise
     ) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.log(
             priority = AndroidLog.INFO,
             message = message,
@@ -162,6 +189,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
         context: ReadableMap,
         promise: Promise
     ) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.log(
             priority = AndroidLog.WARN,
             message = message,
@@ -191,6 +222,10 @@ class DdLogs(reactContext: ReactApplicationContext, logger: Logger? = null) :
         context: ReadableMap,
         promise: Promise
     ) {
+        if (!datadog.isInitialized()) {
+            promise.resolve(null)
+            return
+        }
         reactNativeLogger.log(
             priority = AndroidLog.ERROR,
             message = message,
