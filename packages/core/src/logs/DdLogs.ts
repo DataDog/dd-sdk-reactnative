@@ -126,7 +126,6 @@ class DdLogsWrapper implements DdLogsType {
             this.printLogDroppedWarning(message, status);
             return generateEmptyPromise();
         }
-        this.printLogTracked(message, status);
 
         const event = this.logEventMapper.applyEventMapper({
             message,
@@ -136,6 +135,8 @@ class DdLogsWrapper implements DdLogsType {
         if (!event) {
             return generateEmptyPromise();
         }
+
+        this.printLogTracked(event.message, status);
         return this.nativeLogs[status](event.message, event.context);
     };
 
@@ -151,7 +152,6 @@ class DdLogsWrapper implements DdLogsType {
             this.printLogDroppedWarning(message, status);
             return generateEmptyPromise();
         }
-        this.printLogTracked(message, status);
 
         const event = this.logEventMapper.applyEventMapper({
             message,
@@ -164,6 +164,8 @@ class DdLogsWrapper implements DdLogsType {
         if (!event) {
             return generateEmptyPromise();
         }
+
+        this.printLogTracked(event.message, status);
         return this.nativeLogs[`${status}WithError`](
             event.message,
             (event as NativeLogWithError).errorKind,
