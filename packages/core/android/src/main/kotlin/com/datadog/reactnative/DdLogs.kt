@@ -41,7 +41,7 @@ class DdLogs(
     @ReactMethod
     fun debug(message: String, context: ReadableMap, promise: Promise) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.d(
@@ -59,7 +59,7 @@ class DdLogs(
     @ReactMethod
     fun info(message: String, context: ReadableMap, promise: Promise) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.i(
@@ -77,7 +77,7 @@ class DdLogs(
     @ReactMethod
     fun warn(message: String, context: ReadableMap, promise: Promise) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.w(
@@ -95,7 +95,7 @@ class DdLogs(
     @ReactMethod
     fun error(message: String, context: ReadableMap, promise: Promise) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.e(
@@ -124,7 +124,7 @@ class DdLogs(
         promise: Promise
     ) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.log(
@@ -157,7 +157,7 @@ class DdLogs(
         promise: Promise
     ) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.log(
@@ -190,7 +190,7 @@ class DdLogs(
         promise: Promise
     ) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.log(
@@ -223,7 +223,7 @@ class DdLogs(
         promise: Promise
     ) {
         if (!datadog.isInitialized()) {
-            promise.reject(Throwable(SDK_NOT_INITIALIZED_MESSAGE))
+            promise.reject(IllegalStateException(SDK_NOT_INITIALIZED_MESSAGE))
             return
         }
         reactNativeLogger.log(

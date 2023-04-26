@@ -327,7 +327,8 @@ internal class DdLogsTest {
         verifyZeroInteractions(mockLogger)
         val throwableCaptor = argumentCaptor<Throwable>()
         verify(mockPromise, times(8)).reject(throwableCaptor.capture())
-        assertThat(throwableCaptor.firstValue).hasFieldEqualTo("detailMessage", "Log sent before SDK init")
+        assertThat(throwableCaptor.firstValue.message!!)
+            .isEqualTo("Log sent before SDK init")
 
         // When SDK is finally initialized
         whenever(mockDatadog.isInitialized()) doReturn true
