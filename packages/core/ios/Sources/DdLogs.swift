@@ -46,20 +46,27 @@ class RNDdLogs: NSObject {
 
     private lazy var logger: NativeLogger = loggerProvider()
     private let loggerProvider: () -> NativeLogger
-
-    internal init(_ loggerProvider: @escaping () -> NativeLogger) {
+    private let isSDKInitialized: () -> Bool
+    
+    internal init(_ loggerProvider: @escaping () -> NativeLogger, _ isSDKInitialized: @escaping () -> Bool) {
         self.loggerProvider = loggerProvider
+        self.isSDKInitialized = isSDKInitialized
     }
+
 
     override public convenience init() {
         let builder = Logger.builder
             .sendNetworkInfo(true)
             .printLogsToConsole(true)
-        self.init { builder.build() }
+        self.init({ builder.build() }, { Datadog.isInitialized })
     }
 
     @objc(debug:withContext:withResolver:withRejecter:)
     func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.debug(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -67,6 +74,10 @@ class RNDdLogs: NSObject {
 
     @objc(info:withContext:withResolver:withRejecter:)
     func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.info(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -74,6 +85,10 @@ class RNDdLogs: NSObject {
 
     @objc(warn:withContext:withResolver:withRejecter:)
     func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.warn(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -81,6 +96,10 @@ class RNDdLogs: NSObject {
 
     @objc(error:withContext:withResolver:withRejecter:)
     func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.error(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -88,6 +107,10 @@ class RNDdLogs: NSObject {
 
     @objc(debugWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.debug(message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -95,6 +118,10 @@ class RNDdLogs: NSObject {
 
     @objc(infoWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.info(message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -102,6 +129,10 @@ class RNDdLogs: NSObject {
 
     @objc(warnWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.warn(message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -109,6 +140,10 @@ class RNDdLogs: NSObject {
 
     @objc(errorWithError:withErrorKind:withErrorMessage:withStacktrace:withContext:withResolver:withRejecter:)
     func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if (!self.isSDKInitialized()) {
+            reject(nil, Errors.logSentBeforeSDKInit, nil)
+            return
+        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.error(message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)

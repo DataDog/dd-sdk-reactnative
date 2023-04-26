@@ -16,7 +16,7 @@ import java.lang.IllegalArgumentException
 /**
  * Wrapper around [Datadog].
  */
-@Suppress("ComplexInterface")
+@Suppress("ComplexInterface", "TooManyFunctions")
 interface DatadogWrapper {
 
     /**
@@ -104,4 +104,9 @@ interface DatadogWrapper {
      * Sends Webview events.
      */
     fun consumeWebviewEvent(message: String)
+
+    /**
+     * Returns whether the SDK is initialized.
+     */
+    fun isInitialized(): Boolean
 }

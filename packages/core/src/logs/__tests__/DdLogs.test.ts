@@ -6,8 +6,19 @@
 
 import { NativeModules } from 'react-native';
 
+import { InternalLog } from '../../InternalLog';
+import type { DdNativeLogsType } from '../../nativeModulesTypes';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
+
+jest.mock('../../InternalLog', () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        },
+        DATADOG_MESSAGE_PREFIX: 'DATADOG:'
+    };
+});
 
 describe('DdLogs', () => {
     describe('log event mapper', () => {
@@ -31,14 +42,21 @@ describe('DdLogs', () => {
             expect(
                 NativeModules.DdLogs.info
             ).toHaveBeenCalledWith('new message', { newContext: 'context' });
-            await DdLogs.info(
+
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                1,
+                'Tracking info log "new message"',
+                'debug'
+            );
+
+            await DdLogs.debug(
                 'original message',
                 'TypeError',
                 'error message',
                 'stack',
                 {}
             );
-            expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
+            expect(NativeModules.DdLogs.debugWithError).toHaveBeenCalledWith(
                 'new message',
                 undefined,
                 undefined,
@@ -47,6 +65,11 @@ describe('DdLogs', () => {
                     newContext: 'context',
                     '_dd.error.source_type': 'react-native'
                 }
+            );
+            expect(InternalLog.log).toHaveBeenNthCalledWith(
+                2,
+                'Tracking debug log "new message"',
+                'debug'
             );
         });
 
@@ -106,6 +129,10 @@ describe('DdLogs', () => {
 
             await DdLogs.info('original message', {});
             expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'info log dropped by log mapper: "original message"',
+                'debug'
+            );
         });
     });
 
@@ -167,6 +194,26 @@ describe('DdLogs', () => {
             expect(NativeModules.DdLogs.info).toHaveBeenCalledWith(
                 'message',
                 {}
+            );
+        });
+    });
+
+    describe.only('when SDK is not initialized', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdLogs.unregisterLogEventMapper();
+        });
+
+        it('does not crash and warns user', async () => {
+            (NativeModules.DdLogs.info as jest.MockedFunction<
+                DdNativeLogsType['debug']
+            >).mockRejectedValueOnce(
+                new Error('DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT')
+            );
+            const consoleSpy = jest.spyOn(console, 'warn');
+            await DdLogs.info('original message', {});
+            expect(consoleSpy).toHaveBeenCalledWith(
+                'DATADOG: Dropping info log as the SDK is not initialized yet: "original message"'
             );
         });
     });

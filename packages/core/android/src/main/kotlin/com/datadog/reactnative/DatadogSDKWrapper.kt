@@ -67,4 +67,8 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun consumeWebviewEvent(message: String) {
         Datadog._internal.consumeWebviewEvent(message)
     }
+
+    override fun isInitialized(): Boolean {
+        return Datadog.isInitialized()
+    }
 }
