@@ -19,7 +19,7 @@ import type {
     NativeLogWithError
 } from './types';
 
-const SDK_NOT_INITIALIZED_MESSAGE = 'Log sent before SDK init';
+const SDK_NOT_INITIALIZED_MESSAGE = 'DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 

@@ -238,6 +238,6 @@ class DdLogs(
     }
 
     companion object {
-        private const val SDK_NOT_INITIALIZED_MESSAGE = "Log sent before SDK init"
+        private const val SDK_NOT_INITIALIZED_MESSAGE = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
     }
 }

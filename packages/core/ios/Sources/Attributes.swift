@@ -114,5 +114,5 @@ internal struct InternalConfigurationAttributes {
 internal struct Errors {
     /// Error thrown when a log was sent before the SDK was initialized.
     /// Not sending the log prevent the logger to be set to a Noop logger.
-    static let logSentBeforeSDKInit = "Log sent before SDK init"
+    static let logSentBeforeSDKInit = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
 }

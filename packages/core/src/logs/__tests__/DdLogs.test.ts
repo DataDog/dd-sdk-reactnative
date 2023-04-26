@@ -207,7 +207,9 @@ describe('DdLogs', () => {
         it('does not crash and warns user', async () => {
             (NativeModules.DdLogs.info as jest.MockedFunction<
                 DdNativeLogsType['debug']
-            >).mockRejectedValueOnce(new Error('Log sent before SDK init'));
+            >).mockRejectedValueOnce(
+                new Error('DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT')
+            );
             const consoleSpy = jest.spyOn(console, 'warn');
             await DdLogs.info('original message', {});
             expect(consoleSpy).toHaveBeenCalledWith(

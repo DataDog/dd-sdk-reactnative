@@ -328,7 +328,7 @@ internal class DdLogsTest {
         val throwableCaptor = argumentCaptor<Throwable>()
         verify(mockPromise, times(8)).reject(throwableCaptor.capture())
         assertThat(throwableCaptor.firstValue.message!!)
-            .isEqualTo("Log sent before SDK init")
+            .isEqualTo("DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT")
 
         // When SDK is finally initialized
         whenever(mockDatadog.isInitialized()) doReturn true
