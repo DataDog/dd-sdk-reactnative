@@ -9,7 +9,7 @@ package com.datadog.tools.unit
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 
-class GenericAssert(actual: Any) :
+class GenericAssert(actual: Any?) :
     AbstractAssert<GenericAssert, Any>(actual, GenericAssert::class.java) {
 
     fun doesNotHaveField(name: String): GenericAssert {
@@ -62,7 +62,7 @@ class GenericAssert(actual: Any) :
     }
 
     companion object {
-        fun assertThat(actual: Any): GenericAssert {
+        fun assertThat(actual: Any?): GenericAssert {
             return GenericAssert(actual)
         }
     }

@@ -325,9 +325,9 @@ internal class DdLogsTest {
 
         // Then
         verifyZeroInteractions(mockLogger)
-        val throwableCaptor = argumentCaptor<Throwable>()
-        verify(mockPromise, times(8)).reject(throwableCaptor.capture())
-        assertThat(throwableCaptor.firstValue.message!!)
+        val exceptionCaptor = argumentCaptor<IllegalStateException>()
+        verify(mockPromise, times(8)).reject(exceptionCaptor.capture())
+        assertThat(exceptionCaptor.firstValue.message)
             .isEqualTo("DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT")
 
         // When SDK is finally initialized
