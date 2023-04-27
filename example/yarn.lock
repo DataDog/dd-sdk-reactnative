@@ -1073,13 +1073,13 @@
     yamux-js "0.1.1"
 
 "@datadog/mobile-react-native-navigation@file:../packages/react-native-navigation":
-  version "1.5.2"
+  version "1.5.3"
 
 "@datadog/mobile-react-native@file:../packages/core":
-  version "1.5.2"
+  version "1.5.3"
 
 "@datadog/mobile-react-navigation@file:../packages/react-navigation":
-  version "1.5.2"
+  version "1.5.3"
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
