@@ -46,10 +46,14 @@ data class DdSdkConfiguration(
  * @param trackErrors Whether JS errors are tracked.
  * @param trackInteractions Whether interactions are tracked.
  * @param trackNetworkRequests Whether network requests are tracked.
+ * @param reactVersion Version of react used in app.
+ * @param reactNativeVersion Version of react-native used in app.
  */
 data class ConfigurationForTelemetry(
     val initializationType: String? = null,
     val trackErrors: Boolean? = null,
     val trackInteractions: Boolean? = null,
-    val trackNetworkRequests: Boolean? = null
+    val trackNetworkRequests: Boolean? = null,
+    val reactVersion: String? = null,
+    val reactNativeVersion: String? = null
 )
