@@ -362,6 +362,13 @@ describe('DdRum', () => {
         });
     });
 
+    describe('DdRum.stopSession', () => {
+        it('calls the native API', async () => {
+            await DdRum.stopSession();
+            expect(NativeModules.DdRum.stopSession).toHaveBeenCalledWith();
+        });
+    });
+
     describe('PropagatorTypes', () => {
         it('matches with the native name of propagators', () => {
             /**

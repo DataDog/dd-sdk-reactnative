@@ -322,6 +322,11 @@ export type DdNativeRumType = {
      * @param name: The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
      */
     addTiming(name: string): Promise<void>;
+
+    /**
+     * Stops the current RUM Session.
+     */
+    stopSession(): Promise<void>;
 };
 
 type ActionType = 'TAP' | 'SCROLL' | 'SWIPE' | 'BACK' | 'CUSTOM';

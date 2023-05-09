@@ -101,7 +101,10 @@ actualRN.NativeModules.DdRum = {
     ) as jest.MockedFunction<DdRumType['addError']>,
     addTiming: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdRumType['addTiming']>
+    ) as jest.MockedFunction<DdRumType['addTiming']>,
+    stopSession: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['stopSession']>
 };
 
 module.exports = actualRN;
