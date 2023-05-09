@@ -79,16 +79,22 @@ public class ConfigurationForTelemetry: NSObject {
     public var trackErrors: Bool?
     public var trackInteractions: Bool?
     public var trackNetworkRequests: Bool?
+    public var reactVersion: NSString?
+    public var reactNativeVersion: NSString?
     
     public init(
         initializationType: NSString?,
         trackErrors: Bool?,
         trackInteractions: Bool?,
-        trackNetworkRequests: Bool?
+        trackNetworkRequests: Bool?,
+        reactVersion: NSString?,
+        reactNativeVersion: NSString?
     ) {
         self.initializationType = initializationType
         self.trackErrors = trackErrors
         self.trackInteractions = trackInteractions
         self.trackNetworkRequests = trackNetworkRequests
+        self.reactVersion = reactVersion
+        self.reactNativeVersion = reactNativeVersion
     }
 }
