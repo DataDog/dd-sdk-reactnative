@@ -42,6 +42,13 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             trackingConsent = forge.aNullable {
                 anElementFrom("pending", "granted", "not_granted")
             },
+            uploadFrequency = forge.aNullable {
+                anElementFrom(
+                    "RARE",
+                    "FREQUENT",
+                    "AVERAGE"
+                )
+            },
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),
