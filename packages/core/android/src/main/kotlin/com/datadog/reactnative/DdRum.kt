@@ -255,6 +255,15 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
         promise.resolve(null)
     }
 
+    /**
+     * Stops the current RUM Session.
+     */
+    @ReactMethod
+    fun stopSession(promise: Promise) {
+        GlobalRum.get().stopSession()
+        promise.resolve(null)
+    }
+
     // region Internal
 
     private fun String.asRumActionType(): RumActionType {
