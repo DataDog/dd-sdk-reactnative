@@ -21,6 +21,21 @@ export enum VitalsUpdateFrequency {
     NEVER = 'NEVER'
 }
 
+export enum UploadFrequency {
+    /**
+     * Upload data every 1000ms.
+     */
+    FREQUENT = 'FREQUENT',
+    /**
+     * Upload data every 5000ms.
+     */
+    AVERAGE = 'AVERAGE',
+    /**
+     * Upload data every 10000ms.
+     */
+    RARE = 'RARE'
+}
+
 export type FirstPartyHostsConfiguration = (
     | FirstPartyHost
     | LegacyFirstPartyHost
@@ -70,7 +85,8 @@ const DEFAULTS = {
     errorEventMapper: null,
     resourceEventMapper: null,
     actionEventMapper: null,
-    trackFrustrations: true
+    trackFrustrations: true,
+    uploadFrequency: UploadFrequency.AVERAGE
 };
 
 /**
@@ -188,6 +204,11 @@ export class DdSdkReactNativeConfiguration {
      */
     public trackFrustrations: boolean = DEFAULTS.trackFrustrations;
 
+    /**
+     * Sets the preferred frequency for uploading batches of data.
+     */
+    public uploadFrequency: UploadFrequency = DEFAULTS.uploadFrequency;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -300,6 +321,7 @@ export type PartialInitializationConfiguration = {
     readonly telemetrySampleRate?: number;
     readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
     readonly trackFrustrations?: boolean;
+    readonly uploadFrequency?: UploadFrequency;
 };
 
 const setConfigurationAttribute = <
