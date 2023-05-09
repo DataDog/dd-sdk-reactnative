@@ -38,6 +38,7 @@ public class DdSdkConfiguration: NSObject {
     public var telemetrySampleRate: Double? = nil
     public var vitalsUpdateFrequency: NSString? = nil
     public var trackFrustrations: Bool? = nil
+    public var uploadFrequency: NSString? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
@@ -54,6 +55,7 @@ public class DdSdkConfiguration: NSObject {
         telemetrySampleRate: Double?,
         vitalsUpdateFrequency: NSString?,
         trackFrustrations: Bool?,
+        uploadFrequency: NSString?,
         additionalConfig: NSDictionary?,
         configurationForTelemetry: ConfigurationForTelemetry?
     ) {
@@ -69,6 +71,7 @@ public class DdSdkConfiguration: NSObject {
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackFrustrations = trackFrustrations
+        self.uploadFrequency = uploadFrequency
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }

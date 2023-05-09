@@ -185,6 +185,8 @@ class RNDdSdk: NSObject {
         
         _ = ddConfigBuilder.set(mobileVitalsFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency))
 
+        _ = ddConfigBuilder.set(uploadFrequency: buildUploadFrequency(frequency: configuration.uploadFrequency))
+
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
         }
@@ -323,6 +325,21 @@ class RNDdSdk: NSObject {
             vitalsFrequency = .average
         }
         return vitalsFrequency
+    }
+
+    func buildUploadFrequency(frequency: NSString?) -> Datadog.Configuration.UploadFrequency {
+        let uploadFrequency: Datadog.Configuration.UploadFrequency
+        switch frequency?.lowercased {
+        case "rare":
+            uploadFrequency = .rare
+        case "average":
+            uploadFrequency = .average
+        case "frequent":
+            uploadFrequency = .frequent
+        default:
+            uploadFrequency = .average
+        }
+        return uploadFrequency
     }
 
     func setVerbosityLevel(additionalConfig: NSDictionary?) {
