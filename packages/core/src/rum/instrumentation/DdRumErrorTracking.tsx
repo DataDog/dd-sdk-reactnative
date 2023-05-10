@@ -66,7 +66,6 @@ export class DdRumErrorTracking {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static onGlobalError = (error: any, isFatal?: boolean): void => {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
