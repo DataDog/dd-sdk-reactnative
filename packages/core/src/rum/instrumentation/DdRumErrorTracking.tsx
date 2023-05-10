@@ -67,7 +67,7 @@ export class DdRumErrorTracking {
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static onGlobalError(error: any, isFatal?: boolean): void {
+    static onGlobalError = (error: any, isFatal?: boolean): void => {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
         const errorName = getErrorName(error);
@@ -82,9 +82,9 @@ export class DdRumErrorTracking {
                 DdRumErrorTracking.isInDefaultErrorHandler = false;
             }
         });
-    }
+    };
 
-    static onConsoleError(...params: unknown[]): void {
+    static onConsoleError = (...params: unknown[]): void => {
         if (DdRumErrorTracking.isInDefaultErrorHandler) {
             return;
         }
@@ -127,7 +127,7 @@ export class DdRumErrorTracking {
                 DdRumErrorTracking.defaultConsoleError.apply(console, params);
             }
         );
-    }
+    };
 
     private static reportError = (
         message: string,
