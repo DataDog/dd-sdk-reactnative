@@ -249,6 +249,14 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
 
+    func testStopSession() throws {
+        rum.stopSession(resolve: mockResolve, reject: mockReject)
+
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .stopSession())
+        XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
+    }
+
     func testRumErrorSourceMapping() throws {
         XCTAssertEqual(RUMErrorSource(from: "source"), RUMErrorSource.source)
         XCTAssertEqual(RUMErrorSource(from: "network"), RUMErrorSource.network)
@@ -278,6 +286,7 @@ private class MockNativeRUM: NativeRUM {
         case stopUserAction(type: RUMUserActionType, name: String?)
         case addUserAction(type: RUMUserActionType, name: String)
         case addTiming(name: String)
+        case stopSession(_: Int? = nil) // We need an attribute for the case to be Equatable
         case addResourceMetrics(resourceKey: String,
                                 fetch: Interval,
                                 redirection: Interval,
@@ -330,6 +339,9 @@ private class MockNativeRUM: NativeRUM {
     }
     func addTiming(name: String) {
         calledMethods.append(.addTiming(name: name))
+    }
+    func stopSession() {
+        calledMethods.append(.stopSession())
     }
     func addResourceMetrics(
         resourceKey: String,

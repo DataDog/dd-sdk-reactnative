@@ -326,6 +326,11 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() => this.nativeRum.addTiming(name));
     }
 
+    stopSession(): Promise<void> {
+        InternalLog.log('Stopping RUM Session', SdkVerbosity.DEBUG);
+        return bufferVoidNativeCall(() => this.nativeRum.stopSession());
+    }
+
     registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {
         this.errorEventMapper = generateErrorEventMapper(errorEventMapper);
     }

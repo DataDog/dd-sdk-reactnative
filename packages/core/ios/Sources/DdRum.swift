@@ -18,6 +18,7 @@ internal protocol NativeRUM {
     func stopUserAction(type: RUMUserActionType, name: String?, attributes: [String: Encodable])
     func addUserAction(type: RUMUserActionType, name: String, attributes: [String: Encodable])
     func addTiming(name: String)
+    func stopSession()
     func addResourceMetrics(resourceKey: String,
                             fetch: (start: Date, end: Date),
                             redirection: (start: Date, end: Date)?,
@@ -184,6 +185,12 @@ class RNDdRum: NSObject {
     @objc(addTiming:withResolver:withRejecter:)
     func addTiming(name: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addTiming(name: name)
+        resolve(nil)
+    }
+
+    @objc(stopSession:withRejecter:)
+    func stopSession(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.stopSession()
         resolve(nil)
     }
 
