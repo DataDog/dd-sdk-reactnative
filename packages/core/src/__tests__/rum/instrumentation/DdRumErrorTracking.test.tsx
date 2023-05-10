@@ -640,3 +640,92 @@ describe.each([
         );
     });
 });
+
+it('M intercept and send a RUM event W on error() {called from RNErrorHandler}', async () => {
+    // GIVEN
+    const errorHandlerMock = new RNErrorHandlerMock();
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
+    const error = new Error('Something bad happened');
+
+    // WHEN
+    errorHandlerMock.onError(error, is_fatal);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        expect.stringContaining('Error: Something bad happened'),
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
+    );
+    expect(DdRum.addError.mock.calls[0][2]).toContain(
+        '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
+    );
+    expect(baseErrorHandlerCalled).toStrictEqual(true);
+    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
+    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'Error',
+        'Something bad happened',
+        expect.stringContaining('Error: Something bad happened'),
+        {
+            '_dd.error.raw': error,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        }
+    );
+});
+
+it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}', async () => {
+    // GIVEN
+    const errorHandlerMock = new RNErrorHandlerMock();
+    DdRumErrorTracking.startTracking();
+    const message = 'Oops I did it again!';
+
+    // WHEN
+    errorHandlerMock.onConsoleError(message);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Oops I did it again!',
+        'CONSOLE',
+        '',
+        {
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number)
+    );
+    expect(baseConsoleErrorCalled).toStrictEqual(true);
+    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
+    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
+        'Oops I did it again!',
+        'Error',
+        'Oops I did it again!',
+        '',
+        { '_dd.error.source_type': 'react-native' }
+    );
+});
+
+/**
+ * This is a mock of the RN error handler class that will call the ErrorUtils.
+ * Testing with this catches bugs around `this` references.
+ */
+class RNErrorHandlerMock {
+    onError = (error: any, isFatal: boolean) => {
+        const errorHandler = ErrorUtils.getGlobalHandler();
+        errorHandler(error, isFatal);
+    };
+
+    onConsoleError = (...params: any) => {
+        console.error(...params);
+    };
+}
