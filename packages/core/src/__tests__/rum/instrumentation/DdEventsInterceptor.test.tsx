@@ -186,9 +186,9 @@ it('M do nothing W interceptOnPress { invalid arguments - empty object } ', asyn
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { invalid arguments - array } ', async () => {
@@ -202,9 +202,9 @@ it('M do nothing W interceptOnPress { invalid arguments - array } ', async () =>
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { invalid arguments - nested array } ', async () => {
@@ -218,9 +218,9 @@ it('M do nothing W interceptOnPress { invalid arguments - nested array } ', asyn
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { invalid arguments - undefined } ', async () => {
@@ -234,9 +234,9 @@ it('M do nothing W interceptOnPress { invalid arguments - undefined } ', async (
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => {
@@ -250,9 +250,9 @@ it('M do nothing W interceptOnPress { invalid arguments - null } ', async () => 
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', async () => {
@@ -263,9 +263,9 @@ it('M do nothing W interceptOnPress { invalid arguments - wrong object } ', asyn
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
 
 it('M do nothing W interceptOnPress { no arguments call } ', async () => {
@@ -276,7 +276,7 @@ it('M do nothing W interceptOnPress { no arguments call } ', async () => {
     expect(DdRum.addAction.mock.calls.length).toBe(0);
     expect(InternalLog.log.mock.calls.length).toBe(1);
     expect(InternalLog.log.mock.calls[0][0]).toBe(
-        DdEventsInterceptor.ACTION_EVENT_DROPPED_WARN_MESSAGE
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
     );
-    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.WARN);
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });

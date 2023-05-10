@@ -1827,7 +1827,9 @@ internal class DdSdkTest {
         @StringForgery initializationType: String,
         @BoolForgery trackInteractions: Boolean,
         @BoolForgery trackErrors: Boolean,
-        @BoolForgery trackNetworkRequests: Boolean
+        @BoolForgery trackNetworkRequests: Boolean,
+        @StringForgery reactVersion: String,
+        @StringForgery reactNativeVersion: String
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
@@ -1838,7 +1840,9 @@ internal class DdSdkTest {
                 initializationType = initializationType,
                 trackErrors = trackErrors,
                 trackInteractions = trackInteractions,
-                trackNetworkRequests = trackNetworkRequests
+                trackNetworkRequests = trackNetworkRequests,
+                reactVersion = reactVersion,
+                reactNativeVersion = reactNativeVersion
             )
         )
         val configCaptor = argumentCaptor<Configuration>()

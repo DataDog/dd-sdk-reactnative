@@ -28,4 +28,22 @@ describe('areObjectValuesEqual', () => {
         const objectB = { a: 22 };
         expect(areObjectShallowEqual(objectA, objectB)).toBe(true);
     });
+    it('returns false when one of the object is null', () => {
+        expect(areObjectShallowEqual(null, { a: 22 })).toBe(false);
+        expect(areObjectShallowEqual(null, undefined)).toBe(false);
+        expect(areObjectShallowEqual({ a: 22 }, null)).toBe(false);
+        expect(areObjectShallowEqual(undefined, null)).toBe(false);
+    });
+    it('returns false when one of the object is undefined', () => {
+        expect(areObjectShallowEqual(undefined, { a: 22 })).toBe(false);
+        expect(areObjectShallowEqual(undefined, null)).toBe(false);
+        expect(areObjectShallowEqual({ a: 22 }, undefined)).toBe(false);
+        expect(areObjectShallowEqual(null, undefined)).toBe(false);
+    });
+    it('returns true when both of the objects are null', () => {
+        expect(areObjectShallowEqual(null, null)).toBe(true);
+    });
+    it('returns true when both of the objects are undefined', () => {
+        expect(areObjectShallowEqual(undefined, undefined)).toBe(true);
+    });
 });

@@ -410,4 +410,14 @@ internal class DdRumTest {
         // Then
         verify(mockRumMonitor).addTiming(timing)
     }
+
+    @Test
+    fun `M call stopSession W stopSession()`() {
+
+        // When
+        testedDdRum.stopSession(mockPromise)
+
+        // Then
+        verify(mockRumMonitor).stopSession()
+    }
 }

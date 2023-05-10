@@ -73,5 +73,7 @@ internal fun ConfigurationForTelemetry.toReadableJavaOnlyMap(): ReadableMap {
     trackErrors?.let { map.put("trackErrors", it) }
     trackInteractions?.let { map.put("trackInteractions", it) }
     trackNetworkRequests?.let { map.put("trackNetworkRequests", it) }
+    reactVersion?.let { map.put("reactVersion", it) }
+    reactNativeVersion?.let { map.put("reactNativeVersion", it) }
     return map.toReadableMap()
 }

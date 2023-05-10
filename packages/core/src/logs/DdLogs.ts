@@ -6,53 +6,203 @@
 
 import { NativeModules } from 'react-native';
 
-import { InternalLog } from '../InternalLog';
+import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 
 import { generateEventMapper } from './eventMapper';
-import type { DdLogsType, LogEventMapper } from './types';
+import type {
+    DdLogsType,
+    LogArguments,
+    LogEventMapper,
+    LogWithErrorArguments,
+    NativeLogWithError
+} from './types';
+
+const SDK_NOT_INITIALIZED_MESSAGE = 'DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
+
+/**
+ * We consider that if either one of `errorKind`, `errorMessage` or `stacktrace` is a string,
+ * then the log contains an error.
+ */
+const isLogWithError = (
+    args: LogArguments | LogWithErrorArguments
+): args is LogWithErrorArguments => {
+    return (
+        typeof args[1] === 'string' ||
+        typeof args[2] === 'string' ||
+        typeof args[3] === 'string' ||
+        typeof args[4] === 'object'
+    );
+};
 
 class DdLogsWrapper implements DdLogsType {
     private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
     private logEventMapper = generateEventMapper(undefined);
 
-    debug(message: string, context: object = {}): Promise<void> {
-        return this.log(message, context, 'debug');
+    debug(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+        if (isLogWithError(args)) {
+            return this.logWithError(
+                args[0],
+                args[1],
+                args[2],
+                args[3],
+                args[4] || {},
+                'debug'
+            );
+        }
+        return this.log(args[0], args[1] || {}, 'debug');
     }
 
-    info(message: string, context: object = {}): Promise<void> {
-        return this.log(message, context, 'info');
+    info(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+        if (isLogWithError(args)) {
+            return this.logWithError(
+                args[0],
+                args[1],
+                args[2],
+                args[3],
+                args[4] || {},
+                'info'
+            );
+        }
+        return this.log(args[0], args[1] || {}, 'info');
     }
 
-    warn(message: string, context: object = {}): Promise<void> {
-        return this.log(message, context, 'warn');
+    warn(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+        if (isLogWithError(args)) {
+            return this.logWithError(
+                args[0],
+                args[1],
+                args[2],
+                args[3],
+                args[4] || {},
+                'warn'
+            );
+        }
+        return this.log(args[0], args[1] || {}, 'warn');
     }
 
-    error(message: string, context: object = {}): Promise<void> {
-        return this.log(message, context, 'error');
+    error(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+        if (isLogWithError(args)) {
+            return this.logWithError(
+                args[0],
+                args[1],
+                args[2],
+                args[3],
+                args[4] || {},
+                'error'
+            );
+        }
+        return this.log(args[0], args[1] || {}, 'error');
     }
 
-    private log = (
+    /**
+     * Since the InternalLog does not have a verbosity set yet in this case,
+     * we use console.warn to warn the user in dev mode.
+     */
+    private printLogDroppedSdkNotInitialized = (
         message: string,
-        context: object,
-        status: keyof DdNativeLogsType
-    ): Promise<void> => {
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
+        if (__DEV__) {
+            console.warn(
+                `${DATADOG_MESSAGE_PREFIX} Dropping ${status} log as the SDK is not initialized yet: "${message}"`
+            );
+        }
+    };
+
+    private printlogDroppedByMapper = (
+        message: string,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
         InternalLog.log(
-            `Tracking ${status} log “${message}”`,
+            `${status} log dropped by log mapper: "${message}"`,
             SdkVerbosity.DEBUG
         );
+    };
+
+    private printLogTracked = (
+        message: string,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ) => {
+        InternalLog.log(
+            `Tracking ${status} log "${message}"`,
+            SdkVerbosity.DEBUG
+        );
+    };
+
+    private log = async (
+        message: string,
+        context: object,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ): Promise<void> => {
         const event = this.logEventMapper.applyEventMapper({
             message,
             context,
             status
         });
         if (!event) {
+            this.printlogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
-        return this.nativeLogs[status](event.message, event.context);
+
+        this.printLogTracked(event.message, status);
+        try {
+            return await this.nativeLogs[status](event.message, event.context);
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (error.message === SDK_NOT_INITIALIZED_MESSAGE) {
+                this.printLogDroppedSdkNotInitialized(message, status);
+                return generateEmptyPromise();
+            }
+
+            throw error;
+        }
+    };
+
+    private logWithError = async (
+        message: string,
+        errorKind: string | undefined,
+        errorMessage: string | undefined,
+        stacktrace: string | undefined,
+        context: object,
+        status: 'debug' | 'info' | 'warn' | 'error'
+    ): Promise<void> => {
+        const event = this.logEventMapper.applyEventMapper({
+            message,
+            errorKind,
+            errorMessage,
+            stacktrace,
+            context,
+            status
+        });
+        if (!event) {
+            this.printlogDroppedByMapper(message, status);
+            return generateEmptyPromise();
+        }
+
+        this.printLogTracked(event.message, status);
+        try {
+            return await this.nativeLogs[`${status}WithError`](
+                event.message,
+                (event as NativeLogWithError).errorKind,
+                (event as NativeLogWithError).errorMessage,
+                (event as NativeLogWithError).stacktrace,
+                { ...event.context, '_dd.error.source_type': 'react-native' }
+            );
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (error.message === SDK_NOT_INITIALIZED_MESSAGE) {
+                this.printLogDroppedSdkNotInitialized(message, status);
+                return generateEmptyPromise();
+            }
+
+            throw error;
+        }
     };
 
     registerLogEventMapper(logEventMapper: LogEventMapper) {

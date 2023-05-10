@@ -24,12 +24,12 @@ jest.mock('../../TimeProvider', () => {
 });
 
 describe('DdRum', () => {
-    describe('DdRum.stopAction', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            BufferSingleton.onInitialization();
-        });
+    beforeEach(() => {
+        jest.clearAllMocks();
+        BufferSingleton.onInitialization();
+    });
 
+    describe('DdRum.stopAction', () => {
         test('calls the native SDK when called with new API', async () => {
             await DdRum.stopAction('scroll', 'page', { user: 'me' }, 123);
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
@@ -151,11 +151,6 @@ describe('DdRum', () => {
     });
 
     describe('DdRum.addError', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            DdRum.unregisterErrorEventMapper();
-        });
-
         it('registers event mapper and maps error', async () => {
             const errorEventMapper: ErrorEventMapper = error => {
                 error.message = 'New message';
@@ -196,12 +191,6 @@ describe('DdRum', () => {
     });
 
     describe('DdRum.stopResource', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            DdRum.unregisterResourceEventMapper();
-            BufferSingleton.onInitialization();
-        });
-
         it('registers event mapper and maps resource', async () => {
             const resourceEventMapper: ResourceEventMapper = resource => {
                 resource.context = { retryAttempts: 3 };
@@ -270,11 +259,6 @@ describe('DdRum', () => {
     });
 
     describe('DdRum.addAction', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            DdRum.unregisterActionEventMapper();
-        });
-
         it('registers event mapper and maps action', async () => {
             const actionEventMapper: ActionEventMapper = action => {
                 action.context = { frustration: true };
@@ -318,12 +302,6 @@ describe('DdRum', () => {
     });
 
     describe('DdRum.stopAction', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            DdRum.unregisterActionEventMapper();
-            BufferSingleton.onInitialization();
-        });
-
         it('registers event mapper and maps action', async () => {
             const actionEventMapper: ActionEventMapper = action => {
                 action.context = { frustration: true };
@@ -381,6 +359,13 @@ describe('DdRum', () => {
                 { '_dd.action.drop_action': true },
                 234
             );
+        });
+    });
+
+    describe('DdRum.stopSession', () => {
+        it('calls the native API', async () => {
+            await DdRum.stopSession();
+            expect(NativeModules.DdRum.stopSession).toHaveBeenCalledWith();
         });
     });
 

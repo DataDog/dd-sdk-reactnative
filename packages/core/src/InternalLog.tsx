@@ -6,6 +6,8 @@
 
 import { SdkVerbosity } from './SdkVerbosity';
 
+export const DATADOG_MESSAGE_PREFIX = 'DATADOG:';
+
 /**
  * /!\ DO NOT USE THIS IN YOUR APP /!\\
  *
@@ -30,7 +32,7 @@ export class InternalLog {
         if (allowedLevel === undefined || requiredLevel === undefined) {
             return;
         }
-        const prefixedMessage = `DATADOG: ${message}`;
+        const prefixedMessage = `${DATADOG_MESSAGE_PREFIX} ${message}`;
         if (verbosity === SdkVerbosity.ERROR && requiredLevel >= allowedLevel) {
             console.error(prefixedMessage);
         }

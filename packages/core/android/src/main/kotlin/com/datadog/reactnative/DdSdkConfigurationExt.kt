@@ -38,6 +38,8 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
         trackErrors = getBoolean("trackErrors"),
         trackInteractions = getBoolean("trackInteractions"),
         trackNetworkRequests = getBoolean("trackNetworkRequests"),
+        reactVersion = getString("reactVersion"),
+        reactNativeVersion = getString("reactNativeVersion"),
     )
 }
 
@@ -78,5 +80,7 @@ internal fun ConfigurationForTelemetry.toReadableMap(): ReadableMap {
     trackErrors?.let { map.putBoolean("trackErrors", it) }
     trackInteractions?.let { map.putBoolean("trackInteractions", it) }
     trackNetworkRequests?.let { map.putBoolean("trackNetworkRequests", it) }
+    reactVersion?.let { map.putString("reactVersion", it) }
+    reactNativeVersion?.let { map.putString("reactNativeVersion", it) }
     return map
 }

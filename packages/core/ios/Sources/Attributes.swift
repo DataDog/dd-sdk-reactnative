@@ -109,3 +109,10 @@ internal struct InternalConfigurationAttributes {
     /// Expects `Bool` value.
     static let dropAction = "_dd.action.drop_action"
 }
+
+/// Error messages that can be thrown to the JS SDK
+internal struct Errors {
+    /// Error thrown when a log was sent before the SDK was initialized.
+    /// Not sending the log prevent the logger to be set to a Noop logger.
+    static let logSentBeforeSDKInit = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
+}

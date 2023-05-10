@@ -8,18 +8,29 @@ import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { EventMapper } from '../sdk/EventMappers/EventMapper';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
-import type { LogEvent, LogEventMapper, NativeLog, RawLog } from './types';
+import type {
+    LogEvent,
+    LogEventMapper,
+    NativeLog,
+    NativeLogWithError,
+    RawLog,
+    RawLogWithError
+} from './types';
 
-export const formatLogEventToNativeLog = (logEvent: LogEvent): NativeLog => {
+export const formatLogEventToNativeLog = (
+    logEvent: LogEvent
+): NativeLog | NativeLogWithError => {
     return logEvent;
 };
 
-export const formatRawLogToNativeEvent = (rawLog: RawLog): NativeLog => {
+export const formatRawLogToNativeEvent = (
+    rawLog: RawLog | RawLogWithError
+): NativeLog | NativeLogWithError => {
     return rawLog;
 };
 
 export const formatRawLogToLogEvent = (
-    rawLog: RawLog,
+    rawLog: RawLog | RawLogWithError,
     additionalInformation: {
         userInfo: UserInfo;
         attributes: Attributes;

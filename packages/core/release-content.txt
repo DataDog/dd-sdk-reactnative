@@ -436,6 +436,7 @@ package/src/__tests__/DdSdkReactNativeConfiguration.test.ts
 package/src/__tests__/InternalLog.test.tsx
 package/src/__tests__/TimeProvider.test.tsx
 package/src/__tests__/Timer.test.ts
+package/src/__tests__/errorUtils.test.ts
 package/src/__tests__/longTasksUtils.test.ts
 package/src/__tests__/rum
 package/src/__tests__/rum/instrumentation

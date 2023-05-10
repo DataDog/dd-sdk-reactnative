@@ -6,11 +6,19 @@
 
 package com.datadog.reactnative
 
+import android.util.Log
 import com.datadog.android.log.Logger
+import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
+import com.nhaarman.mockitokotlin2.whenever
+import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
@@ -41,8 +49,17 @@ internal class DdLogsTest {
     @StringForgery
     lateinit var fakeMessage: String
 
+    private var fakeErrorKind: String? = null
+
+    private var fakeErrorMessage: String? = null
+
+    private var fakeStacktrace: String? = null
+
     @Mock
     lateinit var mockPromise: Promise
+
+    @Mock
+    lateinit var mockDatadog: DatadogWrapper
 
     @Mock
     lateinit var mockReactContext: ReactApplicationContext
@@ -63,8 +80,12 @@ internal class DdLogsTest {
     lateinit var fakeGlobalState: Map<String, String>
 
     @BeforeEach
-    fun `set up`() {
-        testedLogs = DdLogs(mockReactContext, mockLogger)
+    fun `set up`(forge: Forge) {
+        whenever(mockDatadog.isInitialized()) doReturn true
+        testedLogs = DdLogs(mockReactContext, mockLogger, mockDatadog)
+        fakeErrorKind = forge.aNullable { forge.aString() }
+        fakeErrorMessage = forge.aNullable { forge.aString() }
+        fakeStacktrace = forge.aNullable { forge.aString() }
     }
 
     @AfterEach
@@ -166,5 +187,224 @@ internal class DdLogsTest {
 
         // Then
         verify(mockLogger).e(fakeMessage, attributes = expectedAttributes)
+    }
+
+    @Test
+    fun `M forward debug log with error W debugWithError()`() {
+        // When
+        testedLogs.debugWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verify(mockLogger).log(
+            Log.DEBUG,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+    }
+
+    @Test
+    fun `M forward info log with error W infoWithError()`() {
+        // When
+        testedLogs.infoWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verify(mockLogger).log(
+            Log.INFO,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+    }
+
+    @Test
+    fun `M forward warn log with error W warnWithError()`() {
+        // When
+        testedLogs.warnWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verify(mockLogger).log(
+            Log.WARN,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+    }
+
+    @Test
+    fun `M forward error log with error W errorWithError()`() {
+        // When
+        testedLogs.errorWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verify(mockLogger).log(
+            Log.ERROR,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+    }
+
+    @Test
+    fun `M not forward logs W SDK is not initialized`() {
+        // When
+        whenever(mockDatadog.isInitialized()) doReturn false
+        var newTestedLogs = DdLogs(mockReactContext, mockLogger, mockDatadog)
+        newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.info(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.warn(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.error(fakeMessage, mockContext, mockPromise)
+        testedLogs.debugWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.infoWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.warnWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.errorWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verifyZeroInteractions(mockLogger)
+        val exceptionCaptor = argumentCaptor<IllegalStateException>()
+        verify(mockPromise, times(8)).reject(exceptionCaptor.capture())
+        assertThat(exceptionCaptor.firstValue.message)
+            .isEqualTo("DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT")
+
+        // When SDK is finally initialized
+        whenever(mockDatadog.isInitialized()) doReturn true
+        newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.info(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.warn(fakeMessage, mockContext, mockPromise)
+        newTestedLogs.error(fakeMessage, mockContext, mockPromise)
+        testedLogs.debugWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.infoWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.warnWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+        testedLogs.errorWithError(
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            mockContext,
+            mockPromise
+        )
+
+        // Then
+        verify(mockLogger).i(fakeMessage, attributes = mockContext.toHashMap())
+        verify(mockLogger).d(fakeMessage, attributes = mockContext.toHashMap())
+        verify(mockLogger).w(fakeMessage, attributes = mockContext.toHashMap())
+        verify(mockLogger).e(fakeMessage, attributes = mockContext.toHashMap())
+        verify(mockLogger).log(
+            Log.DEBUG,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+        verify(mockLogger).log(
+            Log.INFO,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+        verify(mockLogger).log(
+            Log.WARN,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
+        verify(mockLogger).log(
+            Log.ERROR,
+            fakeMessage,
+            fakeErrorKind,
+            fakeErrorMessage,
+            fakeStacktrace,
+            attributes = mockContext.toHashMap()
+        )
     }
 }

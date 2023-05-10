@@ -303,6 +303,10 @@ class DdSdk(
                         configuration.configurationForTelemetry?.trackNetworkRequests
                     event.telemetry.configuration.trackNetworkRequests =
                         configuration.configurationForTelemetry?.trackNetworkRequests
+                    event.telemetry.configuration.reactVersion =
+                        configuration.configurationForTelemetry?.reactVersion
+                    event.telemetry.configuration.reactNativeVersion =
+                        configuration.configurationForTelemetry?.reactNativeVersion
 
                     return event
                 }
