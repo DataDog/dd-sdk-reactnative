@@ -47,12 +47,16 @@ extension NSDictionary {
         let trackErrors = object(forKey: "trackErrors") as? Bool
         let trackInteractions = object(forKey: "trackInteractions") as? Bool
         let trackNetworkRequests = object(forKey: "trackNetworkRequests") as? Bool
+        let reactVersion = object(forKey: "reactVersion") as? NSString
+        let reactNativeVersion = object(forKey: "reactNativeVersion") as? NSString
 
         return ConfigurationForTelemetry(
             initializationType: initializationType,
             trackErrors: trackErrors,
             trackInteractions: trackInteractions,
-            trackNetworkRequests: trackNetworkRequests
+            trackNetworkRequests: trackNetworkRequests,
+            reactVersion: reactVersion,
+            reactNativeVersion: reactNativeVersion
         )
     }
 }

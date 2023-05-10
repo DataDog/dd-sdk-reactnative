@@ -27,6 +27,8 @@ export class DdSdkConfiguration {
             trackErrors: boolean;
             trackInteractions: boolean;
             trackNetworkRequests: boolean;
+            reactVersion: string;
+            reactNativeVersion: string;
         }
     ) {}
 }

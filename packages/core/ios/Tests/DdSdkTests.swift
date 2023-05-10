@@ -616,7 +616,7 @@ internal class DdSdkTests: XCTestCase {
                 nativeCrashReportEnabled: false,
                 nativeLongTaskThresholdMs: 0.0,
                 longTaskThresholdMs: 0.1,
-                configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true]
+                configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
             ),
             resolve: mockResolve,
             reject: mockReject
@@ -675,6 +675,8 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeErrors, false)
         XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeLongTasks, false)
         XCTAssertEqual(mappedEvent.telemetry.configuration.trackLongTask, true)
+        XCTAssertEqual(mappedEvent.telemetry.configuration.reactVersion, "18.2.0")
+        XCTAssertEqual(mappedEvent.telemetry.configuration.reactNativeVersion, "0.71.0")
 
         Datadog.internalFlushAndDeinitialize()
     }

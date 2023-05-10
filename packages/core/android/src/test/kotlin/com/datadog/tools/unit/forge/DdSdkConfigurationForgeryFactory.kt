@@ -46,7 +46,9 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),
                 trackInteractions = forge.aBool(),
-                trackNetworkRequests = forge.aBool()
+                trackNetworkRequests = forge.aBool(),
+                reactVersion = forge.aString(),
+                reactNativeVersion = forge.aString(),
             ),
             trackFrustrations = forge.aNullable { aBool() },
         )

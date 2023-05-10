@@ -123,7 +123,12 @@ export class DdSdkReactNative {
                     initializationType: params.initializationModeForTelemetry,
                     trackErrors: configuration.trackErrors,
                     trackInteractions: configuration.trackInteractions,
-                    trackNetworkRequests: configuration.trackResources
+                    trackNetworkRequests: configuration.trackResources,
+                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                    reactNativeVersion: require('react-native/package.json')
+                        .version,
+                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                    reactVersion: require('react/package.json').version
                 }
             )
         );

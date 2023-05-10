@@ -136,6 +136,8 @@ class RNDdSdk: NSObject {
             configuration.trackInteractions = rnConfiguration.configurationForTelemetry?.trackInteractions
             configuration.trackResources = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
             configuration.trackNetworkRequests = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+            configuration.reactVersion = rnConfiguration.configurationForTelemetry?.reactVersion as? String
+            configuration.reactNativeVersion = rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String
 
             // trackCrossPlatformLongTasks will be deprecated for trackLongTask
             configuration.trackCrossPlatformLongTasks = rnConfiguration.longTaskThresholdMs != 0
