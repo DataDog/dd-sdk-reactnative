@@ -20,7 +20,7 @@ package com.datadog.reactnative
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
  * @param trackFrustrations Whether to track frustration signals or not.
- * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT
+ * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
