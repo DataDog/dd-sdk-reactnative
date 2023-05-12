@@ -183,7 +183,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -233,7 +232,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -281,7 +279,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -333,7 +330,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -385,7 +381,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -437,7 +432,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -480,7 +474,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -533,7 +526,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
@@ -590,7 +582,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
@@ -647,7 +638,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
@@ -704,7 +694,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
@@ -761,7 +750,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
@@ -818,7 +806,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
@@ -875,7 +862,6 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
                 it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
@@ -1579,6 +1565,96 @@ internal class DdSdkTest {
                     "firstPartyHostsWithHeaderTypes",
                     tracingHosts
                 )
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {average upload frequency}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            uploadFrequency = "AVERAGE",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {rare upload frequency}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            uploadFrequency = "RARE",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.RARE)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {frequent upload frequency}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            uploadFrequency = "FREQUENT",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.FREQUENT)
             }
     }
 

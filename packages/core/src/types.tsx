@@ -21,6 +21,7 @@ export class DdSdkConfiguration {
         readonly additionalConfig: object,
         readonly telemetrySampleRate: number,
         readonly vitalsUpdateFrequency: string,
+        readonly uploadFrequency: string,
         readonly trackFrustrations: boolean,
         readonly configurationForTelemetry: {
             initializationType: string;

@@ -85,6 +85,7 @@ describe('DatadogProvider', () => {
                   "telemetrySampleRate": 20,
                   "trackFrustrations": true,
                   "trackingConsent": "granted",
+                  "uploadFrequency": "AVERAGE",
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);

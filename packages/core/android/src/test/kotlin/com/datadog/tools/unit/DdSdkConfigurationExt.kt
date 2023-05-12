@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit
 
+import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
@@ -59,6 +60,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         false
     } else {
         trackFrustrations
+    }
+    if (uploadFrequency != null) {
+        map["uploadFrequency"] = uploadFrequency
+    } else {
+        map["uploadFrequency"] = UploadFrequency.AVERAGE.toString()
     }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     configurationForTelemetry?.let {

@@ -4,7 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { buildConfigurationFromPartialConfiguration } from '../DdSdkReactNativeConfiguration';
+import {
+    UploadFrequency,
+    buildConfigurationFromPartialConfiguration
+} from '../DdSdkReactNativeConfiguration';
 import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
@@ -52,6 +55,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackInteractions": false,
                   "trackResources": false,
                   "trackingConsent": "granted",
+                  "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
@@ -95,7 +99,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         nativeCrashReportEnabled: true,
                         nativeLongTaskThresholdMs: 345,
                         longTaskThresholdMs: 567,
-                        trackFrustrations: true
+                        trackFrustrations: true,
+                        uploadFrequency: UploadFrequency.FREQUENT
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -135,6 +140,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackInteractions": true,
                   "trackResources": true,
                   "trackingConsent": "pending",
+                  "uploadFrequency": "FREQUENT",
                   "verbosity": "debug",
                   "version": "1.4.5",
                   "versionSuffix": "codepush-3",
@@ -197,6 +203,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackInteractions": false,
                   "trackResources": false,
                   "trackingConsent": "granted",
+                  "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
                   "version": "",
                   "versionSuffix": "",

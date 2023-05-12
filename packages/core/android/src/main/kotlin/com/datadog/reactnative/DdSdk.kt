@@ -14,6 +14,7 @@ import com.datadog.android.DatadogSite
 import com.datadog.android._InternalProxy
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.event.EventMapper
 import com.datadog.android.privacy.TrackingConsent
@@ -213,6 +214,9 @@ class DdSdk(
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setVitalsUpdateFrequency(
             buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+        )
+        configBuilder.setUploadFrequency(
+            buildUploadFrequency(configuration.uploadFrequency)
         )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
@@ -434,6 +438,16 @@ class DdSdk(
             "average" -> VitalsUpdateFrequency.AVERAGE
             "frequent" -> VitalsUpdateFrequency.FREQUENT
             else -> VitalsUpdateFrequency.AVERAGE
+        }
+    }
+
+    private fun buildUploadFrequency(uploadFrequency: String?): UploadFrequency {
+        val uploadFrequency = uploadFrequency?.lowercase(Locale.US)
+        return when (uploadFrequency) {
+            "rare" -> UploadFrequency.RARE
+            "average" -> UploadFrequency.AVERAGE
+            "frequent" -> UploadFrequency.FREQUENT
+            else -> UploadFrequency.AVERAGE
         }
     }
 

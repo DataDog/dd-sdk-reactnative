@@ -522,7 +522,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.proxyConfiguration?[kCFProxyPasswordKey] as? String, "pwd")
     }
 
-    func testBuildConfigurationAverageVitalsUploadFrequency() {
+    func testBuildConfigurationAverageVitalsUpdateFrequency() {
         let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "average")
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
@@ -530,12 +530,36 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.mobileVitalsFrequency, .average)
     }
 
-    func testBuildConfigurationNeverVitalsUploadFrequency() {
+    func testBuildConfigurationNeverVitalsUpdateFrequency() {
         let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "never")
 
         let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
 
         XCTAssertEqual(ddConfig.mobileVitalsFrequency, .never)
+    }
+
+    func testBuildConfigurationAverageUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "AVERAGE")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.uploadFrequency, .average)
+    }
+
+    func testBuildConfigurationFrequentUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "FREQUENT")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.uploadFrequency, .frequent)
+    }
+
+    func testBuildConfigurationRareUploadFrequency() {
+        let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "RARE")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.uploadFrequency, .rare)
     }
     
     func testJsRefreshRateInitializationWithLongTaskDisabled() {
@@ -554,7 +578,7 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
 
-    func testJsRefreshRateInitializationNeverVitalsUploadFrequency() {
+    func testJsRefreshRateInitializationNeverVitalsUpdateFrequency() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
@@ -570,7 +594,7 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
     
-    func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUploadFrequency() {
+    func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUpdateFrequency() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
@@ -766,7 +790,8 @@ extension DdSdkConfiguration {
         vitalsUpdateFrequency: NSString = "average",
         trackFrustrations: Bool? = nil,
         additionalConfig: NSDictionary? = nil,
-        configurationForTelemetry: NSDictionary? = nil
+        configurationForTelemetry: NSDictionary? = nil,
+        uploadFrequency: NSString = "AVERAGE"
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -781,6 +806,7 @@ extension DdSdkConfiguration {
             telemetrySampleRate: telemetrySampleRate,
             vitalsUpdateFrequency: vitalsUpdateFrequency,
             trackFrustrations: trackFrustrations,
+            uploadFrequency: uploadFrequency,
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
@@ -801,7 +827,8 @@ extension NSDictionary {
         telemetrySampleRate: Double = 45.0,
         vitalsUpdateFrequency: NSString = "average",
         additionalConfig: NSDictionary? = nil,
-        configurationForTelemetry: NSDictionary? = nil
+        configurationForTelemetry: NSDictionary? = nil,
+        uploadFrequency: NSString = "AVERAGE"
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -817,7 +844,8 @@ extension NSDictionary {
                 "telemetrySampleRate": telemetrySampleRate,
                 "vitalsUpdateFrequency": vitalsUpdateFrequency,
                 "additionalConfig": additionalConfig,
-                "configurationForTelemetry": configurationForTelemetry
+                "configurationForTelemetry": configurationForTelemetry,
+                "uploadFrequency": uploadFrequency
             ]
         )
     }
