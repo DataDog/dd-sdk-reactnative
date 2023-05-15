@@ -21,6 +21,7 @@ import java.util.Locale
 /**
  * The entry point to use Datadog's RUM feature.
  */
+@Suppress("TooManyFunctions")
 class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "DdRum"
@@ -261,6 +262,21 @@ class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(
     @ReactMethod
     fun stopSession(promise: Promise) {
         GlobalRum.get().stopSession()
+        promise.resolve(null)
+    }
+
+    /**
+     * Adds result of evaluating a feature flag to the view.
+     * Feature flag evaluations are local to the active view and are cleared when the view is stopped.
+     * @param name The name of the feature flag
+     * @param value The value the feature flag evaluated to, encapsulated in a Map
+     */
+    @ReactMethod
+    fun addFeatureFlagEvaluation(name: String, value: ReadableMap, promise: Promise) {
+        val value = value.toHashMap()["value"]
+        if (value != null) {
+            GlobalRum.get().addFeatureFlagEvaluation(name, value)
+        }
         promise.resolve(null)
     }
 
