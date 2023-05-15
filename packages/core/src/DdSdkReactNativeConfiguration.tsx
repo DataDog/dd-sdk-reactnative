@@ -226,7 +226,8 @@ export class DdSdkReactNativeConfiguration {
     public uploadFrequency: UploadFrequency = DEFAULTS.uploadFrequency;
 
     /**
-     * Sets the preferred size for uploaded batches of data.
+     * Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.
+     * Smaller batches mean smaller but more network requests, whereas larger batches mean fewer but larger network requests.
      */
     public batchSize: BatchSize = DEFAULTS.batchSize;
 
