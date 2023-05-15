@@ -561,6 +561,30 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.uploadFrequency, .rare)
     }
+
+    func testBuildConfigurationMediumBatchSize() {
+        let configuration: DdSdkConfiguration = .mockAny(batchSize: "MEDIUM")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchSize, .medium)
+    }
+
+    func testBuildConfigurationLargeBatchSize() {
+        let configuration: DdSdkConfiguration = .mockAny(batchSize: "LARGE")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchSize, .large)
+    }
+
+    func testBuildConfigurationSmallBatchSize() {
+        let configuration: DdSdkConfiguration = .mockAny(batchSize: "SMALL")
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchSize, .small)
+    }
     
     func testJsRefreshRateInitializationWithLongTaskDisabled() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
@@ -791,7 +815,8 @@ extension DdSdkConfiguration {
         trackFrustrations: Bool? = nil,
         additionalConfig: NSDictionary? = nil,
         configurationForTelemetry: NSDictionary? = nil,
-        uploadFrequency: NSString = "AVERAGE"
+        uploadFrequency: NSString = "AVERAGE",
+        batchSize: NSString = "MEDIUM"
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -807,6 +832,7 @@ extension DdSdkConfiguration {
             vitalsUpdateFrequency: vitalsUpdateFrequency,
             trackFrustrations: trackFrustrations,
             uploadFrequency: uploadFrequency,
+            batchSize: batchSize,
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
@@ -828,7 +854,8 @@ extension NSDictionary {
         vitalsUpdateFrequency: NSString = "average",
         additionalConfig: NSDictionary? = nil,
         configurationForTelemetry: NSDictionary? = nil,
-        uploadFrequency: NSString = "AVERAGE"
+        uploadFrequency: NSString = "AVERAGE",
+        batchSize: NSString = "MEDIUM"
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -845,7 +872,8 @@ extension NSDictionary {
                 "vitalsUpdateFrequency": vitalsUpdateFrequency,
                 "additionalConfig": additionalConfig,
                 "configurationForTelemetry": configurationForTelemetry,
-                "uploadFrequency": uploadFrequency
+                "uploadFrequency": uploadFrequency,
+                "batchSize": batchSize
             ]
         )
     }

@@ -187,6 +187,8 @@ class RNDdSdk: NSObject {
 
         _ = ddConfigBuilder.set(uploadFrequency: buildUploadFrequency(frequency: configuration.uploadFrequency))
 
+        _ = ddConfigBuilder.set(batchSize: buildBatchSize(batchSize: configuration.batchSize))
+
         if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
             _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
         }
@@ -340,6 +342,21 @@ class RNDdSdk: NSObject {
             uploadFrequency = .average
         }
         return uploadFrequency
+    }
+
+    func buildBatchSize(batchSize: NSString?) -> Datadog.Configuration.BatchSize {
+        let size: Datadog.Configuration.BatchSize
+        switch batchSize?.lowercased {
+        case "small":
+            size = .small
+        case "medium":
+            size = .medium
+        case "large":
+            size = .large
+        default:
+            size = .medium
+        }
+        return size
     }
 
     func setVerbosityLevel(additionalConfig: NSDictionary?) {

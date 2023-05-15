@@ -20,6 +20,8 @@ import Foundation
      - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
      - vitalsUpdateFrequency: The frequency at which to measure vitals performance metrics.
+     - uploadFrequency: The frequency at which batches of data are sent.
+     - batchSize: The preferred size of batched data uploaded to Datadog.
      - trackFrustrations: Whether to track frustration signals or not.
      - additionalConfig: Additional configuration parameters.
      - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
@@ -39,6 +41,7 @@ public class DdSdkConfiguration: NSObject {
     public var vitalsUpdateFrequency: NSString? = nil
     public var trackFrustrations: Bool? = nil
     public var uploadFrequency: NSString? = nil
+    public var batchSize: NSString? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
@@ -56,6 +59,7 @@ public class DdSdkConfiguration: NSObject {
         vitalsUpdateFrequency: NSString?,
         trackFrustrations: Bool?,
         uploadFrequency: NSString?,
+        batchSize: NSString?,
         additionalConfig: NSDictionary?,
         configurationForTelemetry: ConfigurationForTelemetry?
     ) {
@@ -72,6 +76,7 @@ public class DdSdkConfiguration: NSObject {
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackFrustrations = trackFrustrations
         self.uploadFrequency = uploadFrequency
+        self.batchSize = batchSize
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }
