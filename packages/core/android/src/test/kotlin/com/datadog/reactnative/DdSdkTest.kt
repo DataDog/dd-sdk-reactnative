@@ -66,6 +66,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.stream.Stream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -73,6 +74,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Answers
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
@@ -1554,73 +1558,16 @@ internal class DdSdkTest {
             }
     }
 
-    @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {average upload frequency}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(
-            uploadFrequency = "AVERAGE",
-        )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
-            )
-            verify(mockDatadog).registerRumMonitor(any())
-        }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.AVERAGE)
-            }
-    }
-
-    @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {rare upload frequency}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(
-            uploadFrequency = "RARE",
-        )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
-            )
-            verify(mockDatadog).registerRumMonitor(any())
-        }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.RARE)
-            }
-    }
-
-    @Test
+    @ParameterizedTest
+    @MethodSource("provideUploadFrequency")
     fun `𝕄 initialize native SDK 𝕎 initialize() {frequent upload frequency}`(
+        input: String,
+        expectedUploadFrequency: UploadFrequency,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            uploadFrequency = "FREQUENT",
+            uploadFrequency = input,
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1640,17 +1587,20 @@ internal class DdSdkTest {
         }
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
-                it.hasFieldEqualTo("uploadFrequency", UploadFrequency.FREQUENT)
+                it.hasFieldEqualTo("uploadFrequency", expectedUploadFrequency)
             }
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("provideBatchSize")
     fun `𝕄 initialize native SDK 𝕎 initialize() {small batch size}`(
+        input: String,
+        expectedBatchSize: BatchSize,
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            batchSize = "SMALL",
+            batchSize = input,
         )
         val credentialCaptor = argumentCaptor<Credentials>()
         val configCaptor = argumentCaptor<Configuration>()
@@ -1670,67 +1620,7 @@ internal class DdSdkTest {
         }
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
-                it.hasFieldEqualTo("batchSize", BatchSize.SMALL)
-            }
-    }
-
-    @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {medium batch size}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(
-            batchSize = "MEDIUM",
-        )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
-            )
-            verify(mockDatadog).registerRumMonitor(any())
-        }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
-            }
-    }
-
-    @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {large batch size}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(
-            batchSize = "LARGE",
-        )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
-            )
-            verify(mockDatadog).registerRumMonitor(any())
-        }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("batchSize", BatchSize.LARGE)
+                it.hasFieldEqualTo("batchSize", expectedBatchSize)
             }
     }
 
@@ -2592,5 +2482,23 @@ internal class DdSdkTest {
     companion object {
         const val ONE_HUNDRED_MILLISSECOND_NS: Long = 100 * 1000L * 1000L
         const val ONE_SECOND_NS: Long = 1000L * 1000L * 1000L
+
+        @JvmStatic
+        fun provideBatchSize(): Stream<Arguments?>? {
+            return Stream.of(
+                Arguments.of("SMALL", BatchSize.SMALL),
+                Arguments.of("MEDIUM", BatchSize.MEDIUM),
+                Arguments.of("LARGE", BatchSize.LARGE),
+            )
+        }
+
+        @JvmStatic
+        fun provideUploadFrequency(): Stream<Arguments?>? {
+            return Stream.of(
+                Arguments.of("RARE", UploadFrequency.RARE),
+                Arguments.of("AVERAGE", UploadFrequency.AVERAGE),
+                Arguments.of("FREQUENT", UploadFrequency.FREQUENT),
+            )
+        }
     }
 }
