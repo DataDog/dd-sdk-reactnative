@@ -5,6 +5,7 @@
  */
 
 import {
+    BatchSize,
     UploadFrequency,
     buildConfigurationFromPartialConfiguration
 } from '../DdSdkReactNativeConfiguration';
@@ -33,6 +34,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "actionEventMapper": null,
                   "additionalConfig": {},
                   "applicationId": "fake-app-id",
+                  "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "errorEventMapper": null,
@@ -100,7 +102,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         nativeLongTaskThresholdMs: 345,
                         longTaskThresholdMs: 567,
                         trackFrustrations: true,
-                        uploadFrequency: UploadFrequency.FREQUENT
+                        uploadFrequency: UploadFrequency.FREQUENT,
+                        batchSize: BatchSize.LARGE
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -110,6 +113,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "additionalField": "fake-value",
                   },
                   "applicationId": "fake-app-id",
+                  "batchSize": "LARGE",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "errorEventMapper": [Function],
@@ -181,6 +185,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "actionEventMapper": null,
                   "additionalConfig": {},
                   "applicationId": "",
+                  "batchSize": "MEDIUM",
                   "clientToken": "",
                   "env": "",
                   "errorEventMapper": null,

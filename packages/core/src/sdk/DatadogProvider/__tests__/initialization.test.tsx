@@ -67,6 +67,7 @@ describe('DatadogProvider', () => {
                     "_dd.source": "react-native",
                   },
                   "applicationId": "fakeApplicationId",
+                  "batchSize": "MEDIUM",
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",

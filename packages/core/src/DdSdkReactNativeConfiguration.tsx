@@ -36,6 +36,21 @@ export enum UploadFrequency {
     RARE = 'RARE'
 }
 
+export enum BatchSize {
+    /**
+     * Upload less frequent, larger batches of data
+     */
+    LARGE = 'LARGE',
+    /**
+     * Use default size for batches of data
+     */
+    MEDIUM = 'MEDIUM',
+    /**
+     * Upload more frequent, smaller batches of data
+     */
+    SMALL = 'SMALL'
+}
+
 export type FirstPartyHostsConfiguration = (
     | FirstPartyHost
     | LegacyFirstPartyHost
@@ -86,7 +101,8 @@ const DEFAULTS = {
     resourceEventMapper: null,
     actionEventMapper: null,
     trackFrustrations: true,
-    uploadFrequency: UploadFrequency.AVERAGE
+    uploadFrequency: UploadFrequency.AVERAGE,
+    batchSize: BatchSize.MEDIUM
 };
 
 /**
@@ -209,6 +225,11 @@ export class DdSdkReactNativeConfiguration {
      */
     public uploadFrequency: UploadFrequency = DEFAULTS.uploadFrequency;
 
+    /**
+     * Sets the preferred size for uploaded batches of data.
+     */
+    public batchSize: BatchSize = DEFAULTS.batchSize;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -322,6 +343,7 @@ export type PartialInitializationConfiguration = {
     readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
     readonly trackFrustrations?: boolean;
     readonly uploadFrequency?: UploadFrequency;
+    readonly batchSize?: BatchSize;
 };
 
 const setConfigurationAttribute = <
