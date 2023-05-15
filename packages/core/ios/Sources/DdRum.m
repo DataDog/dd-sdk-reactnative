@@ -74,4 +74,9 @@ RCT_EXTERN_METHOD(addTiming:(NSString)name
 RCT_EXTERN_METHOD(stopSession:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(addFeatureFlagEvaluation:(NSString)name
+                 withValue:(NSDictionary)value
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
 @end
