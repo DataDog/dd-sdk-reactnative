@@ -49,6 +49,13 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     "AVERAGE"
                 )
             },
+            batchSize = forge.aNullable {
+                anElementFrom(
+                    "SMALL",
+                    "MEDIUM",
+                    "LARGE"
+                )
+            },
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),

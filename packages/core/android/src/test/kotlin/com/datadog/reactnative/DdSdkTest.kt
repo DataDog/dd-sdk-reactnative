@@ -182,7 +182,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -231,7 +230,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -278,7 +276,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -329,7 +326,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -380,7 +376,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -431,7 +426,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -473,7 +467,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
@@ -525,7 +518,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
@@ -581,7 +573,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
@@ -637,7 +628,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
@@ -693,7 +683,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
@@ -749,7 +738,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
@@ -805,7 +793,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
@@ -861,7 +848,6 @@ internal class DdSdkTest {
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
             }
             .hasField("logsConfig") {
                 it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
@@ -1655,6 +1641,96 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("uploadFrequency", UploadFrequency.FREQUENT)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {small batch size}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            batchSize = "SMALL",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("batchSize", BatchSize.SMALL)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {medium batch size}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            batchSize = "MEDIUM",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("batchSize", BatchSize.MEDIUM)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {large batch size}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            batchSize = "LARGE",
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("batchSize", BatchSize.LARGE)
             }
     }
 

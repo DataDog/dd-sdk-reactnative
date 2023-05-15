@@ -21,6 +21,7 @@ package com.datadog.reactnative
  * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
  * @param trackFrustrations Whether to track frustration signals or not.
  * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
+ * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
@@ -38,6 +39,7 @@ data class DdSdkConfiguration(
     val vitalsUpdateFrequency: String? = null,
     val trackFrustrations: Boolean? = null,
     val uploadFrequency: String? = null,
+    val batchSize: String? = null,
     val additionalConfig: Map<String, Any?>? = null,
     val configurationForTelemetry: ConfigurationForTelemetry? = null
 )

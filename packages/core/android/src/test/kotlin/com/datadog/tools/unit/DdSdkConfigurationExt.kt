@@ -6,11 +6,11 @@
 
 package com.datadog.tools.unit
 
+import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
-import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
 
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
@@ -65,6 +65,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         map["uploadFrequency"] = uploadFrequency
     } else {
         map["uploadFrequency"] = UploadFrequency.AVERAGE.toString()
+    }
+    if (batchSize != null) {
+        map["batchSize"] = batchSize
+    } else {
+        map["batchSize"] = BatchSize.MEDIUM.toString()
     }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     configurationForTelemetry?.let {
