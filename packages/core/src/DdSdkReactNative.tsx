@@ -119,6 +119,7 @@ export class DdSdkReactNative {
                 configuration.telemetrySampleRate,
                 configuration.vitalsUpdateFrequency,
                 configuration.uploadFrequency,
+                configuration.batchSize,
                 configuration.trackFrustrations,
                 {
                     initializationType: params.initializationModeForTelemetry,

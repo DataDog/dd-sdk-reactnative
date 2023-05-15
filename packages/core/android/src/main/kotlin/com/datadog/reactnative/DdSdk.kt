@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.Choreographer
 import com.datadog.android.DatadogSite
 import com.datadog.android._InternalProxy
+import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.UploadFrequency
@@ -217,6 +218,9 @@ class DdSdk(
         )
         configBuilder.setUploadFrequency(
             buildUploadFrequency(configuration.uploadFrequency)
+        )
+        configBuilder.setBatchSize(
+            buildBatchSize(configuration.batchSize)
         )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
@@ -448,6 +452,15 @@ class DdSdk(
             "average" -> UploadFrequency.AVERAGE
             "frequent" -> UploadFrequency.FREQUENT
             else -> UploadFrequency.AVERAGE
+        }
+    }
+
+    private fun buildBatchSize(batchSize: String?): BatchSize {
+        return when (batchSize?.lowercase(Locale.US)) {
+            "small" -> BatchSize.SMALL
+            "medium" -> BatchSize.MEDIUM
+            "large" -> BatchSize.LARGE
+            else -> BatchSize.MEDIUM
         }
     }
 

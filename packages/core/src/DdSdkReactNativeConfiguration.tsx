@@ -36,6 +36,21 @@ export enum UploadFrequency {
     RARE = 'RARE'
 }
 
+export enum BatchSize {
+    /**
+     * Upload less frequent, larger batches of data
+     */
+    LARGE = 'LARGE',
+    /**
+     * Use default size for batches of data
+     */
+    MEDIUM = 'MEDIUM',
+    /**
+     * Upload more frequent, smaller batches of data
+     */
+    SMALL = 'SMALL'
+}
+
 export type FirstPartyHostsConfiguration = (
     | FirstPartyHost
     | LegacyFirstPartyHost
@@ -86,7 +101,8 @@ const DEFAULTS = {
     resourceEventMapper: null,
     actionEventMapper: null,
     trackFrustrations: true,
-    uploadFrequency: UploadFrequency.AVERAGE
+    uploadFrequency: UploadFrequency.AVERAGE,
+    batchSize: BatchSize.MEDIUM
 };
 
 /**
@@ -209,6 +225,12 @@ export class DdSdkReactNativeConfiguration {
      */
     public uploadFrequency: UploadFrequency = DEFAULTS.uploadFrequency;
 
+    /**
+     * Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.
+     * Smaller batches mean smaller but more network requests, whereas larger batches mean fewer but larger network requests.
+     */
+    public batchSize: BatchSize = DEFAULTS.batchSize;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -322,6 +344,7 @@ export type PartialInitializationConfiguration = {
     readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
     readonly trackFrustrations?: boolean;
     readonly uploadFrequency?: UploadFrequency;
+    readonly batchSize?: BatchSize;
 };
 
 const setConfigurationAttribute = <

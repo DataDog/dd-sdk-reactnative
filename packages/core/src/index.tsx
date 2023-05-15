@@ -9,7 +9,8 @@ import {
     DdSdkReactNativeConfiguration,
     InitializationMode,
     VitalsUpdateFrequency,
-    UploadFrequency
+    UploadFrequency,
+    BatchSize
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
@@ -40,5 +41,6 @@ export {
     SdkVerbosity,
     VitalsUpdateFrequency,
     PropagatorType,
-    UploadFrequency
+    UploadFrequency,
+    BatchSize
 };

@@ -22,6 +22,7 @@ export class DdSdkConfiguration {
         readonly telemetrySampleRate: number,
         readonly vitalsUpdateFrequency: string,
         readonly uploadFrequency: string,
+        readonly batchSize: string,
         readonly trackFrustrations: boolean,
         readonly configurationForTelemetry: {
             initializationType: string;
