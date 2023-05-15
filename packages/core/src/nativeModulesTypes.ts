@@ -327,6 +327,14 @@ export type DdNativeRumType = {
      * Stops the current RUM Session.
      */
     stopSession(): Promise<void>;
+
+    /**
+     * Adds the result of evaluating a feature flag with a given name and value to the view.
+     * Feature flag evaluations are local to the active view and are cleared when the view is stopped.
+     * @param name: The name of the feature flag
+     * @param value: The value of the feature flag, encapsulated in an object to accept all types
+     */
+    addFeatureFlagEvaluation(name: string, value: object): Promise<void>;
 };
 
 type ActionType = 'TAP' | 'SCROLL' | 'SWIPE' | 'BACK' | 'CUSTOM';

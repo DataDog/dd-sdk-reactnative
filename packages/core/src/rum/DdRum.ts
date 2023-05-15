@@ -331,6 +331,18 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() => this.nativeRum.stopSession());
     }
 
+    addFeatureFlagEvaluation(name: string, value: unknown): Promise<void> {
+        InternalLog.log(
+            `Adding feature flag evaluation for name: ${name} with value: ${JSON.stringify(
+                value
+            )}`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addFeatureFlagEvaluation(name, { value })
+        );
+    }
+
     registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {
         this.errorEventMapper = generateErrorEventMapper(errorEventMapper);
     }
