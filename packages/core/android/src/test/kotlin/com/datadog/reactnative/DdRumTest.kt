@@ -21,6 +21,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.Forge
+import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
@@ -419,5 +420,21 @@ internal class DdRumTest {
 
         // Then
         verify(mockRumMonitor).stopSession()
+    }
+
+    @Test
+    fun `M call addFeatureFlagEvaluation W addFeatureFlagEvaluation(boolean value)`(
+        @StringForgery name: String,
+        @BoolForgery value: Boolean
+    ) {
+        val valueAsReadableMap = mapOf<String, Any?>(
+            "value" to value
+        )
+
+        // When
+        testedDdRum.addFeatureFlagEvaluation(name, valueAsReadableMap.toReadableMap(), mockPromise)
+
+        // Then
+        verify(mockRumMonitor).addFeatureFlagEvaluation(name, value)
     }
 }

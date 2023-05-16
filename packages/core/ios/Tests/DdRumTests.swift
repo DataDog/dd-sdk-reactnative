@@ -257,6 +257,13 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
 
+    func testAddFeatureFlagEvaluationWithBoolValue() throws {
+        rum.addFeatureFlagEvaluation(name: "flag", value: ["value": true], resolve: mockResolve, reject: mockReject)
+
+        let featureFlags = try XCTUnwrap(mockNativeRUM.receivedFeatureFlags)
+        XCTAssertEqual(featureFlags["flag"] as? Bool, true)
+    }
+
     func testRumErrorSourceMapping() throws {
         XCTAssertEqual(RUMErrorSource(from: "source"), RUMErrorSource.source)
         XCTAssertEqual(RUMErrorSource(from: "network"), RUMErrorSource.network)
@@ -300,6 +307,7 @@ private class MockNativeRUM: NativeRUM {
 
     private(set) var calledMethods = [CalledMethod]()
     private(set) var receivedAttributes = [[String: Encodable]]()
+    private(set) var receivedFeatureFlags = [String: Encodable]()
 
     // swiftlint:disable force_cast
     func startView(key: String, name: String?, attributes: [String: Encodable]) {
@@ -342,6 +350,9 @@ private class MockNativeRUM: NativeRUM {
     }
     func stopSession() {
         calledMethods.append(.stopSession())
+    }
+    func addFeatureFlagEvaluation(name: String, value: Encodable) {
+        receivedFeatureFlags[name] = value
     }
     func addResourceMetrics(
         resourceKey: String,

@@ -29,6 +29,7 @@ internal protocol NativeRUM {
                             download: (start: Date, end: Date)?,
                             responseSize: Int64?,
                             attributes: [AttributeKey: AttributeValue])
+    func addFeatureFlagEvaluation(name: String, value: Encodable)
 }
 
 private extension RUMUserActionType {
@@ -191,6 +192,15 @@ class RNDdRum: NSObject {
     @objc(stopSession:withRejecter:)
     func stopSession(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.stopSession()
+        resolve(nil)
+    }
+
+    @objc(addFeatureFlagEvaluation:withValue:withResolver:withRejecter:)
+    func addFeatureFlagEvaluation(name: String, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let valueAsEncodable = castAttributesToSwift(value)
+        if let value = valueAsEncodable["value"] {
+            nativeRUM.addFeatureFlagEvaluation(name: name, value: value)
+        }
         resolve(nil)
     }
 
