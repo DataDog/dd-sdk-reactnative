@@ -211,6 +211,7 @@ class DdSdk(
         }
 
         configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
+        configBuilder.trackBackgroundRumEvents(configuration.trackBackgroundEvents ?: false)
 
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setVitalsUpdateFrequency(

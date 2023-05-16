@@ -22,6 +22,7 @@ package com.datadog.reactnative
  * @param trackFrustrations Whether to track frustration signals or not.
  * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
  * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
+ * @param trackBackgroundEvents Whether to track events when the app is in background.
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
@@ -40,6 +41,7 @@ data class DdSdkConfiguration(
     val trackFrustrations: Boolean? = null,
     val uploadFrequency: String? = null,
     val batchSize: String? = null,
+    val trackBackgroundEvents: Boolean? = null,
     val additionalConfig: Map<String, Any?>? = null,
     val configurationForTelemetry: ConfigurationForTelemetry? = null
 )

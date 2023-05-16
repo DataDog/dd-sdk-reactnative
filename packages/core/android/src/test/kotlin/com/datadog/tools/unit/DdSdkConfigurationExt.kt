@@ -71,6 +71,11 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     } else {
         map["batchSize"] = BatchSize.MEDIUM.toString()
     }
+    map["trackBackgroundEvents"] = if (trackBackgroundEvents == null) {
+        false
+    } else {
+        trackBackgroundEvents
+    }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     configurationForTelemetry?.let {
         map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())

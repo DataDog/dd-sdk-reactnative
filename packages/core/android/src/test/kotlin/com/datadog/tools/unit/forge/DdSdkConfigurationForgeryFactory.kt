@@ -56,6 +56,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     "LARGE"
                 )
             },
+            trackBackgroundEvents = forge.aBool(),
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),
