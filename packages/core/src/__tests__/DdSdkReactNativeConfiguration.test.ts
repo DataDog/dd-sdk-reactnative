@@ -52,6 +52,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "sessionSamplingRate": 100,
                   "site": "US1",
                   "telemetrySampleRate": 20,
+                  "trackBackgroundEvents": false,
                   "trackErrors": false,
                   "trackFrustrations": true,
                   "trackInteractions": false,
@@ -103,7 +104,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         longTaskThresholdMs: 567,
                         trackFrustrations: true,
                         uploadFrequency: UploadFrequency.FREQUENT,
-                        batchSize: BatchSize.LARGE
+                        batchSize: BatchSize.LARGE,
+                        trackBackgroundEvents: true
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -139,6 +141,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "sessionSamplingRate": 80,
                   "site": "EU",
                   "telemetrySampleRate": 20,
+                  "trackBackgroundEvents": true,
                   "trackErrors": true,
                   "trackFrustrations": true,
                   "trackInteractions": true,
@@ -177,7 +180,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         nativeCrashReportEnabled: false,
                         nativeLongTaskThresholdMs: false,
                         longTaskThresholdMs: false,
-                        trackFrustrations: false
+                        trackFrustrations: false,
+                        trackBackgroundEvents: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -203,6 +207,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "sessionSamplingRate": 0,
                   "site": "",
                   "telemetrySampleRate": 20,
+                  "trackBackgroundEvents": false,
                   "trackErrors": false,
                   "trackFrustrations": false,
                   "trackInteractions": false,

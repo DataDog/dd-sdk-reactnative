@@ -102,7 +102,8 @@ const DEFAULTS = {
     actionEventMapper: null,
     trackFrustrations: true,
     uploadFrequency: UploadFrequency.AVERAGE,
-    batchSize: BatchSize.MEDIUM
+    batchSize: BatchSize.MEDIUM,
+    trackBackgroundEvents: false
 };
 
 /**
@@ -231,6 +232,11 @@ export class DdSdkReactNativeConfiguration {
      */
     public batchSize: BatchSize = DEFAULTS.batchSize;
 
+    /**
+     * Enables tracking of events when the app is in background. Defaults to `false`.
+     */
+    public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -345,6 +351,7 @@ export type PartialInitializationConfiguration = {
     readonly trackFrustrations?: boolean;
     readonly uploadFrequency?: UploadFrequency;
     readonly batchSize?: BatchSize;
+    readonly trackBackgroundEvents?: boolean;
 };
 
 const setConfigurationAttribute = <
