@@ -654,7 +654,23 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
-    
+
+    func testBackgroundTrackingEnabled() {
+        let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: true)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumBackgroundEventTrackingEnabled, true)
+    }
+
+    func testBackgroundTrackingDisabled() {
+        let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: false)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumBackgroundEventTrackingEnabled, false)
+    }
+
     func testConfigurationTelemetryEventMapper() throws {
         RNDdSdk(
             mainDispatchQueue: DispatchQueueMock(),
@@ -816,7 +832,8 @@ extension DdSdkConfiguration {
         additionalConfig: NSDictionary? = nil,
         configurationForTelemetry: NSDictionary? = nil,
         uploadFrequency: NSString = "AVERAGE",
-        batchSize: NSString = "MEDIUM"
+        batchSize: NSString = "MEDIUM",
+        trackBackgroundEvents: Bool? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -833,6 +850,7 @@ extension DdSdkConfiguration {
             trackFrustrations: trackFrustrations,
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
+            trackBackgroundEvents: trackBackgroundEvents,
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
@@ -855,7 +873,8 @@ extension NSDictionary {
         additionalConfig: NSDictionary? = nil,
         configurationForTelemetry: NSDictionary? = nil,
         uploadFrequency: NSString = "AVERAGE",
-        batchSize: NSString = "MEDIUM"
+        batchSize: NSString = "MEDIUM",
+        trackBackgroundEvents: Bool? = nil
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -872,6 +891,7 @@ extension NSDictionary {
                 "vitalsUpdateFrequency": vitalsUpdateFrequency,
                 "additionalConfig": additionalConfig,
                 "configurationForTelemetry": configurationForTelemetry,
+                "trackBackgroundEvents": trackBackgroundEvents,
                 "uploadFrequency": uploadFrequency,
                 "batchSize": batchSize
             ]
