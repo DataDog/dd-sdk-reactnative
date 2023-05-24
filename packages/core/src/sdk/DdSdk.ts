@@ -4,10 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeModules } from 'react-native';
-
 import type { DdNativeSdkType } from '../nativeModulesTypes';
 
-const DdSdk: DdNativeSdkType = NativeModules.DdSdk;
+// eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+const DdSdk: DdNativeSdkType = require('../specs/NativeDdSdk').default;
 
 export { DdSdk };
