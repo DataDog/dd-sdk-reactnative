@@ -197,6 +197,10 @@ class RNDdSdk: NSObject {
             _ = ddConfigBuilder.trackFrustrations(trackFrustrations)
         }
 
+        if var trackBackgroundEvents = (configuration.trackBackgroundEvents) {
+            _ = ddConfigBuilder.trackBackgroundEvents(trackBackgroundEvents)
+        }
+
         if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
             if (threshold != 0) {
                 // `nativeLongTaskThresholdMs` attribute is in milliseconds

@@ -24,6 +24,7 @@ export class DdSdkConfiguration {
         readonly uploadFrequency: string,
         readonly batchSize: string,
         readonly trackFrustrations: boolean,
+        readonly trackBackgroundEvents: boolean,
         readonly configurationForTelemetry: {
             initializationType: string;
             trackErrors: boolean;

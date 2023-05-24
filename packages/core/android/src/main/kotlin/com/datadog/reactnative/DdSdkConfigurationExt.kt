@@ -27,6 +27,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         trackFrustrations = getBoolean("trackFrustrations"),
         uploadFrequency = getString("uploadFrequency"),
         batchSize = getString("batchSize"),
+        trackBackgroundEvents = getBoolean("trackBackgroundEvents"),
         additionalConfig = getMap("additionalConfig")?.toHashMap(),
         configurationForTelemetry = getMap(
             "configurationForTelemetry"
@@ -74,6 +75,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     trackFrustrations?.let { map.putBoolean("trackFrustrations", it) }
     uploadFrequency?.let { map.putString("uploadFrequency", it) }
     batchSize?.let { map.putString("batchSize", it) }
+    trackBackgroundEvents?.let { map.putBoolean("trackBackgroundEvents", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }

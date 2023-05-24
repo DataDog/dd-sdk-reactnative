@@ -102,7 +102,8 @@ const DEFAULTS = {
     actionEventMapper: null,
     trackFrustrations: true,
     uploadFrequency: UploadFrequency.AVERAGE,
-    batchSize: BatchSize.MEDIUM
+    batchSize: BatchSize.MEDIUM,
+    trackBackgroundEvents: false
 };
 
 /**
@@ -231,6 +232,14 @@ export class DdSdkReactNativeConfiguration {
      */
     public batchSize: BatchSize = DEFAULTS.batchSize;
 
+    /**
+     * Enables tracking of RUM event when no RUM View is active.
+     *
+     * By default, background events are not tracked. Enabling this feature might increase the
+     * number of sessions tracked and impact your billing.
+     */
+    public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -345,6 +354,7 @@ export type PartialInitializationConfiguration = {
     readonly trackFrustrations?: boolean;
     readonly uploadFrequency?: UploadFrequency;
     readonly batchSize?: BatchSize;
+    readonly trackBackgroundEvents?: boolean;
 };
 
 const setConfigurationAttribute = <

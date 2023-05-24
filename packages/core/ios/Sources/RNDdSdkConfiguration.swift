@@ -24,6 +24,7 @@ extension NSDictionary {
         let trackFrustrations = object(forKey: "trackFrustrations") as? Bool
         let uploadFrequency = object(forKey: "uploadFrequency") as? NSString
         let batchSize = object(forKey: "batchSize") as? NSString
+        let trackBackgroundEvents = object(forKey: "trackBackgroundEvents") as? Bool
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
         return DdSdkConfiguration(
@@ -41,6 +42,7 @@ extension NSDictionary {
             trackFrustrations: trackFrustrations,
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
+            trackBackgroundEvents: trackBackgroundEvents,
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )

@@ -1560,7 +1560,7 @@ internal class DdSdkTest {
 
     @ParameterizedTest
     @MethodSource("provideUploadFrequency")
-    fun `𝕄 initialize native SDK 𝕎 initialize() {frequent upload frequency}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {upload frequency}`(
         input: String,
         expectedUploadFrequency: UploadFrequency,
         @Forgery configuration: DdSdkConfiguration
@@ -1593,7 +1593,7 @@ internal class DdSdkTest {
 
     @ParameterizedTest
     @MethodSource("provideBatchSize")
-    fun `𝕄 initialize native SDK 𝕎 initialize() {small batch size}`(
+    fun `𝕄 initialize native SDK 𝕎 initialize() {batch size}`(
         input: String,
         expectedBatchSize: BatchSize,
         @Forgery configuration: DdSdkConfiguration
@@ -1621,6 +1621,38 @@ internal class DdSdkTest {
         assertThat(configCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("batchSize", expectedBatchSize)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {trackBackgroundEvents}`(
+        @Forgery configuration: DdSdkConfiguration,
+        forge: Forge
+    ) {
+        // Given
+        val trackBackgroundEvents = forge.aNullable { forge.aBool() }
+        val bridgeConfiguration = configuration.copy(
+            trackBackgroundEvents = trackBackgroundEvents,
+        )
+        val credentialCaptor = argumentCaptor<Credentials>()
+        val configCaptor = argumentCaptor<Configuration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                credentialCaptor.capture(),
+                configCaptor.capture(),
+                eq(configuration.trackingConsent.asTrackingConsent())
+            )
+            verify(mockDatadog).registerRumMonitor(any())
+        }
+        assertThat(configCaptor.firstValue)
+            .hasField("rumConfig") {
+                it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents ?: false)
             }
     }
 

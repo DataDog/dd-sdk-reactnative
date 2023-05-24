@@ -23,6 +23,7 @@ import Foundation
      - uploadFrequency: The frequency at which batches of data are sent.
      - batchSize: The preferred size of batched data uploaded to Datadog.
      - trackFrustrations: Whether to track frustration signals or not.
+     - trackBackgroundEvents: Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
      - additionalConfig: Additional configuration parameters.
      - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
  */
@@ -42,6 +43,7 @@ public class DdSdkConfiguration: NSObject {
     public var trackFrustrations: Bool? = nil
     public var uploadFrequency: NSString? = nil
     public var batchSize: NSString? = nil
+    public var trackBackgroundEvents: Bool? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
@@ -60,6 +62,7 @@ public class DdSdkConfiguration: NSObject {
         trackFrustrations: Bool?,
         uploadFrequency: NSString?,
         batchSize: NSString?,
+        trackBackgroundEvents: Bool?,
         additionalConfig: NSDictionary?,
         configurationForTelemetry: ConfigurationForTelemetry?
     ) {
@@ -77,6 +80,7 @@ public class DdSdkConfiguration: NSObject {
         self.trackFrustrations = trackFrustrations
         self.uploadFrequency = uploadFrequency
         self.batchSize = batchSize
+        self.trackBackgroundEvents = trackBackgroundEvents
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }

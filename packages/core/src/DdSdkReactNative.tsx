@@ -121,6 +121,7 @@ export class DdSdkReactNative {
                 configuration.uploadFrequency,
                 configuration.batchSize,
                 configuration.trackFrustrations,
+                configuration.trackBackgroundEvents,
                 {
                     initializationType: params.initializationModeForTelemetry,
                     trackErrors: configuration.trackErrors,
