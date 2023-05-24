@@ -233,7 +233,10 @@ export class DdSdkReactNativeConfiguration {
     public batchSize: BatchSize = DEFAULTS.batchSize;
 
     /**
-     * Enables tracking of events when the app is in background. Defaults to `false`.
+     * Enables tracking of RUM event when no RUM View is active.
+     *
+     * By default, background events are not tracked. Enabling this feature might increase the
+     * number of sessions tracked and impact your billing.
      */
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
 

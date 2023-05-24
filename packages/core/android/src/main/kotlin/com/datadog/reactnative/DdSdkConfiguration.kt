@@ -22,7 +22,7 @@ package com.datadog.reactnative
  * @param trackFrustrations Whether to track frustration signals or not.
  * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
  * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
- * @param trackBackgroundEvents Whether to track events when the app is in background.
+ * @param trackBackgroundEvents Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
