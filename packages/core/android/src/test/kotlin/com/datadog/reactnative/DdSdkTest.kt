@@ -1627,9 +1627,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {trackBackgroundEvents}`(
         @Forgery configuration: DdSdkConfiguration,
-        @BoolForgery trackBackgroundEvents: Boolean
+        forge: Forge
     ) {
         // Given
+        val trackBackgroundEvents = forge.aNullable { forge.aBool() }
         val bridgeConfiguration = configuration.copy(
             trackBackgroundEvents = trackBackgroundEvents,
         )
@@ -1651,7 +1652,7 @@ internal class DdSdkTest {
         }
         assertThat(configCaptor.firstValue)
             .hasField("rumConfig") {
-                it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents)
+                it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents ?: false)
             }
     }
 

@@ -671,6 +671,14 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.rumBackgroundEventTrackingEnabled, false)
     }
 
+    func testBackgroundTrackingUndefined() {
+        let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: nil)
+
+        let ddConfig = RNDdSdk().buildConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.rumBackgroundEventTrackingEnabled, false)
+    }
+
     func testConfigurationTelemetryEventMapper() throws {
         RNDdSdk(
             mainDispatchQueue: DispatchQueueMock(),
