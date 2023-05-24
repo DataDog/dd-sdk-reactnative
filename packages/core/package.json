@@ -76,5 +76,13 @@
                 }
             ]
         ]
+    },
+    "codegenConfig": {
+        "name": "DdSdkReactNative",
+        "type": "modules",
+        "jsSrcsDir": "src/specs",
+        "android": {
+            "javaPackageName": "com.datadog.reactnative"
+        }
     }
 }
