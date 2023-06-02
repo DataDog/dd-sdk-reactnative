@@ -8,6 +8,9 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
+/**
+ * Do not import this Spec directly, use DdNativeLogsType instead.
+ */
 export interface Spec extends TurboModule {
     readonly getConstants: () => {};
 
