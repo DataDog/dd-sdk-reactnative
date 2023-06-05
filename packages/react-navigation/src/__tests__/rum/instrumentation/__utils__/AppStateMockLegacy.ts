@@ -5,6 +5,7 @@
  */
 
 import type { AppStateEvent, AppStateStatus } from 'react-native';
+import { AppState } from 'react-native';
 
 type handler = (type: AppStateStatus) => void;
 
@@ -41,6 +42,8 @@ export class AppStateMockLegacy {
     };
 
     changeValue = (value: AppStateStatus) => {
+        // Currently jest does not let us mock getters
+        AppState.currentState = value;
         if (!this.listeners.change) {
             return;
         }

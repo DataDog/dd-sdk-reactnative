@@ -179,14 +179,8 @@ export class DdRumReactNavigationTracking {
         );
 
         if (key != null && screenName != null) {
-            if (appStateStatus === 'background') {
-                DdRum.stopView(key);
-            } else if (
-                appStateStatus === 'active' ||
-                appStateStatus === undefined
-            ) {
-                // case when app goes into foreground,
-                // in that case navigation listener won't be called
+            // On iOS, the app can start in either "active", "background" or "unknown" state
+            if (appStateStatus !== 'background') {
                 DdRum.startView(key, screenName);
             }
         }
