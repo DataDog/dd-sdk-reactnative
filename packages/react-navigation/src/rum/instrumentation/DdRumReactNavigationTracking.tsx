@@ -173,9 +173,10 @@ export class DdRumReactNavigationTracking {
             return;
         }
         const key = route.key;
-
-        const predicate = DdRumReactNavigationTracking.viewNamePredicate;
-        const screenName = predicate(route, route.name);
+        const screenName = DdRumReactNavigationTracking.viewNamePredicate(
+            route,
+            route.name
+        );
 
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
