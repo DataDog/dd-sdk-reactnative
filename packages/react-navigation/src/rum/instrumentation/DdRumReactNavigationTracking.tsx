@@ -190,6 +190,37 @@ export class DdRumReactNavigationTracking {
         }
     }
 
+    private static handleAppStateChanged(
+        route: Route<string, any | undefined> | undefined,
+        appStateStatus: AppStateStatus | undefined = undefined
+    ) {
+        if (route === undefined || route === null) {
+            InternalLog.log(
+                DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
+                SdkVerbosity.WARN
+            );
+            // RUMM-1400 in some cases the route seem to be undefined
+            return;
+        }
+        const key = route.key;
+
+        const predicate = DdRumReactNavigationTracking.viewNamePredicate;
+        const screenName = predicate(route, route.name);
+
+        if (key != null && screenName != null) {
+            if (appStateStatus === 'background') {
+                DdRum.stopView(key);
+            } else if (
+                appStateStatus === 'active' ||
+                appStateStatus === undefined
+            ) {
+                // case when app goes into foreground,
+                // in that case navigation listener won't be called
+                DdRum.startView(key, screenName);
+            }
+        }
+    }
+
     private static resolveNavigationStateChangeListener(): NavigationListener {
         if (
             DdRumReactNavigationTracking.navigationStateChangeListener == null
@@ -223,7 +254,7 @@ export class DdRumReactNavigationTracking {
             return;
         }
 
-        DdRumReactNavigationTracking.handleRouteNavigation(
+        DdRumReactNavigationTracking.handleAppStateChanged(
             currentRoute,
             appStateStatus
         );
