@@ -191,17 +191,9 @@ export class DdRumReactNavigationTracking {
     }
 
     private static handleAppStateChanged(
-        route: Route<string, any | undefined> | undefined,
+        route: Route<string, any | undefined>,
         appStateStatus: AppStateStatus | undefined = undefined
     ) {
-        if (route === undefined || route === null) {
-            InternalLog.log(
-                DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
-                SdkVerbosity.WARN
-            );
-            // RUMM-1400 in some cases the route seem to be undefined
-            return;
-        }
         const key = route.key;
 
         const predicate = DdRumReactNavigationTracking.viewNamePredicate;
