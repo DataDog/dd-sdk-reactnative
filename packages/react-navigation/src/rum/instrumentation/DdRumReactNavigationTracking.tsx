@@ -102,7 +102,8 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
             const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
             DdRumReactNavigationTracking.handleRouteNavigation(
-                navigationRef.getCurrentRoute()
+                navigationRef.getCurrentRoute(),
+                AppState.currentState
             );
             navigationRef.addListener('state', listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
@@ -161,7 +162,7 @@ export class DdRumReactNavigationTracking {
 
     private static handleRouteNavigation(
         route: Route<string, any | undefined> | undefined,
-        appStateStatus: AppStateStatus | undefined = undefined
+        appStateStatus: AppStateStatus
     ) {
         if (route === undefined || route === null) {
             InternalLog.log(
@@ -226,7 +227,10 @@ export class DdRumReactNavigationTracking {
                     return;
                 }
 
-                DdRumReactNavigationTracking.handleRouteNavigation(route);
+                DdRumReactNavigationTracking.handleRouteNavigation(
+                    route,
+                    AppState.currentState
+                );
             };
         }
         return DdRumReactNavigationTracking.navigationStateChangeListener;
