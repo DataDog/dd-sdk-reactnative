@@ -192,7 +192,7 @@ export class DdRumReactNavigationTracking {
 
     private static handleAppStateChanged(
         route: Route<string, any | undefined>,
-        appStateStatus: AppStateStatus | undefined = undefined
+        appStateStatus: AppStateStatus
     ) {
         const key = route.key;
 
@@ -202,10 +202,7 @@ export class DdRumReactNavigationTracking {
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
                 DdRum.stopView(key);
-            } else if (
-                appStateStatus === 'active' ||
-                appStateStatus === undefined
-            ) {
+            } else if (appStateStatus === 'active') {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
                 DdRum.startView(key, screenName);
