@@ -386,6 +386,7 @@ describe.each([
             (reactNativeVersion, AppStateMockVersion) => {
                 let appStateMock;
                 beforeEach(() => {
+                    AppState.currentState = 'active';
                     appStateMock = new AppStateMockVersion();
                     mocked(AppState.addEventListener).mockImplementation(
                         // @ts-ignore
@@ -476,7 +477,7 @@ describe.each([
                     ).toBe('string');
                 });
 
-                it('starts last view when app goes into foreground', async () => {
+                it('restarts last view when app goes into foreground', async () => {
                     // GIVEN
                     const navigationRef = createRef<any>();
                     render(<FakeNavigator1 navigationRef={navigationRef} />);
@@ -531,6 +532,43 @@ describe.each([
                     // THEN
                     expect(DdRum.stopView).toHaveBeenCalled();
                 });
+
+                it('does not create a RUM view when the app starts in background', async () => {
+                    // GIVEN
+                    appStateMock.changeValue('background');
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+
+                    // THEN
+                    expect(DdRum.startView).not.toHaveBeenCalled();
+                });
+
+                // Note: currently iOS apps start in "unknown" app state, but should default to "inactive"
+                it.each(['unknown', 'inactive'])(
+                    'creates 2 RUM Views when the app starts in %s then becomes active',
+                    async initialAppState => {
+                        // GIVEN
+                        appStateMock.changeValue(initialAppState);
+                        const navigationRef = createRef<any>();
+                        render(
+                            <FakeNavigator1 navigationRef={navigationRef} />
+                        );
+
+                        DdRumReactNavigationTracking.startTrackingViews(
+                            navigationRef.current
+                        );
+
+                        // WHEN
+                        appStateMock.changeValue('active');
+
+                        // THEN
+                        expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                    }
+                );
             }
         );
 

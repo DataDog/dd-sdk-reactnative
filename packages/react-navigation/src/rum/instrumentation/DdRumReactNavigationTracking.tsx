@@ -102,7 +102,8 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
             const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
             DdRumReactNavigationTracking.handleRouteNavigation(
-                navigationRef.getCurrentRoute()
+                navigationRef.getCurrentRoute(),
+                AppState.currentState
             );
             navigationRef.addListener('state', listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
@@ -161,7 +162,7 @@ export class DdRumReactNavigationTracking {
 
     private static handleRouteNavigation(
         route: Route<string, any | undefined> | undefined,
-        appStateStatus: AppStateStatus | undefined = undefined
+        appStateStatus: AppStateStatus
     ) {
         if (route === undefined || route === null) {
             InternalLog.log(
@@ -172,17 +173,33 @@ export class DdRumReactNavigationTracking {
             return;
         }
         const key = route.key;
+        const screenName = DdRumReactNavigationTracking.viewNamePredicate(
+            route,
+            route.name
+        );
 
-        const predicate = DdRumReactNavigationTracking.viewNamePredicate;
-        const screenName = predicate(route, route.name);
+        if (key != null && screenName != null) {
+            // On iOS, the app can start in either "active", "background" or "unknown" state
+            if (appStateStatus !== 'background') {
+                DdRum.startView(key, screenName);
+            }
+        }
+    }
+
+    private static handleAppStateChanged(
+        route: Route<string, any | undefined>,
+        appStateStatus: AppStateStatus
+    ) {
+        const key = route.key;
+        const screenName = DdRumReactNavigationTracking.viewNamePredicate(
+            route,
+            route.name
+        );
 
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
                 DdRum.stopView(key);
-            } else if (
-                appStateStatus === 'active' ||
-                appStateStatus === undefined
-            ) {
+            } else if (appStateStatus === 'active') {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
                 DdRum.startView(key, screenName);
@@ -205,7 +222,10 @@ export class DdRumReactNavigationTracking {
                     return;
                 }
 
-                DdRumReactNavigationTracking.handleRouteNavigation(route);
+                DdRumReactNavigationTracking.handleRouteNavigation(
+                    route,
+                    AppState.currentState
+                );
             };
         }
         return DdRumReactNavigationTracking.navigationStateChangeListener;
@@ -223,7 +243,7 @@ export class DdRumReactNavigationTracking {
             return;
         }
 
-        DdRumReactNavigationTracking.handleRouteNavigation(
+        DdRumReactNavigationTracking.handleAppStateChanged(
             currentRoute,
             appStateStatus
         );
