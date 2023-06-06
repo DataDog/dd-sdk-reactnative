@@ -133,11 +133,21 @@ export class DdRumErrorTracking {
         source: ErrorSource,
         stacktrace: string,
         errorName: string,
-        context?: object
+        context: object = {}
     ): Promise<[void, void]> => {
+        const updatedContext = {
+            ...context,
+            '_dd.error_log.is_crash': true
+        };
         return Promise.all([
-            DdRum.addError(message, source, stacktrace, context),
-            DdLogs.error(message, errorName, message, stacktrace, context)
+            DdRum.addError(message, source, stacktrace, updatedContext),
+            DdLogs.error(
+                message,
+                errorName,
+                message,
+                stacktrace,
+                updatedContext
+            )
         ]);
     };
 }
