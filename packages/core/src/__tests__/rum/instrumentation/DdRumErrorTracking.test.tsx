@@ -83,7 +83,8 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -123,7 +124,8 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -164,7 +166,8 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -209,7 +212,8 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -252,7 +256,8 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -297,7 +302,8 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -342,7 +348,8 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -388,7 +395,8 @@ it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -440,7 +448,8 @@ it('M not report error in console handler W onGlobalError() {with console report
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -473,14 +482,15 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(
-        DdLogs.errorWithError
-    ).toHaveBeenCalledWith(
+    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
         'Oops I did it again! Something bad happened',
         'Error',
         'Oops I did it again! Something bad happened',
         'at ./path/to/file.js:1038:57',
-        { '_dd.error.source_type': 'react-native' }
+        {
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
+        }
     );
 });
 
@@ -514,14 +524,15 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(
-        DdLogs.errorWithError
-    ).toHaveBeenCalledWith(
+    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
         'Oops I did it again! Something bad happened',
         'Error',
         'Oops I did it again! Something bad happened',
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        { '_dd.error.source_type': 'react-native' }
+        {
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
+        }
     );
 });
 
@@ -552,7 +563,10 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
         'Error',
         'Something bad happened',
         '',
-        { '_dd.error.source_type': 'react-native' }
+        {
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
+        }
     );
 });
 
@@ -585,14 +599,15 @@ it('M intercept and send a RUM event W onConsole() {Error with source file and n
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(
-        DdLogs.errorWithError
-    ).toHaveBeenCalledWith(
+    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
         'Oops I did it again! Something bad happened',
         'CustomConsoleError',
         'Oops I did it again! Something bad happened',
         'at ./path/to/file.js:1038:57',
-        { '_dd.error.source_type': 'react-native' }
+        {
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
+        }
     );
 });
 
@@ -636,7 +651,10 @@ describe.each([
             'Error',
             errorMessage,
             '',
-            { '_dd.error.source_type': 'react-native' }
+            {
+                '_dd.error.source_type': 'react-native',
+                '_dd.error_log.is_crash': true
+            }
         );
     });
 });
@@ -678,7 +696,8 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
         {
             '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
         }
     );
 });
@@ -711,7 +730,10 @@ it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}'
         'Error',
         'Oops I did it again!',
         '',
-        { '_dd.error.source_type': 'react-native' }
+        {
+            '_dd.error.source_type': 'react-native',
+            '_dd.error_log.is_crash': true
+        }
     );
 });
 
