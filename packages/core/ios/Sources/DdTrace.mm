@@ -3,26 +3,32 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+// Import this first to prevent require cycles
+#import <DatadogSDKReactNative-Swift.h>
+#import "DdTrace.h"
 
-#import <React/RCTBridgeModule.h>
-// Thanks to this guard, we won't import this header when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-#import "DdSdkReactNative.h"
-#endif
 
-@interface RCT_EXTERN_MODULE(DdTrace, NSObject)
+@implementation DdTrace
 
-RCT_EXTERN_METHOD(startSpan:(NSString)operation
-                 withContext:(NSDictionary)context
-                 withTimestampms:(NSInteger)timestampMs
+RCT_EXPORT_MODULE()
+
+RCT_REMAP_METHOD(startSpan, withOperation:(NSString*)operation
+                 withContext:(NSDictionary*)context
+                 withTimestampms:(NSNumber*)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self startSpan:operation context:context timestampMs:timestampMs resolve:resolve reject:reject];
+}
 
-RCT_EXTERN_METHOD(finishSpan:(NSString)spanId
-                 withContext:(NSDictionary)context
-                 withTimestampms:(NSInteger)timestampMs
+RCT_REMAP_METHOD(finishSpan, withSpanId:(NSString*)spanId
+                 withContext:(NSDictionary*)context
+                 withTimestampms:(NSNumber*)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self finishSpan:spanId context:context timestampMs:timestampMs resolve:resolve reject:reject];
+}
 
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -32,5 +38,29 @@ RCT_EXTERN_METHOD(finishSpan:(NSString)spanId
     return std::make_shared<facebook::react::NativeDdTraceSpecJSI>(params);
 }
 #endif
+
+- (void)startSpan:(NSString *)operation context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddTraceImplementation startSpanWithOperation:operation context:context timestampMs:timestampMs resolve:resolve reject:reject];
+}
+
+- (void)finishSpan:(NSString *)spanId context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddTraceImplementation finishSpanWithSpanId:spanId context:context timestampMs:timestampMs resolve:resolve reject:reject];
+}
+
+- (DdTraceImplementation*)ddTraceImplementation
+{
+    if (_ddTraceImplementation == nil) {
+        _ddTraceImplementation = [[DdTraceImplementation alloc] init];
+    }
+    return _ddTraceImplementation;
+}
+
++ (BOOL)requiresMainQueueSetup {
+    return NO;
+}
+
+- (dispatch_queue_t)methodQueue {
+    return [RNQueue getSharedQueue];
+}
 
 @end

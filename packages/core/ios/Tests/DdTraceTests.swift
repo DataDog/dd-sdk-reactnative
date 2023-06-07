@@ -11,7 +11,7 @@ import XCTest
 
 internal class DdTraceTests: XCTestCase {
     private let mockNativeTracer = MockTracer()
-    private var tracer: RNDdTrace! // swiftlint:disable:this implicitly_unwrapped_optional
+    private var tracer: DdTraceImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
     private var lastResolveValue: Any?
     
     private func mockResolve(args: Any?) { lastResolveValue = args }
@@ -19,7 +19,7 @@ internal class DdTraceTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        tracer = RNDdTrace { self.mockNativeTracer }
+        tracer = DdTraceImplementation { self.mockNativeTracer }
         GlobalState.addAttribute(forKey: "global-string", value: "foo")
         GlobalState.addAttribute(forKey: "global-int", value: 42)
     }
@@ -41,7 +41,7 @@ internal class DdTraceTests: XCTestCase {
         // Given
         let expectation = self.expectation(description: "Initialize Tracer once")
 
-        let tracer = RNDdTrace { [unowned self] in
+        let tracer = DdTraceImplementation { [unowned self] in
             expectation.fulfill()
             return self.mockNativeTracer
         }
@@ -58,7 +58,7 @@ internal class DdTraceTests: XCTestCase {
         tracer.startSpan(
             operation: "test_span",
             context: testTags,
-            timestampMs: Int64(timestampInMilliseconds),
+            timestampMs: NSNumber(value: timestampInMilliseconds),
             resolve: mockResolve,
             reject: mockReject
         )
@@ -85,7 +85,7 @@ internal class DdTraceTests: XCTestCase {
         tracer.startSpan(
             operation: "test_span",
             context: testTags,
-            timestampMs: timestampMs,
+            timestampMs: NSNumber(value: timestampMs),
             resolve: mockResolve,
             reject: mockReject
         )
@@ -98,9 +98,9 @@ internal class DdTraceTests: XCTestCase {
 
         let spanDuration: TimeInterval = 10.042
         let spanDurationMs = Int64(spanDuration * 1_000)
-        let finishTimestampMs = timestampMs + spanDurationMs
+        let finishTimestampMs = Int64(timestampMs) + spanDurationMs
         let finishingContext = NSDictionary(dictionary: ["last_key": "last_value"])
-        tracer.finishSpan(spanId: spanID, context: finishingContext, timestampMs: finishTimestampMs, resolve: mockResolve, reject: mockReject)
+        tracer.finishSpan(spanId: spanID, context: finishingContext, timestampMs: NSNumber(value: finishTimestampMs), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Array(tracer.spanDictionary.keys), [])
         XCTAssertEqual(

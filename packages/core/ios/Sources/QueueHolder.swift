@@ -9,6 +9,15 @@ import React
 
 internal let sharedQueue = DispatchQueue(label: "dd-react-native-sdk")
 
+// This file will move to Obj-c later, just keeping it for now for compatibility with both obj-c and swift modules
+@objc
+open class RNQueue: NSObject {
+    @objc
+    public static func getSharedQueue() -> DispatchQueue {
+        return sharedQueue
+    }
+}
+
 protocol DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void)
 }

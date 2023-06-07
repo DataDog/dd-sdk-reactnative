@@ -7,14 +7,8 @@
 import Foundation
 import Datadog
 
-@objc(DdTrace)
-class RNDdTrace: NSObject {
-
-    @objc(requiresMainQueueSetup)
-    static func requiresMainQueueSetup() -> Bool {
-        return false
-    }
-
+@objc
+open class DdTraceImplementation: NSObject {
     private lazy var tracer: OTTracer = tracerProvider()
     private let tracerProvider: () -> OTTracer
     private(set) var spanDictionary = [NSString: OTSpan]()
@@ -23,16 +17,15 @@ class RNDdTrace: NSObject {
         self.tracerProvider = tracerProvider
     }
 
-    override convenience init() {
+    @objc
+    public override convenience init() {
         self.init { Tracer.initialize(configuration: Tracer.Configuration()) }
     }
-    @objc(methodQueue)
-    let methodQueue: DispatchQueue = sharedQueue
 
-    @objc(startSpan:withContext:withTimestampms:withResolver:withRejecter:)
-    func startSpan(operation: String, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    @objc
+    open func startSpan(operation: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let id = UUID().uuidString as NSString
-        let timeIntervalSince1970: TimeInterval = Double(timestampMs) / 1_000
+        let timeIntervalSince1970: TimeInterval = Double(truncating: timestampMs) / 1_000
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
 
         objc_sync_enter(self)
@@ -47,15 +40,15 @@ class RNDdTrace: NSObject {
         resolve(id)
     }
 
-    @objc(finishSpan:withContext:withTimestampms:withResolver:withRejecter:)
-    func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Int64, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    @objc
+    open func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         objc_sync_enter(self)
         let optionalSpan = spanDictionary.removeValue(forKey: spanId)
         objc_sync_exit(self)
 
         if let span = optionalSpan {
             set(tags: castAttributesToSwift(context).mergeWithGlobalAttributes(), to: span)
-            let timeIntervalSince1970: TimeInterval = Double(timestampMs) / 1_000
+            let timeIntervalSince1970: TimeInterval = Double(truncating: timestampMs) / 1_000
             span.finish(at: Date(timeIntervalSince1970: timeIntervalSince1970))
         }
         
