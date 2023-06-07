@@ -10,23 +10,23 @@ import XCTest
 
 internal class DdRumTests: XCTestCase {
     private let mockNativeRUM = MockNativeRUM()
-    private var rum: RNDdRum! // swiftlint:disable:this implicitly_unwrapped_optional
+    private var rum: DdRumImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
     
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 
-    private let randomTimestamp = Int64.random(in: 0...Int64.max)
+    private let randomTimestamp = NSNumber(value: Int64.random(in: 0...Int64.max))
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        rum = RNDdRum { self.mockNativeRUM }
+        rum = DdRumImplementation { self.mockNativeRUM }
     }
 
     func testItInitializesNativeRumOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize RUM once")
 
-        let rum = RNDdRum { [unowned self] in
+        let rum = DdRumImplementation { [unowned self] in
             expectation.fulfill()
             return self.mockNativeRUM
         }
@@ -40,7 +40,7 @@ internal class DdRumTests: XCTestCase {
 
     // TODO: Fix this test by removing ambiguity in names
 //    func testInternalTimestampKeyValue() {
-//        XCTAssertEqual(RNDdRum.timestampKey, CrossPlatformAttributes.timestampInMilliseconds)
+//        XCTAssertEqual(DdRumImplementation.timestampKey, CrossPlatformAttributes.timestampInMilliseconds)
 //    }
 
     func testStartView() throws {
@@ -52,7 +52,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStopView() throws {
@@ -64,7 +64,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStartAction() throws {
@@ -76,7 +76,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStopActionWithoutStarting() {
@@ -95,7 +95,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testAddAction() throws {
@@ -107,7 +107,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStartResource() throws {
@@ -119,7 +119,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStopResource() throws {
@@ -131,7 +131,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStopResourceWithMissingSize() throws {
@@ -143,7 +143,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testStopResourceWithExternalTimings() throws {
@@ -226,7 +226,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testAddError() throws {
@@ -238,7 +238,7 @@ internal class DdRumTests: XCTestCase {
         let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
-        XCTAssertEqual(lastAttributes[RNDdRum.timestampKey] as? Int64, randomTimestamp)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? NSNumber, randomTimestamp)
     }
 
     func testAddTiming() throws {

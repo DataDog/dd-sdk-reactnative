@@ -12,7 +12,7 @@ class ModulesTest: XCTestCase {
 
     func testAllModulesUseSameQueue() {
         XCTAssertTrue(sharedQueue === RNDdSdk().methodQueue)
-        XCTAssertTrue(sharedQueue === RNDdRum().methodQueue)
+        XCTAssertTrue(sharedQueue === DdRum().methodQueue)
         XCTAssertTrue(sharedQueue === DdLogs().methodQueue)
         XCTAssertTrue(sharedQueue === DdTrace().methodQueue)
     }
@@ -26,7 +26,7 @@ class ModulesTest: XCTestCase {
 
         // Then
         XCTAssertTrue(RNDdSdk().responds(to: methodQueueSelector))
-        XCTAssertTrue(RNDdRum().responds(to: methodQueueSelector))
+        XCTAssertTrue(DdRum().responds(to: methodQueueSelector))
         XCTAssertTrue(DdLogs().responds(to: methodQueueSelector))
         XCTAssertTrue(DdTrace().responds(to: methodQueueSelector))
     }
