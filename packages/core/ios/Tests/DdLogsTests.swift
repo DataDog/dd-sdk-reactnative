@@ -12,7 +12,7 @@ func mockReject(args: String?, arg: String?, err: Error?) {}
 
 internal class DdLogsTests: XCTestCase {
     private let mockNativeLogger = MockNativeLogger()
-    private lazy var logger = RNDdLogs({ self.mockNativeLogger }, { true })
+    private lazy var logger = DdLogsImplementation({ self.mockNativeLogger }, { true })
 
     private let testMessage_swift: String = "message"
     private let testMessage_objc: NSString = "message"
@@ -48,7 +48,7 @@ internal class DdLogsTests: XCTestCase {
         // Given
         let expectation = self.expectation(description: "Initialize logger once")
 
-        let logger = RNDdLogs({ [unowned self] in
+        let logger = DdLogsImplementation({ [unowned self] in
             expectation.fulfill()
             return self.mockNativeLogger
         }, { true })
@@ -346,7 +346,7 @@ internal class DdLogsTests: XCTestCase {
     
     func testDoesNotInitializeLoggerBeforeSdkIsInitialized() throws {
         var isInitialized = false
-        let newLogger = RNDdLogs({ self.mockNativeLogger }, { isInitialized })
+        let newLogger = DdLogsImplementation({ self.mockNativeLogger }, { isInitialized })
         
         newLogger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
         newLogger.info(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
