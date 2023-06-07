@@ -96,6 +96,9 @@ module.exports = {
             .mockImplementation(() => new Promise(resolve => resolve())),
         addTiming: jest
             .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addFeatureFlagEvaluation: jest
+            .fn()
             .mockImplementation(() => new Promise(resolve => resolve()))
     },
 
