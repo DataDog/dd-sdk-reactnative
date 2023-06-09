@@ -14,10 +14,11 @@ import { DdLogs, DdRum, DdTrace, DdSdkReactNative } from '../index';
  *
  * 1. You added/renamed a private property to one of the tested class
  * In this case, add the private property to the list of private properties below.
- * There are not supposed to be used by our customers so they aren't mocked
+ * There are not supposed to be used by our customers so they aren't mocked.
  *
  * 2. You added/renamed/deleted a public property from one of the tested class
- * In this case, make sure the public property is correctly mocked
+ * In this case, make sure the public property is correctly mocked.
+ * ⚠️ Only arrow functions will appear in properties!
  */
 
 const privateProperties = {
@@ -61,18 +62,28 @@ const privateProperties = {
     ]
 };
 
+const getPublicPropertiesFromModule = (
+    module: Record<string, unknown>,
+    moduleName: string
+) => {
+    return Object.keys(module).filter(
+        key => !privateProperties[moduleName].includes(key)
+    );
+};
+
 describe('official mock', () => {
     describe.each([{ DdTrace }, { DdLogs }, { DdRum }, { DdSdkReactNative }])(
         'mocks module: %s',
         moduleObject => {
+            // We get the name of the module and the module from our object list
             const [moduleName, module] = Object.entries(moduleObject)[0];
-            it.each(
-                Object.keys(module).filter(
-                    key => !privateProperties[moduleName].includes(key)
-                )
-            )('for key: %s', key => {
-                expect(mock[moduleName][key]).not.toBeUndefined();
-            });
+
+            it.each(getPublicPropertiesFromModule(module, moduleName))(
+                'for key: %s',
+                key => {
+                    expect(mock[moduleName][key]).not.toBeUndefined();
+                }
+            );
         }
     );
 });
