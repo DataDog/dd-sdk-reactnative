@@ -42,7 +42,7 @@ class DdLogsWrapper implements DdLogsType {
     private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
     private logEventMapper = generateEventMapper(undefined);
 
-    debug(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+    debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -54,9 +54,9 @@ class DdLogsWrapper implements DdLogsType {
             );
         }
         return this.log(args[0], args[1] || {}, 'debug');
-    }
+    };
 
-    info(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+    info = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -68,9 +68,9 @@ class DdLogsWrapper implements DdLogsType {
             );
         }
         return this.log(args[0], args[1] || {}, 'info');
-    }
+    };
 
-    warn(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+    warn = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -82,9 +82,9 @@ class DdLogsWrapper implements DdLogsType {
             );
         }
         return this.log(args[0], args[1] || {}, 'warn');
-    }
+    };
 
-    error(...args: LogArguments | LogWithErrorArguments): Promise<void> {
+    error = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -96,7 +96,7 @@ class DdLogsWrapper implements DdLogsType {
             );
         }
         return this.log(args[0], args[1] || {}, 'error');
-    }
+    };
 
     /**
      * Since the InternalLog does not have a verbosity set yet in this case,
