@@ -21,11 +21,11 @@ const timeProvider = new TimeProvider();
 class DdTraceWrapper implements DdTraceType {
     private nativeTrace: DdNativeTraceType = NativeModules.DdTrace;
 
-    startSpan(
+    startSpan = (
         operation: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<string> {
+    ): Promise<string> => {
         const spanId = bufferNativeCallReturningId(() =>
             this.nativeTrace.startSpan(operation, context, timestampMs)
         );
@@ -34,19 +34,19 @@ class DdTraceWrapper implements DdTraceType {
             SdkVerbosity.DEBUG
         );
         return spanId;
-    }
+    };
 
-    finishSpan(
+    finishSpan = (
         spanId: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log(`Finishing span #${spanId}`, SdkVerbosity.DEBUG);
         return bufferNativeCallWithId(
             id => this.nativeTrace.finishSpan(id, context, timestampMs),
             spanId
         );
-    }
+    };
 }
 
 const DdTrace: DdTraceType = new DdTraceWrapper();
