@@ -198,7 +198,7 @@ describe('DdLogs', () => {
         });
     });
 
-    describe.only('when SDK is not initialized', () => {
+    describe('when SDK is not initialized', () => {
         beforeEach(() => {
             jest.clearAllMocks();
             DdLogs.unregisterLogEventMapper();
