@@ -22,7 +22,6 @@ const DatadogProviderMock = ({ children }) => {
 module.exports = {
     ...actualDatadog,
     DdSdkReactNative: {
-        ...actualDatadog.DdSdkReactNative,
         initialize: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),

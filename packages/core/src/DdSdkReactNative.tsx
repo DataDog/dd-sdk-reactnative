@@ -70,14 +70,14 @@ export class DdSdkReactNative {
      * @param configuration the configuration for the SDK library
      * @returns a Promise.
      */
-    static async initialize(
+    static initialize = async (
         configuration: DdSdkReactNativeConfiguration
-    ): Promise<void> {
+    ): Promise<void> => {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
         });
         DdSdkReactNative.enableFeatures(configuration);
-    }
+    };
 
     private static initializeNativeSDK = async (
         configuration: DdSdkReactNativeConfiguration,
@@ -209,14 +209,14 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static async setAttributes(attributes: Attributes): Promise<void> {
+    static setAttributes = async (attributes: Attributes): Promise<void> => {
         InternalLog.log(
             `Setting attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
         await DdSdk.setAttributes(attributes);
         AttributesSingleton.getInstance().setAttributes(attributes);
-    }
+    };
 
     /**
      * Set the user information.
@@ -224,24 +224,24 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    static async setUser(user: UserInfo): Promise<void> {
+    static setUser = async (user: UserInfo): Promise<void> => {
         InternalLog.log(
             `Setting user ${JSON.stringify(user)}`,
             SdkVerbosity.DEBUG
         );
         await DdSdk.setUser(user);
         UserInfoSingleton.getInstance().setUserInfo(user);
-    }
+    };
 
     /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: One of TrackingConsent values.
      * @returns a Promise.
      */
-    static setTrackingConsent(consent: TrackingConsent): Promise<void> {
+    static setTrackingConsent = (consent: TrackingConsent): Promise<void> => {
         InternalLog.log(`Setting consent ${consent}`, SdkVerbosity.DEBUG);
         return DdSdk.setTrackingConsent(consent);
-    }
+    };
 
     private static buildConfiguration = (
         configuration: DdSdkReactNativeConfiguration
