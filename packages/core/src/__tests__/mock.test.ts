@@ -5,9 +5,9 @@
  */
 
 import * as mock from '../../jest/mock';
-import { DdLogs, DdTrace } from '../index';
+import { DdLogs, DdRum, DdTrace } from '../index';
 
-const ignoredProperties = {
+const privateProperties = {
     DdTrace: ['nativeTrace'],
     DdLogs: [
         'nativeLogs',
@@ -17,17 +17,25 @@ const ignoredProperties = {
         'printLogTracked',
         'log',
         'logWithError'
+    ],
+    DdRum: [
+        'nativeRum',
+        'errorEventMapper',
+        'resourceEventMapper',
+        'actionEventMapper',
+        'callNativeStopAction',
+        'getStopActionNativeCallArgs'
     ]
 };
 
 describe('official mock', () => {
-    describe.each([{ DdTrace }, { DdLogs }])(
+    describe.each([{ DdTrace }, { DdLogs }, { DdRum }])(
         'mocks module: %s',
         moduleObject => {
             const [moduleName, module] = Object.entries(moduleObject)[0];
             it.each(
                 Object.getOwnPropertyNames(module).filter(
-                    key => !ignoredProperties[moduleName].includes(key)
+                    key => !privateProperties[moduleName].includes(key)
                 )
             )('for key: %s', key => {
                 expect(mock[moduleName][key]).not.toBeUndefined();

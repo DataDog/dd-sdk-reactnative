@@ -38,12 +38,12 @@ class DdRumWrapper implements DdRumType {
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
 
-    startView(
+    startView = (
         key: string,
         name: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log(
             `Starting RUM View “${name}” #${key}`,
             SdkVerbosity.DEBUG
@@ -51,25 +51,25 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() =>
             this.nativeRum.startView(key, name, context, timestampMs)
         );
-    }
+    };
 
-    stopView(
+    stopView = (
         key: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log(`Stopping RUM View #${key}`, SdkVerbosity.DEBUG);
         return bufferVoidNativeCall(() =>
             this.nativeRum.stopView(key, context, timestampMs)
         );
-    }
+    };
 
-    startAction(
+    startAction = (
         type: RumActionType,
         name: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log(
             `Starting RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
@@ -78,9 +78,9 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() =>
             this.nativeRum.startAction(type, name, context, timestampMs)
         );
-    }
+    };
 
-    stopAction(
+    stopAction = (
         ...args:
             | [
                   type: RumActionType,
@@ -89,7 +89,7 @@ class DdRumWrapper implements DdRumType {
                   timestampMs?: number
               ]
             | [context?: object, timestampMs?: number]
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log('Stopping current RUM Action', SdkVerbosity.DEBUG);
         const nativeCallArgs = this.getStopActionNativeCallArgs(args);
         this.lastActionData = undefined;
@@ -97,7 +97,7 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
         return this.callNativeStopAction(...nativeCallArgs);
-    }
+    };
 
     private callNativeStopAction = (
         type: RumActionType,
@@ -186,13 +186,13 @@ class DdRumWrapper implements DdRumType {
         return null;
     };
 
-    addAction(
+    addAction = (
         type: RumActionType,
         name: string,
         context: object = {},
         timestampMs: number = timeProvider.now(),
         actionContext?: GestureResponderEvent
-    ): Promise<void> {
+    ): Promise<void> => {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
             type,
             name,
@@ -215,15 +215,15 @@ class DdRumWrapper implements DdRumType {
                 mappedEvent.timestampMs
             )
         );
-    }
+    };
 
-    startResource(
+    startResource = (
         key: string,
         method: string,
         url: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         InternalLog.log(
             `Starting RUM Resource #${key} ${method}: ${url}`,
             SdkVerbosity.DEBUG
@@ -231,9 +231,9 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() =>
             this.nativeRum.startResource(key, method, url, context, timestampMs)
         );
-    }
+    };
 
-    stopResource(
+    stopResource = (
         key: string,
         statusCode: number,
         kind: ResourceKind,
@@ -241,7 +241,7 @@ class DdRumWrapper implements DdRumType {
         context: object = {},
         timestampMs: number = timeProvider.now(),
         resourceContext?: XMLHttpRequest
-    ): Promise<void> {
+    ): Promise<void> => {
         const mappedEvent = this.resourceEventMapper.applyEventMapper({
             key,
             statusCode,
@@ -285,15 +285,15 @@ class DdRumWrapper implements DdRumType {
                 mappedEvent.timestampMs
             )
         );
-    }
+    };
 
-    addError(
+    addError = (
         message: string,
         source: ErrorSource,
         stacktrace: string,
         context: object = {},
         timestampMs: number = timeProvider.now()
-    ): Promise<void> {
+    ): Promise<void> => {
         const mappedEvent = this.errorEventMapper.applyEventMapper({
             message,
             source,
@@ -316,22 +316,25 @@ class DdRumWrapper implements DdRumType {
                 mappedEvent.timestampMs
             )
         );
-    }
+    };
 
-    addTiming(name: string): Promise<void> {
+    addTiming = (name: string): Promise<void> => {
         InternalLog.log(
             `Adding timing “${name}” to RUM View`,
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() => this.nativeRum.addTiming(name));
-    }
+    };
 
-    stopSession(): Promise<void> {
+    stopSession = (): Promise<void> => {
         InternalLog.log('Stopping RUM Session', SdkVerbosity.DEBUG);
         return bufferVoidNativeCall(() => this.nativeRum.stopSession());
-    }
+    };
 
-    addFeatureFlagEvaluation(name: string, value: unknown): Promise<void> {
+    addFeatureFlagEvaluation = (
+        name: string,
+        value: unknown
+    ): Promise<void> => {
         InternalLog.log(
             `Adding feature flag evaluation for name: ${name} with value: ${JSON.stringify(
                 value
@@ -341,7 +344,7 @@ class DdRumWrapper implements DdRumType {
         return bufferVoidNativeCall(() =>
             this.nativeRum.addFeatureFlagEvaluation(name, { value })
         );
-    }
+    };
 
     registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {
         this.errorEventMapper = generateErrorEventMapper(errorEventMapper);
