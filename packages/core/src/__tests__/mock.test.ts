@@ -5,19 +5,33 @@
  */
 
 import * as mock from '../../jest/mock';
-import { DdTrace } from '../index';
+import { DdLogs, DdTrace } from '../index';
 
 const ignoredProperties = {
-    DdTrace: ['nativeTrace']
+    DdTrace: ['nativeTrace'],
+    DdLogs: [
+        'nativeLogs',
+        'logEventMapper',
+        'printLogDroppedSdkNotInitialized',
+        'printlogDroppedByMapper',
+        'printLogTracked',
+        'log',
+        'logWithError'
+    ]
 };
 
 describe('official mock', () => {
-    describe.each([{ DdTrace }])('mocks module: %s', moduleObject => {
-        const [moduleName, module] = Object.entries(moduleObject)[0];
-        it.each(Object.getOwnPropertyNames(module))('for key: %s', key => {
-            if (!ignoredProperties[moduleName].includes(key)) {
+    describe.each([{ DdTrace }, { DdLogs }])(
+        'mocks module: %s',
+        moduleObject => {
+            const [moduleName, module] = Object.entries(moduleObject)[0];
+            it.each(
+                Object.getOwnPropertyNames(module).filter(
+                    key => !ignoredProperties[moduleName].includes(key)
+                )
+            )('for key: %s', key => {
                 expect(mock[moduleName][key]).not.toBeUndefined();
-            }
-        });
-    });
+            });
+        }
+    );
 });
