@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@datadog/mobile-react-native": "../packages/core",
+    "@datadog/mobile-react-native": "file:../packages/core",
     "react": "18.2.0",
     "react-native": "0.71.10"
   },

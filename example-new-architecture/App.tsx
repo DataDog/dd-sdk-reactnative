@@ -1,3 +1,14 @@
+import {
+  DdSdkReactNativeConfiguration,
+  SdkVerbosity,
+  UploadFrequency,
+  BatchSize,
+  DdSdkReactNative,
+  DdRum,
+  RumActionType,
+  DdLogs,
+  DdTrace,
+} from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
@@ -17,6 +28,32 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+
+(async () => {
+  const config = new DdSdkReactNativeConfiguration(
+    CLIENT_TOKEN,
+    ENVIRONMENT,
+    APPLICATION_ID,
+    true,
+    true,
+    true,
+  );
+  config.sessionSamplingRate = 100;
+  config.verbosity = SdkVerbosity.DEBUG;
+  config.telemetrySampleRate = 100;
+  config.uploadFrequency = UploadFrequency.FREQUENT;
+  config.batchSize = BatchSize.SMALL;
+  await DdSdkReactNative.initialize(config);
+  await DdRum.startView('main', 'Main');
+  setTimeout(async () => {
+    await DdRum.addTiming('one_second');
+  }, 1000);
+  await DdRum.addAction(RumActionType.CUSTOM, 'custom action');
+  await DdLogs.info('info log');
+  const spanId = await DdTrace.startSpan('test span');
+  await DdTrace.finishSpan(spanId);
+})();
 
 type SectionProps = PropsWithChildren<{
   title: string;
