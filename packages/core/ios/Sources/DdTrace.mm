@@ -14,7 +14,7 @@ RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(startSpan, withOperation:(NSString*)operation
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -23,7 +23,7 @@ RCT_REMAP_METHOD(startSpan, withOperation:(NSString*)operation
 
 RCT_REMAP_METHOD(finishSpan, withSpanId:(NSString*)spanId
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -39,11 +39,11 @@ RCT_REMAP_METHOD(finishSpan, withSpanId:(NSString*)spanId
 }
 #endif
 
-- (void)startSpan:(NSString *)operation context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)startSpan:(NSString *)operation context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddTraceImplementation startSpanWithOperation:operation context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)finishSpan:(NSString *)spanId context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)finishSpan:(NSString *)spanId context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddTraceImplementation finishSpanWithSpanId:spanId context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 

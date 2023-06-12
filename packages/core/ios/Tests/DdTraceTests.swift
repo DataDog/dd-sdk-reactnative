@@ -58,7 +58,7 @@ internal class DdTraceTests: XCTestCase {
         tracer.startSpan(
             operation: "test_span",
             context: testTags,
-            timestampMs: NSNumber(value: timestampInMilliseconds),
+            timestampMs: timestampInMilliseconds,
             resolve: mockResolve,
             reject: mockReject
         )
@@ -81,11 +81,11 @@ internal class DdTraceTests: XCTestCase {
 
     func testFinishingASpan() throws {
         let startDate = Date(timeIntervalSinceReferenceDate: 42.042)
-        let timestampMs = Int64(startDate.timeIntervalSince1970 * 1_000)
+        let timestampMs = startDate.timeIntervalSince1970 * 1_000
         tracer.startSpan(
             operation: "test_span",
             context: testTags,
-            timestampMs: NSNumber(value: timestampMs),
+            timestampMs: timestampMs,
             resolve: mockResolve,
             reject: mockReject
         )
@@ -97,10 +97,10 @@ internal class DdTraceTests: XCTestCase {
         XCTAssertEqual(startedSpan.finishTime, MockSpan.unfinished)
 
         let spanDuration: TimeInterval = 10.042
-        let spanDurationMs = Int64(spanDuration * 1_000)
-        let finishTimestampMs = Int64(timestampMs) + spanDurationMs
+        let spanDurationMs = spanDuration * 1_000
+        let finishTimestampMs = timestampMs + spanDurationMs
         let finishingContext = NSDictionary(dictionary: ["last_key": "last_value"])
-        tracer.finishSpan(spanId: spanID, context: finishingContext, timestampMs: NSNumber(value: finishTimestampMs), resolve: mockResolve, reject: mockReject)
+        tracer.finishSpan(spanId: spanID, context: finishingContext, timestampMs: finishTimestampMs, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Array(tracer.spanDictionary.keys), [])
         XCTAssertEqual(

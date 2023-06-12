@@ -116,43 +116,43 @@ open class DdRumImplementation: NSObject {
     }
 
     @objc
-    open func startView(key: String, name: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func startView(key: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.startView(key: key, name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func stopView(key: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func stopView(key: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.stopView(key: key, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func startAction(type: String, name: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.startUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func stopAction(type: String, name: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.stopUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func addAction(type: String, name: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func addAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.startResourceLoading(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    open func stopResource(key: String, statusCode: Int64, kind: String, size: NSNumber, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func stopResource(key: String, statusCode: Int64, kind: String, size: Double, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let mutableContext = NSMutableDictionary(dictionary: context)
         if let resourceTimings = mutableContext.object(forKey: Self.resourceTimingsKey) as? [String: Any] {
             mutableContext.removeObject(forKey: Self.resourceTimingsKey)
@@ -164,14 +164,14 @@ open class DdRumImplementation: NSObject {
             resourceKey: key,
             statusCode: Int(statusCode),
             kind: RUMResourceType(from: kind),
-            size: Int64(truncating: size) == Self.missingResourceSize ? nil : Int64(truncating: size),
+            size: Int64(size) == Self.missingResourceSize ? nil : Int64(size),
             attributes: attributes(from: mutableContext, with: timestampMs)
         )
         resolve(nil)
     }
 
     @objc
-    open func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addError(message: message, type: nil, source: RUMErrorSource(from: source), stack: stacktrace, attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
         resolve(nil)
     }
@@ -199,7 +199,7 @@ open class DdRumImplementation: NSObject {
 
     // MARK: - Private methods
 
-    private func attributes(from context: NSDictionary, with timestampMs: NSNumber) -> [String: Encodable] {
+    private func attributes(from context: NSDictionary, with timestampMs: Double) -> [String: Encodable] {
         var context = context as? [String: Any] ?? [:]
         context[Self.timestampKey] = timestampMs
         return castAttributesToSwift(context)

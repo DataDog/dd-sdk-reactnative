@@ -12,8 +12,8 @@ type RawError = {
     message: string;
     source: ErrorSource;
     stacktrace: string;
-    context?: object;
-    timestampMs?: number;
+    context: object;
+    timestampMs: number;
 };
 
 type ErrorEvent = RawError & AdditionalEventDataForMapper;
@@ -22,8 +22,8 @@ type NativeError = {
     message: string;
     source: ErrorSource;
     stacktrace: string;
-    context?: object;
-    timestampMs?: number;
+    context: object;
+    timestampMs: number;
 };
 
 export type ErrorEventMapper = (event: ErrorEvent) => ErrorEvent | null;

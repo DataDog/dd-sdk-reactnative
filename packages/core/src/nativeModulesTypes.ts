@@ -82,8 +82,8 @@ export interface DdNativeRumType extends NativeDdRum {
     startAction(
         type: ActionType,
         name: string,
-        context?: object,
-        timestampMs?: number
+        context: object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -96,8 +96,8 @@ export interface DdNativeRumType extends NativeDdRum {
     stopAction(
         type: ActionType,
         name: string,
-        context?: object,
-        timestampMs?: number
+        context: object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -110,8 +110,8 @@ export interface DdNativeRumType extends NativeDdRum {
     addAction(
         type: ActionType,
         name: string,
-        context?: object,
-        timestampMs?: number
+        context: object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -127,9 +127,9 @@ export interface DdNativeRumType extends NativeDdRum {
         key: string,
         statusCode: number,
         kind: ResourceKind,
-        size?: number,
-        context?: object,
-        timestampMs?: number
+        size: number,
+        context: object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -144,7 +144,7 @@ export interface DdNativeRumType extends NativeDdRum {
         message: string,
         source: ErrorSource,
         stacktrace: string,
-        context?: object,
-        timestampMs?: number
+        context: object,
+        timestampMs: number
     ): Promise<void>;
 }

@@ -23,9 +23,9 @@ open class DdTraceImplementation: NSObject {
     }
 
     @objc
-    open func startSpan(operation: String, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func startSpan(operation: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let id = UUID().uuidString as NSString
-        let timeIntervalSince1970: TimeInterval = Double(truncating: timestampMs) / 1_000
+        let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
 
         objc_sync_enter(self)
@@ -41,14 +41,14 @@ open class DdTraceImplementation: NSObject {
     }
 
     @objc
-    open func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: NSNumber, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    open func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         objc_sync_enter(self)
         let optionalSpan = spanDictionary.removeValue(forKey: spanId)
         objc_sync_exit(self)
 
         if let span = optionalSpan {
             set(tags: castAttributesToSwift(context).mergeWithGlobalAttributes(), to: span)
-            let timeIntervalSince1970: TimeInterval = Double(truncating: timestampMs) / 1_000
+            let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
             span.finish(at: Date(timeIntervalSince1970: timeIntervalSince1970))
         }
         

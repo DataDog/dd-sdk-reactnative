@@ -22,8 +22,8 @@ export interface Spec extends TurboModule {
      */
     startSpan(
         operation: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<string>;
 
     /**
@@ -34,8 +34,8 @@ export interface Spec extends TurboModule {
      */
     finishSpan(
         spanId: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 }
 

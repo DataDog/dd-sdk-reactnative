@@ -24,8 +24,8 @@ export interface Spec extends TurboModule {
     startView(
         key: string,
         name: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -34,11 +34,7 @@ export interface Spec extends TurboModule {
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the view stopped (in milliseconds). If not provided, current timestamp will be used.
      */
-    stopView(
-        key: string,
-        context?: Object,
-        timestampMs?: number
-    ): Promise<void>;
+    stopView(key: string, context: Object, timestampMs: number): Promise<void>;
 
     /**
      * Start tracking a RUM Action.
@@ -50,8 +46,8 @@ export interface Spec extends TurboModule {
     startAction(
         type: string,
         name: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -64,8 +60,8 @@ export interface Spec extends TurboModule {
     stopAction(
         type: string,
         name: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -78,8 +74,8 @@ export interface Spec extends TurboModule {
     addAction(
         type: string,
         name: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -94,8 +90,8 @@ export interface Spec extends TurboModule {
         key: string,
         method: string,
         url: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -111,9 +107,9 @@ export interface Spec extends TurboModule {
         key: string,
         statusCode: number,
         kind: string,
-        size?: number,
-        context?: Object,
-        timestampMs?: number
+        size: number,
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**
@@ -128,8 +124,8 @@ export interface Spec extends TurboModule {
         message: string,
         source: string,
         stacktrace: string,
-        context?: Object,
-        timestampMs?: number
+        context: Object,
+        timestampMs: number
     ): Promise<void>;
 
     /**

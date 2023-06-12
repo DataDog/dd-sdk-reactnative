@@ -15,7 +15,7 @@ RCT_EXPORT_MODULE()
 RCT_REMAP_METHOD(startView, withKey:(NSString*)key
                  withName:(NSString*)name
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -24,7 +24,7 @@ RCT_REMAP_METHOD(startView, withKey:(NSString*)key
 
 RCT_REMAP_METHOD(stopView, withKey:(NSString*)key
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -34,7 +34,7 @@ RCT_REMAP_METHOD(stopView, withKey:(NSString*)key
 RCT_REMAP_METHOD(startAction, startWithType:(NSString*)type
                  withName:(NSString*)name
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -44,7 +44,7 @@ RCT_REMAP_METHOD(startAction, startWithType:(NSString*)type
 RCT_REMAP_METHOD(stopAction, stopWithType:(NSString*)type
                  withName:(NSString*)name
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -54,7 +54,7 @@ RCT_REMAP_METHOD(stopAction, stopWithType:(NSString*)type
 RCT_REMAP_METHOD(addAction, addWithType:(NSString*)type
                  withName:(NSString*)name
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -65,7 +65,7 @@ RCT_REMAP_METHOD(startResource, withKey:(NSString*)key
                  withMethod:(NSString*)method
                  withUrl:(NSString*)url
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -75,9 +75,9 @@ RCT_REMAP_METHOD(startResource, withKey:(NSString*)key
 RCT_REMAP_METHOD(stopResource, withKey:(NSString*)key
                  withStatuscode:(double)statusCode
                  withKind:(NSString*)kind
-                 withSize:(NSNumber*)size
+                 withSize:(double)size
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -88,7 +88,7 @@ RCT_REMAP_METHOD(addError, withMessage:(NSString*)message
                  withSource:(NSString*)source
                  withStacktrace:(NSString*)stacktrace
                  withContext:(NSDictionary*)context
-                 withTimestampms:(NSNumber*)timestampMs
+                 withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -141,11 +141,11 @@ RCT_REMAP_METHOD(addFeatureFlagEvaluation, withName:(NSString*)name
     return [RNQueue getSharedQueue];
 }
 
-- (void)addAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)addAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation addActionWithType:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)addError:(NSString *)message source:(NSString *)source stacktrace:(NSString *)stacktrace context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)addError:(NSString *)message source:(NSString *)source stacktrace:(NSString *)stacktrace context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation addErrorWithMessage:message source:source stacktrace:stacktrace context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
@@ -157,23 +157,23 @@ RCT_REMAP_METHOD(addFeatureFlagEvaluation, withName:(NSString*)name
     [self.ddRumImplementation addTimingWithName:name resolve:resolve reject:reject];
 }
 
-- (void)startAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)startAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation startActionWithType:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)startResource:(NSString *)key method:(NSString *)method url:(NSString *)url context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)startResource:(NSString *)key method:(NSString *)method url:(NSString *)url context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation startResourceWithKey:key method:method url:url context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)startView:(NSString *)key name:(NSString *)name context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)startView:(NSString *)key name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation startViewWithKey:key name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)stopAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)stopAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation stopActionWithType:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)stopResource:(NSString *)key statusCode:(double)statusCode kind:(NSString *)kind size:(NSNumber *)size context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)stopResource:(NSString *)key statusCode:(double)statusCode kind:(NSString *)kind size:(double)size context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation stopResourceWithKey:key statusCode:statusCode kind:kind size:size context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
@@ -181,7 +181,7 @@ RCT_REMAP_METHOD(addFeatureFlagEvaluation, withName:(NSString*)name
     [self.ddRumImplementation stopSessionWithResolve:resolve reject:reject];
 }
 
-- (void)stopView:(NSString *)key context:(NSDictionary *)context timestampMs:(NSNumber *)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+- (void)stopView:(NSString *)key context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation stopViewWithKey:key context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
