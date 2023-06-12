@@ -36,6 +36,17 @@ To edit the Objective-C and Swift files, open `example/ios/DdSdkReactNativeExamp
 
 To edit the Kotlin files, open `example/android` in Android studio and find the source files at `ddsdkreactnative` under `Android`.
 
+#### With the new React Native architecture
+
+You can find an app ready for developing with the new architecture under `example-new-architecture/`.
+
+Create a `ddCredentials.js` file at the root of the app containing your datadog credentials:
+
+```js
+export const APPLICATION_ID = '<APP_ID>';
+export const CLIENT_TOKEN = '<CLIENT_TOKEN>';
+export const ENVIRONMENT = '<ENVIRONMENT>';
+```
 ### Command line tools
 
 You can run the samples, linters and test using the following commands: 
