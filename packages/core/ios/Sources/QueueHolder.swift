@@ -9,6 +9,14 @@ import React
 
 internal let sharedQueue = DispatchQueue(label: "dd-react-native-sdk")
 
+@objc
+open class RNQueue: NSObject {
+    @objc
+    public static func getSharedQueue() -> DispatchQueue {
+        return sharedQueue
+    }
+}
+
 protocol DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void)
 }

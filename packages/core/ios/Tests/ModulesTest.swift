@@ -11,10 +11,10 @@ import XCTest
 class ModulesTest: XCTestCase {
 
     func testAllModulesUseSameQueue() {
-        XCTAssertTrue(sharedQueue === RNDdSdk().methodQueue)
-        XCTAssertTrue(sharedQueue === RNDdRum().methodQueue)
-        XCTAssertTrue(sharedQueue === RNDdLogs().methodQueue)
-        XCTAssertTrue(sharedQueue === RNDdTrace().methodQueue)
+        XCTAssertTrue(sharedQueue === DdSdk().methodQueue)
+        XCTAssertTrue(sharedQueue === DdRum().methodQueue)
+        XCTAssertTrue(sharedQueue === DdLogs().methodQueue)
+        XCTAssertTrue(sharedQueue === DdTrace().methodQueue)
     }
 
     func testAllModulesExposeMethodQueueProperly() {
@@ -25,9 +25,9 @@ class ModulesTest: XCTestCase {
         let methodQueueSelector = #selector(getter: RCTModuleData.methodQueue)
 
         // Then
-        XCTAssertTrue(RNDdSdk().responds(to: methodQueueSelector))
-        XCTAssertTrue(RNDdRum().responds(to: methodQueueSelector))
-        XCTAssertTrue(RNDdLogs().responds(to: methodQueueSelector))
-        XCTAssertTrue(RNDdTrace().responds(to: methodQueueSelector))
+        XCTAssertTrue(DdSdk().responds(to: methodQueueSelector))
+        XCTAssertTrue(DdRum().responds(to: methodQueueSelector))
+        XCTAssertTrue(DdLogs().responds(to: methodQueueSelector))
+        XCTAssertTrue(DdTrace().responds(to: methodQueueSelector))
     }
 }

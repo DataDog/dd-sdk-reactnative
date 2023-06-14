@@ -8,7 +8,6 @@ package com.datadog.reactnative
 
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
@@ -47,7 +46,7 @@ import org.mockito.quality.Strictness
 @MockitoSettings(strictness = Strictness.LENIENT)
 internal class DdTraceTest {
 
-    lateinit var testedTrace: DdTrace
+    lateinit var testedTrace: DdTraceImplementation
 
     @Mock
     lateinit var mockTracer: Tracer
@@ -92,9 +91,6 @@ internal class DdTraceTest {
         }
     }
 
-    @Mock
-    lateinit var mockReactContext: ReactApplicationContext
-
     @BeforeEach
     fun `set up`() {
         whenever(mockTracer.buildSpan(fakeOperation)) doReturn mockSpanBuilder
@@ -108,7 +104,7 @@ internal class DdTraceTest {
         whenever(mockSpanContext.toSpanId()) doReturn fakeSpanId
         whenever(mockSpanContext.toTraceId()) doReturn fakeTraceId
 
-        testedTrace = DdTrace(mockReactContext, tracerProvider = { mockTracer })
+        testedTrace = DdTraceImplementation(tracerProvider = { mockTracer })
     }
 
     @AfterEach

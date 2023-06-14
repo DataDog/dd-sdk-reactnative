@@ -5,7 +5,6 @@
  */
 
 import type { GestureResponderEvent } from 'react-native';
-import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -32,7 +31,9 @@ const timeProvider = new TimeProvider();
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
 class DdRumWrapper implements DdRumType {
-    private nativeRum: DdNativeRumType = NativeModules.DdRum;
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
+        .default;
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);

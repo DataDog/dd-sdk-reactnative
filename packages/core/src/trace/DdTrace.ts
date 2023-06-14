@@ -4,8 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeModules } from 'react-native';
-
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TimeProvider } from '../TimeProvider';
@@ -19,7 +17,9 @@ import type { DdTraceType } from '../types';
 const timeProvider = new TimeProvider();
 
 class DdTraceWrapper implements DdTraceType {
-    private nativeTrace: DdNativeTraceType = NativeModules.DdTrace;
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    private nativeTrace: DdNativeTraceType = require('../specs/NativeDdTrace')
+        .default;
 
     startSpan = (
         operation: string,

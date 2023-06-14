@@ -27,5 +27,11 @@ yarn add file:../packages/react-navigation
 (cd ios && pod install --repo-update)
 )
 
+(cd example-new-architecture &&
+yarn remove @datadog/mobile-react-native &&
+yarn add file:../packages/core
+(cd ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
+)
+
 git add .
 git commit -m "Bump to version $1"

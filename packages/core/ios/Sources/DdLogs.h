@@ -1,0 +1,24 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+#import <Foundation/Foundation.h>
+@class DdLogsImplementation;
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+#import <DdSdkReactNative/DdSdkReactNative.h>
+@interface DdLogs: NSObject <NativeDdLogsSpec>
+
+#else
+
+#import <React/RCTBridgeModule.h>
+@interface DdLogs : NSObject <RCTBridgeModule>
+
+#endif
+
+@property (nonatomic, strong) DdLogsImplementation* ddLogsImplementation;
+
+@end

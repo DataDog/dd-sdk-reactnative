@@ -23,4 +23,17 @@ Pod::Spec.new do |s|
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'
   end
+
+  
+  # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
+  # The `install_modules_dependencies` function is only available from RN 0.71, the new architecture is not
+  # supported on earlier RN versions.
+  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
+    s.pod_target_xcconfig = {
+      "DEFINES_MODULE" => "YES",
+      "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1"
+    }
+
+    install_modules_dependencies(s)
+  end
 end

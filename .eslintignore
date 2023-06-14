@@ -1,5 +1,6 @@
 node_modules
 example
+example-new-architecture
 dist
 lib
 // TODO remove that line once bridges updated

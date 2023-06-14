@@ -4,8 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeModules } from 'react-native';
-
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
@@ -39,7 +37,9 @@ const isLogWithError = (
 };
 
 class DdLogsWrapper implements DdLogsType {
-    private nativeLogs: DdNativeLogsType = NativeModules.DdLogs;
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    private nativeLogs: DdNativeLogsType = require('../specs/NativeDdLogs')
+        .default;
     private logEventMapper = generateEventMapper(undefined);
 
     debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {

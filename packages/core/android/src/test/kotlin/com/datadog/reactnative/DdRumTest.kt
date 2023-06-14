@@ -17,7 +17,6 @@ import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import fr.xgouchet.elmyr.Forge
@@ -51,13 +50,10 @@ internal class DdRumTest {
 
     // TODO: 14/12/2020 RUMM-925 Add the relevant unit tests after merging the feature/bridge branch
 
-    lateinit var testedDdRum: DdRum
+    lateinit var testedDdRum: DdRumImplementation
 
     @Mock
     lateinit var mockRumMonitor: RumMonitor
-
-    @Mock
-    lateinit var mockReactContext: ReactApplicationContext
 
     @Mock
     lateinit var mockPromise: Promise
@@ -83,7 +79,7 @@ internal class DdRumTest {
             }
         }
 
-        testedDdRum = DdRum(mockReactContext)
+        testedDdRum = DdRumImplementation()
     }
 
     @AfterEach

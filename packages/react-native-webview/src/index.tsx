@@ -5,7 +5,8 @@
  */
 import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { WebView as RNWebView } from 'react-native-webview';
-import { NativeModules } from 'react-native';
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
 import React, { useCallback } from 'react';
 
 import {
@@ -24,7 +25,7 @@ export const WebView = (props: Props) => {
         (event: WebViewMessageEvent) => {
             const message = event.nativeEvent.data;
             if (message.startsWith(DATADOG_MESSAGE_PREFIX)) {
-                NativeModules.DdSdk.consumeWebviewEvent(
+                NativeDdSdk?.consumeWebviewEvent(
                     message.substring(DATADOG_MESSAGE_PREFIX.length + 1)
                 );
             } else {
@@ -46,3 +47,12 @@ export const WebView = (props: Props) => {
 };
 
 export default WebView;
+
+/**
+ * We have to redefine the spec for the Native SDK here to be able to use the new architecture.
+ * We don't declare it in a separate file so we don't end up with a duplicate definition of the native module.
+ */
+interface PartialNativeDdSdkSpec extends TurboModule {
+    consumeWebviewEvent(message: string): Promise<void>;
+}
+const NativeDdSdk = TurboModuleRegistry.get<PartialNativeDdSdkSpec>('DdSdk');
