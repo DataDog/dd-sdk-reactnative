@@ -8,7 +8,7 @@ import Foundation
 import Datadog
 
 @objc
-open class DdTraceImplementation: NSObject {
+public class DdTraceImplementation: NSObject {
     private lazy var tracer: OTTracer = tracerProvider()
     private let tracerProvider: () -> OTTracer
     private(set) var spanDictionary = [NSString: OTSpan]()
@@ -23,7 +23,7 @@ open class DdTraceImplementation: NSObject {
     }
 
     @objc
-    open func startSpan(operation: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startSpan(operation: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let id = UUID().uuidString as NSString
         let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
@@ -41,7 +41,7 @@ open class DdTraceImplementation: NSObject {
     }
 
     @objc
-    open func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         objc_sync_enter(self)
         let optionalSpan = spanDictionary.removeValue(forKey: spanId)
         objc_sync_exit(self)

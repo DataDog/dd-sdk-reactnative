@@ -34,7 +34,7 @@ internal protocol NativeLogger {
 }
 
 @objc
-open class DdLogsImplementation: NSObject {
+public class DdLogsImplementation: NSObject {
     private lazy var logger: NativeLogger = loggerProvider()
     private let loggerProvider: () -> NativeLogger
     private let isSDKInitialized: () -> Bool
@@ -53,7 +53,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -64,7 +64,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -75,7 +75,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -86,7 +86,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -97,7 +97,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -108,7 +108,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -119,7 +119,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return
@@ -130,7 +130,7 @@ open class DdLogsImplementation: NSObject {
     }
 
     @objc
-    open func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if (!self.isSDKInitialized()) {
             reject(nil, Errors.logSentBeforeSDKInit, nil)
             return

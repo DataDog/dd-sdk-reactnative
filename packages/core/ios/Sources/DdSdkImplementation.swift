@@ -16,7 +16,7 @@ func getDefaultAppVersion() -> String {
 }
 
 @objc
-open class DdSdkImplementation: NSObject {
+public class DdSdkImplementation: NSObject {
     @objc var bridge: RCTBridge!
 
     let jsRefreshRateMonitor: RefreshRateMonitor
@@ -37,7 +37,7 @@ open class DdSdkImplementation: NSObject {
     
     // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    open func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
+    public func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
@@ -71,7 +71,7 @@ open class DdSdkImplementation: NSObject {
     }
 
     @objc
-    open func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
             Global.rum.addAttribute(forKey: key, value: value)
@@ -82,7 +82,7 @@ open class DdSdkImplementation: NSObject {
     }
 
     @objc
-    open func setUser(user: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setUser(user: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         var castedUser = castAttributesToSwift(user)
         let id = castedUser.removeValue(forKey: "id") as? String
         let name = castedUser.removeValue(forKey: "name") as? String
@@ -94,25 +94,25 @@ open class DdSdkImplementation: NSObject {
     }
 
     @objc
-    open func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog.set(trackingConsent: buildTrackingConsent(consent: trackingConsent))
         resolve(nil)
     }
     
     @objc
-    open func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog._internal.telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc
-    open func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }
     
     @objc
-    open func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
             try Datadog._internal.webEventBridge.send(message)
         } catch {
