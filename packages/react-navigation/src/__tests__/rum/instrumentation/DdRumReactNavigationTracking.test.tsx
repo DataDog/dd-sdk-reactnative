@@ -495,6 +495,66 @@ describe.each([
                     expect(DdRum.startView).toHaveBeenCalledTimes(2);
                 });
 
+                /**
+                 * This is a typical scenario when apps go inactive: a call prompt is displayed which
+                 * makes the app inactive.
+                 * Taking the call makes the app go into background, then it comes back in the foreground
+                 * when the call has ended.
+                 */
+                it('restarts last view when app goes inactive, then background then active', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+                    expect(DdRum.startView).toHaveBeenCalledTimes(1);
+
+                    // WHEN
+                    appStateMock.changeValue('inactive');
+                    appStateMock.changeValue('background');
+                    appStateMock.changeValue('inactive');
+                    appStateMock.changeValue('active');
+
+                    // THEN
+                    expect(DdRum.stopView).toHaveBeenCalledTimes(1);
+                    expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                });
+
+                it('does not create a new view if the appState transitions to active after registration of route', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+
+                    // WHEN
+                    appStateMock.changeValue('active');
+
+                    // THEN
+                    expect(DdRum.startView).toHaveBeenCalledTimes(1);
+                });
+
+                it('does not create a new view if the appState transitions to active after inactive', async () => {
+                    // GIVEN
+                    const navigationRef = createRef<any>();
+                    render(<FakeNavigator1 navigationRef={navigationRef} />);
+
+                    DdRumReactNavigationTracking.startTrackingViews(
+                        navigationRef.current
+                    );
+
+                    // WHEN
+                    appStateMock.changeValue('inactive');
+                    appStateMock.changeValue('active');
+
+                    // THEN
+                    expect(DdRum.startView).toHaveBeenCalledTimes(1);
+                });
+
                 it('does not stop view when no navigator attached', async () => {
                     // GIVEN
                     const navigationRef = createRef<any>();
@@ -549,7 +609,7 @@ describe.each([
 
                 // Note: currently iOS apps start in "unknown" app state, but should default to "inactive"
                 it.each(['unknown', 'inactive'])(
-                    'creates 2 RUM Views when the app starts in %s then becomes active',
+                    'creates only 1 RUM View when the app starts in %s then becomes active',
                     async initialAppState => {
                         // GIVEN
                         appStateMock.changeValue(initialAppState);
@@ -566,7 +626,7 @@ describe.each([
                         appStateMock.changeValue('active');
 
                         // THEN
-                        expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                        expect(DdRum.startView).toHaveBeenCalledTimes(1);
                     }
                 );
             }

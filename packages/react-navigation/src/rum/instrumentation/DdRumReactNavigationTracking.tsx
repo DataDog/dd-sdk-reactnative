@@ -203,7 +203,10 @@ export class DdRumReactNavigationTracking {
             if (appStateStatus === 'background') {
                 DdRumReactNavigationTracking.trackingState = 'NOT_TRACKING';
                 DdRum.stopView(key);
-            } else if (appStateStatus === 'active') {
+            } else if (
+                appStateStatus === 'active' &&
+                DdRumReactNavigationTracking.trackingState === 'NOT_TRACKING'
+            ) {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
                 DdRumReactNavigationTracking.trackingState = 'TRACKING';
