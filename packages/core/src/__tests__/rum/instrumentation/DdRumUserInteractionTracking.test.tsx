@@ -13,12 +13,14 @@ import {
     TouchableHighlight,
     TouchableNativeFeedback,
     TouchableWithoutFeedback,
-    StyleSheet
+    StyleSheet,
+    NativeModules
 } from 'react-native';
 import React from 'react';
 
-import { DdEventsInterceptor } from '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor';
+import type { DdNativeRumType } from '../../../nativeModulesTypes';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
+import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from '../../../sdk/DdSdk';
 
 const styles = StyleSheet.create({
@@ -29,9 +31,7 @@ const styles = StyleSheet.create({
     }
 });
 
-jest.mock(
-    '../../../rum/instrumentation/interactionTracking/DdEventsInterceptor'
-);
+const DdRum = NativeModules.DdRum as DdNativeRumType;
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
@@ -39,6 +39,7 @@ jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 beforeEach(() => {
     jest.setTimeout(20000);
     jest.clearAllMocks();
+    BufferSingleton.onInitialization();
 });
 
 afterEach(() => {
@@ -53,26 +54,27 @@ it('M intercept and send a RUM event W onPress { Button component }', async () =
     DdRumUserInteractionTracking.startTracking();
     const { getByText } = render(
         <View>
-            <Button
-                title="Click me"
-                accessibilityLabel="click_me_button"
-                onPress={event => {}}
-            />
+            <Button title="Click me" onPress={event => {}} />
         </View>
     );
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 it('M intercept only once W startTracking { called multiple times }', async () => {
@@ -82,26 +84,27 @@ it('M intercept only once W startTracking { called multiple times }', async () =
     DdRumUserInteractionTracking.startTracking();
     const { getByText } = render(
         <View>
-            <Button
-                title="Click me"
-                accessibilityLabel="click_me_button"
-                onPress={event => {}}
-            />
+            <Button title="Click me" onPress={event => {}} />
         </View>
     );
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 it('M intercept and send a RUM event W onPress { TouchableOpacity component }', async () => {
@@ -109,11 +112,7 @@ it('M intercept and send a RUM event W onPress { TouchableOpacity component }', 
     DdRumUserInteractionTracking.startTracking();
     const { getByText } = render(
         <View>
-            <TouchableOpacity
-                style={styles.button}
-                accessibilityLabel="click_me_touchable_opacity"
-                onPress={event => {}}
-            >
+            <TouchableOpacity style={styles.button} onPress={event => {}}>
                 <Text>Click me</Text>
             </TouchableOpacity>
         </View>
@@ -121,16 +120,21 @@ it('M intercept and send a RUM event W onPress { TouchableOpacity component }', 
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 it('M intercept and send a RUM event W onPress { TouchableHighlight component }', async () => {
@@ -148,16 +152,21 @@ it('M intercept and send a RUM event W onPress { TouchableHighlight component }'
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 it('M intercept and send a RUM event W onPress { TouchableNativeFeedback component }', async () => {
@@ -175,16 +184,21 @@ it('M intercept and send a RUM event W onPress { TouchableNativeFeedback compone
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback component }', async () => {
@@ -202,16 +216,21 @@ it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback compon
     const testButton = getByText('Click me');
 
     // WHEN
-    fireEvent(testButton, 'press');
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
 
     // THEN
-    const currentMockedEventsInterceptor =
-        DdEventsInterceptor.mock.instances[
-            DdEventsInterceptor.mock.instances.length - 1
-        ];
-    const mockedInterceptOnPressFunction =
-        currentMockedEventsInterceptor.interceptOnPress;
-    expect(mockedInterceptOnPressFunction).toBeCalled();
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_button',
+        expect.anything(),
+        expect.anything()
+    );
 });
 
 describe('startTracking memoization', () => {

@@ -58,7 +58,9 @@ export class DdRumUserInteractionTracking {
      * Please note that we are only considering as valid - for - tracking only the user interactions that have
      * a visible output (either an UI state change or a Resource request)
      */
-    static startTracking(): void {
+    static startTracking({
+        actionNameAttribute
+    }: { actionNameAttribute?: string } = {}): void {
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumUserInteractionTracking.isTracking) {
             InternalLog.log(
