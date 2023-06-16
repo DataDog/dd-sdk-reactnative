@@ -41,6 +41,8 @@ export class DdRumReactNavigationTracking {
 
     private static appStateSubscription?: NativeEventSubscription;
 
+    private static trackingState: 'TRACKING' | 'NOT_TRACKING' = 'NOT_TRACKING';
+
     static ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE =
         'A navigation change was detected but the RUM ViewEvent was dropped as the route was undefined.';
     static NULL_NAVIGATION_REF_ERROR_MESSAGE =
@@ -181,6 +183,7 @@ export class DdRumReactNavigationTracking {
         if (key != null && screenName != null) {
             // On iOS, the app can start in either "active", "background" or "unknown" state
             if (appStateStatus !== 'background') {
+                DdRumReactNavigationTracking.trackingState = 'TRACKING';
                 DdRum.startView(key, screenName);
             }
         }
@@ -198,10 +201,12 @@ export class DdRumReactNavigationTracking {
 
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
+                DdRumReactNavigationTracking.trackingState = 'NOT_TRACKING';
                 DdRum.stopView(key);
             } else if (appStateStatus === 'active') {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
+                DdRumReactNavigationTracking.trackingState = 'TRACKING';
                 DdRum.startView(key, screenName);
             }
         }
