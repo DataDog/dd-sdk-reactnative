@@ -77,6 +77,37 @@ it('M intercept and send a RUM event W onPress { Button component }', async () =
     );
 });
 
+it('M intercept and send a RUM event W onPress { custom action name prop used }', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking({
+        actionNameAttribute: 'testID'
+    });
+    const { getByText } = render(
+        <View>
+            <Button title="Click me" onPress={event => {}} />
+        </View>
+    );
+    const testButton = getByText('Click me');
+
+    // WHEN
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button',
+                testID: 'click_me_test_ID'
+            }
+        }
+    });
+
+    // THEN
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'click_me_test_ID',
+        expect.anything(),
+        expect.anything()
+    );
+});
+
 it('M intercept only once W startTracking { called multiple times }', async () => {
     // GIVEN
     DdRumUserInteractionTracking.startTracking();

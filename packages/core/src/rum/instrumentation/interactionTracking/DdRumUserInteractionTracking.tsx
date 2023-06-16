@@ -69,7 +69,9 @@ export class DdRumUserInteractionTracking {
             );
             return;
         }
-        DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor();
+        DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor(
+            { actionNameAttribute }
+        );
 
         const original = React.createElement;
         React.createElement = (

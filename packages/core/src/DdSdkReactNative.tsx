@@ -327,7 +327,9 @@ export class DdSdkReactNative {
             return;
         }
         if (configuration.trackInteractions) {
-            DdRumUserInteractionTracking.startTracking();
+            DdRumUserInteractionTracking.startTracking({
+                actionNameAttribute: configuration.actionNameAttribute
+            });
         }
 
         if (configuration.trackResources) {
