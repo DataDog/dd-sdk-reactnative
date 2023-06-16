@@ -77,7 +77,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         logEventMapper: event => event,
                         errorEventMapper: event => event,
                         resourceEventMapper: event => event,
-                        actionEventMapper: event => event
+                        actionEventMapper: event => event,
+                        actionNameAttribute: 'testID'
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -111,6 +112,7 @@ describe('DdSdkReactNativeConfiguration', () => {
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": [Function],
+                  "actionNameAttribute": "testID",
                   "additionalConfig": {
                     "additionalField": "fake-value",
                   },
