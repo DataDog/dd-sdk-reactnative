@@ -28,6 +28,14 @@ export class DdEventsInterceptor implements EventsInterceptor {
 
     private debouncingStartedTimestamp = Number.MIN_VALUE;
 
+    private actionNameAttribute?: string;
+
+    constructor({
+        actionNameAttribute
+    }: { actionNameAttribute?: string } = {}) {
+        this.actionNameAttribute = actionNameAttribute;
+    }
+
     interceptOnPress(...args: any[]): void {
         if (args.length > 0 && args[0] && args[0]._targetInst) {
             const currentTime = Date.now();
@@ -93,6 +101,13 @@ export class DdEventsInterceptor implements EventsInterceptor {
             const props = currentNode.memoizedProps;
             if (props && props[DD_ACTION_NAME_PROP]) {
                 return props[DD_ACTION_NAME_PROP];
+            }
+            if (
+                this.actionNameAttribute &&
+                props &&
+                props[this.actionNameAttribute]
+            ) {
+                return props[this.actionNameAttribute];
             }
             currentNode = currentNode.return;
         }

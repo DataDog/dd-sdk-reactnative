@@ -66,6 +66,60 @@ it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name
     expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeArguments);
 });
 
+it('M send a RUM Action event W interceptOnPress { arguments with actionNameAttribute } ', async () => {
+    // GIVEN
+    const eventsInterceptor = new DdEventsInterceptor({
+        actionNameAttribute: 'testID'
+    });
+    const fakeAccessibilityLabel = 'target_name';
+    const fakeTestId = 'testID';
+    const fakeArguments = {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: fakeAccessibilityLabel,
+                testID: fakeTestId
+            }
+        }
+    };
+
+    // WHEN
+    eventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1);
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeTestId);
+    expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeArguments);
+});
+
+it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name over actionNameAttribute } ', async () => {
+    // GIVEN
+    const eventsInterceptor = new DdEventsInterceptor({
+        actionNameAttribute: 'testID'
+    });
+    const fakeAccessibilityLabel = 'target_name';
+    const fakeTestId = 'testID';
+    const fakeDdActionLabel = 'DdActionLabel';
+    const fakeArguments = {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: fakeAccessibilityLabel,
+                'dd-action-name': fakeDdActionLabel,
+                testID: fakeTestId
+            }
+        }
+    };
+
+    // WHEN
+    eventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1);
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel);
+    expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeArguments);
+});
+
 it('M send a RUM Action event W interceptOnPress { arguments with dd-action-name on a parent node} ', async () => {
     // GIVEN
     const fakeAccessibilityLabel = 'target_name';

@@ -240,6 +240,19 @@ export class DdSdkReactNativeConfiguration {
      */
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
 
+    /**
+     * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
+     *
+     * For example if you set it to `testID`, the value of the `testID` prop is used as a custom action name:
+     *
+     * ```js
+     * <TouchableOpacity testID="Dismiss notification" onPress={() => dismiss()}>
+     * ```
+     *
+     * `dd-action-name` is favored when both attributes are present on an element.
+     */
+    public actionNameAttribute?: string;
+
     public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
@@ -280,6 +293,7 @@ export type AutoInstrumentationConfiguration = {
     readonly errorEventMapper?: ErrorEventMapper | null;
     readonly resourceEventMapper?: ResourceEventMapper | null;
     readonly actionEventMapper?: ActionEventMapper | null;
+    readonly actionNameAttribute?: string;
 };
 
 /**
@@ -295,6 +309,7 @@ export type AutoInstrumentationParameters = {
     readonly errorEventMapper: ErrorEventMapper | null;
     readonly resourceEventMapper: ResourceEventMapper | null;
     readonly actionEventMapper: ActionEventMapper | null;
+    readonly actionNameAttribute?: string;
 };
 
 /**
@@ -436,6 +451,13 @@ export const buildConfigurationFromPartialConfiguration = (
         {
             name: 'actionEventMapper',
             value: features.actionEventMapper
+        },
+        SdkConfiguration
+    );
+    setConfigurationAttribute(
+        {
+            name: 'actionNameAttribute',
+            value: features.actionNameAttribute
         },
         SdkConfiguration
     );
