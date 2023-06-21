@@ -1157,7 +1157,7 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 "@datadog/mobile-react-native@file:../packages/core":
-  version "1.7.1"
+  version "1.8.0-rc0"
 
 "@eslint-community/eslint-utils@^4.2.0":
   version "4.4.0"

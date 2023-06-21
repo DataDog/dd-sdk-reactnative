@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-webview",
-    "version": "1.7.1",
+    "version": "1.8.0-rc0",
     "description": "A client-side React Native module to interact with react-native-webview and Datadog",
     "keywords": [
         "datadog",
