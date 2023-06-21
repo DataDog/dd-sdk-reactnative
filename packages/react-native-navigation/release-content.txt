@@ -88,6 +88,11 @@ package/lib/typescript/core/src/sdk/EventMappers/utils/deepClone.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton
 package/lib/typescript/core/src/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/types.d.ts
+package/lib/typescript/core/src/specs
+package/lib/typescript/core/src/specs/NativeDdLogs.d.ts
+package/lib/typescript/core/src/specs/NativeDdRum.d.ts
+package/lib/typescript/core/src/specs/NativeDdSdk.d.ts
+package/lib/typescript/core/src/specs/NativeDdTrace.d.ts
 package/lib/typescript/core/src/trace
 package/lib/typescript/core/src/trace/DdTrace.d.ts
 package/lib/typescript/core/src/types.d.ts
