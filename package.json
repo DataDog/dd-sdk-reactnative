@@ -72,8 +72,7 @@
             "./jest.setup.js"
         ],
         "testPathIgnorePatterns": [
-            "/__utils__/",
-            "<rootDir>/expo/"
+            "/__utils__/"
         ],
         "transformIgnorePatterns": [
             "jest-runner"
