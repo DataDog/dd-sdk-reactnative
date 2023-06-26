@@ -60,6 +60,9 @@
     },
     "jest": {
         "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>/packages/core/src"
+        },
         "modulePathIgnorePatterns": [
             "<rootDir>/example/node_modules",
             "<rootDir>/packages/.*/lib/"
