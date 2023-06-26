@@ -73,7 +73,6 @@ package-lock.json
 
 # Release artifacts
 packages/**/*.tgz
-expo/**/*.tgz
 
 # Yarn ignored files
 .pnp.*

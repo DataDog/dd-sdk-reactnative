@@ -22,6 +22,8 @@ if linkage != nil
 end
 
 target 'ddSdkReactnativeExample' do
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+
   config = use_native_modules!
 
   # Flags change depending on the env values.
@@ -38,13 +40,11 @@ target 'ddSdkReactnativeExample' do
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
     # you should disable the next line.
-    :flipper_configuration => flipper_config,
+    # :flipper_configuration => flipper_config,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
   
-  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
-
   target 'ddSdkReactnativeExampleTests' do
     inherit! :complete
     # Pods for testing
