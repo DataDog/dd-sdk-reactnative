@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 import { fireEvent, render } from '@testing-library/react-native';
+import type { WebView as RNWebView } from 'react-native-webview';
 import { NativeModules } from 'react-native';
 import React from 'react';
 
@@ -50,5 +51,14 @@ describe('WebView', () => {
         expect(NativeModules.DdSdk.consumeWebviewEvent).toHaveBeenCalledWith(
             DdMessage
         );
+    });
+    it('forwards ref to the actual RN Webview component', async () => {
+        const ref = React.createRef<RNWebView>();
+
+        const { findByTestId } = render(
+            <WebView testID="webView" allowedHosts={[]} ref={ref} />
+        );
+        await findByTestId('webView');
+        expect(ref.current?.injectJavaScript).toBeDefined();
     });
 });

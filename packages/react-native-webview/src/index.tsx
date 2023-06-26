@@ -7,7 +7,7 @@ import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { WebView as RNWebView } from 'react-native-webview';
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
-import React, { useCallback } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import {
     DATADOG_MESSAGE_PREFIX,
@@ -19,7 +19,7 @@ type Props = WebViewProps & {
     injectedJavaScriptBeforeContentLoaded?: string;
 };
 
-export const WebView = (props: Props) => {
+const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
     const userDefinedOnMessage = props.onMessage;
     const onMessage = useCallback(
         (event: WebViewMessageEvent) => {
@@ -42,9 +42,12 @@ export const WebView = (props: Props) => {
                 props.allowedHosts,
                 props.injectedJavaScriptBeforeContentLoaded
             )}
+            ref={ref}
         />
     );
 };
+
+export const WebView = forwardRef(WebViewComponent);
 
 export default WebView;
 
