@@ -3,7 +3,7 @@
 set -e
 
 # Change version
-yarn run lerna version $1 --ignore-changes --skip-git
+yarn run lerna version $1 --ignore-changes --no-git-tag-version --no-push
 
 # prepare packages
 yarn
