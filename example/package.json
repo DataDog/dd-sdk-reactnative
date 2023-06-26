@@ -1,39 +1,42 @@
 {
-  "name": "dd-sdk-reactnative-example",
-  "description": "Example app for dd-sdk-reactnative",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start"
-  },
-  "dependencies": {
-    "@datadog/mobile-react-native": "file:../packages/core",
-    "@datadog/mobile-react-native-navigation": "file:../packages/react-native-navigation",
-    "@datadog/mobile-react-navigation": "file:../packages/react-navigation",
-    "@react-native-async-storage/async-storage": "^1.15.2",
-    "@react-native-community/masked-view": "^0.1.10",
-    "@react-navigation/bottom-tabs": "^6.3.1",
-    "@react-navigation/native": "^6.0.9",
-    "@react-navigation/stack": "^6.2.1",
-    "axios": "^0.21.1",
-    "react": "18.2.0",
-    "react-native": "0.71.2",
-    "react-native-crash-tester": "0.2.2",
-    "react-native-gesture-handler": "^1.10.1",
-    "react-native-navigation": "7.31.1",
-    "react-native-safe-area-context": "^3.1.9",
-    "react-native-screens": "^2.15.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
-    "@datadog/datadog-ci": "^1.11.0",
-    "@react-native-community/eslint-config": "^3.0.0",
-    "babel-plugin-module-resolver": "^4.0.0",
-    "metro-react-native-babel-preset": "0.73.7"
-  },
-  "packageManager": "yarn@3.4.1"
+    "name": "dd-sdk-reactnative-example",
+    "description": "Example app for dd-sdk-reactnative",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "android": "react-native run-android",
+        "ios": "react-native run-ios",
+        "start": "react-native start"
+    },
+    "dependencies": {
+        "@datadog/mobile-react-native": "workspace:packages/core",
+        "@datadog/mobile-react-native-navigation": "workspace:packages/react-native-navigation",
+        "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",
+        "@react-native-async-storage/async-storage": "^1.15.2",
+        "@react-native-community/masked-view": "^0.1.10",
+        "@react-navigation/bottom-tabs": "^6.3.1",
+        "@react-navigation/native": "^6.0.9",
+        "@react-navigation/stack": "^6.2.1",
+        "axios": "^0.21.1",
+        "react": "18.2.0",
+        "react-native": "0.71.2",
+        "react-native-crash-tester": "0.2.2",
+        "react-native-gesture-handler": "^1.10.1",
+        "react-native-navigation": "7.31.1",
+        "react-native-safe-area-context": "^3.1.9",
+        "react-native-screens": "^2.15.2"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.20.0",
+        "@babel/preset-env": "^7.20.0",
+        "@babel/runtime": "^7.20.0",
+        "@datadog/datadog-ci": "^1.11.0",
+        "@react-native-community/eslint-config": "^3.0.0",
+        "babel-plugin-module-resolver": "^4.0.0",
+        "metro-react-native-babel-preset": "0.73.7"
+    },
+    "installConfig": {
+        "hoistingLimits": "dependencies"
+    },
+    "packageManager": "yarn@3.4.1"
 }
