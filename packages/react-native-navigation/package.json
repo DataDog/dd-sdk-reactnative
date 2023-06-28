@@ -20,8 +20,8 @@
   "license": "Apache-2.0",
   "main": "lib/commonjs/index",
   "files": [
-    "src",
-    "lib"
+    "src/**",
+    "lib/**"
   ],
   "types": "lib/typescript/react-native-navigation/src/index.d.ts",
   "react-native": "src/index",

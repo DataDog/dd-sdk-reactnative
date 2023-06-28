@@ -22,8 +22,8 @@
   "license": "Apache-2.0",
   "main": "lib/commonjs/index",
   "files": [
-    "src",
-    "lib"
+    "src/**",
+    "lib/**"
   ],
   "types": "lib/typescript/codepush/src/index.d.ts",
   "react-native": "src/index",
