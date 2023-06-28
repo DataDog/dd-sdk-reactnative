@@ -38,7 +38,8 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "devDependencies": {
-        "@testing-library/react-native": "7.0.2"
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1"
     },
     "peerDependencies": {
         "@datadog/mobile-react-native": ">=1.5.0",

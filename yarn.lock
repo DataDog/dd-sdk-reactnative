@@ -3512,6 +3512,7 @@ __metadata:
   dependencies:
     "@datadog/mobile-react-native": ^1.8.0-rc1
     "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
     react-native-code-push: 7.0.5
   peerDependencies:
     "@datadog/mobile-react-native": ^1.0.0-beta4
@@ -3527,6 +3528,7 @@ __metadata:
   dependencies:
     "@datadog/mobile-react-native": ^1.8.0-rc1
     "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
     react-native-gesture-handler: 1.10.3
     react-native-navigation: 7.31.1
     remx: 3.x.x
@@ -3543,6 +3545,7 @@ __metadata:
   resolution: "@datadog/mobile-react-native-webview@workspace:packages/react-native-webview"
   dependencies:
     "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
   peerDependencies:
     "@datadog/mobile-react-native": ">=1.5.0"
     react: ">=16.13.1"
@@ -3556,6 +3559,7 @@ __metadata:
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
     "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
   peerDependencies:
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
@@ -3572,6 +3576,7 @@ __metadata:
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2"
     "@react-navigation/stack-v6": "npm:@react-navigation/stack@6.2.1"
     "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
     react-native-gesture-handler: 1.10.3
     react-native-safe-area-context: 3.1.9
   peerDependencies:
