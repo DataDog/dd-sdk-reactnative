@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native",
-    "version": "1.8.0-rc0",
+    "version": "1.8.0-rc1",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",
@@ -50,7 +50,8 @@
         "react-native": ">=0.63.4 <1.0"
     },
     "devDependencies": {
-        "@testing-library/react-native": "7.0.2"
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1"
     },
     "jest": {
         "preset": "react-native",

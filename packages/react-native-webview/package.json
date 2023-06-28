@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-webview",
-    "version": "1.8.0-rc0",
+    "version": "1.8.0-rc1",
     "description": "A client-side React Native module to interact with react-native-webview and Datadog",
     "keywords": [
         "datadog",
@@ -38,7 +38,8 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "devDependencies": {
-        "@testing-library/react-native": "7.0.2"
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1"
     },
     "peerDependencies": {
         "@datadog/mobile-react-native": ">=1.5.0",

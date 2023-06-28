@@ -1,6 +1,6 @@
 {
   "name": "@datadog/mobile-react-navigation",
-  "version": "1.8.0-rc0",
+  "version": "1.8.0-rc1",
   "description": "A client-side React Native module to interact with Datadog",
   "keywords": [
     "datadog",
@@ -36,12 +36,13 @@
     "prepare": "rm -rf lib && yarn bob build"
   },
   "devDependencies": {
-    "@datadog/mobile-react-native": "^1.8.0-rc0",
+    "@datadog/mobile-react-native": "^1.8.0-rc1",
     "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.8",
     "@react-navigation/native-v6": "npm:@react-navigation/native@6.1.2",
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2",
     "@react-navigation/stack-v6": "npm:@react-navigation/stack@6.2.1",
     "@testing-library/react-native": "7.0.2",
+    "react-native-builder-bob": "0.17.1",
     "react-native-gesture-handler": "1.10.3",
     "react-native-safe-area-context": "3.1.9"
   },
