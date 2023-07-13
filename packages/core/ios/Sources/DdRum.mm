@@ -4,7 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 // Import this first to prevent require cycles
+#if __has_include("DatadogSDKReactNative-Swift.h")
 #import <DatadogSDKReactNative-Swift.h>
+#else
+#import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
+#endif
 #import "DdRum.h"
 
 
