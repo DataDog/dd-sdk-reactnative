@@ -5,7 +5,7 @@ PODS:
   - DatadogSDKCrashReporting (1.22.0):
     - DatadogSDK (= 1.22.0)
     - PLCrashReporter (~> 1.11.0)
-  - DatadogSDKReactNative (1.8.1):
+  - DatadogSDKReactNative (1.8.2):
     - DatadogSDK (~> 1.22.0)
     - DatadogSDKCrashReporting (~> 1.22.0)
     - RCT-Folly (= 2021.07.22.00)
@@ -942,7 +942,7 @@ SPEC CHECKSUMS:
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DatadogSDK: 46e1a7363bc3130fae151ec4aedf11ea291517c5
   DatadogSDKCrashReporting: 24a0e6ec6db905cdeb174721962a7941b2f8a9d2
-  DatadogSDKReactNative: 5a8a873e9c38e86f4f2c08131809fff929a28000
+  DatadogSDKReactNative: bdb47967c6c225adf39cfc1160ebed1d982bc023
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 33a87f65f1a467d5f63d11d0cc106a10d3b0639d
