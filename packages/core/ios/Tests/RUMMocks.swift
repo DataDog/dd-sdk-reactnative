@@ -230,6 +230,7 @@ extension RUMDevice: RandomMockable {
 extension RUMOperatingSystem: RandomMockable {
     static func mockRandom() -> RUMOperatingSystem {
         return .init(
+            build: .mockRandom(length: 5),
             name: .mockRandom(length: 5),
             version: .mockRandom(among: .decimalDigits, length: 2),
             versionMajor: .mockRandom(among: .decimalDigits, length: 1)
