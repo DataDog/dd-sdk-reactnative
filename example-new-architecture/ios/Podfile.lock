@@ -1,13 +1,13 @@
 PODS:
   - boost (1.76.0)
   - CocoaAsyncSocket (7.6.5)
-  - DatadogSDK (1.20.0)
-  - DatadogSDKCrashReporting (1.20.0):
-    - DatadogSDK (= 1.20.0)
+  - DatadogSDK (1.22.0)
+  - DatadogSDKCrashReporting (1.22.0):
+    - DatadogSDK (= 1.22.0)
     - PLCrashReporter (~> 1.11.0)
-  - DatadogSDKReactNative (1.8.1):
-    - DatadogSDK (~> 1.20.0)
-    - DatadogSDKCrashReporting (~> 1.20.0)
+  - DatadogSDKReactNative (1.8.2):
+    - DatadogSDK (~> 1.22.0)
+    - DatadogSDKCrashReporting (~> 1.22.0)
     - RCT-Folly (= 2021.07.22.00)
     - RCTRequired
     - RCTTypeSafety
@@ -764,7 +764,7 @@ PODS:
     - React-jsi (= 0.71.10)
     - React-logger (= 0.71.10)
     - React-perflogger (= 0.71.10)
-  - SocketRocket (0.6.0)
+  - SocketRocket (0.6.1)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -940,9 +940,9 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  DatadogSDK: a89bfe6b833c5f4069c36a5a1096947ff148e89a
-  DatadogSDKCrashReporting: 9f8ea80a58a68d165568e74a5b9d3d04bcff9563
-  DatadogSDKReactNative: ab0452aa248d455360ed9bf8611ffd34005e63c0
+  DatadogSDK: 46e1a7363bc3130fae151ec4aedf11ea291517c5
+  DatadogSDKCrashReporting: 24a0e6ec6db905cdeb174721962a7941b2f8a9d2
+  DatadogSDKReactNative: bdb47967c6c225adf39cfc1160ebed1d982bc023
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 33a87f65f1a467d5f63d11d0cc106a10d3b0639d
@@ -992,7 +992,7 @@ SPEC CHECKSUMS:
   React-rncore: 0ed130c0a368c85d94e4941e675428effb8358e9
   React-runtimeexecutor: a9a1cd79996c9a0846e3232ecb25c64e1cc0172e
   ReactCommon: 65718685d4095d06b4b1af8042e12f1df2925c31
-  SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
+  SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: e7ea9e590e27460d28911403b894722354d73479
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
