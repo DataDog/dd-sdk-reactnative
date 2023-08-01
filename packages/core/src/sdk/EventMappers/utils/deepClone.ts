@@ -31,6 +31,16 @@ const isMap = (
 };
 
 /**
+ * Be careful when changing this value, it can lead to performance issues: https://github.com/DataDog/dd-sdk-reactnative/issues/514.
+ * Benchmark of average execution time for an action event mapper with different max depth on iOS simulator:
+ * 7: 40ms
+ * 6: 15ms
+ * 5: 4ms
+ * 4: <1ms
+ */
+const MAX_DEPTH = 7;
+
+/**
  * Simple deep clone inspired from https://github.com/angus-c/just/blob/master/packages/collection-clone/index.cjs
  * Functions and RegExp will be returned as they are.
  * Maps and Sets are cloned even though they won't be accepted by React Native, just in case they are mutated by the user to avoid side effects.
@@ -55,7 +65,7 @@ export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
         ) as unknown) as T;
     }
     if (isArray(type, originalObject)) {
-        if (depth >= 7) {
+        if (depth >= MAX_DEPTH) {
             // Break the circular reference here
             return originalObject;
         }
@@ -69,7 +79,7 @@ export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
         return (result as unknown) as T;
     }
     if (isObject(type, originalObject)) {
-        if (depth >= 7) {
+        if (depth >= MAX_DEPTH) {
             // Break the circular reference here
             return originalObject;
         }
