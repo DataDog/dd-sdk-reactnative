@@ -4,28 +4,29 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-const isDate = (object: unknown): object is Date => {
-    const type = {}.toString.call(object).slice(8, -1);
+const isDate = (type: string, object: unknown): object is Date => {
     return type === 'Date';
 };
 
-const isArray = (object: unknown): object is unknown[] => {
-    const type = {}.toString.call(object).slice(8, -1);
+const isArray = (type: string, object: unknown): object is unknown[] => {
     return type === 'Array';
 };
 
-const isObject = (object: unknown): object is Record<string, unknown> => {
-    const type = {}.toString.call(object).slice(8, -1);
+const isObject = (
+    type: string,
+    object: unknown
+): object is Record<string, unknown> => {
     return type === 'Object';
 };
 
-const isSet = (object: unknown): object is Set<unknown> => {
-    const type = {}.toString.call(object).slice(8, -1);
+const isSet = (type: string, object: unknown): object is Set<unknown> => {
     return type === 'Set';
 };
 
-const isMap = (object: unknown): object is Map<string, unknown> => {
-    const type = {}.toString.call(object).slice(8, -1);
+const isMap = (
+    type: string,
+    object: unknown
+): object is Map<string, unknown> => {
     return type === 'Map';
 };
 
@@ -39,20 +40,21 @@ const isMap = (object: unknown): object is Map<string, unknown> => {
  * @returns
  */
 export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
-    if (isDate(originalObject)) {
+    const type = {}.toString.call(originalObject).slice(8, -1);
+    if (isDate(type, originalObject)) {
         return (new Date(originalObject.getTime()) as unknown) as T;
     }
-    if (isSet(originalObject)) {
+    if (isSet(type, originalObject)) {
         return (new Set(
             [...originalObject].map(value => deepClone(value))
         ) as unknown) as T;
     }
-    if (isMap(originalObject)) {
+    if (isMap(type, originalObject)) {
         return (new Map(
             [...originalObject].map(kv => [deepClone(kv[0]), deepClone(kv[1])])
         ) as unknown) as T;
     }
-    if (isArray(originalObject)) {
+    if (isArray(type, originalObject)) {
         if (depth >= 7) {
             // Break the circular reference here
             return originalObject;
@@ -66,7 +68,7 @@ export const deepClone = <T>(originalObject: T, depth: number = 0): T => {
 
         return (result as unknown) as T;
     }
-    if (isObject(originalObject)) {
+    if (isObject(type, originalObject)) {
         if (depth >= 7) {
             // Break the circular reference here
             return originalObject;
