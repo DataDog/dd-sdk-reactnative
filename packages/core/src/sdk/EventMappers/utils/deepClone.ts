@@ -38,7 +38,7 @@ const isMap = (
  * 5: 4ms
  * 4: <1ms
  */
-const MAX_DEPTH = 7;
+const MAX_DEPTH = 4;
 
 /**
  * Simple deep clone inspired from https://github.com/angus-c/just/blob/master/packages/collection-clone/index.cjs
