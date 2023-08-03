@@ -4,29 +4,23 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-const isDate = (type: string, object: unknown): object is Date => {
+const isDate = (type: string, _: unknown): _ is Date => {
     return type === 'Date';
 };
 
-const isArray = (type: string, object: unknown): object is unknown[] => {
+const isArray = (type: string, _: unknown): _ is unknown[] => {
     return type === 'Array';
 };
 
-const isObject = (
-    type: string,
-    object: unknown
-): object is Record<string, unknown> => {
+const isObject = (type: string, _: unknown): _ is Record<string, unknown> => {
     return type === 'Object';
 };
 
-const isSet = (type: string, object: unknown): object is Set<unknown> => {
+const isSet = (type: string, _: unknown): _ is Set<unknown> => {
     return type === 'Set';
 };
 
-const isMap = (
-    type: string,
-    object: unknown
-): object is Map<string, unknown> => {
+const isMap = (type: string, _: unknown): _ is Map<string, unknown> => {
     return type === 'Map';
 };
 
