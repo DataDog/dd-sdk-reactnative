@@ -4,6 +4,7 @@ set -e
 
 # Change version
 yarn run lerna version $1 --ignore-changes --no-git-tag-version --no-push
+yarn prepare
 
 # prepare packages
 yarn
