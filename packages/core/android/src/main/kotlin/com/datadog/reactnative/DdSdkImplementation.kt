@@ -171,7 +171,8 @@ class DdSdkImplementation(
         return packageInfo?.let {
             // we need to use the deprecated method because getLongVersionCode method is only
             // available from API 28 and above
-            @Suppress("DEPRECATION") it.versionName ?: it.versionCode.toString()
+            @Suppress("DEPRECATION")
+            it.versionName ?: it.versionCode.toString()
         }
             ?: DEFAULT_APP_VERSION
     }
@@ -341,6 +342,7 @@ class DdSdkImplementation(
             configBuilder.setProxy(proxy, authenticator)
         }
 
+        @Suppress("UNCHECKED_CAST")
         val firstPartyHosts =
             (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
                 ?.toArrayList() as?
@@ -436,8 +438,7 @@ class DdSdkImplementation(
     }
 
     private fun buildUploadFrequency(uploadFrequency: String?): UploadFrequency {
-        val uploadFrequency = uploadFrequency?.lowercase(Locale.US)
-        return when (uploadFrequency) {
+        return when (uploadFrequency?.lowercase(Locale.US)) {
             "rare" -> UploadFrequency.RARE
             "average" -> UploadFrequency.AVERAGE
             "frequent" -> UploadFrequency.FREQUENT
