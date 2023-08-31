@@ -9,8 +9,14 @@ package com.datadog.reactnative
 import android.content.Context
 import com.datadog.android.Datadog
 import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.log.Logs
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRumMonitor
+import com.datadog.android.rum.Rum
+import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.trace.Trace
+import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
 
 internal class DatadogSDKWrapper : DatadogWrapper {
@@ -25,6 +31,18 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         consent: TrackingConsent
     ) {
         Datadog.initialize(context, configuration, consent)
+    }
+
+    override fun enableRum(configuration: RumConfiguration) {
+        Rum.enable(configuration)
+    }
+
+    override fun enableLogs(configuration: LogsConfiguration) {
+        Logs.enable(configuration)
+    }
+
+    override fun enableTrace(configuration: TraceConfiguration) {
+        Trace.enable(configuration)
     }
 
     override fun setUserInfo(
