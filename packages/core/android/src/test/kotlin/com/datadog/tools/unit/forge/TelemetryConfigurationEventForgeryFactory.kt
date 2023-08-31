@@ -59,6 +59,7 @@ internal class TelemetryConfigurationEventForgeryFactory :
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
+                    forge.aNullable { aBool() },
                     forge.aNullable { aString() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },

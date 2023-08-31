@@ -6,19 +6,15 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.rum.GlobalRum
-import com.datadog.android.rum.RumActionType
-import com.datadog.android.rum.RumAttributes
-import com.datadog.android.rum.RumErrorSource
-import com.datadog.android.rum.RumMonitor
-import com.datadog.android.rum.RumResourceKind
+import com.datadog.android.api.SdkCore
+import com.datadog.android.rum.*
 import com.datadog.tools.unit.forge.BaseConfigurator
-import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
-import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.DoubleForgery
@@ -29,7 +25,6 @@ import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.util.Date
-import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -56,6 +51,9 @@ internal class DdRumTest {
     lateinit var mockRumMonitor: RumMonitor
 
     @Mock
+    lateinit var mockDatadog: DatadogWrapper
+
+    @Mock
     lateinit var mockPromise: Promise
 
     lateinit var fakeContext: Map<String, Any?>
@@ -65,7 +63,7 @@ internal class DdRumTest {
 
     @BeforeEach
     fun `set up`(forge: Forge) {
-        GlobalRum.registerIfAbsent(mockRumMonitor)
+        whenever(mockDatadog.getRumMonitor()) doReturn mockRumMonitor
 
         fakeContext = forge.aMap {
             anAlphabeticalString() to aNullable {
@@ -79,13 +77,11 @@ internal class DdRumTest {
             }
         }
 
-        testedDdRum = DdRumImplementation()
+        testedDdRum = DdRumImplementation(mockDatadog)
     }
 
     @AfterEach
     fun `tear down`() {
-        GlobalRum.javaClass.setStaticValue("monitor", mock<RumMonitor>())
-        GlobalRum.javaClass.getStaticValue<GlobalRum, AtomicBoolean>("isRegistered").set(false)
     }
 
     @Test
@@ -138,7 +134,7 @@ internal class DdRumTest {
         )
 
         // Then
-        verify(mockRumMonitor).addUserAction(type, name, updatedContext)
+        verify(mockRumMonitor).addAction(type, name, updatedContext)
     }
 
     @Test
@@ -155,7 +151,7 @@ internal class DdRumTest {
         testedDdRum.addAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
-        verify(mockRumMonitor).addUserAction(RumActionType.CUSTOM, name, updatedContext)
+        verify(mockRumMonitor).addAction(RumActionType.CUSTOM, name, updatedContext)
     }
 
     @Test
@@ -175,7 +171,7 @@ internal class DdRumTest {
         )
 
         // Then
-        verify(mockRumMonitor).startUserAction(type, name, updatedContext)
+        verify(mockRumMonitor).startAction(type, name, updatedContext)
     }
 
     @Test
@@ -192,7 +188,7 @@ internal class DdRumTest {
         testedDdRum.startAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
-        verify(mockRumMonitor).startUserAction(RumActionType.CUSTOM, name, updatedContext)
+        verify(mockRumMonitor).startAction(RumActionType.CUSTOM, name, updatedContext)
     }
 
     @Test
@@ -212,7 +208,7 @@ internal class DdRumTest {
         )
 
         // Then
-        verify(mockRumMonitor).stopUserAction(type, name, updatedContext)
+        verify(mockRumMonitor).stopAction(type, name, updatedContext)
     }
 
     @Test
@@ -229,7 +225,7 @@ internal class DdRumTest {
         testedDdRum.stopAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
 
         // Then
-        verify(mockRumMonitor).stopUserAction(RumActionType.CUSTOM, name, updatedContext)
+        verify(mockRumMonitor).stopAction(RumActionType.CUSTOM, name, updatedContext)
     }
 
     @Test
