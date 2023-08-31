@@ -253,10 +253,10 @@ class DdRumImplementation {
      * Adds result of evaluating a feature flag to the view.
      * Feature flag evaluations are local to the active view and are cleared when the view is stopped.
      * @param name The name of the feature flag
-     * @param value The value the feature flag evaluated to, encapsulated in a Map
+     * @param valueAsMap The value the feature flag evaluated to, encapsulated in a Map
      */
-    fun addFeatureFlagEvaluation(name: String, value: ReadableMap, promise: Promise) {
-        val value = value.toHashMap()["value"]
+    fun addFeatureFlagEvaluation(name: String, valueAsMap: ReadableMap, promise: Promise) {
+        val value = valueAsMap.toHashMap()["value"]
         if (value != null) {
             GlobalRumMonitor.get().addFeatureFlagEvaluation(name, value)
         }
