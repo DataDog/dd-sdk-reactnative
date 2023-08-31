@@ -15,12 +15,10 @@ import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
-import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.GlobalRumMonitor
-import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
@@ -28,7 +26,6 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
-import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.Promise
@@ -66,12 +63,12 @@ class DdSdkImplementation(
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        Rum.enable(rumConfiguration)
+        datadog.enableRum(rumConfiguration)
         monitorJsRefreshRate(ddSdkConfiguration)
 
-        Trace.enable(TraceConfiguration.Builder().build())
+        datadog.enableTrace(TraceConfiguration.Builder().build())
 
-        Logs.enable(LogsConfiguration.Builder().build())
+        datadog.enableLogs(LogsConfiguration.Builder().build())
 
         initialized.set(true)
 

@@ -8,8 +8,11 @@ package com.datadog.reactnative
 
 import android.content.Context
 import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.trace.TraceConfiguration
 import java.lang.IllegalArgumentException
 
 /**
@@ -46,6 +49,33 @@ interface DatadogWrapper {
         context: Context,
         configuration: Configuration,
         consent: TrackingConsent
+    )
+
+    /**
+     * Enables the RUM feature of the SDK.
+     *
+     * @param configuration the configuration for the RUM feature
+     */
+    fun enableRum(
+        configuration: RumConfiguration
+    )
+
+    /**
+     * Enables the Logs feature of the SDK.
+     *
+     * @param configuration the configuration for the Logs feature
+     */
+    fun enableLogs(
+        configuration: LogsConfiguration
+    )
+
+    /**
+     * Enables the Trace feature of the SDK.
+     *
+     * @param configuration the configuration for the Trace feature
+     */
+    fun enableTrace(
+        configuration: TraceConfiguration
     )
 
     /**
