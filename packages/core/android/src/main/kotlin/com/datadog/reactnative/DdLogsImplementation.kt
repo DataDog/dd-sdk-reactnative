@@ -20,9 +20,8 @@ class DdLogsImplementation(
 ) {
     private val reactNativeLogger: Logger by lazy {
         logger ?: Logger.Builder()
-            .setDatadogLogsEnabled(true)
             .setLogcatLogsEnabled(true)
-            .setLoggerName("DdLogs")
+            .setName("DdLogs")
             .build()
     }
 

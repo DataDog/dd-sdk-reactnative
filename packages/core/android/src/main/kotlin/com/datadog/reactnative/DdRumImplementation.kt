@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.rum.GlobalRum
+import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
@@ -37,7 +37,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().startView(
+        GlobalRumMonitor.get().startView(
             key = key,
             name = name,
             attributes = attributes
@@ -55,7 +55,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().stopView(
+        GlobalRumMonitor.get().stopView(
             key = key,
             attributes = attributes
         )
@@ -79,7 +79,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().startUserAction(
+        GlobalRumMonitor.get().startAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -104,7 +104,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().stopUserAction(
+        GlobalRumMonitor.get().stopAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -129,7 +129,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().addUserAction(
+        GlobalRumMonitor.get().addAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -157,7 +157,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().startResource(
+        GlobalRumMonitor.get().startResource(
             key = key,
             method = method,
             url = url,
@@ -193,7 +193,7 @@ class DdRumImplementation {
         } else {
             size.toLong()
         }
-        GlobalRum.get().stopResource(
+        GlobalRumMonitor.get().stopResource(
             key = key,
             statusCode = statusCode.toInt(),
             kind = kind.asRumResourceKind(),
@@ -223,7 +223,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRum.get().addErrorWithStacktrace(
+        GlobalRumMonitor.get().addErrorWithStacktrace(
             message = message,
             source = source.asErrorSource(),
             stacktrace = stacktrace,
@@ -237,7 +237,7 @@ class DdRumImplementation {
      * @param name The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
      */
     fun addTiming(name: String, promise: Promise) {
-        GlobalRum.get().addTiming(name)
+        GlobalRumMonitor.get().addTiming(name)
         promise.resolve(null)
     }
 
@@ -245,7 +245,7 @@ class DdRumImplementation {
      * Stops the current RUM Session.
      */
     fun stopSession(promise: Promise) {
-        GlobalRum.get().stopSession()
+        GlobalRumMonitor.get().stopSession()
         promise.resolve(null)
     }
 
@@ -258,7 +258,7 @@ class DdRumImplementation {
     fun addFeatureFlagEvaluation(name: String, value: ReadableMap, promise: Promise) {
         val value = value.toHashMap()["value"]
         if (value != null) {
-            GlobalRum.get().addFeatureFlagEvaluation(name, value)
+            GlobalRumMonitor.get().addFeatureFlagEvaluation(name, value)
         }
         promise.resolve(null)
     }

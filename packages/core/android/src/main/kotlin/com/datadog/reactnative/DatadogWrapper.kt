@@ -8,7 +8,6 @@ package com.datadog.reactnative
 
 import android.content.Context
 import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumMonitor
 import java.lang.IllegalArgumentException
@@ -45,7 +44,6 @@ interface DatadogWrapper {
      */
     fun initialize(
         context: Context,
-        credentials: Credentials,
         configuration: Configuration,
         consent: TrackingConsent
     )
@@ -65,13 +63,6 @@ interface DatadogWrapper {
         email: String?,
         extraInfo: Map<String, Any?>
     )
-
-    /**
-     * Registers a given monitor in [GlobalRum].
-     *
-     * @param rumMonitor to register
-     */
-    fun registerRumMonitor(rumMonitor: RumMonitor)
 
     /**
      * Adds global attributes.
