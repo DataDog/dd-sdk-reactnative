@@ -9,10 +9,9 @@ package com.datadog.reactnative
 import android.content.Context
 import com.datadog.android.Datadog
 import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.GlobalRum
-import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.GlobalRumMonitor
+import com.datadog.android.webview.WebViewTracking
 
 internal class DatadogSDKWrapper : DatadogWrapper {
 
@@ -22,11 +21,10 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun initialize(
         context: Context,
-        credentials: Credentials,
         configuration: Configuration,
         consent: TrackingConsent
     ) {
-        Datadog.initialize(context, credentials, configuration, consent)
+        Datadog.initialize(context, configuration, consent)
     }
 
     override fun setUserInfo(
@@ -38,13 +36,9 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         Datadog.setUserInfo(id, name, email, extraInfo)
     }
 
-    override fun registerRumMonitor(rumMonitor: RumMonitor) {
-        GlobalRum.registerIfAbsent(rumMonitor)
-    }
-
     override fun addRumGlobalAttributes(attributes: Map<String, Any?>) {
         attributes.forEach {
-            GlobalRum.addAttribute(it.key, it.value)
+            GlobalRumMonitor.get().addAttribute(it.key, it.value)
         }
     }
 
@@ -53,19 +47,23 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun telemetryDebug(message: String) {
-        Datadog._internal._telemetry.debug(message)
+        // TODO: store instance of proxy to avoid creating one every time
+        Datadog._internalProxy()._telemetry.debug(message)
     }
 
     override fun telemetryError(message: String, stack: String?, kind: String?) {
-        Datadog._internal._telemetry.error(message, stack, kind)
+        // TODO: store instance of proxy to avoid creating one every time
+        Datadog._internalProxy()._telemetry.error(message, stack, kind)
     }
 
     override fun telemetryError(message: String, throwable: Throwable?) {
-        Datadog._internal._telemetry.error(message, throwable)
+        // TODO: store instance of proxy to avoid creating one every time
+        Datadog._internalProxy()._telemetry.error(message, throwable)
     }
 
     override fun consumeWebviewEvent(message: String) {
-        Datadog._internal.consumeWebviewEvent(message)
+        // TODO: store instance of proxy to avoid creating one every time
+        WebViewTracking._InternalWebViewProxy(Datadog.getInstance()).consumeWebviewEvent(message)
     }
 
     override fun isInitialized(): Boolean {

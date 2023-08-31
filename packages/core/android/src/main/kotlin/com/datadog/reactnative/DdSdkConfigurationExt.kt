@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.tracing.TracingHeaderType
+import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap

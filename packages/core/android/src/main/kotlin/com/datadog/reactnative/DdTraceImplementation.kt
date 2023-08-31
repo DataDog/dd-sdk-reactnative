@@ -6,18 +6,26 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.tracing.AndroidTracer
+import com.datadog.android.trace.AndroidTracer
+import com.datadog.android.trace.Trace
+import com.datadog.android.trace.TraceConfiguration
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import io.opentracing.Span
 import io.opentracing.Tracer
+import io.opentracing.util.GlobalTracer
 import java.util.concurrent.TimeUnit
 
 /**
  * The entry point to use Datadog's Trace feature.
  */
 class DdTraceImplementation(
-    private val tracerProvider: () -> Tracer = { AndroidTracer.Builder().build() }
+    private val tracerProvider: () -> Tracer = {
+        val tracer = AndroidTracer.Builder().build()
+        GlobalTracer.registerIfAbsent(tracer)
+
+        GlobalTracer.get()
+    }
 ) {
     private val spanMap: MutableMap<String, Span> = mutableMapOf()
 

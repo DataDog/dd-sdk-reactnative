@@ -159,7 +159,10 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android:1.19.2"
+  implementation "com.datadoghq:dd-sdk-android-rum:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:2.0.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
