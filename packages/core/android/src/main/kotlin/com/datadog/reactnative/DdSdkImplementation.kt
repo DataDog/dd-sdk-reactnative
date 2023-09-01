@@ -18,7 +18,6 @@ import com.datadog.android.event.EventMapper
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
-import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
@@ -491,7 +490,7 @@ class DdSdkImplementation(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
-                GlobalRumMonitor.get()
+                datadog.getRumMonitor()
                     ._getInternal()
                     ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
             }
@@ -501,7 +500,7 @@ class DdSdkImplementation(
                         ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
                     )
             ) {
-                GlobalRumMonitor.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
+                datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
     }
