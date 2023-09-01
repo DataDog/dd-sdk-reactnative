@@ -10,6 +10,7 @@ import android.content.Context
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.TraceConfiguration
@@ -130,4 +131,9 @@ interface DatadogWrapper {
      * Returns whether the SDK is initialized.
      */
     fun isInitialized(): Boolean
+
+    /**
+     * Returns the RUM Monitor for the default SDK core.
+     */
+    fun getRumMonitor(): RumMonitor
 }

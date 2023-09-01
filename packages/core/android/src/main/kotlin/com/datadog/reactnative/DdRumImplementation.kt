@@ -6,7 +6,6 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
@@ -19,7 +18,7 @@ import java.util.Locale
  * The entry point to use Datadog's RUM feature.
  */
 @Suppress("TooManyFunctions")
-class DdRumImplementation {
+class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrapper()) {
     /**
      * Start tracking a RUM View.
      * @param key The view unique key identifier.
@@ -37,7 +36,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().startView(
+        datadog.getRumMonitor().startView(
             key = key,
             name = name,
             attributes = attributes
@@ -55,7 +54,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().stopView(
+        datadog.getRumMonitor().stopView(
             key = key,
             attributes = attributes
         )
@@ -79,7 +78,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().startAction(
+        datadog.getRumMonitor().startAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -104,7 +103,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().stopAction(
+        datadog.getRumMonitor().stopAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -129,7 +128,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().addAction(
+        datadog.getRumMonitor().addAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
@@ -157,7 +156,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().startResource(
+        datadog.getRumMonitor().startResource(
             key = key,
             method = method,
             url = url,
@@ -193,7 +192,7 @@ class DdRumImplementation {
         } else {
             size.toLong()
         }
-        GlobalRumMonitor.get().stopResource(
+        datadog.getRumMonitor().stopResource(
             key = key,
             statusCode = statusCode.toInt(),
             kind = kind.asRumResourceKind(),
@@ -223,7 +222,7 @@ class DdRumImplementation {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
-        GlobalRumMonitor.get().addErrorWithStacktrace(
+        datadog.getRumMonitor().addErrorWithStacktrace(
             message = message,
             source = source.asErrorSource(),
             stacktrace = stacktrace,
@@ -237,7 +236,7 @@ class DdRumImplementation {
      * @param name The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
      */
     fun addTiming(name: String, promise: Promise) {
-        GlobalRumMonitor.get().addTiming(name)
+        datadog.getRumMonitor().addTiming(name)
         promise.resolve(null)
     }
 
@@ -245,7 +244,7 @@ class DdRumImplementation {
      * Stops the current RUM Session.
      */
     fun stopSession(promise: Promise) {
-        GlobalRumMonitor.get().stopSession()
+        datadog.getRumMonitor().stopSession()
         promise.resolve(null)
     }
 
@@ -258,7 +257,7 @@ class DdRumImplementation {
     fun addFeatureFlagEvaluation(name: String, valueAsMap: ReadableMap, promise: Promise) {
         val value = valueAsMap.toHashMap()["value"]
         if (value != null) {
-            GlobalRumMonitor.get().addFeatureFlagEvaluation(name, value)
+            datadog.getRumMonitor().addFeatureFlagEvaluation(name, value)
         }
         promise.resolve(null)
     }

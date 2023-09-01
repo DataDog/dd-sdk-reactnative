@@ -15,6 +15,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
@@ -56,7 +57,7 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun addRumGlobalAttributes(attributes: Map<String, Any?>) {
         attributes.forEach {
-            GlobalRumMonitor.get().addAttribute(it.key, it.value)
+            this.getRumMonitor().addAttribute(it.key, it.value)
         }
     }
 
@@ -86,5 +87,9 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun isInitialized(): Boolean {
         return Datadog.isInitialized()
+    }
+
+    override fun getRumMonitor(): RumMonitor {
+        return GlobalRumMonitor.get()
     }
 }
