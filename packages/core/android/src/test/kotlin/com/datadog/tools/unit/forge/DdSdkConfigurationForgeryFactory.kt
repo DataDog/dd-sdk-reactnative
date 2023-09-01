@@ -17,7 +17,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
         return DdSdkConfiguration(
             clientToken = forge.aStringMatching("pub[a-f0-9]{32}"),
             env = forge.anAlphabeticalString(),
-            applicationId = forge.aNullable { getForgery<UUID>().toString() },
+            applicationId = forge.getForgery<UUID>().toString(),
             nativeCrashReportEnabled = forge.aNullable { aBool() },
             nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
             longTaskThresholdMs = forge.aDouble(0.0, 100.0),

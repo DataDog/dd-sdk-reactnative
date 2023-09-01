@@ -180,7 +180,7 @@ class DdSdkImplementation(
     private fun buildRUMConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
-                applicationId = configuration.applicationId!!
+                applicationId = configuration.applicationId
             )
         if (configuration.sampleRate != null) {
             configBuilder.setSessionSampleRate(configuration.sampleRate.toFloat())
@@ -329,6 +329,7 @@ class DdSdkImplementation(
                 ?: emptyMap()
         )
 
+        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setUploadFrequency(
             buildUploadFrequency(configuration.uploadFrequency)
