@@ -22,6 +22,16 @@ import com.datadog.android.webview.WebViewTracking
 
 internal class DatadogSDKWrapper : DatadogWrapper {
 
+    // lazy here is on purpose. The thing is that this class will be instantiated even before
+    // Sdk.initialize is called, but telemetry proxy can be created only after SDK is initialized.
+    private val telemetryProxy by lazy { Datadog._internalProxy() }
+
+    // lazy here is on purpose. The thing is that this class will be instantiated even before
+    // Sdk.initialize is called, but webview proxy can be created only after SDK is initialized.
+    private val webViewProxy by lazy {
+        WebViewTracking._InternalWebViewProxy(Datadog.getInstance())
+    }
+
     override fun setVerbosity(level: Int) {
         Datadog.setVerbosity(level)
     }
@@ -66,23 +76,31 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun telemetryDebug(message: String) {
-        // TODO: store instance of proxy to avoid creating one every time
-        Datadog._internalProxy()._telemetry.debug(message)
+        // Do not initialize the telemetry proxy before SDK is initialized
+        if (isInitialized()) {
+            telemetryProxy._telemetry.debug(message)
+        }
     }
 
     override fun telemetryError(message: String, stack: String?, kind: String?) {
-        // TODO: store instance of proxy to avoid creating one every time
-        Datadog._internalProxy()._telemetry.error(message, stack, kind)
+        // Do not initialize the telemetry proxy before SDK is initialized
+        if (isInitialized()) {
+            telemetryProxy._telemetry.error(message, stack, kind)
+        }
     }
 
     override fun telemetryError(message: String, throwable: Throwable?) {
-        // TODO: store instance of proxy to avoid creating one every time
-        Datadog._internalProxy()._telemetry.error(message, throwable)
+        // Do not initialize the telemetry proxy before SDK is initialized
+        if (isInitialized()) {
+            telemetryProxy._telemetry.error(message, throwable)
+        }
     }
 
     override fun consumeWebviewEvent(message: String) {
-        // TODO: store instance of proxy to avoid creating one every time
-        WebViewTracking._InternalWebViewProxy(Datadog.getInstance()).consumeWebviewEvent(message)
+        // Do not initialize the webview proxy before SDK is initialized
+        if (isInitialized()) {
+            webViewProxy.consumeWebviewEvent(message)
+        }
     }
 
     override fun isInitialized(): Boolean {
