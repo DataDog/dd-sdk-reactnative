@@ -6,10 +6,12 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.api.SdkCore
-import com.datadog.android.rum.*
+import com.datadog.android.rum.RumActionType
+import com.datadog.android.rum.RumAttributes
+import com.datadog.android.rum.RumErrorSource
+import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumResourceKind
 import com.datadog.tools.unit.forge.BaseConfigurator
-import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import com.nhaarman.mockitokotlin2.doReturn
@@ -129,8 +131,11 @@ internal class DdRumTest {
 
         // When
         testedDdRum.addAction(
-            type.name, name, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            type.name,
+            name,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -166,8 +171,11 @@ internal class DdRumTest {
 
         // When
         testedDdRum.startAction(
-            type.name, name, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            type.name,
+            name,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -203,8 +211,11 @@ internal class DdRumTest {
 
         // When
         testedDdRum.stopAction(
-            type.name, name, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            type.name,
+            name,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -241,8 +252,12 @@ internal class DdRumTest {
 
         // When
         testedDdRum.startResource(
-            key, method, url, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            key,
+            method,
+            url,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -360,8 +375,12 @@ internal class DdRumTest {
 
         // When
         testedDdRum.addError(
-            message, source.name, stackTrace, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            message,
+            source.name,
+            stackTrace,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -381,8 +400,12 @@ internal class DdRumTest {
 
         // When
         testedDdRum.addError(
-            message, source, stackTrace, fakeContext.toReadableMap(),
-            fakeTimestamp, mockPromise
+            message,
+            source,
+            stackTrace,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
         )
 
         // Then
@@ -396,7 +419,6 @@ internal class DdRumTest {
 
     @Test
     fun `M call addTiming W addTiming()`(@StringForgery timing: String) {
-
         // When
         testedDdRum.addTiming(timing, mockPromise)
 
@@ -406,7 +428,6 @@ internal class DdRumTest {
 
     @Test
     fun `M call stopSession W stopSession()`() {
-
         // When
         testedDdRum.stopSession(mockPromise)
 

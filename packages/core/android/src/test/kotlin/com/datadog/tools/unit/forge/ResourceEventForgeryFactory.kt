@@ -100,7 +100,7 @@ internal class ResourceEventForgeryFactory :
                 name = forge.anAlphabeticalString(),
                 model = forge.anAlphabeticalString(),
                 brand = forge.anAlphabeticalString(),
-                type = forge.aValueFrom(ResourceEvent.DeviceType::class.java),
+                type = forge.aValueFrom(ResourceEvent.DeviceType::class.java)
             ),
             context = ResourceEvent.Context(
                 additionalProperties = mutableMapOf()

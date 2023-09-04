@@ -12,7 +12,7 @@ buildscript {
     classpath 'com.android.tools.build:gradle:7.2.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath "org.jlleitschuh.gradle:ktlint-gradle:10.2.1"
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
     classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
     classpath 'com.github.bjoernq:unmockplugin:0.7.9'
   }
@@ -207,7 +207,6 @@ ktlint {
   outputToConsole.set(true)
   ignoreFailures.set(false)
   enableExperimentalRules.set(false)
-  additionalEditorconfigFile.set(file("${project.rootDir}/script/config/.editorconfig"))
   filter {
     exclude("**/generated/**")
     include("**/kotlin/**")

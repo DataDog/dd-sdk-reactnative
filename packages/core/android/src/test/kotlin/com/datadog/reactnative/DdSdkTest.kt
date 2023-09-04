@@ -16,7 +16,9 @@ import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.*
+import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
@@ -24,9 +26,13 @@ import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
-import com.datadog.tools.unit.*
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
+import com.datadog.tools.unit.MockRumMonitor
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.setStaticValue
+import com.datadog.tools.unit.toReadableArray
+import com.datadog.tools.unit.toReadableJavaOnlyMap
+import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -58,7 +64,6 @@ import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Stream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -317,7 +322,6 @@ internal class DdSdkTest {
             .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("sampleRate", expectedRumSampleRate)
             }
-
     }
 
     // endregion
@@ -1134,6 +1138,7 @@ internal class DdSdkTest {
                 it.hasFieldEqualTo("userActionTracking", true)
             }
     }
+
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {sdk verbosity}`(
         @Forgery configuration: DdSdkConfiguration,
@@ -1257,12 +1262,12 @@ internal class DdSdkTest {
             verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
         assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration")  { rumConfig ->
+            .hasField("featureConfiguration") { rumConfig ->
                 rumConfig.hasField("longTaskTrackingStrategy") { longTaskTrackingStrategy ->
                     longTaskTrackingStrategy
                         .isInstanceOf(
                             "com.datadog.android.rum.internal.instrumentation." +
-                                    "MainLooperLongTaskStrategy"
+                                "MainLooperLongTaskStrategy"
                         )
                         .hasFieldEqualTo("thresholdMs", threshold.toLong())
                 }
@@ -1298,7 +1303,7 @@ internal class DdSdkTest {
             verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
         assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration")  { rumConfig ->
+            .hasField("featureConfiguration") { rumConfig ->
                 rumConfig.doesNotHaveField("longTaskTrackingStrategy")
             }
     }
@@ -1378,7 +1383,7 @@ internal class DdSdkTest {
             Pair(
                 forge.aStringMatching("[a-z]+\\.[a-z]{3}"),
                 setOf(
-                    TracingHeaderType.DATADOG,
+                    TracingHeaderType.DATADOG
                 )
             )
         }
@@ -1441,9 +1446,9 @@ internal class DdSdkTest {
                 host,
                 setOf(
                     TracingHeaderType.DATADOG,
-                    TracingHeaderType.B3,
+                    TracingHeaderType.B3
                 )
-            ),
+            )
         )
 
         val firstPartyHosts = mutableListOf<ReadableMap>()
@@ -1451,7 +1456,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.DATADOG.name.lowercase(),
+                    TracingHeaderType.DATADOG.name.lowercase()
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1459,7 +1464,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.B3.name.lowercase(),
+                    TracingHeaderType.B3.name.lowercase()
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1507,7 +1512,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            uploadFrequency = input,
+            uploadFrequency = input
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1546,7 +1551,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            batchSize = input,
+            batchSize = input
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1584,7 +1589,7 @@ internal class DdSdkTest {
         // Given
         val trackBackgroundEvents = forge.aNullable { forge.aBool() }
         val bridgeConfiguration = configuration.copy(
-            trackBackgroundEvents = trackBackgroundEvents,
+            trackBackgroundEvents = trackBackgroundEvents
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1751,7 +1756,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "AVERAGE",
-            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble()
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1788,7 +1793,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "NEVER",
-            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble()
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1912,7 +1917,9 @@ internal class DdSdkTest {
         assertThat(rumConfigCaptor.firstValue)
             .hasField("featureConfiguration") {
                 val configurationMapper = it
-                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>("telemetryConfigurationMapper")
+                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>(
+                        "telemetryConfigurationMapper"
+                    )
                 val result = configurationMapper.map(telemetryConfigurationEvent)!!
                 assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
                     trackNativeErrors
@@ -1942,7 +1949,7 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a resource mapper that does not drop resources 𝕎 initialize() {}`(
-        @Forgery resourceEvent: ResourceEvent,
+        @Forgery resourceEvent: ResourceEvent
     ) {
         // Given
         val sdkConfigCaptor = argumentCaptor<Configuration>()
@@ -1975,7 +1982,7 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
-        @Forgery resourceEvent: ResourceEvent,
+        @Forgery resourceEvent: ResourceEvent
     ) {
         // Given
         val sdkConfigCaptor = argumentCaptor<Configuration>()
@@ -2013,7 +2020,7 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a action mapper that does not drop actions 𝕎 initialize() {}`(
-        @Forgery actionEvent: ActionEvent,
+        @Forgery actionEvent: ActionEvent
     ) {
         // Given
         val sdkConfigCaptor = argumentCaptor<Configuration>()
@@ -2046,7 +2053,7 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a action mapper that drops flagged actions 𝕎 initialize() {}`(
-        @Forgery actionEvent: ActionEvent,
+        @Forgery actionEvent: ActionEvent
     ) {
         // Given
         val sdkConfigCaptor = argumentCaptor<Configuration>()
@@ -2272,7 +2279,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Granted consent 𝕎 buildTrackingConsent {granted}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("granted", "GRANTED")
@@ -2284,7 +2290,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Pending consent 𝕎 buildTrackingConsent {pending}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("pending", "PENDING")
@@ -2296,7 +2301,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Granted consent 𝕎 buildTrackingConsent {not_granted}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("not_granted", "NOT_GRANTED")
@@ -2308,7 +2312,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build default Pending consent 𝕎 buildTrackingConsent {any}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom(null, "some-type")
@@ -2320,7 +2323,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 call setTrackingConsent 𝕎 setTrackingConsent ()`(forge: Forge) {
-
         // Given
         val consent = forge.anElementFrom("pending", "granted", "not_granted")
 
@@ -2335,7 +2337,6 @@ internal class DdSdkTest {
     fun `𝕄 not build proxy config 𝕎 no proxy config specified`(
         @Forgery configuration: DdSdkConfiguration
     ) {
-
         // Given
         val config = configuration.copy(additionalConfig = null)
 
@@ -2526,7 +2527,7 @@ internal class DdSdkTest {
             return Stream.of(
                 Arguments.of("SMALL", BatchSize.SMALL),
                 Arguments.of("MEDIUM", BatchSize.MEDIUM),
-                Arguments.of("LARGE", BatchSize.LARGE),
+                Arguments.of("LARGE", BatchSize.LARGE)
             )
         }
 
@@ -2535,7 +2536,7 @@ internal class DdSdkTest {
             return Stream.of(
                 Arguments.of("RARE", UploadFrequency.RARE),
                 Arguments.of("AVERAGE", UploadFrequency.AVERAGE),
-                Arguments.of("FREQUENT", UploadFrequency.FREQUENT),
+                Arguments.of("FREQUENT", UploadFrequency.FREQUENT)
             )
         }
     }
