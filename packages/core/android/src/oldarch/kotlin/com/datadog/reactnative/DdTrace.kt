@@ -16,7 +16,7 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's Trace feature.
  */
 class DdTrace(
-    reactContext: ReactApplicationContext,
+    reactContext: ReactApplicationContext
 ) : ReactContextBaseJavaModule(reactContext) {
 
     private val implementation = DdTraceImplementation()
