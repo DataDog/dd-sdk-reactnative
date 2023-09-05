@@ -6,7 +6,8 @@
 
 import XCTest
 @testable import DatadogSDKReactNative
-@testable import Datadog
+@testable import DatadogCore
+@testable import DatadogTrace
 
 
 internal class DdTraceTests: XCTestCase {

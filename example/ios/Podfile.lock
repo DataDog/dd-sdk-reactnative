@@ -1,13 +1,35 @@
 PODS:
   - boost (1.76.0)
-  - DatadogSDK (1.22.0)
-  - DatadogSDKCrashReporting (1.22.0):
-    - DatadogSDK (= 1.22.0)
-    - PLCrashReporter (~> 1.11.0)
+  - DatadogCore (2.1.2):
+    - DatadogInternal (= 2.1.2)
+  - DatadogCrashReporting (2.1.2):
+    - DatadogInternal (= 2.1.2)
+    - PLCrashReporter (~> 1.11.1)
+  - DatadogInternal (2.1.2)
+  - DatadogLogs (2.1.2):
+    - DatadogInternal (= 2.1.2)
+  - DatadogRUM (2.1.2):
+    - DatadogInternal (= 2.1.2)
   - DatadogSDKReactNative (1.8.5):
-    - DatadogSDK (~> 1.22.0)
-    - DatadogSDKCrashReporting (~> 1.22.0)
+    - DatadogCore (~> 2.1.2)
+    - DatadogCrashReporting (~> 2.1.2)
+    - DatadogLogs (~> 2.1.2)
+    - DatadogRUM (~> 2.1.2)
+    - DatadogTrace (~> 2.1.2)
+    - DatadogWebViewTracking (~> 2.1.2)
     - React-Core
+  - DatadogSDKReactNative/Tests (1.8.5):
+    - DatadogCore (~> 2.1.2)
+    - DatadogCrashReporting (~> 2.1.2)
+    - DatadogLogs (~> 2.1.2)
+    - DatadogRUM (~> 2.1.2)
+    - DatadogTrace (~> 2.1.2)
+    - DatadogWebViewTracking (~> 2.1.2)
+    - React-Core
+  - DatadogTrace (2.1.2):
+    - DatadogInternal (= 2.1.2)
+  - DatadogWebViewTracking (2.1.2):
+    - DatadogInternal (= 2.1.2)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.71.10)
   - FBReactNativeSpec (0.71.10):
@@ -387,7 +409,8 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - "DatadogSDKReactNative (from `../node_modules/@datadog/mobile-react-native`)"
+  - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -433,8 +456,13 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - DatadogSDK
-    - DatadogSDKCrashReporting
+    - DatadogCore
+    - DatadogCrashReporting
+    - DatadogInternal
+    - DatadogLogs
+    - DatadogRUM
+    - DatadogTrace
+    - DatadogWebViewTracking
     - fmt
     - HMSegmentedControl
     - libevent
@@ -444,7 +472,7 @@ EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
-    :path: "../node_modules/@datadog/mobile-react-native"
+    :path: "../../packages/core/DatadogSDKReactNative.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -528,9 +556,14 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
-  DatadogSDK: 46e1a7363bc3130fae151ec4aedf11ea291517c5
-  DatadogSDKCrashReporting: 24a0e6ec6db905cdeb174721962a7941b2f8a9d2
-  DatadogSDKReactNative: 1cd2c5ca0673e9fc83ad4b44b2c14f90cce9d53c
+  DatadogCore: 24190ba2cf526577212a9a6dd99e323684a867c1
+  DatadogCrashReporting: ace454b37c3e8bb3e343823301dd2bf8f7da2e6f
+  DatadogInternal: 5b02abb37a3ea80b86b0b02463d305b53f76d8d0
+  DatadogLogs: 612176842ed36a796b9dc6c8a28c079faa721d19
+  DatadogRUM: 5372a3c69f865a0f98870818144bf0b6c3282136
+  DatadogSDKReactNative: 4ba919b617e60dd5ada3e8e053e45797e3b062c4
+  DatadogTrace: 61c815e87bd4d2e232cbc03e1c05cb9f61a34834
+  DatadogWebViewTracking: b7b0b70263dfdf9abb16fecb654d7ad669cfc5db
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 90fc1a90b4b7a171e0a7c20ea426c1bf6ce4399c
@@ -576,6 +609,6 @@ SPEC CHECKSUMS:
   RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
   Yoga: e7ea9e590e27460d28911403b894722354d73479
 
-PODFILE CHECKSUM: ffc581c91d71c08d4a9374af21697b3d934fc7cf
+PODFILE CHECKSUM: 32a6101a728d3e9718c34a74bebf1924834aef29
 
 COCOAPODS: 1.12.1

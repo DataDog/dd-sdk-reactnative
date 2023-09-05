@@ -5,7 +5,7 @@
  */
 
 import Foundation
-import Datadog
+import DatadogTrace
 
 @objc
 public class DdTraceImplementation: NSObject {
@@ -19,7 +19,7 @@ public class DdTraceImplementation: NSObject {
 
     @objc
     public override convenience init() {
-        self.init { Tracer.initialize(configuration: Tracer.Configuration()) }
+        self.init { Tracer.shared() }
     }
 
     @objc
