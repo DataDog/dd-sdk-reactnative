@@ -54,8 +54,8 @@ class DdSdkImplementation(
      */
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
-        val sdkConfiguration = buildSDKConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRUMConfiguration(ddSdkConfiguration)
+        val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
+        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
         configureSdkVerbosity(ddSdkConfiguration)
@@ -177,7 +177,7 @@ class DdSdkImplementation(
     }
 
     @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
-    private fun buildRUMConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
+    private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
                 applicationId = configuration.applicationId
@@ -307,7 +307,7 @@ class DdSdkImplementation(
         return firstPartyHostsWithHeaderTypes
     }
 
-    private fun buildSDKConfiguration(configuration: DdSdkConfiguration): Configuration {
+    private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
         val serviceName = configuration.additionalConfig?.get(DD_SERVICE_NAME) as? String
         val configBuilder = Configuration.Builder(
             clientToken = configuration.clientToken,
