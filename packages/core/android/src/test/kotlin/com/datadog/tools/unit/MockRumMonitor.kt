@@ -1,104 +1,108 @@
 package com.datadog.tools.unit
 
+import com.datadog.android.rum.RumActionType
+import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumResourceKind
+import com.datadog.android.rum._RumInternalProxy
 
 class MockRumMonitor : RumMonitor {
     override var debug = false
 
-    override fun _getInternal(): com.datadog.android.rum._RumInternalProxy? {
+    override fun _getInternal(): _RumInternalProxy? {
         return null
     }
 
     override fun addAction(
-        type: com.datadog.android.rum.RumActionType,
-        name: kotlin.String,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        type: RumActionType,
+        name: String,
+        attributes: Map<String, Any?>
+    ) {}
 
-    override fun addAttribute(key: kotlin.String, value: kotlin.Any?): kotlin.Unit {}
+    override fun addAttribute(key: String, value: Any?) {}
 
     override fun addError(
-        message: kotlin.String,
-        source: com.datadog.android.rum.RumErrorSource,
-        throwable: kotlin.Throwable?,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        message: String,
+        source: RumErrorSource,
+        throwable: Throwable?,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun addErrorWithStacktrace(
-        message: kotlin.String,
-        source: com.datadog.android.rum.RumErrorSource,
-        stacktrace: kotlin.String?,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        message: String,
+        source: RumErrorSource,
+        stacktrace: String?,
+        attributes: Map<String, Any?>
+    ) {}
 
-    override fun addFeatureFlagEvaluation(name: kotlin.String, value: kotlin.Any): kotlin.Unit {}
+    override fun addFeatureFlagEvaluation(name: String, value: Any) {}
 
-    override fun addTiming(name: kotlin.String): kotlin.Unit {}
+    override fun addTiming(name: String) {}
 
-    override fun clearAttributes(): kotlin.Unit {}
+    override fun clearAttributes() {}
 
-    override fun getAttributes(): kotlin.collections.Map<kotlin.String, kotlin.Any?> {
+    override fun getAttributes(): Map<String, Any?> {
         return mapOf()
     }
 
-    override fun removeAttribute(key: kotlin.String): kotlin.Unit {}
+    override fun removeAttribute(key: String) {}
 
     override fun startAction(
-        type: com.datadog.android.rum.RumActionType,
-        name: kotlin.String,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        type: RumActionType,
+        name: String,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun startResource(
-        key: kotlin.String,
-        method: kotlin.String,
-        url: kotlin.String,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: String,
+        method: String,
+        url: String,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun startView(
-        key: kotlin.Any,
-        name: kotlin.String,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: Any,
+        name: String,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun stopAction(
-        type: com.datadog.android.rum.RumActionType,
-        name: kotlin.String,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        type: RumActionType,
+        name: String,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun stopResource(
-        key: kotlin.String,
-        statusCode: kotlin.Int?,
-        size: kotlin.Long?,
-        kind: com.datadog.android.rum.RumResourceKind,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: String,
+        statusCode: Int?,
+        size: Long?,
+        kind: RumResourceKind,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun stopResourceWithError(
-        key: kotlin.String,
-        statusCode: kotlin.Int?,
-        message: kotlin.String,
-        source: com.datadog.android.rum.RumErrorSource,
-        stackTrace: kotlin.String,
-        errorType: kotlin.String?,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: String,
+        statusCode: Int?,
+        message: String,
+        source: RumErrorSource,
+        stackTrace: String,
+        errorType: String?,
+        attributes: Map<String, Any?>
+    ) {}
 
     override fun stopResourceWithError(
-        key: kotlin.String,
-        statusCode: kotlin.Int?,
-        message: kotlin.String,
-        source: com.datadog.android.rum.RumErrorSource,
-        throwable: kotlin.Throwable,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: String,
+        statusCode: Int?,
+        message: String,
+        source: RumErrorSource,
+        throwable: Throwable,
+        attributes: Map<String, Any?>
+    ) {}
 
-    override fun stopSession(): kotlin.Unit {}
+    override fun stopSession() {}
 
     override fun stopView(
-        key: kotlin.Any,
-        attributes: kotlin.collections.Map<kotlin.String, kotlin.Any?>
-    ): kotlin.Unit {}
+        key: Any,
+        attributes: Map<String, Any?>
+    ) {}
 }
