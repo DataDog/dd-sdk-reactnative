@@ -348,8 +348,8 @@ public class DdSdkImplementation: NSObject {
         switch verbosityLevel?.lowercased {
         case "debug":
             Datadog.verbosityLevel = .debug
-        // TODO: deprecate info in js and android
         case "info":
+            // .info is mapped to .debug
             Datadog.verbosityLevel = .debug
         case "warn":
             Datadog.verbosityLevel = .warn
