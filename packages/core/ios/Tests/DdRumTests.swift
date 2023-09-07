@@ -40,10 +40,12 @@ internal class DdRumTests: XCTestCase {
         waitForExpectations(timeout: 0.5, handler: nil)
     }
 
-    // TODO: Fix this test by removing ambiguity in names
-//    func testInternalTimestampKeyValue() {
-//        XCTAssertEqual(DdRumImplementation.timestampKey, CrossPlatformAttributes.timestampInMilliseconds)
-//    }
+    func testInternalTimestampKeyValue() {
+        let key = "_dd.timestamp"
+        
+        XCTAssertEqual(DdRumImplementation.timestampKey, DatadogInternal.CrossPlatformAttributes.timestampInMilliseconds)
+        XCTAssertEqual(DdRumImplementation.timestampKey, DatadogSDKReactNative.CrossPlatformAttributes.timestampInMilliseconds)
+    }
 
     func testStartView() throws {
         rum.startView(key: "view key", name: "view name", context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
