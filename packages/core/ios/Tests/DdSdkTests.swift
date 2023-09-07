@@ -207,15 +207,13 @@ internal class DdSdkTests: XCTestCase {
     
     func testEnableAllFeatures() {
         let core = MockDatadogCore()
-        CoreRegistry.register(default: core)
         let configuration: DdSdkConfiguration = .mockAny()
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
         
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
         XCTAssertNotNil(core.features[TraceFeature.name])
-        CoreRegistry.unregisterDefault()
     }
 
     func testBuildConfigurationDefaultEndpoint() {
@@ -327,35 +325,29 @@ internal class DdSdkTests: XCTestCase {
 
     func testBuildConfigurationNoCrashReportByDefault() {
         let core = MockDatadogCore()
-        CoreRegistry.register(default: core)
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
-        CoreRegistry.unregisterDefault()
     }
 
     func testBuildConfigurationNoCrashReport() {
         let core = MockDatadogCore()
-        CoreRegistry.register(default: core)
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
-        CoreRegistry.unregisterDefault()
     }
 
     func testBuildConfigurationWithCrashReport() {
         let core = MockDatadogCore()
-        CoreRegistry.register(default: core)
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
         
         XCTAssertNotNil(core.features[CrashReportingFeature.name])
-        CoreRegistry.unregisterDefault()
     }
     
     func testBuildConfigurationWithVersionSuffix() {
@@ -813,80 +805,27 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.trackBackgroundEvents, false)
     }
 
-    func testConfigurationTelemetryEventMapper() throws {
-        //TODO: rewrite this test
-//        DdSdkImplementation(
-//            mainDispatchQueue: DispatchQueueMock(),
-//            jsDispatchQueue: DispatchQueueMock(),
-//            jsRefreshRateMonitor: JSRefreshRateMonitor())
-//        .initialize(
-//            configuration: .mockAny(
-//                nativeCrashReportEnabled: false,
-//                nativeLongTaskThresholdMs: 0.0,
-//                longTaskThresholdMs: 0.1,
-//                configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
-//            ),
-//            resolve: mockResolve,
-//            reject: mockReject
-//        )
-//
-//
-//        guard let configurationEventMapper = try XCTUnwrap(DD.telemetry as? RUMTelemetry).configurationEventMapper else { return }
-//
-//        let mappedEvent = configurationEventMapper(
-//            TelemetryConfigurationEvent(
-//                dd: TelemetryConfigurationEvent.DD(),
-//                action: nil,
-//                application: nil,
-//                date: Int64(),
-//                experimentalFeatures: nil,
-//                service: "mockService",
-//                session: nil,
-//                source: .reactNative,
-//                telemetry: TelemetryConfigurationEvent.Telemetry(
-//                    configuration: TelemetryConfigurationEvent.Telemetry.Configuration(
-//                        actionNameAttribute: nil,
-//                        batchSize: nil,
-//                        batchUploadFrequency: nil,
-//                        forwardConsoleLogs: nil,
-//                        forwardErrorsToLogs: nil,
-//                        forwardReports: nil,
-//                        premiumSampleRate: nil,
-//                        replaySampleRate: nil,
-//                        selectedTracingPropagators: nil,
-//                        sessionSampleRate: nil,
-//                        silentMultipleInit: nil,
-//                        telemetryConfigurationSampleRate: nil,
-//                        telemetrySampleRate: nil,
-//                        traceSampleRate: nil,
-//                        trackSessionAcrossSubdomains: nil,
-//                        useAllowedTracingOrigins: nil,
-//                        useAllowedTracingUrls: nil,
-//                        useBeforeSend: nil,
-//                        useCrossSiteSessionCookie: nil,
-//                        useExcludedActivityUrls: nil,
-//                        useLocalEncryption: nil,
-//                        useSecureSessionCookie: nil,
-//                        useTracing: nil,
-//                        viewTrackingStrategy: nil
-//                    )
-//                ),
-//                version: "1.0.0",
-//                view: nil
-//            )
-//        )
-//
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.initializationType, "LEGACY")
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackErrors, true)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackInteractions, true)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNetworkRequests, true)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeErrors, false)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackNativeLongTasks, false)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.trackLongTask, true)
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.reactVersion, "18.2.0")
-//        XCTAssertEqual(mappedEvent.telemetry.configuration.reactNativeVersion, "0.71.0")
-//
-//        Datadog.internalFlushAndDeinitialize()
+    func testConfigurationTelemetryOverride() throws {
+        let core = MockDatadogCore()
+        let configuration: DdSdkConfiguration = .mockAny(
+            nativeCrashReportEnabled: false,
+            nativeLongTaskThresholdMs: 0.0,
+            longTaskThresholdMs: 0.1,
+            configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
+        )
+        
+        DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration, core: core)
+
+        // TODO: uncomment when all telemetry is supported
+//        XCTAssertEqual(mockTelemetry.configuration?.initializationType, "LEGACY")
+        XCTAssertEqual(core.configuration?.trackErrors, true)
+        XCTAssertEqual(core.configuration?.trackInteractions, true)
+        XCTAssertEqual(core.configuration?.trackNetworkRequests, true)
+//        XCTAssertEqual(core.configuration?.trackNativeErrors, false)
+        XCTAssertEqual(core.configuration?.trackNativeLongTasks, false)
+        XCTAssertEqual(core.configuration?.trackLongTask, true)
+//        XCTAssertEqual(core.configuration?.reactVersion, "18.2.0")
+//        XCTAssertEqual(core.configuration?.reactNativeVersion, "0.71.0")
     }
 
     func testDropsResourceMarkedAsDropped() throws {
@@ -1055,8 +994,15 @@ extension DdSdkImplementation {
 }
 
 internal class MockDatadogCore: DatadogCoreProtocol {
-    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
-    
+    func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
+        if  // Configuration Telemetry Message
+            case .telemetry(let telemetry) = message,
+            case .configuration(let configuration) = telemetry {
+            self.configuration = configuration
+        }
+    }
+   
+    private(set) var configuration: ConfigurationTelemetry?
     private(set) var features: [String: DatadogFeature] = [:]
 
     func register<T>(feature: T) throws where T : DatadogFeature {

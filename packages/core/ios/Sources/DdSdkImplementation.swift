@@ -81,27 +81,28 @@ public class DdSdkImplementation: NSObject {
 
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
-            Datadog.initialize(with: sdkConfig, trackingConsent: consent)
+            let core = Datadog.initialize(with: sdkConfig, trackingConsent: consent)
 
-            self.enableFeatures(sdkConfiguration: sdkConfiguration)
-            self.sendConfigurationAsTelemetry(rnConfiguration: sdkConfiguration)
+            self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
 
             resolve(nil)
         }
     }
     
-    func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
-        let rumConfig = self.buildRUMConfiguration(configuration: sdkConfiguration)
-        RUM.enable(with: rumConfig)
+    func enableFeatures(sdkConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) {
+        let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
+        RUM.enable(with: rumConfig, in: core)
         
-        Logs.enable(with: Logs.Configuration())
+        Logs.enable(with: Logs.Configuration(), in: core)
         
-        Trace.enable(with: Trace.Configuration())
+        Trace.enable(with: Trace.Configuration(), in: core)
 
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
-            CrashReporting.enable()
+            CrashReporting.enable(in: core)
         }
+
+        overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration, core: core)
     }
 
     @objc
@@ -157,9 +158,9 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
-    func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) -> Void {
         // TODO: missing some keys: initializationType, reactVersion, reactNativeVersion, trackNativeErrors
-        let telemetry = TelemetryCore(core: CoreRegistry.default)
+        let telemetry = TelemetryCore(core: core)
         telemetry.configuration(
             trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
