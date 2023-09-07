@@ -83,21 +83,24 @@ public class DdSdkImplementation: NSObject {
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
             Datadog.initialize(with: sdkConfig, trackingConsent: consent)
 
-            let rumConfig = self.buildRUMConfiguration(configuration: sdkConfiguration)
-            RUM.enable(with: rumConfig)
-            
-            Logs.enable(with: Logs.Configuration())
-            
-            Trace.enable(with: Trace.Configuration())
-
-            if sdkConfiguration.nativeCrashReportEnabled ?? false {
-                CrashReporting.enable()
-            }
-
+            self.enableFeatures(sdkConfiguration: sdkConfiguration)
             self.sendConfigurationAsTelemetry(rnConfiguration: sdkConfiguration)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
-            
+
             resolve(nil)
+        }
+    }
+    
+    func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
+        let rumConfig = self.buildRUMConfiguration(configuration: sdkConfiguration)
+        RUM.enable(with: rumConfig)
+        
+        Logs.enable(with: Logs.Configuration())
+        
+        Trace.enable(with: Trace.Configuration())
+
+        if sdkConfiguration.nativeCrashReportEnabled ?? false {
+            CrashReporting.enable()
         }
     }
 
@@ -178,7 +181,7 @@ public class DdSdkImplementation: NSObject {
             uploadFrequency: configuration.uploadFrequency,
             proxyConfiguration: buildProxyConfiguration(config: configuration.additionalConfig)
         )
-        if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {
+        if let additionalConfiguration = configuration.additionalConfig as? [String: Any] {
             config._internal_mutation {
               $0.additionalConfiguration = additionalConfiguration
             }

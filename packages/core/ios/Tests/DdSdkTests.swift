@@ -9,6 +9,9 @@ import XCTest
 @testable import DatadogCore
 @testable import DatadogRUM
 @testable import DatadogInternal
+@testable import DatadogLogs
+@testable import DatadogTrace
+@testable import DatadogCrashReporting
 import DatadogLogs
 
 final class DispatchQueueMock: DispatchQueueType {
@@ -201,6 +204,19 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+    
+    func testEnableAllFeatures() {
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        
+        XCTAssertNotNil(core.features[RUMFeature.name])
+        XCTAssertNotNil(core.features[LogsFeature.name])
+        XCTAssertNotNil(core.features[TraceFeature.name])
+        CoreRegistry.unregisterDefault()
+    }
 
     func testBuildConfigurationDefaultEndpoint() {
         let configuration: DdSdkConfiguration = .mockAny()
@@ -310,32 +326,36 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationNoCrashReportByDefault() {
-        // TODO: rewrite this test
-//        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
-//
-//        let ddConfig = DdSdkImplementation().buildSDKConfiguration(configuration: configuration)
-//
-//        XCTAssertNil(ddConfig.crashReportingPlugin)
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
+
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        
+        XCTAssertNil(core.features[CrashReportingFeature.name])
+        CoreRegistry.unregisterDefault()
     }
 
     func testBuildConfigurationNoCrashReport() {
-        // TODO: rewrite this test
-//        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
-//
-//        let ddConfig = DdSdkImplementation().buildSDKConfiguration(configuration: configuration)
-//
-//        XCTAssertNil(ddConfig.crashReportingPlugin)
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
+
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        
+        XCTAssertNil(core.features[CrashReportingFeature.name])
+        CoreRegistry.unregisterDefault()
     }
 
     func testBuildConfigurationWithCrashReport() {
-        // TODO: rewrite this test
-//        let configuration: DdSdkConfiguration = .mockAny(
-//            nativeCrashReportEnabled: true
-//        )
-//
-//        let ddConfig = DdSdkImplementation().buildSDKConfiguration(configuration: configuration)
-//
-//        XCTAssertNotNil(ddConfig.crashReportingPlugin)
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
+
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
+        
+        XCTAssertNotNil(core.features[CrashReportingFeature.name])
+        CoreRegistry.unregisterDefault()
     }
     
     func testBuildConfigurationWithVersionSuffix() {
@@ -495,12 +515,17 @@ internal class DdSdkTests: XCTestCase {
         ]])
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
-        
-        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.datadog, .b3]])
-        firstPartyHosts += FirstPartyHosts(["datadog.com": [.b3multi, .tracecontext]])
 
-        // TODO: rewrite this test
-//        XCTAssertEqual(ddConfig.urlSessionTracking?.firstPartyHostsTracing, firstPartyHosts!)
+        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext]]
+        var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
+        switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
+            case .trace(_,_): break
+            case let .traceWithHeaders(hostsWithHeaders, _):
+                return actualFirstPartyHosts = hostsWithHeaders
+            case .none: break
+        }
+
+        XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
     }
     
     func testBuildMalformedFirstPartyHosts() {
@@ -510,10 +535,16 @@ internal class DdSdkTests: XCTestCase {
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
         
-        let firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.b3]])
+        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3]]
+        var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
+        switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
+            case .trace(_,_): break
+            case let .traceWithHeaders(hostsWithHeaders, _):
+                return actualFirstPartyHosts = hostsWithHeaders
+            case .none: break
+        }
 
-        // TODO: rewrite this test
-//        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
+        XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
     }
     
     func testBuildFirstPartyHostsWithDuplicatedMatchKey() {
@@ -524,10 +555,16 @@ internal class DdSdkTests: XCTestCase {
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
         
-        var firstPartyHosts: FirstPartyHosts? = FirstPartyHosts(["example.com": [.b3, .tracecontext]])
+        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3, .tracecontext]]
+        var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
+        switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
+            case .trace(_,_): break
+            case let .traceWithHeaders(hostsWithHeaders, _):
+                return actualFirstPartyHosts = hostsWithHeaders
+            case .none: break
+        }
 
-        // TODO: rewrite this test
-//        XCTAssertEqual(ddConfig.firstPartyHosts, firstPartyHosts)
+        XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
     }
 
     func testBuildTelemetrySampleRate() {
@@ -1015,5 +1052,26 @@ extension DdSdkImplementation {
             RUMMonitorInternalProvider: { nil }
         )
     }
+}
+
+internal class MockDatadogCore: DatadogCoreProtocol {
+    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
     
+    private(set) var features: [String: DatadogFeature] = [:]
+
+    func register<T>(feature: T) throws where T : DatadogFeature {
+        features[T.name] = feature
+    }
+    
+    func get<T>(feature type: T.Type) -> T? where T : DatadogFeature {
+        return nil
+    }
+    
+    func scope(for feature: String) -> FeatureScope? {
+        return nil
+    }
+    
+    func set(feature: String, attributes: @escaping () -> FeatureBaggage) {}
+    
+    func update(feature: String, attributes: @escaping () -> FeatureBaggage) {}
 }
