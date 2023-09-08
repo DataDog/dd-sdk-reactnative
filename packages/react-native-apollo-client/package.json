@@ -1,0 +1,73 @@
+{
+    "name": "@datadog/mobile-react-native-apollo-client",
+    "version": "1.8.3",
+    "description": "A client-side React Native module to interact with Apollo Client and Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android",
+        "apollo",
+        "graphql"
+    ],
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative/packages/react-native-apollo-client#readme",
+    "repository": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative",
+        "directory": "packages/react-native-apollo-client"
+    },
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src/**",
+        "lib/**"
+    ],
+    "types": "lib/typescript/index.d.ts",
+    "react-native": "src/index",
+    "source": "src/index",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build"
+    },
+    "devDependencies": {
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1"
+    },
+    "peerDependencies": {
+        "@datadog/mobile-react-native": ">=1.5.0",
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "testPathIgnorePatterns": [
+            "/__utils__/"
+        ],
+        "transformIgnorePatterns": []
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    }
+}
