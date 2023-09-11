@@ -19,6 +19,11 @@ import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
+import {
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
+} from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { DdTrace } from './trace/DdTrace';
@@ -42,5 +47,8 @@ export {
     VitalsUpdateFrequency,
     PropagatorType,
     UploadFrequency,
-    BatchSize
+    BatchSize,
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
 };

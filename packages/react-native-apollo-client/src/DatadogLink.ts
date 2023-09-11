@@ -5,6 +5,11 @@
  */
 
 import { ApolloLink } from '@apollo/client';
+import {
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
+} from '@datadog/mobile-react-native';
 
 import { getOperationName, getVariables, getOperationType } from './helpers';
 
@@ -16,14 +21,22 @@ export class DatadogLink extends ApolloLink {
             const operationType = getOperationType(operation);
 
             operation.setContext(({ headers = {} }) => {
+                const newHeaders: Record<string, string | null> = {
+                    ...headers
+                };
+
+                newHeaders[
+                    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER
+                ] = operationType;
+                newHeaders[
+                    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER
+                ] = operationName;
+                newHeaders[
+                    DATADOG_GRAPH_QL_VARIABLES_HEADER
+                ] = formattedVariables;
+
                 return {
-                    headers: {
-                        ...headers,
-                        // TODO: import headers from core
-                        '_dd-graph-ql-operation-name': operationName,
-                        '_dd-graph-ql-variables': formattedVariables,
-                        '_dd-graph-ql-operation-type': operationType
-                    }
+                    headers: newHeaders
                 };
             });
 

@@ -8,6 +8,12 @@ import Timer from '../../../../../Timer';
 import { getTracingHeaders } from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
+import {
+    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_VARIABLES_HEADER,
+    isDatadogCustomHeader
+} from '../../graphql/graphqlHeaders';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 
@@ -41,6 +47,7 @@ export class XHRProxy extends RequestProxy {
     private providers: XHRProxyProviders;
     private static originalXhrOpen: typeof XMLHttpRequest.prototype.open;
     private static originalXhrSend: typeof XMLHttpRequest.prototype.send;
+    private static originalXhrSetRequestHeader: typeof XMLHttpRequest.prototype.setRequestHeader;
 
     constructor(providers: XHRProxyProviders) {
         super();
@@ -50,12 +57,15 @@ export class XHRProxy extends RequestProxy {
     onTrackingStart = (context: RequestProxyOptions) => {
         XHRProxy.originalXhrOpen = this.providers.xhrType.prototype.open;
         XHRProxy.originalXhrSend = this.providers.xhrType.prototype.send;
+        XHRProxy.originalXhrSetRequestHeader = this.providers.xhrType.prototype.setRequestHeader;
         proxyRequests(this.providers, context);
     };
 
     onTrackingStop = () => {
         this.providers.xhrType.prototype.open = XHRProxy.originalXhrOpen;
         this.providers.xhrType.prototype.send = XHRProxy.originalXhrSend;
+        this.providers.xhrType.prototype.setRequestHeader =
+            XHRProxy.originalXhrSetRequestHeader;
     };
 }
 
@@ -65,6 +75,7 @@ const proxyRequests = (
 ): void => {
     proxyOpen(providers, context);
     proxySend(providers);
+    proxySetRequestHeader(providers);
 };
 
 const proxyOpen = (
@@ -180,4 +191,33 @@ const reportXhr = async (
         },
         resourceContext: xhrProxy
     });
+};
+
+const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
+    const xhrType = providers.xhrType;
+    const originalXhrSetRequestHeader = xhrType.prototype.setRequestHeader;
+
+    xhrType.prototype.setRequestHeader = function (
+        this: DdRumXhr,
+        header: string,
+        value: string
+    ) {
+        if (isDatadogCustomHeader(header)) {
+            if (header === DATADOG_GRAPH_QL_OPERATION_NAME_HEADER) {
+                // TODO: add information to request
+                return;
+            }
+            if (header === DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER) {
+                // TODO: add information to request
+                return;
+            }
+            if (header === DATADOG_GRAPH_QL_VARIABLES_HEADER) {
+                // TODO: add information to request
+                return;
+            }
+        }
+
+        // eslint-disable-next-line prefer-rest-params
+        return originalXhrSetRequestHeader.apply(this, arguments as any);
+    };
 };
