@@ -1,0 +1,96 @@
+{
+    "variables": { "code": "BE" },
+    "extensions": {},
+    "operationName": "CountryDetails",
+    "query": {
+        "kind": "Document",
+        "definitions": [
+            {
+                "kind": "OperationDefinition",
+                "operation": "query",
+                "name": { "kind": "Name", "value": "CountryDetails" },
+                "variableDefinitions": [
+                    {
+                        "kind": "VariableDefinition",
+                        "variable": {
+                            "kind": "Variable",
+                            "name": { "kind": "Name", "value": "code" }
+                        },
+                        "type": {
+                            "kind": "NonNullType",
+                            "type": {
+                                "kind": "NamedType",
+                                "name": { "kind": "Name", "value": "ID" }
+                            }
+                        },
+                        "directives": []
+                    }
+                ],
+                "directives": [],
+                "selectionSet": {
+                    "kind": "SelectionSet",
+                    "selections": [
+                        {
+                            "kind": "Field",
+                            "name": { "kind": "Name", "value": "country" },
+                            "arguments": [
+                                {
+                                    "kind": "Argument",
+                                    "name": { "kind": "Name", "value": "code" },
+                                    "value": {
+                                        "kind": "Variable",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "code"
+                                        }
+                                    }
+                                }
+                            ],
+                            "directives": [],
+                            "selectionSet": {
+                                "kind": "SelectionSet",
+                                "selections": [
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "name"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "emoji"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "capital"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "__typename"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "loc": { "start": 0, "end": 112 }
+    }
+}

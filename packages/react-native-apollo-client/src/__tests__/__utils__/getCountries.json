@@ -1,0 +1,103 @@
+{
+    "variables": {},
+    "extensions": {},
+    "query": {
+        "kind": "Document",
+        "definitions": [
+            {
+                "kind": "OperationDefinition",
+                "operation": "query",
+                "variableDefinitions": [],
+                "directives": [],
+                "selectionSet": {
+                    "kind": "SelectionSet",
+                    "selections": [
+                        {
+                            "kind": "Field",
+                            "name": { "kind": "Name", "value": "countries" },
+                            "arguments": [
+                                {
+                                    "kind": "Argument",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "filter"
+                                    },
+                                    "value": {
+                                        "kind": "ObjectValue",
+                                        "fields": [
+                                            {
+                                                "kind": "ObjectField",
+                                                "name": {
+                                                    "kind": "Name",
+                                                    "value": "continent"
+                                                },
+                                                "value": {
+                                                    "kind": "ObjectValue",
+                                                    "fields": [
+                                                        {
+                                                            "kind": "ObjectField",
+                                                            "name": {
+                                                                "kind": "Name",
+                                                                "value": "eq"
+                                                            },
+                                                            "value": {
+                                                                "kind": "StringValue",
+                                                                "value": "EU",
+                                                                "block": false
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "directives": [],
+                            "selectionSet": {
+                                "kind": "SelectionSet",
+                                "selections": [
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "name"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "emoji"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "code"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "__typename"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "loc": { "start": 0, "end": 98 }
+    }
+}
