@@ -173,8 +173,7 @@ public class DdSdkImplementation: NSObject {
         )
     }
 
-    func buildSDKConfiguration(configuration: DdSdkConfiguration) -> Datadog.Configuration {
-        // TODO: Add version to config once this is released on iOS
+    func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
         var config = Datadog.Configuration(
             clientToken: configuration.clientToken,
             env: configuration.env,
@@ -184,7 +183,13 @@ public class DdSdkImplementation: NSObject {
             uploadFrequency: configuration.uploadFrequency,
             proxyConfiguration: buildProxyConfiguration(config: configuration.additionalConfig)
         )
-        if let additionalConfiguration = configuration.additionalConfig as? [String: Any] {
+
+        if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {
+            if let versionSuffix = additionalConfiguration[InternalConfigurationAttributes.versionSuffix] as? String {
+                let datadogVersion = defaultAppVersion + versionSuffix
+                additionalConfiguration[CrossPlatformAttributes.version] = datadogVersion
+            }
+
             config._internal_mutation {
               $0.additionalConfiguration = additionalConfiguration
             }
