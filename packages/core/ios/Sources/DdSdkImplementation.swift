@@ -159,13 +159,15 @@ public class DdSdkImplementation: NSObject {
     }
     
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) -> Void {
-        // TODO: missing some keys: initializationType, reactVersion, reactNativeVersion, trackNativeErrors
-        let telemetry = TelemetryCore(core: core)
-        telemetry.configuration(
+        core.telemetry.configuration(
+            initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
+            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
+            reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
             trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
             trackInteractions: rnConfiguration.configurationForTelemetry?.trackInteractions,
             trackLongTask: rnConfiguration.longTaskThresholdMs != 0,
+            trackNativeErrors: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNativeLongTasks: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNetworkRequests: rnConfiguration.configurationForTelemetry?.trackNetworkRequests
         )

@@ -816,16 +816,15 @@ internal class DdSdkTests: XCTestCase {
         
         DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration, core: core)
 
-        // TODO: uncomment when all telemetry is supported
-//        XCTAssertEqual(mockTelemetry.configuration?.initializationType, "LEGACY")
+        XCTAssertEqual(core.configuration?.initializationType, "LEGACY")
         XCTAssertEqual(core.configuration?.trackErrors, true)
         XCTAssertEqual(core.configuration?.trackInteractions, true)
         XCTAssertEqual(core.configuration?.trackNetworkRequests, true)
-//        XCTAssertEqual(core.configuration?.trackNativeErrors, false)
+        XCTAssertEqual(core.configuration?.trackNativeErrors, false)
         XCTAssertEqual(core.configuration?.trackNativeLongTasks, false)
         XCTAssertEqual(core.configuration?.trackLongTask, true)
-//        XCTAssertEqual(core.configuration?.reactVersion, "18.2.0")
-//        XCTAssertEqual(core.configuration?.reactNativeVersion, "0.71.0")
+        XCTAssertEqual(core.configuration?.reactVersion, "18.2.0")
+        XCTAssertEqual(core.configuration?.reactNativeVersion, "0.71.0")
     }
 
     func testDropsResourceMarkedAsDropped() throws {
