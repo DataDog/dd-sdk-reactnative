@@ -269,11 +269,11 @@ internal class DdRumTests: XCTestCase {
     }
 
     func testRumErrorSourceMapping() throws {
-//        XCTAssertEqual(RUMErrorSource(from: "source"), RUMErrorSource.source)
-//        XCTAssertEqual(RUMErrorSource(from: "network"), RUMErrorSource.network)
-//        XCTAssertEqual(RUMErrorSource(from: "webview"), RUMErrorSource.webview)
-//        XCTAssertEqual(RUMErrorSource(from: "console"), RUMErrorSource.console)
-//        XCTAssertEqual(RUMErrorSource(from: "foobar"), RUMErrorSource.custom)
+       XCTAssertEqual(RUMErrorSource(from: "source"), RUMErrorSource.source)
+       XCTAssertEqual(RUMErrorSource(from: "network"), RUMErrorSource.network)
+       XCTAssertEqual(RUMErrorSource(from: "webview"), RUMErrorSource.webview)
+       XCTAssertEqual(RUMErrorSource(from: "console"), RUMErrorSource.console)
+       XCTAssertEqual(RUMErrorSource(from: "foobar"), RUMErrorSource.custom)
     }
 
     private func nanoTimeToDate(timestampNs: Int64) -> Date {
