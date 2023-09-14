@@ -874,6 +874,22 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+
+    func testConsumeWebviewEventBeforeInitialization() throws {
+        XCTAssertNoThrow(try DdSdkImplementation().consumeWebviewEvent(message: "TestMessage", resolve: mockResolve, reject: mockReject))
+    }
+
+    func testConsumeWebviewEvent() throws {
+        let sdk = DdSdkImplementation()
+        let configuration: DdSdkConfiguration = .mockAny()
+        let core = MockDatadogCore()
+
+        sdk.enableFeatures(sdkConfiguration: configuration, core: core)
+        
+        sdk.consumeWebviewEvent(message: "{\"eventType\":\"RUM\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertNotNil(core.baggages["browser-rum-event"])
+    }
 }
 
 private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
@@ -998,10 +1014,15 @@ internal class MockDatadogCore: DatadogCoreProtocol {
             case .configuration(let configuration) = telemetry {
             self.configuration = configuration
         }
+        
+        if case .baggage(let key, let baggage) = message {
+            self.baggages[key] = baggage
+        }
     }
    
     private(set) var configuration: ConfigurationTelemetry?
     private(set) var features: [String: DatadogFeature] = [:]
+    private(set) var baggages: [String: Any] = [:]
 
     func register<T>(feature: T) throws where T : DatadogFeature {
         features[T.name] = feature

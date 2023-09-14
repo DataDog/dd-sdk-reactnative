@@ -27,7 +27,8 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
-    
+    var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
 
     @objc
@@ -101,6 +102,8 @@ public class DdSdkImplementation: NSObject {
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
             CrashReporting.enable(in: core)
         }
+        
+        self.webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
 
         overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration, core: core)
     }
@@ -149,9 +152,7 @@ public class DdSdkImplementation: NSObject {
     @objc
     public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
-            // TODO: memoize message emitter once core is initialized
-            let messageEmitter = WebViewTracking._internal.messageEmitter(in: CoreRegistry.default)
-            try messageEmitter.send(body: message)
+            try self.webviewMessageEmitter?.send(body: message)
         } catch {
             Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
