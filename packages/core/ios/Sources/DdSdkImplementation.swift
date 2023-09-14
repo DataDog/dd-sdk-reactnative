@@ -377,7 +377,7 @@ public class DdSdkImplementation: NSObject {
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
         if let frameTimeCallback = buildFrameTimeCallback(sdkConfiguration: sdkConfiguration) {
             // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
-            self.jsRefreshRateMonitor.startMonitoring(jsQueue: jsDispatchQueue ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: jsDispatchQueue, frameTimeCallback: frameTimeCallback)
         }
     }
 
