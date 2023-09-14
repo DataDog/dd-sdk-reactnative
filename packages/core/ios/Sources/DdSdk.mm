@@ -10,9 +10,11 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
 #endif
 #import "DdSdk.h"
+#import <React/RCTBridge+Private.h>
 
 @implementation DdSdk
 
+@synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(initialize, withConfiguration:(NSDictionary*)configuration
@@ -79,7 +81,7 @@ RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
-        _ddSdkImplementation = [[DdSdkImplementation alloc] init];
+        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:_bridge];
     }
     return _ddSdkImplementation;
 }

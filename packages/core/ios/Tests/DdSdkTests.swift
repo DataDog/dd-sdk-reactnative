@@ -12,6 +12,13 @@ final class DispatchQueueMock: DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void) {
         work()
     }
+    
+    func isSameQueue(queue: DispatchQueueType) -> Bool {
+        guard let queueAsMock = queue as? DispatchQueueMock else {
+            return false
+        }
+        return self === queueAsMock
+    }
 }
 
 internal class DdSdkTests: XCTestCase {
@@ -25,11 +32,11 @@ internal class DdSdkTests: XCTestCase {
         var printedMessage = ""
         consolePrint = { msg in printedMessage += msg }
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "")
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
 
@@ -87,7 +94,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityDebug() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "debug"])
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.debug)
 
@@ -97,7 +104,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityInfo() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "info"])
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.info)
 
@@ -107,7 +114,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityWarn() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "warn"])
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.warn)
 
@@ -117,7 +124,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityError() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "error"])
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, LogLevel.error)
 
@@ -127,7 +134,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityNil() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: nil)
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
@@ -137,7 +144,7 @@ internal class DdSdkTests: XCTestCase {
     func testSDKInitializationWithVerbosityUnknown() {
         let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "foo"])
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor()).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
 
@@ -310,7 +317,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSettingUserInfo() throws {
-        let bridge = DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
+        let bridge = DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         bridge.setUser(
@@ -340,7 +347,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSettingAttributes() {
-        let bridge = DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
+        let bridge = DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: JSRefreshRateMonitor())
         bridge.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         let rumMonitorMock = MockRUMMonitor()
@@ -590,7 +597,7 @@ internal class DdSdkTests: XCTestCase {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
@@ -606,7 +613,7 @@ internal class DdSdkTests: XCTestCase {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.0, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertFalse(mockRefreshRateMonitor.isStarted)
@@ -622,7 +629,7 @@ internal class DdSdkTests: XCTestCase {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2, vitalsUpdateFrequency: "never"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
@@ -639,7 +646,7 @@ internal class DdSdkTests: XCTestCase {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
 
-        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"), resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: DispatchQueueMock(), jsRefreshRateMonitor: mockRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"), resolve: mockResolve, reject: mockReject)
         Global.rum = rumMonitorMock
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
@@ -682,6 +689,7 @@ internal class DdSdkTests: XCTestCase {
     func testConfigurationTelemetryEventMapper() throws {
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
             jsRefreshRateMonitor: JSRefreshRateMonitor())
         .initialize(
             configuration: .mockAny(
@@ -784,6 +792,17 @@ internal class DdSdkTests: XCTestCase {
         let mappedEvent = actionEventMapper(mockActionEvent)
         XCTAssertNotNil(mappedEvent)
     }
+
+    func testReactNativeThreadMonitorsRunOnBridge() throws {
+        let bridge = DispatchQueueMock()
+        let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
+
+        DdSdkImplementation(mainDispatchQueue: DispatchQueueMock(), jsDispatchQueue: bridge, jsRefreshRateMonitor: mockJSRefreshRateMonitor).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertTrue(bridge.isSameQueue(queue: mockJSRefreshRateMonitor.jsQueue!))
+
+        Datadog.internalFlushAndDeinitialize()
+    }
 }
 
 private class MockRUMMonitor: DDRUMMonitor, RUMCommandSubscriber {
@@ -810,11 +829,13 @@ private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
     private var refreshRateListener: RefreshRateListener?
     private var frameTimeCallback: frame_time_callback?
     var isStarted: Bool = false
+    private(set) var jsQueue: DispatchQueueType?
     
     init() {}
     
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
         self.frameTimeCallback = frameTimeCallback
+        self.jsQueue = jsQueue
         isStarted = true
     }
     
@@ -905,4 +926,11 @@ extension NSDictionary {
             ]
         )
     }
+}
+
+extension DdSdkImplementation {
+    internal override convenience init() {
+        self.init(mainDispatchQueue: DispatchQueue.main, jsDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
+    }
+    
 }

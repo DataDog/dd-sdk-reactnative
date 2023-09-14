@@ -17,20 +17,20 @@ func getDefaultAppVersion() -> String {
 
 @objc
 public class DdSdkImplementation: NSObject {
-    @objc var bridge: RCTBridge!
-
+    let jsDispatchQueue: DispatchQueueType
     let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
     
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
 
     @objc
-    public convenience override init() {
-        self.init(mainDispatchQueue: DispatchQueue.main, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
+    public convenience init(bridge: RCTBridge) {
+        self.init(mainDispatchQueue: DispatchQueue.main, jsDispatchQueue: bridge, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
     }
     
-    init(mainDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
+    init(mainDispatchQueue: DispatchQueueType, jsDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
         self.mainDispatchQueue = mainDispatchQueue
+        self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
         super.init()
     }
@@ -377,7 +377,7 @@ public class DdSdkImplementation: NSObject {
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
         if let frameTimeCallback = buildFrameTimeCallback(sdkConfiguration: sdkConfiguration) {
             // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
-            self.jsRefreshRateMonitor.startMonitoring(jsQueue: bridge ?? mainDispatchQueue, frameTimeCallback: frameTimeCallback)
+            self.jsRefreshRateMonitor.startMonitoring(jsQueue: jsDispatchQueue, frameTimeCallback: frameTimeCallback)
         }
     }
 
