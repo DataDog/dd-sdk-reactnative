@@ -8,6 +8,7 @@ package com.datadog.reactnative
 
 import android.content.Context
 import com.datadog.android.Datadog
+import com.datadog.android._InternalProxy
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
@@ -22,15 +23,27 @@ import com.datadog.android.webview.WebViewTracking
 
 internal class DatadogSDKWrapper : DatadogWrapper {
 
-    // lazy here is on purpose. The thing is that this class will be instantiated even before
-    // Sdk.initialize is called, but telemetry proxy can be created only after SDK is initialized.
-    private val telemetryProxy by lazy { Datadog._internalProxy() }
+    // We use Kotlin backing field here to initialize once the telemetry proxy
+    // and make sure it is only after SDK is initialized.
+    private var telemetryProxy: _InternalProxy._TelemetryProxy? = null
+        get() {
+            if (field == null && isInitialized()) {
+                field = Datadog._internalProxy()._telemetry
+            }
 
-    // lazy here is on purpose. The thing is that this class will be instantiated even before
-    // Sdk.initialize is called, but webview proxy can be created only after SDK is initialized.
-    private val webViewProxy by lazy {
-        WebViewTracking._InternalWebViewProxy(Datadog.getInstance())
-    }
+            return field
+        }
+
+    // We use Kotlin backing field here to initialize once the telemetry proxy
+    // and make sure it is only after SDK is initialized.
+    private var webViewProxy: WebViewTracking._InternalWebViewProxy? = null
+        get() {
+            if (field == null && isInitialized()) {
+                field = WebViewTracking._InternalWebViewProxy(Datadog.getInstance())
+            }
+
+            return field
+        }
 
     override fun setVerbosity(level: Int) {
         Datadog.setVerbosity(level)
@@ -77,31 +90,19 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun telemetryDebug(message: String) {
-        // Do not initialize the telemetry proxy before SDK is initialized
-        if (isInitialized()) {
-            telemetryProxy._telemetry.debug(message)
-        }
+        telemetryProxy?.debug(message)
     }
 
     override fun telemetryError(message: String, stack: String?, kind: String?) {
-        // Do not initialize the telemetry proxy before SDK is initialized
-        if (isInitialized()) {
-            telemetryProxy._telemetry.error(message, stack, kind)
-        }
+        telemetryProxy?.error(message, stack, kind)
     }
 
     override fun telemetryError(message: String, throwable: Throwable?) {
-        // Do not initialize the telemetry proxy before SDK is initialized
-        if (isInitialized()) {
-            telemetryProxy._telemetry.error(message, throwable)
-        }
+        telemetryProxy?.error(message, throwable)
     }
 
     override fun consumeWebviewEvent(message: String) {
-        // Do not initialize the webview proxy before SDK is initialized
-        if (isInitialized()) {
-            webViewProxy.consumeWebviewEvent(message)
-        }
+        webViewProxy?.consumeWebviewEvent(message)
     }
 
     override fun isInitialized(): Boolean {
