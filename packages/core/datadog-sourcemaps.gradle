@@ -26,11 +26,10 @@ afterEvaluate {
                     " define versionName property in the application/variant config.")
         }
 
-        // locations and names are defined in "../../node_modules/react-native/react.gradle"
-        def targetName = variant.name.capitalize() // e.g. Release
-        def targetPath = variant.dirName // e.g. release
+        def reactConfig = getReactConfig(buildDir, variant)
+        def targetName = reactConfig["targetName"]
+        def targetPath = reactConfig["targetPath"]
 
-        def reactConfig = getReactConfig(buildDir, targetName, targetPath)
         def reactRoot = file(reactConfig.root)
 
         def bundleTask = tasks.findByName(reactConfig.bundleTaskName)
@@ -88,7 +87,6 @@ afterEvaluate {
                 }
 
                 runShellCommand(execCommand(jsBundleFile), reactRoot)
-
             }
         }
 
@@ -105,7 +103,7 @@ afterEvaluate {
 private def getBundleFileResolver(String[] jsBundleDirs, String bundleAssetName) {
     def resolver = { ->
         return jsBundleDirs.collect {
-            file("$it/$bundleAssetName") 
+            file("$it/$bundleAssetName")
         }.find {
             it.exists()
         }
@@ -121,34 +119,50 @@ private def getBundleFileResolver(String[] jsBundleDirs, String bundleAssetName)
  *   (and then "$buildDir/generated/assets/createBundle${targetPath}JsAndAssets" with the release of Android Gradle Plugin 7.4, see https://github.com/facebook/react-native/issues/35439)
  * - config was in "project.react" and is now in "project.extensions.react"
  * - accessing parameters values requires calling a getter 
+ * - target path changed from variant.dirName to variant.name
  */
-private def getReactConfig(File buildDir, String targetName, String targetPath) {
+private def getReactConfig(File buildDir, variant) {
     def reactConfig = [:]
 
     if (project.extensions.findByName("react")) {
         // From RN 0.71
+        // Locations and names are defined in "node_modules/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/TaskConfiguration.kt"
         def bundleAssetName = project.extensions.react.bundleAssetName.get() ?: "index.android.bundle"
+        def targetName = variant.name.capitalize()
+        def targetPath = variant.name
         reactConfig['bundleTaskName'] = "createBundle${targetName}JsAndAssets"
         reactConfig['bundleFileResolver'] = getBundleFileResolver([
             "$buildDir/ASSETS/createBundle${targetName}JsAndAssets", // Android Gradle Plugin 7.3
             "$buildDir/generated/assets/createBundle${targetName}JsAndAssets" // Android Gradle Plugin 7.4 and up
         ] as String[], bundleAssetName)
         reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['targetPath'] = targetPath
+        reactConfig['targetName'] = targetName
         reactConfig['root'] = project.extensions.react.root.get() ?: "../../"
     } else if (project.hasProperty("react")) {
         // WARNING: on RN 0.71, `project.react` is an empty map, so this `if` must go after the previous one.
         // Legacy way, before RN 0.71
+        // Locations and names are defined in "node_modules/react-native/react.gradle"
+        def targetName = variant.name.capitalize()
+        def targetPath = variant.dirName
         def bundleAssetName = project.react.bundleAssetName ?: "index.android.bundle"
         reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
         reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetPath}"] as String[], bundleAssetName)
         reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['targetPath'] = targetPath
+        reactConfig['targetName'] = targetName
         reactConfig['root'] = project.react.root ?: "../../"
     } else {
         // We assume this cannot happen with RN >= 0.71, so we use the legacy default values
+        // Locations and names are defined in "node_modules/react-native/react.gradle"
+        def targetName = variant.name.capitalize()
+        def targetPath = variant.dirName
         def bundleAssetName = "index.android.bundle"
         reactConfig['bundleTaskName'] = "bundle${targetName}JsAndAssets"
         reactConfig['bundleFileResolver'] = getBundleFileResolver(["$buildDir/generated/assets/react/${targetPath}"] as String[], bundleAssetName)
         reactConfig['bundleAssetName'] = bundleAssetName
+        reactConfig['targetPath'] = targetPath
+        reactConfig['targetName'] = targetName
         reactConfig['root'] = "../../"
     }
 
