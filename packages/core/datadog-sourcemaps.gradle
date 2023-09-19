@@ -58,8 +58,7 @@ afterEvaluate {
 
             def execCommand = { jsBundleFile ->
                 return [
-                        "yarn",
-                        "datadog-ci",
+                        "$reactConfig.root/node_modules/.bin/datadog-ci",
                         "react-native",
                         "upload",
                         "--platform",
