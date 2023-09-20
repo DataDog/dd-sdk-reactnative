@@ -324,9 +324,8 @@ class DdSdkImplementation(
         }
         configBuilder.setAdditionalConfiguration(
             additionalConfig?.filterValues { it != null }?.mapValues {
-                it.value!!
-            }
-                ?: emptyMap()
+                it.value
+            } as Map<String, Any>? ?: emptyMap()
         )
 
         configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
