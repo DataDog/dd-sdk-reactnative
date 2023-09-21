@@ -15,6 +15,7 @@ export interface RUMResource {
         kind: ResourceKind;
     };
     tracingAttributes: DdRumResourceTracingAttributes;
+    graphqlAttributes?: DdRumResourceGraphqlAttributes;
     response: {
         statusCode: number;
         size: number;
@@ -26,3 +27,9 @@ export interface RUMResource {
     };
     resourceContext?: XMLHttpRequest;
 }
+
+export type DdRumResourceGraphqlAttributes = {
+    operationType?: string;
+    operationName?: string;
+    variables?: string;
+};

@@ -28,6 +28,11 @@ interface DdRumXhr extends XMLHttpRequest {
 }
 
 interface DdRumXhrContext {
+    graphql: {
+        operationType?: string;
+        operationName?: string;
+        variables?: string;
+    };
     method: string;
     url: string;
     reported: boolean;
@@ -99,6 +104,7 @@ const proxyOpen = (
             url,
             reported: false,
             timer: new Timer(),
+            graphql: {},
             tracingAttributes: getTracingAttributes({
                 hostname,
                 firstPartyHostsRegexMap,
@@ -177,6 +183,7 @@ const reportXhr = async (
             url: context.url,
             kind: 'xhr'
         },
+        graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
         response: {
             statusCode: xhrProxy.status,
@@ -204,15 +211,15 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
     ) {
         if (isDatadogCustomHeader(header)) {
             if (header === DATADOG_GRAPH_QL_OPERATION_NAME_HEADER) {
-                // TODO: add information to request
+                this._datadog_xhr.graphql.operationName = value;
                 return;
             }
             if (header === DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER) {
-                // TODO: add information to request
+                this._datadog_xhr.graphql.operationType = value;
                 return;
             }
             if (header === DATADOG_GRAPH_QL_VARIABLES_HEADER) {
-                // TODO: add information to request
+                this._datadog_xhr.graphql.variables = value;
                 return;
             }
         }
