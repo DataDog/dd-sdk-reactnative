@@ -92,7 +92,7 @@ internal class ActionEventForgeryFactory :
                 name = forge.anAlphabeticalString(),
                 model = forge.anAlphabeticalString(),
                 brand = forge.anAlphabeticalString(),
-                type = forge.aValueFrom(ActionEvent.DeviceType::class.java),
+                type = forge.aValueFrom(ActionEvent.DeviceType::class.java)
             ),
             context = ActionEvent.Context(
                 additionalProperties = mutableMapOf()

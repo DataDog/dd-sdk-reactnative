@@ -8,9 +8,12 @@ package com.datadog.reactnative
 
 import android.content.Context
 import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.Credentials
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.GlobalRumMonitor
+import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.trace.TraceConfiguration
 import java.lang.IllegalArgumentException
 
 /**
@@ -45,9 +48,35 @@ interface DatadogWrapper {
      */
     fun initialize(
         context: Context,
-        credentials: Credentials,
         configuration: Configuration,
         consent: TrackingConsent
+    )
+
+    /**
+     * Enables the RUM feature of the SDK.
+     *
+     * @param configuration the configuration for the RUM feature
+     */
+    fun enableRum(
+        configuration: RumConfiguration
+    )
+
+    /**
+     * Enables the Logs feature of the SDK.
+     *
+     * @param configuration the configuration for the Logs feature
+     */
+    fun enableLogs(
+        configuration: LogsConfiguration
+    )
+
+    /**
+     * Enables the Trace feature of the SDK.
+     *
+     * @param configuration the configuration for the Trace feature
+     */
+    fun enableTrace(
+        configuration: TraceConfiguration
     )
 
     /**
@@ -65,13 +94,6 @@ interface DatadogWrapper {
         email: String?,
         extraInfo: Map<String, Any?>
     )
-
-    /**
-     * Registers a given monitor in [GlobalRum].
-     *
-     * @param rumMonitor to register
-     */
-    fun registerRumMonitor(rumMonitor: RumMonitor)
 
     /**
      * Adds global attributes.
@@ -109,4 +131,9 @@ interface DatadogWrapper {
      * Returns whether the SDK is initialized.
      */
     fun isInitialized(): Boolean
+
+    /**
+     * Returns the RUM Monitor for the default SDK core.
+     */
+    fun getRumMonitor(): RumMonitor
 }

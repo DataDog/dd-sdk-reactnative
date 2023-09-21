@@ -29,7 +29,7 @@ package com.datadog.reactnative
 data class DdSdkConfiguration(
     val clientToken: String,
     val env: String,
-    val applicationId: String? = null,
+    val applicationId: String,
     val nativeCrashReportEnabled: Boolean? = null,
     val nativeLongTaskThresholdMs: Double? = null,
     val longTaskThresholdMs: Double? = null,

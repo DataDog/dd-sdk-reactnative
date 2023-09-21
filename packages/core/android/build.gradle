@@ -12,7 +12,7 @@ buildscript {
     classpath 'com.android.tools.build:gradle:7.2.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath "org.jlleitschuh.gradle:ktlint-gradle:10.2.1"
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
     classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
     classpath 'com.github.bjoernq:unmockplugin:0.7.9'
   }
@@ -159,7 +159,10 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android:1.19.2"
+  implementation "com.datadoghq:dd-sdk-android-rum:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:2.0.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:2.0.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
@@ -204,7 +207,6 @@ ktlint {
   outputToConsole.set(true)
   ignoreFailures.set(false)
   enableExperimentalRules.set(false)
-  additionalEditorconfigFile.set(file("${project.rootDir}/script/config/.editorconfig"))
   filter {
     exclude("**/generated/**")
     include("**/kotlin/**")

@@ -4,7 +4,7 @@
  * Copyright 2019-Present Datadog, Inc.
  */
 
-@testable import Datadog
+@testable import DatadogRUM
 
 // MARK: - Foundation Mocks
 protocol RandomMockable {
@@ -257,6 +257,7 @@ extension RUMResourceEvent: RandomMockable {
         return RUMResourceEvent(
             dd: .init(
                 browserSdkVersion: nil,
+                configuration: nil,
                 discarded: nil,
                 rulePsr: nil,
                 session: .init(plan: .plan1),
@@ -314,6 +315,7 @@ extension RUMResourceEvent: RandomMockable {
         return RUMResourceEvent(
             dd: .init(
                 browserSdkVersion: nil,
+                configuration: nil,
                 discarded: nil,
                 rulePsr: nil,
                 session: .init(plan: .plan1),
@@ -381,6 +383,7 @@ extension RUMActionEvent: RandomMockable {
                     )
                 ),
                 browserSdkVersion: nil,
+                configuration: nil,
                 session: .init(plan: .plan1)
             ),
             action: .init(
@@ -433,6 +436,7 @@ extension RUMActionEvent: RandomMockable {
                     )
                 ),
                 browserSdkVersion: nil,
+                configuration: nil,
                 session: .init(plan: .plan1)
             ),
             action: .init(

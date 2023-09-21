@@ -4,7 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Datadog
+import DatadogCore
+import DatadogRUM
+import DatadogInternal
 import Foundation
 
 extension NSDictionary {
@@ -30,7 +32,7 @@ extension NSDictionary {
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
             env: (env != nil) ? env! : String(),
-            applicationId: applicationId,
+            applicationId: (applicationId != nil) ? applicationId! : String(),
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
             longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : Double(),

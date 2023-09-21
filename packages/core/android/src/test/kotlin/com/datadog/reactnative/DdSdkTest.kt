@@ -12,24 +12,23 @@ import android.view.Choreographer
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.UploadFrequency
-import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.event.EventMapper
-import com.datadog.android.plugin.DatadogPlugin
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.GlobalRum
-import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
-import com.datadog.android.tracing.TracingHeaderType
+import com.datadog.android.trace.TraceConfiguration
+import com.datadog.android.trace.TracingHeaderType
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
+import com.datadog.tools.unit.MockRumMonitor
 import com.datadog.tools.unit.forge.BaseConfigurator
-import com.datadog.tools.unit.getStaticValue
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableJavaOnlyMap
@@ -65,7 +64,6 @@ import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Stream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -111,7 +109,7 @@ internal class DdSdkTest {
     lateinit var mockContext: ReactApplicationContext
 
     @Mock
-    lateinit var mockRumMonitor: RumMonitor
+    lateinit var mockRumMonitor: MockRumMonitor
 
     @Mock
     lateinit var mockRumInternalProxy: _RumInternalProxy
@@ -133,7 +131,7 @@ internal class DdSdkTest {
 
     @BeforeEach
     fun `set up`() {
-        GlobalRum.registerIfAbsent(mockRumMonitor)
+        whenever(mockDatadog.getRumMonitor()) doReturn mockRumMonitor
         whenever(mockRumMonitor._getInternal()) doReturn mockRumInternalProxy
 
         doNothing().whenever(mockChoreographer).postFrameCallback(any())
@@ -156,8 +154,6 @@ internal class DdSdkTest {
     @AfterEach
     fun `tear down`() {
         GlobalState.globalAttributes.clear()
-        GlobalRum.javaClass.setStaticValue("monitor", mock<RumMonitor>())
-        GlobalRum.javaClass.getStaticValue<GlobalRum, AtomicBoolean>("isRegistered").set(false)
     }
 
     // region initialize / nativeCrashReportEnabled
@@ -166,8 +162,10 @@ internal class DdSdkTest {
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=true}`() {
         // Given
         val bridgeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -176,46 +174,38 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
+            .hasFieldEqualTo("crashReportsEnabled", true)
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=false}`() {
         // Given
         fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -224,44 +214,38 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasFieldEqualTo("crashReportConfig", null)
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
+            .hasFieldEqualTo("crashReportsEnabled", false)
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=null}`() {
         // Given
         fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -270,36 +254,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasFieldEqualTo("crashReportConfig", null)
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
+            .hasFieldEqualTo("crashReportsEnabled", false)
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     // endregion
@@ -309,8 +285,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native with sample rate SDK 𝕎 initialize() {}`() {
         // Given
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         val expectedRumSampleRate = fakeConfiguration.sampleRate?.toFloat() ?: 100f
 
         // When
@@ -320,36 +298,30 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-                it.hasFieldEqualTo("samplingRate", expectedRumSampleRate)
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("sampleRate", expectedRumSampleRate)
+            }
     }
 
     // endregion
@@ -359,8 +331,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native with telemetry sample rate SDK 𝕎 initialize() {}`() {
         // Given
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         val expectedTelemetrySampleRate = fakeConfiguration.telemetrySampleRate?.toFloat() ?: 20f
 
         // When
@@ -370,36 +344,30 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-                it.hasFieldEqualTo("telemetrySamplingRate", expectedTelemetrySampleRate)
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("telemetrySampleRate", expectedTelemetrySampleRate)
+            }
     }
 
     // endregion
@@ -410,8 +378,10 @@ internal class DdSdkTest {
     fun `𝕄 initialize native SDK 𝕎 initialize() {additionalConfig=null}`() {
         // Given
         fakeConfiguration = fakeConfiguration.copy(additionalConfig = null)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -420,39 +390,33 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo("additionalConfig", emptyMap<String, Any?>())
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {additionalConfig=nonNull}`() {
         // Given
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -461,35 +425,27 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     // endregion
@@ -502,8 +458,10 @@ internal class DdSdkTest {
     ) {
         // Given
         fakeConfiguration = fakeConfiguration.copy(site = null, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -512,42 +470,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.US1)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -557,8 +501,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("us1")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -567,42 +513,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.US1)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -612,8 +544,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("us3")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -622,42 +556,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.US3)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US3.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -667,8 +587,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("us5")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -677,42 +599,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.US5)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US5.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -722,8 +630,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("us1_fed")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -732,42 +642,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.US1_FED)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.US1_FED.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -777,8 +673,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("eu1")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -787,42 +685,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.EU1)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.EU1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     @Test
@@ -832,8 +716,10 @@ internal class DdSdkTest {
         // Given
         val site = forge.randomizeCase("ap1")
         fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -842,42 +728,28 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") {
                 it.hasFieldEqualTo("needsClearTextHttp", false)
                 it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.AP1)
             }
-            .hasField("logsConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("tracesConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
-            .hasField("crashReportConfig") {
-                it.hasFieldEqualTo("endpointUrl", DatadogSite.AP1.intakeEndpoint)
-                it.hasFieldEqualTo("plugins", emptyList<DatadogPlugin>())
-            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
             .hasFieldEqualTo(
                 "additionalConfig",
                 fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
             )
-        val credentials = credentialCaptor.firstValue
-        assertThat(credentials.clientToken).isEqualTo(fakeConfiguration.clientToken)
-        assertThat(credentials.envName).isEqualTo(fakeConfiguration.env)
-        assertThat(credentials.rumApplicationId).isEqualTo(fakeConfiguration.applicationId)
-        assertThat(credentials.variant).isEqualTo("")
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
     // endregion
@@ -888,8 +760,10 @@ internal class DdSdkTest {
     fun `𝕄 initialize native SDK 𝕎 initialize() {trackingConsent=null}`() {
         // Given
         fakeConfiguration = fakeConfiguration.copy(trackingConsent = null)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -898,11 +772,12 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 eq(TrackingConsent.PENDING)
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
     }
 
@@ -913,8 +788,10 @@ internal class DdSdkTest {
         // Given
         val consent = forge.randomizeCase("PENDING")
         fakeConfiguration = fakeConfiguration.copy(trackingConsent = consent)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -923,11 +800,12 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 eq(TrackingConsent.PENDING)
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
     }
 
@@ -938,8 +816,10 @@ internal class DdSdkTest {
         // Given
         val consent = forge.randomizeCase("GRANTED")
         fakeConfiguration = fakeConfiguration.copy(trackingConsent = consent)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -948,11 +828,12 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 eq(TrackingConsent.GRANTED)
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
     }
 
@@ -963,8 +844,10 @@ internal class DdSdkTest {
         // Given
         val consent = forge.randomizeCase("NOT_GRANTED")
         fakeConfiguration = fakeConfiguration.copy(trackingConsent = consent)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -973,11 +856,12 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
+                sdkConfigCaptor.capture(),
                 eq(TrackingConsent.NOT_GRANTED)
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
     }
 
@@ -989,8 +873,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(additionalConfig = null)
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -999,14 +885,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
             }
     }
@@ -1021,8 +908,10 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to false
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1031,14 +920,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
             }
     }
@@ -1053,8 +943,10 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to true
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1063,14 +955,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("viewTrackingStrategy", ActivityViewTrackingStrategy(false))
             }
     }
@@ -1085,8 +978,10 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to false
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1095,18 +990,16 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
-                it.hasFieldWithClass(
-                    "userActionTrackingStrategy",
-                    "com.datadog.android.rum.internal.tracking.NoOpUserActionTrackingStrategy"
-                )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
             }
     }
 
@@ -1118,8 +1011,10 @@ internal class DdSdkTest {
         val bridgeConfiguration = configuration.copy(
             trackFrustrations = true
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1128,18 +1023,16 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo(
-                    "trackFrustrations",
-                    true
-                )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("trackFrustrations", true)
             }
     }
 
@@ -1151,8 +1044,10 @@ internal class DdSdkTest {
         val bridgeConfiguration = configuration.copy(
             trackFrustrations = false
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1161,18 +1056,16 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
-                it.hasFieldEqualTo(
-                    "trackFrustrations",
-                    false
-                )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("trackFrustrations", false)
             }
     }
 
@@ -1186,8 +1079,10 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to true
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1196,19 +1091,16 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
-                it.hasFieldWithClass(
-                    "userActionTrackingStrategy",
-                    "com.datadog.android.rum.internal" +
-                        ".instrumentation.UserActionTrackingStrategyLegacy"
-                )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("userActionTracking", true)
             }
     }
 
@@ -1222,8 +1114,10 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to null
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1232,21 +1126,19 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
-                it.hasFieldWithClass(
-                    "userActionTrackingStrategy",
-                    "com.datadog.android.rum.internal" +
-                        ".instrumentation.UserActionTrackingStrategyLegacy"
-                )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("userActionTracking", true)
             }
     }
+
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {sdk verbosity}`(
         @Forgery configuration: DdSdkConfiguration,
@@ -1303,20 +1195,40 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_SERVICE_NAME to serviceName
             )
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            credentialCaptor.capture(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(credentialCaptor.firstValue.serviceName).isEqualTo(serviceName)
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("needsClearTextHttp", false)
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+            }
+            .hasFieldEqualTo("clientToken", bridgeConfiguration.clientToken)
+            .hasFieldEqualTo("env", bridgeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
+            .hasFieldEqualTo("service", serviceName)
+            .hasFieldEqualTo(
+                "additionalConfig",
+                bridgeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+            )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", bridgeConfiguration.applicationId)
     }
 
     @Test
@@ -1330,21 +1242,27 @@ internal class DdSdkTest {
         val bridgeConfiguration = configuration.copy(
             nativeLongTaskThresholdMs = threshold
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            credentialCaptor.capture(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") { rumConfig ->
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") { rumConfig ->
                 rumConfig.hasField("longTaskTrackingStrategy") { longTaskTrackingStrategy ->
                     longTaskTrackingStrategy
                         .isInstanceOf(
@@ -1365,21 +1283,27 @@ internal class DdSdkTest {
         val bridgeConfiguration = configuration.copy(
             nativeLongTaskThresholdMs = 0.0
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            credentialCaptor.capture(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") { rumConfig ->
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") { rumConfig ->
                 rumConfig.doesNotHaveField("longTaskTrackingStrategy")
             }
     }
@@ -1422,19 +1346,26 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") { coreConfig ->
                 coreConfig.hasFieldEqualTo(
                     "firstPartyHostsWithHeaderTypes",
@@ -1452,7 +1383,7 @@ internal class DdSdkTest {
             Pair(
                 forge.aStringMatching("[a-z]+\\.[a-z]{3}"),
                 setOf(
-                    TracingHeaderType.DATADOG,
+                    TracingHeaderType.DATADOG
                 )
             )
         }
@@ -1476,19 +1407,26 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") { coreConfig ->
                 coreConfig.hasFieldEqualTo(
                     "firstPartyHostsWithHeaderTypes",
@@ -1508,9 +1446,9 @@ internal class DdSdkTest {
                 host,
                 setOf(
                     TracingHeaderType.DATADOG,
-                    TracingHeaderType.B3,
+                    TracingHeaderType.B3
                 )
-            ),
+            )
         )
 
         val firstPartyHosts = mutableListOf<ReadableMap>()
@@ -1518,7 +1456,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.DATADOG.name.lowercase(),
+                    TracingHeaderType.DATADOG.name.lowercase()
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1526,7 +1464,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.B3.name.lowercase(),
+                    TracingHeaderType.B3.name.lowercase()
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1537,19 +1475,26 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
             )
         )
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
             .hasField("coreConfig") { coreConfig ->
                 coreConfig.hasFieldEqualTo(
                     "firstPartyHostsWithHeaderTypes",
@@ -1567,10 +1512,12 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            uploadFrequency = input,
+            uploadFrequency = input
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1579,15 +1526,19 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("uploadFrequency", expectedUploadFrequency)
+        assertThat(sdkConfigCaptor.firstValue)
+            .hasField("coreConfig") { coreConfig ->
+                coreConfig.hasFieldEqualTo(
+                    "uploadFrequency",
+                    expectedUploadFrequency
+                )
             }
     }
 
@@ -1600,10 +1551,12 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            batchSize = input,
+            batchSize = input
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1612,15 +1565,19 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("batchSize", expectedBatchSize)
+        assertThat(sdkConfigCaptor.firstValue)
+            .hasField("coreConfig") { coreConfig ->
+                coreConfig.hasFieldEqualTo(
+                    "batchSize",
+                    expectedBatchSize
+                )
             }
     }
 
@@ -1632,10 +1589,12 @@ internal class DdSdkTest {
         // Given
         val trackBackgroundEvents = forge.aNullable { forge.aBool() }
         val bridgeConfiguration = configuration.copy(
-            trackBackgroundEvents = trackBackgroundEvents,
+            trackBackgroundEvents = trackBackgroundEvents
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1644,14 +1603,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents ?: false)
             }
     }
@@ -1664,8 +1624,10 @@ internal class DdSdkTest {
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "RARE"
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1674,14 +1636,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
             }
         argumentCaptor<Choreographer.FrameCallback> {
@@ -1700,8 +1663,10 @@ internal class DdSdkTest {
             vitalsUpdateFrequency = "NEVER",
             longTaskThresholdMs = 0.0
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
@@ -1710,14 +1675,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
             }
         verifyZeroInteractions(mockChoreographer)
@@ -1736,8 +1702,10 @@ internal class DdSdkTest {
             vitalsUpdateFrequency = fakeFrequency,
             longTaskThresholdMs = 0.0
         )
-        val credentialCaptor = argumentCaptor<Credentials>()
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         val frameDurationNs = threshold + frameDurationOverThreshold
 
         // When
@@ -1747,14 +1715,15 @@ internal class DdSdkTest {
         inOrder(mockDatadog) {
             verify(mockDatadog).initialize(
                 same(mockContext),
-                credentialCaptor.capture(),
-                configCaptor.capture(),
-                eq(configuration.trackingConsent.asTrackingConsent())
+                sdkConfigCaptor.capture(),
+                any()
             )
-            verify(mockDatadog).registerRumMonitor(any())
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
         }
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
             }
         argumentCaptor<Choreographer.FrameCallback> {
@@ -1787,7 +1756,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "AVERAGE",
-            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble()
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1824,7 +1793,7 @@ internal class DdSdkTest {
         // Given
         val bridgeConfiguration = configuration.copy(
             vitalsUpdateFrequency = "NEVER",
-            longTaskThresholdMs = (threshold / 1_000_000).toDouble(),
+            longTaskThresholdMs = (threshold / 1_000_000).toDouble()
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1866,19 +1835,26 @@ internal class DdSdkTest {
                 DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix
             )
         )
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
             .hasFieldEqualTo(
                 "additionalConfig",
                 mapOf(
@@ -1919,22 +1895,31 @@ internal class DdSdkTest {
                 reactNativeVersion = reactNativeVersion
             )
         )
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            eq(configuration.trackingConsent.asTrackingConsent())
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 val configurationMapper = it
-                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>("rumEventMapper")
+                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>(
+                        "telemetryConfigurationMapper"
+                    )
                 val result = configurationMapper.map(telemetryConfigurationEvent)!!
                 assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
                     trackNativeErrors
@@ -1964,25 +1949,32 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a resource mapper that does not drop resources 𝕎 initialize() {}`(
-        @Forgery resourceEvent: ResourceEvent,
+        @Forgery resourceEvent: ResourceEvent
     ) {
         // Given
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            any()
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 val resourceMapper = it
-                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                    .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
                 val notDroppedEvent = resourceMapper.map(resourceEvent)
                 assertThat(notDroppedEvent).isNotNull
             }
@@ -1990,26 +1982,33 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a resource mapper that drops flagged resources 𝕎 initialize() {}`(
-        @Forgery resourceEvent: ResourceEvent,
+        @Forgery resourceEvent: ResourceEvent
     ) {
         // Given
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            any()
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 val resourceMapper = it
-                    .getActualValue<EventMapper<ResourceEvent>>("rumEventMapper")
+                    .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
                 val droppedEvent = resourceMapper.map(resourceEvent)
                 assertThat(droppedEvent).isNull()
             }
@@ -2021,25 +2020,32 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a action mapper that does not drop actions 𝕎 initialize() {}`(
-        @Forgery actionEvent: ActionEvent,
+        @Forgery actionEvent: ActionEvent
     ) {
         // Given
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            any()
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 val actionMapper = it
-                    .getActualValue<EventMapper<ActionEvent>>("rumEventMapper")
+                    .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
                 val notDroppedEvent = actionMapper.map(actionEvent)
                 assertThat(notDroppedEvent).isNotNull
             }
@@ -2047,26 +2053,33 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 set a action mapper that drops flagged actions 𝕎 initialize() {}`(
-        @Forgery actionEvent: ActionEvent,
+        @Forgery actionEvent: ActionEvent
     ) {
         // Given
-        val configCaptor = argumentCaptor<Configuration>()
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         actionEvent.context?.additionalProperties?.put("_dd.action.drop_action", true)
 
         // When
         testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
         // Then
-        verify(mockDatadog).initialize(
-            same(mockContext),
-            any(),
-            configCaptor.capture(),
-            any()
-        )
-        assertThat(configCaptor.firstValue)
-            .hasField("rumConfig") {
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
                 val actionMapper = it
-                    .getActualValue<EventMapper<ActionEvent>>("rumEventMapper")
+                    .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
                 val droppedEvent = actionMapper.map(actionEvent)
                 assertThat(droppedEvent).isNull()
             }
@@ -2266,7 +2279,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Granted consent 𝕎 buildTrackingConsent {granted}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("granted", "GRANTED")
@@ -2278,7 +2290,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Pending consent 𝕎 buildTrackingConsent {pending}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("pending", "PENDING")
@@ -2290,7 +2301,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build Granted consent 𝕎 buildTrackingConsent {not_granted}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom("not_granted", "NOT_GRANTED")
@@ -2302,7 +2312,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 build default Pending consent 𝕎 buildTrackingConsent {any}`(forge: Forge) {
-
         // When
         val consent = testedBridgeSdk.buildTrackingConsent(
             forge.anElementFrom(null, "some-type")
@@ -2314,7 +2323,6 @@ internal class DdSdkTest {
 
     @Test
     fun `𝕄 call setTrackingConsent 𝕎 setTrackingConsent ()`(forge: Forge) {
-
         // Given
         val consent = forge.anElementFrom("pending", "granted", "not_granted")
 
@@ -2329,7 +2337,6 @@ internal class DdSdkTest {
     fun `𝕄 not build proxy config 𝕎 no proxy config specified`(
         @Forgery configuration: DdSdkConfiguration
     ) {
-
         // Given
         val config = configuration.copy(additionalConfig = null)
 
@@ -2520,7 +2527,7 @@ internal class DdSdkTest {
             return Stream.of(
                 Arguments.of("SMALL", BatchSize.SMALL),
                 Arguments.of("MEDIUM", BatchSize.MEDIUM),
-                Arguments.of("LARGE", BatchSize.LARGE),
+                Arguments.of("LARGE", BatchSize.LARGE)
             )
         }
 
@@ -2529,7 +2536,7 @@ internal class DdSdkTest {
             return Stream.of(
                 Arguments.of("RARE", UploadFrequency.RARE),
                 Arguments.of("AVERAGE", UploadFrequency.AVERAGE),
-                Arguments.of("FREQUENT", UploadFrequency.FREQUENT),
+                Arguments.of("FREQUENT", UploadFrequency.FREQUENT)
             )
         }
     }

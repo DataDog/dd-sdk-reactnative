@@ -6,6 +6,8 @@
 
 import XCTest
 @testable import DatadogSDKReactNative
+import DatadogLogs
+import DatadogInternal
 
 func mockResolve(args: Any?) {}
 func mockReject(args: String?, arg: String?, err: Error?) {}
@@ -374,7 +376,34 @@ internal class DdLogsTests: XCTestCase {
     }
 }
 
-private class MockNativeLogger: NativeLogger {
+private class MockNativeLogger: LoggerProtocol {
+    init () {
+        
+    }
+    
+    func log(level: DatadogLogs.LogLevel, message: String, error: Error?, attributes: [String : Encodable]?) {
+        receivedMethodCalls.append(MethodCall(
+            kind: MockNativeLogger.MethodCall.Kind(from: level),
+            message: message,
+            errorKind: nil,
+            errorMessage: nil,
+            stackTrace: nil,
+            attributes: attributes
+        ))
+    }
+    
+    func addAttribute(forKey key: DatadogInternal.AttributeKey, value: DatadogInternal.AttributeValue) {}
+    
+    func removeAttribute(forKey key: DatadogInternal.AttributeKey) {}
+    
+    func addTag(withKey key: String, value: String) {}
+    
+    func removeTag(withKey key: String) {}
+    
+    func add(tag: String) {}
+    
+    func remove(tag: String) {}
+    
     struct MethodCall {
         enum Kind {
             case debug
@@ -389,30 +418,52 @@ private class MockNativeLogger: NativeLogger {
         let stackTrace: String?
         let attributes: [String: Encodable]?
     }
+    
     private(set) var receivedMethodCalls = [MethodCall]()
 
     func debug(_ message: String, error: Error?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(kind: .debug, message: message, errorKind: nil, errorMessage: nil, stackTrace: nil, attributes: attributes))
     }
-    func debug(_ message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String: Encodable]?) {
-        receivedMethodCalls.append(MethodCall(kind: .debug, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stackTrace, attributes: attributes))
-    }
     func info(_ message: String, error: Error?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(kind: .info, message: message, errorKind: nil, errorMessage: nil, stackTrace: nil, attributes: attributes))
-    }
-    func info(_ message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String: Encodable]?) {
-        receivedMethodCalls.append(MethodCall(kind: .info, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stackTrace, attributes: attributes))
     }
     func warn(_ message: String, error: Error?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(kind: .warn, message: message, errorKind: nil, errorMessage: nil, stackTrace: nil, attributes: attributes))
     }
-    func warn(_ message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String: Encodable]?) {
-        receivedMethodCalls.append(MethodCall(kind: .warn, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stackTrace, attributes: attributes))
-    }
     func error(_ message: String, error: Error?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(kind: .error, message: message, errorKind: nil, errorMessage: nil, stackTrace: nil, attributes: attributes))
     }
-    func error(_ message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String: Encodable]?) {
-        receivedMethodCalls.append(MethodCall(kind: .error, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stackTrace, attributes: attributes))
+}
+
+extension MockNativeLogger: InternalLoggerProtocol {
+    func log(level: DatadogLogs.LogLevel, message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String : Encodable]?) {
+        receivedMethodCalls.append(MethodCall(
+            kind: MockNativeLogger.MethodCall.Kind(from: level),
+            message: message,
+            errorKind: errorKind,
+            errorMessage: errorMessage,
+            stackTrace: stackTrace,
+            attributes: attributes
+        ))
+    }
+}
+
+extension MockNativeLogger.MethodCall.Kind {
+    init (from level: DatadogLogs.LogLevel) {
+        switch level {
+        case .debug:
+            self = .debug
+        case .info:
+            self = .info
+        case .warn:
+            self = .warn
+        case .error:
+            self = .error
+        // unsupported cases
+        case .notice:
+            self = .debug
+        case .critical:
+            self = .debug
+        }
     }
 }

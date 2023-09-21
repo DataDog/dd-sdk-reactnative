@@ -5,11 +5,13 @@
  */
 
 import XCTest
+@testable import DatadogCore
+@testable import DatadogRUM
 @testable import DatadogSDKReactNative
-@testable import Datadog
+@testable import DatadogInternal
 
 internal class DdRumTests: XCTestCase {
-    private let mockNativeRUM = MockNativeRUM()
+    private let mockNativeRUM = MockRUMMonitor()
     private var rum: DdRumImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
     
     private func mockResolve(args: Any?) {}
@@ -19,17 +21,17 @@ internal class DdRumTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        rum = DdRumImplementation { self.mockNativeRUM }
+        rum = DdRumImplementation({ self.mockNativeRUM }, { self.mockNativeRUM._internalMock })
     }
 
     func testItInitializesNativeRumOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize RUM once")
 
-        let rum = DdRumImplementation { [unowned self] in
+        let rum = DdRumImplementation({ [unowned self] in
             expectation.fulfill()
             return self.mockNativeRUM
-        }
+        }, { nil })
 
         // When
         (0..<10).forEach { _ in rum.addTiming(name: "foo", resolve: mockResolve, reject: mockReject) }
@@ -38,10 +40,12 @@ internal class DdRumTests: XCTestCase {
         waitForExpectations(timeout: 0.5, handler: nil)
     }
 
-    // TODO: Fix this test by removing ambiguity in names
-//    func testInternalTimestampKeyValue() {
-//        XCTAssertEqual(DdRumImplementation.timestampKey, CrossPlatformAttributes.timestampInMilliseconds)
-//    }
+    func testInternalTimestampKeyValue() {
+        let key = "_dd.timestamp"
+        
+        XCTAssertEqual(DdRumImplementation.timestampKey, DatadogInternal.CrossPlatformAttributes.timestampInMilliseconds)
+        XCTAssertEqual(DdRumImplementation.timestampKey, DatadogSDKReactNative.CrossPlatformAttributes.timestampInMilliseconds)
+    }
 
     func testStartView() throws {
         rum.startView(key: "view key", name: "view name", context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
@@ -189,31 +193,31 @@ internal class DdRumTests: XCTestCase {
             mockNativeRUM.calledMethods.first,
             .addResourceMetrics(
                 resourceKey: "resource key",
-                fetch: MockNativeRUM.Interval(
+                fetch: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 0),
                     end: nanoTimeToDate(timestampNs: 13)
                 ),
-                redirection: MockNativeRUM.Interval(
+                redirection: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 1),
                     end: nanoTimeToDate(timestampNs: 2)
                 ),
-                dns: MockNativeRUM.Interval(
+                dns: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 3),
                     end: nanoTimeToDate(timestampNs: 4)
                 ),
-                connect: MockNativeRUM.Interval(
+                connect: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 5),
                     end: nanoTimeToDate(timestampNs: 6)
                 ),
-                ssl: MockNativeRUM.Interval(
+                ssl: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 7),
                     end: nanoTimeToDate(timestampNs: 8)
                 ),
-                firstByte: MockNativeRUM.Interval(
+                firstByte: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 9),
                     end: nanoTimeToDate(timestampNs: 10)
                 ),
-                download: MockNativeRUM.Interval(
+                download: MockRUMMonitor.Interval(
                     start: nanoTimeToDate(timestampNs: 11),
                     end: nanoTimeToDate(timestampNs: 12)
                 ),
@@ -275,111 +279,4 @@ internal class DdRumTests: XCTestCase {
     private func nanoTimeToDate(timestampNs: Int64) -> Date {
         return Date(timeIntervalSince1970: TimeInterval(fromNs: timestampNs))
     }
-}
-
-private class MockNativeRUM: NativeRUM {
-    struct Interval: Equatable {
-        let start: Date?
-        let end: Date?
-    }
-
-    enum CalledMethod: Equatable {
-        case startView(key: String, name: String?)
-        case stopView(key: String)
-        case addError(message: String, source: RUMErrorSource, stack: String?)
-        case startResourceLoading(resourceKey: String, httpMethod: RUMMethod, urlString: String)
-        case stopResourceLoading(resourceKey: String, statusCode: Int, kind: RUMResourceType, size: Int64?)
-        case startUserAction(type: RUMUserActionType, name: String)
-        case stopUserAction(type: RUMUserActionType, name: String?)
-        case addUserAction(type: RUMUserActionType, name: String)
-        case addTiming(name: String)
-        case stopSession(_: Int? = nil) // We need an attribute for the case to be Equatable
-        case addResourceMetrics(resourceKey: String,
-                                fetch: Interval,
-                                redirection: Interval,
-                                dns: Interval,
-                                connect: Interval,
-                                ssl: Interval,
-                                firstByte: Interval,
-                                download: Interval,
-                                responseSize: Int64?)
-    }
-
-    private(set) var calledMethods = [CalledMethod]()
-    private(set) var receivedAttributes = [[String: Encodable]]()
-    private(set) var receivedFeatureFlags = [String: Encodable]()
-
-    // swiftlint:disable force_cast
-    func startView(key: String, name: String?, attributes: [String: Encodable]) {
-        calledMethods.append(.startView(key: key, name: name))
-        receivedAttributes.append(attributes)
-    }
-
-    func stopView(key: String, attributes: [String: Encodable]) {
-        calledMethods.append(.stopView(key: key))
-        receivedAttributes.append(attributes)
-    }
-
-    func addError(message: String, type: String?, source: RUMErrorSource, stack: String?, attributes: [String: Encodable], file: StaticString?, line: UInt?) {
-        calledMethods.append(.addError(message: message, source: source, stack: stack))
-        receivedAttributes.append(attributes)
-    }
-
-    func startResourceLoading(resourceKey: String, httpMethod: RUMMethod, urlString: String, attributes: [String: Encodable]) {
-        calledMethods.append(.startResourceLoading(resourceKey: resourceKey, httpMethod: httpMethod, urlString: urlString))
-        receivedAttributes.append(attributes)
-    }
-    func stopResourceLoading(resourceKey: String, statusCode: Int?, kind: RUMResourceType, size: Int64?, attributes: [String: Encodable]) {
-        calledMethods.append(.stopResourceLoading(resourceKey: resourceKey, statusCode: statusCode ?? 0, kind: kind, size: size))
-        receivedAttributes.append(attributes)
-    }
-    func startUserAction(type: RUMUserActionType, name: String, attributes: [String: Encodable]) {
-        calledMethods.append(.startUserAction(type: type, name: name))
-        receivedAttributes.append(attributes)
-    }
-    func stopUserAction(type: RUMUserActionType, name: String?, attributes: [String: Encodable]) {
-        calledMethods.append(.stopUserAction(type: type, name: name))
-        receivedAttributes.append(attributes)
-    }
-    func addUserAction(type: RUMUserActionType, name: String, attributes: [String: Encodable]) {
-        calledMethods.append(.addUserAction(type: type, name: name))
-        receivedAttributes.append(attributes)
-    }
-    func addTiming(name: String) {
-        calledMethods.append(.addTiming(name: name))
-    }
-    func stopSession() {
-        calledMethods.append(.stopSession())
-    }
-    func addFeatureFlagEvaluation(name: String, value: Encodable) {
-        receivedFeatureFlags[name] = value
-    }
-    func addResourceMetrics(
-        resourceKey: String,
-        fetch: (start: Date, end: Date),
-        redirection: (start: Date, end: Date)?,
-        dns: (start: Date, end: Date)?,
-        connect: (start: Date, end: Date)?,
-        ssl: (start: Date, end: Date)?,
-        firstByte: (start: Date, end: Date)?,
-        download: (start: Date, end: Date)?,
-        responseSize: Int64?,
-        attributes: [AttributeKey: AttributeValue]
-    ) {
-        calledMethods.append(
-            .addResourceMetrics(
-                resourceKey: resourceKey,
-                fetch: Interval(start: fetch.start, end: fetch.end),
-                redirection: Interval(start: redirection?.start, end: redirection?.end),
-                dns: Interval(start: dns?.start, end: dns?.end),
-                connect: Interval(start: connect?.start, end: connect?.end),
-                ssl: Interval(start: ssl?.start, end: ssl?.end),
-                firstByte: Interval(start: firstByte?.start, end: firstByte?.end),
-                download: Interval(start: download?.start, end: download?.end),
-                responseSize: responseSize
-            )
-        )
-        receivedAttributes.append(attributes)
-    }
-    // swiftlint:enable force_cast
 }

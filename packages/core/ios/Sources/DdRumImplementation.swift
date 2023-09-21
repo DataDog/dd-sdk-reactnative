@@ -5,34 +5,10 @@
  */
 
 import Foundation
-import Datadog
+import DatadogRUM
+import DatadogInternal
 
-extension DDRUMMonitor: NativeRUM { }
-internal protocol NativeRUM {
-    func startView(key: String, name: String?, attributes: [String: Encodable])
-    func stopView(key: String, attributes: [String: Encodable])
-    func addError(message: String, type: String?, source: RUMErrorSource, stack: String?, attributes: [String: Encodable], file: StaticString?, line: UInt?)
-    func startResourceLoading(resourceKey: String, httpMethod: RUMMethod, urlString: String, attributes: [String: Encodable])
-    func stopResourceLoading(resourceKey: String, statusCode: Int?, kind: RUMResourceType, size: Int64?, attributes: [String: Encodable])
-    func startUserAction(type: RUMUserActionType, name: String, attributes: [String: Encodable])
-    func stopUserAction(type: RUMUserActionType, name: String?, attributes: [String: Encodable])
-    func addUserAction(type: RUMUserActionType, name: String, attributes: [String: Encodable])
-    func addTiming(name: String)
-    func stopSession()
-    func addResourceMetrics(resourceKey: String,
-                            fetch: (start: Date, end: Date),
-                            redirection: (start: Date, end: Date)?,
-                            dns: (start: Date, end: Date)?,
-                            connect: (start: Date, end: Date)?,
-                            ssl: (start: Date, end: Date)?,
-                            firstByte: (start: Date, end: Date)?,
-                            download: (start: Date, end: Date)?,
-                            responseSize: Int64?,
-                            attributes: [AttributeKey: AttributeValue])
-    func addFeatureFlagEvaluation(name: String, value: Encodable)
-}
-
-private extension RUMUserActionType {
+private extension RUMActionType {
     init(from string: String) {
         switch string.lowercased() {
         case "tap": self = .tap
@@ -101,18 +77,27 @@ public class DdRumImplementation: NSObject {
 
     internal static let missingResourceSize = -1
 
-    lazy var nativeRUM: NativeRUM = rumProvider()
-    private let rumProvider: () -> NativeRUM
+    lazy var nativeRUM: RUMMonitorProtocol = rumProvider()
+    lazy var rumInternal: RUMMonitorInternalProtocol? = rumInternalProvider()
+    private let rumProvider: () -> RUMMonitorProtocol
+    private let rumInternalProvider: () -> RUMMonitorInternalProtocol?
 
-    private typealias UserAction = (type: RUMUserActionType, name: String?)
+    private typealias UserAction = (type: RUMActionType, name: String?)
 
-    internal init(_ rumProvider: @escaping () -> NativeRUM) {
+    internal init(
+        _ rumProvider: @escaping () -> RUMMonitorProtocol,
+        _ rumInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
+    ) {
         self.rumProvider = rumProvider
+        self.rumInternalProvider = rumInternalProvider
     }
 
     @objc
     public override convenience init() {
-        self.init { Global.rum }
+        self.init(
+            { RUMMonitor.shared() },
+            { RUMMonitor.shared()._internal }
+        )
     }
 
     @objc
@@ -129,25 +114,25 @@ public class DdRumImplementation: NSObject {
 
     @objc
     public func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.startUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
+        nativeRUM.startAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
     public func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.stopUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
+        nativeRUM.stopAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
     public func addAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addUserAction(type: RUMUserActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
+        nativeRUM.addAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
     public func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.startResourceLoading(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
+        nativeRUM.startResource(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
@@ -160,7 +145,7 @@ public class DdRumImplementation: NSObject {
             addResourceMetrics(key: key, resourceTimings: resourceTimings)
         }
 
-        nativeRUM.stopResourceLoading(
+        nativeRUM.stopResource(
             resourceKey: key,
             statusCode: Int(statusCode),
             kind: RUMResourceType(from: kind),
@@ -172,7 +157,7 @@ public class DdRumImplementation: NSObject {
 
     @objc
     public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addError(message: message, type: nil, source: RUMErrorSource(from: source), stack: stacktrace, attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
+        nativeRUM.addError(message: message, type: nil, stack: stacktrace, source: RUMErrorSource(from: source), attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
         resolve(nil)
     }
 
@@ -214,8 +199,10 @@ public class DdRumImplementation: NSObject {
         let firstByte = timingValue(from: resourceTimings, for: Self.firstByteTimingKey)
         let download = timingValue(from: resourceTimings, for: Self.downloadTimingKey)
 
+        
         if let fetch = fetch {
-            nativeRUM.addResourceMetrics(
+            rumInternal?.addResourceMetrics(
+                at: Date.init(),
                 resourceKey: key,
                 fetch: fetch,
                 redirection: redirect,

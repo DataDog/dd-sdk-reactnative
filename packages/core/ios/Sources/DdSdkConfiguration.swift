@@ -5,6 +5,8 @@
  */
 
 import Foundation
+import DatadogCore
+import DatadogInternal
 
 /**
  A configuration object to initialize Datadog's features.
@@ -31,18 +33,18 @@ import Foundation
 public class DdSdkConfiguration: NSObject {
     public var clientToken: String = ""
     public var env: String = ""
-    public var applicationId: String? = nil
+    public var applicationId: String = ""
     public var nativeCrashReportEnabled: Bool? = nil
     public var nativeLongTaskThresholdMs: Double? = nil
     public var longTaskThresholdMs: Double = 0.0
     public var sampleRate: Double? = nil
-    public var site: NSString? = nil
+    public var site: DatadogSite
     public var trackingConsent: NSString? = nil
     public var telemetrySampleRate: Double? = nil
     public var vitalsUpdateFrequency: NSString? = nil
     public var trackFrustrations: Bool? = nil
-    public var uploadFrequency: NSString? = nil
-    public var batchSize: NSString? = nil
+    public var uploadFrequency: Datadog.Configuration.UploadFrequency
+    public var batchSize: Datadog.Configuration.BatchSize
     public var trackBackgroundEvents: Bool? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
@@ -50,7 +52,7 @@ public class DdSdkConfiguration: NSObject {
     public init(
         clientToken: String,
         env: String,
-        applicationId: String?,
+        applicationId: String,
         nativeCrashReportEnabled: Bool?,
         nativeLongTaskThresholdMs: Double?,
         longTaskThresholdMs: Double,
@@ -73,16 +75,61 @@ public class DdSdkConfiguration: NSObject {
         self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.longTaskThresholdMs = longTaskThresholdMs
         self.sampleRate = sampleRate
-        self.site = site
+        self.site = DdSdkConfiguration.buildSite(site: site)
         self.trackingConsent = trackingConsent
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackFrustrations = trackFrustrations
-        self.uploadFrequency = uploadFrequency
-        self.batchSize = batchSize
+        self.uploadFrequency = DdSdkConfiguration.buildUploadFrequency(uploadFrequency: uploadFrequency)
+        self.batchSize = DdSdkConfiguration.buildBatchSize(batchSize: batchSize)
         self.trackBackgroundEvents = trackBackgroundEvents
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
+    }
+    
+    static func buildSite(site: NSString?) -> DatadogSite {
+        switch site?.lowercased ?? "us" {
+        case "us1", "us":
+            return .us1
+        case "eu1", "eu":
+            return .eu1
+        case "us3":
+            return .us3
+        case "us5":
+            return .us5
+        case "us1_fed", "gov":
+            return .us1_fed
+        case "ap1":
+            return .ap1
+        default:
+            return .us1
+        }
+    }
+    
+    static func buildBatchSize(batchSize: NSString?) -> Datadog.Configuration.BatchSize {
+        switch batchSize?.lowercased ?? "" {
+        case "small":
+            return .small
+        case "medium":
+            return .medium
+        case "large":
+            return .large
+        default:
+            return .medium
+        }
+    }
+    
+    static func buildUploadFrequency(uploadFrequency: NSString?) -> Datadog.Configuration.UploadFrequency {
+        switch uploadFrequency?.lowercased ?? "" {
+        case "rare":
+            return .rare
+        case "average":
+            return .average
+        case "frequent":
+            return .frequent
+        default:
+            return .average
+        }
     }
 }
 

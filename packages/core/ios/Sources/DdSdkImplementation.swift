@@ -5,8 +5,13 @@
  */
 
 import Foundation
-import Datadog
+import DatadogCore
+import DatadogRUM
+import DatadogLogs
+import DatadogTrace
 import DatadogCrashReporting
+import DatadogWebViewTracking
+import DatadogInternal
 import React
 
 func getDefaultAppVersion() -> String {
@@ -20,18 +25,35 @@ public class DdSdkImplementation: NSObject {
     let jsDispatchQueue: DispatchQueueType
     let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
-    
+    let RUMMonitorProvider: () -> RUMMonitorProtocol
+    let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+    var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
 
     @objc
     public convenience init(bridge: RCTBridge) {
-        self.init(mainDispatchQueue: DispatchQueue.main, jsDispatchQueue: bridge, jsRefreshRateMonitor: JSRefreshRateMonitor.init())
+        self.init(
+            mainDispatchQueue: DispatchQueue.main,
+            jsDispatchQueue: bridge,
+            jsRefreshRateMonitor: JSRefreshRateMonitor.init(),
+            RUMMonitorProvider: { RUMMonitor.shared() },
+            RUMMonitorInternalProvider: { RUMMonitor.shared()._internal }
+        )
     }
     
-    init(mainDispatchQueue: DispatchQueueType, jsDispatchQueue: DispatchQueueType, jsRefreshRateMonitor: RefreshRateMonitor) {
+    init(
+        mainDispatchQueue: DispatchQueueType,
+        jsDispatchQueue: DispatchQueueType,
+        jsRefreshRateMonitor: RefreshRateMonitor,
+        RUMMonitorProvider: @escaping () -> RUMMonitorProtocol,
+        RUMMonitorInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
+    ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
+        self.RUMMonitorProvider = RUMMonitorProvider
+        self.RUMMonitorInternalProvider = RUMMonitorInternalProvider
         super.init()
     }
     
@@ -42,7 +64,8 @@ public class DdSdkImplementation: NSObject {
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
             
-            if Datadog.isInitialized {
+            // TODO: see if this `if` is still needed
+            if Datadog.isInitialized() {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
@@ -57,24 +80,39 @@ public class DdSdkImplementation: NSObject {
             }
             self.setVerbosityLevel(additionalConfig: sdkConfiguration.additionalConfig)
 
-            let ddConfig = self.buildConfiguration(configuration: sdkConfiguration)
+            let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
-            Datadog.initialize(appContext: Datadog.AppContext(), trackingConsent: consent, configuration: ddConfig)
-            self.sendConfigurationAsTelemetry(rnConfiguration: sdkConfiguration)
+            let core = Datadog.initialize(with: sdkConfig, trackingConsent: consent)
 
-            Global.rum = RUMMonitor.initialize()
-
+            self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
-            
+
             resolve(nil)
         }
+    }
+    
+    func enableFeatures(sdkConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) {
+        let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
+        RUM.enable(with: rumConfig, in: core)
+        
+        Logs.enable(with: Logs.Configuration(), in: core)
+        
+        Trace.enable(with: Trace.Configuration(), in: core)
+
+        if sdkConfiguration.nativeCrashReportEnabled ?? false {
+            CrashReporting.enable(in: core)
+        }
+        
+        self.webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
+
+        overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration, core: core)
     }
 
     @objc
     public func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
-            Global.rum.addAttribute(forKey: key, value: value)
+            RUMMonitorProvider().addAttribute(forKey: key, value: value)
             GlobalState.addAttribute(forKey: key, value: value)
         }
         
@@ -114,146 +152,107 @@ public class DdSdkImplementation: NSObject {
     @objc
     public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
-            try Datadog._internal.webEventBridge.send(message)
+            try self.webviewMessageEmitter?.send(body: message)
         } catch {
             Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
         resolve(nil)
     }
     
-    func sendConfigurationAsTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
-        Datadog._internal.telemetry.setConfigurationMapper { event in
-            var event = event
-
-            var configuration = event.telemetry.configuration
-            configuration.initializationType = rnConfiguration.configurationForTelemetry?.initializationType as? String
-            configuration.trackErrors = rnConfiguration.configurationForTelemetry?.trackErrors
-            configuration.trackInteractions = rnConfiguration.configurationForTelemetry?.trackInteractions
-            configuration.trackResources = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
-            configuration.trackNetworkRequests = rnConfiguration.configurationForTelemetry?.trackNetworkRequests
-            configuration.reactVersion = rnConfiguration.configurationForTelemetry?.reactVersion as? String
-            configuration.reactNativeVersion = rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String
-
-            // trackCrossPlatformLongTasks will be deprecated for trackLongTask
-            configuration.trackCrossPlatformLongTasks = rnConfiguration.longTaskThresholdMs != 0
-            configuration.trackLongTask = rnConfiguration.longTaskThresholdMs != 0
-            configuration.trackNativeErrors = rnConfiguration.nativeCrashReportEnabled
-            configuration.trackNativeLongTasks = rnConfiguration.nativeLongTaskThresholdMs != 0
-            event.telemetry.configuration = configuration
-
-            return event
-        }
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) -> Void {
+        core.telemetry.configuration(
+            initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
+            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
+            reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
+            trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
+            trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
+            trackInteractions: rnConfiguration.configurationForTelemetry?.trackInteractions,
+            trackLongTask: rnConfiguration.longTaskThresholdMs != 0,
+            trackNativeErrors: rnConfiguration.nativeLongTaskThresholdMs != 0,
+            trackNativeLongTasks: rnConfiguration.nativeLongTaskThresholdMs != 0,
+            trackNetworkRequests: rnConfiguration.configurationForTelemetry?.trackNetworkRequests
+        )
     }
 
-    func buildConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
-        let ddConfigBuilder: Datadog.Configuration.Builder
-        if let rumAppID = configuration.applicationId {
-            ddConfigBuilder = Datadog.Configuration.builderUsing(
-                rumApplicationID: rumAppID,
-                clientToken: configuration.clientToken,
-                environment: configuration.env
-            )
-            .set(rumSessionsSamplingRate: Float(configuration.sampleRate ?? 100.0))
-        } else {
-            ddConfigBuilder = Datadog.Configuration.builderUsing(
-                clientToken: configuration.clientToken,
-                environment: configuration.env
-            )
-        }
+    func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
+        var config = Datadog.Configuration(
+            clientToken: configuration.clientToken,
+            env: configuration.env,
+            site: configuration.site,
+            service: configuration.additionalConfig?[InternalConfigurationAttributes.serviceName] as? String ?? nil,
+            batchSize: configuration.batchSize,
+            uploadFrequency: configuration.uploadFrequency,
+            proxyConfiguration: buildProxyConfiguration(config: configuration.additionalConfig)
+        )
 
-        switch configuration.site?.lowercased ?? "us" {
-        case "us1", "us":
-            _ = ddConfigBuilder.set(endpoint: .us1)
-        case "eu1", "eu":
-            _ = ddConfigBuilder.set(endpoint: .eu1)
-        case "us3":
-            _ = ddConfigBuilder.set(endpoint: .us3)
-        case "us5":
-            _ = ddConfigBuilder.set(endpoint: .us5)
-        case "us1_fed", "gov":
-            _ = ddConfigBuilder.set(endpoint: .us1_fed)
-        case "ap1":
-            _ = ddConfigBuilder.set(endpoint: .ap1)
-        default:
-            _ = ddConfigBuilder.set(endpoint: .us1)
-        }
-        
-        _ = ddConfigBuilder.set(mobileVitalsFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency))
-
-        _ = ddConfigBuilder.set(uploadFrequency: buildUploadFrequency(frequency: configuration.uploadFrequency))
-
-        _ = ddConfigBuilder.set(batchSize: buildBatchSize(batchSize: configuration.batchSize))
-
-        if var telemetrySampleRate = (configuration.telemetrySampleRate as? NSNumber)?.floatValue {
-            _ = ddConfigBuilder.set(sampleTelemetry: telemetrySampleRate)
-        }
-        
-        if var trackFrustrations = (configuration.trackFrustrations) {
-            _ = ddConfigBuilder.trackFrustrations(trackFrustrations)
-        }
-
-        if var trackBackgroundEvents = (configuration.trackBackgroundEvents) {
-            _ = ddConfigBuilder.trackBackgroundEvents(trackBackgroundEvents)
-        }
-
-        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
-            if (threshold != 0) {
-                // `nativeLongTaskThresholdMs` attribute is in milliseconds
-                _ = ddConfigBuilder.trackRUMLongTasks(threshold: threshold / 1_000)
-            }
-        }
-
-        let additionalConfig = configuration.additionalConfig
-
-        if var additionalConfiguration = additionalConfig as? [String: Any] {
-            if let versionSuffix = additionalConfig?[InternalConfigurationAttributes.versionSuffix] as? String {
+        if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {
+            if let versionSuffix = additionalConfiguration[InternalConfigurationAttributes.versionSuffix] as? String {
                 let datadogVersion = defaultAppVersion + versionSuffix
                 additionalConfiguration[CrossPlatformAttributes.version] = datadogVersion
             }
-            
-            _ = ddConfigBuilder.set(additionalConfiguration: additionalConfiguration)
+
+            config._internal_mutation {
+              $0.additionalConfiguration = additionalConfiguration
+            }
         }
 
-        if let enableViewTracking = additionalConfig?[InternalConfigurationAttributes.nativeViewTracking] as? Bool, enableViewTracking {
-            _ = ddConfigBuilder.trackUIKitRUMViews()
+        return config
+    }
+    
+    func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
+        var longTaskThreshold: TimeInterval? = nil
+        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
+            if (threshold != 0) {
+                // `nativeLongTaskThresholdMs` attribute is in milliseconds
+                longTaskThreshold = threshold / 1_000
+            }
+        }
+        
+        var uiKitViewsPredicate: UIKitRUMViewsPredicate? = nil
+        if let enableViewTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeViewTracking] as? Bool, enableViewTracking {
+            uiKitViewsPredicate = DefaultUIKitRUMViewsPredicate()
         }
 
-        if let enableInteractionTracking = additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
-            _ = ddConfigBuilder.trackUIKitRUMActions()
+        var uiKitActionsPredicate: UIKitRUMActionsPredicate? = nil
+        if let enableInteractionTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
+            uiKitActionsPredicate = DefaultUIKitRUMActionsPredicate()
         }
-
-        if let serviceName = additionalConfig?[InternalConfigurationAttributes.serviceName] as? String {
-            _ = ddConfigBuilder.set(serviceName: serviceName)
-        }
-
-        if let firstPartyHosts = additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
+        
+        var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
+        if let firstPartyHosts = configuration.additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
             // We will always fall under this condition as firstPartyHosts is an empty array by default
-            _ = ddConfigBuilder.trackURLSession(firstPartyHostsWithHeaderTypes: firstPartyHosts.asFirstPartyHosts())
+            urlSessionTracking = RUM.Configuration.URLSessionTracking(
+                firstPartyHostsTracing: .traceWithHeaders(
+                    hostsWithHeaders: firstPartyHosts.asFirstPartyHosts(),
+                    sampleRate: 100.0
+                )
+            )
         }
-
-        if let proxyConfiguration = buildProxyConfiguration(config: additionalConfig) {
-            _ = ddConfigBuilder.set(proxyConfiguration: proxyConfiguration)
-        }
-
-        if configuration.nativeCrashReportEnabled ?? false {
-            _ = ddConfigBuilder.enableCrashReporting(using: DDCrashReportingPlugin())
-        }
-
-        _ = ddConfigBuilder.setRUMResourceEventMapper({ resourceEvent in
-            if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
-                return nil
-            }
-            return resourceEvent
-        })
-
-        _ = ddConfigBuilder.setRUMActionEventMapper({ actionEvent in
-            if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
-                return nil
-            }
-            return actionEvent
-        })
-
-        return ddConfigBuilder.build()
+        
+        return RUM.Configuration(
+            applicationID: configuration.applicationId,
+            sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? 100.0,
+            uiKitViewsPredicate: uiKitViewsPredicate,
+            uiKitActionsPredicate: uiKitActionsPredicate,
+            urlSessionTracking: urlSessionTracking,
+            trackFrustrations: configuration.trackFrustrations ?? true,
+            trackBackgroundEvents: configuration.trackBackgroundEvents ?? false,
+            longTaskThreshold: longTaskThreshold,
+            vitalsUpdateFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency),
+            resourceEventMapper: { resourceEvent in
+                if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                    return nil
+                }
+                return resourceEvent
+            },
+            actionEventMapper: { actionEvent in
+                if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                    return nil
+                }
+                return actionEvent
+            },
+            telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? 20.0
+        )
     }
 
     func buildProxyConfiguration(config: NSDictionary?) -> [AnyHashable: Any]? {
@@ -311,21 +310,19 @@ public class DdSdkImplementation: NSObject {
         return trackingConsent
     }
 
-    func buildVitalsUpdateFrequency(frequency: NSString?) -> Datadog.Configuration.VitalsFrequency {
-        let vitalsFrequency: Datadog.Configuration.VitalsFrequency
+    func buildVitalsUpdateFrequency(frequency: NSString?) -> RUM.Configuration.VitalsFrequency? {
         switch frequency?.lowercased {
         case "never":
-            vitalsFrequency = .never
+            return nil
         case "rare":
-            vitalsFrequency = .rare
+            return .rare
         case "average":
-            vitalsFrequency = .average
+            return .average
         case "frequent":
-            vitalsFrequency = .frequent
+            return .frequent
         default:
-            vitalsFrequency = .average
+            return .average
         }
-        return vitalsFrequency
     }
 
     func buildUploadFrequency(frequency: NSString?) -> Datadog.Configuration.UploadFrequency {
@@ -364,7 +361,8 @@ public class DdSdkImplementation: NSObject {
         case "debug":
             Datadog.verbosityLevel = .debug
         case "info":
-            Datadog.verbosityLevel = .info
+            // .info is mapped to .debug
+            Datadog.verbosityLevel = .debug
         case "warn":
             Datadog.verbosityLevel = .warn
         case "error":
@@ -382,7 +380,7 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
-        let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != .never
+        let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != nil
         let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
         
         if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {
@@ -391,10 +389,10 @@ public class DdSdkImplementation: NSObject {
 
         func frameTimeCallback(frameTime: Double) {
             if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
-                Global.rum._internal.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime)
+                RUMMonitorInternalProvider()?.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
             }
             if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
-                Global.rum._internal.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+                RUMMonitorInternalProvider()?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
             }
         }
         

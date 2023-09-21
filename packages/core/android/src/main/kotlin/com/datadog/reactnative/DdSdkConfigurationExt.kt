@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.tracing.TracingHeaderType
+import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
@@ -15,7 +15,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     return DdSdkConfiguration(
         clientToken = getString("clientToken").orEmpty(),
         env = getString("env").orEmpty(),
-        applicationId = getString("applicationId"),
+        applicationId = getString("applicationId").orEmpty(),
         nativeCrashReportEnabled = getBoolean("nativeCrashReportEnabled"),
         nativeLongTaskThresholdMs = getDouble("nativeLongTaskThresholdMs"),
         longTaskThresholdMs = getDouble("longTaskThresholdMs"),
@@ -63,7 +63,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)
     map.putString("env", env)
-    applicationId?.let { map.putString("applicationId", it) }
+    map.putString("applicationId", applicationId)
     nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
     nativeLongTaskThresholdMs?.let { map.putDouble("nativeLongTaskThresholdMs", it) }
     longTaskThresholdMs?.let { map.putDouble("longTaskThresholdMs", it) }

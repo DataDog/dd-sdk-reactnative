@@ -11,22 +11,22 @@ import android.content.pm.PackageManager
 import android.util.Log
 import android.view.Choreographer
 import com.datadog.android.DatadogSite
-import com.datadog.android._InternalProxy
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.Credentials
 import com.datadog.android.core.configuration.UploadFrequency
-import com.datadog.android.core.configuration.VitalsUpdateFrequency
 import com.datadog.android.event.EventMapper
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.GlobalRum
-import com.datadog.android.rum.RumMonitor
+import com.datadog.android.rum.configuration.VitalsUpdateFrequency
+import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
-import com.datadog.android.tracing.TracingHeaderType
+import com.datadog.android.trace.TraceConfiguration
+import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
@@ -54,16 +54,21 @@ class DdSdkImplementation(
      */
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
-        val credentials = buildCredentials(ddSdkConfiguration)
-        val nativeConfiguration = buildConfiguration(ddSdkConfiguration)
+        val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
+        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
         configureSdkVerbosity(ddSdkConfiguration)
 
-        datadog.initialize(appContext, credentials, nativeConfiguration, trackingConsent)
+        datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        datadog.registerRumMonitor(RumMonitor.Builder().build())
+        datadog.enableRum(rumConfiguration)
         monitorJsRefreshRate(ddSdkConfiguration)
+
+        datadog.enableTrace(TraceConfiguration.Builder().build())
+
+        datadog.enableLogs(LogsConfiguration.Builder().build())
+
         initialized.set(true)
 
         promise.resolve(null)
@@ -165,55 +170,31 @@ class DdSdkImplementation(
         return packageInfo?.let {
             // we need to use the deprecated method because getLongVersionCode method is only
             // available from API 28 and above
-            @Suppress("DEPRECATION") it.versionName ?: it.versionCode.toString()
+            @Suppress("DEPRECATION")
+            it.versionName ?: it.versionCode.toString()
         }
             ?: DEFAULT_APP_VERSION
     }
 
     @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
-    private fun buildConfiguration(configuration: DdSdkConfiguration): Configuration {
-        val additionalConfig = configuration.additionalConfig?.toMutableMap()
-
-        val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
-        if (versionSuffix != null && additionalConfig != null) {
-            val defaultVersion = getDefaultAppVersion()
-            additionalConfig.put(DD_VERSION, defaultVersion + versionSuffix)
-        }
-
+    private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
-            Configuration.Builder(
-                logsEnabled = true,
-                tracesEnabled = true,
-                crashReportsEnabled = configuration.nativeCrashReportEnabled
-                    ?: false,
-                rumEnabled = true
+            RumConfiguration.Builder(
+                applicationId = configuration.applicationId
             )
-                .setAdditionalConfiguration(
-                    additionalConfig?.filterValues { it != null }?.mapValues {
-                        it.value!!
-                    }
-                        ?: emptyMap()
-                )
         if (configuration.sampleRate != null) {
-            configBuilder.sampleRumSessions(configuration.sampleRate.toFloat())
+            configBuilder.setSessionSampleRate(configuration.sampleRate.toFloat())
         }
 
         configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
-        configBuilder.trackBackgroundRumEvents(configuration.trackBackgroundEvents ?: false)
+        configBuilder.trackBackgroundEvents(configuration.trackBackgroundEvents ?: false)
 
-        configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setVitalsUpdateFrequency(
             buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
         )
-        configBuilder.setUploadFrequency(
-            buildUploadFrequency(configuration.uploadFrequency)
-        )
-        configBuilder.setBatchSize(
-            buildBatchSize(configuration.batchSize)
-        )
 
         val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
-        telemetrySampleRate?.let { configBuilder.sampleTelemetry(it) }
+        telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
 
         val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
         if (longTask != null) {
@@ -231,25 +212,10 @@ class DdSdkImplementation(
         val interactionTracking =
             configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
         if (interactionTracking == false) {
-            configBuilder.disableInteractionTracking()
+            configBuilder.disableUserInteractionTracking()
         }
 
-        @Suppress("UNCHECKED_CAST")
-        val firstPartyHosts =
-            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
-                ?.toArrayList() as?
-                List<ReadableMap>
-        if (firstPartyHosts != null) {
-            val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
-
-            configBuilder.setFirstPartyHostsWithHeaderType(firstPartyHostsWithHeaderTypes)
-        }
-
-        buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
-            configBuilder.setProxy(proxy, authenticator)
-        }
-
-        configBuilder.setRumResourceEventMapper(
+        configBuilder.setResourceEventMapper(
             object : EventMapper<ResourceEvent> {
                 override fun map(event: ResourceEvent): ResourceEvent? {
                     if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) ==
@@ -262,7 +228,7 @@ class DdSdkImplementation(
             }
         )
 
-        configBuilder.setRumActionEventMapper(
+        configBuilder.setActionEventMapper(
             object : EventMapper<ActionEvent> {
                 override fun map(event: ActionEvent): ActionEvent? {
                     if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true
@@ -274,7 +240,7 @@ class DdSdkImplementation(
             }
         )
 
-        _InternalProxy.setTelemetryConfigurationEventMapper(
+        _RumInternalProxy.setTelemetryConfigurationEventMapper(
             configBuilder,
             object : EventMapper<TelemetryConfigurationEvent> {
                 override fun map(
@@ -341,15 +307,51 @@ class DdSdkImplementation(
         return firstPartyHostsWithHeaderTypes
     }
 
-    private fun buildCredentials(configuration: DdSdkConfiguration): Credentials {
+    private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
         val serviceName = configuration.additionalConfig?.get(DD_SERVICE_NAME) as? String
-        return Credentials(
+        val configBuilder = Configuration.Builder(
             clientToken = configuration.clientToken,
-            envName = configuration.env,
-            rumApplicationId = configuration.applicationId,
+            env = configuration.env,
             variant = "",
-            serviceName = serviceName
+            service = serviceName
         )
+
+        val additionalConfig = configuration.additionalConfig?.toMutableMap()
+        val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
+        if (versionSuffix != null && additionalConfig != null) {
+            val defaultVersion = getDefaultAppVersion()
+            additionalConfig.put(DD_VERSION, defaultVersion + versionSuffix)
+        }
+        configBuilder.setAdditionalConfiguration(
+            additionalConfig?.filterValues { it != null }?.mapValues {
+                it.value
+            } as Map<String, Any>? ?: emptyMap()
+        )
+
+        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
+        configBuilder.useSite(buildSite(configuration.site))
+        configBuilder.setUploadFrequency(
+            buildUploadFrequency(configuration.uploadFrequency)
+        )
+        configBuilder.setBatchSize(
+            buildBatchSize(configuration.batchSize)
+        )
+
+        buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
+            configBuilder.setProxy(proxy, authenticator)
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val firstPartyHosts =
+            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
+                ?.toArrayList() as?
+                    List<ReadableMap>
+        if (firstPartyHosts != null) {
+            val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
+            configBuilder.setFirstPartyHostsWithHeaderType(firstPartyHostsWithHeaderTypes)
+        }
+
+        return configBuilder.build()
     }
 
     internal fun buildTrackingConsent(trackingConsent: String?): TrackingConsent {
@@ -435,8 +437,7 @@ class DdSdkImplementation(
     }
 
     private fun buildUploadFrequency(uploadFrequency: String?): UploadFrequency {
-        val uploadFrequency = uploadFrequency?.lowercase(Locale.US)
-        return when (uploadFrequency) {
+        return when (uploadFrequency?.lowercase(Locale.US)) {
             "rare" -> UploadFrequency.RARE
             "average" -> UploadFrequency.AVERAGE
             "frequent" -> UploadFrequency.FREQUENT
@@ -489,7 +490,7 @@ class DdSdkImplementation(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
-                GlobalRum.get()
+                datadog.getRumMonitor()
                     ._getInternal()
                     ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
             }
@@ -499,7 +500,7 @@ class DdSdkImplementation(
                         ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
                     )
             ) {
-                GlobalRum.get()._getInternal()?.addLongTask(it.toLong(), "javascript")
+                datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
     }

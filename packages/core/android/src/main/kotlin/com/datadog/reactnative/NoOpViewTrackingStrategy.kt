@@ -7,13 +7,14 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import com.datadog.android.api.SdkCore
 import com.datadog.android.rum.tracking.ViewTrackingStrategy
 
 /**
  * No-op implementation of the [ViewTrackingStrategy].
  */
 object NoOpViewTrackingStrategy : ViewTrackingStrategy {
-    override fun register(context: Context) {
+    override fun register(sdkCore: SdkCore, context: Context) {
         // No-op
     }
 

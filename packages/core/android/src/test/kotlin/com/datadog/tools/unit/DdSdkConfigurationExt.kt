@@ -8,7 +8,7 @@ package com.datadog.tools.unit
 
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.UploadFrequency
-import com.datadog.android.core.configuration.VitalsUpdateFrequency
+import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
 import com.facebook.react.bridge.ReadableMap
