@@ -1171,5 +1171,54 @@ describe('XHRProxy', () => {
                 xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
             ).not.toBeDefined();
         });
+
+        it('enables mapper to edit graphql variables to remove sensitive information', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+            DdRum.registerResourceEventMapper(event => {
+                if (event.context['_dd.graphql.variables']) {
+                    const variables = JSON.parse(
+                        event.context['_dd.graphql.variables']
+                    );
+                    if (variables.password) {
+                        variables.password = '***';
+                    }
+                    event.context['_dd.graphql.variables'] = JSON.stringify(
+                        variables
+                    );
+                }
+
+                return event;
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_VARIABLES_HEADER,
+                JSON.stringify({ password: 'SECRET' })
+            );
+            xhr.send();
+            xhr.abort();
+            xhr.complete(0, undefined);
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).toBe('query');
+            expect(attributes['_dd.graphql.operation_name']).not.toBeDefined();
+            expect(attributes['_dd.graphql.variables']).toBe(
+                '{"password":"***"}'
+            );
+        });
     });
 });
