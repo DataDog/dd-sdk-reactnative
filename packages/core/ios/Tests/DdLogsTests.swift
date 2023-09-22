@@ -31,7 +31,7 @@ internal class DdLogsTests: XCTestCase {
     private let invalidTestAttributes = NSDictionary(
         dictionary: ["key1": "value", 123: "value2"]
     )
-    
+
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 
@@ -45,7 +45,7 @@ internal class DdLogsTests: XCTestCase {
         GlobalState.globalAttributes.removeAll()
         super.tearDown()
     }
- 
+
     func testItInitializesNativeLoggerOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize logger once")
@@ -56,7 +56,7 @@ internal class DdLogsTests: XCTestCase {
         }, { true })
 
         // When
-        (0..<10).forEach { _ in logger.debug(message: "foo", context: [:], resolve: mockResolve, reject: mockReject)}
+        (0..<10).forEach { _ in logger.debug(message: "foo", context: [:], resolve: mockResolve, reject: mockReject) }
 
         // Then
         waitForExpectations(timeout: 0.5, handler: nil)
@@ -345,11 +345,11 @@ internal class DdLogsTests: XCTestCase {
             GlobalState.globalAttributes.keys
         )
     }
-    
+
     func testDoesNotInitializeLoggerBeforeSdkIsInitialized() throws {
         var isInitialized = false
         let newLogger = DdLogsImplementation({ self.mockNativeLogger }, { isInitialized })
-        
+
         newLogger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
         newLogger.info(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
         newLogger.warn(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
@@ -362,7 +362,7 @@ internal class DdLogsTests: XCTestCase {
         XCTAssertEqual(mockNativeLogger.receivedMethodCalls.count, 0)
 
         isInitialized = true
-        
+
         newLogger.debug(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
         newLogger.info(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
         newLogger.warn(message: testMessage_objc as String, context: validTestAttributes_objc, resolve: mockResolve, reject: mockReject)
@@ -378,10 +378,9 @@ internal class DdLogsTests: XCTestCase {
 
 private class MockNativeLogger: LoggerProtocol {
     init () {
-        
     }
-    
-    func log(level: DatadogLogs.LogLevel, message: String, error: Error?, attributes: [String : Encodable]?) {
+
+    func log(level: DatadogLogs.LogLevel, message: String, error: Error?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(
             kind: MockNativeLogger.MethodCall.Kind(from: level),
             message: message,
@@ -391,19 +390,19 @@ private class MockNativeLogger: LoggerProtocol {
             attributes: attributes
         ))
     }
-    
+
     func addAttribute(forKey key: DatadogInternal.AttributeKey, value: DatadogInternal.AttributeValue) {}
-    
+
     func removeAttribute(forKey key: DatadogInternal.AttributeKey) {}
-    
+
     func addTag(withKey key: String, value: String) {}
-    
+
     func removeTag(withKey key: String) {}
-    
+
     func add(tag: String) {}
-    
+
     func remove(tag: String) {}
-    
+
     struct MethodCall {
         enum Kind {
             case debug
@@ -418,7 +417,7 @@ private class MockNativeLogger: LoggerProtocol {
         let stackTrace: String?
         let attributes: [String: Encodable]?
     }
-    
+
     private(set) var receivedMethodCalls = [MethodCall]()
 
     func debug(_ message: String, error: Error?, attributes: [String: Encodable]?) {
@@ -436,7 +435,7 @@ private class MockNativeLogger: LoggerProtocol {
 }
 
 extension MockNativeLogger: InternalLoggerProtocol {
-    func log(level: DatadogLogs.LogLevel, message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String : Encodable]?) {
+    func log(level: DatadogLogs.LogLevel, message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String: Encodable]?) {
         receivedMethodCalls.append(MethodCall(
             kind: MockNativeLogger.MethodCall.Kind(from: level),
             message: message,

@@ -86,7 +86,7 @@ public class DdSdkConfiguration: NSObject {
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }
-    
+
     static func buildSite(site: NSString?) -> DatadogSite {
         switch site?.lowercased ?? "us" {
         case "us1", "us":
@@ -105,7 +105,7 @@ public class DdSdkConfiguration: NSObject {
             return .us1
         }
     }
-    
+
     static func buildBatchSize(batchSize: NSString?) -> Datadog.Configuration.BatchSize {
         switch batchSize?.lowercased ?? "" {
         case "small":
@@ -118,7 +118,7 @@ public class DdSdkConfiguration: NSObject {
             return .medium
         }
     }
-    
+
     static func buildUploadFrequency(uploadFrequency: NSString?) -> Datadog.Configuration.UploadFrequency {
         switch uploadFrequency?.lowercased ?? "" {
         case "rare":
@@ -140,7 +140,7 @@ public class ConfigurationForTelemetry: NSObject {
     public var trackNetworkRequests: Bool?
     public var reactVersion: NSString?
     public var reactNativeVersion: NSString?
-    
+
     public init(
         initializationType: NSString?,
         trackErrors: Bool?,

@@ -18,12 +18,12 @@ public class DdTraceImplementation: NSObject {
     }
 
     @objc
-    public override convenience init() {
+    override public convenience init() {
         self.init { Tracer.shared() }
     }
 
     @objc
-    public func startSpan(operation: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startSpan(operation: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         let id = UUID().uuidString as NSString
         let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
@@ -41,7 +41,7 @@ public class DdTraceImplementation: NSObject {
     }
 
     @objc
-    public func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         objc_sync_enter(self)
         let optionalSpan = spanDictionary.removeValue(forKey: spanId)
         objc_sync_exit(self)
@@ -51,7 +51,7 @@ public class DdTraceImplementation: NSObject {
             let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
             span.finish(at: Date(timeIntervalSince1970: timeIntervalSince1970))
         }
-        
+
         resolve(nil)
     }
 

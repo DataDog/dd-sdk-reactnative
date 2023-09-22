@@ -93,51 +93,49 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public override convenience init() {
-        self.init(
-            { RUMMonitor.shared() },
-            { RUMMonitor.shared()._internal }
+    override public convenience init() {
+        self.init({ RUMMonitor.shared() }, { RUMMonitor.shared()._internal }
         )
     }
 
     @objc
-    public func startView(key: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startView(key: String, name: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.startView(key: key, name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopView(key: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopView(key: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.stopView(key: key, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.startAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.stopAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func addAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.addAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.startResource(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopResource(key: String, statusCode: Int64, kind: String, size: Double, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopResource(key: String, statusCode: Int64, kind: String, size: Double, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         let mutableContext = NSMutableDictionary(dictionary: context)
         if let resourceTimings = mutableContext.object(forKey: Self.resourceTimingsKey) as? [String: Any] {
             mutableContext.removeObject(forKey: Self.resourceTimingsKey)
@@ -156,25 +154,25 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.addError(message: message, type: nil, stack: stacktrace, source: RUMErrorSource(from: source), attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
         resolve(nil)
     }
 
     @objc
-    public func addTiming(name: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addTiming(name: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.addTiming(name: name)
         resolve(nil)
     }
 
     @objc
-    public func stopSession(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopSession(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         nativeRUM.stopSession()
         resolve(nil)
     }
 
     @objc
-    public func addFeatureFlagEvaluation(name: String, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addFeatureFlagEvaluation(name: String, value: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         let valueAsEncodable = castAttributesToSwift(value)
         if let value = valueAsEncodable["value"] {
             nativeRUM.addFeatureFlagEvaluation(name: name, value: value)
@@ -199,7 +197,6 @@ public class DdRumImplementation: NSObject {
         let firstByte = timingValue(from: resourceTimings, for: Self.firstByteTimingKey)
         let download = timingValue(from: resourceTimings, for: Self.downloadTimingKey)
 
-        
         if let fetch = fetch {
             rumInternal?.addResourceMetrics(
                 at: Date.init(),

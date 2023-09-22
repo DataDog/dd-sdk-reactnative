@@ -9,12 +9,11 @@ import XCTest
 @testable import DatadogCore
 @testable import DatadogTrace
 
-
 internal class DdTraceTests: XCTestCase {
     private let mockNativeTracer = MockTracer()
     private var tracer: DdTraceImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
     private var lastResolveValue: Any?
-    
+
     private func mockResolve(args: Any?) { lastResolveValue = args }
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 

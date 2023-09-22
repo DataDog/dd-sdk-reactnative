@@ -172,7 +172,6 @@ func mockRandomAttributes() -> [String: Codable] {
     ]
 }
 
-
 // MARK: - RUM Mocks
 
 extension RUMUser {
@@ -238,7 +237,6 @@ extension RUMOperatingSystem: RandomMockable {
     }
 }
 
-
 extension RUMMethod: RandomMockable {
     static func mockRandom() -> RUMMethod {
         return [.post, .get, .head, .put, .delete, .patch].randomElement()!
@@ -250,7 +248,6 @@ extension RUMEventAttributes: RandomMockable {
         return .init(contextInfo: mockRandomAttributes())
     }
 }
-
 
 extension RUMResourceEvent: RandomMockable {
     static func mockRandomDropped() -> RUMResourceEvent {

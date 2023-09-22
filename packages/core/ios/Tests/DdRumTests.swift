@@ -13,7 +13,7 @@ import XCTest
 internal class DdRumTests: XCTestCase {
     private let mockNativeRUM = MockRUMMonitor()
     private var rum: DdRumImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
-    
+
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 
@@ -42,7 +42,7 @@ internal class DdRumTests: XCTestCase {
 
     func testInternalTimestampKeyValue() {
         let key = "_dd.timestamp"
-        
+
         XCTAssertEqual(DdRumImplementation.timestampKey, DatadogInternal.CrossPlatformAttributes.timestampInMilliseconds)
         XCTAssertEqual(DdRumImplementation.timestampKey, DatadogSDKReactNative.CrossPlatformAttributes.timestampInMilliseconds)
     }

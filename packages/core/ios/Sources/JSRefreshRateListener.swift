@@ -19,16 +19,16 @@ internal protocol RefreshRateMonitor {
 
 internal final class JSRefreshRateMonitor: RefreshRateMonitor {
     private var refreshRateListener: RefreshRateListener
-    
+
     init() {
         self.refreshRateListener = NoOpRefreshRateListener()
     }
-    
-    public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+
+    func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
         self.refreshRateListener = JSRefreshRateListener(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
         self.refreshRateListener.start()
     }
-    
+
     func appWillResignActive() {
         self.refreshRateListener.stop()
     }
@@ -46,7 +46,6 @@ private final class NoOpRefreshRateListener: RefreshRateListener {
     init() {}
     func start() {}
     func stop() {}
-
 }
 
 private final class JSRefreshRateListener: RefreshRateListener {
@@ -60,7 +59,7 @@ private final class JSRefreshRateListener: RefreshRateListener {
         self.frameTimeCallback = frameTimeCallback
     }
 
-    public func start() {
+    func start() {
         jsQueue.async {
             self.jsDisplayLink?.invalidate()
             self.jsDisplayLink = CADisplayLink(target: self, selector: #selector(self.onFrameTick))
@@ -68,7 +67,7 @@ private final class JSRefreshRateListener: RefreshRateListener {
         }
     }
 
-    public func stop() {
+    func stop() {
         jsQueue.async {
             self.jsDisplayLink?.invalidate()
             self.jsDisplayLink = nil

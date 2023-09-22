@@ -13,15 +13,15 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     init () {
         self.debug = false
     }
-    
+
     func addAttribute(forKey key: DatadogInternal.AttributeKey, value: DatadogInternal.AttributeValue) {
         addedAttributes[key] = value
     }
-    
+
     func removeAttribute(forKey key: DatadogInternal.AttributeKey) {}
-    
+
     var debug: Bool
-    
+
     struct Interval: Equatable {
         let start: Date?
         let end: Date?
@@ -49,15 +49,14 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
                                 responseSize: Int64?)
         case addLongTasks(time: Date, duration: TimeInterval)
         case updatePerformanceMetric(time: Date, metric: DatadogRUM.PerformanceMetric, value: Double)
-
     }
 
-    public var calledMethods = [CalledMethod]()
-    public var receivedAttributes = [[AttributeKey: AttributeValue]]()
+    var calledMethods = [CalledMethod]()
+    var receivedAttributes = [[AttributeKey: AttributeValue]]()
     private(set) var addedAttributes = [AttributeKey: AttributeValue]()
     private(set) var receivedFeatureFlags = [String: Encodable]()
-    public var lastReceivedPerformanceMetrics = [PerformanceMetric: Double]()
-    public var receivedLongTasks = [Date: TimeInterval]()
+    var lastReceivedPerformanceMetrics = [PerformanceMetric: Double]()
+    var receivedLongTasks = [Date: TimeInterval]()
 
     func startView(key: String, name: String?, attributes: [AttributeKey: AttributeValue]) {
         calledMethods.append(.startView(key: key, name: name))
@@ -103,7 +102,7 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     func addFeatureFlagEvaluation(name: String, value: Encodable) {
         receivedFeatureFlags[name] = value
     }
-    
+
     var _internalMock: MockRUMMonitorInternal {
         MockRUMMonitorInternal(monitor: self)
     }
@@ -112,15 +111,15 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
 public struct MockRUMMonitorInternal: RUMMonitorInternalProtocol {
     let monitor: MockRUMMonitor
 
-    public func addLongTask(at time: Date, duration: TimeInterval, attributes: [AttributeKey : AttributeValue]) {
+    public func addLongTask(at time: Date, duration: TimeInterval, attributes: [AttributeKey: AttributeValue]) {
         monitor.calledMethods.append(
             .addLongTasks(time: time, duration: duration)
         )
         monitor.receivedAttributes.append(attributes)
         monitor.receivedLongTasks[time] = duration
     }
-    
-    public func updatePerformanceMetric(at time: Date, metric: DatadogRUM.PerformanceMetric, value: Double, attributes: [AttributeKey : AttributeValue]) {
+
+    public func updatePerformanceMetric(at time: Date, metric: DatadogRUM.PerformanceMetric, value: Double, attributes: [AttributeKey: AttributeValue]) {
         monitor.calledMethods.append(
             .updatePerformanceMetric(time: time, metric: metric, value: value)
         )

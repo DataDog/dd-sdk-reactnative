@@ -18,7 +18,7 @@ internal class AnyEncodableTests: XCTestCase {
                 "boolean-true": true,
                 "boolean-false": false,
                 "date": Date(timeIntervalSince1970: 123),
-                "double": 3.141_592_653_589_793,
+                "double": 3.141592653589793,
                 "integer": 42,
                 "nested": [
                     "a": "alpha",
@@ -38,7 +38,7 @@ internal class AnyEncodableTests: XCTestCase {
         XCTAssertEqual(castedAttributes.count, attributes.count)
         XCTAssertEqual(castedAttributes["boolean-true"] as? Bool, true, "It preserves Bool type information")
         XCTAssertEqual(castedAttributes["boolean-false"] as? Bool, false, "It preserves Bool type information")
-        XCTAssertEqual(castedAttributes["double"] as? Double, 3.141_592_653_589_793, "It preserves Double type information")
+        XCTAssertEqual(castedAttributes["double"] as? Double, 3.141592653589793, "It preserves Double type information")
         XCTAssertEqual(castedAttributes["integer"] as? Int64, 42, "It preserves Int64 type information")
         XCTAssertEqual(castedAttributes["string"] as? String, "string", "It preserves String type information")
 
@@ -77,7 +77,7 @@ internal class AnyEncodableTests: XCTestCase {
             "array": [1, 2, 3],
             "boolean": true,
             "date": Date(timeIntervalSince1970: 0),
-            "double": 3.141_592_653_589_793,
+            "double": 3.141592653589793,
             "integer": 42,
             "nested": [
                 "a": "alpha",

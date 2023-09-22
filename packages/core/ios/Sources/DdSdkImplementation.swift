@@ -29,7 +29,7 @@ public class DdSdkImplementation: NSObject {
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
-    private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
+    private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1
 
     @objc
     public convenience init(bridge: RCTBridge) {
@@ -41,7 +41,7 @@ public class DdSdkImplementation: NSObject {
             RUMMonitorInternalProvider: { RUMMonitor.shared()._internal }
         )
     }
-    
+
     init(
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
@@ -56,21 +56,21 @@ public class DdSdkImplementation: NSObject {
         self.RUMMonitorInternalProvider = RUMMonitorInternalProvider
         super.init()
     }
-    
+
     // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
+    public func initialize(configuration: NSDictionary, resolve: @escaping ((Any?) -> Void), reject: RCTPromiseRejectBlock) {
         // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
-            
+
             // TODO: see if this `if` is still needed
             if Datadog.isInitialized() {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
                 Datadog._internal.telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
-                
+
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
                 // appears to change at that moment.
@@ -90,37 +90,37 @@ public class DdSdkImplementation: NSObject {
             resolve(nil)
         }
     }
-    
+
     func enableFeatures(sdkConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) {
         let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
         RUM.enable(with: rumConfig, in: core)
-        
+
         Logs.enable(with: Logs.Configuration(), in: core)
-        
+
         Trace.enable(with: Trace.Configuration(), in: core)
 
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
             CrashReporting.enable(in: core)
         }
-        
+
         self.webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
 
         overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration, core: core)
     }
 
     @objc
-    public func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setAttributes(attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
             RUMMonitorProvider().addAttribute(forKey: key, value: value)
             GlobalState.addAttribute(forKey: key, value: value)
         }
-        
+
         resolve(nil)
     }
 
     @objc
-    public func setUser(user: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setUser(user: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         var castedUser = castAttributesToSwift(user)
         let id = castedUser.removeValue(forKey: "id") as? String
         let name = castedUser.removeValue(forKey: "name") as? String
@@ -132,34 +132,34 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setTrackingConsent(trackingConsent: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.set(trackingConsent: buildTrackingConsent(consent: trackingConsent))
         resolve(nil)
     }
-    
+
     @objc
-    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func telemetryDebug(message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog._internal.telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
-    
+
     @objc
-    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }
-    
+
     @objc
-    public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        do{
+    public func consumeWebviewEvent(message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        do {
             try self.webviewMessageEmitter?.send(body: message)
         } catch {
             Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
         resolve(nil)
     }
-    
-    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) -> Void {
+
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) {
         core.telemetry.configuration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
             reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
@@ -198,16 +198,16 @@ public class DdSdkImplementation: NSObject {
 
         return config
     }
-    
+
     func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
         var longTaskThreshold: TimeInterval? = nil
         if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
-            if (threshold != 0) {
+            if threshold != 0 {
                 // `nativeLongTaskThresholdMs` attribute is in milliseconds
                 longTaskThreshold = threshold / 1_000
             }
         }
-        
+
         var uiKitViewsPredicate: UIKitRUMViewsPredicate? = nil
         if let enableViewTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeViewTracking] as? Bool, enableViewTracking {
             uiKitViewsPredicate = DefaultUIKitRUMViewsPredicate()
@@ -217,7 +217,7 @@ public class DdSdkImplementation: NSObject {
         if let enableInteractionTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
             uiKitActionsPredicate = DefaultUIKitRUMActionsPredicate()
         }
-        
+
         var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
         if let firstPartyHosts = configuration.additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
             // We will always fall under this condition as firstPartyHosts is an empty array by default
@@ -228,7 +228,7 @@ public class DdSdkImplementation: NSObject {
                 )
             )
         }
-        
+
         return RUM.Configuration(
             applicationID: configuration.applicationId,
             sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? 100.0,
@@ -371,7 +371,7 @@ public class DdSdkImplementation: NSObject {
             Datadog.verbosityLevel = nil
         }
     }
-    
+
     func startJSRefreshRateMonitoring(sdkConfiguration: DdSdkConfiguration) {
         if let frameTimeCallback = buildFrameTimeCallback(sdkConfiguration: sdkConfiguration) {
             // Falling back to mainDispatchQueue if bridge is nil is only useful for tests
@@ -379,24 +379,23 @@ public class DdSdkImplementation: NSObject {
         }
     }
 
-    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
+    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
         let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != nil
         let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
-        
-        if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {
+
+        if !jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled {
             return nil
         }
 
         func frameTimeCallback(frameTime: Double) {
-            if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
+            if jsRefreshRateMonitoringEnabled && frameTime > 0 {
                 RUMMonitorInternalProvider()?.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
             }
-            if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
+            if jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000 {
                 RUMMonitorInternalProvider()?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
             }
         }
-        
+
         return frameTimeCallback
     }
-
 }

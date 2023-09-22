@@ -10,7 +10,6 @@ import DatadogInternal
 import Foundation
 
 extension NSDictionary {
-
     func asDdSdkConfiguration() -> DdSdkConfiguration {
         let clientToken = object(forKey: "clientToken") as? String
         let env = object(forKey: "env") as? String
@@ -49,7 +48,7 @@ extension NSDictionary {
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
     }
-    
+
     func asConfigurationForTelemetry() -> ConfigurationForTelemetry {
         let initializationType = object(forKey: "initializationType") as? NSString
         let trackErrors = object(forKey: "trackErrors") as? Bool
@@ -91,10 +90,10 @@ extension NSArray {
             }
         })
     }
-    
+
     func asTracingHeaderType() -> Set<TracingHeaderType> {
         return Set(compactMap { headerType in
-            switch(headerType as? String) {
+            switch headerType as? String {
             case "datadog":
                 return TracingHeaderType.datadog
             case "b3":

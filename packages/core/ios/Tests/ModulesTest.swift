@@ -9,7 +9,6 @@ import XCTest
 @testable import React
 
 class ModulesTest: XCTestCase {
-
     func testAllModulesUseSameQueue() {
         XCTAssertTrue(sharedQueue === DdSdk().methodQueue)
         XCTAssertTrue(sharedQueue === DdRum().methodQueue)

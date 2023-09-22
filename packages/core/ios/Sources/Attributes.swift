@@ -1,4 +1,3 @@
-
 /*
  * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
@@ -57,16 +56,16 @@ internal struct CrossPlatformAttributes {
 internal struct ProxyAttributes {
     /// Expects `String?` value.
     static let address = "_dd.proxy.address"
-    
+
     /// Expects `String?` value
     static let username = "_dd.proxy.username"
-    
+
     /// Expects `String?` value
     static let password = "_dd.proxy.password"
-    
+
     /// Expects `String?` value
     static let type = "_dd.proxy.type"
-    
+
     /// Expects `String?` or `Int?` value
     static let port = "_dd.proxy.port"
 }
@@ -76,7 +75,7 @@ internal struct InternalConfigurationAttributes {
     /// Enables native view tracking.
     /// Expects `Bool?` value
     static let nativeViewTracking = "_dd.native_view_tracking"
-    
+
     /// Enables native interaction tracking.
     /// Expects `Bool?` value
     static let nativeInteractionTracking = "_dd.native_interaction_tracking"
@@ -84,21 +83,21 @@ internal struct InternalConfigurationAttributes {
     /// Enable overriding the service name.
     /// Expects `String?` value
     static let serviceName = "_dd.service_name"
-    
+
     /// Specify first party hosts for distributed tracing.
     /// Even if the requests are intercepted at the javascript level, we have to pass this parameter to make sure the headers are
     /// correctly set when sending the traces to the intake.
     /// Expects `[String]?` value
     static let firstPartyHosts = "_dd.first_party_hosts"
-    
+
     /// Specify native SDK verbosity
     /// Expects `NSString?` value
     static let sdkVerbosity = "_dd.sdk_verbosity"
-    
+
     /// Specify version suffix.
     /// Expects `NSString?` value
     static let versionSuffix = "_dd.version_suffix"
-    
+
     /// Custom attribute of the resource passed from bridge SDK.
     /// It flags the resource as dropped by the user so it can be dropped in the resource mapper.
     /// Expects `Bool` value.
