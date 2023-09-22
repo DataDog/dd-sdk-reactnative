@@ -13,6 +13,12 @@ To get started with the project, run `yarn install` in the root directory to ins
 yarn install
 ```
 
+If you're developing on native iOS code, also make sure to install `swiftlint`:
+
+```sh
+brew install swiftlint
+```
+
 ### Project structure overview
 
 This repository contains 2 main projects:
@@ -35,6 +41,8 @@ If you are using Visual Studio Code, please make sure to set workspace version o
 ### Native Module development
 
 To edit the Objective-C and Swift files, open `example/ios/DdSdkReactNativeExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > DdSdkReactNative`.
+
+Make sure your code complies with the linter by running `yarn lint:ios --fix`.
 
 To edit the Kotlin files, open `example/android` in Android studio and find the source files at `ddsdkreactnative` under `Android`.
 
