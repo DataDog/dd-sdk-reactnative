@@ -17,7 +17,7 @@ open class RNQueue: NSObject {
     }
 }
 
-protocol DispatchQueueType {
+internal protocol DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void)
 }
 

@@ -14,7 +14,7 @@ import DatadogWebViewTracking
 import DatadogInternal
 import React
 
-func getDefaultAppVersion() -> String {
+private func getDefaultAppVersion() -> String {
     let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
     let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
     return bundleShortVersion ?? bundleVersion ?? "0.0.0"
@@ -64,7 +64,6 @@ public class DdSdkImplementation: NSObject {
         self.mainDispatchQueue.async {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
 
-            // TODO: see if this `if` is still needed
             if Datadog.isInitialized() {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances

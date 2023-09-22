@@ -94,8 +94,7 @@ public class DdRumImplementation: NSObject {
 
     @objc
     override public convenience init() {
-        self.init({ RUMMonitor.shared() }, { RUMMonitor.shared()._internal }
-        )
+        self.init({ RUMMonitor.shared() }, { RUMMonitor.shared()._internal })
     }
 
     @objc

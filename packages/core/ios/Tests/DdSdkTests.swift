@@ -499,59 +499,74 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildFirstPartyHosts() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
-            ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
-            ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
-        ]])
+        let configuration: DdSdkConfiguration = .mockAny(
+            additionalConfig: [
+                "_dd.first_party_hosts": [
+                    ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
+                    ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
+                ]
+            ]
+        )
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
-        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext]]
+        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = [
+            "example.com": [.datadog, .b3],
+            "datadog.com": [.b3multi, .tracecontext]
+        ]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace: break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
-            case .none: break
+        case .trace: break
+        case let .traceWithHeaders(hostsWithHeaders, _):
+            return actualFirstPartyHosts = hostsWithHeaders
+        case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
     }
 
     func testBuildMalformedFirstPartyHosts() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
-            ["match": "example.com", "propagatorTypes": ["badPropagatorType", "b3"]],
-        ]])
+        let configuration: DdSdkConfiguration = .mockAny(
+            additionalConfig: [
+                "_dd.first_party_hosts": [
+                    ["match": "example.com", "propagatorTypes": ["badPropagatorType", "b3"]],
+                ]
+            ]
+        )
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3]]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace: break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
-            case .none: break
+        case .trace: break
+        case let .traceWithHeaders(hostsWithHeaders, _):
+            return actualFirstPartyHosts = hostsWithHeaders
+        case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
     }
 
     func testBuildFirstPartyHostsWithDuplicatedMatchKey() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
-            ["match": "example.com", "propagatorTypes": ["b3"]],
-            ["match": "example.com", "propagatorTypes": ["tracecontext"]],
-        ]])
+        let configuration: DdSdkConfiguration = .mockAny(
+            additionalConfig: [
+                "_dd.first_party_hosts": [
+                    ["match": "example.com", "propagatorTypes": ["b3"]],
+                    ["match": "example.com", "propagatorTypes": ["tracecontext"]],
+                ]
+            ]
+        )
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3, .tracecontext]]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace: break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
-            case .none: break
+        case .trace: break
+        case let .traceWithHeaders(hostsWithHeaders, _):
+            return actualFirstPartyHosts = hostsWithHeaders
+        case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)

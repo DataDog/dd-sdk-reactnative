@@ -6,7 +6,7 @@
 
 import Foundation
 
-typealias frame_time_callback = (Double) -> Void
+internal typealias frame_time_callback = (Double) -> Void
 
 internal protocol RefreshRateListener {
     func start()
@@ -74,7 +74,8 @@ private final class JSRefreshRateListener: RefreshRateListener {
         }
     }
 
-    @objc func onFrameTick(displayLink: CADisplayLink) {
+    @objc
+    func onFrameTick(displayLink: CADisplayLink) {
         let frameTimestamp = displayLink.timestamp
         if lastFrameTimestamp != -1 {
             let frameDuration = frameTimestamp - lastFrameTimestamp

@@ -29,12 +29,12 @@ extension NSDictionary {
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
         return DdSdkConfiguration(
-            clientToken: (clientToken != nil) ? clientToken! : String(),
-            env: (env != nil) ? env! : String(),
-            applicationId: (applicationId != nil) ? applicationId! : String(),
+            clientToken: clientToken ?? String(),
+            env: env ?? String(),
+            applicationId: applicationId ?? String(),
             nativeCrashReportEnabled: nativeCrashReportEnabled,
             nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
-            longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : Double(),
+            longTaskThresholdMs: longTaskThresholdMs ?? Double(),
             sampleRate: sampleRate,
             site: site,
             trackingConsent: trackingConsent,
