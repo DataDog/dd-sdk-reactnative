@@ -44,14 +44,13 @@ public class DdTraceImplementation: NSObject {
     public func finishSpan(spanId: NSString, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         objc_sync_enter(self)
         let optionalSpan = spanDictionary.removeValue(forKey: spanId)
-        objc_sync_exit(self)
-
         if let span = optionalSpan {
             set(tags: castAttributesToSwift(context).mergeWithGlobalAttributes(), to: span)
             let timeIntervalSince1970: TimeInterval = timestampMs / 1_000
             span.finish(at: Date(timeIntervalSince1970: timeIntervalSince1970))
         }
-        
+        objc_sync_exit(self)
+
         resolve(nil)
     }
 
