@@ -24,6 +24,9 @@ import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.sessionreplay.SessionReplay
+import com.datadog.android.sessionreplay.SessionReplayConfiguration
+import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
@@ -68,6 +71,8 @@ class DdSdkImplementation(
         datadog.enableTrace(TraceConfiguration.Builder().build())
 
         datadog.enableLogs(LogsConfiguration.Builder().build())
+
+       SessionReplay.enable(SessionReplayConfiguration.Builder(100F).setPrivacy(SessionReplayPrivacy.ALLOW).build())
 
         initialized.set(true)
 
