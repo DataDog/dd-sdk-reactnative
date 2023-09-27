@@ -23,6 +23,7 @@ Pod::Spec.new do |s|
   s.dependency 'DatadogRUM', '~> 2.2.1'
   s.dependency 'DatadogCrashReporting', '~> 2.2.1'
   s.dependency 'DatadogWebViewTracking', '~> 2.2.1'
+  s.dependency 'DatadogSessionReplay', '~> 2.2.1'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'

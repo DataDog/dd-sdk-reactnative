@@ -12,6 +12,7 @@ import DatadogTrace
 import DatadogCrashReporting
 import DatadogWebViewTracking
 import DatadogInternal
+import DatadogSessionReplay
 import React
 
 func getDefaultAppVersion() -> String {
@@ -86,6 +87,13 @@ public class DdSdkImplementation: NSObject {
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
+
+            SessionReplay.enable(
+                with: SessionReplay.Configuration(
+                    replaySampleRate: 100.0,
+                    defaultPrivacyLevel: .allow
+                )
+            )
 
             resolve(nil)
         }

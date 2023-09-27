@@ -15,6 +15,7 @@ PODS:
     - DatadogCrashReporting (~> 2.2.1)
     - DatadogLogs (~> 2.2.1)
     - DatadogRUM (~> 2.2.1)
+    - DatadogSessionReplay (~> 2.2.1)
     - DatadogTrace (~> 2.2.1)
     - DatadogWebViewTracking (~> 2.2.1)
     - React-Core
@@ -23,9 +24,12 @@ PODS:
     - DatadogCrashReporting (~> 2.2.1)
     - DatadogLogs (~> 2.2.1)
     - DatadogRUM (~> 2.2.1)
+    - DatadogSessionReplay (~> 2.2.1)
     - DatadogTrace (~> 2.2.1)
     - DatadogWebViewTracking (~> 2.2.1)
     - React-Core
+  - DatadogSessionReplay (2.2.1):
+    - DatadogInternal (= 2.2.1)
   - DatadogTrace (2.2.1):
     - DatadogInternal (= 2.2.1)
   - DatadogWebViewTracking (2.2.1):
@@ -461,6 +465,7 @@ SPEC REPOS:
     - DatadogInternal
     - DatadogLogs
     - DatadogRUM
+    - DatadogSessionReplay
     - DatadogTrace
     - DatadogWebViewTracking
     - fmt
@@ -561,7 +566,8 @@ SPEC CHECKSUMS:
   DatadogInternal: bfa2b823bd47511425d696d36a1bc77c4d06b2f4
   DatadogLogs: a0eafa7bd2103511eac07bcd2ff95c851123e29b
   DatadogRUM: 1e027ccfe4ba1eb81a185f3c58e0909bb12811be
-  DatadogSDKReactNative: 6f16f15e8b3d5a60c5799d604843a0feb2010c9b
+  DatadogSDKReactNative: 3f2fbc9281447730e65bbb2e5f8f47fe53af09e9
+  DatadogSessionReplay: 4b29318297ad20189a69153b4b0475f0fab7d3f5
   DatadogTrace: 74dc91a7a80e746dc4ef1af6d0db1735b5bfd993
   DatadogWebViewTracking: 9ca93299a2c900c68ba080f6e800fae1fa3c6b61
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
