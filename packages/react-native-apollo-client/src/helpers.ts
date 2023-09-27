@@ -16,7 +16,7 @@ export const getVariables = (operation: Operation): string | null => {
         try {
             return JSON.stringify(operation.variables);
         } catch (e) {
-            // TODO: telemetry
+            // TODO RUM-1206: telemetry
             return null;
         }
     }
@@ -48,7 +48,7 @@ export const getOperationType = (
                 })[0] || null
         );
     } catch (e) {
-        // TODO: telemetry
+        // TODO RUM-1206: telemetry
         return null;
     }
 };
