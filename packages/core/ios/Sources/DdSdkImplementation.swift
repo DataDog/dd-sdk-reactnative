@@ -26,6 +26,7 @@ public class DdSdkImplementation: NSObject {
     let jsDispatchQueue: DispatchQueueType
     let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
+    let uiManager: RCTUIManager
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
@@ -38,6 +39,7 @@ public class DdSdkImplementation: NSObject {
             mainDispatchQueue: DispatchQueue.main,
             jsDispatchQueue: bridge,
             jsRefreshRateMonitor: JSRefreshRateMonitor.init(),
+            uiManager: bridge.uiManager,
             RUMMonitorProvider: { RUMMonitor.shared() },
             RUMMonitorInternalProvider: { RUMMonitor.shared()._internal }
         )
@@ -47,12 +49,14 @@ public class DdSdkImplementation: NSObject {
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
         jsRefreshRateMonitor: RefreshRateMonitor,
+        uiManager: RCTUIManager,
         RUMMonitorProvider: @escaping () -> RUMMonitorProtocol,
         RUMMonitorInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
+        self.uiManager = uiManager
         self.RUMMonitorProvider = RUMMonitorProvider
         self.RUMMonitorInternalProvider = RUMMonitorInternalProvider
         super.init()
@@ -91,7 +95,8 @@ public class DdSdkImplementation: NSObject {
             SessionReplay.enable(
                 with: SessionReplay.Configuration(
                     replaySampleRate: 100.0,
-                    defaultPrivacyLevel: .allow
+                    defaultPrivacyLevel: .allow,
+                    additionalNodeRecorders: [RCTTextViewRecorder(uiManager: self.uiManager)]
                 )
             )
 

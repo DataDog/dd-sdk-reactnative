@@ -22,6 +22,15 @@ if linkage != nil
 end
 
 target 'ddSdkReactnativeExample' do
+  pod 'DatadogCore', :path => '../../../native/dd-sdk-ios/DatadogCore.podspec' # local path
+  pod 'DatadogLogs', :path => '../../../native/dd-sdk-ios/DatadogLogs.podspec' # local path
+  pod 'DatadogTrace', :path => '../../../native/dd-sdk-ios/DatadogTrace.podspec' # local path
+  pod 'DatadogInternal', :path => '../../../native/dd-sdk-ios/DatadogInternal.podspec' # local path
+  pod 'DatadogRUM', :path => '../../../native/dd-sdk-ios/DatadogRUM.podspec' # local path
+  pod 'DatadogCrashReporting', :path => '../../../native/dd-sdk-ios/DatadogCrashReporting.podspec' # local path
+  pod 'DatadogWebViewTracking', :path => '../../../native/dd-sdk-ios/DatadogWebViewTracking.podspec' # local path
+  pod 'DatadogSessionReplay', :path => '../../../native/dd-sdk-ios/DatadogSessionReplay.podspec' # local path
+
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
   config = use_native_modules!

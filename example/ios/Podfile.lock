@@ -413,8 +413,16 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
+  - DatadogCore (from `../../../native/dd-sdk-ios/DatadogCore.podspec`)
+  - DatadogCrashReporting (from `../../../native/dd-sdk-ios/DatadogCrashReporting.podspec`)
+  - DatadogInternal (from `../../../native/dd-sdk-ios/DatadogInternal.podspec`)
+  - DatadogLogs (from `../../../native/dd-sdk-ios/DatadogLogs.podspec`)
+  - DatadogRUM (from `../../../native/dd-sdk-ios/DatadogRUM.podspec`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSessionReplay (from `../../../native/dd-sdk-ios/DatadogSessionReplay.podspec`)
+  - DatadogTrace (from `../../../native/dd-sdk-ios/DatadogTrace.podspec`)
+  - DatadogWebViewTracking (from `../../../native/dd-sdk-ios/DatadogWebViewTracking.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -460,14 +468,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - DatadogCore
-    - DatadogCrashReporting
-    - DatadogInternal
-    - DatadogLogs
-    - DatadogRUM
-    - DatadogSessionReplay
-    - DatadogTrace
-    - DatadogWebViewTracking
     - fmt
     - HMSegmentedControl
     - libevent
@@ -476,8 +476,24 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
+  DatadogCore:
+    :path: "../../../native/dd-sdk-ios/DatadogCore.podspec"
+  DatadogCrashReporting:
+    :path: "../../../native/dd-sdk-ios/DatadogCrashReporting.podspec"
+  DatadogInternal:
+    :path: "../../../native/dd-sdk-ios/DatadogInternal.podspec"
+  DatadogLogs:
+    :path: "../../../native/dd-sdk-ios/DatadogLogs.podspec"
+  DatadogRUM:
+    :path: "../../../native/dd-sdk-ios/DatadogRUM.podspec"
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogSessionReplay:
+    :path: "../../../native/dd-sdk-ios/DatadogSessionReplay.podspec"
+  DatadogTrace:
+    :path: "../../../native/dd-sdk-ios/DatadogTrace.podspec"
+  DatadogWebViewTracking:
+    :path: "../../../native/dd-sdk-ios/DatadogWebViewTracking.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -561,15 +577,15 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
-  DatadogCore: 12218dd1bed5db394c5e26ec59dd793413ae55b9
-  DatadogCrashReporting: d094c1eb1ecce59dbb6b1062b2e524dfa6579fc9
-  DatadogInternal: bfa2b823bd47511425d696d36a1bc77c4d06b2f4
-  DatadogLogs: a0eafa7bd2103511eac07bcd2ff95c851123e29b
-  DatadogRUM: 1e027ccfe4ba1eb81a185f3c58e0909bb12811be
+  DatadogCore: a9d90a610cf4d8c10462c30e383f45d339f16d77
+  DatadogCrashReporting: 6d1a25d0a1a3729705057ac1acc53028b1f1b1f9
+  DatadogInternal: d19822bf5834b75dae4bb1b8a2c209ac740bb59b
+  DatadogLogs: c0c1eb971ae5ef039cc90e0e74771bf8a0ae3424
+  DatadogRUM: 8070e94e3ff359cd1bbce0c6613623a831461207
   DatadogSDKReactNative: 3f2fbc9281447730e65bbb2e5f8f47fe53af09e9
-  DatadogSessionReplay: 4b29318297ad20189a69153b4b0475f0fab7d3f5
-  DatadogTrace: 74dc91a7a80e746dc4ef1af6d0db1735b5bfd993
-  DatadogWebViewTracking: 9ca93299a2c900c68ba080f6e800fae1fa3c6b61
+  DatadogSessionReplay: 984f7ab855a793f5e7a5c8f38b69b9209357702d
+  DatadogTrace: 6fcdb1d7f3f4411d965335b6ac0566c4be9d6b56
+  DatadogWebViewTracking: 99585c8361fcace9dbeb290599efca655ebbeb83
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 90fc1a90b4b7a171e0a7c20ea426c1bf6ce4399c
@@ -615,6 +631,6 @@ SPEC CHECKSUMS:
   RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
   Yoga: e7ea9e590e27460d28911403b894722354d73479
 
-PODFILE CHECKSUM: 59a4878659fbb7b053887dd9eec3df44ca9e0b28
+PODFILE CHECKSUM: 00b0db44d8a557dfe7f2964f0e62323e3d8b59c0
 
 COCOAPODS: 1.12.1
