@@ -17,10 +17,10 @@ import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
@@ -72,7 +72,13 @@ class DdSdkImplementation(
 
         datadog.enableLogs(LogsConfiguration.Builder().build())
 
-       SessionReplay.enable(SessionReplayConfiguration.Builder(100F).setPrivacy(SessionReplayPrivacy.ALLOW).build())
+        SessionReplay.enable(
+            SessionReplayConfiguration
+                .Builder(100F)
+                .setPrivacy(SessionReplayPrivacy.ALLOW)
+                .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(reactContext))
+                .build()
+        )
 
         initialized.set(true)
 
