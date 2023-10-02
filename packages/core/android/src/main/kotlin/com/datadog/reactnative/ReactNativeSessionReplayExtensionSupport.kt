@@ -7,6 +7,12 @@
 package com.datadog.reactnative
 
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.InsetDrawable
+import android.graphics.drawable.RippleDrawable
+import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
@@ -14,6 +20,7 @@ import com.datadog.android.sessionreplay.ExtensionSupport
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.sessionreplay.internal.recorder.MappingContext
 import com.datadog.android.sessionreplay.internal.recorder.OptionSelectorDetector
+import com.datadog.android.sessionreplay.internal.recorder.TraversalStrategy
 import com.datadog.android.sessionreplay.internal.recorder.mapper.BaseWireframeMapper
 import com.datadog.android.sessionreplay.internal.recorder.mapper.WireframeMapper
 import com.datadog.android.sessionreplay.model.MobileSegment
@@ -25,13 +32,18 @@ import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.views.text.ReactTextShadowNode
 import com.facebook.react.views.text.ReactTextView
 import com.facebook.react.views.text.TextAttributes
+import com.facebook.react.views.view.ReactViewBackgroundDrawable
+import com.facebook.react.views.view.ReactViewGroup
 import okhttp3.internal.notify
 import okhttp3.internal.wait
 
 class ReactNativeSessionReplayExtensionSupport(private val reactContext: ReactContext) : ExtensionSupport {
 
     override fun getCustomViewMappers(): Map<SessionReplayPrivacy, Map<Class<*>, WireframeMapper<View, *>>> {
-        return mapOf(SessionReplayPrivacy.ALLOW to mapOf(ReactTextView::class.java to ReactTextViewMapper(reactContext) as WireframeMapper<View, *>))
+        return mapOf(SessionReplayPrivacy.ALLOW to mapOf(
+            ReactTextView::class.java to ReactTextViewMapper(reactContext) as WireframeMapper<View, *>,
+            ReactViewGroup::class.java to ReactViewGroupMapper() as WireframeMapper<View, *>
+        ))
     }
 
     override fun getOptionSelectorDetectors(): List<OptionSelectorDetector> {
@@ -49,6 +61,13 @@ private inline fun UIManagerModule.resolveShadowNode(tag: Int): ReactShadowNode<
 
 private inline fun ReactTextShadowNode.getColor(): Int {
     return javaClass.superclass.getDeclaredField("mColor").let {
+        it.isAccessible = true
+        return@let it.getInt(this);
+    }
+}
+
+private inline fun ReactTextShadowNode.getBackgroundColor(): Int {
+    return javaClass.superclass.getDeclaredField("mBackgroundColor").let {
         it.isAccessible = true
         return@let it.getInt(this);
     }
@@ -98,8 +117,9 @@ class ReactTextViewMapper(private val reactContext: ReactContext) :
             view,
             mappingContext.systemInformation.screenDensity
         )
-        val (shapeStyle, border) = view.background?.resolveShapeStyleAndBorder(view.alpha)
-            ?: (null to null)
+        view.background?.let { Log.d("RNRNRN", it.toString()) }
+
+        val (shapeStyle, border) = MobileSegment.ShapeStyle(colorAndAlphaAsStringHexa(shadowNode?.getBackgroundColor() ?: 0, 255), 255) to null
 
         return listOf(
             MobileSegment.Wireframe.TextWireframe(
@@ -253,4 +273,77 @@ internal fun Int.densityNormalized(density: Float): Int {
         return this
     }
     return (this / density).toInt()
+}
+
+private inline fun ReactViewGroup.getRNBackgroundColor(): Int {
+    try {
+        return javaClass.getDeclaredField("mReactBackgroundDrawable").let {
+            it.isAccessible = true
+            val backgroundDrawable = it.get(this) as ReactViewBackgroundDrawable? ?: return@let 0
+            return@let backgroundDrawable.color;
+        } as Int
+    } catch (e: Exception) {
+        return 0
+    }
+}
+
+private inline fun ReactViewGroup.getBackgroundAlpha(): Int {
+    try {
+        return javaClass.getDeclaredField("mReactBackgroundDrawable").let {
+            it.isAccessible = true
+            val backgroundDrawable = it.get(this) as ReactViewBackgroundDrawable?
+            if (backgroundDrawable == null) {
+                return@let 255
+            }
+            return@let backgroundDrawable.alpha;
+        } as Int
+    } catch (e: Exception) {
+        return 255
+    }
+}
+
+class ReactViewGroupMapper() :
+    BaseWireframeMapper<ReactViewGroup, MobileSegment.Wireframe.ShapeWireframe>() {
+
+    override val traversalStrategy: TraversalStrategy
+        get() = TraversalStrategy.TRAVERSE_ALL_CHILDREN
+
+    private fun resolveRNShapeStyleAndBorder(viewAlpha: Int, viewColor: Int):
+        Pair<MobileSegment.ShapeStyle?, MobileSegment.ShapeBorder?> {
+        val color = colorAndAlphaAsStringHexa(viewColor, 255)
+
+        return MobileSegment.ShapeStyle(color, viewAlpha) to null
+    }
+
+    private var shadowNode: ReactTextShadowNode? = null
+
+    private fun setShadowNode(shadowNode: ReactTextShadowNode) {
+        this.shadowNode = shadowNode
+    }
+
+    override fun map(view: ReactViewGroup, mappingContext: MappingContext):
+            List<MobileSegment.Wireframe.ShapeWireframe> {
+
+        val viewGlobalBounds = resolveViewGlobalBounds(
+            view,
+            mappingContext.systemInformation.screenDensity
+        )
+
+        val (shapeStyle, border) = resolveRNShapeStyleAndBorder(
+            view.getBackgroundAlpha(),
+            view.getRNBackgroundColor()
+        )
+        return listOf(
+            MobileSegment.Wireframe.ShapeWireframe(
+                resolveViewId(view),
+                viewGlobalBounds.x,
+                viewGlobalBounds.y,
+                viewGlobalBounds.width,
+                viewGlobalBounds.height,
+                shapeStyle = shapeStyle,
+                border = border
+            )
+        )
+
+    }
 }
