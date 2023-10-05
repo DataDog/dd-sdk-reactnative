@@ -1,0 +1,125 @@
+{
+    "variables": { "name": "Croute", "age": 22 },
+    "extensions": {},
+    "operationName": "CreateCat",
+    "query": {
+        "kind": "Document",
+        "definitions": [
+            {
+                "kind": "OperationDefinition",
+                "operation": "mutation",
+                "name": { "kind": "Name", "value": "CreateCat" },
+                "variableDefinitions": [
+                    {
+                        "kind": "VariableDefinition",
+                        "variable": {
+                            "kind": "Variable",
+                            "name": { "kind": "Name", "value": "name" }
+                        },
+                        "type": {
+                            "kind": "NamedType",
+                            "name": { "kind": "Name", "value": "String" }
+                        },
+                        "directives": []
+                    },
+                    {
+                        "kind": "VariableDefinition",
+                        "variable": {
+                            "kind": "Variable",
+                            "name": { "kind": "Name", "value": "age" }
+                        },
+                        "type": {
+                            "kind": "NamedType",
+                            "name": { "kind": "Name", "value": "Int" }
+                        },
+                        "directives": []
+                    }
+                ],
+                "directives": [],
+                "selectionSet": {
+                    "kind": "SelectionSet",
+                    "selections": [
+                        {
+                            "kind": "Field",
+                            "name": { "kind": "Name", "value": "createCat" },
+                            "arguments": [
+                                {
+                                    "kind": "Argument",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "createCatInput"
+                                    },
+                                    "value": {
+                                        "kind": "ObjectValue",
+                                        "fields": [
+                                            {
+                                                "kind": "ObjectField",
+                                                "name": {
+                                                    "kind": "Name",
+                                                    "value": "name"
+                                                },
+                                                "value": {
+                                                    "kind": "Variable",
+                                                    "name": {
+                                                        "kind": "Name",
+                                                        "value": "name"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "kind": "ObjectField",
+                                                "name": {
+                                                    "kind": "Name",
+                                                    "value": "age"
+                                                },
+                                                "value": {
+                                                    "kind": "Variable",
+                                                    "name": {
+                                                        "kind": "Name",
+                                                        "value": "age"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "directives": [],
+                            "selectionSet": {
+                                "kind": "SelectionSet",
+                                "selections": [
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "name"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "age"
+                                        },
+                                        "arguments": [],
+                                        "directives": []
+                                    },
+                                    {
+                                        "kind": "Field",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "__typename"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "loc": { "start": 0, "end": 139 }
+    }
+}

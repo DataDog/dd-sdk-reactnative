@@ -34,29 +34,44 @@ export class ResourceReporter {
 
 const formatResourceStartContext = (
     tracingAttributes: RUMResource['tracingAttributes']
-): Record<string, string | number> | undefined => {
-    return tracingAttributes.samplingPriorityHeader === '0'
-        ? undefined
-        : {
-              '_dd.span_id': tracingAttributes.spanId.toString(10),
-              '_dd.trace_id': tracingAttributes.traceId.toString(10),
-              '_dd.rule_psr': tracingAttributes.rulePsr
-          };
+): Record<string, string | number> => {
+    const attributes: Record<string, string | number> = {};
+    if (tracingAttributes.samplingPriorityHeader !== '0') {
+        attributes['_dd.span_id'] = tracingAttributes.spanId.toString(10);
+        attributes['_dd.trace_id'] = tracingAttributes.traceId.toString(10);
+        attributes['_dd.rule_psr'] = tracingAttributes.rulePsr;
+    }
+
+    return attributes;
 };
 
 const formatResourceStopContext = (
-    timings: RUMResource['timings']
+    timings: RUMResource['timings'],
+    graphqlAttributes: RUMResource['graphqlAttributes']
 ): Record<string, unknown> => {
-    return {
-        '_dd.resource_timings':
-            timings.responseStartTime !== undefined
-                ? createTimings(
-                      timings.startTime,
-                      timings.responseStartTime,
-                      timings.stopTime
-                  )
-                : null
-    };
+    const attributes: Record<string, unknown> = {};
+
+    if (timings.responseStartTime !== undefined) {
+        attributes['_dd.resource_timings'] = createTimings(
+            timings.startTime,
+            timings.responseStartTime,
+            timings.stopTime
+        );
+    }
+
+    if (graphqlAttributes?.operationType) {
+        attributes['_dd.graphql.operation_type'] =
+            graphqlAttributes.operationType;
+        if (graphqlAttributes.operationName) {
+            attributes['_dd.graphql.operation_name'] =
+                graphqlAttributes.operationName;
+        }
+        if (graphqlAttributes.variables) {
+            attributes['_dd.graphql.variables'] = graphqlAttributes.variables;
+        }
+    }
+
+    return attributes;
 };
 
 const reportResource = async (resource: RUMResource) => {
@@ -73,7 +88,7 @@ const reportResource = async (resource: RUMResource) => {
         resource.response.statusCode,
         resource.request.kind,
         resource.response.size,
-        formatResourceStopContext(resource.timings),
+        formatResourceStopContext(resource.timings, resource.graphqlAttributes),
         resource.timings.stopTime,
         resource.resourceContext
     );

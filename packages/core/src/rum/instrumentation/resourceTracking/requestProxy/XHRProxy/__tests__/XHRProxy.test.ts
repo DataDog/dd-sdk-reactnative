@@ -25,6 +25,11 @@ import {
     ORIGIN_HEADER_KEY
 } from '../../../distributedTracing/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
+import {
+    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
+} from '../../../graphql/graphqlHeaders';
 import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
 import { XHRProxy } from '../XHRProxy';
 import {
@@ -77,7 +82,7 @@ afterEach(() => {
     DdRum.unregisterResourceEventMapper();
 });
 
-describe('XHRPr', () => {
+describe('XHRProxy', () => {
     describe('resource interception', () => {
         it('intercepts XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
@@ -798,7 +803,7 @@ describe('XHRPr', () => {
             // THEN
             const attributes = DdNativeRum.stopResource.mock.calls[0][4];
 
-            expect(attributes['_dd.resource_timings']).toBeNull();
+            expect(attributes['_dd.resource_timings']).toBeUndefined();
         });
 
         it('attaches the XMLHttpRequest object containing response to the event mapper', async () => {
@@ -1043,6 +1048,177 @@ describe('XHRPr', () => {
 
             // THEN
             expect(size).toEqual(-1);
+        });
+    });
+
+    describe('setRequestHeader', () => {
+        it('sets graphql attributes and drops corresponding headers', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+                'cats'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_VARIABLES_HEADER, '{}');
+            xhr.send();
+            xhr.abort();
+            xhr.complete(0, undefined);
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).toEqual('query');
+            expect(attributes['_dd.graphql.operation_name']).toEqual('cats');
+            expect(attributes['_dd.graphql.variables']).toEqual('{}');
+
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+            ).not.toBeDefined();
+        });
+
+        it('sets graphql attributes and drops corresponding headers when operation name and variables are missing', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.send();
+            xhr.abort();
+            xhr.complete(0, undefined);
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).toEqual('query');
+            expect(attributes['_dd.graphql.operation_name']).not.toBeDefined();
+            expect(attributes['_dd.graphql.variables']).not.toBeDefined();
+
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+            ).not.toBeDefined();
+        });
+
+        it('does not set graphql attributes but drops corresponding headers when operation type is missing', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+                'cats'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_VARIABLES_HEADER, '{}');
+            xhr.send();
+            xhr.abort();
+            xhr.complete(0, undefined);
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).not.toBeDefined();
+            expect(attributes['_dd.graphql.operation_name']).not.toBeDefined();
+            expect(attributes['_dd.graphql.variables']).not.toBeDefined();
+
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+            ).not.toBeDefined();
+            expect(
+                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+            ).not.toBeDefined();
+        });
+
+        it('enables mapper to edit graphql variables to remove sensitive information', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+            DdRum.registerResourceEventMapper(event => {
+                if (event.context['_dd.graphql.variables']) {
+                    const variables = JSON.parse(
+                        event.context['_dd.graphql.variables']
+                    );
+                    if (variables.password) {
+                        variables.password = '***';
+                    }
+                    event.context['_dd.graphql.variables'] = JSON.stringify(
+                        variables
+                    );
+                }
+
+                return event;
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_VARIABLES_HEADER,
+                JSON.stringify({ password: 'SECRET' })
+            );
+            xhr.send();
+            xhr.abort();
+            xhr.complete(0, undefined);
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).toBe('query');
+            expect(attributes['_dd.graphql.operation_name']).not.toBeDefined();
+            expect(attributes['_dd.graphql.variables']).toBe(
+                '{"password":"***"}'
+            );
         });
     });
 });
