@@ -13,6 +13,8 @@ import type {
 import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 
+jest.mock('../../../utils/jsUtils');
+
 const DdRum = NativeModules.DdRum as DdNativeRumType;
 const DdLogs = NativeModules.DdLogs as DdNativeLogsType;
 
