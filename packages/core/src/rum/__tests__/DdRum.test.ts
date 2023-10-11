@@ -15,7 +15,7 @@ import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
-jest.mock('../../TimeProvider', () => {
+jest.mock('../../utils/TimeProvider', () => {
     return {
         TimeProvider: jest.fn().mockImplementation(() => {
             return { now: jest.fn().mockReturnValue(456) };

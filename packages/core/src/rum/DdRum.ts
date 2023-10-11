@@ -8,10 +8,10 @@ import type { GestureResponderEvent } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
-import { TimeProvider } from '../TimeProvider';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
+import { TimeProvider } from '../utils/TimeProvider';
 
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateActionEventMapper } from './eventMappers/actionEventMapper';

@@ -8,10 +8,10 @@ import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
-import { TimeProvider } from '../../../TimeProvider';
 import { DdRum } from '../../../rum/DdRum';
 import { RumActionType } from '../../../rum/types';
 import { DdTrace } from '../../../trace/DdTrace';
+import { TimeProvider } from '../../../utils/TimeProvider';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -24,7 +24,7 @@ import {
     renderWithProvider
 } from './__utils__/renderWithProvider';
 
-jest.mock('../../../TimeProvider', () => {
+jest.mock('../../../utils/TimeProvider', () => {
     const now = jest.fn();
     return {
         TimeProvider: jest.fn().mockImplementation(() => {

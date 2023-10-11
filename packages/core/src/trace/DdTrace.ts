@@ -6,13 +6,13 @@
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
-import { TimeProvider } from '../TimeProvider';
 import type { DdNativeTraceType } from '../nativeModulesTypes';
 import {
     bufferNativeCallReturningId,
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import type { DdTraceType } from '../types';
+import { TimeProvider } from '../utils/TimeProvider';
 
 const timeProvider = new TimeProvider();
 
