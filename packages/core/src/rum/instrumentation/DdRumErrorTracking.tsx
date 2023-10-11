@@ -8,14 +8,14 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { DdLogs } from '../../logs/DdLogs';
 import {
     getErrorMessage,
     getErrorStackTrace,
     EMPTY_STACK_TRACE,
     getErrorName,
     DEFAULT_ERROR_NAME
-} from '../../errorUtils';
-import { DdLogs } from '../../logs/DdLogs';
+} from '../../utils/errorUtils';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
 import { ErrorSource } from '../types';

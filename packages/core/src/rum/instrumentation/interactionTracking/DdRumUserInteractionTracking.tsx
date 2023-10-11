@@ -8,8 +8,8 @@ import React from 'react';
 
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
-import { getErrorMessage } from '../../../errorUtils';
 import { DdSdk } from '../../../sdk/DdSdk';
+import { getErrorMessage } from '../../../utils/errorUtils';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
