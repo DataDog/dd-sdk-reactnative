@@ -47,9 +47,9 @@ public struct RCTTextViewRecorder: NodeRecorder {
             return nil
         }
  
-        guard let textContent = textView.textStorage().string else {
-            return InvisibleElement.constant
-        }
+        // guard let textContent = textView.textStorage().string else {
+        //     return InvisibleElement.constant
+        // }
 
         // TODO: fix this cast
         let shadowView = uiManager.shadowView(forReactTag: textView.reactTag) as! RCTTextShadowView
@@ -59,7 +59,7 @@ public struct RCTTextViewRecorder: NodeRecorder {
             attributes: attributes,
             // This relies on a change on RN to expose the textStorage.
             // We could rely on textView.accessibilityLabel or check what else we could get
-            text: textContent,
+            text: textView.accessibilityLabel ?? "",
             textAlignment: shadowView.textAttributes.alignment,
             textColor: shadowView.textAttributes.foregroundColor?.cgColor,
             // check this works
