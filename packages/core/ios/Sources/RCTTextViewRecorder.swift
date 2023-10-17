@@ -50,27 +50,35 @@ public struct RCTTextViewRecorder: NodeRecorder {
         // guard let textContent = textView.textStorage().string else {
         //     return InvisibleElement.constant
         // }
+        
+        var shadowView: RCTTextShadowView? = nil
+        let tag = textView.reactTag
+    
+        RCTGetUIManagerQueue().sync {
+            shadowView = uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
+        }
 
-        // TODO: fix this cast
-        let shadowView = uiManager.shadowView(forReactTag: textView.reactTag) as! RCTTextShadowView
+        if let shadow = shadowView {
+            let builder = RCTTextViewWireframesBuilder(
+                wireframeID: context.ids.nodeID(view: textView, nodeRecorder: self),
+                attributes: attributes,
+                // This relies on a change on RN to expose the textStorage.
+                // We could rely on textView.accessibilityLabel or check what else we could get
+                text: textView.accessibilityLabel ?? "",
+                textAlignment: shadow.textAttributes.alignment,
+                textColor: shadow.textAttributes.foregroundColor?.cgColor,
+                // check this works
+                font: shadow.textAttributes.effectiveFont(),
+                textObfuscator: textObfuscator(context, false),
+                // this is currently incorrect
+                contentRect: shadow.contentFrame
+            )
 
-        let builder = RCTTextViewWireframesBuilder(
-            wireframeID: context.ids.nodeID(view: textView, nodeRecorder: self),
-            attributes: attributes,
-            // This relies on a change on RN to expose the textStorage.
-            // We could rely on textView.accessibilityLabel or check what else we could get
-            text: textView.accessibilityLabel ?? "",
-            textAlignment: shadowView.textAttributes.alignment,
-            textColor: shadowView.textAttributes.foregroundColor?.cgColor,
-            // check this works
-            font: shadowView.textAttributes.effectiveFont(),
-            textObfuscator: textObfuscator(context, false),
-            // this is currently incorrect
-            contentRect: textView.frame
-        )
+            let node = Node(viewAttributes: attributes, wireframesBuilder: builder)
+            return SpecificElement(subtreeStrategy: .ignore, nodes: [node])
+        }
 
-        let node = Node(viewAttributes: attributes, wireframesBuilder: builder)
-        return SpecificElement(subtreeStrategy: .ignore, nodes: [node])
+        return InvisibleElement.constant
     }
 }
 
@@ -110,7 +118,7 @@ internal struct RCTTextViewWireframesBuilder: NodeWireframesBuilder {
 
     private var relativeIntersectedRect: CGRect {
         // UITextView adds additional padding for presented content.
-        let padding: CGFloat = 8
+        let padding: CGFloat = 0
         return CGRect(
             x: attributes.frame.origin.x - contentRect.origin.x + padding,
             y: attributes.frame.origin.y - contentRect.origin.y + padding,
