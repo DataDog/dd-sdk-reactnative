@@ -32,10 +32,12 @@ import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.views.text.ReactTextShadowNode
 import com.facebook.react.views.text.ReactTextView
 import com.facebook.react.views.text.TextAttributes
+import com.facebook.react.views.view.ColorUtil
 import com.facebook.react.views.view.ReactViewBackgroundDrawable
 import com.facebook.react.views.view.ReactViewGroup
 import okhttp3.internal.notify
 import okhttp3.internal.wait
+import kotlin.math.roundToInt
 
 class ReactNativeSessionReplayExtensionSupport(private val reactContext: ReactContext) : ExtensionSupport {
 
@@ -73,6 +75,13 @@ private inline fun ReactTextShadowNode.getBackgroundColor(): Int {
     }
 }
 
+private inline fun ReactViewBackgroundDrawable.getBackgroundColor(): Int {
+    return javaClass.getDeclaredField("mColor").let {
+        it.isAccessible = true
+        return@let it.getInt(this);
+    }
+}
+
 private inline fun ReactTextShadowNode.getFontSize(): Int {
     return javaClass.superclass.getDeclaredField("mTextAttributes").let {
         it.isAccessible = true
@@ -81,6 +90,36 @@ private inline fun ReactTextShadowNode.getFontSize(): Int {
     }
 }
 
+//
+fun colorAndAlphaAsHexaString(color: Int, alpha: Float): String {
+    val alphaInt = (alpha * 255).roundToInt()
+
+    val colorAndAlpha = ColorUtil.multiplyColorAlpha(color, 255)
+
+    val colorAndAlphaAsHexa = (0xffffffff and colorAndAlpha.toLong()).toString(16)
+
+    var requiredLength = 9
+
+
+    @Suppress("UnsafeThirdPartyFunctionCall") // argument is not negative
+    val sb = StringBuilder(requiredLength)
+    sb.append("#")
+    requiredLength--
+    repeat(requiredLength - colorAndAlphaAsHexa.length) {
+        sb.append('0')
+    }
+    sb.append(colorAndAlphaAsHexa)
+
+
+    // swapping the alpha that is at the beginning
+    val alphaHex = sb.substring(1, 3);
+    sb.deleteRange(1, 3)
+    sb.append(alphaHex)
+
+
+    return sb.toString()
+
+}
 
 
 class ReactTextViewMapper(private val reactContext: ReactContext) :
@@ -119,7 +158,12 @@ class ReactTextViewMapper(private val reactContext: ReactContext) :
         )
         view.background?.let { Log.d("RNRNRN", it.toString()) }
 
-        val (shapeStyle, border) = MobileSegment.ShapeStyle(colorAndAlphaAsStringHexa(shadowNode?.getBackgroundColor() ?: 0, 255), 255) to null
+        val (shapeStyle, border) = MobileSegment.ShapeStyle(
+            colorAndAlphaAsHexaString(
+            (view.background as? ReactViewBackgroundDrawable)?.getBackgroundColor() ?: 0,
+            view.alpha
+            )
+        ) to null
 
         return listOf(
             MobileSegment.Wireframe.TextWireframe(
@@ -293,12 +337,12 @@ private inline fun ReactViewGroup.getBackgroundAlpha(): Int {
             it.isAccessible = true
             val backgroundDrawable = it.get(this) as ReactViewBackgroundDrawable?
             if (backgroundDrawable == null) {
-                return@let 255
+                return@let 0
             }
             return@let backgroundDrawable.alpha;
         } as Int
     } catch (e: Exception) {
-        return 255
+        return 0
     }
 }
 
@@ -308,9 +352,10 @@ class ReactViewGroupMapper() :
     override val traversalStrategy: TraversalStrategy
         get() = TraversalStrategy.TRAVERSE_ALL_CHILDREN
 
-    private fun resolveRNShapeStyleAndBorder(viewAlpha: Int, viewColor: Int):
+    private fun resolveRNShapeStyleAndBorder(viewAlpha: Float, viewColor: Int):
         Pair<MobileSegment.ShapeStyle?, MobileSegment.ShapeBorder?> {
-        val color = colorAndAlphaAsStringHexa(viewColor, 255)
+        val alphaInt = (viewAlpha * 255).roundToInt()
+        val color = colorAndAlphaAsStringHexa(viewColor, alphaInt)
 
         return MobileSegment.ShapeStyle(color, viewAlpha) to null
     }
@@ -329,10 +374,13 @@ class ReactViewGroupMapper() :
             mappingContext.systemInformation.screenDensity
         )
 
+        val isViewVisible = view.getBackgroundAlpha() !== 0
+
         val (shapeStyle, border) = resolveRNShapeStyleAndBorder(
-            view.getBackgroundAlpha(),
+            if (isViewVisible) view.alpha else 0F,
             view.getRNBackgroundColor()
         )
+
         return listOf(
             MobileSegment.Wireframe.ShapeWireframe(
                 resolveViewId(view),
