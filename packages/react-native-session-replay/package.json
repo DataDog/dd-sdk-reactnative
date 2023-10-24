@@ -1,0 +1,86 @@
+{
+    "name": "@datadog/mobile-react-native-session-replay",
+    "version": "1.8.5",
+    "description": "A client-side React Native module to enable session replay with Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android"
+    ],
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "private": true,
+    "files": [
+        "src/**",
+        "lib/**",
+        "android/build.gradle",
+        "android/detekt.yml",
+        "android/gradle.properties",
+        "android/src/**",
+        "ios/Sources/**",
+        "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/project.xcworkspace/xcsharedata",
+        "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/project.xcworkspace/*.xcworkspacedata",
+        "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/*.pbxproj",
+        "DatadogSDKReactNativeSessionReplay.podspec"
+    ],
+    "types": "lib/typescript/index.d.ts",
+    "react-native": "src/index",
+    "source": "src",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "restricted"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build"
+    },
+    "peerDependencies": {
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0"
+    },
+    "devDependencies": {
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1"
+    },
+    "jest": {
+        "preset": "react-native",
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "setupFiles": [
+            "./../../node_modules/react-native-gesture-handler/jestSetup.js",
+            "./../../jest.setup.js"
+        ],
+        "transformIgnorePatterns": []
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    },
+    "codegenConfig": {
+        "name": "DatadogSDKReactNativeSessionReplay",
+        "type": "modules",
+        "jsSrcsDir": "./src/specs",
+        "android": {
+            "javaPackageName": "com.datadog.reactnative.sessionreplay"
+        }
+    }
+}

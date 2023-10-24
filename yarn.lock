@@ -3592,6 +3592,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay":
+  version: 0.0.0-use.local
+  resolution: "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay"
+  dependencies:
+    "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  languageName: unknown
+  linkType: soft
+
 "@datadog/mobile-react-native-webview@workspace:packages/react-native-webview":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-webview@workspace:packages/react-native-webview"
