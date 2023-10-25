@@ -25,7 +25,6 @@ import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
-import { adaptLongTaskThreshold } from './longTasksUtils';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
@@ -37,6 +36,7 @@ import { DdSdk } from './sdk/DdSdk';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';
+import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
 /**

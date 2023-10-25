@@ -8,14 +8,15 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { DdLogs } from '../../logs/DdLogs';
 import {
     getErrorMessage,
     getErrorStackTrace,
     EMPTY_STACK_TRACE,
     getErrorName,
     DEFAULT_ERROR_NAME
-} from '../../errorUtils';
-import { DdLogs } from '../../logs/DdLogs';
+} from '../../utils/errorUtils';
+import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
 import { ErrorSource } from '../types';
 
@@ -73,10 +74,18 @@ export class DdRumErrorTracking {
         this.reportError(message, ErrorSource.SOURCE, stacktrace, errorName, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
-        }).then(() => {
+        }).then(async () => {
             DdRumErrorTracking.isInDefaultErrorHandler = true;
             try {
-                DdRumErrorTracking.defaultErrorHandler(error, isFatal);
+                // On real iOS devices, the crash context is not updated soon
+                // enough for the view update to contain the crash.
+                // Waiting for 50ms has low impact and ensures the crash context
+                // is updated before actually crashing the app.
+                await executeWithDelay(
+                    () =>
+                        DdRumErrorTracking.defaultErrorHandler(error, isFatal),
+                    50
+                );
             } finally {
                 DdRumErrorTracking.isInDefaultErrorHandler = false;
             }

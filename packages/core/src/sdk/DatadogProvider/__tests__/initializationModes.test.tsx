@@ -9,9 +9,9 @@ import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
-import { TimeProvider } from '../../../TimeProvider';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
+import { TimeProvider } from '../../../utils/TimeProvider';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -25,7 +25,7 @@ import {
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
 
-jest.mock('../../../TimeProvider', () => {
+jest.mock('../../../utils/TimeProvider', () => {
     const now = jest.fn();
     return {
         TimeProvider: jest.fn().mockImplementation(() => {
