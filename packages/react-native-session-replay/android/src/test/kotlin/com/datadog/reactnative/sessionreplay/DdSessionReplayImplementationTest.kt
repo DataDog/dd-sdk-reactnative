@@ -6,7 +6,15 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import com.datadog.android.sessionreplay.SessionReplayConfiguration
+import com.datadog.android.sessionreplay.SessionReplayPrivacy
+import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.verify
+import fr.xgouchet.elmyr.annotation.DoubleForgery
+import fr.xgouchet.elmyr.annotation.Forgery
+import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -30,9 +38,12 @@ internal class DdSessionReplayImplementationTest {
     @Mock
     lateinit var mockPromise: Promise
 
+    @Mock
+    lateinit var mockSessionReplay: SessionReplayWrapper
+
     @BeforeEach
     fun `set up`() {
-        testedSessionReplay = DdSessionReplayImplementation()
+        testedSessionReplay = DdSessionReplayImplementation { mockSessionReplay }
     }
 
     @AfterEach
@@ -40,8 +51,39 @@ internal class DdSessionReplayImplementationTest {
     }
 
     @Test
-    fun `M do nothing W enable()`() {
+    fun `M enable session replay W enable()`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @Forgery privacy: SessionReplayPrivacy
+    ) {
+        // Given
+        val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
+
         // When
-        testedSessionReplay.enable(100.0, "MASK", mockPromise)
+        testedSessionReplay.enable(replaySampleRate, privacy.toString(), mockPromise)
+
+        // Then
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
+        assertThat(sessionReplayConfigCaptor.firstValue)
+            .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
+            .hasFieldEqualTo("privacy", privacy)
+    }
+
+    @Test
+    fun `M enable session replay with mask W enable with bad privacy option()`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        // Not ALLOW nor MASK_USER_INPUT
+        @StringForgery(regex = "^/(?!ALLOW|MASK_USER_INPUT)([a-z0-9]+)$/i") privacy: String,
+    ) {
+        // Given
+        val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
+
+        // When
+        testedSessionReplay.enable(replaySampleRate, privacy, mockPromise)
+
+        // Then
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
+        assertThat(sessionReplayConfigCaptor.firstValue)
+            .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
+            .hasFieldEqualTo("privacy", SessionReplayPrivacy.MASK)
     }
 }
