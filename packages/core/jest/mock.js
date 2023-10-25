@@ -18,7 +18,7 @@ const actualDatadog = jest.requireActual('@datadog/mobile-react-native');
 const DatadogProviderMock = ({ children }) => {
     return <>{children}</>;
 };
-DatadogProviderMock.initialize = jest.fn().mockResolvedValue()
+DatadogProviderMock.initialize = jest.fn().mockResolvedValue();
 
 module.exports = {
     ...actualDatadog,
