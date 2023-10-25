@@ -15,11 +15,14 @@ export interface Spec extends TurboModule {
     readonly getConstants: () => {};
 
     /**
-     * Send a log with DEBUG level.
-     * @param message: The message to send.
-     * @param context: The additional context to send.
+     * Enable session replay and start recording session.
+     * @param replaySampleRate: The sample rate applied for session replay.
+     * @param defaultPrivacyLevel: The privacy level used for replay.
      */
-    readonly enable: () => Promise<void>;
+    enable(
+        replaySampleRate: number,
+        defaultPrivacyLevel: string
+    ): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('DdSessionReplay');

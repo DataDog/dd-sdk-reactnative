@@ -11,7 +11,19 @@ import type { Spec as NativeDdSessionReplay } from './specs/NativeDdSessionRepla
  * As we cannot use enums or classes in the specs, we override methods using them here.
  */
 
+type PrivacyLevel = 'MASK' | 'MASK_USER_INPUT' | 'ALLOW';
+
 /**
- * The entry point to use Datadog's Logs feature.
+ * The entry point to use Datadog's Session Replay feature.
  */
-export type NativeSessionReplayType = NativeDdSessionReplay;
+export interface NativeSessionReplayType extends NativeDdSessionReplay {
+    /**
+     * Enable session replay and start recording session.
+     * @param replaySampleRate: The sample rate applied for session replay.
+     * @param defaultPrivacyLevel: The privacy level used for replay.
+     */
+    enable(
+        replaySampleRate: number,
+        defaultPrivacyLevel: PrivacyLevel
+    ): Promise<void>;
+}
