@@ -6,7 +6,7 @@
 
 import type { NativeSessionReplayType } from './nativeModulesTypes';
 
-class SessionReplayWrapper {
+export class SessionReplayWrapper {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeSessionReplay: NativeSessionReplayType = require('./specs/NativeDdSessionReplay')
         .default;
@@ -16,6 +16,4 @@ class SessionReplayWrapper {
     };
 }
 
-const SessionReplay = new SessionReplayWrapper();
-
-export { SessionReplay };
+export const SessionReplay = new SessionReplayWrapper();
