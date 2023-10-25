@@ -3,14 +3,14 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import { NativeModules } from 'react-native';
+import { NativeDdSdk } from '../NativeDdSdk';
 
 export function formatAllowedHosts(allowedHosts?: string[]): string {
     try {
         return `'${JSON.stringify(allowedHosts)}'`;
     } catch (e: any) {
-        if (NativeModules.DdSdk && NativeModules.DdSdk.telemetryError) {
-            NativeModules.DdSdk.telemetryError(
+        if (NativeDdSdk) {
+            NativeDdSdk.telemetryError(
                 getErrorMessage(e),
                 getErrorStackTrace(e),
                 'AllowedHostsError'
