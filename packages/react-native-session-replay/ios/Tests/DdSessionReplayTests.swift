@@ -13,6 +13,6 @@ internal class DdSessionReplayTests: XCTestCase {
     private func mockReject(args: String?, arg: String?, err: Error?) {}
  
     func testDoesNothing() {
-        sessionReplay.enable(resolve: mockResolve, reject: mockReject)
+        sessionReplay.enable(replaySampleRate: 100, defaultPrivacyLevel: "MASK", resolve: mockResolve, reject: mockReject)
     }
 }

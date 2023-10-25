@@ -42,6 +42,6 @@ internal class DdSessionReplayImplementationTest {
     @Test
     fun `M do nothing W enable()`() {
         // When
-        testedSessionReplay.enable(mockPromise)
+        testedSessionReplay.enable(100.0, "MASK", mockPromise)
     }
 }

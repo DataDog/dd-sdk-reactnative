@@ -9,7 +9,7 @@ import Foundation
 @objc
 public class DdSessionReplayImplementation: NSObject {
     @objc
-    public func enable(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func enable(replaySampleRate: Double, defaultPrivacyLevel: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         resolve(nil)
     }
 }

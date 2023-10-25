@@ -12,7 +12,12 @@ import com.facebook.react.bridge.Promise
  * The entry point to use Datadog's Session Replay feature.
  */
 class DdSessionReplayImplementation() {
-    fun enable(promise: Promise) {
+    /**
+     * Enable session replay and start recording session.
+     * @param replaySampleRate The sample rate applied for session replay.
+     * @param defaultPrivacyLevel The privacy level used for replay.
+     */
+    fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
         promise.resolve(null)
     }
 

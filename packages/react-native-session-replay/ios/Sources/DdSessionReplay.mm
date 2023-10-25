@@ -16,10 +16,12 @@
 
 RCT_EXPORT_MODULE()
 
-RCT_REMAP_METHOD(enable, withEnableResolve:(RCTPromiseResolveBlock)resolve
+RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
+                 withDefaultPrivacyLevel:(NSString*)defaultPrivacyLevel
+                 withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self enable:resolve reject:reject];
+    [self enable:replaySampleRate defaultPrivacyLevel:defaultPrivacyLevel resolve:resolve reject:reject];
 }
 
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
@@ -43,8 +45,8 @@ RCT_REMAP_METHOD(enable, withEnableResolve:(RCTPromiseResolveBlock)resolve
     return NO;
 }
 
-- (void)enable:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSessionReplayImplementation enableWithResolve:resolve reject:reject];
+- (void)enable:(double)replaySampleRate defaultPrivacyLevel:(NSString *)defaultPrivacyLevel resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSessionReplayImplementation enableWithReplaySampleRate:replaySampleRate defaultPrivacyLevel:defaultPrivacyLevel resolve:resolve reject:reject];
 }
 
 @end

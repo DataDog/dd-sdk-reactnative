@@ -20,9 +20,14 @@ class DdSessionReplay(
     private val implementation = DdSessionReplayImplementation()
 
     override fun getName(): String = DdSessionReplayImplementation.NAME
-
+    
+    /**
+     * Enable session replay and start recording session.
+     * @param replaySampleRate The sample rate applied for session replay.
+     * @param defaultPrivacyLevel The privacy level used for replay.
+     */
     @ReactMethod
-    override fun enable(promise: Promise) {
-        implementation.enable(promise)
+    override fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
+        implementation.enable(replaySampleRate, defaultPrivacyLevel, promise)
     }
 }
