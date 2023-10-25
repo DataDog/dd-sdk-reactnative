@@ -1,76 +1,81 @@
 {
-  "name": "@datadog/mobile-react-native-code-push",
-  "version": "1.8.5",
-  "description": "A client-side React Native module to interact with Appcenter Codepush and Datadog",
-  "keywords": [
-    "datadog",
-    "react-native",
-    "ios",
-    "android",
-    "codepush",
-    "appcenter"
-  ],
-  "author": "Datadog (https://github.com/DataDog)",
-  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
-  "repository": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative",
-    "directory": "packages/codepush"
-  },
-  "bugs": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
-  },
-  "license": "Apache-2.0",
-  "main": "lib/commonjs/index",
-  "files": [
-    "src/**",
-    "lib/**"
-  ],
-  "types": "lib/typescript/codepush/src/index.d.ts",
-  "react-native": "src/index",
-  "source": "src/index",
-  "module": "lib/module/index",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
-    "prepare": "rm -rf lib && yarn bob build"
-  },
-  "devDependencies": {
-    "@datadog/mobile-react-native": "^1.8.5",
-    "@testing-library/react-native": "7.0.2",
-    "react-native-builder-bob": "0.17.1",
-    "react-native-code-push": "7.0.5"
-  },
-  "peerDependencies": {
-    "@datadog/mobile-react-native": "^1.0.0-beta4",
-    "react": ">=16.13.1",
-    "react-native": ">=0.63.4 <1.0",
-    "react-native-code-push": ">=2.0.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/lib/"
+    "name": "@datadog/mobile-react-native-code-push",
+    "version": "1.8.5",
+    "description": "A client-side React Native module to interact with Appcenter Codepush and Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android",
+        "codepush",
+        "appcenter"
     ],
-    "testPathIgnorePatterns": [
-      "/__utils__/"
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative",
+        "directory": "packages/codepush"
+    },
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src/**",
+        "lib/**"
     ],
-    "transformIgnorePatterns": []
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      [
-        "typescript",
-        {
-          "tsc": "./../../node_modules/.bin/tsc"
-        }
-      ]
-    ]
-  }
+    "types": "lib/typescript/codepush/src/index.d.ts",
+    "react-native": "src/index",
+    "source": "src/index",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build"
+    },
+    "devDependencies": {
+        "@datadog/mobile-react-native": "^1.8.5",
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1",
+        "react-native-code-push": "7.0.5"
+    },
+    "peerDependencies": {
+        "@datadog/mobile-react-native": "^1.0.0-beta4",
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0",
+        "react-native-code-push": ">=2.0.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>../core/src"
+        },
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "testPathIgnorePatterns": [
+            "/__utils__/"
+        ],
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    }
 }

@@ -52,6 +52,9 @@
     },
     "jest": {
         "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>../core/src"
+        },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"
         ],
@@ -59,7 +62,9 @@
             "./../../node_modules/react-native-gesture-handler/jestSetup.js",
             "./../../jest.setup.js"
         ],
-        "transformIgnorePatterns": []
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
     },
     "react-native-builder-bob": {
         "source": "src",
