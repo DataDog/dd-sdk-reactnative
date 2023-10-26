@@ -26,6 +26,14 @@ PODS:
     - DatadogTrace (~> 2.2.1)
     - DatadogWebViewTracking (~> 2.2.1)
     - React-Core
+  - DatadogSDKReactNativeSessionReplay (1.8.5):
+    - DatadogSessionReplay (~> 2.2.1)
+    - React-Core
+  - DatadogSDKReactNativeSessionReplay/Tests (1.8.5):
+    - DatadogSessionReplay (~> 2.2.1)
+    - React-Core
+  - DatadogSessionReplay (2.2.1):
+    - DatadogInternal (= 2.2.1)
   - DatadogTrace (2.2.1):
     - DatadogInternal (= 2.2.1)
   - DatadogWebViewTracking (2.2.1):
@@ -411,6 +419,8 @@ DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSDKReactNativeSessionReplay (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
+  - DatadogSDKReactNativeSessionReplay/Tests (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -461,6 +471,7 @@ SPEC REPOS:
     - DatadogInternal
     - DatadogLogs
     - DatadogRUM
+    - DatadogSessionReplay
     - DatadogTrace
     - DatadogWebViewTracking
     - fmt
@@ -473,6 +484,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogSDKReactNativeSessionReplay:
+    :path: "../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -562,6 +575,8 @@ SPEC CHECKSUMS:
   DatadogLogs: a0eafa7bd2103511eac07bcd2ff95c851123e29b
   DatadogRUM: 1e027ccfe4ba1eb81a185f3c58e0909bb12811be
   DatadogSDKReactNative: 6f16f15e8b3d5a60c5799d604843a0feb2010c9b
+  DatadogSDKReactNativeSessionReplay: ec9e93b87abbb2f4935bd02e651b28a9503b48de
+  DatadogSessionReplay: 4b29318297ad20189a69153b4b0475f0fab7d3f5
   DatadogTrace: 74dc91a7a80e746dc4ef1af6d0db1735b5bfd993
   DatadogWebViewTracking: 9ca93299a2c900c68ba080f6e800fae1fa3c6b61
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
@@ -609,6 +624,6 @@ SPEC CHECKSUMS:
   RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
   Yoga: e7ea9e590e27460d28911403b894722354d73479
 
-PODFILE CHECKSUM: 59a4878659fbb7b053887dd9eec3df44ca9e0b28
+PODFILE CHECKSUM: c13458ce5aca9de130799f13a0494e537a800b3c
 
 COCOAPODS: 1.12.1
