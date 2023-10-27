@@ -51,13 +51,18 @@
     },
     "jest": {
         "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>../core/src"
+        },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"
         ],
         "testPathIgnorePatterns": [
             "/__utils__/"
         ],
-        "transformIgnorePatterns": []
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
     },
     "react-native-builder-bob": {
         "source": "src",

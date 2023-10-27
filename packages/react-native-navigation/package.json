@@ -1,76 +1,84 @@
 {
-  "name": "@datadog/mobile-react-native-navigation",
-  "version": "1.8.5",
-  "description": "A client-side React Native module to interact with Datadog",
-  "keywords": [
-    "datadog",
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "author": "Datadog (https://github.com/DataDog)",
-  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
-  "repository": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative",
-    "directory": "packages/react-native-navigation"
-  },
-  "bugs": {
-    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
-  },
-  "license": "Apache-2.0",
-  "main": "lib/commonjs/index",
-  "files": [
-    "src/**",
-    "lib/**"
-  ],
-  "types": "lib/typescript/react-native-navigation/src/index.d.ts",
-  "react-native": "src/index",
-  "source": "src/index",
-  "module": "lib/module/index",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
-    "prepare": "rm -rf lib && yarn bob build"
-  },
-  "devDependencies": {
-    "@datadog/mobile-react-native": "^1.8.5",
-    "@testing-library/react-native": "7.0.2",
-    "react-native-builder-bob": "0.17.1",
-    "react-native-gesture-handler": "1.10.3",
-    "react-native-navigation": "7.31.1",
-    "remx": "3.x.x"
-  },
-  "peerDependencies": {
-    "@datadog/mobile-react-native": "^1.0.0-beta4",
-    "react": ">=16.13.1",
-    "react-native": ">=0.63.4 <1.0",
-    "react-native-navigation": "^7.5.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/lib/"
+    "name": "@datadog/mobile-react-native-navigation",
+    "version": "1.8.5",
+    "description": "A client-side React Native module to interact with Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android"
     ],
-    "setupFiles": [
-      "./../../node_modules/react-native-gesture-handler/jestSetup.js"
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative",
+        "directory": "packages/react-native-navigation"
+    },
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src/**",
+        "lib/**"
     ],
-    "transformIgnorePatterns": []
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      [
-        "typescript",
-        {
-          "tsc": "./../../node_modules/.bin/tsc"
-        }
-      ]
-    ]
-  }
+    "types": "lib/typescript/react-native-navigation/src/index.d.ts",
+    "react-native": "src/index",
+    "source": "src/index",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build"
+    },
+    "devDependencies": {
+        "@datadog/mobile-react-native": "^1.8.5",
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.17.1",
+        "react-native-gesture-handler": "1.10.3",
+        "react-native-navigation": "7.31.1",
+        "remx": "3.x.x"
+    },
+    "peerDependencies": {
+        "@datadog/mobile-react-native": "^1.0.0-beta4",
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0",
+        "react-native-navigation": "^7.5.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>../core/src"
+        },
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "setupFiles": [
+            "./../../node_modules/react-native-gesture-handler/jestSetup.js"
+        ],
+        "testPathIgnorePatterns": [
+            "/__utils__/"
+        ],
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    }
 }
