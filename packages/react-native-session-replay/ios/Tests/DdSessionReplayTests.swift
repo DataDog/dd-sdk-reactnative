@@ -5,14 +5,67 @@
  */
 
 import XCTest
+@testable import DatadogSDKReactNativeSessionReplay
+import DatadogSessionReplay
 
 internal class DdSessionReplayTests: XCTestCase {
-    private lazy var sessionReplay = DdSessionReplayImplementation()
-    
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
  
-    func testDoesNothing() {
-        sessionReplay.enable(replaySampleRate: 100, defaultPrivacyLevel: "MASK", resolve: mockResolve, reject: mockReject)
+    func testEnablesSessionReplayWithZeroReplaySampleRate() {
+        let sessionReplayMock = MockSessionReplay()
+        DdSessionReplayImplementation({ sessionReplayMock })
+            .enable(replaySampleRate: 0, defaultPrivacyLevel: "MASK", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 0.0, privacyLevel: .mask))
+    }
+    
+    func testEnablesSessionReplayWithMaskPrivacyLevel() {
+        let sessionReplayMock = MockSessionReplay()
+        DdSessionReplayImplementation({ sessionReplayMock })
+            .enable(replaySampleRate: 100, defaultPrivacyLevel: "MASK", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .mask))
+    }
+    
+    func testEnablesSessionReplayWithMaskUserInputPrivacyLevel() {
+        let sessionReplayMock = MockSessionReplay()
+        DdSessionReplayImplementation({ sessionReplayMock })
+            .enable(replaySampleRate: 100, defaultPrivacyLevel: "MASK_USER_INPUT", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .maskUserInput))
+    }
+    
+    func testEnablesSessionReplayWithAllowPrivacyLevel() {
+        let sessionReplayMock = MockSessionReplay()
+        DdSessionReplayImplementation({ sessionReplayMock })
+            .enable(replaySampleRate: 100, defaultPrivacyLevel: "ALLOW", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .allow))
+    }
+    
+    func testEnablesSessionReplayWithBadPrivacyLevel() {
+        let sessionReplayMock = MockSessionReplay()
+        DdSessionReplayImplementation({ sessionReplayMock })
+            .enable(replaySampleRate: 100, defaultPrivacyLevel: "BAD_VALUE", resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .mask))
+    }
+}
+
+private class MockSessionReplay: SessionReplayProtocol {
+    enum CalledMethod: Equatable {
+        case enable(replaySampleRate: Float, privacyLevel: SessionReplay.Configuration.PrivacyLevel)
+    }
+
+    public var calledMethods = [CalledMethod]()
+
+    func enable(with configuration: SessionReplay.Configuration) {
+        calledMethods.append(
+            .enable(
+                replaySampleRate: configuration.replaySampleRate,
+                privacyLevel: configuration.defaultPrivacyLevel
+            )
+        )
     }
 }
