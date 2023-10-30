@@ -139,6 +139,10 @@ internal class DdTraceTests: XCTestCase {
     }
 
     func testTracingConcurrently() {
+        // It is possible and acceptable that a concurrent finishSpan resolve is called on a different thread before we get the lastResolveValue.
+        // This would override lastResolveValue to be `nil`. To avoid this, we use a different resolve.
+        func mockFinishResolve(args: Any?) {}
+
         let iterationCount = 30
         DispatchQueue.concurrentPerform(iterations: iterationCount) { iteration in
             tracer.startSpan(
@@ -149,7 +153,7 @@ internal class DdTraceTests: XCTestCase {
                 reject: mockReject
             )
             let spanID = lastResolveValue as! NSString
-            tracer.finishSpan(spanId: spanID, context: testTags, timestampMs: 100, resolve: mockResolve, reject: mockReject)
+            tracer.finishSpan(spanId: spanID, context: testTags, timestampMs: 100, resolve: mockFinishResolve, reject: mockReject)
         }
 
         XCTAssertEqual(mockNativeTracer.startedSpans.count, iterationCount, "\(mockNativeTracer.startedSpans)")
