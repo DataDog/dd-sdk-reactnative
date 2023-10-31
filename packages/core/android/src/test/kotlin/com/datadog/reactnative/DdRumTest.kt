@@ -11,6 +11,7 @@ import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
+import com.datadog.android.rum.RumResourceMethod
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
@@ -242,7 +243,7 @@ internal class DdRumTest {
     @Test
     fun `M call startResource W startResource()`(
         @StringForgery key: String,
-        @StringForgery(regex = "GET|POST|DELETE") method: String,
+        @Forgery method: RumResourceMethod,
         @StringForgery(regex = "http(s?)://[a-z]+\\.com/\\w+") url: String
     ) {
         // Given
@@ -253,7 +254,7 @@ internal class DdRumTest {
         // When
         testedDdRum.startResource(
             key,
-            method,
+            method.toString(),
             url,
             fakeContext.toReadableMap(),
             fakeTimestamp,
