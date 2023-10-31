@@ -1008,6 +1008,8 @@ extension DdSdkImplementation {
 }
 
 internal class MockDatadogCore: DatadogCoreProtocol {
+    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
+    
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
         if  // Configuration Telemetry Message
             case .telemetry(let telemetry) = message,

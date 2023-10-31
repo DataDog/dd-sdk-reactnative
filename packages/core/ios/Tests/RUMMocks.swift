@@ -266,6 +266,7 @@ extension RUMResourceEvent: RandomMockable {
             ),
             action: .init(id: .mockRandom()),
             application: .init(id: .mockRandom()),
+            buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
             context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
@@ -324,6 +325,7 @@ extension RUMResourceEvent: RandomMockable {
             ),
             action: .init(id: .mockRandom()),
             application: .init(id: .mockRandom()),
+            buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
             context: .mockRandom(),
@@ -398,6 +400,7 @@ extension RUMActionEvent: RandomMockable {
                 type: [.tap, .swipe, .scroll].randomElement()!
             ),
             application: .init(id: .mockRandom()),
+            buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
             context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
@@ -451,6 +454,7 @@ extension RUMActionEvent: RandomMockable {
                 type: [.tap, .swipe, .scroll].randomElement()!
             ),
             application: .init(id: .mockRandom()),
+            buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
             context: .mockRandom(),

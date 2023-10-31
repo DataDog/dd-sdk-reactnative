@@ -17,7 +17,9 @@ Pod::Spec.new do |s|
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
   
   s.dependency "React-Core"
-  s.dependency 'DatadogSessionReplay', '~> 2.2.1'
+
+  # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
+  s.dependency 'DatadogSessionReplay', '~> 2.4.0'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'
