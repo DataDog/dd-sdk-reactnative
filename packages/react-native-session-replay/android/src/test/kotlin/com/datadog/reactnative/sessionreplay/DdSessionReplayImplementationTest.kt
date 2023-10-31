@@ -72,7 +72,7 @@ internal class DdSessionReplayImplementationTest {
     fun `M enable session replay with mask W enable with bad privacy option()`(
         @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
         // Not ALLOW nor MASK_USER_INPUT
-        @StringForgery(regex = "^/(?!ALLOW|MASK_USER_INPUT)([a-z0-9]+)$/i") privacy: String,
+        @StringForgery(regex = "^/(?!ALLOW|MASK_USER_INPUT)([a-z0-9]+)$/i") privacy: String
     ) {
         // Given
         val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
