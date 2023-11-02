@@ -4,6 +4,7 @@ import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
+import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum._RumInternalProxy
 
 class MockRumMonitor : RumMonitor {
@@ -50,6 +51,13 @@ class MockRumMonitor : RumMonitor {
     override fun startAction(
         type: RumActionType,
         name: String,
+        attributes: Map<String, Any?>
+    ) {}
+
+    override fun startResource(
+        key: String,
+        method: RumResourceMethod,
+        url: String,
         attributes: Map<String, Any?>
     ) {}
 

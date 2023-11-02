@@ -6,10 +6,12 @@
 
 package com.datadog.reactnative
 
+import android.util.Log
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumResourceKind
+import com.datadog.android.rum.RumResourceMethod
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
@@ -158,7 +160,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         }
         datadog.getRumMonitor().startResource(
             key = key,
-            method = method,
+            method = method.asRumResourceMethod(),
             url = url,
             attributes = attributes
         )
@@ -301,6 +303,25 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
             "source" -> RumErrorSource.SOURCE
             "webview" -> RumErrorSource.WEBVIEW
             else -> RumErrorSource.SOURCE
+        }
+    }
+
+    private fun String.asRumResourceMethod(): RumResourceMethod {
+        return when(lowercase(Locale.US)) {
+            "get" -> RumResourceMethod.GET
+            "delete" -> RumResourceMethod.DELETE
+            "head" -> RumResourceMethod.HEAD
+            "patch" -> RumResourceMethod.PATCH
+            "put" -> RumResourceMethod.PUT
+            "post" -> RumResourceMethod.POST
+            else -> {
+                Log.w(
+                    DdRum::class.java.canonicalName,
+                    "Unknown RUM resource method given: $this, " +
+                            "using ${RumResourceMethod.GET} as default"
+                )
+                RumResourceMethod.GET
+            }
         }
     }
 
