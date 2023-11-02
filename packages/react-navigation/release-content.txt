@@ -16,15 +16,11 @@ package/lib/typescript/core/src/DdSdkReactNativeConfiguration.d.ts
 package/lib/typescript/core/src/InternalLog.d.ts
 package/lib/typescript/core/src/ProxyConfiguration.d.ts
 package/lib/typescript/core/src/SdkVerbosity.d.ts
-package/lib/typescript/core/src/TimeProvider.d.ts
-package/lib/typescript/core/src/Timer.d.ts
 package/lib/typescript/core/src/TrackingConsent.d.ts
-package/lib/typescript/core/src/errorUtils.d.ts
 package/lib/typescript/core/src/index.d.ts
 package/lib/typescript/core/src/logs/DdLogs.d.ts
 package/lib/typescript/core/src/logs/eventMapper.d.ts
 package/lib/typescript/core/src/logs/types.d.ts
-package/lib/typescript/core/src/longTasksUtils.d.ts
 package/lib/typescript/core/src/nativeModulesTypes.d.ts
 package/lib/typescript/core/src/rum/DdRum.d.ts
 package/lib/typescript/core/src/rum/eventMappers/actionEventMapper.d.ts
@@ -41,6 +37,7 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResour
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/firstPartyHosts.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/graphql/graphqlHeaders.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/ResourceReporter.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/internalDevResourceBlocklist.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/resourceTiming.d.ts
@@ -69,6 +66,11 @@ package/lib/typescript/core/src/specs/NativeDdSdk.d.ts
 package/lib/typescript/core/src/specs/NativeDdTrace.d.ts
 package/lib/typescript/core/src/trace/DdTrace.d.ts
 package/lib/typescript/core/src/types.d.ts
+package/lib/typescript/core/src/utils/TimeProvider.d.ts
+package/lib/typescript/core/src/utils/Timer.d.ts
+package/lib/typescript/core/src/utils/errorUtils.d.ts
+package/lib/typescript/core/src/utils/jsUtils.d.ts
+package/lib/typescript/core/src/utils/longTasksUtils.d.ts
 package/lib/typescript/core/src/version.d.ts
 package/lib/typescript/react-navigation/src/index.d.ts
 package/lib/typescript/react-navigation/src/rum/instrumentation/DdRumReactNavigationTracking.d.ts
