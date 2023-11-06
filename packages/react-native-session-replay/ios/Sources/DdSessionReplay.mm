@@ -14,6 +14,7 @@
 
 @implementation DdSessionReplay
 
+@synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
@@ -36,7 +37,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
 - (DdSessionReplayImplementation*)ddSessionReplayImplementation
 {
     if (_ddSessionReplayImplementation == nil) {
-        _ddSessionReplayImplementation = [[DdSessionReplayImplementation alloc] init];
+        _ddSessionReplayImplementation = [[DdSessionReplayImplementation alloc] initWithBridge:_bridge];
     }
     return _ddSessionReplayImplementation;
 }
