@@ -22,7 +22,8 @@ import {
     B3_MULTI_SPAN_ID_HEADER_KEY,
     B3_MULTI_SAMPLED_HEADER_KEY,
     ORIGIN_RUM,
-    ORIGIN_HEADER_KEY
+    ORIGIN_HEADER_KEY,
+    TRACESTATE_HEADER_KEY
 } from '../../../distributedTracing/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
 import {
@@ -444,8 +445,13 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const headerValue = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
-            expect(headerValue).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+            const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
+            expect(contextHeader).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+
+            // Parent value of the context header is the 3rd part of it
+            const parentValue = contextHeader.split('-')[2];
+            const stateHeader = xhr.requestHeaders[TRACESTATE_HEADER_KEY];
+            expect(stateHeader).toBe(`dd=s:1;o:rum;p:${parentValue}`);
         });
 
         it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {

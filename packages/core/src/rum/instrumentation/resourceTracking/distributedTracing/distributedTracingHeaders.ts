@@ -24,6 +24,7 @@ export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
  * OTel headers
  */
 export const TRACECONTEXT_HEADER_KEY = 'traceparent';
+export const TRACESTATE_HEADER_KEY = 'tracestate';
 export const B3_HEADER_KEY = 'b3';
 export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
 export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
@@ -60,16 +61,26 @@ export const getTracingHeaders = (
                 break;
             }
             case PropagatorType.TRACECONTEXT: {
-                headers.push({
-                    header: TRACECONTEXT_HEADER_KEY,
-                    value: generateTraceContextHeader({
-                        version: '00',
-                        traceId: tracingAttributes.traceId,
-                        parentId: tracingAttributes.spanId,
-                        isSampled:
-                            tracingAttributes.samplingPriorityHeader === '1'
-                    })
-                });
+                headers.push(
+                    {
+                        header: TRACECONTEXT_HEADER_KEY,
+                        value: generateTraceContextHeader({
+                            version: '00',
+                            traceId: tracingAttributes.traceId,
+                            parentId: tracingAttributes.spanId,
+                            isSampled:
+                                tracingAttributes.samplingPriorityHeader === '1'
+                        })
+                    },
+                    {
+                        header: TRACESTATE_HEADER_KEY,
+                        value: generateTraceStateHeader({
+                            parentId: tracingAttributes.spanId,
+                            isSampled:
+                                tracingAttributes.samplingPriorityHeader === '1'
+                        })
+                    }
+                );
                 break;
             }
             case PropagatorType.B3: {
@@ -122,6 +133,20 @@ const generateTraceContextHeader = ({
         16,
         32
     )}-${parentId.toPaddedString(16, 16)}-${flags}`;
+};
+
+const generateTraceStateHeader = ({
+    parentId,
+    isSampled
+}: {
+    parentId: SpanId;
+    isSampled: boolean;
+}) => {
+    const sampled = `s:${isSampled ? '1' : '0'}`;
+    const origin = 'o:rum';
+    const parent = `p:${parentId.toPaddedString(16, 16)}`;
+
+    return `dd=${sampled};${origin};${parent}`;
 };
 
 const generateB3Header = ({
