@@ -75,7 +75,10 @@ export const formatFirstPartyHosts = (
         if (isLegacyFirstPartyHost(host)) {
             return {
                 match: host,
-                propagatorTypes: [PropagatorType.DATADOG]
+                propagatorTypes: [
+                    PropagatorType.DATADOG,
+                    PropagatorType.TRACECONTEXT
+                ]
             };
         }
         return host;

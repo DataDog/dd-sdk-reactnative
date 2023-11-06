@@ -514,8 +514,14 @@ describe('DdSdkReactNative', () => {
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
                 '_dd.first_party_hosts': [
-                    { match: 'api.example.com', propagatorTypes: ['datadog'] },
-                    { match: 'something.fr', propagatorTypes: ['datadog'] }
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: ['datadog', 'tracecontext']
+                    },
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: ['datadog']
+                    }
                 ]
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
@@ -524,8 +530,14 @@ describe('DdSdkReactNative', () => {
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
                 tracingSamplingRate: 42,
                 firstPartyHosts: [
-                    { match: 'api.example.com', propagatorTypes: ['datadog'] },
-                    { match: 'something.fr', propagatorTypes: ['datadog'] }
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: ['datadog', 'tracecontext']
+                    },
+                    {
+                        match: 'something.fr',
+                        propagatorTypes: ['datadog']
+                    }
                 ]
             });
         });
