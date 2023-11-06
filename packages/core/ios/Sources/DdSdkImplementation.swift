@@ -12,7 +12,7 @@ import DatadogTrace
 import DatadogCrashReporting
 import DatadogWebViewTracking
 import DatadogInternal
-import DatadogSessionReplay
+@_spi(Internal) import DatadogSessionReplay
 import React
 
 func getDefaultAppVersion() -> String {
@@ -91,13 +91,15 @@ public class DdSdkImplementation: NSObject {
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
+            
+            var sessionReplayConfiguration = SessionReplay.Configuration(
+                replaySampleRate: 100.0,
+                defaultPrivacyLevel: .allow)
+            
+            sessionReplayConfiguration.setAdditionalNodeRecorders([RCTTextViewRecorder(uiManager: self.uiManager)])
 
             SessionReplay.enable(
-                with: SessionReplay.Configuration(
-                    replaySampleRate: 100.0,
-                    defaultPrivacyLevel: .allow,
-                    additionalNodeRecorders: [RCTTextViewRecorder(uiManager: self.uiManager)]
-                )
+                with: sessionReplayConfiguration
             )
 
             resolve(nil)
