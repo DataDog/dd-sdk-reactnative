@@ -55,6 +55,10 @@ const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
 let xhrProxy;
 
+const hexToDecimal = (hex: string): string => {
+    return BigInt(`0x${hex}`).toString(10);
+};
+
 beforeEach(() => {
     DdNativeRum.startResource.mockClear();
     DdNativeRum.stopResource.mockClear();
@@ -452,6 +456,67 @@ describe('XHRProxy', () => {
             const parentValue = contextHeader.split('-')[2];
             const stateHeader = xhr.requestHeaders[TRACESTATE_HEADER_KEY];
             expect(stateHeader).toBe(`dd=s:1;o:rum;p:${parentValue}`);
+        });
+
+        it('adds tracing headers with matching value when all headers are added', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.TRACECONTEXT]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3MULTI]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            const datadogTraceValue = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+            const datadogParentValue = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
+
+            const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
+            const traceContextValue = contextHeader.split('-')[1];
+            const parentContextValue = contextHeader.split('-')[2];
+
+            const b3MultiTraceHeader =
+                xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
+            const b3MultiParentHeader =
+                xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
+
+            const b3Header = xhr.requestHeaders[B3_HEADER_KEY];
+            const traceB3Value = b3Header.split('-')[0];
+            const parentB3Value = b3Header.split('-')[1];
+
+            expect(hexToDecimal(traceContextValue)).toBe(datadogTraceValue);
+            expect(hexToDecimal(parentContextValue)).toBe(datadogParentValue);
+
+            expect(hexToDecimal(b3MultiTraceHeader)).toBe(datadogTraceValue);
+            expect(hexToDecimal(b3MultiParentHeader)).toBe(datadogParentValue);
+
+            expect(hexToDecimal(traceB3Value)).toBe(datadogTraceValue);
+            expect(hexToDecimal(parentB3Value)).toBe(datadogParentValue);
         });
 
         it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {
