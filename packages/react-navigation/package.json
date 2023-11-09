@@ -47,7 +47,7 @@
         "react-native-safe-area-context": "3.1.9"
     },
     "peerDependencies": {
-        "@datadog/mobile-react-native": "^1.0.0-beta4",
+        "@datadog/mobile-react-native": "^2.0.1",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0"
     },
