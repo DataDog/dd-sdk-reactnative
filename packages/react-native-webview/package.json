@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-webview",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "A client-side React Native module to interact with react-native-webview and Datadog",
     "keywords": [
         "datadog",
@@ -42,10 +42,10 @@
         "react-native-builder-bob": "0.17.1"
     },
     "peerDependencies": {
-        "@datadog/mobile-react-native": ">=1.5.0",
+        "@datadog/mobile-react-native": "^2.0.1",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0",
-        "react-native-webview": "11.x.x"
+        "react-native-webview": ">=11.0.0"
     },
     "jest": {
         "preset": "react-native",
