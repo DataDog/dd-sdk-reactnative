@@ -10,14 +10,18 @@ import DatadogSessionReplay
 import React
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
-    public var identifier = UUID()
-    
-    public let uiManager: RCTUIManager
-    
-    public init(uiManager: RCTUIManager) {
+    internal var textObfuscator: (SessionReplayViewTreeRecordingContext) -> SessionReplayTextObfuscating = { context in
+        return context.recorder.privacy.staticTextObfuscator
+    }
+
+    internal var identifier = UUID()
+
+    internal let uiManager: RCTUIManager
+
+    internal init(uiManager: RCTUIManager) {
         self.uiManager = uiManager
     }
-    
+
     internal func extractTextFromSubViews(
         subviews: [RCTShadowView]?
     ) -> String? {
@@ -44,10 +48,10 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         guard let textView = view as? RCTTextView else {
             return nil
         }
-        
+
         var shadowView: RCTTextShadowView? = nil
         let tag = textView.reactTag
-    
+
         RCTGetUIManagerQueue().sync {
             shadowView = uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
         }
@@ -64,6 +68,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
                 text: text,
                 textAlignment: shadow.textAttributes.alignment,
                 textColor: shadow.textAttributes.foregroundColor?.cgColor,
+                textObfuscator: textObfuscator(context),
                 font: shadow.textAttributes.effectiveFont(), // Custom fonts are currently not supported for iOS
                 contentRect: shadow.contentFrame
             )
@@ -78,12 +83,14 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
     let wireframeID: WireframeID
     /// Attributes of the base `UIView`.
     let attributes: SessionReplayViewAttributes
-    /// The text
+    /// The text.
     let text: String?
     /// The alignment of the text.
     var textAlignment: NSTextAlignment
     /// The color of the text.
     let textColor: CGColor?
+    /// The text obfuscator.
+    let textObfuscator: SessionReplayTextObfuscating
     /// The font used by the text field.
     let font: UIFont?
     /// The frame of the text content
@@ -122,7 +129,7 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
             builder.createTextWireframe(
                 id: wireframeID,
                 frame: relativeIntersectedRect,
-                text: text ?? "",
+                text: textObfuscator.mask(text: text ?? ""),
                 textAlignment: .init(systemTextAlignment: textAlignment, vertical: .center),
                 clip: clip,
                 textColor: textColor ?? DEFAULT_FONT_COLOR,
