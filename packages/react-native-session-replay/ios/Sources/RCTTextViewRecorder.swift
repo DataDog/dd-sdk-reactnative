@@ -5,24 +5,35 @@
  */
 
 import UIKit
-@_spi(Internal) import DatadogSessionReplay
+@_spi(Internal)
+import DatadogSessionReplay
 import React
 
-//    var textObfuscator: (ViewTreeRecordingContext, _ isSensitive: Bool) -> TextObfuscating = { context, isSensitive in
-//        if isSensitive {
-//            return context.recorder.privacy.sensitiveTextObfuscator
-//        }
-//
-//        return context.recorder.privacy.staticTextObfuscator
-//    }
-
-@_spi(Internal) public class RCTTextViewRecorder: SessionReplayNodeRecorder {
+internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
     public var identifier = UUID()
     
     public let uiManager: RCTUIManager
     
     public init(uiManager: RCTUIManager) {
         self.uiManager = uiManager
+    }
+    
+    internal func extractTextFromSubViews(
+        subviews: [RCTShadowView]?
+    ) -> String? {
+        if let subviews = subviews {
+            return subviews.compactMap { subview in
+                if let sub = subview as? RCTRawTextShadowView {
+                    return sub.text
+                }
+                if let sub = subview as? RCTVirtualTextShadowView {
+                    // We recursively get all subviews for nested Text components
+                    return extractTextFromSubViews(subviews: sub.reactSubviews())
+                }
+                return nil
+            }.joined()
+        }
+        return nil
     }
 
     public func semantics(
@@ -42,56 +53,54 @@ import React
         }
 
         if let shadow = shadowView {
+            // TODO: RUM-2173 check performance is ok
+            let text = extractTextFromSubViews(
+                subviews: shadow.reactSubviews()
+            )
+
             let builder = RCTTextViewWireframesBuilder(
                 wireframeID: context.ids.nodeID(view: textView, nodeRecorder: self),
                 attributes: attributes,
-                // This relies on a change on RN to expose the textStorage.
-                // We could rely on textView.accessibilityLabel or check what else we could get
-                text: textView.accessibilityLabel ?? "",
+                text: text,
                 textAlignment: shadow.textAttributes.alignment,
                 textColor: shadow.textAttributes.foregroundColor?.cgColor,
-                // check this works
-                font: shadow.textAttributes.effectiveFont(),
-//                textObfuscator: textObfuscator(context, false),
-                // this is currently incorrect
+                font: shadow.textAttributes.effectiveFont(), // Custom fonts are currently not supported for iOS
                 contentRect: shadow.contentFrame
             )
-
             let node = SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
-            return SessionReplaySpecificElement(subtreeStrategy: .ignore, nodes: [node])
+            return SessionReplaySpecificElement(subtreeStrategy: .record, nodes: [node])
         }
-
         return SessionReplayInvisibleElement.constant
     }
 }
 
-@_spi(Internal) public struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
+internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
     /// Attributes of the base `UIView`.
     let attributes: SessionReplayViewAttributes
-    /// The text inside text field.
-    let text: String
+    /// The text
+    let text: String?
     /// The alignment of the text.
     var textAlignment: NSTextAlignment
     /// The color of the text.
     let textColor: CGColor?
     /// The font used by the text field.
     let font: UIFont?
-    /// Text obfuscator for masking text.
-//    let textObfuscator: TextObfuscating
     /// The frame of the text content
     let contentRect: CGRect
 
     public var wireframeRect: CGRect {
         attributes.frame
     }
-    
-    private var clip: ContentClip {
+
+    let DEFAULT_FONT_COLOR = UIColor.black.cgColor
+
+    private var clip: SRContentClip {
         let top = abs(contentRect.origin.y)
         let left = abs(contentRect.origin.x)
         let bottom = max(contentRect.height - attributes.frame.height - top, 0)
         let right = max(contentRect.width - attributes.frame.width - left, 0)
-        return ContentClip(
+        return SRContentClip.create(
             bottom: Int64(withNoOverflow: bottom),
             left: Int64(withNoOverflow: left),
             right: Int64(withNoOverflow: right),
@@ -108,16 +117,15 @@ import React
         )
     }
 
-    public func buildWireframes(with builder: SessionReplayWireframesBuilder) -> [Wireframe] {
+    public func buildWireframes(with builder: SessionReplayWireframesBuilder) -> [SRWireframe] {
         return [
             builder.createTextWireframe(
                 id: wireframeID,
                 frame: relativeIntersectedRect,
-//                text: textObfuscator.mask(text: text),
-                text: text,
-                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
+                text: text ?? "",
+                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .center),
                 clip: clip,
-                textColor: textColor,
+                textColor: textColor ?? DEFAULT_FONT_COLOR,
                 font: font,
                 borderColor: attributes.layerBorderColor,
                 borderWidth: attributes.layerBorderWidth,
