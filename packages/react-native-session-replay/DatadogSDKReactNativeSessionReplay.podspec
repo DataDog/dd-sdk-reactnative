@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogSessionReplay', '~> 2.4.0'
+  s.dependency 'DatadogSessionReplay', '~> 2.5.0'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.dependency "React-RCTText"
