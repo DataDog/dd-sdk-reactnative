@@ -42,9 +42,9 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
 
     public func semantics(
         of view: UIView,
-        with attributes: DatadogSessionReplay.SessionReplayViewAttributes,
-        in context: DatadogSessionReplay.SessionReplayViewTreeRecordingContext
-    ) -> DatadogSessionReplay.SessionReplayNodeSemantics? {
+        with attributes: SessionReplayViewAttributes,
+        in context: SessionReplayViewTreeRecordingContext
+    ) -> SessionReplayNodeSemantics? {
         guard let textView = view as? RCTTextView else {
             return nil
         }
