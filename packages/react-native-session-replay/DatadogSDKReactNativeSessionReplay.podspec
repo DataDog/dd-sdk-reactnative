@@ -22,6 +22,7 @@ Pod::Spec.new do |s|
   s.dependency 'DatadogSessionReplay', '~> 2.4.0'
   
   s.test_spec 'Tests' do |test_spec|
+    test_spec.dependency "React-RCTText"
     test_spec.source_files = 'ios/Tests/*.swift'
   end
 
