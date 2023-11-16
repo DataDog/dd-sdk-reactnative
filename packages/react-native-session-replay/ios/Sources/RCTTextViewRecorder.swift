@@ -73,7 +73,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
                 contentRect: shadow.contentFrame
             )
             let node = SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
-            return SessionReplaySpecificElement(subtreeStrategy: .record, nodes: [node])
+            return SessionReplaySpecificElement(subtreeStrategy: .ignore, nodes: [node])
         }
         return SessionReplayInvisibleElement.constant
     }
