@@ -81,19 +81,12 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
 
 internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
-    /// Attributes of the base `UIView`.
     let attributes: SessionReplayViewAttributes
-    /// The text.
     let text: String?
-    /// The alignment of the text.
     var textAlignment: NSTextAlignment
-    /// The color of the text.
     let textColor: CGColor?
-    /// The text obfuscator.
     let textObfuscator: SessionReplayTextObfuscating
-    /// The font used by the text field.
     let font: UIFont?
-    /// The frame of the text content
     let contentRect: CGRect
 
     public var wireframeRect: CGRect {
