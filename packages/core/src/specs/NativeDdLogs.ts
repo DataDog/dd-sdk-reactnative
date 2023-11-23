@@ -59,7 +59,7 @@ export interface Spec extends TurboModule {
     ) => Promise<void>;
 
     /**
-     * Send a log containing an error with INDO level.
+     * Send a log containing an error with INFO level.
      * @param message: The message to send.
      * @param errorKind: The error kind to send.
      * @param errorMessage: The error message to send.

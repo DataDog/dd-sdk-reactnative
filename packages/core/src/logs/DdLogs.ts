@@ -113,7 +113,7 @@ class DdLogsWrapper implements DdLogsType {
         }
     };
 
-    private printlogDroppedByMapper = (
+    private printLogDroppedByMapper = (
         message: string,
         status: 'debug' | 'info' | 'warn' | 'error'
     ) => {
@@ -144,7 +144,7 @@ class DdLogsWrapper implements DdLogsType {
             status
         });
         if (!event) {
-            this.printlogDroppedByMapper(message, status);
+            this.printLogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
 
@@ -180,7 +180,7 @@ class DdLogsWrapper implements DdLogsType {
             status
         });
         if (!event) {
-            this.printlogDroppedByMapper(message, status);
+            this.printLogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
 

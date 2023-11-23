@@ -189,7 +189,7 @@ At a minimum, please provide:
     - Android API level;
     - Datadog SDK version;
     - Versions of any other relevant dependencies (OkHttp, …);
-    - Your proguard configuration;
+    - Your ProGuard configuration;
     - The list of Gradle plugins applied to your project.
 
 If at all possible, also provide:

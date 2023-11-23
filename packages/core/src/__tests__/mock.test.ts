@@ -27,7 +27,7 @@ const privateProperties = {
         'nativeLogs',
         'logEventMapper',
         'printLogDroppedSdkNotInitialized',
-        'printlogDroppedByMapper',
+        'printLogDroppedByMapper',
         'printLogTracked',
         'log',
         'logWithError'

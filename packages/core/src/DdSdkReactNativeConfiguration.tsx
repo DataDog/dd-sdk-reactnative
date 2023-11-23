@@ -115,7 +115,7 @@ const DEFAULTS = {
  */
 export class DdSdkReactNativeConfiguration {
     /**
-     * Enables crash reporting for native plaforms (iOS, Android). Default `false`.
+     * Enables crash reporting for native platforms (iOS, Android). Default `false`.
      */
     public nativeCrashReportEnabled: boolean =
         DEFAULTS.nativeCrashReportEnabled;
