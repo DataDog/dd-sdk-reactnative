@@ -46,7 +46,7 @@ interface XHRProxyProviders {
 }
 
 /**
- * Proxies XMLHTTPRequest to track resources.
+ * Proxies XMLHttpRequest to track resources.
  */
 export class XHRProxy extends RequestProxy {
     private providers: XHRProxyProviders;

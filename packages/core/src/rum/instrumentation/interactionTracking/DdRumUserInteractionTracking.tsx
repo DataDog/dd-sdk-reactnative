@@ -82,12 +82,12 @@ export class DdRumUserInteractionTracking {
 
         try {
             const jsxRuntime = getJsxRuntime();
-            const originaljsx = jsxRuntime.jsx;
-            this.originalJsx = originaljsx;
+            const originalJsx = jsxRuntime.jsx;
+            this.originalJsx = originalJsx;
             jsxRuntime.jsx = (
                 ...args: Parameters<typeof React.createElement>
             ): ReturnType<typeof React.createElement> => {
-                return this.patchCreateElementFunction(originaljsx, args);
+                return this.patchCreateElementFunction(originalJsx, args);
             };
         } catch (e) {
             DdSdk.telemetryDebug(getErrorMessage(e));

@@ -9,7 +9,7 @@ import { SdkVerbosity } from '../../../../../SdkVerbosity';
 
 const MISSING_RESOURCE_SIZE = -1;
 export const RESOURCE_SIZE_ERROR_MESSAGE =
-    "Couldn't get resource size, because an error occured: ";
+    "Couldn't get resource size, because an error occurred: ";
 
 function byteLength(str: string): number {
     // This is a weird trick, but it works.

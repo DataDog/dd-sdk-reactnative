@@ -41,7 +41,7 @@ export class BoundedBuffer extends DatadogBuffer {
             message: string;
             stack: string;
             kind: string;
-            occurences: number;
+            occurrences: number;
         };
     } = {};
 
@@ -184,22 +184,22 @@ export class BoundedBuffer extends DatadogBuffer {
         kind: string
     ) => {
         if (this.telemetryBuffer[kind]) {
-            this.telemetryBuffer[kind].occurences++;
+            this.telemetryBuffer[kind].occurrences++;
         } else {
             this.telemetryBuffer[kind] = {
                 message,
                 stack,
                 kind,
-                occurences: 1
+                occurrences: 1
             };
         }
     };
 
     private drainTelemetry = () => {
         Object.values(this.telemetryBuffer).forEach(
-            ({ message, stack, kind, occurences }) => {
+            ({ message, stack, kind, occurrences }) => {
                 DdSdk.telemetryError(
-                    `${message} happened ${occurences} times.`,
+                    `${message} happened ${occurrences} times.`,
                     stack,
                     kind
                 );

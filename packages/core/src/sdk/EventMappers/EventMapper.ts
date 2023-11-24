@@ -26,7 +26,7 @@ export type AdditionalEventDataForMapper = {
  *
  * @param eventMapper the user-registered event mapper
  * @param formatRawEventForMapper formatter that gets the raw event (from javascript call) and returns the input given to the mapper
- * @param formatMapperEventForNative formatter that gets the ouput of the mapper, and returns the input given to the native SDKs
+ * @param formatMapperEventForNative formatter that gets the output of the mapper, and returns the input given to the native SDKs
  * @param formatRawEventForNative called when no event mapper is registered
  */
 export class EventMapper<RawEvent, MapperEvent, NativeEvent> {

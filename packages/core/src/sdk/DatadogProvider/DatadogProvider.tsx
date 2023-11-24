@@ -51,7 +51,7 @@ const isConfigurationPartial = (
         return false;
     }
     if (configuration instanceof DdSdkReactNativeConfiguration) {
-        // Not using InternalLog here as it is not yet instanciated
+        // Not using InternalLog here as it is not yet instantiated
         console.warn(
             'A DdSdkReactNativeConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
         );
