@@ -5,30 +5,40 @@
  */
 
 import Foundation
-import DatadogSessionReplay
+@_spi(Internal) import DatadogSessionReplay
 import DatadogInternal
+import React
 
 @objc
 public class DdSessionReplayImplementation: NSObject {
     private lazy var sessionReplay: SessionReplayProtocol = sessionReplayProvider()
     private let sessionReplayProvider: () -> SessionReplayProtocol
+    private let uiManager: RCTUIManager
     
-    internal init(_ sessionReplayProvider: @escaping () -> SessionReplayProtocol) {
+    internal init(sessionReplayProvider: @escaping () -> SessionReplayProtocol, uiManager: RCTUIManager) {
         self.sessionReplayProvider = sessionReplayProvider
+        self.uiManager = uiManager
     }
 
     @objc
-    public override convenience init() {
-        self.init({ NativeSessionReplay() })
+    public convenience init(bridge: RCTBridge) {
+        self.init(
+            sessionReplayProvider: { NativeSessionReplay() },
+            uiManager: bridge.uiManager
+        )
     }
 
     @objc
     public func enable(replaySampleRate: Double, defaultPrivacyLevel: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        var sessionReplayConfiguration = SessionReplay.Configuration(
+            replaySampleRate: Float(replaySampleRate),
+            defaultPrivacyLevel: buildPrivacyLevel(privacyLevel: defaultPrivacyLevel as NSString)
+        )
+                    
+        sessionReplayConfiguration.setAdditionalNodeRecorders([RCTTextViewRecorder(uiManager: self.uiManager)])
+
         sessionReplay.enable(
-            with: SessionReplay.Configuration(
-                replaySampleRate: Float(replaySampleRate),
-                defaultPrivacyLevel: buildPrivacyLevel(privacyLevel: defaultPrivacyLevel as NSString)
-            )
+            with: sessionReplayConfiguration
         )
         resolve(nil)
     }

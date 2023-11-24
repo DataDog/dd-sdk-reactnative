@@ -21,8 +21,23 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+use_modular_headers!
+
 target 'ddSdkReactnativeExample' do
+  native_ios_sdk_path = ENV['DD_NATIVE_IOS_SDK_PATH']
+  if (native_ios_sdk_path) then
+    pod 'DatadogCore', :path => "#{native_ios_sdk_path}/DatadogCore.podspec"
+    pod 'DatadogLogs', :path => "#{native_ios_sdk_path}/DatadogLogs.podspec"
+    pod 'DatadogTrace', :path => "#{native_ios_sdk_path}/DatadogTrace.podspec"
+    pod 'DatadogInternal', :path => "#{native_ios_sdk_path}/DatadogInternal.podspec"
+    pod 'DatadogRUM', :path => "#{native_ios_sdk_path}/DatadogRUM.podspec"
+    pod 'DatadogCrashReporting', :path => "#{native_ios_sdk_path}/DatadogCrashReporting.podspec"
+    pod 'DatadogWebViewTracking', :path => "#{native_ios_sdk_path}/DatadogWebViewTracking.podspec"
+    pod 'DatadogSessionReplay', :path => "#{native_ios_sdk_path}/DatadogSessionReplay.podspec"
+  end
+
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
 
   config = use_native_modules!
 

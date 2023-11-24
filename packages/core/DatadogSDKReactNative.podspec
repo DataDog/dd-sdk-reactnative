@@ -19,12 +19,12 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
 
   # /!\ Remember to keep the versions in sync with DatadogSDKReactNativeSessionReplay.podspec
-  s.dependency 'DatadogCore', '~> 2.4.0'
-  s.dependency 'DatadogLogs', '~> 2.4.0'
-  s.dependency 'DatadogTrace', '~> 2.4.0'
-  s.dependency 'DatadogRUM', '~> 2.4.0'
-  s.dependency 'DatadogCrashReporting', '~> 2.4.0'
-  s.dependency 'DatadogWebViewTracking', '~> 2.4.0'
+  s.dependency 'DatadogCore', '~> 2.5.0'
+  s.dependency 'DatadogLogs', '~> 2.5.0'
+  s.dependency 'DatadogTrace', '~> 2.5.0'
+  s.dependency 'DatadogRUM', '~> 2.5.0'
+  s.dependency 'DatadogCrashReporting', '~> 2.5.0'
+  s.dependency 'DatadogWebViewTracking', '~> 2.5.0'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/*.swift'
