@@ -27,6 +27,7 @@ class DdSessionReplayImplementation(
     fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .setPrivacy(buildPrivacy(defaultPrivacyLevel))
+            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport())
             .build()
         sessionReplayProvider().enable(configuration)
         promise.resolve(null)
