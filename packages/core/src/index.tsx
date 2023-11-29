@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { DdCoreTests } from './DdCoreTests';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
@@ -35,6 +36,7 @@ export {
     DdLogs,
     DdTrace,
     DdRum,
+    DdCoreTests,
     RumActionType,
     ErrorSource,
     DdSdkReactNativeConfiguration,

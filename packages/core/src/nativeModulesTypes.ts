@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { Spec as NativeDdCoreTests } from './specs/NativeDdCoreTests';
 import type { Spec as NativeDdLogs } from './specs/NativeDdLogs';
 import type { Spec as NativeDdRum } from './specs/NativeDdRum';
 import type { Spec as NativeDdSdk } from './specs/NativeDdSdk';
@@ -23,6 +24,8 @@ export type DdNativeLogsType = NativeDdLogs;
  * The entry point to use Datadog's Trace feature.
  */
 export type DdNativeTraceType = NativeDdTrace;
+
+export type DdNativeCoreTestsType = NativeDdCoreTests;
 
 /**
  * A configuration object to initialize Datadog's features.
