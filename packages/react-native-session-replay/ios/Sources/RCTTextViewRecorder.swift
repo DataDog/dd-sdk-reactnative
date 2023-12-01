@@ -135,7 +135,8 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
                 frame: relativeIntersectedRect,
                 text: textObfuscator.mask(text: text ?? ""),
                 textFrame: textFrame,
-                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .center),
+                // Text alignment is top for all RCTTextView components.
+                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
                 clip: clip,
                 textColor: textColor ?? DEFAULT_FONT_COLOR,
                 font: font,
