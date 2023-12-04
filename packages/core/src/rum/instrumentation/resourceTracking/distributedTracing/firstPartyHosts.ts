@@ -57,7 +57,7 @@ const firstPartyHostsRegexBuilder = (firstPartyHosts: string[]): RegExp => {
         // "example.com", "api.example.com", but not "foo.com".
         const firstPartyHostsRegex = new RegExp(
             `^(.*\\.)*(${firstPartyHosts
-                .map(host => `${escapeRegExp(host)}$`)
+                .map(host => `${escapeRegExp(host)}(/.*)?$`)
                 .join('|')})`
         );
         firstPartyHostsRegex.test('test_the_regex_is_valid');

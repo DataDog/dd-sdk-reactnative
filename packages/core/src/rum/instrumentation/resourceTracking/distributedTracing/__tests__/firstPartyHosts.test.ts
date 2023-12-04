@@ -30,5 +30,17 @@ describe('firstPartyHosts', () => {
             ]);
             expect(regexMap[0].regex.test('apiiexample.com')).toBe(false);
         });
+
+        it('returns a RegExp that matches hosts and optional paths', () => {
+            const regexMap = firstPartyHostsRegexMapBuilder([
+                {
+                    match: 'api.example.com/resource',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]);
+            expect(regexMap[0].propagatorType).toBe('datadog');
+            expect(regexMap[0].regex.test('api.example.com/resource/folder/?test_param=123')).toBe(true);
+            expect(regexMap[0].regex.test('api.example.com/other')).toBe(false);
+        });
     });
 });
