@@ -4,10 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { Platform } from 'react-native';
+
 import type { DdNativeCoreTestsType } from './nativeModulesTypes';
 import { base64 } from './utils/base64';
 
-type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay';
+type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay' | 'logs';
 
 /**
  * Traces
@@ -222,16 +224,23 @@ class DdCoreTestsWrapper {
     };
     getAllEventsData = async (feature: Feature) => {
         const events = await this.nativeDdCoreTests.getAllEventsData(feature);
-        return (JSON.parse(events) as string[]).map(event =>
-            JSON.parse(base64.decode(event))
-        );
+        if (Platform.OS === 'ios') {
+            return (JSON.parse(events) as string[]).map(event =>
+                JSON.parse(base64.decode(event))
+            );
+        }
+        return JSON.parse(events);
     };
     getTraces = async (): Promise<TracingResult> => {
         const traces = await this.getAllEventsData('tracing');
         return buildTracingResult(traces);
     };
     getLogs = async (): Promise<LoggingResult> => {
-        const logs = await this.getAllEventsData('logging');
+        const featureName = Platform.select({
+            ios: 'logging',
+            android: 'logs'
+        });
+        const logs = await this.getAllEventsData(featureName as Feature);
         return buildLoggingResult(logs);
     };
     // This should get better getters, like getRUMActions, getRUMErrors, getRUMLongTasks, etc.
