@@ -11,12 +11,6 @@ import com.datadog.android.log.Logger
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.MapForgery
@@ -31,6 +25,12 @@ import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
 @Extensions(
@@ -314,7 +314,7 @@ internal class DdLogsTest {
         )
 
         // Then
-        verifyZeroInteractions(mockLogger)
+        verifyNoInteractions(mockLogger)
         val exceptionCaptor = argumentCaptor<IllegalStateException>()
         verify(mockPromise, times(8)).reject(exceptionCaptor.capture())
         assertThat(exceptionCaptor.firstValue.message)
