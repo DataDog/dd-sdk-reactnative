@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.sessionreplay
+package com.datadog.reactnative.sessionreplay.utils
 
 private const val HEX_COLOR_INCLUDING_ALPHA_LENGTH: Int = 8
 

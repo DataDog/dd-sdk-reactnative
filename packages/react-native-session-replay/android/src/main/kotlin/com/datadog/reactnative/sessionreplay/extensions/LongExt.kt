@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.sessionreplay
+package com.datadog.reactnative.sessionreplay.extensions
 
 internal fun Long.convertToDensityNormalized(density: Float): Long {
     return if (density == 0f) {

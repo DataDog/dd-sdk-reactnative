@@ -6,15 +6,19 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import com.datadog.android.Datadog
+import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactContext
 import java.util.Locale
 
 /**
  * The entry point to use Datadog's Session Replay feature.
  */
 class DdSessionReplayImplementation(
+    private val reactContext: ReactContext,
     private val sessionReplayProvider: () -> SessionReplayWrapper = {
         SessionReplaySDKWrapper()
     }
@@ -25,9 +29,11 @@ class DdSessionReplayImplementation(
      * @param defaultPrivacyLevel The privacy level used for replay.
      */
     fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
+        val sdkCore = Datadog.getInstance() as FeatureSdkCore
+        val logger = sdkCore.internalLogger
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .setPrivacy(buildPrivacy(defaultPrivacyLevel))
-            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport())
+            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(reactContext, logger))
             .build()
         sessionReplayProvider().enable(configuration)
         promise.resolve(null)
