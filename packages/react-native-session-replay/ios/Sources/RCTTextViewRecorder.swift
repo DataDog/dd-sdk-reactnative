@@ -95,11 +95,13 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
 
     let DEFAULT_FONT_COLOR = UIColor.black.cgColor
 
+    // Clipping should be 0 to avoid the text from overflowing when the
+    // numberOfLines prop is used.
     private var clip: SRContentClip {
-        let top = abs(contentRect.origin.y)
-        let left = abs(contentRect.origin.x)
-        let bottom = max(contentRect.height - attributes.frame.height - top, 0)
-        let right = max(contentRect.width - attributes.frame.width - left, 0)
+        let top = 0.0
+        let left = 0.0
+        let bottom = 0.0
+        let right = 0.0
         return SRContentClip.create(
             bottom: Int64(withNoOverflow: bottom),
             left: Int64(withNoOverflow: left),
@@ -110,10 +112,19 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
 
     private var relativeIntersectedRect: CGRect {
         return CGRect(
-            x: attributes.frame.origin.x - contentRect.origin.x,
-            y: attributes.frame.origin.y - contentRect.origin.y ,
+            x: attributes.frame.origin.x,
+            y: attributes.frame.origin.y,
             width: max(contentRect.width, attributes.frame.width),
             height: max(contentRect.height, attributes.frame.height)
+        )
+    }
+
+    private var textFrame: CGRect {
+        return CGRect(
+            x: attributes.frame.origin.x + contentRect.origin.x,
+            y: attributes.frame.origin.y + contentRect.origin.y,
+            width: contentRect.width,
+            height: contentRect.height
         )
     }
 
@@ -123,7 +134,9 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
                 id: wireframeID,
                 frame: relativeIntersectedRect,
                 text: textObfuscator.mask(text: text ?? ""),
-                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .center),
+                textFrame: textFrame,
+                // Text alignment is top for all RCTTextView components.
+                textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
                 clip: clip,
                 textColor: textColor ?? DEFAULT_FONT_COLOR,
                 font: font,
