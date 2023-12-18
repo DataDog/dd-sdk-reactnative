@@ -69,7 +69,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
                 textAlignment: shadow.textAttributes.alignment,
                 textColor: shadow.textAttributes.foregroundColor?.cgColor,
                 textObfuscator: textObfuscator(context),
-                font: shadow.textAttributes.effectiveFont(), // Custom fonts are currently not supported for iOS
+                font: nil, // Custom fonts are currently not supported for iOS
                 contentRect: shadow.contentFrame
             )
             let node = SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
@@ -78,6 +78,9 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         return SessionReplayInvisibleElement.constant
     }
 }
+
+// Black color. This is faster than accessing UIColor.black.cgColor.
+let DEFAULT_COLOR = UIColor(white: 0, alpha: 1).cgColor
 
 internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
@@ -92,8 +95,6 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
     public var wireframeRect: CGRect {
         attributes.frame
     }
-
-    let DEFAULT_FONT_COLOR = UIColor.black.cgColor
 
     // Clipping should be 0 to avoid the text from overflowing when the
     // numberOfLines prop is used.
@@ -138,7 +139,7 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
                 // Text alignment is top for all RCTTextView components.
                 textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
                 clip: clip,
-                textColor: textColor ?? DEFAULT_FONT_COLOR,
+                textColor: textColor ?? DEFAULT_COLOR,
                 font: font,
                 borderColor: attributes.layerBorderColor,
                 borderWidth: attributes.layerBorderWidth,
