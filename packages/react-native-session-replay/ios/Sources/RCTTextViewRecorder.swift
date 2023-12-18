@@ -79,8 +79,8 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
     }
 }
 
-// Black color. This is faster than accessing UIColor.black.cgColor.
-let DEFAULT_COLOR = UIColor(white: 0, alpha: 1).cgColor
+// Black color. This is the default for RN: https://github.com/facebook/react-native/blob/a5ee029cd02a636136058d82919480eeeb700067/packages/react-native/Libraries/Text/RCTTextAttributes.mm#L250
+let DEFAULT_COLOR = UIColor.black.cgColor
 
 internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
