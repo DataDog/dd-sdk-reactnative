@@ -23,7 +23,7 @@ For more information, see [Apache License, v2.0][7]
 [1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
 [2]: https://docs.expo.dev/
 [3]: https://docs.datadoghq.com/real_user_monitoring/reactnative/expo/
-[4]: https://docs.datadoghq.com/real_user_monitoring/reactnative/troubleshooting/
+[4]: https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#react-native
 [5]: https://github.com/DataDog/dd-sdk-reactnative/issues?q=is%3Aissue
 [6]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/CONTRIBUTING.md
 [7]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
