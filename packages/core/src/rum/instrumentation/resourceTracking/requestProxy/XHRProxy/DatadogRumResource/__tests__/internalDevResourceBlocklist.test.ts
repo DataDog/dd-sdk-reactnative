@@ -12,7 +12,7 @@ const resourceMockFactory = new ResourceMockFactory();
 
 describe('internalDevResourceBlocklist', () => {
     describe('filterDevResource', () => {
-        it.each(['192.168.1.20', '10.46.29.155', '172.28.1.20'])(
+        it.each(['192.168.1.20', '10.46.29.155', '172.28.1.20', '127.0.0.1'])(
             'returns null when a expo logs call with ip %s is made',
             ip => {
                 const resource = resourceMockFactory.getCustomResource({

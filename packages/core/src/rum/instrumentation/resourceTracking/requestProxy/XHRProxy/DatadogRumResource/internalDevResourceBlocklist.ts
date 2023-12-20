@@ -16,7 +16,7 @@ import type { RUMResource } from '../../interfaces/RumResource';
  * An example URL is http://192.168.1.20:8081/logs or http://10.46.29.155:19000/logs
  */
 const EXPO_DEV_LOGS_REGEX = new RegExp(
-    '^http://((10|172|192).[0-9]+.[0-9]+.[0-9]+|localhost):[0-9]+/logs$'
+    '^http://((10|172|192).[0-9]+.[0-9]+.[0-9]+|localhost|127.0.0.1):[0-9]+/logs$'
 );
 
 /**
@@ -26,7 +26,7 @@ const RN_PACKAGER_SYMBOLICATE_REGEX = new RegExp(
     '^http://localhost:[0-9]+/symbolicate$'
 );
 
-const internalResourceBlocklist: RegExp[] = [
+const internalDevResourceBlocklist: RegExp[] = [
     EXPO_DEV_LOGS_REGEX,
     RN_PACKAGER_SYMBOLICATE_REGEX
 ];
@@ -38,12 +38,11 @@ const internalResourceBlocklist: RegExp[] = [
 export const filterDevResource = (
     resource: RUMResource
 ): RUMResource | null => {
-    // TODO: if we get the confirmation by Expo that the
-    // logs call is only made when __DEV__ is true, add an
-    // early return for when it is false.
-    for (const resourceRegex of internalResourceBlocklist) {
-        if (resourceRegex.test(resource.request.url)) {
-            return null;
+    if (__DEV__) {
+        for (const resourceRegex of internalDevResourceBlocklist) {
+            if (resourceRegex.test(resource.request.url)) {
+                return null;
+            }
         }
     }
     return resource;
