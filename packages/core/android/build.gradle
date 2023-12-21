@@ -51,7 +51,7 @@ def resolveReactNativeDirectory() {
       commandLine("node", "-p", "require.resolve('react-native/package.json')")
       ignoreExitValue true
       standardOutput = reactNativePackageJsonPathStdout
-    }
+    }.rethrowFailure()
 
     def reactNativeFromProjectNodeModules = file(reactNativePackageJsonPathStdout.toString().trim()).getParentFile();
 
@@ -59,7 +59,7 @@ def resolveReactNativeDirectory() {
       return reactNativeFromProjectNodeModules
     }
   } catch (e) {
-    // Ignore
+    e.printStackTrace()
   }
 
   throw new Exception(
@@ -170,7 +170,7 @@ dependencies {
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
-  
+
   implementation "com.datadoghq:dd-sdk-android-rum:2.3.0"
   implementation "com.datadoghq:dd-sdk-android-logs:2.3.0"
   implementation "com.datadoghq:dd-sdk-android-trace:2.3.0"
