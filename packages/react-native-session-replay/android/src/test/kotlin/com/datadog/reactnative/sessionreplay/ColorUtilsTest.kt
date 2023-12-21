@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

@@ -9,7 +9,10 @@ package com.datadog.reactnative.sessionreplay
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
+import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.UIManagerModule
 import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.StringForgery
@@ -22,8 +25,11 @@ import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
 @Extensions(
@@ -39,11 +45,21 @@ internal class DdSessionReplayImplementationTest {
     lateinit var mockPromise: Promise
 
     @Mock
+    lateinit var mockReactContext: ReactContext
+
+    @Mock
     lateinit var mockSessionReplay: SessionReplayWrapper
+
+    @Mock
+    lateinit var mockUiManagerModule: UIManagerModule
 
     @BeforeEach
     fun `set up`() {
-        testedSessionReplay = DdSessionReplayImplementation { mockSessionReplay }
+        whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
+            .doReturn(mockUiManagerModule)
+
+        testedSessionReplay =
+            DdSessionReplayImplementation(mockReactContext) { mockSessionReplay }
     }
 
     @AfterEach

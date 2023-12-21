@@ -7,21 +7,59 @@
 package com.datadog.reactnative.sessionreplay
 
 import android.view.View
+import androidx.annotation.VisibleForTesting
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.ExtensionSupport
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.sessionreplay.internal.recorder.OptionSelectorDetector
 import com.datadog.android.sessionreplay.internal.recorder.mapper.WireframeMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.UIManagerModule
+import com.facebook.react.views.text.ReactTextView
+import com.facebook.react.views.textinput.ReactEditText
 import com.facebook.react.views.view.ReactViewGroup
 
-internal class ReactNativeSessionReplayExtensionSupport : ExtensionSupport {
+internal class ReactNativeSessionReplayExtensionSupport(
+    private val reactContext: ReactContext,
+    private val logger: InternalLogger
+) : ExtensionSupport {
 
     override fun getCustomViewMappers(): Map<SessionReplayPrivacy, Map<Class<*>, WireframeMapper<View, *>>> {
-        return mapOf(SessionReplayPrivacy.ALLOW to mapOf(
-            ReactViewGroup::class.java to ReactViewGroupMapper() as WireframeMapper<View, *>
-        ))
+        val uiManagerModule = getUiManagerModule()
+
+        return mapOf(
+            SessionReplayPrivacy.ALLOW to mapOf(
+                ReactViewGroup::class.java to ReactViewGroupMapper(),
+                ReactTextView::class.java to ReactTextMapper(reactContext, uiManagerModule),
+                ReactEditText::class.java to ReactTextMapper(reactContext, uiManagerModule)
+            ).mapValues{
+                it.value as WireframeMapper<View, *>
+            }
+        )
     }
 
     override fun getOptionSelectorDetectors(): List<OptionSelectorDetector> {
         return listOf()
+    }
+
+    @VisibleForTesting
+    internal fun getUiManagerModule(): UIManagerModule? {
+        return try {
+            reactContext.getNativeModule(UIManagerModule::class.java)
+        } catch (e: IllegalStateException) {
+            logger.log(
+                level = InternalLogger.Level.WARN,
+                targets = listOf(InternalLogger.Target.MAINTAINER, InternalLogger.Target.TELEMETRY),
+                messageBuilder = { RESOLVE_UIMANAGERMODULE_ERROR },
+                throwable = e
+            )
+            return null
+        }
+    }
+
+    internal companion object {
+        internal const val RESOLVE_UIMANAGERMODULE_ERROR = "Unable to resolve UIManagerModule"
     }
 }
