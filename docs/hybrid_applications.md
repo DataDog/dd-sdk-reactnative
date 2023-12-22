@@ -1,5 +1,7 @@
 # Hybrid applications
 
+Note: This document uses SDK v2. For v1 documentation, refer to the [previous version of this document][10].
+
 ## Overview
 
 You can use Datadog on the same application both from the React Native and the native sides.
@@ -14,7 +16,7 @@ A few constraints to keep in mind:
     - Through _auto-instrumentation_ - Some React classes and methods are modified to automate this.
     - Through _manual instrumentation_ - For example, if you want to report something you consider an error but that is not going to crash the app.
       Auto-instrumentation for JavaScript errors, resources, and interactions can only be started from JavaScript code.
-2. You cannot initialize more than one instance of the native `DatadogSDK` because it uses a singleton pattern on the native side. That means that once you initialize the native SDK on the native side or on the ReactNative side (by calling `DdSdkReactNative.initialize`) it is initialized for both.
+2. You can share the same instance of the core SDK between native and React Native. That way once you initialize the native SDK on the native side or on the React Native side (by calling `DdSdkReactNative.initialize`) it is initialized for both and events will appear in the same RUM Session. React Native uses the default core instance.
    This means that you can use _manual instrumentation_ on both sides, but _auto-instrumentation_ will only be activated for the side on which the SDK was initialized.
 3. If you try to report Datadog RUM events or logs before the initialization, they and future RUM events and logs will not be sent.
 4. You cannot change the `source` attribute of a RUM session, so all your RUM events will appear under the same source.
@@ -29,18 +31,26 @@ This also initializes the SDK on the native side. You are able to call both the 
 
 If you are sure that you don't call the native SDK before the React Native SDK this is the solution we recommend.
 
-On Android, add the Datadog Android SDK to your dependencies in your `android/app/build.gradle` file:
+On Android, add the Datadog Android SDKs to your dependencies in your `android/app/build.gradle` file:
 
 ```groovy
     // The version will be set by @datadog/mobile-react-native
-    implementation "com.datadoghq:dd-sdk-android"
+    implementation "com.datadoghq:dd-sdk-android-rum"
+    implementation "com.datadoghq:dd-sdk-android-logs"
+    implementation "com.datadoghq:dd-sdk-android-trace"
+    implementation "com.datadoghq:dd-sdk-android-webview"
 ```
 
-On iOS, add the Datadog iOS SDK to your dependencies in your `ios/Podfile` to use it in Objective C files:
+On iOS, add the Datadog iOS SDKs to your dependencies in your `ios/Podfile` to use it in Objective C files:
 
 ```ruby
 # Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
-pod 'DatadogSDKObjc', '~> 1.15.0'
+pod 'DatadogCoreObjc', '~> 2.5.0'
+pod 'DatadogLogsObjc', '~> 2.5.0'
+pod 'DatadogTraceObjc', '~> 2.5.0'
+pod 'DatadogRUMObjc', '~> 2.5.0'
+pod 'DatadogCrashReportingObjc', '~> 2.5.0'
+pod 'DatadogWebViewTrackingObjc', '~> 2.5.0'
 ```
 
 #### Tracking native RUM Views
@@ -71,14 +81,10 @@ On Android, add the Datadog Android SDK to your dependencies in your `android/ap
 
 ```groovy
     // The version will be set by @datadog/mobile-react-native
-    implementation "com.datadoghq:dd-sdk-android"
-```
-
-On iOS, add the Datadog iOS SDK to your dependencies in your `ios/Podfile` to use it in Objective C files:
-
-```ruby
-# Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
-pod 'DatadogSDKObjc', '~> 1.15.0'
+    implementation "com.datadoghq:dd-sdk-android-rum"
+    implementation "com.datadoghq:dd-sdk-android-logs"
+    implementation "com.datadoghq:dd-sdk-android-trace"
+    implementation "com.datadoghq:dd-sdk-android-webview"
 ```
 
 Initialize the SDK on the native side, by using the official documentation [for iOS][2] and [for Android][3].
@@ -102,8 +108,11 @@ class RNHybridPredicate: UIKitRUMViewsPredicate {
     }
 }
 
-// Use it when calling trackUIKitRUMViews
-Datadog.Configuration.trackUIKitRUMViews(using: RNHybridPredicate())
+// Use it in your RUM configuration
+let rumConfiguration = RUM.Configuration(
+    applicationID: applicationId,
+    uiKitViewsPredicate: RNHybridPredicate(),
+)
 ```
 
 On Android, use a `ComponentPredicate` to filter out native views created by your navigation libraries:
@@ -127,8 +136,8 @@ class RNComponentPredicate : ComponentPredicate<Fragment> {
     }
 }
 
-// Use it in your configuration
-configuration.useViewTrackingStrategy(FragmentViewTrackingStrategy(true, RNComponentPredicate()))
+// Use it in your RUM configuration
+rumConfiguration.useViewTrackingStrategy(FragmentViewTrackingStrategy(true, RNComponentPredicate()))
 ```
 
 Then use `@datadog/mobile-react-navigation` to track your views.
@@ -183,8 +192,8 @@ class RNActionEventMapper : EventMapper<ActionEvent> {
     }
 }
 
-// Use it in your configuration
-configuration.setRumActionEventMapper(RNActionEventMapper())
+// Use it in your RUM configuration
+rumConfiguration.setActionEventMapper(RNActionEventMapper())
 ```
 
 If you have enabled ProGuard obfuscation, add rules to prevent obfuscation of the target packages in release builds.
@@ -196,29 +205,30 @@ If you specified a `resourceEventMapper` or `actionEventMapper` in your React Na
 To keep this functionality, add the following snippets in your native configuration for iOS:
 
 ```swift
-Datadog.Configuration
-    .builderUsing(...)
-    .setRUMResourceEventMapper { resourceEvent in
+RUM.Configuration(
+    applicationID: applicationId,
+    resourceEventMapper: { resourceEvent in
         if resourceEvent.context?.contextInfo["_dd.resource.drop_resource"] != nil {
             return nil
         }
         // You can add your custom event mapper logic here
         return resourceEvent
-    }
-    .setRUMActionEventMapper { actionEvent in
+    },
+    actionEventMapper: { actionEvent in
         if actionEvent.context?.contextInfo["_dd.resource.drop_action"] != nil {
             return nil
         }
         // You can add your custom event mapper logic here
         return resourceEvent
     }
+)
 ```
 
 And for Android:
 
 ```kotlin
-    val config = Configuration.Builder(true, true, true, true)
-     .setRumResourceEventMapper(object : EventMapper<ResourceEvent> {
+    val config = RumConfiguration.Builder(applicationId = appId)
+     .setResourceEventMapper(object : EventMapper<ResourceEvent> {
             override fun map(event: ResourceEvent): ResourceEvent? {
                 if (event.context?.additionalProperties?.containsKey("_dd.resource.drop_resource") == true) {
                     return null
@@ -227,7 +237,7 @@ And for Android:
                 return event
             }
         })
-     .setRumActionEventMapper(object : EventMapper<ActionEvent> {
+     .setActionEventMapper(object : EventMapper<ActionEvent> {
             override fun map(event: ActionEvent): ActionEvent? {
                 if (event.context?.additionalProperties?.containsKey("_dd.action.drop_action") == true) {
                     return null
@@ -248,3 +258,4 @@ And for Android:
 [7]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#automatically-track-network-requests
 [8]: https://docs.datadoghq.com/real_user_monitoring/android/advanced_configuration/?tab=kotlin#custom-resources
 [9]: https://docs.datadoghq.com/real_user_monitoring/ios/advanced_configuration/?tab=objectivec#automatically-track-network-requests
+[10]: https://github.com/DataDog/dd-sdk-reactnative/blob/13c2ee0f91bba5bed1defec180f74f463f222fce/docs/hybrid_applications.md
