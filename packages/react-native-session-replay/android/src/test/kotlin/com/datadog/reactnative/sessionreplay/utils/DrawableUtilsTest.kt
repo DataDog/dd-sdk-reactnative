@@ -4,12 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.sessionreplay
+package com.datadog.reactnative.sessionreplay.utils
 
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
-import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.facebook.react.views.view.ReactViewBackgroundDrawable
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import org.assertj.core.api.Assertions.assertThat

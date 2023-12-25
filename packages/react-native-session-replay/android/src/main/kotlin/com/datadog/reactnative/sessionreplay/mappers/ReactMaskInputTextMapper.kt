@@ -9,7 +9,7 @@ package com.datadog.reactnative.sessionreplay.mappers
 import android.widget.TextView
 import com.datadog.android.sessionreplay.internal.AsyncJobStatusCallback
 import com.datadog.android.sessionreplay.internal.recorder.MappingContext
-import com.datadog.android.sessionreplay.internal.recorder.mapper.TextViewMapper
+import com.datadog.android.sessionreplay.internal.recorder.mapper.MaskInputTextViewMapper
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.reactnative.sessionreplay.NoopTextPropertiesResolver
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver
@@ -18,11 +18,10 @@ import com.datadog.reactnative.sessionreplay.utils.TextViewUtils
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.UIManagerModule
 
-internal class ReactTextMapper(
-    private val reactTextPropertiesResolver: TextPropertiesResolver =
-        NoopTextPropertiesResolver(),
+internal class ReactMaskInputTextMapper(
+    private val reactTextPropertiesResolver: TextPropertiesResolver,
     private val textViewUtils: TextViewUtils = TextViewUtils()
-): TextViewMapper() {
+): MaskInputTextViewMapper() {
 
     internal constructor(
         reactContext: ReactContext,
@@ -52,3 +51,4 @@ internal class ReactTextMapper(
         )
     }
 }
+
