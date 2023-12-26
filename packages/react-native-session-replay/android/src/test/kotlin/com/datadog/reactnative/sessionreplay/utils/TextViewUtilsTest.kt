@@ -4,13 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.sessionreplay.mappers
+package com.datadog.reactnative.sessionreplay.utils
 
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.util.DisplayMetrics
 import android.widget.TextView
-import com.datadog.android.sessionreplay.internal.AsyncJobStatusCallback
 import com.datadog.android.sessionreplay.internal.recorder.MappingContext
 import com.datadog.android.sessionreplay.internal.recorder.SystemInformation
 import com.datadog.android.sessionreplay.model.MobileSegment
@@ -26,7 +25,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.spy
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
@@ -35,17 +33,14 @@ import org.mockito.quality.Strictness
     ExtendWith(ForgeExtension::class)
 )
 @MockitoSettings(strictness = Strictness.LENIENT)
-internal class ReactTextMapperTest {
-    private lateinit var testedMapper: ReactTextMapper
+internal class TextViewUtilsTest {
+    private lateinit var testedUtils: TextViewUtils
 
     @Mock
     private lateinit var mockReactTextPropertiesResolver: ReactTextPropertiesResolver
 
     @Mock
     private lateinit var mockMappingContext: MappingContext
-
-    @Mock
-    private lateinit var mockAsyncJobStatusCallback: AsyncJobStatusCallback
 
     @Mock
     private lateinit var mockTextView: TextView
@@ -59,9 +54,6 @@ internal class ReactTextMapperTest {
     @Mock
     private lateinit var mockDisplayMetrics: DisplayMetrics
 
-    @Mock
-    private lateinit var mockTextWireframe: MobileSegment.Wireframe.TextWireframe
-
     @BeforeEach
     fun `set up`(forge: Forge) {
         whenever(mockResources.displayMetrics).thenReturn(mockDisplayMetrics)
@@ -71,56 +63,30 @@ internal class ReactTextMapperTest {
         whenever(mockTextView.text).thenReturn(forge.aString())
         whenever(mockTextView.typeface).thenReturn(Typeface.SANS_SERIF)
 
-        whenever(
-            mockReactTextPropertiesResolver.addReactNativeProperties(
-                originalWireframe = eq(mockTextWireframe),
-                view = eq(mockTextView),
-                pixelDensity = eq(0f)
-            )
-        ).thenReturn(mockTextWireframe)
-
-        testedMapper = spy(
-            ReactTextMapper(
-                reactTextPropertiesResolver = mockReactTextPropertiesResolver
-            )
-        )
+        testedUtils = TextViewUtils()
     }
 
     @Test
     fun `M return wireframe W map() { even if not TextWireframeType }`(
         @Mock mockImageWireframe: MobileSegment.Wireframe.ImageWireframe
     ) {
-        // Given
-        whenever(
-            testedMapper.mapOnSuperclass(
-                textView = eq(mockTextView),
-                mappingContext = eq(mockMappingContext),
-                asyncJobStatusCallback = eq(mockAsyncJobStatusCallback)
-            )
-        ).thenReturn(
-            listOf(mockImageWireframe)
-        )
-
         // When
-        val result = testedMapper.map(mockTextView, mockMappingContext, mockAsyncJobStatusCallback)
+        val result = testedUtils.mapTextViewToWireframes(
+            wireframes = listOf(mockImageWireframe),
+            view = mockTextView,
+            mappingContext = mockMappingContext,
+            reactTextPropertiesResolver = mockReactTextPropertiesResolver
+        )
 
         // Then
         assertThat(result).contains(mockImageWireframe)
     }
 
     @Test
-    fun `M return textWireframe W map()`() {
+    fun `M return textWireframe W map()`(
+        @Mock mockTextWireframe: MobileSegment.Wireframe.TextWireframe
+    ) {
         // Given
-        whenever(
-            testedMapper.mapOnSuperclass(
-                textView = eq(mockTextView),
-                mappingContext = eq(mockMappingContext),
-                asyncJobStatusCallback = eq(mockAsyncJobStatusCallback)
-            )
-        ).thenReturn(
-            listOf(mockTextWireframe)
-        )
-
         whenever(
             mockReactTextPropertiesResolver.addReactNativeProperties(
                 originalWireframe = eq(mockTextWireframe),
@@ -130,13 +96,14 @@ internal class ReactTextMapperTest {
         ).thenReturn(mockTextWireframe)
 
         // When
-        val result = testedMapper.map(
-            mockTextView,
-            mockMappingContext,
-            mockAsyncJobStatusCallback
+        val result = testedUtils.mapTextViewToWireframes(
+            wireframes = listOf(mockTextWireframe),
+            view = mockTextView,
+            mappingContext = mockMappingContext,
+            reactTextPropertiesResolver = mockReactTextPropertiesResolver
         )[0] as MobileSegment.Wireframe.TextWireframe
 
         // Then
-        assertThat(result.text).isEqualTo(mockTextWireframe.text)
+        assertThat(result).isEqualTo(mockTextWireframe)
     }
 }

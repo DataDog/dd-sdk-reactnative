@@ -13,6 +13,8 @@ import com.datadog.android.sessionreplay.ExtensionSupport
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.sessionreplay.internal.recorder.OptionSelectorDetector
 import com.datadog.android.sessionreplay.internal.recorder.mapper.WireframeMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactMaskInputTextMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactMaskTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
 import com.facebook.react.bridge.ReactContext
@@ -34,10 +36,20 @@ internal class ReactNativeSessionReplayExtensionSupport(
                 ReactViewGroup::class.java to ReactViewGroupMapper(),
                 ReactTextView::class.java to ReactTextMapper(reactContext, uiManagerModule),
                 ReactEditText::class.java to ReactTextMapper(reactContext, uiManagerModule)
-            ).mapValues{
-                it.value as WireframeMapper<View, *>
-            }
-        )
+            ),
+            SessionReplayPrivacy.MASK to mapOf(
+                ReactViewGroup::class.java to ReactViewGroupMapper(),
+                ReactTextView::class.java to ReactMaskTextMapper(reactContext, uiManagerModule),
+                ReactEditText::class.java to ReactMaskTextMapper(reactContext, uiManagerModule)
+            ),
+            SessionReplayPrivacy.MASK_USER_INPUT to mapOf(
+                ReactViewGroup::class.java to ReactViewGroupMapper(),
+                ReactTextView::class.java to ReactMaskInputTextMapper(reactContext, uiManagerModule),
+                ReactEditText::class.java to ReactMaskInputTextMapper(reactContext, uiManagerModule)
+            )
+        ).mapValues {
+            it.value as Map<Class<*>, WireframeMapper<View, *>>
+        }
     }
 
     override fun getOptionSelectorDetectors(): List<OptionSelectorDetector> {

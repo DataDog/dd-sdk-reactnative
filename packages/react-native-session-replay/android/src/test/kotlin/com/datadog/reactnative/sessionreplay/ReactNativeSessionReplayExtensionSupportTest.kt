@@ -8,6 +8,8 @@ package com.datadog.reactnative.sessionreplay
 
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
+import com.datadog.reactnative.sessionreplay.mappers.ReactMaskInputTextMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactMaskTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
 import com.facebook.react.bridge.NativeModule
@@ -74,6 +76,40 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
             .isInstanceOf(ReactTextMapper::class.java)
         assertThat(allowMappers[ReactEditText::class.java])
             .isInstanceOf(ReactTextMapper::class.java)
+    }
+
+    @Test
+    fun `M get mask input mappers W getCustomViewMappers()`() {
+        // When
+        val customViewMappers = testedExtensionSupport.getCustomViewMappers()
+        val maskUserInputMappers = customViewMappers[SessionReplayPrivacy.MASK_USER_INPUT]
+
+        // Then
+        check(maskUserInputMappers != null)
+        assertThat(maskUserInputMappers).hasSize(3)
+        assertThat(maskUserInputMappers[ReactViewGroup::class.java])
+            .isInstanceOf(ReactViewGroupMapper::class.java)
+        assertThat(maskUserInputMappers[ReactTextView::class.java])
+            .isInstanceOf(ReactMaskInputTextMapper::class.java)
+        assertThat(maskUserInputMappers[ReactEditText::class.java])
+            .isInstanceOf(ReactMaskInputTextMapper::class.java)
+    }
+
+    @Test
+    fun `M get mask mappers W getCustomViewMappers()`() {
+        // When
+        val customViewMappers = testedExtensionSupport.getCustomViewMappers()
+        val maskMappers = customViewMappers[SessionReplayPrivacy.MASK]
+
+        // Then
+        check(maskMappers != null)
+        assertThat(maskMappers).hasSize(3)
+        assertThat(maskMappers[ReactViewGroup::class.java])
+            .isInstanceOf(ReactViewGroupMapper::class.java)
+        assertThat(maskMappers[ReactTextView::class.java])
+            .isInstanceOf(ReactMaskTextMapper::class.java)
+        assertThat(maskMappers[ReactEditText::class.java])
+            .isInstanceOf(ReactMaskTextMapper::class.java)
     }
 
     @Test
