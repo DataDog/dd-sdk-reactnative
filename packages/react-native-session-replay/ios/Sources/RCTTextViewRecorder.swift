@@ -98,8 +98,10 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
 
     // Clipping should be 0 to avoid the text from overflowing when the
     // numberOfLines prop is used.
+    // To apply clip(0 0 0 0) we set a negative clipping (which has no effect).
+    // TODO: RUM-2354 remove this when clip(0 0 0 0) is applied 
     private var clip: SRContentClip {
-        let top = 0.0
+        let top = -1.0 
         let left = 0.0
         let bottom = 0.0
         let right = 0.0
