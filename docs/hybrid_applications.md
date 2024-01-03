@@ -1,6 +1,6 @@
 # Hybrid applications
 
-Note: This document uses SDK v2. For v1 documentation, refer to the [previous version of this document][10].
+Note: This document uses SDK v2. For v1 documentation, see the [previous version of this document][10].
 
 ## Overview
 
@@ -16,7 +16,7 @@ A few constraints to keep in mind:
     - Through _auto-instrumentation_ - Some React classes and methods are modified to automate this.
     - Through _manual instrumentation_ - For example, if you want to report something you consider an error but that is not going to crash the app.
       Auto-instrumentation for JavaScript errors, resources, and interactions can only be started from JavaScript code.
-2. You can share the same instance of the core SDK between native and React Native. That way once you initialize the native SDK on the native side or on the React Native side (by calling `DdSdkReactNative.initialize`) it is initialized for both and events will appear in the same RUM Session. React Native uses the default core instance.
+2. You can share the same instance of the core SDK between native and React Native. This allows you to initialize the native SDK on either the native side or on the React Native side (by calling `DdSdkReactNative.initialize`) and have it initialized for both sides, with events appearing in the same RUM session. React Native uses the default core instance.
    This means that you can use _manual instrumentation_ on both sides, but _auto-instrumentation_ will only be activated for the side on which the SDK was initialized.
 3. If you try to report Datadog RUM events or logs before the initialization, they and future RUM events and logs will not be sent.
 4. You cannot change the `source` attribute of a RUM session, so all your RUM events will appear under the same source.
@@ -41,7 +41,7 @@ On Android, add the Datadog Android SDKs to your dependencies in your `android/a
     implementation "com.datadoghq:dd-sdk-android-webview"
 ```
 
-On iOS, add the Datadog iOS SDKs to your dependencies in your `ios/Podfile` to use it in Objective C files:
+On iOS, add the Datadog iOS SDKs to your dependencies in your `ios/Podfile` to use in Objective C files:
 
 ```ruby
 # Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
