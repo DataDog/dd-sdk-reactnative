@@ -69,7 +69,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
                 textAlignment: shadow.textAttributes.alignment,
                 textColor: shadow.textAttributes.foregroundColor?.cgColor,
                 textObfuscator: textObfuscator(context),
-                font: nil, // Custom fonts are currently not supported for iOS
+                fontSize: shadow.textAttributes.fontSize,
                 contentRect: shadow.contentFrame
             )
             let node = SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
@@ -82,6 +82,9 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
 // Black color. This is the default for RN: https://github.com/facebook/react-native/blob/a5ee029cd02a636136058d82919480eeeb700067/packages/react-native/Libraries/Text/RCTTextAttributes.mm#L250
 let DEFAULT_COLOR = UIColor.black.cgColor
 
+// Default font size for RN: https://github.com/facebook/react-native/blob/16dff523b0a16d7fa9b651062c386885c2f48a6b/packages/react-native/React/Views/RCTFont.mm#L396
+let DEFAULT_FONT_SIZE = CGFloat(14)
+
 internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
     let attributes: SessionReplayViewAttributes
@@ -89,7 +92,7 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
     var textAlignment: NSTextAlignment
     let textColor: CGColor?
     let textObfuscator: SessionReplayTextObfuscating
-    let font: UIFont?
+    let fontSize: CGFloat
     let contentRect: CGRect
 
     public var wireframeRect: CGRect {
@@ -142,7 +145,7 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
                 textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
                 clip: clip,
                 textColor: textColor ?? DEFAULT_COLOR,
-                font: font,
+                fontOverride: SessionReplayWireframesBuilder.FontOverride(size: fontSize.isNaN ? DEFAULT_FONT_SIZE : fontSize),
                 borderColor: attributes.layerBorderColor,
                 borderWidth: attributes.layerBorderWidth,
                 backgroundColor: attributes.backgroundColor,
