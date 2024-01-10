@@ -17,6 +17,7 @@ export interface Spec extends TurboModule {
     clearData(): Promise<void>;
     getAllEvents(feature: string): Promise<any>;
     getAllEventsData(feature: string): Promise<string>;
+    startRecording(): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('DdCoreTests');

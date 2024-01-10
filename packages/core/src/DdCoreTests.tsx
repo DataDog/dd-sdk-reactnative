@@ -219,6 +219,9 @@ class DdCoreTestsWrapper {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     nativeDdCoreTests: DdNativeCoreTestsType = require('./specs/NativeDdCoreTests')
         .default;
+    start = () => {
+        return this.nativeDdCoreTests.startRecording();
+    };
     clearData = () => {
         return this.nativeDdCoreTests.clearData();
     };

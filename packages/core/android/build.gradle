@@ -180,7 +180,7 @@ dependencies {
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
-  
+  implementation "com.google.code.gson:gson:2.10.0"
   implementation "com.datadoghq:dd-sdk-android-rum:2.4.0"
   implementation "com.datadoghq:dd-sdk-android-logs:2.4.0"
   implementation "com.datadoghq:dd-sdk-android-trace:2.4.0"

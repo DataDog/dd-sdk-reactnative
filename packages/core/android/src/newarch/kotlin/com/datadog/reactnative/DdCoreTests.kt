@@ -31,4 +31,9 @@ class DdCoreTests(
     override fun getAllEventsData(feature: String, promise: Promise) {
         implementation.getAllEventsData(feature, promise)
     }
+
+    @ReactMethod
+    override fun startRecording(promise: Promise) {
+        implementation.startRecording(promise)
+    }
 }

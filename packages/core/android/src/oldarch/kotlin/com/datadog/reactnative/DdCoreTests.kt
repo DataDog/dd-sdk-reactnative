@@ -32,4 +32,9 @@ class DdCoreTests(
     fun getAllEventsData(feature: String, promise: Promise) {
         implementation.getAllEventsData(feature, promise)
     }
+
+    @ReactMethod
+    fun startRecording(promise: Promise) {
+        implementation.startRecording(promise)
+    }
 }
