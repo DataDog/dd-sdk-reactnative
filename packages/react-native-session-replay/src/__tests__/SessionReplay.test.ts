@@ -18,7 +18,7 @@ describe('SessionReplay', () => {
             SessionReplay.enable();
 
             expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                20,
+                0,
                 'MASK'
             );
         });

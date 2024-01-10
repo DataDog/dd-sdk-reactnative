@@ -33,7 +33,7 @@ export interface SessionReplayConfiguration {
 }
 
 const DEFAULTS = {
-    replaySampleRate: 20,
+    replaySampleRate: 0,
     defaultPrivacyLevel: SessionReplayPrivacy.MASK
 };
 
