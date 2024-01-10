@@ -10,6 +10,10 @@
 @testable import DatadogSDKReactNative
 
 internal class MockRUMMonitor: RUMMonitorProtocol {
+    func currentSessionID(completion: @escaping (String?) -> Void) {
+        // not implemented
+    }
+    
     init () {
         self.debug = false
     }
