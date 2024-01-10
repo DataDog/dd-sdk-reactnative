@@ -1,23 +1,23 @@
 PODS:
   - boost (1.76.0)
   - CocoaAsyncSocket (7.6.5)
-  - DatadogCore (2.5.0):
-    - DatadogInternal (= 2.5.0)
-  - DatadogCrashReporting (2.5.0):
-    - DatadogInternal (= 2.5.0)
+  - DatadogCore (2.6.0):
+    - DatadogInternal (= 2.6.0)
+  - DatadogCrashReporting (2.6.0):
+    - DatadogInternal (= 2.6.0)
     - PLCrashReporter (~> 1.11.1)
-  - DatadogInternal (2.5.0)
-  - DatadogLogs (2.5.0):
-    - DatadogInternal (= 2.5.0)
-  - DatadogRUM (2.5.0):
-    - DatadogInternal (= 2.5.0)
+  - DatadogInternal (2.6.0)
+  - DatadogLogs (2.6.0):
+    - DatadogInternal (= 2.6.0)
+  - DatadogRUM (2.6.0):
+    - DatadogInternal (= 2.6.0)
   - DatadogSDKReactNative (2.0.1):
-    - DatadogCore (~> 2.5.0)
-    - DatadogCrashReporting (~> 2.5.0)
-    - DatadogLogs (~> 2.5.0)
-    - DatadogRUM (~> 2.5.0)
-    - DatadogTrace (~> 2.5.0)
-    - DatadogWebViewTracking (~> 2.5.0)
+    - DatadogCore (~> 2.6.0)
+    - DatadogCrashReporting (~> 2.6.0)
+    - DatadogLogs (~> 2.6.0)
+    - DatadogRUM (~> 2.6.0)
+    - DatadogTrace (~> 2.6.0)
+    - DatadogWebViewTracking (~> 2.6.0)
     - RCT-Folly (= 2021.07.22.00)
     - RCTRequired
     - RCTTypeSafety
@@ -26,10 +26,10 @@ PODS:
     - React-RCTFabric
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-  - DatadogTrace (2.5.0):
-    - DatadogInternal (= 2.5.0)
-  - DatadogWebViewTracking (2.5.0):
-    - DatadogInternal (= 2.5.0)
+  - DatadogTrace (2.6.0):
+    - DatadogInternal (= 2.6.0)
+  - DatadogWebViewTracking (2.6.0):
+    - DatadogInternal (= 2.6.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.71.10)
   - FBReactNativeSpec (0.71.10):
@@ -959,14 +959,14 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  DatadogCore: a152fbcc24ea1a6b937c9844b1c1d5b86f0a375e
-  DatadogCrashReporting: 53b458152130de5505901e025e0dd031ce057f31
-  DatadogInternal: 96448807156495aa41a9f177b8c849a404618948
-  DatadogLogs: 2e67adf2e2cccd84b880b42f52e56cd0b8c7ef82
-  DatadogRUM: d807827ad24ae6c738867e853df38c6cb2bb555b
-  DatadogSDKReactNative: 0b659c7de3043d16465ae3fd6e2d418a5b62261c
-  DatadogTrace: 703d7572acc1dcda474ab33b7db3d8d67984192c
-  DatadogWebViewTracking: 87c0c1c9de4da7bb4f9efb87595da6c3d333aba9
+  DatadogCore: 2b9cae7b3706ec29c6329f5b2e350bd70395bfb6
+  DatadogCrashReporting: 0ebc16ea7f226805c19a7efa6dab47f3743c6d2c
+  DatadogInternal: 6febbce547fac204638f2ef5fe53cea49d05215b
+  DatadogLogs: 23905c3f91c8c3c9ab3bd0f00ec5c070fccafa36
+  DatadogRUM: 691819a9d5fc1924f783af6ad6eb609e5ab35e72
+  DatadogSDKReactNative: e4eacadf44b51c642d094ec063191f679f286215
+  DatadogTrace: e099ae8cab89bd01575809a93acdc3f69b599cbe
+  DatadogWebViewTracking: d1c6e9b349444d8996380dd0545bdb3abd620302
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 33a87f65f1a467d5f63d11d0cc106a10d3b0639d
