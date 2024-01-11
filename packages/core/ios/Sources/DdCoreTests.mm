@@ -36,6 +36,13 @@ RCT_REMAP_METHOD(getAllEventsData, withDataFeature: (NSString *)feature
     [self getAllEventsData:feature resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(startRecording, withResolver2:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self startRecording:resolve reject:reject];
+}
+
+
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -74,5 +81,8 @@ RCT_REMAP_METHOD(getAllEventsData, withDataFeature: (NSString *)feature
     [self.ddCoreTestsImplementation getAllEventsDataWithFeature:feature resolve:resolve reject:reject];
 }
 
+- (void)startRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddCoreTestsImplementation startRecordingWithResolve:resolve reject:reject];
+}
 
 @end
