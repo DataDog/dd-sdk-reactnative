@@ -260,15 +260,17 @@ extension RUMResourceEvent: RandomMockable {
                 configuration: nil,
                 discarded: nil,
                 rulePsr: nil,
-                session: .init(plan: .plan1),
+                session: .init(plan: .plan1, sessionPrecondition: nil),
                 spanId: .mockRandom(),
                 traceId: .mockRandom()
             ),
             action: .init(id: .mockRandom()),
             application: .init(id: .mockRandom()),
+            buildId: nil,
             buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
+            container: nil,
             context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
             date: .mockRandom(),
             device: .mockRandom(),
@@ -319,15 +321,17 @@ extension RUMResourceEvent: RandomMockable {
                 configuration: nil,
                 discarded: nil,
                 rulePsr: nil,
-                session: .init(plan: .plan1),
+                session: .init(plan: .plan1, sessionPrecondition: nil),
                 spanId: .mockRandom(),
                 traceId: .mockRandom()
             ),
             action: .init(id: .mockRandom()),
             application: .init(id: .mockRandom()),
+            buildId: nil,
             buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
+            container: nil,
             context: .mockRandom(),
             date: .mockRandom(),
             device: .mockRandom(),
@@ -386,7 +390,7 @@ extension RUMActionEvent: RandomMockable {
                 ),
                 browserSdkVersion: nil,
                 configuration: nil,
-                session: .init(plan: .plan1)
+                session: .init(plan: .plan1, sessionPrecondition: nil)
             ),
             action: .init(
                 crash: .init(count: .mockRandom()),
@@ -400,9 +404,11 @@ extension RUMActionEvent: RandomMockable {
                 type: [.tap, .swipe, .scroll].randomElement()!
             ),
             application: .init(id: .mockRandom()),
+            buildId: nil,
             buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
+            container: nil,
             context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
             date: .mockRandom(),
             device: .mockRandom(),
@@ -440,7 +446,7 @@ extension RUMActionEvent: RandomMockable {
                 ),
                 browserSdkVersion: nil,
                 configuration: nil,
-                session: .init(plan: .plan1)
+                session: .init(plan: .plan1, sessionPrecondition: nil)
             ),
             action: .init(
                 crash: .init(count: .mockRandom()),
@@ -454,9 +460,11 @@ extension RUMActionEvent: RandomMockable {
                 type: [.tap, .swipe, .scroll].randomElement()!
             ),
             application: .init(id: .mockRandom()),
+            buildId: nil,
             buildVersion: nil,
             ciTest: nil,
             connectivity: .mockRandom(),
+            container: nil,
             context: .mockRandom(),
             date: .mockRandom(),
             device: .mockRandom(),
