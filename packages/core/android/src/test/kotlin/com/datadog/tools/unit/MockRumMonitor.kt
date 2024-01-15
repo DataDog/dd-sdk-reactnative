@@ -52,6 +52,8 @@ class MockRumMonitor : RumMonitor {
         return mapOf()
     }
 
+    override fun getCurrentSessionId(callback: (String?) -> Unit) {}
+
     override fun removeAttribute(key: String) {}
 
     override fun startAction(
