@@ -83,8 +83,9 @@ public class DdSdkImplementation: NSObject {
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
             let core = Datadog.initialize(with: sdkConfig, trackingConsent: consent)
+            let wrappedCore = DatadogCoreProxy.initialize(core: core)
 
-            self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
+            self.enableFeatures(sdkConfiguration: sdkConfiguration, core: wrappedCore)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
 
             resolve(nil)

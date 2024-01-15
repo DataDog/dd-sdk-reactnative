@@ -21,7 +21,10 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public override convenience init() {
-        self.init({ Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short)) }, { Datadog.isInitialized() })
+        // TODO: improvoe the DatadogCoreProxy.instance! here.
+        // TODO: We should have a wrapper on top of Datadog in the SDK that exposes the core. The core can then be fetched for SR, etc. and here as well
+        // TODO: The core proxy package will replace the wrapper with another implementation that wraps the core.
+        self.init({ Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short), in: DatadogCoreProxy.instance!) }, { Datadog.isInitialized() })
     }
 
     @objc
