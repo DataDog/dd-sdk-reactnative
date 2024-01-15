@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-session-replay",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "A client-side React Native module to enable session replay with Datadog",
     "keywords": [
         "datadog",
