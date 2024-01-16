@@ -1,9 +1,5 @@
 # React-Native Monitoring for @apollo/client
 
-## Notice: this integration is not ready for production
-
-Adding the GraphQL integration does not change any existing features. The information is not surfaced on the Datadog platform yet.
-
 ## Overview
 
 Monitor your GraphQL resources with Real User Monitoring (RUM) and perform the following:
