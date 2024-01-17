@@ -65,11 +65,11 @@ public class DdSdkImplementation: NSObject {
             let sdkConfiguration = configuration.asDdSdkConfiguration()
             
             // TODO: see if this `if` is still needed
-            if Datadog.isInitialized() {
+            if DatadogSDKWrapper.shared.isInitialized() {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
                 consolePrint("Datadog SDK is already initialized, skipping initialization.")
-                Datadog._internal.telemetry.debug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+                DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
                 
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
                 // In this case, we need to restart the refresh rate monitor, as the javascript thread 
@@ -82,30 +82,30 @@ public class DdSdkImplementation: NSObject {
 
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
-            let core = Datadog.initialize(with: sdkConfig, trackingConsent: consent)
+            DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: consent)
 
-            self.enableFeatures(sdkConfiguration: sdkConfiguration, core: core)
+            self.enableFeatures(sdkConfiguration: sdkConfiguration)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
 
             resolve(nil)
         }
     }
     
-    func enableFeatures(sdkConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) {
+    func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
         let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
-        RUM.enable(with: rumConfig, in: core)
+        DatadogSDKWrapper.shared.enableRUM(with: rumConfig)
         
-        Logs.enable(with: Logs.Configuration(), in: core)
+        DatadogSDKWrapper.shared.enableLogs(with: Logs.Configuration())
         
-        Trace.enable(with: Trace.Configuration(), in: core)
+        DatadogSDKWrapper.shared.enableTrace(with: Trace.Configuration())
 
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
-            CrashReporting.enable(in: core)
+            DatadogSDKWrapper.shared.enableCrashReporting()
         }
         
-        self.webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
+        DatadogSDKWrapper.shared.enableWebviewTracking()
 
-        overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration, core: core)
+        overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
     }
 
     @objc
@@ -139,28 +139,28 @@ public class DdSdkImplementation: NSObject {
     
     @objc
     public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal.telemetry.debug(id: "datadog_react_native:\(message)", message: message as String)
+        DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog._internal.telemetry.error(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
         resolve(nil)
     }
     
     @objc
     public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
-            try self.webviewMessageEmitter?.send(body: message)
+            try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
         } catch {
-            Datadog._internal.telemetry.error(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
+            DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
         resolve(nil)
     }
     
-    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration, core: DatadogCoreProtocol) -> Void {
-        core.telemetry.configuration(
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
+        DatadogSDKWrapper.shared.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
             reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,

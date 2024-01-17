@@ -6,7 +6,6 @@
 
 import Foundation
 import DatadogLogs
-import DatadogCore
 
 @objc
 public class DdLogsImplementation: NSObject {
@@ -21,7 +20,7 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public override convenience init() {
-        self.init({ Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short)) }, { Datadog.isInitialized() })
+        self.init({ DatadogSDKWrapper.shared.createLogger() }, { DatadogSDKWrapper.shared.isInitialized() })
     }
 
     @objc

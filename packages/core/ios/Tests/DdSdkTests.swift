@@ -30,6 +30,11 @@ final class DispatchQueueMock: DispatchQueueType {
 internal class DdSdkTests: XCTestCase {
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
+    
+    override func setUp() {
+        super.setUp()
+        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
+    }
 
     func testSDKInitialization() {
         let originalConsolePrint = consolePrint
@@ -205,11 +210,31 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
     
+    func testSDKInitializationWithOnInitializedCallback() {
+        var coreFromCallback: DatadogCoreProtocol? = nil
+        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: { core in
+            coreFromCallback = core
+        })
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertNotNil(coreFromCallback)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+    
     func testEnableAllFeatures() {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny()
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
@@ -327,7 +352,7 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -336,7 +361,7 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -345,7 +370,8 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNotNil(core.features[CrashReportingFeature.name])
     }
@@ -813,7 +839,8 @@ internal class DdSdkTests: XCTestCase {
             configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
         )
         
-        DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration)
 
         XCTAssertEqual(core.configuration?.initializationType, "LEGACY")
         XCTAssertEqual(core.configuration?.trackErrors, true)
@@ -884,7 +911,8 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
         let core = MockDatadogCore()
 
-        sdk.enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        sdk.enableFeatures(sdkConfiguration: configuration)
         
         sdk.consumeWebviewEvent(message: "{\"eventType\":\"RUM\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
         
