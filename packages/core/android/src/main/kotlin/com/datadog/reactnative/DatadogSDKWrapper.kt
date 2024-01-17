@@ -25,9 +25,14 @@ import com.datadog.android.webview.WebViewTracking
 
 object DatadogSDKWrapperStorage {
     private val onFeatureEnabledListeners: MutableList<(FeatureScope, featureName: String) -> Unit> = mutableListOf()
+    private val onInitializedListeners: MutableList<(FeatureSdkCore?) -> Unit> = mutableListOf()
 
     fun addOnFeatureEnabledListener(listener: (FeatureScope, featureName: String) -> Unit) {
         onFeatureEnabledListeners.add(listener)
+    }
+
+    fun addOnInitializedListener(listener: (FeatureSdkCore?) -> Unit) {
+        onInitializedListeners.add(listener)
     }
 
     fun notifyOnFeatureEnabledListeners(featureName: String) {
@@ -36,6 +41,12 @@ object DatadogSDKWrapperStorage {
             onFeatureEnabledListeners.forEach {
                 it(feature, featureName)
             }
+        }
+    }
+
+    fun notifyOnInitializedListeners() {
+        onInitializedListeners.forEach {
+            it(core)
         }
     }
 

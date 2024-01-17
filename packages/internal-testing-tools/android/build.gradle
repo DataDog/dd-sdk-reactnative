@@ -179,6 +179,9 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation project(path: ':datadog_mobile-react-native')
+  implementation "com.datadoghq:dd-sdk-android-core"
+  implementation "com.google.code.gson:gson:2.10.0"
 
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"

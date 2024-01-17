@@ -20,6 +20,22 @@ class DdInternalTesting(
     private val implementation = DdInternalTestingImplementation()
 
     override fun getName(): String = DdInternalTestingImplementation.NAME
+
+    /**
+     * Clears all data for all features.
+     */
+    @ReactMethod
+    override fun clearData(promise: Promise) {
+        implementation.clearData(promise)
+    }
+
+    /**
+     * Retrieves the list of events for a given feature.
+     */
+    @ReactMethod
+    override fun getAllEvents(feature: String, promise: Promise) {
+        implementation.getAllEvents(feature, promise)
+    }
     
     /**
      * Enable native testing module.
