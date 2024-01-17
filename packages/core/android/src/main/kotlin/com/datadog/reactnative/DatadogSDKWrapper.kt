@@ -9,6 +9,8 @@ package com.datadog.reactnative
 import android.content.Context
 import com.datadog.android.Datadog
 import com.datadog.android._InternalProxy
+import com.datadog.android.api.feature.FeatureScope
+import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
@@ -20,6 +22,33 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
+
+object DatadogSDKWrapperStorage {
+    private val onFeatureEnabledListeners: MutableList<(FeatureScope, featureName: String) -> Unit> = mutableListOf()
+
+    fun addOnFeatureEnabledListener(listener: (FeatureScope, featureName: String) -> Unit) {
+        onFeatureEnabledListeners.add(listener)
+    }
+
+    fun notifyOnFeatureEnabledListeners(featureName: String) {
+        val feature = core?.getFeature(featureName)
+        if (feature !== null) {
+            onFeatureEnabledListeners.forEach {
+                it(feature, featureName)
+            }
+        }
+    }
+
+    private var core: FeatureSdkCore? = null
+
+    fun setSdkCore(core: FeatureSdkCore?) {
+        this.core = core
+    }
+
+    fun getSdkCore(): FeatureSdkCore? {
+        return core
+    }
+}
 
 internal class DatadogSDKWrapper : DatadogWrapper {
 
@@ -54,19 +83,23 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         configuration: Configuration,
         consent: TrackingConsent
     ) {
-        Datadog.initialize(context, configuration, consent)
+        val core = Datadog.initialize(context, configuration, consent)
+        DatadogSDKWrapperStorage.setSdkCore(core as FeatureSdkCore)
     }
 
     override fun enableRum(configuration: RumConfiguration) {
         Rum.enable(configuration)
+        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("rum")
     }
 
     override fun enableLogs(configuration: LogsConfiguration) {
         Logs.enable(configuration)
+        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("logs")
     }
 
     override fun enableTrace(configuration: TraceConfiguration) {
         Trace.enable(configuration)
+        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("tracing")
     }
 
     override fun setUserInfo(
