@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
 
   s.dependency "React-Core"
+  s.dependency "DatadogSDKReactNative"
   
   # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
   # The `install_modules_dependencies` function is only available from RN 0.71, the new architecture is not

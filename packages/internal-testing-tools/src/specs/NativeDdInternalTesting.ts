@@ -22,6 +22,22 @@ export interface Spec extends TurboModule {
      * On Android, it registers a callback on feature initialization to intercept their messages.
      */
     enable(): Promise<void>;
+
+    /**
+     * Clears all test data.
+     */
+    clearData(): Promise<void>;
+
+    /**
+     * Get all events for a given feature.
+     *
+     * @param feature one of:
+     * - rum
+     * - tracing
+     * - session replay
+     * - logs (Android) / logging (iOS)
+     */
+    getAllEvents(feature: string): Promise<any>;
 }
 
 export default TurboModuleRegistry.get<Spec>('DdInternalTesting');

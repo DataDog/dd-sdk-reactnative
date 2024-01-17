@@ -17,8 +17,21 @@
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
-RCT_REMAP_METHOD(enable, withResolver:(RCTPromiseResolveBlock)resolve
+RCT_REMAP_METHOD(clearData, withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self clearData:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(getAllEvents, withFeature: (NSString *)feature
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self getAllEvents:feature resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(enable, withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
 {
     [self enable:resolve reject:reject];
 }
@@ -42,6 +55,14 @@ RCT_REMAP_METHOD(enable, withResolver:(RCTPromiseResolveBlock)resolve
 
 + (BOOL)requiresMainQueueSetup {
     return NO;
+}
+
+- (void)clearData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddInternalTestingImplementation clearDataWithResolve:resolve reject:reject];
+}
+
+- (void)getAllEvents:(NSString *)feature resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddInternalTestingImplementation getAllEventsWithFeature:feature resolve:resolve reject:reject];
 }
 
 - (void)enable:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
