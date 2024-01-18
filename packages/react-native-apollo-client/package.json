@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-apollo-client",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "description": "A client-side React Native module to interact with Apollo Client and Datadog",
     "keywords": [
         "datadog",
