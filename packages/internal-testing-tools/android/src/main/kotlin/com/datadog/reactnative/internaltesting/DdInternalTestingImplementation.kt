@@ -20,7 +20,7 @@ import kotlin.concurrent.thread
  * The entry point to use Datadog's internal testing feature.
  */
 class DdInternalTestingImplementation() {
-    private val featureScopes = mutableMapOf<String, FeatureScopeInterceptor>()
+    internal val featureScopes = mutableMapOf<String, FeatureScopeInterceptor>()
 
     /**
      * Clears all data for all features.

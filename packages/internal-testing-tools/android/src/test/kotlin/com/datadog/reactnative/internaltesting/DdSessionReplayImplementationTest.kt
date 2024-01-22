@@ -6,14 +6,14 @@
 
 package com.datadog.reactnative.internaltesting
 
-import com.datadog.tools.unit.GenericAssert.Companion.assertThat
-import com.facebook.react.bridge.NativeModule
+import android.content.Context
+import com.datadog.android.api.context.DatadogContext
+import com.datadog.android.api.feature.Feature
+import com.datadog.android.api.feature.FeatureScope
+import com.datadog.android.api.storage.EventBatchWriter
+import com.datadog.android.core.InternalSdkCore
+import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.UIManagerModule
-import fr.xgouchet.elmyr.annotation.DoubleForgery
-import fr.xgouchet.elmyr.annotation.Forgery
-import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -23,10 +23,7 @@ import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
@@ -42,6 +39,9 @@ internal class DdInternalTestingImplementationTest {
     @Mock
     lateinit var mockPromise: Promise
 
+    @Mock
+    lateinit var mockCore: InternalSdkCore
+
     @BeforeEach
     fun `set up`() {
         testedInternalTesting =
@@ -53,12 +53,40 @@ internal class DdInternalTestingImplementationTest {
     }
 
     @Test
-    fun `M enable native testing W enable()`() {
+    fun `M return captured events W enable()`() {
         // Given
+        testedInternalTesting.enable(mockPromise)
+        val mockFeature = MockFeature("mockFeature")
+        val mockFeatureScope = MockFeatureScope(mockFeature)
+        whenever(mockCore.getFeature(mockFeature.name)).doReturn(
+            mockFeatureScope
+        )
 
         // When
-        testedInternalTesting.enable(mockPromise)
+        DatadogSDKWrapperStorage.setSdkCore(mockCore)
+        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners(mockFeature.name)
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners()
 
         // Then
+        assert(testedInternalTesting.featureScopes[mockFeature.name] != null)
     }
+}
+
+internal class MockFeatureScope(private val feature: Feature): FeatureScope {
+    override fun sendEvent(event: Any) {}
+
+    override fun <T : Feature> unwrap(): T {
+        return feature as T
+    }
+
+    override fun withWriteContext(
+        forceNewBatch: Boolean,
+        callback: (DatadogContext, EventBatchWriter) -> Unit
+    ) {}
+}
+
+internal class MockFeature(override val name: String) : Feature {
+    override fun onInitialize(appContext: Context) {}
+
+    override fun onStop() {}
 }

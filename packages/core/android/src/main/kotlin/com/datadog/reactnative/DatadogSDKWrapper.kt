@@ -23,18 +23,32 @@ import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
 
+/**
+ * Internal object used to add internal testing.
+ */
 object DatadogSDKWrapperStorage {
-    private val onFeatureEnabledListeners: MutableList<(FeatureScope, featureName: String) -> Unit> = mutableListOf()
-    private val onInitializedListeners: MutableList<(FeatureSdkCore?) -> Unit> = mutableListOf()
+    internal val onFeatureEnabledListeners: MutableList<(FeatureScope, featureName: String) -> Unit> = mutableListOf()
+    internal val onInitializedListeners: MutableList<(FeatureSdkCore?) -> Unit> = mutableListOf()
 
+    /**
+     * Adds a Listener called whenever a feature is enabled on the core.
+     */
     fun addOnFeatureEnabledListener(listener: (FeatureScope, featureName: String) -> Unit) {
         onFeatureEnabledListeners.add(listener)
     }
 
+    /**
+     * Adds a Listener called when the core is completely initialized.
+     * This should be removed once setting features of the core does not break RUM Views.
+     */
     fun addOnInitializedListener(listener: (FeatureSdkCore?) -> Unit) {
         onInitializedListeners.add(listener)
     }
 
+    /**
+     * To be called in RN SDKs after enabling a feature (e.g. Session Replay).
+     */
+    @Suppress("FunctionMaxLength")
     fun notifyOnFeatureEnabledListeners(featureName: String) {
         val feature = core?.getFeature(featureName)
         if (feature !== null) {
@@ -44,6 +58,9 @@ object DatadogSDKWrapperStorage {
         }
     }
 
+    /**
+     * Exposed for testing purposes only.
+     */
     fun notifyOnInitializedListeners() {
         onInitializedListeners.forEach {
             it(core)
@@ -52,10 +69,16 @@ object DatadogSDKWrapperStorage {
 
     private var core: FeatureSdkCore? = null
 
+    /**
+     * Exposed for testing purposes only.
+     */
     fun setSdkCore(core: FeatureSdkCore?) {
         this.core = core
     }
 
+    /**
+     * Returns the core used for registering RN features.
+     */
     fun getSdkCore(): FeatureSdkCore? {
         return core
     }
