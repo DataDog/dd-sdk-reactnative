@@ -152,7 +152,6 @@ internal class DdSdkTest {
 
         DatadogSDKWrapperStorage.setSdkCore(null)
         DatadogSDKWrapperStorage.onInitializedListeners.clear()
-        DatadogSDKWrapperStorage.onFeatureEnabledListeners.clear()
     }
 
     @AfterEach

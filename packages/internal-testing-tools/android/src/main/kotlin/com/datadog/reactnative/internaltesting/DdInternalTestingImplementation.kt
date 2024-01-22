@@ -6,31 +6,34 @@
 
 package com.datadog.reactnative.internaltesting
 
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.context.DatadogContext
+import com.datadog.android.api.context.NetworkInfo
+import com.datadog.android.api.context.TimeInfo
+import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
+import com.datadog.android.core.internal.net.FirstPartyHostHeaderTypeResolver
+import com.datadog.android.trace.TracingHeaderType
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import com.google.gson.Gson
+import okhttp3.HttpUrl
 import kotlin.concurrent.thread
 
 /**
  * The entry point to use Datadog's internal testing feature.
  */
 class DdInternalTestingImplementation() {
-    internal val featureScopes = mutableMapOf<String, FeatureScopeInterceptor>()
+    private var wrappedCore: StubSDKCore? = null
 
     /**
      * Clears all data for all features.
      */
     fun clearData(promise: Promise) {
-        featureScopes["logs"]?.clearData()
-        featureScopes["rum"]?.clearData()
-        featureScopes["tracing"]?.clearData()
-        featureScopes["session-replay"]?.clearData()
-
+        wrappedCore?.clearData()
         promise.resolve(null)
     }
 
@@ -38,7 +41,7 @@ class DdInternalTestingImplementation() {
      * Retrieves the list of events for a given feature.
      */
     fun getAllEvents(feature: String, promise: Promise) {
-        val events = featureScopes[feature]?.eventsWritten()?.toList() ?: emptyList<Any>()
+        val events = wrappedCore?.eventsWritten(feature)
         val eventsJson = Gson().toJson(events)
         promise.resolve(eventsJson)
     }
@@ -47,44 +50,138 @@ class DdInternalTestingImplementation() {
      * Enable native testing module.
      */
     fun enable(promise: Promise) {
-        DatadogSDKWrapperStorage.addOnFeatureEnabledListener { featureScope, featureName ->
-            val core = DatadogSDKWrapperStorage.getSdkCore()
-            registerFeature(featureScope, featureName, core as InternalSdkCore)
-        }
-        DatadogSDKWrapperStorage.addOnInitializedListener { core ->
-            core?.let { ddCore ->
-                /**
-                 * There's a bug when trying a new RUM View after the features have been reset.
-                 * When debugging we stop in DatadogCore::updateFeatureContext on the first line trying to get the feature.
-                 * It's because we expect a SDKFeature and we give FeatureScopeInterceptor.
-                 *
-                 * By waiting for 3 seconds on a separate thread we give enough time for the "Application Start" View and first 
-                 * RUM view to be created. 
-                 * 
-                 * If we switch from `features[featureName]` to `getFeature(featureName)` in DatadogCore::updateFeatureContext
-                 * we can remove the sleep here.
-                 */
-                thread {
-                    Thread.sleep(3000)
-                    ddCore.javaClass.declaredFields.firstOrNull { it.name == "features" }?.let {
-                        it.isAccessible = true
-                        it.set(core, featureScopes)
-                    }
-                }
+        DatadogSDKWrapperStorage.addOnInitializedListener { ddCore ->
+            ddCore?.let { core ->
+                this.wrappedCore = StubSDKCore(core)
+                DatadogSDKWrapperStorage.setSdkCore(this.wrappedCore)
             }
         }
         promise.resolve(null)
     }
 
-    private fun registerFeature(featureScope: FeatureScope, featureName: String, core: InternalSdkCore) {
-        val instrumentedScope = FeatureScopeInterceptor(featureScope, core)
-        featureScopes[featureName] = instrumentedScope
-    }
 
     companion object {
         internal const val NAME = "DdInternalTesting"
     }
 }
+
+internal class StubSDKCore(
+    private val core: InternalSdkCore
+) : InternalSdkCore by core {
+    internal val featureScopes = mutableMapOf<String, FeatureScopeInterceptor>()
+
+    // region Stub
+
+    /**
+     * Lists all the events written by a given feature.
+     * @param featureName the name of the feature
+     * @return a list of [StubEvent]
+     */
+    fun eventsWritten(featureName: String): List<String> {
+        return featureScopes[featureName]?.eventsWritten()?.toList() ?: emptyList<String>()
+    }
+
+    fun clearData() {
+        featureScopes.forEach { entry ->
+            featureScopes[entry.key]?.clearData()
+        }
+    }
+
+    // endregion
+
+    // region InternalSdkCore
+
+    override val firstPartyHostResolver: FirstPartyHostHeaderTypeResolver =
+        StubFirstPartyHostHeaderTypeResolver()
+
+    override fun getDatadogContext(): DatadogContext? {
+        return core.getDatadogContext()
+    }
+
+    override val networkInfo: NetworkInfo
+        get() = core.networkInfo
+
+    // endregion
+
+    // region FeatureSdkCore
+
+    override val internalLogger: InternalLogger = core.internalLogger
+
+    override fun registerFeature(feature: Feature) {
+        core.registerFeature(feature)
+        core.getFeature(feature.name)?.let {
+            featureScopes[feature.name] = FeatureScopeInterceptor(it, core)
+        }
+    }
+
+    override fun getFeature(featureName: String): FeatureScope? {
+        return featureScopes[featureName]
+    }
+
+    override fun updateFeatureContext(
+        featureName: String,
+        updateCallback: (context: MutableMap<String, Any?>) -> Unit
+    ) {
+        core.updateFeatureContext(featureName, updateCallback)
+    }
+
+    override fun getFeatureContext(featureName: String): Map<String, Any?> {
+        return core.getFeatureContext(featureName)
+    }
+
+    // endregion
+
+    // region SdkCore
+
+    override val service: String
+        get() {
+            return core.service
+        }
+
+    override val time: TimeInfo
+        get() {
+            val nanos = System.nanoTime()
+            return TimeInfo(
+                deviceTimeNs = nanos,
+                serverTimeNs = nanos,
+                serverTimeOffsetMs = 0L,
+                serverTimeOffsetNs = 0L
+            )
+        }
+
+    override fun setUserInfo(
+        id: String?,
+        name: String?,
+        email: String?,
+        extraInfo: Map<String, Any?>
+    ) {
+        core.setUserInfo(id, name, email, extraInfo)
+    }
+
+    // endregion
+}
+
+class StubFirstPartyHostHeaderTypeResolver :
+    FirstPartyHostHeaderTypeResolver {
+
+    // region FirstPartyHostHeaderTypeResolver
+
+    override fun isEmpty(): Boolean = false
+
+    override fun isFirstPartyUrl(url: HttpUrl): Boolean = true
+
+    override fun isFirstPartyUrl(url: String): Boolean = true
+
+    override fun headerTypesForUrl(url: String): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
+
+    override fun headerTypesForUrl(url: HttpUrl): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
+
+    override fun getAllHeaderTypes(): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
+
+    // endregion
+}
+
+
 
 internal class FeatureScopeInterceptor(
     private val featureScope: FeatureScope,
@@ -108,8 +205,9 @@ internal class FeatureScopeInterceptor(
     ) {
         featureScope.withWriteContext(forceNewBatch, callback)
 
-        val context = core.getDatadogContext()!!
-        callback(context, eventsBatchInterceptor)
+        core.getDatadogContext()?.let {
+            callback(it, eventsBatchInterceptor)
+        }
     }
 
     // endregion

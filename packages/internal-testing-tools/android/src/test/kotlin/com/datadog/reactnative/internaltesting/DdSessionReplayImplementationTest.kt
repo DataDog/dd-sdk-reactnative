@@ -7,11 +7,17 @@
 package com.datadog.reactnative.internaltesting
 
 import android.content.Context
+import androidx.annotation.WorkerThread
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
+import com.datadog.android.api.storage.DataWriter
 import com.datadog.android.api.storage.EventBatchWriter
+import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
+import com.datadog.android.core.persistence.Serializer
+import com.datadog.android.core.persistence.serializeToByteArray
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import fr.xgouchet.elmyr.junit5.ForgeExtension
@@ -42,6 +48,9 @@ internal class DdInternalTestingImplementationTest {
     @Mock
     lateinit var mockCore: InternalSdkCore
 
+    @Mock
+    lateinit var mockContext: DatadogContext
+
     @BeforeEach
     fun `set up`() {
         testedInternalTesting =
@@ -61,14 +70,22 @@ internal class DdInternalTestingImplementationTest {
         whenever(mockCore.getFeature(mockFeature.name)).doReturn(
             mockFeatureScope
         )
-
-        // When
+        whenever(mockCore.getDatadogContext()).doReturn(
+            mockContext
+        )
         DatadogSDKWrapperStorage.setSdkCore(mockCore)
-        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners(mockFeature.name)
         DatadogSDKWrapperStorage.notifyOnInitializedListeners()
 
+
+        // When
+        val wrappedCore = DatadogSDKWrapperStorage.getSdkCore() as StubSDKCore
+        wrappedCore.registerFeature(mockFeature)
+        wrappedCore.getFeature(mockFeature.name)!!.withWriteContext { _, eventBatchWriter ->
+            MockDataWriter().write(eventBatchWriter, MockEvent("mock event for test"))
+        }
+
         // Then
-        assert(testedInternalTesting.featureScopes[mockFeature.name] != null)
+        assert(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first() == "mock event for test")
     }
 }
 
@@ -89,4 +106,14 @@ internal class MockFeature(override val name: String) : Feature {
     override fun onInitialize(appContext: Context) {}
 
     override fun onStop() {}
+}
+
+internal data class MockEvent (
+    public var name: String
+)
+
+internal class MockDataWriter: DataWriter<MockEvent> {
+    override fun write(writer: EventBatchWriter, element: MockEvent): Boolean {
+        return synchronized(this) { writer.write(RawBatchEvent(data = element.name.toByteArray()), batchMetadata = null) }
+    }
 }

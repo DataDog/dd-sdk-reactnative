@@ -71,8 +71,6 @@ class DdSdkImplementation(
 
         initialized.set(true)
 
-        DatadogSDKWrapperStorage.notifyOnInitializedListeners()
-
         promise.resolve(null)
     }
 

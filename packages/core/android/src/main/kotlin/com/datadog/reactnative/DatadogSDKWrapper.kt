@@ -9,8 +9,11 @@ package com.datadog.reactnative
 import android.content.Context
 import com.datadog.android.Datadog
 import com.datadog.android._InternalProxy
+import com.datadog.android.api.SdkCore
+import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.feature.FeatureSdkCore
+import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
@@ -27,35 +30,13 @@ import com.datadog.android.webview.WebViewTracking
  * Internal object used to add internal testing.
  */
 object DatadogSDKWrapperStorage {
-    internal val onFeatureEnabledListeners: MutableList<(FeatureScope, featureName: String) -> Unit> = mutableListOf()
-    internal val onInitializedListeners: MutableList<(FeatureSdkCore?) -> Unit> = mutableListOf()
+    internal val onInitializedListeners: MutableList<(InternalSdkCore?) -> Unit> = mutableListOf()
 
     /**
-     * Adds a Listener called whenever a feature is enabled on the core.
+     * Adds a Listener called when the core is initialized.
      */
-    fun addOnFeatureEnabledListener(listener: (FeatureScope, featureName: String) -> Unit) {
-        onFeatureEnabledListeners.add(listener)
-    }
-
-    /**
-     * Adds a Listener called when the core is completely initialized.
-     * This should be removed once setting features of the core does not break RUM Views.
-     */
-    fun addOnInitializedListener(listener: (FeatureSdkCore?) -> Unit) {
+    fun addOnInitializedListener(listener: (InternalSdkCore?) -> Unit) {
         onInitializedListeners.add(listener)
-    }
-
-    /**
-     * To be called in RN SDKs after enabling a feature (e.g. Session Replay).
-     */
-    @Suppress("FunctionMaxLength")
-    fun notifyOnFeatureEnabledListeners(featureName: String) {
-        val feature = core?.getFeature(featureName)
-        if (feature !== null) {
-            onFeatureEnabledListeners.forEach {
-                it(feature, featureName)
-            }
-        }
     }
 
     /**
@@ -67,20 +48,20 @@ object DatadogSDKWrapperStorage {
         }
     }
 
-    private var core: FeatureSdkCore? = null
+    private var core: InternalSdkCore? = null
 
     /**
-     * Exposed for testing purposes only.
+     * Sets instance of core SDK to be used to initialize features.
      */
-    fun setSdkCore(core: FeatureSdkCore?) {
+    fun setSdkCore(core: InternalSdkCore?) {
         this.core = core
     }
 
     /**
      * Returns the core used for registering RN features.
      */
-    fun getSdkCore(): FeatureSdkCore? {
-        return core
+    fun getSdkCore(): SdkCore {
+        return core ?: Datadog.getInstance()
     }
 }
 
@@ -102,7 +83,7 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     private var webViewProxy: WebViewTracking._InternalWebViewProxy? = null
         get() {
             if (field == null && isInitialized()) {
-                field = WebViewTracking._InternalWebViewProxy(Datadog.getInstance())
+                field = WebViewTracking._InternalWebViewProxy(DatadogSDKWrapperStorage.getSdkCore())
             }
 
             return field
@@ -118,22 +99,26 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         consent: TrackingConsent
     ) {
         val core = Datadog.initialize(context, configuration, consent)
-        DatadogSDKWrapperStorage.setSdkCore(core as FeatureSdkCore)
+        DatadogSDKWrapperStorage.setSdkCore(core as InternalSdkCore)
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners()
     }
 
     override fun enableRum(configuration: RumConfiguration) {
-        Rum.enable(configuration)
-        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("rum")
+        DatadogSDKWrapperStorage.getSdkCore()?.let {
+            Rum.enable(configuration, it)
+        }
     }
 
     override fun enableLogs(configuration: LogsConfiguration) {
-        Logs.enable(configuration)
-        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("logs")
+        DatadogSDKWrapperStorage.getSdkCore()?.let {
+            Logs.enable(configuration, it)
+        }
     }
 
     override fun enableTrace(configuration: TraceConfiguration) {
-        Trace.enable(configuration)
-        DatadogSDKWrapperStorage.notifyOnFeatureEnabledListeners("tracing")
+        DatadogSDKWrapperStorage.getSdkCore()?.let {
+            Trace.enable(configuration, it)
+        }
     }
 
     override fun setUserInfo(
@@ -177,6 +162,6 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun getRumMonitor(): RumMonitor {
-        return GlobalRumMonitor.get()
+        return GlobalRumMonitor.get(DatadogSDKWrapperStorage.getSdkCore())
     }
 }
