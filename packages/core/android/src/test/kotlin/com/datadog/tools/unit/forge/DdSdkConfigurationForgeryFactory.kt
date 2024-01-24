@@ -7,6 +7,7 @@
 package com.datadog.tools.unit.forge
 
 import com.datadog.reactnative.ConfigurationForTelemetry
+import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -65,7 +66,12 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 reactVersion = forge.aString(),
                 reactNativeVersion = forge.aString()
             ),
-            trackFrustrations = forge.aNullable { aBool() }
+            trackFrustrations = forge.aNullable { aBool() },
+            customEndpoints = CustomEndpoints(
+                rum = forge.aNullable { aString() },
+                logs = forge.aNullable { aString() },
+                trace = forge.aNullable { aString() }
+            )
         )
     }
 }

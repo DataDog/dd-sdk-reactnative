@@ -10,7 +10,9 @@ import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
+import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
+import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
 
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
@@ -76,6 +78,9 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     } else {
         trackBackgroundEvents
     }
+    customEndpoints?.let {
+        map.put("customEndpoints", it.toReadableJavaOnlyMap())
+    }
     additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
     configurationForTelemetry?.let {
         map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
@@ -91,5 +96,13 @@ internal fun ConfigurationForTelemetry.toReadableJavaOnlyMap(): ReadableMap {
     trackNetworkRequests?.let { map.put("trackNetworkRequests", it) }
     reactVersion?.let { map.put("reactVersion", it) }
     reactNativeVersion?.let { map.put("reactNativeVersion", it) }
+    return map.toReadableMap()
+}
+
+internal fun CustomEndpoints.toReadableJavaOnlyMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    rum?.let { map.put("rum", it) }
+    logs?.let { map.put("logs", it) }
+    trace?.let { map.put("trace", it) }
     return map.toReadableMap()
 }

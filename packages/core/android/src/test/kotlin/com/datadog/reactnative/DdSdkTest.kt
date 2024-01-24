@@ -2506,6 +2506,44 @@ internal class DdSdkTest {
         assertThat(authenticator?.password).isEqualTo(proxyPassword)
     }
 
+    fun `𝕄 initialize native SDK 𝕎 initialize() {with custom endpoints}`(
+        forge: Forge
+    ) {
+        // Given
+        val customRumEndpoint = forge.aNullable { aString() }
+        val customLogsEndpoint = forge.aNullable { aString() }
+        val customTraceEndpoint = forge.aNullable { aString() }
+        val bridgeConfiguration = fakeConfiguration.copy(
+            customEndpoints = CustomEndpoints(
+                rum = customRumEndpoint,
+                logs = customLogsEndpoint,
+                trace = customTraceEndpoint
+            )
+        )
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("customEndpointUrl", customRumEndpoint)
+            }
+        assertThat(logsConfigCaptor.firstValue)
+            .hasFieldEqualTo("customEndpointUrl", customLogsEndpoint)
+        assertThat(traceConfigCaptor.firstValue)
+            .hasFieldEqualTo("customEndpointUrl", customTraceEndpoint)
+    }
+
     @Test
     fun `𝕄 clear all data 𝕎 clearAllData()`() {
         // When
