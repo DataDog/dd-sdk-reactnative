@@ -806,6 +806,43 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+    
+    func testSDKInitializationWithCustomEndpoints() throws {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: mockRefreshRateMonitor,
+            RUMMonitorProvider: { rumMonitorMock },
+            RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
+        ).initialize(
+            configuration: .mockAny(
+                customEndpoints: [
+                    "rum": "https://rum.example.com",
+                    "logs": "https://logs.example.com",
+                    "trace": "https://trace.example.com",
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        let logsFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: LogsFeature.self)
+        let customLogsEndpoint = try XCTUnwrap(logsFeature?.requestBuilder as? DatadogLogs.RequestBuilder).customIntakeURL
+        XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com")
+        
+        let rumFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: RUMFeature.self)
+        let customRumEndpoint = try XCTUnwrap(rumFeature?.requestBuilder as? DatadogRUM.RequestBuilder).customIntakeURL
+        XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com")
+
+        let traceFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: TraceFeature.self)
+        let customTraceEndpoint = try XCTUnwrap(traceFeature?.requestBuilder as? TracingRequestBuilder).customIntakeURL
+        XCTAssertEqual(customTraceEndpoint?.absoluteString, "https://trace.example.com")
+
+        Datadog.internalFlushAndDeinitialize()
+    }
 
     func testBackgroundTrackingEnabled() {
         let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: true)
@@ -1019,7 +1056,8 @@ extension DdSdkConfiguration {
         configurationForTelemetry: NSDictionary? = nil,
         uploadFrequency: NSString = "AVERAGE",
         batchSize: NSString = "MEDIUM",
-        trackBackgroundEvents: Bool? = nil
+        trackBackgroundEvents: Bool? = nil,
+        customEndpoints: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1037,6 +1075,7 @@ extension DdSdkConfiguration {
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
             trackBackgroundEvents: trackBackgroundEvents,
+            customEndpoints: customEndpoints?.asCustomEndpoints(),
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
@@ -1060,7 +1099,8 @@ extension NSDictionary {
         configurationForTelemetry: NSDictionary? = nil,
         uploadFrequency: NSString = "AVERAGE",
         batchSize: NSString = "MEDIUM",
-        trackBackgroundEvents: Bool? = nil
+        trackBackgroundEvents: Bool? = nil,
+        customEndpoints: NSDictionary? = nil
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -1079,7 +1119,8 @@ extension NSDictionary {
                 "configurationForTelemetry": configurationForTelemetry,
                 "trackBackgroundEvents": trackBackgroundEvents,
                 "uploadFrequency": uploadFrequency,
-                "batchSize": batchSize
+                "batchSize": batchSize,
+                "customEndpoints": customEndpoints
             ]
         )
     }
