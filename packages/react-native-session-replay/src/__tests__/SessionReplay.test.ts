@@ -19,30 +19,35 @@ describe('SessionReplay', () => {
 
             expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
                 0,
-                'MASK'
+                'MASK',
+                ''
             );
         });
 
         it('calls native session replay with provided configuration', () => {
             SessionReplay.enable({
                 replaySampleRate: 100,
-                defaultPrivacyLevel: SessionReplayPrivacy.ALLOW
+                defaultPrivacyLevel: SessionReplayPrivacy.ALLOW,
+                customEndpoint: 'https://session-replay.example.com'
             });
 
             expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
                 100,
-                'ALLOW'
+                'ALLOW',
+                'https://session-replay.example.com'
             );
         });
 
         it('calls native session replay with edge cases in configuration', () => {
             SessionReplay.enable({
-                replaySampleRate: 0
+                replaySampleRate: 0,
+                customEndpoint: ''
             });
 
             expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
                 0,
-                'MASK'
+                'MASK',
+                ''
             );
         });
     });

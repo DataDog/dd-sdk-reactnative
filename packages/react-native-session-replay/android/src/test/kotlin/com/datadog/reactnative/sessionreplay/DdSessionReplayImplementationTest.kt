@@ -69,23 +69,30 @@ internal class DdSessionReplayImplementationTest {
     @Test
     fun `M enable session replay W enable()`(
         @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
-        @Forgery privacy: SessionReplayPrivacy
+        @Forgery privacy: SessionReplayPrivacy,
+        @StringForgery(regex = ".+") customEndpoint: String
     ) {
         // Given
         val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
 
         // When
-        testedSessionReplay.enable(replaySampleRate, privacy.toString(), mockPromise)
+        testedSessionReplay.enable(
+            replaySampleRate,
+            privacy.toString(),
+            customEndpoint,
+            mockPromise
+        )
 
         // Then
         verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
         assertThat(sessionReplayConfigCaptor.firstValue)
             .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
             .hasFieldEqualTo("privacy", privacy)
+            .hasFieldEqualTo("customEndpointUrl", customEndpoint)
     }
 
     @Test
-    fun `M enable session replay with mask W enable with bad privacy option()`(
+    fun `M enable session replay without custom endpoint W empty string()`(
         @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
         // Not ALLOW nor MASK_USER_INPUT
         @StringForgery(regex = "^/(?!ALLOW|MASK_USER_INPUT)([a-z0-9]+)$/i") privacy: String
@@ -94,12 +101,13 @@ internal class DdSessionReplayImplementationTest {
         val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
 
         // When
-        testedSessionReplay.enable(replaySampleRate, privacy, mockPromise)
+        testedSessionReplay.enable(replaySampleRate, privacy, "", mockPromise)
 
         // Then
         verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
         assertThat(sessionReplayConfigCaptor.firstValue)
             .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
             .hasFieldEqualTo("privacy", SessionReplayPrivacy.MASK)
+            .doesNotHaveField("customEndpointUrl")
     }
 }

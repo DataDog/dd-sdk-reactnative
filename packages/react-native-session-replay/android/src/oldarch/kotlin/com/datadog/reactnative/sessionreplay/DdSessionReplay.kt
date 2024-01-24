@@ -26,9 +26,15 @@ class DdSessionReplay(
      * Enable session replay and start recording session.
      * @param replaySampleRate The sample rate applied for session replay.
      * @param defaultPrivacyLevel The privacy level used for replay.
+     * @param customEndpoint Custom server url for sending replay data.
      */
     @ReactMethod
-    fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
-        implementation.enable(replaySampleRate, defaultPrivacyLevel, promise)
+    fun enable(
+        replaySampleRate: Double,
+        defaultPrivacyLevel: String,
+        customEndpoint: String,
+        promise: Promise
+    ) {
+        implementation.enable(replaySampleRate, defaultPrivacyLevel, customEndpoint, promise)
     }
 }
