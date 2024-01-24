@@ -30,10 +30,14 @@ public class DdSessionReplayImplementation: NSObject {
 
     @objc
     public func enable(replaySampleRate: Double, defaultPrivacyLevel: String, customEndpoint: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        var customEndpointURL: URL? = nil
+        if (customEndpoint != "") {
+            customEndpointURL = URL(string: "\(customEndpoint)/api/v2/replay" as String)
+        }
         var sessionReplayConfiguration = SessionReplay.Configuration(
             replaySampleRate: Float(replaySampleRate),
             defaultPrivacyLevel: buildPrivacyLevel(privacyLevel: defaultPrivacyLevel as NSString),
-            customEndpoint: URL(string: customEndpoint)
+            customEndpoint: customEndpointURL
         )
                     
         sessionReplayConfiguration.setAdditionalNodeRecorders([RCTTextViewRecorder(uiManager: self.uiManager)])

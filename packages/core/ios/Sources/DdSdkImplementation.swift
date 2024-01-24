@@ -239,7 +239,9 @@ public class DdSdkImplementation: NSObject {
         
         var customRUMEndpointURL: URL? = nil
         if let customRUMEndpoint = configuration.customEndpoints?.rum as? NSString {
-            customRUMEndpointURL = URL(string: customRUMEndpoint as String)
+            if (customRUMEndpoint != "") {
+                customRUMEndpointURL = URL(string: "\(customRUMEndpoint)/api/v2/rum" as String)
+            }
         }
         
         return RUM.Configuration(
@@ -272,7 +274,9 @@ public class DdSdkImplementation: NSObject {
     func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
         var customLogsEndpointURL: URL? = nil
         if let customLogsEndpoint = configuration.customEndpoints?.logs as? NSString {
-            customLogsEndpointURL = URL(string: customLogsEndpoint as String)
+            if (customLogsEndpoint != "") {
+                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
+            }
         }
         
         return Logs.Configuration(customEndpoint: customLogsEndpointURL)
@@ -282,7 +286,9 @@ public class DdSdkImplementation: NSObject {
     func buildTraceConfiguration(configuration: DdSdkConfiguration) -> Trace.Configuration {
         var customTraceEndpointURL: URL? = nil
         if let customTraceEndpoint = configuration.customEndpoints?.trace as? NSString {
-            customTraceEndpointURL = URL(string: customTraceEndpoint as String)
+            if (customTraceEndpoint != "") {
+                customTraceEndpointURL = URL(string: "\(customTraceEndpoint)/api/v2/spans" as String)
+            }
         }
         
         return Trace.Configuration(customEndpoint: customTraceEndpointURL)

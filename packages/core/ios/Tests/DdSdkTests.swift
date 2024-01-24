@@ -831,15 +831,15 @@ internal class DdSdkTests: XCTestCase {
 
         let logsFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: LogsFeature.self)
         let customLogsEndpoint = try XCTUnwrap(logsFeature?.requestBuilder as? DatadogLogs.RequestBuilder).customIntakeURL
-        XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com")
+        XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com/api/v2/logs")
         
         let rumFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: RUMFeature.self)
         let customRumEndpoint = try XCTUnwrap(rumFeature?.requestBuilder as? DatadogRUM.RequestBuilder).customIntakeURL
-        XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com")
+        XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com/api/v2/rum")
 
         let traceFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: TraceFeature.self)
         let customTraceEndpoint = try XCTUnwrap(traceFeature?.requestBuilder as? TracingRequestBuilder).customIntakeURL
-        XCTAssertEqual(customTraceEndpoint?.absoluteString, "https://trace.example.com")
+        XCTAssertEqual(customTraceEndpoint?.absoluteString, "https://trace.example.com/api/v2/spans")
 
         Datadog.internalFlushAndDeinitialize()
     }

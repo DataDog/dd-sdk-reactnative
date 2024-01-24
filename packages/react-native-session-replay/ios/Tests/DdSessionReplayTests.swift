@@ -64,7 +64,7 @@ internal class DdSessionReplayTests: XCTestCase {
         DdSessionReplayImplementation(sessionReplayProvider:{ sessionReplayMock }, uiManager: uiManagerMock)
             .enable(replaySampleRate: 100, defaultPrivacyLevel: "MASK", customEndpoint: "https://session-replay.example.com", resolve: mockResolve, reject: mockReject)
         
-        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .mask, customEndpoint: URL(string: "https://session-replay.example.com")))
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 100.0, privacyLevel: .mask, customEndpoint: URL(string: "https://session-replay.example.com/api/v2/replay")))
     }
 }
 
