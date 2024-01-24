@@ -948,6 +948,40 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
             expect(ddSdkConfiguration.longTaskThresholdMs).toBe(0);
         });
+
+        it('enables custom endpoints when initialize { custom endpoints specified }', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true
+            );
+            configuration.customEndpoints = {
+                rum: 'https://rum.example.com/',
+                trace: 'https://trace.example.com/',
+                logs: 'https://logs.example.com/'
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.customEndpoints).toEqual({
+                rum: 'https://rum.example.com/',
+                trace: 'https://trace.example.com/',
+                logs: 'https://logs.example.com/'
+            });
+        });
     });
 
     describe('setAttributes', () => {

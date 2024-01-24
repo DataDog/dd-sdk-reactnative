@@ -36,6 +36,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "fake-app-id",
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
+                  "customEndpoints": {},
                   "env": "fake-env",
                   "errorEventMapper": null,
                   "firstPartyHosts": [],
@@ -106,7 +107,12 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackFrustrations: true,
                         uploadFrequency: UploadFrequency.FREQUENT,
                         batchSize: BatchSize.LARGE,
-                        trackBackgroundEvents: true
+                        trackBackgroundEvents: true,
+                        customEndpoints: {
+                            rum: 'https://rum.example.com/',
+                            logs: 'https://logs.example.com/',
+                            trace: 'https://trace.example.com/'
+                        }
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -119,6 +125,11 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "fake-app-id",
                   "batchSize": "LARGE",
                   "clientToken": "fake-client-token",
+                  "customEndpoints": {
+                    "logs": "https://logs.example.com/",
+                    "rum": "https://rum.example.com/",
+                    "trace": "https://trace.example.com/",
+                  },
                   "env": "fake-env",
                   "errorEventMapper": [Function],
                   "firstPartyHosts": [
@@ -183,7 +194,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         nativeLongTaskThresholdMs: false,
                         longTaskThresholdMs: false,
                         trackFrustrations: false,
-                        trackBackgroundEvents: false
+                        trackBackgroundEvents: false,
+                        customEndpoints: {}
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -193,6 +205,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "applicationId": "",
                   "batchSize": "MEDIUM",
                   "clientToken": "",
+                  "customEndpoints": {},
                   "env": "",
                   "errorEventMapper": null,
                   "firstPartyHosts": [],

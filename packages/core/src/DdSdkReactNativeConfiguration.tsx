@@ -64,6 +64,12 @@ const isLegacyFirstPartyHost = (
     return typeof firstPartyHost === 'string';
 };
 
+export type CustomEndpoints = {
+    rum?: string;
+    logs?: string;
+    trace?: string;
+};
+
 /**
  * Defaults legacy first party hosts format to Datadog first party hosts to keep
  * retro-compatibility before OTel support was introduced.
@@ -106,7 +112,8 @@ const DEFAULTS = {
     trackFrustrations: true,
     uploadFrequency: UploadFrequency.AVERAGE,
     batchSize: BatchSize.MEDIUM,
-    trackBackgroundEvents: false
+    trackBackgroundEvents: false,
+    getCustomEndpoints: () => ({})
 };
 
 /**
@@ -271,6 +278,8 @@ export class DdSdkReactNativeConfiguration {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfig();
 
+    public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
+
     constructor(
         readonly clientToken: string,
         readonly env: string,
@@ -373,6 +382,7 @@ export type PartialInitializationConfiguration = {
     readonly uploadFrequency?: UploadFrequency;
     readonly batchSize?: BatchSize;
     readonly trackBackgroundEvents?: boolean;
+    readonly customEndpoints?: CustomEndpoints;
 };
 
 const setConfigurationAttribute = <

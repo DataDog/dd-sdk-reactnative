@@ -77,6 +77,7 @@ describe('DatadogProvider', () => {
                     "trackInteractions": true,
                     "trackNetworkRequests": false,
                   },
+                  "customEndpoints": {},
                   "env": "fakeEnv",
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
