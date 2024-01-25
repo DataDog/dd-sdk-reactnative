@@ -7,12 +7,10 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.util.Log
 import com.datadog.android.Datadog
 import com.datadog.android._InternalProxy
 import com.datadog.android.api.SdkCore
-import com.datadog.android.api.context.DatadogContext
-import com.datadog.android.api.feature.FeatureScope
-import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
@@ -31,6 +29,7 @@ import com.datadog.android.webview.WebViewTracking
  */
 object DatadogSDKWrapperStorage {
     internal val onInitializedListeners: MutableList<(InternalSdkCore) -> Unit> = mutableListOf()
+    private var core: InternalSdkCore? = null
 
     /**
      * Adds a Listener called when the core is initialized.
@@ -48,8 +47,6 @@ object DatadogSDKWrapperStorage {
         }
     }
 
-    private var core: InternalSdkCore? = null
-
     /**
      * Sets instance of core SDK to be used to initialize features.
      */
@@ -58,10 +55,17 @@ object DatadogSDKWrapperStorage {
     }
 
     /**
-     * Returns the core used for registering RN features.
+     * Returns the core set by setSdkCore or the default core instance by default.
      */
     fun getSdkCore(): SdkCore {
-        return core ?: Datadog.getInstance()
+        core?.let {
+            return it
+        }
+        Log.d(
+            DatadogSDKWrapperStorage::class.java.canonicalName,
+            "SdkCore was not set in DatadogSDKWrapperStorage, using default instance."
+        )
+        return Datadog.getInstance()
     }
 }
 
@@ -104,21 +108,15 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun enableRum(configuration: RumConfiguration) {
-        DatadogSDKWrapperStorage.getSdkCore()?.let {
-            Rum.enable(configuration, it)
-        }
+        Rum.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun enableLogs(configuration: LogsConfiguration) {
-        DatadogSDKWrapperStorage.getSdkCore()?.let {
-            Logs.enable(configuration, it)
-        }
+        Logs.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun enableTrace(configuration: TraceConfiguration) {
-        DatadogSDKWrapperStorage.getSdkCore()?.let {
-            Trace.enable(configuration, it)
-        }
+        Trace.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun setUserInfo(
@@ -165,3 +163,4 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         return GlobalRumMonitor.get(DatadogSDKWrapperStorage.getSdkCore())
     }
 }
+
