@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-navigation",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",
@@ -36,7 +36,7 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "devDependencies": {
-        "@datadog/mobile-react-native": "^2.0.3",
+        "@datadog/mobile-react-native": "^2.0.4",
         "@testing-library/react-native": "7.0.2",
         "react-native-builder-bob": "0.17.1",
         "react-native-gesture-handler": "1.10.3",

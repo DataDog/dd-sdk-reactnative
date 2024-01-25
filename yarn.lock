@@ -3562,7 +3562,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-code-push@workspace:packages/codepush"
   dependencies:
-    "@datadog/mobile-react-native": ^2.0.3
+    "@datadog/mobile-react-native": ^2.0.4
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.17.1
     react-native-code-push: 7.0.5
@@ -3578,7 +3578,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-navigation@workspace:packages/react-native-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.0.3
+    "@datadog/mobile-react-native": ^2.0.4
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.17.1
     react-native-gesture-handler: 1.10.3
@@ -3618,7 +3618,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native@^2.0.3, @datadog/mobile-react-native@workspace:packages/core":
+"@datadog/mobile-react-native@^2.0.4, @datadog/mobile-react-native@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
@@ -3634,7 +3634,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-navigation@workspace:packages/react-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.0.3
+    "@datadog/mobile-react-native": ^2.0.4
     "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.8"
     "@react-navigation/native-v6": "npm:@react-navigation/native@6.1.2"
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2"
