@@ -30,21 +30,21 @@ import com.datadog.android.webview.WebViewTracking
  * Internal object used to add internal testing.
  */
 object DatadogSDKWrapperStorage {
-    internal val onInitializedListeners: MutableList<(InternalSdkCore?) -> Unit> = mutableListOf()
+    internal val onInitializedListeners: MutableList<(InternalSdkCore) -> Unit> = mutableListOf()
 
     /**
      * Adds a Listener called when the core is initialized.
      */
-    fun addOnInitializedListener(listener: (InternalSdkCore?) -> Unit) {
+    fun addOnInitializedListener(listener: (InternalSdkCore) -> Unit) {
         onInitializedListeners.add(listener)
     }
 
     /**
      * Exposed for testing purposes only.
      */
-    fun notifyOnInitializedListeners() {
+    fun notifyOnInitializedListeners(ddCore: InternalSdkCore) {
         onInitializedListeners.forEach {
-            it(core)
+            it(ddCore)
         }
     }
 
@@ -100,7 +100,7 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     ) {
         val core = Datadog.initialize(context, configuration, consent)
         DatadogSDKWrapperStorage.setSdkCore(core as InternalSdkCore)
-        DatadogSDKWrapperStorage.notifyOnInitializedListeners()
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners(core)
     }
 
     override fun enableRum(configuration: RumConfiguration) {

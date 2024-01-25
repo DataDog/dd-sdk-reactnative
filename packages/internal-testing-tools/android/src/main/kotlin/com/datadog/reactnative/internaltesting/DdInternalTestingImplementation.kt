@@ -51,10 +51,8 @@ class DdInternalTestingImplementation() {
      */
     fun enable(promise: Promise) {
         DatadogSDKWrapperStorage.addOnInitializedListener { ddCore ->
-            ddCore?.let { core ->
-                this.wrappedCore = StubSDKCore(core)
-                DatadogSDKWrapperStorage.setSdkCore(this.wrappedCore)
-            }
+            this.wrappedCore = StubSDKCore(ddCore)
+            DatadogSDKWrapperStorage.setSdkCore(this.wrappedCore)
         }
         promise.resolve(null)
     }

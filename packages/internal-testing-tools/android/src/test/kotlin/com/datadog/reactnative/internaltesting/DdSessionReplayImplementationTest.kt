@@ -74,7 +74,7 @@ internal class DdInternalTestingImplementationTest {
             mockContext
         )
         DatadogSDKWrapperStorage.setSdkCore(mockCore)
-        DatadogSDKWrapperStorage.notifyOnInitializedListeners()
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners(mockCore)
 
 
         // When
