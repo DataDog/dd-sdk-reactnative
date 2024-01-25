@@ -7,8 +7,6 @@
 package com.datadog.reactnative.internaltesting
 
 import android.content.Context
-import androidx.annotation.WorkerThread
-import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
@@ -16,12 +14,10 @@ import com.datadog.android.api.storage.DataWriter
 import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
-import com.datadog.android.core.persistence.Serializer
-import com.datadog.android.core.persistence.serializeToByteArray
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import org.junit.jupiter.api.AfterEach
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -57,14 +53,9 @@ internal class DdInternalTestingImplementationTest {
             DdInternalTestingImplementation()
     }
 
-    @AfterEach
-    fun `tear down`() {
-    }
-
     @Test
     fun `M return captured events W enable()`() {
         // Given
-        testedInternalTesting.enable(mockPromise)
         val mockFeature = MockFeature("mockFeature")
         val mockFeatureScope = MockFeatureScope(mockFeature)
         whenever(mockCore.getFeature(mockFeature.name)).doReturn(
@@ -73,19 +64,21 @@ internal class DdInternalTestingImplementationTest {
         whenever(mockCore.getDatadogContext()).doReturn(
             mockContext
         )
+
+        // When
+        testedInternalTesting.enable(mockPromise)
+        // Simulating DdSdkImplementation initialization
         DatadogSDKWrapperStorage.setSdkCore(mockCore)
         DatadogSDKWrapperStorage.notifyOnInitializedListeners(mockCore)
 
-
-        // When
         val wrappedCore = DatadogSDKWrapperStorage.getSdkCore() as StubSDKCore
         wrappedCore.registerFeature(mockFeature)
-        wrappedCore.getFeature(mockFeature.name)!!.withWriteContext { _, eventBatchWriter ->
-            MockDataWriter().write(eventBatchWriter, MockEvent("mock event for test"))
+        requireNotNull(wrappedCore.getFeature(mockFeature.name)).withWriteContext { _, eventBatchWriter ->
+            eventBatchWriter.write(RawBatchEvent(data = "mock event for test".toByteArray()), batchMetadata = null)
         }
 
         // Then
-        assert(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first() == "mock event for test")
+        assertThat(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first()).isEqualTo("mock event for test")
     }
 }
 
@@ -106,14 +99,4 @@ internal class MockFeature(override val name: String) : Feature {
     override fun onInitialize(appContext: Context) {}
 
     override fun onStop() {}
-}
-
-internal data class MockEvent (
-    public var name: String
-)
-
-internal class MockDataWriter: DataWriter<MockEvent> {
-    override fun write(writer: EventBatchWriter, element: MockEvent): Boolean {
-        return synchronized(this) { writer.write(RawBatchEvent(data = element.name.toByteArray()), batchMetadata = null) }
-    }
 }

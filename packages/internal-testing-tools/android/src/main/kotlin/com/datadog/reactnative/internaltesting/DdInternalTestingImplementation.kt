@@ -21,13 +21,13 @@ import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import com.google.gson.Gson
 import okhttp3.HttpUrl
-import kotlin.concurrent.thread
 
 /**
  * The entry point to use Datadog's internal testing feature.
  */
 class DdInternalTestingImplementation() {
     private var wrappedCore: StubSDKCore? = null
+    private val gson = Gson()
 
     /**
      * Clears all data for all features.
@@ -42,7 +42,7 @@ class DdInternalTestingImplementation() {
      */
     fun getAllEvents(feature: String, promise: Promise) {
         val events = wrappedCore?.eventsWritten(feature)
-        val eventsJson = Gson().toJson(events)
+        val eventsJson = gson.toJson(events)
         promise.resolve(eventsJson)
     }
 
@@ -80,30 +80,12 @@ internal class StubSDKCore(
     }
 
     fun clearData() {
-        featureScopes.forEach { entry ->
-            featureScopes[entry.key]?.clearData()
-        }
+        featureScopes.values.forEach { it.clearData() }
     }
-
-    // endregion
-
-    // region InternalSdkCore
-
-    override val firstPartyHostResolver: FirstPartyHostHeaderTypeResolver =
-        StubFirstPartyHostHeaderTypeResolver()
-
-    override fun getDatadogContext(): DatadogContext? {
-        return core.getDatadogContext()
-    }
-
-    override val networkInfo: NetworkInfo
-        get() = core.networkInfo
 
     // endregion
 
     // region FeatureSdkCore
-
-    override val internalLogger: InternalLogger = core.internalLogger
 
     override fun registerFeature(feature: Feature) {
         core.registerFeature(feature)
@@ -116,70 +98,8 @@ internal class StubSDKCore(
         return featureScopes[featureName]
     }
 
-    override fun updateFeatureContext(
-        featureName: String,
-        updateCallback: (context: MutableMap<String, Any?>) -> Unit
-    ) {
-        core.updateFeatureContext(featureName, updateCallback)
-    }
-
-    override fun getFeatureContext(featureName: String): Map<String, Any?> {
-        return core.getFeatureContext(featureName)
-    }
-
-    // endregion
-
-    // region SdkCore
-
-    override val service: String
-        get() {
-            return core.service
-        }
-
-    override val time: TimeInfo
-        get() {
-            val nanos = System.nanoTime()
-            return TimeInfo(
-                deviceTimeNs = nanos,
-                serverTimeNs = nanos,
-                serverTimeOffsetMs = 0L,
-                serverTimeOffsetNs = 0L
-            )
-        }
-
-    override fun setUserInfo(
-        id: String?,
-        name: String?,
-        email: String?,
-        extraInfo: Map<String, Any?>
-    ) {
-        core.setUserInfo(id, name, email, extraInfo)
-    }
-
     // endregion
 }
-
-class StubFirstPartyHostHeaderTypeResolver :
-    FirstPartyHostHeaderTypeResolver {
-
-    // region FirstPartyHostHeaderTypeResolver
-
-    override fun isEmpty(): Boolean = false
-
-    override fun isFirstPartyUrl(url: HttpUrl): Boolean = true
-
-    override fun isFirstPartyUrl(url: String): Boolean = true
-
-    override fun headerTypesForUrl(url: String): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
-
-    override fun headerTypesForUrl(url: HttpUrl): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
-
-    override fun getAllHeaderTypes(): Set<TracingHeaderType> = setOf(TracingHeaderType.TRACECONTEXT)
-
-    // endregion
-}
-
-
 
 internal class FeatureScopeInterceptor(
     private val featureScope: FeatureScope,
@@ -229,9 +149,7 @@ internal class EventBatchInterceptor: EventBatchWriter {
     ): Boolean {
         val eventContent = String(event.data)
 
-        events.add(events.size,
-            eventContent
-        )
+        events += eventContent
 
         return true
     }
