@@ -105,6 +105,15 @@ android {
       buildConfig = true
     }
   }
+  if (agpVersion.tokenize('.')[0].toInteger() < 8) {
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_11
+      targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+      jvmTarget = JavaVersion.VERSION_11.majorVersion
+    }
+  }
 
   defaultConfig {
     minSdkVersion 21
@@ -197,10 +206,6 @@ dependencies {
 }
 
 tasks.withType(Test) {
-  tasks.withType(KotlinCompile) {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
-  }
-
   useJUnitPlatform {
     includeEngines("spek", "junit-jupiter", "junit-vintage")
   }
