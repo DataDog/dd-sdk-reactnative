@@ -159,6 +159,12 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
+    @objc
+    public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DatadogSDKWrapper.shared.clearAllData()
+        resolve(nil)
+    }
+    
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
         DatadogSDKWrapper.shared.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,

@@ -68,6 +68,12 @@ RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
     [self consumeWebviewEvent:message resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self clearAllData:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -120,6 +126,10 @@ RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
 
 - (void)telemetryError:(NSString *)message stack:(NSString *)stack kind:(NSString *)kind resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation telemetryErrorWithMessage:message stack:stack kind:kind resolve:resolve reject:reject];
+}
+
+- (void)clearAllData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation clearAllDataWithResolve:resolve reject:reject];
 }
 
 @end
