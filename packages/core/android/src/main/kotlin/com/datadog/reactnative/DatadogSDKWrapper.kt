@@ -7,8 +7,11 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.util.Log
 import com.datadog.android.Datadog
 import com.datadog.android._InternalProxy
+import com.datadog.android.api.SdkCore
+import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
@@ -20,6 +23,51 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
+
+/**
+ * Internal object used to add internal testing.
+ */
+object DatadogSDKWrapperStorage {
+    internal val onInitializedListeners: MutableList<(InternalSdkCore) -> Unit> = mutableListOf()
+    private var core: InternalSdkCore? = null
+
+    /**
+     * Adds a Listener called when the core is initialized.
+     */
+    fun addOnInitializedListener(listener: (InternalSdkCore) -> Unit) {
+        onInitializedListeners.add(listener)
+    }
+
+    /**
+     * Exposed for testing purposes only.
+     */
+    fun notifyOnInitializedListeners(ddCore: InternalSdkCore) {
+        onInitializedListeners.forEach {
+            it(ddCore)
+        }
+    }
+
+    /**
+     * Sets instance of core SDK to be used to initialize features.
+     */
+    fun setSdkCore(core: InternalSdkCore?) {
+        this.core = core
+    }
+
+    /**
+     * Returns the core set by setSdkCore or the default core instance by default.
+     */
+    fun getSdkCore(): SdkCore {
+        core?.let {
+            return it
+        }
+        Log.d(
+            DatadogSDKWrapperStorage::class.java.canonicalName,
+            "SdkCore was not set in DatadogSDKWrapperStorage, using default instance."
+        )
+        return Datadog.getInstance()
+    }
+}
 
 internal class DatadogSDKWrapper : DatadogWrapper {
 
@@ -39,7 +87,7 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     private var webViewProxy: WebViewTracking._InternalWebViewProxy? = null
         get() {
             if (field == null && isInitialized()) {
-                field = WebViewTracking._InternalWebViewProxy(Datadog.getInstance())
+                field = WebViewTracking._InternalWebViewProxy(DatadogSDKWrapperStorage.getSdkCore())
             }
 
             return field
@@ -54,19 +102,21 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         configuration: Configuration,
         consent: TrackingConsent
     ) {
-        Datadog.initialize(context, configuration, consent)
+        val core = Datadog.initialize(context, configuration, consent)
+        DatadogSDKWrapperStorage.setSdkCore(core as InternalSdkCore)
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners(core)
     }
 
     override fun enableRum(configuration: RumConfiguration) {
-        Rum.enable(configuration)
+        Rum.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun enableLogs(configuration: LogsConfiguration) {
-        Logs.enable(configuration)
+        Logs.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun enableTrace(configuration: TraceConfiguration) {
-        Trace.enable(configuration)
+        Trace.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     override fun setUserInfo(
@@ -110,6 +160,7 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     }
 
     override fun getRumMonitor(): RumMonitor {
-        return GlobalRumMonitor.get()
+        return GlobalRumMonitor.get(DatadogSDKWrapperStorage.getSdkCore())
     }
 }
+

@@ -30,6 +30,12 @@ final class DispatchQueueMock: DispatchQueueType {
 internal class DdSdkTests: XCTestCase {
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
+    
+    override func setUp() {
+        super.setUp()
+        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
+        DatadogSDKWrapper.shared.onCoreInitializedListeners = []
+    }
 
     func testSDKInitialization() {
         let originalConsolePrint = consolePrint
@@ -205,11 +211,31 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
     
+    func testSDKInitializationWithOnInitializedCallback() {
+        var coreFromCallback: DatadogCoreProtocol? = nil
+        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: { core in
+            coreFromCallback = core
+        })
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertNotNil(coreFromCallback)
+
+        Datadog.internalFlushAndDeinitialize()
+    }
+    
     func testEnableAllFeatures() {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny()
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
@@ -327,7 +353,7 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -336,7 +362,7 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -345,7 +371,8 @@ internal class DdSdkTests: XCTestCase {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
 
-        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().enableFeatures(sdkConfiguration: configuration)
         
         XCTAssertNotNil(core.features[CrashReportingFeature.name])
     }
@@ -813,7 +840,8 @@ internal class DdSdkTests: XCTestCase {
             configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
         )
         
-        DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration)
 
         XCTAssertEqual(core.configuration?.initializationType, "LEGACY")
         XCTAssertEqual(core.configuration?.trackErrors, true)
@@ -874,6 +902,23 @@ internal class DdSdkTests: XCTestCase {
 
         Datadog.internalFlushAndDeinitialize()
     }
+    
+    func testCallsOnCoreInitializedListeners() throws {
+        let bridge = DispatchQueueMock()
+        let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let mockListener = MockOnCoreInitializedListener()
+        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: mockListener.listener)
+        
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: bridge,
+            jsRefreshRateMonitor: mockJSRefreshRateMonitor,
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertNotNil(mockListener.core)
+    }
 
     func testConsumeWebviewEventBeforeInitialization() throws {
         XCTAssertNoThrow(try DdSdkImplementation().consumeWebviewEvent(message: "TestMessage", resolve: mockResolve, reject: mockReject))
@@ -884,7 +929,8 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
         let core = MockDatadogCore()
 
-        sdk.enableFeatures(sdkConfiguration: configuration, core: core)
+        DatadogSDKWrapper.shared.setCoreInstance(core: core)
+        sdk.enableFeatures(sdkConfiguration: configuration)
         
         sdk.consumeWebviewEvent(message: "{\"eventType\":\"RUM\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
         
@@ -1007,38 +1053,10 @@ extension DdSdkImplementation {
     }
 }
 
-internal class MockDatadogCore: DatadogCoreProtocol {
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
+internal class MockOnCoreInitializedListener {
+    var core: DatadogCoreProtocol? = nil
     
-    func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
-        if  // Configuration Telemetry Message
-            case .telemetry(let telemetry) = message,
-            case .configuration(let configuration) = telemetry {
-            self.configuration = configuration
-        }
-        
-        if case .baggage(let key, let baggage) = message {
-            self.baggages[key] = baggage
-        }
+    func listener(core: DatadogCoreProtocol) {
+        self.core = core
     }
-   
-    private(set) var configuration: ConfigurationTelemetry?
-    private(set) var features: [String: DatadogFeature] = [:]
-    private(set) var baggages: [String: Any] = [:]
-
-    func register<T>(feature: T) throws where T : DatadogFeature {
-        features[T.name] = feature
-    }
-    
-    func get<T>(feature type: T.Type) -> T? where T : DatadogFeature {
-        return nil
-    }
-    
-    func scope(for feature: String) -> FeatureScope? {
-        return nil
-    }
-    
-    func set(feature: String, attributes: @escaping () -> FeatureBaggage) {}
-    
-    func update(feature: String, attributes: @escaping () -> FeatureBaggage) {}
 }

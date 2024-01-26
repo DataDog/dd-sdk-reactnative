@@ -149,6 +149,9 @@ internal class DdSdkTest {
             true
         }
         testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog)
+
+        DatadogSDKWrapperStorage.setSdkCore(null)
+        DatadogSDKWrapperStorage.onInitializedListeners.clear()
     }
 
     @AfterEach

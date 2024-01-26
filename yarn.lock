@@ -3694,6 +3694,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@datadog/react-native-internal-testing-tools@workspace:packages/internal-testing-tools":
+  version: 0.0.0-use.local
+  resolution: "@datadog/react-native-internal-testing-tools@workspace:packages/internal-testing-tools"
+  dependencies:
+    "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.17.1
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  languageName: unknown
+  linkType: soft
+
 "@datadog/sketches-js@npm:^2.1.0":
   version: 2.1.0
   resolution: "@datadog/sketches-js@npm:2.1.0"

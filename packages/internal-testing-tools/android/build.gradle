@@ -1,0 +1,242 @@
+import java.nio.file.Paths
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+buildscript {
+  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
+  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['DatadogInternalTesting_kotlinVersion']
+
+  repositories {
+    mavenCentral()
+    google()
+    gradlePluginPortal()
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:7.2.2'
+    // noinspection DifferentKotlinGradleVersion
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
+    classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
+    classpath 'com.github.bjoernq:unmockplugin:0.7.9'
+  }
+}
+
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+apply plugin: 'com.android.library'
+if (isNewArchitectureEnabled()) {
+  apply plugin: 'com.facebook.react'
+}
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
+apply plugin: "io.gitlab.arturbosch.detekt"
+
+/**
+ * Finds the path of the installed npm package with the given name using Node's
+ * module resolution algorithm, which searches "node_modules" directories up to
+ * the file system root.
+ * This enables us to handle monorepos without requiring the node executable.
+ *
+ * The search begins at the given base directory (a File object). The returned
+ * path is a string.
+ */
+static def findNodeModulePath(baseDir, packageName) {
+    def basePath = baseDir.toPath().normalize()
+    // Node's module resolution algorithm searches up to the root directory,
+    // after which the base path will be null
+    while (basePath) {
+        def candidatePath = Paths.get(basePath.toString(), "node_modules", packageName)
+        if (candidatePath.toFile().exists()) {
+            return candidatePath.toString()
+        }
+        basePath = basePath.getParent()
+    }
+    return null
+}
+
+def resolveReactNativeDirectory() {
+  def reactNativeLocation = rootProject.hasProperty("reactNativeDir") ? rootProject.getProperty("reactNativeDir") : null
+
+  if (reactNativeLocation != null) {
+    return file(reactNativeLocation)
+  }
+
+  def reactNativePath = findNodeModulePath(projectDir, "react-native")
+
+  if (reactNativePath != null) {
+    return file(reactNativePath)
+  }
+
+  throw new Exception(
+    "${project.name}: Failed to resolve 'react-native' in the project. " +
+    "Altenatively, you can specify 'reactNativeDir' with the path to 'react-native' in your 'gradle.properties' file."
+  )
+}
+
+def reactNativeRootDir = resolveReactNativeDirectory()
+def reactProperties = new Properties()
+file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+
+def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+def (reactNativeMajorVersion, reactNativeMinorVersion) = reactNativeVersion.split("\\.").collect { it.isInteger() ? it.toInteger() : it }
+
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['DatadogInternalTesting_' + name]
+}
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['DatadogInternalTesting_' + name]).toInteger()
+}
+
+android {
+  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
+  buildToolsVersion getExtOrDefault('buildToolsVersion')
+  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+    namespace = "com.datadog.reactnative.internaltesting"
+  }
+  if (agpVersion.tokenize('.')[0].toInteger() >= 8) {
+    buildFeatures {
+      buildConfig = true
+    }
+  }
+  if (agpVersion.tokenize('.')[0].toInteger() < 8) {
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_11
+      targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+      jvmTarget = JavaVersion.VERSION_11.majorVersion
+    }
+  }
+
+  defaultConfig {
+    minSdkVersion 21
+    targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
+    versionCode 1
+    versionName "1.0"
+    buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
+  }
+
+  sourceSets {
+    main {
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += ['src/newarch/kotlin']
+      } else {
+        java.srcDirs += ['src/oldarch/kotlin']
+      }
+    }
+    test {
+      java.srcDir("src/test/kotlin")
+    }
+  }
+
+  testOptions {
+    unitTests {
+      returnDefaultValues = true
+    }
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+  lintOptions {
+    disable 'GradleCompatible'
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+}
+
+repositories {
+  mavenCentral()
+  google()
+  maven { url "https://jitpack.io" }
+  mavenLocal()
+
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
+    def androidSourcesDir = file("$reactNativeRootDir/android")
+    def androidSourcesName = "React Native sources"
+
+    if (androidSourcesDir.exists()) {
+      maven {
+        url androidSourcesDir.toString()
+        name androidSourcesName
+      }
+    }
+  }
+}
+
+def kotlin_version = getExtOrDefault('kotlinVersion')
+
+dependencies {
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
+    // noinspection GradleDynamicVersion
+    api 'com.facebook.react:react-native:+'
+  } else {
+    // We specify the $reactNativeVersion, like it's done on the react-native-gradle-plugin, as the plugin is not applied in tests.
+    // There is no impact for apps as we apply the same logic:
+    // https://github.com/facebook/react-native/blob/e1a1e6aa8030bf11d691c3dcf7abd13b25175027/packages/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/utils/DependencyUtils.kt
+    api "com.facebook.react:react-android:$reactNativeVersion"
+  }
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation project(path: ':datadog_mobile-react-native')
+  implementation "com.datadoghq:dd-sdk-android-core"
+  implementation "com.google.code.gson:gson:2.10.0"
+
+  testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
+  testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
+  testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
+  testImplementation "org.junit.jupiter:junit-jupiter-params:5.6.2"
+  testImplementation "org.mockito:mockito-junit-jupiter:3.4.6"
+  testImplementation "org.assertj:assertj-core:3.18.1"
+  testImplementation "com.github.xgouchet.Elmyr:core:1.3.1"
+  testImplementation "com.github.xgouchet.Elmyr:inject:1.3.1"
+  testImplementation "com.github.xgouchet.Elmyr:junit5:1.3.1"
+  testImplementation "com.github.xgouchet.Elmyr:jvm:1.3.1"
+  testImplementation "org.mockito.kotlin:mockito-kotlin:5.1.0"
+  testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+}
+
+tasks.withType(Test) {
+  useJUnitPlatform {
+    includeEngines("spek", "junit-jupiter", "junit-vintage")
+  }
+  reports {
+    junitXml.required.set(true)
+    html.required.set(true)
+  }
+}
+
+tasks.named("check") {
+  dependsOn("ktlintCheck")
+  dependsOn("detekt")
+}
+
+ktlint {
+  debug.set(false)
+  android.set(true)
+  outputToConsole.set(true)
+  ignoreFailures.set(false)
+  enableExperimentalRules.set(false)
+  filter {
+    exclude("**/generated/**")
+    include("**/kotlin/**")
+  }
+}
+
+detekt {
+  input = files("$projectDir/src/main/kotlin")
+  config = files("$projectDir/detekt.yml")
+  reports {
+    xml {
+      enabled = true
+      destination = file("build/reports/detekt.xml")
+    }
+  }
+}
