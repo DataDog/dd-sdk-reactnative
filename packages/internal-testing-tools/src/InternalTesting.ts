@@ -9,6 +9,7 @@ import { Platform } from 'react-native';
 import { buildLogsAssertions } from './assertions/logs';
 import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
+import { Report } from './report/Report';
 import type { LogEvent, TraceEvent } from './types/events';
 import { base64 } from './utils/base64';
 
@@ -18,6 +19,7 @@ export class InternalTestingWrapper {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeInternalTesting: NativeInternalTestingType = require('./specs/NativeDdInternalTesting')
         .default;
+    private report = new Report();
 
     /**
      * Enable internal testing.
@@ -44,8 +46,12 @@ export class InternalTestingWrapper {
         )) as TraceEvent[];
 
         return {
-            logs: buildLogsAssertions(logsEvents),
-            trace: buildTraceAssertions(traceEvents)
+            logs: this.report.connectAssertionsToReport(
+                buildLogsAssertions(logsEvents)
+            ),
+            trace: this.report.connectAssertionsToReport(
+                buildTraceAssertions(traceEvents)
+            )
         };
     };
 
