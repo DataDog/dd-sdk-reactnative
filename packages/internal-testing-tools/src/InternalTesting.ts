@@ -6,7 +6,10 @@
 
 import { Platform } from 'react-native';
 
+import { buildLogsAssertions } from './assertions/logs';
+import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
+import type { LogEvent, TraceEvent } from './types/events';
 import { base64 } from './utils/base64';
 
 type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay';
@@ -29,6 +32,21 @@ export class InternalTestingWrapper {
      */
     clearData = () => {
         return this.nativeInternalTesting.clearData();
+    };
+
+    /**
+     * Returns events for assertions.
+     */
+    getEvents = async () => {
+        const logsEvents = (await this.getAllEvents('logging')) as LogEvent[];
+        const traceEvents = (await this.getAllEvents(
+            'tracing'
+        )) as TraceEvent[];
+
+        return {
+            logs: buildLogsAssertions(logsEvents),
+            trace: buildTraceAssertions(traceEvents)
+        };
     };
 
     /**
