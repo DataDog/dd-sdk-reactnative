@@ -243,6 +243,15 @@ export class DdSdkReactNative {
         return DdSdk.setTrackingConsent(consent);
     };
 
+    /**
+     * Clears all data that has not already been sent to Datadog servers
+     * @returns a Promise
+     */
+    static clearAllData = (): Promise<void> => {
+        InternalLog.log('Clearing all data', SdkVerbosity.DEBUG);
+        return DdSdk.clearAllData();
+    };
+
     private static buildConfiguration = (
         configuration: DdSdkReactNativeConfiguration
     ) => {

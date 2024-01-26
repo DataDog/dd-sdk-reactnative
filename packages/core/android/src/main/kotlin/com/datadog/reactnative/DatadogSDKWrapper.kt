@@ -162,5 +162,9 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun getRumMonitor(): RumMonitor {
         return GlobalRumMonitor.get(DatadogSDKWrapperStorage.getSdkCore())
     }
+
+    override fun clearAllData() {
+        return Datadog.clearAllData(DatadogSDKWrapperStorage.getSdkCore())
+    }
 }
 

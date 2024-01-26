@@ -87,4 +87,12 @@ class DdSdk(
     override fun consumeWebviewEvent(message: String, promise: Promise) {
         implementation.consumeWebviewEvent(message, promise)
     }
+
+    /**
+     * Clears all data that has not already been sent to Datadog servers.
+     */
+    @ReactMethod
+    override fun clearAllData(promise: Promise) {
+        implementation.clearAllData(promise)
+    }
 }

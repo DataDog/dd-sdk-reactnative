@@ -59,6 +59,15 @@ public class DatadogSDKWrapper {
         return Datadog.isInitialized()
     }
 
+    internal func clearAllData() -> Void {
+        if let core = coreInstance {
+            Datadog.clearAllData(in: core)
+        } else {
+            Datadog.clearAllData()
+        }
+    }
+
+    // Features
     internal func enableRUM(with configuration: RUM.Configuration) {
         if let core = coreInstance {
             RUM.enable(with: configuration, in: core)

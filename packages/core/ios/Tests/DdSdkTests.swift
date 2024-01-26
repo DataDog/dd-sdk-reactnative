@@ -936,6 +936,50 @@ internal class DdSdkTests: XCTestCase {
         
         XCTAssertNotNil(core.baggages["browser-rum-event"])
     }
+    
+    func testClearAllData() throws {
+        // Given
+        let bridge = DispatchQueueMock()
+        let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
+        
+        let sdk = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: bridge,
+            jsRefreshRateMonitor: mockJSRefreshRateMonitor,
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        )
+        sdk.initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        let core = try XCTUnwrap(CoreRegistry.default as? DatadogCore)
+        // On SDK init, underlying `ConsentAwareDataWriter` performs data migration for each feature, which includes
+        // data removal in `unauthorised` (`.pending`) directory. To not cause test flakiness, we must ensure that
+        // mock data is written only after this operation completes - otherwise, migration may delete mocked files.
+        core.readWriteQueue.sync {}
+        
+        let featureDirectories: [FeatureDirectories] = [
+            try core.directory.getFeatureDirectories(forFeatureNamed: "logging"),
+            try core.directory.getFeatureDirectories(forFeatureNamed: "tracing"),
+        ]
+
+        let allDirectories: [Directory] = featureDirectories.flatMap { [$0.authorized, $0.unauthorized] }
+        try allDirectories.forEach { directory in _ = try directory.createFile(named: .mockRandom()) }
+
+        let numberOfFiles = try allDirectories.reduce(0, { acc, nextDirectory in return try acc + nextDirectory.files().count })
+        XCTAssertEqual(numberOfFiles, 4, "Each feature stores 2 files - one authorised and one unauthorised")
+
+        // When
+        sdk.clearAllData(resolve: mockResolve, reject: mockReject)
+
+        // Wait for async clear completion in all features:
+        core.readWriteQueue.sync {}
+
+        // Then
+        let newNumberOfFiles = try allDirectories.reduce(0, { acc, nextDirectory in return try acc + nextDirectory.files().count })
+        XCTAssertEqual(newNumberOfFiles, 0, "All files must be removed")
+
+        Datadog.internalFlushAndDeinitialize()
+    }
 }
 
 private final class MockJSRefreshRateMonitor: RefreshRateMonitor {

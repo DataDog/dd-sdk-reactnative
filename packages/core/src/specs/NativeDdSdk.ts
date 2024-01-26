@@ -57,6 +57,11 @@ export interface Spec extends TurboModule {
      * @param message event description
      */
     consumeWebviewEvent(message: string): Promise<void>;
+
+    /**
+     * Clears all data that has not already been sent to Datadog servers
+     */
+    clearAllData(): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('DdSdk');

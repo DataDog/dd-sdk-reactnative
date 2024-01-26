@@ -40,6 +40,9 @@ module.exports = {
             .mockImplementation(() => new Promise(resolve => resolve())),
         telemetryError: jest
             .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        clearAllData: jest
+            .fn()
             .mockImplementation(() => new Promise(resolve => resolve()))
     },
 

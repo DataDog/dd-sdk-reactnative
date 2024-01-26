@@ -1001,6 +1001,16 @@ describe('DdSdkReactNative', () => {
         });
     });
 
+    describe('clearAllData', () => {
+        it('calls SDK method when clearAllData', async () => {
+            // WHEN
+            DdSdkReactNative.clearAllData();
+
+            // THEN
+            expect(DdSdk.clearAllData).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe.each([[ProxyType.HTTP], [ProxyType.HTTPS], [ProxyType.SOCKS]])(
         'proxy configs test, no auth',
         proxyType => {
