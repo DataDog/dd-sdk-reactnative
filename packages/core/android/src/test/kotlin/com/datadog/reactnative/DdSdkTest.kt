@@ -2506,6 +2506,18 @@ internal class DdSdkTest {
         assertThat(authenticator?.password).isEqualTo(proxyPassword)
     }
 
+    @Test
+    fun `𝕄 clear all data 𝕎 clearAllData()`() {
+        // When
+        testedBridgeSdk.clearAllData(mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
+                .clearAllData()
+        }
+    }
+
     // endregion
 
     // region Internal

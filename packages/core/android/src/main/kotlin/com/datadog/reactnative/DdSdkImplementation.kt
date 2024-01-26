@@ -138,6 +138,14 @@ class DdSdkImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Clears all data that has not already been sent to Datadog servers.
+     */
+    fun clearAllData(promise: Promise) {
+        datadog.clearAllData()
+        promise.resolve(null)
+    }
+
     // endregion
 
     // region Internal

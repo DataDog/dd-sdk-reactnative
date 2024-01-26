@@ -136,4 +136,9 @@ interface DatadogWrapper {
      * Returns the RUM Monitor for the default SDK core.
      */
     fun getRumMonitor(): RumMonitor
+
+    /**
+     * Clears all data that has not already been sent to Datadog servers.
+     */
+    fun clearAllData()
 }
