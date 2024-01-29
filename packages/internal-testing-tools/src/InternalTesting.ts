@@ -10,10 +10,8 @@ import { buildLogsAssertions } from './assertions/logs';
 import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
 import { Report } from './report/Report';
-import type { LogEvent, TraceEvent } from './types/events';
+import type { Feature, eventTypeByFeature } from './types/events';
 import { base64 } from './utils/base64';
-
-type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay';
 
 export class InternalTestingWrapper {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -40,10 +38,8 @@ export class InternalTestingWrapper {
      * Returns events for assertions.
      */
     getEvents = async () => {
-        const logsEvents = (await this.getAllEvents('logging')) as LogEvent[];
-        const traceEvents = (await this.getAllEvents(
-            'tracing'
-        )) as TraceEvent[];
+        const logsEvents = await this.getAllEvents('logging');
+        const traceEvents = await this.getAllEvents('tracing');
 
         return {
             logs: this.report.connectAssertionsToReport(
@@ -58,7 +54,9 @@ export class InternalTestingWrapper {
     /**
      * Return all events.
      */
-    getAllEvents = async (feature: Feature) => {
+    getAllEvents = async <F extends Feature>(
+        feature: F
+    ): Promise<eventTypeByFeature[F][]> => {
         const events = await this.nativeInternalTesting.getAllEvents(
             formatFeatureName(feature)
         );
