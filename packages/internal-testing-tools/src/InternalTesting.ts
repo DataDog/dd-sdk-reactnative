@@ -52,6 +52,20 @@ export class InternalTestingWrapper {
     };
 
     /**
+     * Returns the status of the report and all assertions details.
+     * Resets the report after returning.
+     */
+    getReport = () => {
+        const report = {
+            status: this.report.status,
+            assertions: this.report.assertions
+        };
+
+        this.report = new Report();
+        return report;
+    };
+
+    /**
      * Return all events.
      */
     getAllEvents = async <F extends Feature>(
