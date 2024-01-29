@@ -23,7 +23,7 @@ internal class TextViewUtils {
         val result = mutableListOf<MobileSegment.Wireframe>()
         val pixelDensity = mappingContext.systemInformation.screenDensity
 
-        wireframes.forEach { originalWireframe ->
+        for (originalWireframe in wireframes) {
             if (originalWireframe !is MobileSegment.Wireframe.TextWireframe) {
                 result.add(originalWireframe)
             } else {
