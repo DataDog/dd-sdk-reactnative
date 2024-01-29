@@ -217,6 +217,10 @@ tasks.withType(Test) {
   useJUnitPlatform {
     includeEngines("spek", "junit-jupiter", "junit-vintage")
   }
+  jvmArgs(
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED"
+  )
   reports {
     junitXml.required.set(true)
     html.required.set(true)
