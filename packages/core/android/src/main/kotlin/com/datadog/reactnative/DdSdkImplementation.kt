@@ -81,7 +81,9 @@ class DdSdkImplementation(
      */
     fun setAttributes(attributes: ReadableMap, promise: Promise) {
         datadog.addRumGlobalAttributes(attributes.toHashMap())
-        attributes.toHashMap().forEach { (k, v) -> GlobalState.addAttribute(k, v) }
+        for ((k,v) in attributes.toHashMap()) {
+            GlobalState.addAttribute(k, v)
+        }
         promise.resolve(null)
     }
 
@@ -299,7 +301,7 @@ class DdSdkImplementation(
          */
         val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
 
-        firstPartyHosts.forEach {
+        for (it in firstPartyHosts) {
             val match = it.getString("match")
             val propagatorTypes = it.getArray("propagatorTypes")?.asTracingHeaderTypes()
             if (match != null && propagatorTypes != null && propagatorTypes.isNotEmpty()) {

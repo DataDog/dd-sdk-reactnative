@@ -11,7 +11,8 @@ import com.facebook.react.bridge.WritableNativeMap
 
 internal fun List<*>.toWritableArray(): WritableNativeArray {
     val list = WritableNativeArray()
-    forEach {
+    for (it in iterator()) {
+        @Suppress("NotImplementedDeclaration")
         when (it) {
             null -> list.pushNull()
             is Int -> list.pushInt(it)
@@ -29,8 +30,9 @@ internal fun List<*>.toWritableArray(): WritableNativeArray {
 
 internal fun Map<*, *>.toWritableMap(): WritableNativeMap {
     val map = WritableNativeMap()
-    forEach { (k, v) ->
+    for ((k,v) in iterator()) {
         val key = (k as? String) ?: k.toString()
+        @Suppress("NotImplementedDeclaration")
         when (v) {
             null -> map.putNull(key)
             is Int -> map.putInt(key, v)
