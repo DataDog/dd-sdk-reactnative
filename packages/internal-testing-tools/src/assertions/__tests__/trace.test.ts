@@ -5,7 +5,17 @@ const generateTraceAssertions = (length: number) => {
         Array(length)
             .fill(0)
             .map((_, index) => ({
-                spans: [{}]
+                spans: [
+                    {
+                        name: '',
+                        service: '',
+                        type: '',
+                        trace_id: '',
+                        span_id: '',
+                        parent_id: ''
+                    }
+                ],
+                env: ''
             }))
     );
 };

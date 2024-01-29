@@ -13,6 +13,38 @@ export const buildLogsAssertions = (events: LogEvent[]) => {
                     events
                 );
             }
+        },
+        toHaveLogWith: ({
+            status,
+            message
+        }: {
+            status?: string;
+            message?: string;
+        }) => {
+            if (!status && !message) {
+                throw new Error(
+                    'toHaveLogWith was called without a status or a message. Please specify at least one of them.'
+                );
+            }
+            const logMatching = events.find(log => {
+                if (message && !log.message.match(message)) {
+                    return false;
+                }
+                if (status && log.status !== status) {
+                    return false;
+                }
+                return true;
+            });
+            if (!logMatching) {
+                throw new AssertionError(
+                    'Could not find log matching status and message.',
+                    `${status && `status: "${status}"`} ${
+                        message && `message: "${message}"`
+                    }`,
+                    undefined,
+                    events
+                );
+            }
         }
     };
 };
