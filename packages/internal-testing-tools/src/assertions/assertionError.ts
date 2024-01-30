@@ -1,9 +1,11 @@
+import type { DDEvent } from '../types/events';
+
 export class AssertionError extends Error {
     constructor(
         message: string,
         expected: string,
         actual: string | undefined,
-        events: Event[]
+        events: DDEvent[]
     ) {
         if (actual !== undefined) {
             super(

@@ -45,7 +45,7 @@ export type RumEvent =
     | RumLongTaskEvent
     | RumResourceEvent;
 
-export type Event = LogEvent | TraceEvent | RumEvent | SessionReplayEvent;
+export type DDEvent = LogEvent | TraceEvent | RumEvent | SessionReplayEvent;
 
 export type eventTypeByFeature = {
     rum: RumEvent;
