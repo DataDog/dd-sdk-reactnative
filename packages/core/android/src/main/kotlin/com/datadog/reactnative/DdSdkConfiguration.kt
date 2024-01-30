@@ -23,6 +23,7 @@ package com.datadog.reactnative
  * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
  * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
  * @param trackBackgroundEvents Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
+ * @param customEndpoints Custom endpoints for RUM/Logs/Trace features.
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
  */
@@ -42,6 +43,7 @@ data class DdSdkConfiguration(
     val uploadFrequency: String? = null,
     val batchSize: String? = null,
     val trackBackgroundEvents: Boolean? = null,
+    val customEndpoints: CustomEndpoints? = null,
     val additionalConfig: Map<String, Any?>? = null,
     val configurationForTelemetry: ConfigurationForTelemetry? = null
 )
@@ -62,4 +64,16 @@ data class ConfigurationForTelemetry(
     val trackNetworkRequests: Boolean? = null,
     val reactVersion: String? = null,
     val reactNativeVersion: String? = null
+)
+
+/**
+ * Custom endpoints for features.
+ * @param rum Custom endpoint for RUM.
+ * @param logs Custom endpoint for Logs.
+ * @param trace Custom endpoint for Trace.
+ */
+data class CustomEndpoints(
+    val rum: String? = null,
+    val logs: String? = null,
+    val trace: String? = null
 )

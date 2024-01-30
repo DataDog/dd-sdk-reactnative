@@ -25,6 +25,11 @@ export class DdSdkConfiguration {
         readonly batchSize: string,
         readonly trackFrustrations: boolean,
         readonly trackBackgroundEvents: boolean,
+        readonly customEndpoints: {
+            rum?: string;
+            trace?: string;
+            logs?: string;
+        },
         readonly configurationForTelemetry: {
             initializationType: string;
             trackErrors: boolean;

@@ -122,6 +122,7 @@ export class DdSdkReactNative {
                 configuration.batchSize,
                 configuration.trackFrustrations,
                 configuration.trackBackgroundEvents,
+                configuration.customEndpoints,
                 {
                     initializationType: params.initializationModeForTelemetry,
                     trackErrors: configuration.trackErrors,

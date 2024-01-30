@@ -27,6 +27,7 @@ extension NSDictionary {
         let uploadFrequency = object(forKey: "uploadFrequency") as? NSString
         let batchSize = object(forKey: "batchSize") as? NSString
         let trackBackgroundEvents = object(forKey: "trackBackgroundEvents") as? Bool
+        let customEndpoints = object(forKey: "customEndpoints") as? NSDictionary
         let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
         let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
         return DdSdkConfiguration(
@@ -45,6 +46,7 @@ extension NSDictionary {
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
             trackBackgroundEvents: trackBackgroundEvents,
+            customEndpoints: customEndpoints?.asCustomEndpoints(),
             additionalConfig: additionalConfig,
             configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
         )
@@ -65,6 +67,18 @@ extension NSDictionary {
             trackNetworkRequests: trackNetworkRequests,
             reactVersion: reactVersion,
             reactNativeVersion: reactNativeVersion
+        )
+    }
+    
+    func asCustomEndpoints() -> CustomEndpoints {
+        let rum = object(forKey: "rum") as? NSString
+        let logs = object(forKey: "logs") as? NSString
+        let trace = object(forKey: "trace") as? NSString
+        
+        return CustomEndpoints(
+            rum: rum,
+            logs: logs,
+            trace: trace
         )
     }
 }

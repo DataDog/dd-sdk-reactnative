@@ -56,6 +56,8 @@ class DdSdkImplementation(
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
         val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
+        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+        val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
         configureSdkVerbosity(ddSdkConfiguration)
@@ -65,9 +67,9 @@ class DdSdkImplementation(
         datadog.enableRum(rumConfiguration)
         monitorJsRefreshRate(ddSdkConfiguration)
 
-        datadog.enableTrace(TraceConfiguration.Builder().build())
+        datadog.enableTrace(traceConfiguration)
 
-        datadog.enableLogs(LogsConfiguration.Builder().build())
+        datadog.enableLogs(logsConfiguration)
 
         initialized.set(true)
 
@@ -283,6 +285,28 @@ class DdSdkImplementation(
                 }
             }
         )
+
+        configuration.customEndpoints?.rum?.let {
+            configBuilder.useCustomEndpoint(it)
+        }
+
+        return configBuilder.build()
+    }
+
+    private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
+        val configBuilder = LogsConfiguration.Builder()
+        configuration.customEndpoints?.logs?.let {
+            configBuilder.useCustomEndpoint(it)
+        }
+
+        return configBuilder.build()
+    }
+
+    private fun buildTraceConfiguration(configuration: DdSdkConfiguration): TraceConfiguration {
+        val configBuilder = TraceConfiguration.Builder()
+        configuration.customEndpoints?.trace?.let {
+            configBuilder.useCustomEndpoint(it)
+        }
 
         return configBuilder.build()
     }

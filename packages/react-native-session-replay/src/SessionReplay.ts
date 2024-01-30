@@ -30,11 +30,16 @@ export interface SessionReplayConfiguration {
      * Default `SessionReplayPrivacy.MASK`.
      */
     defaultPrivacyLevel?: SessionReplayPrivacy;
+    /**
+     * Custom server url for sending replay data.
+     */
+    customEndpoint?: string;
 }
 
 const DEFAULTS = {
     replaySampleRate: 0,
-    defaultPrivacyLevel: SessionReplayPrivacy.MASK
+    defaultPrivacyLevel: SessionReplayPrivacy.MASK,
+    customEndpoint: ''
 };
 
 export class SessionReplayWrapper {
@@ -47,11 +52,16 @@ export class SessionReplayWrapper {
     ): {
         replaySampleRate: number;
         defaultPrivacyLevel: SessionReplayPrivacy;
+        customEndpoint: string;
     } => {
         if (!configuration) {
             return DEFAULTS;
         }
-        const { replaySampleRate, defaultPrivacyLevel } = configuration;
+        const {
+            replaySampleRate,
+            defaultPrivacyLevel,
+            customEndpoint
+        } = configuration;
         return {
             replaySampleRate:
                 replaySampleRate !== undefined
@@ -60,7 +70,11 @@ export class SessionReplayWrapper {
             defaultPrivacyLevel:
                 defaultPrivacyLevel !== undefined
                     ? defaultPrivacyLevel
-                    : DEFAULTS.defaultPrivacyLevel
+                    : DEFAULTS.defaultPrivacyLevel,
+            customEndpoint:
+                customEndpoint !== undefined
+                    ? customEndpoint
+                    : DEFAULTS.customEndpoint
         };
     };
 
@@ -71,12 +85,14 @@ export class SessionReplayWrapper {
     enable = (configuration?: SessionReplayConfiguration): Promise<void> => {
         const {
             replaySampleRate,
-            defaultPrivacyLevel
+            defaultPrivacyLevel,
+            customEndpoint
         } = this.buildConfiguration(configuration);
 
         return this.nativeSessionReplay.enable(
             replaySampleRate,
-            defaultPrivacyLevel
+            defaultPrivacyLevel,
+            customEndpoint
         );
     };
 }

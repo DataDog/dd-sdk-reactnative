@@ -26,6 +26,7 @@ import DatadogInternal
      - batchSize: The preferred size of batched data uploaded to Datadog.
      - trackFrustrations: Whether to track frustration signals or not.
      - trackBackgroundEvents: Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
+     - customEndpoints: Custom endpoints for RUM/Logs/Trace features.
      - additionalConfig: Additional configuration parameters.
      - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
  */
@@ -46,6 +47,7 @@ public class DdSdkConfiguration: NSObject {
     public var uploadFrequency: Datadog.Configuration.UploadFrequency
     public var batchSize: Datadog.Configuration.BatchSize
     public var trackBackgroundEvents: Bool? = nil
+    public var customEndpoints: CustomEndpoints? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
@@ -65,6 +67,7 @@ public class DdSdkConfiguration: NSObject {
         uploadFrequency: NSString?,
         batchSize: NSString?,
         trackBackgroundEvents: Bool?,
+        customEndpoints: CustomEndpoints?,
         additionalConfig: NSDictionary?,
         configurationForTelemetry: ConfigurationForTelemetry?
     ) {
@@ -83,6 +86,7 @@ public class DdSdkConfiguration: NSObject {
         self.uploadFrequency = DdSdkConfiguration.buildUploadFrequency(uploadFrequency: uploadFrequency)
         self.batchSize = DdSdkConfiguration.buildBatchSize(batchSize: batchSize)
         self.trackBackgroundEvents = trackBackgroundEvents
+        self.customEndpoints = customEndpoints
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
     }
@@ -137,7 +141,7 @@ public class ConfigurationForTelemetry: NSObject {
     public var initializationType: NSString?
     public var trackErrors: Bool?
     public var trackInteractions: Bool?
-    public var trackNetworkRequests: Bool?
+    public let trackNetworkRequests: Bool?
     public var reactVersion: NSString?
     public var reactNativeVersion: NSString?
     
@@ -155,5 +159,21 @@ public class ConfigurationForTelemetry: NSObject {
         self.trackNetworkRequests = trackNetworkRequests
         self.reactVersion = reactVersion
         self.reactNativeVersion = reactNativeVersion
+    }
+}
+
+public class CustomEndpoints: NSObject {
+    public var rum: NSString?
+    public var logs: NSString?
+    public var trace: NSString?
+    
+    public init(
+        rum: NSString?,
+        logs: NSString?,
+        trace: NSString?
+    ) {
+        self.rum = rum
+        self.logs = logs
+        self.trace = trace
     }
 }

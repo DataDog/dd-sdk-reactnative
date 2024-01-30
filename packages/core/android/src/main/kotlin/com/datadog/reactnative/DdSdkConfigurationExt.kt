@@ -28,6 +28,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         uploadFrequency = getString("uploadFrequency"),
         batchSize = getString("batchSize"),
         trackBackgroundEvents = getBoolean("trackBackgroundEvents"),
+        customEndpoints = getMap("customEndpoints")?.asCustomEndpoints(),
         additionalConfig = getMap("additionalConfig")?.toHashMap(),
         configurationForTelemetry = getMap(
             "configurationForTelemetry"
@@ -43,6 +44,14 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
         trackNetworkRequests = getBoolean("trackNetworkRequests"),
         reactVersion = getString("reactVersion"),
         reactNativeVersion = getString("reactNativeVersion"),
+    )
+}
+
+internal fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
+    return CustomEndpoints(
+        rum = getString("rum"),
+        logs = getString("logs"),
+        trace = getString("trace"),
     )
 }
 
@@ -88,5 +97,13 @@ internal fun ConfigurationForTelemetry.toReadableMap(): ReadableMap {
     trackNetworkRequests?.let { map.putBoolean("trackNetworkRequests", it) }
     reactVersion?.let { map.putString("reactVersion", it) }
     reactNativeVersion?.let { map.putString("reactNativeVersion", it) }
+    return map
+}
+
+internal fun CustomEndpoints.toReadableMap(): ReadableMap {
+    val map = WritableNativeMap()
+    rum?.let { map.putString("rum", it) }
+    logs?.let { map.putString("logs", it) }
+    trace?.let { map.putString("trace", it) }
     return map
 }

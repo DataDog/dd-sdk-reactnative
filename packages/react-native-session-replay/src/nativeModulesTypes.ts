@@ -21,9 +21,11 @@ export interface NativeSessionReplayType extends NativeDdSessionReplay {
      * Enable session replay and start recording session.
      * @param replaySampleRate: The sample rate applied for session replay.
      * @param defaultPrivacyLevel: The privacy level used for replay.
+     * @param customEndpoint: Custom server url for sending replay data.
      */
     enable(
         replaySampleRate: number,
-        defaultPrivacyLevel: PrivacyLevel
+        defaultPrivacyLevel: PrivacyLevel,
+        customEndpoint: string
     ): Promise<void>;
 }

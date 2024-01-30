@@ -27,15 +27,20 @@ class DdSessionReplayImplementation(
      * Enable session replay and start recording session.
      * @param replaySampleRate The sample rate applied for session replay.
      * @param defaultPrivacyLevel The privacy level used for replay.
+     * @param customEndpoint Custom server url for sending replay data.
      */
-    fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, promise: Promise) {
+    fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, customEndpoint: String, promise: Promise) {
         val sdkCore = Datadog.getInstance() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .setPrivacy(buildPrivacy(defaultPrivacyLevel))
             .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(reactContext, logger))
-            .build()
-        sessionReplayProvider().enable(configuration)
+
+        if (customEndpoint != "") {
+            configuration.useCustomEndpoint(customEndpoint)
+        }
+
+        sessionReplayProvider().enable(configuration.build())
         promise.resolve(null)
     }
 
