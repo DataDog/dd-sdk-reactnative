@@ -1,6 +1,8 @@
 import type { RumActionEvent } from 'rum-events-format';
 
-import { AssertionError } from '../assertionError';
+import { exactStringMatcherBuilder } from '../utils/eventMatcherStrategies/exactStringMatcher';
+import { partialStringMatcherBuilder } from '../utils/eventMatcherStrategies/partialStringMatcher';
+import { findEventsWithMatchers } from '../utils';
 
 export const buildRumActionAssertions = (events: RumActionEvent[]) => {
     return {
@@ -16,25 +18,20 @@ export const buildRumActionAssertions = (events: RumActionEvent[]) => {
                     'toHaveActionWith was called without a target or a type. Please specify at least one of them.'
                 );
             }
-            const actionMatching = events.find(action => {
-                if (target && !action.action.target?.name.match(target)) {
-                    return false;
-                }
-                if (type && action.action.type !== type) {
-                    return false;
-                }
-                return true;
+
+            findEventsWithMatchers(events, {
+                fieldMatchers: {
+                    target: partialStringMatcherBuilder(
+                        target,
+                        action => action.action.target?.name
+                    ),
+                    type: exactStringMatcherBuilder(
+                        type,
+                        action => action.action.type
+                    )
+                },
+                eventName: 'action'
             });
-            if (!actionMatching) {
-                throw new AssertionError(
-                    'Could not find action matching target and type.',
-                    `${target && `target: "${target}"`} ${
-                        type && `type: "${type}"`
-                    }`,
-                    undefined,
-                    events
-                );
-            }
         }
     };
 };

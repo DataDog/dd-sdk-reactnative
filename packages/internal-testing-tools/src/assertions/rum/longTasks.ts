@@ -1,6 +1,46 @@
 import type { RumLongTaskEvent } from 'rum-events-format';
 
-import { AssertionError } from '../assertionError';
+import { durationMatcherBuilder } from '../utils/eventMatcherStrategies/durationMatcher';
+import type { EventMatcherStrategy } from '../utils/eventMatcherStrategies/eventMatcherStrategy';
+import { findEventsWithMatchers } from '../utils';
+
+const longTaskThreadMatcher = (
+    expected: 'js' | 'main' | undefined
+): EventMatcherStrategy<RumLongTaskEvent> => {
+    return {
+        runMatcher: event => {
+            if (expected !== undefined) {
+                // Disabling ts as trying to safely access attributes won't crash the app
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                const thread = event.context?.['long_task']?.['target'];
+                switch (expected) {
+                    case 'js': {
+                        if (thread !== 'javascript') {
+                            return false;
+                        }
+                        break;
+                    }
+                    case 'main': {
+                        if (thread === 'javascript') {
+                            return false;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            return true;
+        },
+        formatExpectedValueForErrorMessage: () => {
+            if (expected === undefined) {
+                return '';
+            }
+            return expected;
+        }
+    };
+};
 
 export const buildRumLongTaskAssertions = (events: RumLongTaskEvent[]) => {
     return {
@@ -16,59 +56,17 @@ export const buildRumLongTaskAssertions = (events: RumLongTaskEvent[]) => {
                     'toHaveLongTaskWith was called without a duration or a thread. Please specify at least one of them.'
                 );
             }
-            const longTaskMatching = events.find(longTask => {
-                switch (thread) {
-                    case 'js': {
-                        if (
-                            // Disabling ts as trying to safely access attributes won't crash the app
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            longTask.context?.['long_task']?.['target'] !==
-                            'javascript'
-                        ) {
-                            return false;
-                        }
-                        break;
-                    }
-                    case 'main': {
-                        if (
-                            // Disabling ts as trying to safely access attributes won't crash the app
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            longTask.context?.['long_task']?.['target'] ===
-                            'javascript'
-                        ) {
-                            return false;
-                        }
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-                if (duration) {
-                    const durationMs = longTask.long_task.duration / 1_000_000;
-                    if (
-                        durationMs > duration.maxMs ||
-                        durationMs < duration.minMs
-                    ) {
-                        return false;
-                    }
-                }
 
-                return true;
+            findEventsWithMatchers(events, {
+                fieldMatchers: {
+                    thread: longTaskThreadMatcher(thread),
+                    duration: durationMatcherBuilder(
+                        duration,
+                        longTask => longTask.long_task.duration / 1_000_000
+                    )
+                },
+                eventName: 'action'
             });
-            if (!longTaskMatching) {
-                throw new AssertionError(
-                    'Could not find error matching duration and thread.',
-                    `${thread && `thread: "${thread}"`} ${
-                        duration &&
-                        `duration min: ${duration.minMs} duration max: ${duration.maxMs}`
-                    }`,
-                    undefined,
-                    events
-                );
-            }
         }
     };
 };
