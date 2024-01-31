@@ -26,6 +26,7 @@ import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
+import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -53,7 +54,6 @@ class DdSdkImplementation(
 
         val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
-
         monitorJsRefreshRate(ddSdkConfiguration)
         initialized.set(true)
 
@@ -147,7 +147,7 @@ class DdSdkImplementation(
                 Log.w(
                     DdSdk::class.java.canonicalName,
                     "Unknown consent given: $trackingConsent, " +
-                        "using ${TrackingConsent.PENDING} as default"
+                            "using ${TrackingConsent.PENDING} as default"
                 )
                 TrackingConsent.PENDING
             }
@@ -192,7 +192,7 @@ class DdSdkImplementation(
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
             buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
-                VitalsUpdateFrequency.NEVER
+                    VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -208,8 +208,8 @@ class DdSdkImplementation(
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                        ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                    )
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
@@ -223,6 +223,8 @@ class DdSdkImplementation(
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_NATIVE_INTERACTION_TRACKING = "_dd.native_interaction_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
+        internal const val DD_ENABLE_RUM_FOR_LOGS = "_dd.enable_rum_for_logs"
+        internal const val DD_ENABLE_TRACES_FOR_LOGS = "_dd.enable_traces_for_logs"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"

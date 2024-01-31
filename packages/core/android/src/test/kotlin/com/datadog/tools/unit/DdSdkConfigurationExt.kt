@@ -96,6 +96,8 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     firstPartyHosts?.let {
         map.put("firstPartyHosts", it.toFirstPartyHostsReadableArray())
     }
+    map.put("bundleLogsWithRum", bundleLogsWithRum)
+    map.put("bundleLogsWithTraces", bundleLogsWithTraces)
 
     return map.toReadableMap()
 }

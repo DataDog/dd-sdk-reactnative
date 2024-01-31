@@ -35,6 +35,8 @@ import java.net.Proxy
  * @param proxyConfig Configuration for proxying SDK data.
  * @param serviceName Custom service name.
  * @param firstPartyHosts List of backend hosts to enable tracing with.
+ * @param bundleLogsWithRum Enables RUM correlation with logs.
+ * @param bundleLogsWithTraces Enables Traces correlation with logs.
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -60,7 +62,9 @@ data class DdSdkConfiguration(
     val verbosity: String? = null,
     val proxyConfig: Pair<Proxy, ProxyAuthenticator?>? = null,
     val serviceName: String? = null,
-    val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null
+    val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
+    val bundleLogsWithRum: Boolean? = null,
+    val bundleLogsWithTraces: Boolean? = null
 )
 
 internal data class JSONConfigurationFile(
@@ -89,7 +93,9 @@ internal data class JSONDdSdkConfiguration(
     val verbosity: String? = null,
     val proxy: JSONProxyConfiguration? = null,
     val serviceName: String? = null,
-    val firstPartyHosts: List<JSONFirstPartyHost>? = null
+    val firstPartyHosts: List<JSONFirstPartyHost>? = null,
+    val bundleLogsWithRum: Boolean? = null,
+    val bundleLogsWithTraces: Boolean? = null
 )
 
 internal data class JSONProxyConfiguration(

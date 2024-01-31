@@ -11,6 +11,7 @@ import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
+import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.Tracer
 import io.opentracing.util.GlobalTracer
@@ -28,6 +29,7 @@ class DdTraceImplementation(
     }
 ) {
     private val spanMap: MutableMap<String, Span> = mutableMapOf()
+    private val scopeMap: MutableMap<String, Scope> = mutableMapOf()
 
     // lazy here is on purpose. The thing is that this class will be instantiated even
     // before Sdk.initialize is called, but Tracer can be created only after SDK is initialized.
@@ -43,12 +45,17 @@ class DdTraceImplementation(
         val span = tracer.buildSpan(operation)
             .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(timestampMs.toLong()))
             .start()
+        
+        // This is required for traces to be able to be bundled with logs.
+        val scope = tracer.scopeManager().activate(span)
+
         val spanContext = span.context()
 
         span.setTags(context.toHashMap())
         span.setTags(GlobalState.globalAttributes)
         val spanId = spanContext.toSpanId()
         spanMap[spanId] = span
+        scopeMap[spanId] = scope
 
         promise.resolve(spanId)
     }
@@ -60,6 +67,9 @@ class DdTraceImplementation(
      * @param timestampMs The timestamp when the operation stopped (in milliseconds). If not provided, current timestamp will be used.
      */
     fun finishSpan(spanId: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+        val scope = scopeMap.remove(spanId)
+        scope?.close()
+
         val span = spanMap.remove(spanId)
         if (span == null) {
             promise.resolve(null)

@@ -43,6 +43,7 @@ class DdSdkNativeInitialization internal constructor(
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
         configureSdkVerbosity(ddSdkConfiguration)
+        configureRumAndTracesForLogs(ddSdkConfiguration)
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
@@ -51,6 +52,15 @@ class DdSdkNativeInitialization internal constructor(
         datadog.enableTrace(traceConfiguration)
 
         datadog.enableLogs(logsConfiguration)
+    }
+
+    private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
+        configuration.bundleLogsWithRum?.let {
+            datadog.bundleLogsWithRum = it
+        }
+        configuration.bundleLogsWithTraces?.let {
+            datadog.bundleLogsWithTraces = it
+        }
     }
 
     private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {

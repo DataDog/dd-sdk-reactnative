@@ -43,7 +43,9 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         verbosity = getString("verbosity"),
         proxyConfig = getMap("proxyConfig")?.asProxyConfig(),
         serviceName = getString("serviceName"),
-        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts()
+        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
+        bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
+        bundleLogsWithTraces = getBoolean("bundleLogsWithTraces")
     )
 }
 
@@ -117,6 +119,8 @@ internal object DefaultConfiguration {
     const val uploadFrequency = "AVERAGE"
     const val batchSize = "MEDIUM"
     const val trackBackgroundEvents = false
+    const val bundleLogsWithRum = true
+    const val bundleLogsWithTraces = true
 }
 
 @Suppress("ComplexMethod")
@@ -148,7 +152,9 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         this.verbosity,
         this.proxy?.asProxyConfig(),
         this.serviceName,
-        this.firstPartyHosts?.asFirstPartyHosts()
+        this.firstPartyHosts?.asFirstPartyHosts(),
+        this.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
+        this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces
     )
 }
 

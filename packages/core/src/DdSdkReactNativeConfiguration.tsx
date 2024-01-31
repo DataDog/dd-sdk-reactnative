@@ -113,7 +113,9 @@ export const DEFAULTS = {
     uploadFrequency: UploadFrequency.AVERAGE,
     batchSize: BatchSize.MEDIUM,
     trackBackgroundEvents: false,
-    getCustomEndpoints: () => ({})
+    getCustomEndpoints: () => ({}),
+    bundleLogsWithRum: true,
+    bundleLogsWithTraces: true
 };
 
 /**
@@ -251,6 +253,20 @@ export class DdSdkReactNativeConfiguration {
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
 
     /**
+     * Enables RUM correlation with logs.
+     *
+     * By default, RUM is enabled for logs.
+     */
+    public bundleLogsWithRum: boolean = DEFAULTS.bundleLogsWithRum;
+
+    /**
+     * Enables Traces correlation with logs.
+     *
+     * By default, Traces is enabled for logs.
+     */
+    public bundleLogsWithTraces: boolean = DEFAULTS.bundleLogsWithTraces;
+
+    /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
      *
      * For example if you set it to `testID`, the value of the `testID` prop is used as a custom action name:
@@ -383,6 +399,8 @@ export type PartialInitializationConfiguration = {
     readonly batchSize?: BatchSize;
     readonly trackBackgroundEvents?: boolean;
     readonly customEndpoints?: CustomEndpoints;
+    readonly bundleLogsWithRum?: boolean;
+    readonly bundleLogsWithTraces?: boolean;
 };
 
 const setConfigurationAttribute = <

@@ -77,7 +77,9 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             verbosity = forge.aNullable { anElementFrom("debug", "info", "warn", "error") },
             proxyConfig = null,
             serviceName = forge.aNullable { forge.anAlphabeticalString() },
-            firstPartyHosts = null
+            firstPartyHosts = null,
+            bundleLogsWithRum = forge.aBool(),
+            bundleLogsWithTraces = forge.aBool()
         )
     }
 }
