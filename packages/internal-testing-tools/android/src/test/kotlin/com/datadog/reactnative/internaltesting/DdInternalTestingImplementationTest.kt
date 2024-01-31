@@ -10,14 +10,13 @@ import android.content.Context
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
-import com.datadog.android.api.storage.DataWriter
 import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -73,16 +72,22 @@ internal class DdInternalTestingImplementationTest {
 
         val wrappedCore = DatadogSDKWrapperStorage.getSdkCore() as StubSDKCore
         wrappedCore.registerFeature(mockFeature)
-        requireNotNull(wrappedCore.getFeature(mockFeature.name)).withWriteContext { _, eventBatchWriter ->
-            eventBatchWriter.write(RawBatchEvent(data = "mock event for test".toByteArray()), batchMetadata = null)
-        }
+        requireNotNull(wrappedCore.getFeature(mockFeature.name))
+            .withWriteContext { _, eventBatchWriter ->
+                eventBatchWriter.write(
+                    RawBatchEvent(data = "mock event for test".toByteArray()),
+                    batchMetadata = null
+                )
+            }
 
         // Then
-        assertThat(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first()).isEqualTo("mock event for test")
+        assertThat(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first()).isEqualTo(
+            "mock event for test"
+        )
     }
 }
 
-internal class MockFeatureScope(private val feature: Feature): FeatureScope {
+internal class MockFeatureScope(private val feature: Feature) : FeatureScope {
     override fun sendEvent(event: Any) {}
 
     override fun <T : Feature> unwrap(): T {

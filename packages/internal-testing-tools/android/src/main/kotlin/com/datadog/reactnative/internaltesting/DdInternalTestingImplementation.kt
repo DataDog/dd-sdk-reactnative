@@ -25,7 +25,7 @@ import okhttp3.HttpUrl
 /**
  * The entry point to use Datadog's internal testing feature.
  */
-class DdInternalTestingImplementation() {
+class DdInternalTestingImplementation {
     private var wrappedCore: StubSDKCore? = null
     private val gson = Gson()
 
@@ -136,7 +136,7 @@ internal class EventBatchInterceptor: EventBatchWriter {
     internal val events = mutableListOf<String>()
 
     override fun currentMetadata(): ByteArray? {
-        TODO("Not yet implemented")
+        return null
     }
 
     fun clearData() {

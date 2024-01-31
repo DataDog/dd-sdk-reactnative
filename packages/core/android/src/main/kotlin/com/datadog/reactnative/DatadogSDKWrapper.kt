@@ -42,8 +42,8 @@ object DatadogSDKWrapperStorage {
      * Exposed for testing purposes only.
      */
     fun notifyOnInitializedListeners(ddCore: InternalSdkCore) {
-        onInitializedListeners.forEach {
-            it(ddCore)
+        for (listener in onInitializedListeners) {
+            listener(ddCore)
         }
     }
 
@@ -130,8 +130,8 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun addRumGlobalAttributes(attributes: Map<String, Any?>) {
         val rumMonitor = this.getRumMonitor()
-        attributes.forEach {
-            rumMonitor.addAttribute(it.key, it.value)
+        for (attribute in attributes) {
+            rumMonitor.addAttribute(attribute.key, attribute.value)
         }
     }
 

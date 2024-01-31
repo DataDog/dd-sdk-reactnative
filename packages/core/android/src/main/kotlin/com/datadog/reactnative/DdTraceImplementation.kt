@@ -73,7 +73,7 @@ class DdTraceImplementation(
     }
 
     private fun Span.setTags(tags: Map<String, Any?>) {
-        tags.forEach { (key, value) ->
+        for ((key, value) in tags) {
             when (value) {
                 is Boolean -> setTag(key, value)
                 is Number -> setTag(key, value)
