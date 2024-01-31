@@ -62,6 +62,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
+                  "enableRumForLogs": false,
+                  "enableTracesForLogs": false,  
                 }
             `);
         });
@@ -95,11 +97,13 @@ describe('DdSdkReactNativeConfiguration', () => {
                             'api.com',
                             443
                         ),
-
+                        
                         serviceName: 'com.test.app',
                         version: '1.4.5',
                         versionSuffix: 'codepush-3',
-                        additionalConfig: { additionalField: 'fake-value' },
+                        additionalConfig: { 
+                            additionalField: 'fake-value',
+                        },
                         trackingConsent: TrackingConsent.PENDING,
                         nativeCrashReportEnabled: true,
                         nativeLongTaskThresholdMs: 345,
@@ -112,7 +116,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                             rum: 'https://rum.example.com/',
                             logs: 'https://logs.example.com/',
                             trace: 'https://trace.example.com/'
-                        }
+                        },
+                        enableRumForLogs: true,
+                        enableTracesForLogs: true,
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -130,6 +136,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "rum": "https://rum.example.com/",
                     "trace": "https://trace.example.com/",
                   },
+                  "enableRumForLogs": true,
+                  "enableTracesForLogs": true,
                   "env": "fake-env",
                   "errorEventMapper": [Function],
                   "firstPartyHosts": [

@@ -141,4 +141,14 @@ interface DatadogWrapper {
      * Clears all data that has not already been sent to Datadog servers.
      */
     fun clearAllData()
+
+    /**
+     * Enable Rum for Logs
+     */
+    fun setRumForLogsEnabled(enabled: Boolean)
+
+    /**
+     * Enable Traces for Logs
+     */
+    fun setTracesForLogsEnabled(enabled: Boolean)
 }

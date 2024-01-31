@@ -61,6 +61,7 @@ class DdSdkImplementation(
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
         configureSdkVerbosity(ddSdkConfiguration)
+        configureRumAndTracesForLogs(ddSdkConfiguration)
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
@@ -166,6 +167,19 @@ class DdSdkImplementation(
             }
         if (verbosity != null) {
             datadog.setVerbosity(verbosity)
+        }
+    }
+
+    private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
+        val rumForLogsEnabled = configuration.additionalConfig?.get(DD_RUM_ENABLE_LOGS) as? Boolean
+        val tracesForLogsEnabled = configuration.additionalConfig?.get(DD_TRACES_ENABLE_LOGS) as? Boolean
+
+        if (rumForLogsEnabled != null) {
+            datadog.setRumForLogsEnabled(rumForLogsEnabled)
+        }
+
+        if (tracesForLogsEnabled != null) {
+            datadog.setTracesForLogsEnabled(tracesForLogsEnabled)
         }
     }
 
@@ -546,6 +560,8 @@ class DdSdkImplementation(
         internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
         internal const val DD_NATIVE_INTERACTION_TRACKING = "_dd.native_interaction_tracking"
         internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
+        internal const val DD_RUM_ENABLE_LOGS = "_dd.enable_rum_for_logs"
+        internal const val DD_TRACES_ENABLE_LOGS = "_dd.enable_traces_for_logs"
         internal const val DD_SERVICE_NAME = "_dd.service_name"
         internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"

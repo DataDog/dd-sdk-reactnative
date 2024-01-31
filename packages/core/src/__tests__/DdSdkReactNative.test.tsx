@@ -361,6 +361,52 @@ describe('DdSdkReactNative', () => {
             );
         });
 
+        it('initializes with enableRumForLogs when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.enableRumForLogs = true;
+            
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+                expect(ddSdkConfiguration.additionalConfig['_dd.enable_rum_for_logs']).toBe(
+                    true
+                );
+        });
+
+        it('initializes with enableTracesForLogs when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.enableTracesForLogs = true;
+            
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+                expect(ddSdkConfiguration.additionalConfig['_dd.enable_traces_for_logs']).toBe(
+                    true
+                );
+        });
+
         it('initializes with the version when a version is specified', async () => {
             // GIVEN
             const fakeAppId = '1';

@@ -19,8 +19,18 @@ class DdLogsImplementation(
     private val datadog: DatadogWrapper = DatadogSDKWrapper()
 ) {
     private val reactNativeLogger: Logger by lazy {
+        var rumForLogsEnabled = false
+        var tracesForLogsEnabled = false
+
+        (datadog as? DatadogSDKWrapper)?.let{
+            rumForLogsEnabled = it.rumForLogsState
+            tracesForLogsEnabled = it.traceForLogsState
+        }
+
         logger ?: Logger.Builder(DatadogSDKWrapperStorage.getSdkCore())
             .setLogcatLogsEnabled(true)
+            .setBundleWithRumEnabled(rumForLogsEnabled)
+            .setBundleWithTraceEnabled(tracesForLogsEnabled)
             .setName("DdLogs")
             .build()
     }

@@ -37,7 +37,9 @@ export class DdSdkConfiguration {
             trackNetworkRequests: boolean;
             reactVersion: string;
             reactNativeVersion: string;
-        }
+        },
+        readonly enableRumForLogs: boolean,
+        readonly enableTracesForLogs: boolean,
     ) {}
 }
 

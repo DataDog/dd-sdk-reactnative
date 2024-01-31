@@ -53,6 +53,8 @@ export class DdSdkReactNative {
         '_dd.native_interaction_tracking';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
+    private static readonly DD_ENABLE_RUM_FOR_LOGS = '_dd.enable_rum_for_logs';
+    private static readonly DD_ENABLE_TRACES_FOR_LOGS = '_dd.enable_traces_for_logs';
 
     // Proxy
     private static readonly DD_PROXY_TYPE_KEY = '_dd.proxy.type';
@@ -133,7 +135,9 @@ export class DdSdkReactNative {
                         .version,
                     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                     reactVersion: require('react/package.json').version
-                }
+                },
+                configuration.enableRumForLogs,
+                configuration.enableTracesForLogs,
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
@@ -267,6 +271,12 @@ export class DdSdkReactNative {
         configuration.additionalConfig[
             DdSdkReactNative.DD_NATIVE_INTERACTION_TRACKING_KEY
         ] = configuration.nativeInteractionTracking;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_ENABLE_RUM_FOR_LOGS
+        ] = configuration.enableRumForLogs;
+        configuration.additionalConfig[
+            DdSdkReactNative.DD_ENABLE_TRACES_FOR_LOGS
+        ] = configuration.enableTracesForLogs;
 
         if (configuration.verbosity) {
             configuration.additionalConfig[
