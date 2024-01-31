@@ -70,8 +70,8 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
-    var rumForLogsState = false
-    var traceForLogsState = false
+    var rumForLogsState = RUM_ENABLE_LOGS_DEFAULT
+    var traceForLogsState = TRACES_ENABLE_LOGS_DEFAULT
 
     override fun setRumForLogsEnabled(enabled: Boolean) {
         this.rumForLogsState = enabled
@@ -175,6 +175,11 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun clearAllData() {
         return Datadog.clearAllData(DatadogSDKWrapperStorage.getSdkCore())
+    }
+
+    internal companion object {
+        internal const val RUM_ENABLE_LOGS_DEFAULT = true
+        internal const val TRACES_ENABLE_LOGS_DEFAULT = true
     }
 }
 

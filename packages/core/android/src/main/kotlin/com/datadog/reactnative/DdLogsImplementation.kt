@@ -8,6 +8,8 @@ package com.datadog.reactnative
 
 import android.util.Log as AndroidLog
 import com.datadog.android.log.Logger
+import com.datadog.reactnative.DatadogSDKWrapper.Companion.RUM_ENABLE_LOGS_DEFAULT
+import com.datadog.reactnative.DatadogSDKWrapper.Companion.TRACES_ENABLE_LOGS_DEFAULT
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
@@ -19,13 +21,10 @@ class DdLogsImplementation(
     private val datadog: DatadogWrapper = DatadogSDKWrapper()
 ) {
     private val reactNativeLogger: Logger by lazy {
-        var rumForLogsEnabled = false
-        var tracesForLogsEnabled = false
-
-        (datadog as? DatadogSDKWrapper)?.let{
-            rumForLogsEnabled = it.rumForLogsState
-            tracesForLogsEnabled = it.traceForLogsState
-        }
+        val rumForLogsEnabled = (datadog as? DatadogSDKWrapper)?.rumForLogsState
+            ?: RUM_ENABLE_LOGS_DEFAULT
+        val tracesForLogsEnabled = (datadog as? DatadogSDKWrapper)?.traceForLogsState
+            ?: TRACES_ENABLE_LOGS_DEFAULT
 
         logger ?: Logger.Builder(DatadogSDKWrapperStorage.getSdkCore())
             .setLogcatLogsEnabled(true)

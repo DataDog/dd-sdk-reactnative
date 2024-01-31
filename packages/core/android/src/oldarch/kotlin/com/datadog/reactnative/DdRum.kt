@@ -16,9 +16,12 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's RUM feature.
  */
 @Suppress("TooManyFunctions")
-class DdRum(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class DdRum(
+    reactContext: ReactApplicationContext,
+    datadogWrapper: DatadogWrapper
+) : ReactContextBaseJavaModule(reactContext) {
 
-    private val implementation = DdRumImplementation()
+    private val implementation = DdRumImplementation(datadog = datadogWrapper)
 
     override fun getName(): String = DdRumImplementation.NAME
 

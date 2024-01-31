@@ -114,8 +114,8 @@ const DEFAULTS = {
     batchSize: BatchSize.MEDIUM,
     trackBackgroundEvents: false,
     getCustomEndpoints: () => ({}),
-    enableRumForLogs: false,
-    enableTracesForLogs: false,
+    enableRumForLogs: true,
+    enableTracesForLogs: true,
 };
 
 /**
@@ -255,14 +255,14 @@ export class DdSdkReactNativeConfiguration {
     /**
      * Enables RUM for logs.
      * 
-     * By default, RUM is not enabled for logs.
+     * By default, RUM is enabled for logs.
      */
     public enableRumForLogs: boolean = DEFAULTS.enableRumForLogs; 
 
         /**
      * Enables Traces for logs.
      * 
-     * By default, Traces is not enabled for logs.
+     * By default, Traces is enabled for logs.
      */
     public enableTracesForLogs: boolean = DEFAULTS.enableTracesForLogs;
 
