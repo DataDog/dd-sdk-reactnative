@@ -109,6 +109,8 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.nativeInteractionTracking).toBe(false);
             expect(ddSdkConfiguration.nativeViewTracking).toBe(false);
             expect(ddSdkConfiguration.firstPartyHosts).toEqual([]);
+            expect(ddSdkConfiguration.bundleLogsWithRum).toBe(true);
+            expect(ddSdkConfiguration.bundleLogsWithTraces).toBe(true);
 
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
@@ -353,6 +355,48 @@ describe('DdSdkReactNative', () => {
                     sampleRate: 70
                 })
             );
+        });
+
+        it('initializes with bundleLogsWithRum false when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.bundleLogsWithRum = false;
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.bundleLogsWithRum).toBe(false);
+        });
+
+        it('initializes with bundleLogsWithTraces false when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.bundleLogsWithTraces = false;
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkConfiguration;
+            expect(ddSdkConfiguration.bundleLogsWithTraces).toBe(false);
         });
 
         it('initializes with the version when a version is specified', async () => {

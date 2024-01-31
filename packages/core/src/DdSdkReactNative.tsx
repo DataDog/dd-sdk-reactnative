@@ -271,7 +271,9 @@ export class DdSdkReactNative {
             configuration.verbosity,
             configuration.proxyConfig,
             configuration.serviceName,
-            formatFirstPartyHosts(configuration.firstPartyHosts)
+            formatFirstPartyHosts(configuration.firstPartyHosts),
+            configuration.bundleLogsWithRum,
+            configuration.bundleLogsWithTraces
         );
     };
 

@@ -70,6 +70,8 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
+    override var bundleLogsWithRum = BUNDLE_LOGS_WITH_RUM_DEFAULT
+    override var bundleLogsWithTraces = BUNDLE_LOGS_WITH_TRACES_DEFAULT
 
     // We use Kotlin backing field here to initialize once the telemetry proxy
     // and make sure it is only after SDK is initialized.
@@ -165,6 +167,11 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun clearAllData() {
         return Datadog.clearAllData(DatadogSDKWrapperStorage.getSdkCore())
+    }
+
+    internal companion object {
+        internal const val BUNDLE_LOGS_WITH_RUM_DEFAULT = true
+        internal const val BUNDLE_LOGS_WITH_TRACES_DEFAULT = true
     }
 }
 

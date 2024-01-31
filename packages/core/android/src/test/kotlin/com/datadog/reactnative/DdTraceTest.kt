@@ -15,6 +15,8 @@ import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeExtension
+import io.opentracing.Scope
+import io.opentracing.ScopeManager
 import io.opentracing.Span
 import io.opentracing.SpanContext
 import io.opentracing.Tracer
@@ -58,7 +60,13 @@ internal class DdTraceTest {
     lateinit var mockSpanContext: SpanContext
 
     @Mock
+    lateinit var mockScopeManager: ScopeManager
+
+    @Mock
     lateinit var mockSpan: Span
+
+    @Mock
+    lateinit var mockScope: Scope
 
     @StringForgery
     lateinit var fakeOperation: String
@@ -94,6 +102,7 @@ internal class DdTraceTest {
     @BeforeEach
     fun `set up`() {
         whenever(mockTracer.buildSpan(fakeOperation)) doReturn mockSpanBuilder
+        whenever(mockTracer.scopeManager()) doReturn mockScopeManager
         whenever(
             mockSpanBuilder.withStartTimestamp(
                 fakeTimestamp.toLong() * 1000
@@ -103,6 +112,7 @@ internal class DdTraceTest {
         whenever(mockSpan.context()) doReturn mockSpanContext
         whenever(mockSpanContext.toSpanId()) doReturn fakeSpanId
         whenever(mockSpanContext.toTraceId()) doReturn fakeTraceId
+        whenever(mockScopeManager.activate(mockSpan)) doReturn mockScope
 
         testedTrace = DdTraceImplementation(tracerProvider = { mockTracer })
     }

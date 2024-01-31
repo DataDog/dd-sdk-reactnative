@@ -42,7 +42,9 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         verbosity = getString("verbosity"),
         proxyConfig = getMap("proxyConfig")?.asProxyConfig(),
         serviceName = getString("serviceName"),
-        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts()
+        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
+        bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
+        bundleLogsWithTraces = getBoolean("bundleLogsWithTraces")
     )
 }
 
