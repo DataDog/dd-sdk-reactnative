@@ -54,7 +54,8 @@ export class DdSdkReactNative {
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
     private static readonly DD_ENABLE_RUM_FOR_LOGS = '_dd.enable_rum_for_logs';
-    private static readonly DD_ENABLE_TRACES_FOR_LOGS = '_dd.enable_traces_for_logs';
+    private static readonly DD_ENABLE_TRACES_FOR_LOGS =
+        '_dd.enable_traces_for_logs';
 
     // Proxy
     private static readonly DD_PROXY_TYPE_KEY = '_dd.proxy.type';
@@ -137,7 +138,7 @@ export class DdSdkReactNative {
                     reactVersion: require('react/package.json').version
                 },
                 configuration.enableRumForLogs,
-                configuration.enableTracesForLogs,
+                configuration.enableTracesForLogs
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);

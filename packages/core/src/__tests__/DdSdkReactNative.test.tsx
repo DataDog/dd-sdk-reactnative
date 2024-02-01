@@ -111,7 +111,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
         });
 
@@ -148,7 +150,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
 
             expect(DdSdkReactNative['wasInitialized']).toBe(false);
@@ -193,7 +197,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
         });
 
@@ -228,7 +234,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
         });
 
@@ -285,7 +293,9 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
-                    '_dd.first_party_hosts': []
+                    '_dd.first_party_hosts': [],
+                    '_dd.enable_rum_for_logs': true,
+                    '_dd.enable_traces_for_logs': true
                 });
                 expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
             } finally {
@@ -372,16 +382,16 @@ describe('DdSdkReactNative', () => {
                 fakeAppId
             );
             configuration.enableRumForLogs = true;
-            
+
             // WHEN
             await DdSdkReactNative.initialize(configuration);
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
-                expect(ddSdkConfiguration.additionalConfig['_dd.enable_rum_for_logs']).toBe(
-                    true
-                );
+            expect(
+                ddSdkConfiguration.additionalConfig['_dd.enable_rum_for_logs']
+            ).toBe(true);
         });
 
         it('initializes with enableTracesForLogs when it is specified', async () => {
@@ -395,16 +405,18 @@ describe('DdSdkReactNative', () => {
                 fakeAppId
             );
             configuration.enableTracesForLogs = true;
-            
+
             // WHEN
             await DdSdkReactNative.initialize(configuration);
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
-                expect(ddSdkConfiguration.additionalConfig['_dd.enable_traces_for_logs']).toBe(
-                    true
-                );
+            expect(
+                ddSdkConfiguration.additionalConfig[
+                    '_dd.enable_traces_for_logs'
+                ]
+            ).toBe(true);
         });
 
         it('initializes with the version when a version is specified', async () => {
@@ -514,7 +526,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(
                 DdRumUserInteractionTracking.startTracking
@@ -568,7 +582,9 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
                 1
@@ -620,7 +636,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -822,7 +840,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.service_name': fakeServiceName,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -860,7 +880,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -897,7 +919,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': true,
                 '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -934,7 +958,9 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion,
                 '_dd.native_view_tracking': false,
                 '_dd.native_interaction_tracking': true,
-                '_dd.first_party_hosts': []
+                '_dd.first_party_hosts': [],
+                '_dd.enable_rum_for_logs': true,
+                '_dd.enable_traces_for_logs': true
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -1139,7 +1165,9 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.type': proxyType,
                     '_dd.proxy.address': proxyAddress,
                     '_dd.proxy.port': proxyPort,
-                    '_dd.first_party_hosts': []
+                    '_dd.first_party_hosts': [],
+                    '_dd.enable_rum_for_logs': true,
+                    '_dd.enable_traces_for_logs': true
                 });
             });
         }
@@ -1200,7 +1228,9 @@ describe('DdSdkReactNative', () => {
                     '_dd.proxy.port': proxyPort,
                     '_dd.proxy.username': proxyUsername,
                     '_dd.proxy.password': proxyPassword,
-                    '_dd.first_party_hosts': []
+                    '_dd.first_party_hosts': [],
+                    '_dd.enable_rum_for_logs': true,
+                    '_dd.enable_traces_for_logs': true
                 });
             });
         }

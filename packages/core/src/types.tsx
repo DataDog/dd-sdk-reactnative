@@ -39,7 +39,7 @@ export class DdSdkConfiguration {
             reactNativeVersion: string;
         },
         readonly enableRumForLogs: boolean,
-        readonly enableTracesForLogs: boolean,
+        readonly enableTracesForLogs: boolean
     ) {}
 }
 

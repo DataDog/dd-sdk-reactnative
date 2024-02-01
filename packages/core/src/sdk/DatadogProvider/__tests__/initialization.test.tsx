@@ -61,6 +61,8 @@ describe('DatadogProvider', () => {
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkConfiguration {
                   "additionalConfig": {
+                    "_dd.enable_rum_for_logs": true,
+                    "_dd.enable_traces_for_logs": true,
                     "_dd.first_party_hosts": [],
                     "_dd.native_interaction_tracking": false,
                     "_dd.native_view_tracking": false,
@@ -78,6 +80,8 @@ describe('DatadogProvider', () => {
                     "trackNetworkRequests": false,
                   },
                   "customEndpoints": {},
+                  "enableRumForLogs": true,
+                  "enableTracesForLogs": true,
                   "env": "fakeEnv",
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,

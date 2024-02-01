@@ -37,6 +37,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
                   "customEndpoints": {},
+                  "enableRumForLogs": true,
+                  "enableTracesForLogs": true,
                   "env": "fake-env",
                   "errorEventMapper": null,
                   "firstPartyHosts": [],
@@ -62,8 +64,6 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
-                  "enableRumForLogs": false,
-                  "enableTracesForLogs": false,  
                 }
             `);
         });
@@ -97,12 +97,11 @@ describe('DdSdkReactNativeConfiguration', () => {
                             'api.com',
                             443
                         ),
-                        
                         serviceName: 'com.test.app',
                         version: '1.4.5',
                         versionSuffix: 'codepush-3',
-                        additionalConfig: { 
-                            additionalField: 'fake-value',
+                        additionalConfig: {
+                            additionalField: 'fake-value'
                         },
                         trackingConsent: TrackingConsent.PENDING,
                         nativeCrashReportEnabled: true,
@@ -118,7 +117,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trace: 'https://trace.example.com/'
                         },
                         enableRumForLogs: true,
-                        enableTracesForLogs: true,
+                        enableTracesForLogs: true
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -203,7 +202,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                         longTaskThresholdMs: false,
                         trackFrustrations: false,
                         trackBackgroundEvents: false,
-                        customEndpoints: {}
+                        customEndpoints: {},
+                        enableRumForLogs: false,
+                        enableTracesForLogs: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -214,6 +215,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "",
                   "customEndpoints": {},
+                  "enableRumForLogs": false,
+                  "enableTracesForLogs": false,
                   "env": "",
                   "errorEventMapper": null,
                   "firstPartyHosts": [],

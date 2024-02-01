@@ -70,14 +70,14 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
-    var rumForLogsState = RUM_ENABLE_LOGS_DEFAULT
-    var traceForLogsState = TRACES_ENABLE_LOGS_DEFAULT
+    internal var rumForLogsState = RUM_ENABLE_LOGS_DEFAULT
+    internal var traceForLogsState = TRACES_ENABLE_LOGS_DEFAULT
 
-    override fun setRumForLogsEnabled(enabled: Boolean) {
+    internal fun setRumForLogsEnabled(enabled: Boolean) {
         this.rumForLogsState = enabled
     }
 
-    override fun setTracesForLogsEnabled(enabled: Boolean) {
+    internal fun setTracesForLogsEnabled(enabled: Boolean) {
         this.traceForLogsState = enabled
     }
 

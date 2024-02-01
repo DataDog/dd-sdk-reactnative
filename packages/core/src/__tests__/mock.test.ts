@@ -54,6 +54,8 @@ const privateProperties = {
         'DD_PROXY_PORT_KEY',
         'DD_PROXY_USERNAME_KEY',
         'DD_PROXY_PASSWORD_KEY',
+        'DD_ENABLE_RUM_FOR_LOGS',
+        'DD_ENABLE_TRACES_FOR_LOGS',
         'wasInitialized',
         'wasAutoInstrumented',
         'initializeNativeSDK',

@@ -27,6 +27,8 @@ import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
+import com.datadog.reactnative.DatadogSDKWrapper.Companion.RUM_ENABLE_LOGS_DEFAULT
+import com.datadog.reactnative.DatadogSDKWrapper.Companion.TRACES_ENABLE_LOGS_DEFAULT
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
@@ -171,15 +173,16 @@ class DdSdkImplementation(
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
-        val rumForLogsEnabled = configuration.additionalConfig?.get(DD_RUM_ENABLE_LOGS) as? Boolean
-        val tracesForLogsEnabled = configuration.additionalConfig?.get(DD_TRACES_ENABLE_LOGS) as? Boolean
+        val rumForLogsEnabled =
+            configuration.additionalConfig?.get(DD_RUM_ENABLE_LOGS) as? Boolean
+                ?: RUM_ENABLE_LOGS_DEFAULT
+        val tracesForLogsEnabled =
+            configuration.additionalConfig?.get(DD_TRACES_ENABLE_LOGS) as? Boolean
+                ?: TRACES_ENABLE_LOGS_DEFAULT
 
-        if (rumForLogsEnabled != null) {
-            datadog.setRumForLogsEnabled(rumForLogsEnabled)
-        }
-
-        if (tracesForLogsEnabled != null) {
-            datadog.setTracesForLogsEnabled(tracesForLogsEnabled)
+        (datadog as? DatadogSDKWrapper)?.apply {
+            this.setRumForLogsEnabled(rumForLogsEnabled)
+            this.setTracesForLogsEnabled(tracesForLogsEnabled)
         }
     }
 
@@ -411,7 +414,7 @@ class DdSdkImplementation(
                 Log.w(
                     DdSdk::class.java.canonicalName,
                     "Unknown consent given: $trackingConsent, " +
-                        "using ${TrackingConsent.PENDING} as default"
+                            "using ${TrackingConsent.PENDING} as default"
                 )
                 TrackingConsent.PENDING
             }
@@ -529,7 +532,7 @@ class DdSdkImplementation(
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
             buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
-                VitalsUpdateFrequency.NEVER
+                    VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -545,8 +548,8 @@ class DdSdkImplementation(
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                        ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                    )
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }

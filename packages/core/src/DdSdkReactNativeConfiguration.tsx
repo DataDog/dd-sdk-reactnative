@@ -115,7 +115,7 @@ const DEFAULTS = {
     trackBackgroundEvents: false,
     getCustomEndpoints: () => ({}),
     enableRumForLogs: true,
-    enableTracesForLogs: true,
+    enableTracesForLogs: true
 };
 
 /**
@@ -254,14 +254,12 @@ export class DdSdkReactNativeConfiguration {
 
     /**
      * Enables RUM for logs.
-     * 
      * By default, RUM is enabled for logs.
      */
-    public enableRumForLogs: boolean = DEFAULTS.enableRumForLogs; 
+    public enableRumForLogs: boolean = DEFAULTS.enableRumForLogs;
 
-        /**
+    /**
      * Enables Traces for logs.
-     * 
      * By default, Traces is enabled for logs.
      */
     public enableTracesForLogs: boolean = DEFAULTS.enableTracesForLogs;
