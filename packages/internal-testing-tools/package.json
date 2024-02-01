@@ -48,7 +48,8 @@
     },
     "devDependencies": {
         "@testing-library/react-native": "7.0.2",
-        "react-native-builder-bob": "0.17.1"
+        "react-native-builder-bob": "0.17.1",
+        "rum-events-format": "DataDog/rum-events-format#workspace=rum-events-format"
     },
     "jest": {
         "preset": "react-native",
@@ -90,8 +91,5 @@
         "android": {
             "javaPackageName": "com.datadog.reactnative.internaltesting"
         }
-    },
-    "dependencies": {
-        "rum-events-format": "DataDog/rum-events-format#workspace=rum-events-format"
     }
 }
