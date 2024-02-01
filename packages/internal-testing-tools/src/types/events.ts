@@ -30,6 +30,7 @@ export type SessionReplayEvent = unknown;
 
 export type Span = {
     name: string;
+    duration: number;
     service: string;
     type: string;
     trace_id: string;
@@ -44,7 +45,7 @@ export type RumEvent =
     | RumLongTaskEvent
     | RumResourceEvent;
 
-export type Event = LogEvent | TraceEvent | RumEvent | SessionReplayEvent;
+export type DDEvent = LogEvent | TraceEvent | RumEvent | SessionReplayEvent;
 
 export type eventTypeByFeature = {
     rum: RumEvent;

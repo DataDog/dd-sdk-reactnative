@@ -7,10 +7,11 @@
 import { Platform } from 'react-native';
 
 import { buildLogsAssertions } from './assertions/logs';
+import { buildRumAssertions } from './assertions/rum/rum';
 import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
 import { Report } from './report/Report';
-import type { Feature, eventTypeByFeature } from './types/events';
+import type { eventTypeByFeature, Feature } from './types/events';
 import { base64 } from './utils/base64';
 
 export class InternalTestingWrapper {
@@ -40,6 +41,9 @@ export class InternalTestingWrapper {
     getEvents = async () => {
         const logsEvents = await this.getAllEvents('logging');
         const traceEvents = await this.getAllEvents('tracing');
+        const rumEvents = await this.getAllEvents('rum');
+
+        const rumAssertions = buildRumAssertions(rumEvents);
 
         return {
             logs: this.report.connectAssertionsToReport(
@@ -47,7 +51,24 @@ export class InternalTestingWrapper {
             ),
             trace: this.report.connectAssertionsToReport(
                 buildTraceAssertions(traceEvents)
-            )
+            ),
+            rum: {
+                actions: this.report.connectAssertionsToReport(
+                    rumAssertions.actions
+                ),
+                errors: this.report.connectAssertionsToReport(
+                    rumAssertions.errors
+                ),
+                longTasks: this.report.connectAssertionsToReport(
+                    rumAssertions.longTasks
+                ),
+                resources: this.report.connectAssertionsToReport(
+                    rumAssertions.resources
+                ),
+                views: this.report.connectAssertionsToReport(
+                    rumAssertions.views
+                )
+            }
         };
     };
 
