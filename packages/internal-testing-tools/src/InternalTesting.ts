@@ -103,7 +103,7 @@ export class InternalTestingWrapper {
             );
         }
 
-        return JSON.parse(events);
+        return JSON.parse(events).map((event: string) => JSON.parse(event));
     };
 }
 
