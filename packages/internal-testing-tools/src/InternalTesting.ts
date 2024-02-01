@@ -6,15 +6,18 @@
 
 import { Platform } from 'react-native';
 
+import { buildLogsAssertions } from './assertions/logs';
+import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
+import { Report } from './report/Report';
+import type { Feature, eventTypeByFeature } from './types/events';
 import { base64 } from './utils/base64';
-
-type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay';
 
 export class InternalTestingWrapper {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeInternalTesting: NativeInternalTestingType = require('./specs/NativeDdInternalTesting')
         .default;
+    private report = new Report();
 
     /**
      * Enable internal testing.
@@ -32,9 +35,42 @@ export class InternalTestingWrapper {
     };
 
     /**
+     * Returns events for assertions.
+     */
+    getEvents = async () => {
+        const logsEvents = await this.getAllEvents('logging');
+        const traceEvents = await this.getAllEvents('tracing');
+
+        return {
+            logs: this.report.connectAssertionsToReport(
+                buildLogsAssertions(logsEvents)
+            ),
+            trace: this.report.connectAssertionsToReport(
+                buildTraceAssertions(traceEvents)
+            )
+        };
+    };
+
+    /**
+     * Returns the status of the report and all assertions details.
+     * Resets the report after returning.
+     */
+    getReport = () => {
+        const report = {
+            status: this.report.status,
+            assertions: this.report.assertions
+        };
+
+        this.report = new Report();
+        return report;
+    };
+
+    /**
      * Return all events.
      */
-    getAllEvents = async (feature: Feature) => {
+    getAllEvents = async <F extends Feature>(
+        feature: F
+    ): Promise<eventTypeByFeature[F][]> => {
         const events = await this.nativeInternalTesting.getAllEvents(
             formatFeatureName(feature)
         );

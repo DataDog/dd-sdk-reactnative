@@ -87,5 +87,8 @@
         "android": {
             "javaPackageName": "com.datadog.reactnative.internaltesting"
         }
+    },
+    "dependencies": {
+        "rum-events-format": "DataDog/rum-events-format#workspace=rum-events-format"
     }
 }

@@ -3700,6 +3700,7 @@ __metadata:
   dependencies:
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.17.1
+    rum-events-format: "DataDog/rum-events-format#workspace=rum-events-format"
   peerDependencies:
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
@@ -17694,6 +17695,13 @@ __metadata:
   bin:
     rimraf: ./bin.js
   checksum: 3ea587b981a19016297edb96d1ffe48af7e6af69660e3b371dbfc73722a73a0b0e9be5c88089fbeeb866c389c1098e07f64929c7414290504b855f54f901ab10
+  languageName: node
+  linkType: hard
+
+"rum-events-format@DataDog/rum-events-format#workspace=rum-events-format":
+  version: 1.0.0
+  resolution: "rum-events-format@https://github.com/DataDog/rum-events-format.git#workspace=rum-events-format&commit=4b697eb32fd8550290e380871b75b7d80b3a9052"
+  checksum: fb544c3e2c124c932d389a41180a1846c7688bc9d5d1eecb126acac7c23f32dd8a41cb0c65dc565fa5317c24436f017054228ea51e99720cf74fd6810c2e727d
   languageName: node
   linkType: hard
 
