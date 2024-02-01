@@ -23,7 +23,7 @@ export const buildRumLongTaskAssertions = (events: RumLongTaskEvent[]) => {
                             // Disabling ts as trying to safely access attributes won't crash the app
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore
-                            longTask.context?.['long_task']?.['target'] !==
+                            longTask.context?.['long_task.target'] !==
                             'javascript'
                         ) {
                             return false;
@@ -35,7 +35,7 @@ export const buildRumLongTaskAssertions = (events: RumLongTaskEvent[]) => {
                             // Disabling ts as trying to safely access attributes won't crash the app
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore
-                            longTask.context?.['long_task']?.['target'] ===
+                            longTask.context?.['long_task.target'] ===
                             'javascript'
                         ) {
                             return false;
