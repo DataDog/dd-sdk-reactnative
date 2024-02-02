@@ -13,9 +13,7 @@ export const mockRumLongTask = ({
             duration: duration || 0
         },
         context: {
-            long_task: {
-                target: thread
-            }
+            'long_task.target': thread
         },
         date: 0,
         application: {
