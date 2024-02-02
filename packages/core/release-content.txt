@@ -37,6 +37,7 @@ package/android/src/test/kotlin/com/datadog/tools/unit/GenericAssert.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/MapExt.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/MockRumMonitor.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/ReflectUtils.kt
+package/android/src/test/kotlin/com/datadog/tools/unit/RemoveFinalModifierJava.java
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/ActionEventForgeryFactory.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/BaseConfigurator.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/forge/DdSdkConfigurationForgeryFactory.kt
@@ -52,6 +53,7 @@ package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace/contents.xcworkspaced
 package/ios/Sources/AnyEncodable.swift
 package/ios/Sources/Attributes.swift
 package/ios/Sources/DatadogSDKReactNative.h
+package/ios/Sources/DatadogSDKWrapper.swift
 package/ios/Sources/DdLogs.h
 package/ios/Sources/DdLogs.mm
 package/ios/Sources/DdLogsImplementation.swift
