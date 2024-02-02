@@ -47,7 +47,8 @@ export const buildRumLongTaskAssertions = (events: RumLongTaskEvent[]) => {
                     }
                 }
                 if (duration) {
-                    const durationMs = longTask.long_task.duration / 1_000_000;
+                    const durationMs =
+                        longTask.long_task.duration / (1000 * 1000);
                     if (
                         durationMs > duration.maxMs ||
                         durationMs < duration.minMs

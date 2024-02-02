@@ -32,7 +32,7 @@ export const buildTraceAssertions = (events: TraceEvent[]) => {
                         return false;
                     }
                     if (duration) {
-                        const durationMs = span.duration / 1_000_000;
+                        const durationMs = span.duration / (1000 * 1000);
                         if (
                             durationMs > duration.maxMs ||
                             durationMs < duration.minMs
