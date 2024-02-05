@@ -19,28 +19,28 @@ export interface Spec extends TurboModule {
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    readonly debug: (message: string, context?: Object) => Promise<void>;
+    readonly debug: (message: string, context: Object) => Promise<void>;
 
     /**
      * Send a log with INFO level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    readonly info: (message: string, context?: Object) => Promise<void>;
+    readonly info: (message: string, context: Object) => Promise<void>;
 
     /**
      * Send a log with WARN level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    readonly warn: (message: string, context?: Object) => Promise<void>;
+    readonly warn: (message: string, context: Object) => Promise<void>;
 
     /**
      * Send a log with ERROR level.
      * @param message: The message to send.
      * @param context: The additional context to send.
      */
-    readonly error: (message: string, context?: Object) => Promise<void>;
+    readonly error: (message: string, context: Object) => Promise<void>;
 
     /**
      * Send a log containing an error with DEBUG level.
@@ -52,10 +52,10 @@ export interface Spec extends TurboModule {
      */
     readonly debugWithError: (
         message: string,
-        errorKind?: string,
-        errorMessage?: string,
-        stacktrace?: string,
-        context?: Object
+        errorKind: string,
+        errorMessage: string,
+        stacktrace: string,
+        context: Object
     ) => Promise<void>;
 
     /**
@@ -68,10 +68,10 @@ export interface Spec extends TurboModule {
      */
     readonly infoWithError: (
         message: string,
-        errorKind?: string,
-        errorMessage?: string,
-        stacktrace?: string,
-        context?: Object
+        errorKind: string,
+        errorMessage: string,
+        stacktrace: string,
+        context: Object
     ) => Promise<void>;
 
     /**
@@ -84,10 +84,10 @@ export interface Spec extends TurboModule {
      */
     readonly warnWithError: (
         message: string,
-        errorKind?: string,
-        errorMessage?: string,
-        stacktrace?: string,
-        context?: Object
+        errorKind: string,
+        errorMessage: string,
+        stacktrace: string,
+        context: Object
     ) => Promise<void>;
 
     /**
@@ -100,10 +100,10 @@ export interface Spec extends TurboModule {
      */
     readonly errorWithError: (
         message: string,
-        errorKind?: string,
-        errorMessage?: string,
-        stacktrace?: string,
-        context?: Object
+        errorKind: string,
+        errorMessage: string,
+        stacktrace: string,
+        context: Object
     ) => Promise<void>;
 }
 
