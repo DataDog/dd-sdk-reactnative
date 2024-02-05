@@ -10,6 +10,7 @@ import com.datadog.android.Datadog
 import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
+import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
 import java.util.Locale
@@ -30,7 +31,7 @@ class DdSessionReplayImplementation(
      * @param customEndpoint Custom server url for sending replay data.
      */
     fun enable(replaySampleRate: Double, defaultPrivacyLevel: String, customEndpoint: String, promise: Promise) {
-        val sdkCore = Datadog.getInstance() as FeatureSdkCore
+        val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .setPrivacy(buildPrivacy(defaultPrivacyLevel))
@@ -40,7 +41,7 @@ class DdSessionReplayImplementation(
             configuration.useCustomEndpoint(customEndpoint)
         }
 
-        sessionReplayProvider().enable(configuration.build())
+        sessionReplayProvider().enable(configuration.build(), sdkCore)
         promise.resolve(null)
     }
 

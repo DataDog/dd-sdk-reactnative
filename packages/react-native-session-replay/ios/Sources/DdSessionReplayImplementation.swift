@@ -7,6 +7,7 @@
 import Foundation
 @_spi(Internal) import DatadogSessionReplay
 import DatadogInternal
+import DatadogSDKReactNative
 import React
 
 @objc
@@ -42,9 +43,15 @@ public class DdSessionReplayImplementation: NSObject {
                     
         sessionReplayConfiguration.setAdditionalNodeRecorders([RCTTextViewRecorder(uiManager: self.uiManager)])
 
-        sessionReplay.enable(
-            with: sessionReplayConfiguration
-        )
+        if let core = DatadogSDKWrapper.shared.getCoreInstance() {
+            sessionReplay.enable(
+                with: sessionReplayConfiguration,
+                in: core
+            )
+        } else {
+            consolePrint("Core instance was not found when initializing Session Replay.")
+        }
+
         resolve(nil)
     }
     
@@ -64,12 +71,13 @@ public class DdSessionReplayImplementation: NSObject {
 
 internal protocol SessionReplayProtocol {
     func enable(
-        with configuration: SessionReplay.Configuration
+        with configuration: SessionReplay.Configuration,
+        in core: DatadogCoreProtocol
     )
 }
 
 internal class NativeSessionReplay: SessionReplayProtocol {
-    func enable(with configuration: DatadogSessionReplay.SessionReplay.Configuration) {
-        SessionReplay.enable(with: configuration)
+    func enable(with configuration: DatadogSessionReplay.SessionReplay.Configuration, in core: DatadogCoreProtocol) {
+        SessionReplay.enable(with: configuration, in: core)
     }
 }

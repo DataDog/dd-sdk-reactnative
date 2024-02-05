@@ -20,7 +20,8 @@ Pod::Spec.new do |s|
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
   s.dependency 'DatadogSessionReplay', '~> 2.6.0'
-  
+  s.dependency 'DatadogSDKReactNative'
+
   s.test_spec 'Tests' do |test_spec|
     test_spec.dependency "React-RCTText"
     test_spec.source_files = 'ios/Tests/*.swift'

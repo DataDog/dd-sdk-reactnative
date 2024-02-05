@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import com.datadog.android.api.SdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 
 /**
@@ -18,5 +19,6 @@ interface SessionReplayWrapper {
      */
     fun enable(
         sessionReplayConfiguration: SessionReplayConfiguration,
+        sdkCore: SdkCore
     )
 }

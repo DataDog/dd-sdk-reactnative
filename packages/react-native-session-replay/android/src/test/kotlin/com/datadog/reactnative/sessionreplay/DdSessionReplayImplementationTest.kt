@@ -84,7 +84,7 @@ internal class DdSessionReplayImplementationTest {
         )
 
         // Then
-        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture(), any())
         assertThat(sessionReplayConfigCaptor.firstValue)
             .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
             .hasFieldEqualTo("privacy", privacy)
@@ -104,7 +104,7 @@ internal class DdSessionReplayImplementationTest {
         testedSessionReplay.enable(replaySampleRate, privacy, "", mockPromise)
 
         // Then
-        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture())
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture(), any())
         assertThat(sessionReplayConfigCaptor.firstValue)
             .hasFieldEqualTo("sampleRate", replaySampleRate.toFloat())
             .hasFieldEqualTo("privacy", SessionReplayPrivacy.MASK)
