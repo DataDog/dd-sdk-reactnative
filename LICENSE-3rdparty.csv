@@ -1,9 +1,11 @@
 Component,Origin,License,Copyright
+prod,lodash.isequal,CC0,"Copyright jQuery Foundation and other contributors <https://jquery.org/>"
 prod,react-native,MIT,"Copyright (c) Facebook, Inc. and its affiliates."
 dev,@apollo/client,MIT,"Copyright (c) 2022 Apollo Graph, Inc. (Formerly Meteor Development Group, Inc.)"
 dev,@babel/plugin-transform-runtime,MIT,"Copyright (c) 2014-present Sebastian McKenzie and other contributors"
 dev,@testing-library/react-native,MIT,"Copyright (c) 2018 Callstack and Rally Health"
 dev,@types/jest,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
+dev,@types/lodash.isequal,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
 dev,@types/react,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
 dev,@types/react-native,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
 dev,@types/react-test-renderer,MIT,"Copyrights are respective of each contributor listed at the beginning of each definition file."
