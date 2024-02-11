@@ -70,16 +70,8 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
-    internal var rumForLogsState = RUM_ENABLE_LOGS_DEFAULT
-    internal var traceForLogsState = TRACES_ENABLE_LOGS_DEFAULT
-
-    internal fun setRumForLogsEnabled(enabled: Boolean) {
-        this.rumForLogsState = enabled
-    }
-
-    internal fun setTracesForLogsEnabled(enabled: Boolean) {
-        this.traceForLogsState = enabled
-    }
+    override var bundleWithRum = RUM_ENABLE_LOGS_DEFAULT
+    override var bundleWithTraces = TRACES_ENABLE_LOGS_DEFAULT
 
     // We use Kotlin backing field here to initialize once the telemetry proxy
     // and make sure it is only after SDK is initialized.

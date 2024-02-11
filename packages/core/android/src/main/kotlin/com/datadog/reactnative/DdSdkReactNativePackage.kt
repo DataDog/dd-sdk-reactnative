@@ -16,8 +16,9 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
  * Package of native dd-sdk-reactnative native modules.
  */
 class DdSdkReactNativePackage : TurboReactPackage() {
+    private val sdkWrapper = DatadogSDKWrapper()
+
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        val sdkWrapper = DatadogSDKWrapper()
         return when (name) {
             DdSdkImplementation.NAME -> DdSdk(reactContext, sdkWrapper)
             DdRumImplementation.NAME -> DdRum(reactContext, sdkWrapper)

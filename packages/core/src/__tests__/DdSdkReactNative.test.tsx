@@ -371,7 +371,7 @@ describe('DdSdkReactNative', () => {
             );
         });
 
-        it('initializes with enableRumForLogs when it is specified', async () => {
+        it('initializes with bundleWithRum false when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -381,7 +381,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.enableRumForLogs = true;
+            configuration.bundleWithRum = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -391,10 +391,10 @@ describe('DdSdkReactNative', () => {
                 .calls[0][0] as DdSdkConfiguration;
             expect(
                 ddSdkConfiguration.additionalConfig['_dd.enable_rum_for_logs']
-            ).toBe(true);
+            ).toBe(false);
         });
 
-        it('initializes with enableTracesForLogs when it is specified', async () => {
+        it('initializes with bundleWithTraces false when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -404,7 +404,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.enableTracesForLogs = true;
+            configuration.bundleWithTraces = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -416,7 +416,7 @@ describe('DdSdkReactNative', () => {
                 ddSdkConfiguration.additionalConfig[
                     '_dd.enable_traces_for_logs'
                 ]
-            ).toBe(true);
+            ).toBe(false);
         });
 
         it('initializes with the version when a version is specified', async () => {

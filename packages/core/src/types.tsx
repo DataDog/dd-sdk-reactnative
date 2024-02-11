@@ -38,8 +38,8 @@ export class DdSdkConfiguration {
             reactVersion: string;
             reactNativeVersion: string;
         },
-        readonly enableRumForLogs: boolean,
-        readonly enableTracesForLogs: boolean
+        readonly bundleWithRum: boolean,
+        readonly bundleWithTraces: boolean
     ) {}
 }
 

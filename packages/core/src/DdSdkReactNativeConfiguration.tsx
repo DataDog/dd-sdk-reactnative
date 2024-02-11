@@ -114,8 +114,8 @@ const DEFAULTS = {
     batchSize: BatchSize.MEDIUM,
     trackBackgroundEvents: false,
     getCustomEndpoints: () => ({}),
-    enableRumForLogs: true,
-    enableTracesForLogs: true
+    bundleWithRum: true,
+    bundleWithTraces: true
 };
 
 /**
@@ -256,13 +256,13 @@ export class DdSdkReactNativeConfiguration {
      * Enables RUM for logs.
      * By default, RUM is enabled for logs.
      */
-    public enableRumForLogs: boolean = DEFAULTS.enableRumForLogs;
+    public bundleWithRum: boolean = DEFAULTS.bundleWithRum;
 
     /**
      * Enables Traces for logs.
      * By default, Traces is enabled for logs.
      */
-    public enableTracesForLogs: boolean = DEFAULTS.enableTracesForLogs;
+    public bundleWithTraces: boolean = DEFAULTS.bundleWithTraces;
 
     /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
@@ -397,8 +397,8 @@ export type PartialInitializationConfiguration = {
     readonly batchSize?: BatchSize;
     readonly trackBackgroundEvents?: boolean;
     readonly customEndpoints?: CustomEndpoints;
-    readonly enableRumForLogs?: boolean;
-    readonly enableTracesForLogs?: boolean;
+    readonly bundleWithRum?: boolean;
+    readonly bundleWithTraces?: boolean;
 };
 
 const setConfigurationAttribute = <

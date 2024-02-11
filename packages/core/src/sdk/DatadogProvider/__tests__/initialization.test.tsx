@@ -70,6 +70,8 @@ describe('DatadogProvider', () => {
                   },
                   "applicationId": "fakeApplicationId",
                   "batchSize": "MEDIUM",
+                  "bundleWithRum": true,
+                  "bundleWithTraces": true,
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
@@ -80,8 +82,6 @@ describe('DatadogProvider', () => {
                     "trackNetworkRequests": false,
                   },
                   "customEndpoints": {},
-                  "enableRumForLogs": true,
-                  "enableTracesForLogs": true,
                   "env": "fakeEnv",
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,

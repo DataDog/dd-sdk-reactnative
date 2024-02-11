@@ -137,8 +137,8 @@ export class DdSdkReactNative {
                     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                     reactVersion: require('react/package.json').version
                 },
-                configuration.enableRumForLogs,
-                configuration.enableTracesForLogs
+                configuration.bundleWithRum,
+                configuration.bundleWithTraces
             )
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
@@ -274,10 +274,10 @@ export class DdSdkReactNative {
         ] = configuration.nativeInteractionTracking;
         configuration.additionalConfig[
             DdSdkReactNative.DD_ENABLE_RUM_FOR_LOGS
-        ] = configuration.enableRumForLogs;
+        ] = configuration.bundleWithRum;
         configuration.additionalConfig[
             DdSdkReactNative.DD_ENABLE_TRACES_FOR_LOGS
-        ] = configuration.enableTracesForLogs;
+        ] = configuration.bundleWithTraces;
 
         if (configuration.verbosity) {
             configuration.additionalConfig[

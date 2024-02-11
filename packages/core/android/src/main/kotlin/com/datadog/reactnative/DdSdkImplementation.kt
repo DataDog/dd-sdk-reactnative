@@ -180,10 +180,8 @@ class DdSdkImplementation(
             configuration.additionalConfig?.get(DD_TRACES_ENABLE_LOGS) as? Boolean
                 ?: TRACES_ENABLE_LOGS_DEFAULT
 
-        (datadog as? DatadogSDKWrapper)?.apply {
-            this.setRumForLogsEnabled(rumForLogsEnabled)
-            this.setTracesForLogsEnabled(tracesForLogsEnabled)
-        }
+        datadog.bundleWithRum = rumForLogsEnabled
+        datadog.bundleWithTraces = tracesForLogsEnabled
     }
 
     private fun getDefaultAppVersion(): String {

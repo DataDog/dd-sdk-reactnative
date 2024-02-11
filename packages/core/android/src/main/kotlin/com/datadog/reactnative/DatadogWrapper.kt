@@ -21,6 +21,17 @@ import java.lang.IllegalArgumentException
  */
 @Suppress("ComplexInterface", "TooManyFunctions")
 interface DatadogWrapper {
+    /**
+     * Enables RUM for logs.
+     * By default, RUM is enabled for logs.
+     */
+    var bundleWithRum : Boolean
+
+    /**
+     * Enables Traces for logs.
+     * By default, Traces is enabled for logs.
+     */
+    var bundleWithTraces : Boolean
 
     /**
      * Sets the verbosity of the Datadog library.
