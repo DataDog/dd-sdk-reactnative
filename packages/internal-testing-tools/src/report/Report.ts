@@ -7,7 +7,9 @@
 import type {
     Assertion,
     AssertionResult,
-    EventTypeAssertions
+    EventTypeAssertions,
+    EventTypeFinders,
+    Finder
 } from '../types/report';
 
 export class Report {
@@ -28,6 +30,19 @@ export class Report {
 
         // TODO: try to remove the "as T" here
         return connectedAssertions as AssertionsType;
+    };
+
+    connectFindersToReport = <FindersType extends EventTypeFinders>(
+        finders: FindersType
+    ): FindersType => {
+        const connectedFinders: Record<string, Finder> = {};
+
+        Object.entries(finders).forEach(([key, finder]) => {
+            connectedFinders[key] = this.connectFinder(key, finder);
+        });
+
+        // TODO: try to remove the "as T" here
+        return connectedFinders as FindersType;
     };
 
     private connectAssertion = <AssertionType extends Assertion>(
@@ -53,6 +68,25 @@ export class Report {
                     error: error as Error
                 });
                 return false;
+            }
+        };
+    };
+
+    private connectFinder = <FinderType extends Finder>(
+        name: string,
+        finder: FinderType
+    ) => {
+        return (...args: Parameters<FinderType>) => {
+            try {
+                return finder(...args);
+            } catch (error) {
+                this.status = 'FAILED';
+                this.assertions.push({
+                    status: 'FAILED',
+                    name,
+                    error: error as Error
+                });
+                return undefined;
             }
         };
     };

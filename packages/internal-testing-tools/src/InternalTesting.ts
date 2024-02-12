@@ -76,7 +76,7 @@ export class InternalTestingWrapper {
                     rumAssertions.views
                 )
             },
-            sessionReplay: {
+            sessionReplay: this.report.connectFindersToReport({
                 findViewWireframes: (
                     type: WireframeType,
                     matchers: { viewName: string }
@@ -94,7 +94,7 @@ export class InternalTestingWrapper {
                     this.report.connectAssertionsToReport(
                         sessionReplayAssertions.findViewTextWireframe(matchers)
                     )
-            }
+            })
         };
     };
 
