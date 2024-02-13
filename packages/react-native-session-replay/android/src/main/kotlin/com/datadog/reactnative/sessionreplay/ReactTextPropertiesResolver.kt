@@ -144,6 +144,12 @@ internal class ReactTextPropertiesResolver(
     }
 
     private fun getTextColor(shadowNodeWrapper: ShadowNodeWrapper): String? {
+        val isColorSet = shadowNodeWrapper
+            .getDeclaredShadowNodeField(IS_COLOR_SET_FIELD_NAME) as Boolean?
+        if (isColorSet != true) {
+            // Improvement: get default text color if different from black
+            return "#000000FF"
+        }
         val resolvedColor = shadowNodeWrapper
             .getDeclaredShadowNodeField(COLOR_FIELD_NAME) as Int?
         if (resolvedColor != null) {
@@ -187,6 +193,7 @@ internal class ReactTextPropertiesResolver(
         internal const val TEXT_ATTRIBUTES_FIELD_NAME = "mTextAttributes"
         internal const val FONT_FAMILY_FIELD_NAME = "mFontFamily"
         internal const val COLOR_FIELD_NAME = "mColor"
+        internal const val IS_COLOR_SET_FIELD_NAME = "mIsColorSet"
 
         private const val ROBOTO_TYPEFACE_NAME = "roboto"
         private const val SERIF_FAMILY_NAME = "serif"
