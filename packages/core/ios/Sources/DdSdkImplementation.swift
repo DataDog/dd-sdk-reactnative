@@ -30,9 +30,6 @@ public class DdSdkImplementation: NSObject {
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
-    private let jsRefreshRateEventQueue = DispatchQueue(
-        label: "dd-rn-js-refresh-rate-event-queue",
-        target: .global(qos: .utility))
 
     @objc
     public convenience init(bridge: RCTBridge) {
@@ -439,7 +436,7 @@ public class DdSdkImplementation: NSObject {
             // Record current timestamp, it may change slightly before event is created on background thread.
             let now = Date()
             // Leave JS thread ASAP to give as much time to JS engine work.
-            jsRefreshRateEventQueue.async {
+            sharedQueue.async {
                 if (shouldRecordFrameTime) {
                     rumMonitorInternal.updatePerformanceMetric(at: now, metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
                 }
