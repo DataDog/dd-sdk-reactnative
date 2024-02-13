@@ -50,6 +50,7 @@ const wireframeMock = mockSessionReplayWireframe({
     x: 22,
     y: 33
 }) as TextWireframe;
+
 describe('textWireframeAssertions', () => {
     describe('toHaveStyle', () => {
         it('does not throw if matching style is found', () => {

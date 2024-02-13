@@ -5,6 +5,7 @@
  */
 
 import isEqual from 'lodash.isequal';
+import { Platform } from 'react-native';
 import type {
     ShapeBorder,
     ShapeStyle,
@@ -76,7 +77,7 @@ export const buildTextWireframeAssertions = (wireframe: TextWireframe) => ({
 
         if (
             textPosition !== undefined &&
-            !isEqual(textPosition, wireframe.textPosition)
+            !compareTextPosition(textPosition, wireframe.textPosition || {})
         ) {
             throw new AssertionError(
                 'Text Wireframe does not have matching textPosition.',
@@ -132,3 +133,31 @@ export const buildTextWireframeAssertions = (wireframe: TextWireframe) => ({
         }
     }
 });
+
+// We allow a margin of 1px of error for paddings on Android as we get different measurements.
+const errorMargin = Platform.select({
+    android: 1,
+    default: 0
+});
+
+const compareTextPosition = (expected: TextPosition, actual: TextPosition) => {
+    if (!isEqual(expected.alignment, actual.alignment)) {
+        return false;
+    }
+    return (
+        comparePadding(expected.padding?.top || 0, actual.padding?.top || 0) &&
+        comparePadding(
+            expected.padding?.bottom || 0,
+            actual.padding?.bottom || 0
+        ) &&
+        comparePadding(
+            expected.padding?.left || 0,
+            actual.padding?.left || 0
+        ) &&
+        comparePadding(expected.padding?.right || 0, actual.padding?.right || 0)
+    );
+};
+
+const comparePadding = (expected: number, actual: number): boolean => {
+    return Math.abs(expected - actual) <= errorMargin;
+};
