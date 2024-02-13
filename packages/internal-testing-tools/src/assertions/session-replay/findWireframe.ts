@@ -52,7 +52,7 @@ export const findViewWireframes = (
     const viewID = findViewIdFromRumEvents(viewName, rumEvents);
 
     const viewSegments = events.filter(event => {
-        return event.viewID === viewID;
+        return event.viewID === viewID || event.view_id === viewID;
     });
 
     const viewWireframes = viewSegments.flatMap(segment =>

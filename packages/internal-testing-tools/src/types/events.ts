@@ -37,7 +37,8 @@ export type TraceEvent = {
  * Some fields are wrong, for instance view.id is viewID and has_full_snapshot is hasFullSnapshot
  */
 export type SessionReplayEvent = MobileSegment & {
-    viewID: string;
+    viewID?: string; // on iOS
+    view_id?: string; // on Android
 };
 
 export type Span = {
