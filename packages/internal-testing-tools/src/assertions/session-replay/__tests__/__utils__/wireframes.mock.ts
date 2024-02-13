@@ -35,7 +35,7 @@ export const mockSessionReplayWireframe = (
               height?: number;
               shapeStyle?: ShapeStyle;
               textPosition?: TextPosition;
-              textStyle?: TextStyle;
+              textStyle: TextStyle;
               width?: number;
               x?: number;
               y?: number;

@@ -16,6 +16,8 @@ import type {
 import type { SessionReplayEvent } from '../../types/events';
 import { AssertionError } from '../assertionError';
 
+import { formatWireframe } from './formatWireframe';
+
 const findViewIdFromRumEvents = (
     viewName: string,
     rumEvents: RumEvent[]
@@ -60,6 +62,7 @@ export const findViewWireframes = (
             .filter(isFullSnapshotRecord)
             .flatMap(fullSnapshotRecord => fullSnapshotRecord.data.wireframes)
             .filter(wireframe => wireframe.type === type)
+            .map(formatWireframe)
     );
 
     if (viewWireframes.length === 0) {
