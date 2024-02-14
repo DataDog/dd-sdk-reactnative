@@ -45,6 +45,22 @@ const isFullSnapshotRecord = (
     return record.type === 10;
 };
 
+/**
+ * Android takes a full snapshot every 3 seconds, so we might end up with
+ * duplicated wireframes.
+ * This makes sure we only return a wireframe with a given id once.
+ */
+const uniqById = (wireframes: Wireframe[]): Wireframe[] => {
+    const existingIds: Record<number, boolean> = {};
+    return wireframes.filter(wireframe => {
+        if (existingIds[wireframe.id]) {
+            return false;
+        }
+        existingIds[wireframe.id] = true;
+        return true;
+    });
+};
+
 export const findViewWireframes = (
     type: WireframeType,
     events: SessionReplayEvent[],
@@ -74,7 +90,7 @@ export const findViewWireframes = (
         );
     }
 
-    return viewWireframes;
+    return uniqById(viewWireframes);
 };
 
 export const findViewTextWireframe = (

@@ -19,6 +19,7 @@ export const mockSessionReplayWireframe = (
     wireframe:
         | {
               type: 'shape';
+              id: number;
               border?: ShapeBorder;
               clip?: WireframeClip;
               height?: number;
@@ -29,6 +30,7 @@ export const mockSessionReplayWireframe = (
           }
         | {
               type: 'text';
+              id: number;
               text: string;
               border?: ShapeBorder;
               clip?: WireframeClip;
@@ -52,6 +54,7 @@ export const mockSessionReplayWireframe = (
 
 const mockTextWireframe = ({
     text,
+    id,
     textStyle,
     textPosition,
     border,
@@ -63,6 +66,7 @@ const mockTextWireframe = ({
     y
 }: {
     text: string;
+    id: number;
     border?: ShapeBorder;
     clip?: WireframeClip;
     height?: number;
@@ -76,6 +80,7 @@ const mockTextWireframe = ({
     return {
         type: 'text',
         text,
+        id,
         textStyle,
         textPosition,
         border,
@@ -89,6 +94,7 @@ const mockTextWireframe = ({
 };
 
 const mockShapeWireframe = ({
+    id,
     shapeStyle,
     border,
     clip,
@@ -97,6 +103,7 @@ const mockShapeWireframe = ({
     x,
     y
 }: {
+    id: number;
     border?: ShapeBorder;
     clip?: WireframeClip;
     height?: number;
@@ -107,6 +114,7 @@ const mockShapeWireframe = ({
 }): ShapeWireframe => {
     return {
         type: 'shape',
+        id,
         border,
         shapeStyle,
         clip,

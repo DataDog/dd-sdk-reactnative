@@ -23,10 +23,11 @@ describe('findWireframe', () => {
             const segmentMock = mockSessionReplayFullSnapshotSegment({
                 viewID,
                 wireframes: [
-                    mockSessionReplayWireframe({ type: 'shape' }),
+                    mockSessionReplayWireframe({ type: 'shape', id: 1 }),
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 2,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -48,6 +49,30 @@ describe('findWireframe', () => {
             ).not.toThrow();
         });
 
+        it('only reports wireframes the first time they appear in a full snapshot', () => {
+            const viewID = 'view-id';
+            const viewMock = mockRumViewForSessionReplay({
+                name: 'Main',
+                id: viewID
+            });
+            const segmentMock = mockSessionReplayFullSnapshotSegment({
+                viewID,
+                wireframes: [
+                    mockSessionReplayWireframe({ type: 'shape', id: 1 })
+                ]
+            });
+
+            const wireframes = findViewWireframes(
+                'shape',
+                [segmentMock, segmentMock],
+                [viewMock],
+                {
+                    viewName: 'Main'
+                }
+            );
+            expect(wireframes).toHaveLength(1);
+        });
+
         it('throws if no wireframe matches criteria', () => {
             const viewID = 'view-id';
             const viewMock = mockRumViewForSessionReplay({
@@ -56,7 +81,9 @@ describe('findWireframe', () => {
             });
             const segmentMock = mockSessionReplayFullSnapshotSegment({
                 viewID,
-                wireframes: [mockSessionReplayWireframe({ type: 'shape' })]
+                wireframes: [
+                    mockSessionReplayWireframe({ type: 'shape', id: 1 })
+                ]
             });
 
             expect(() =>
@@ -74,7 +101,9 @@ describe('findWireframe', () => {
             });
             const segmentMock = mockSessionReplayFullSnapshotSegment({
                 viewID,
-                wireframes: [mockSessionReplayWireframe({ type: 'shape' })]
+                wireframes: [
+                    mockSessionReplayWireframe({ type: 'shape', id: 1 })
+                ]
             });
 
             expect(() =>
@@ -95,11 +124,13 @@ describe('findWireframe', () => {
                 wireframes: [
                     mockSessionReplayWireframe({
                         type: 'shape',
+                        id: 1,
                         shapeStyle: { backgroundColor: '#abcdef00' }
                     }),
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 2,
                         textStyle: { color: '#abcdef00', size: 20, family: '' }
                     })
                 ]
@@ -141,6 +172,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 1,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -150,6 +182,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'something else',
+                        id: 2,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -185,6 +218,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 1,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -214,6 +248,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 1,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -223,6 +258,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock too',
+                        id: 2,
                         textStyle: {
                             color: '',
                             size: 20,
@@ -252,6 +288,7 @@ describe('findWireframe', () => {
                     mockSessionReplayWireframe({
                         type: 'text',
                         text: 'mock',
+                        id: 1,
                         textStyle: {
                             color: '',
                             size: 20,

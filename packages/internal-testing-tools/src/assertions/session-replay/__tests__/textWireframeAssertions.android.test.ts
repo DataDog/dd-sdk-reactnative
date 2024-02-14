@@ -13,6 +13,12 @@ import { mockSessionReplayWireframe } from './__utils__/wireframes.mock';
 const wireframeMock = mockSessionReplayWireframe({
     type: 'text',
     text: 'mock',
+    id: 1,
+    textStyle: {
+        size: 20,
+        color: '',
+        family: ''
+    },
     textPosition: {
         padding: {
             top: 1,

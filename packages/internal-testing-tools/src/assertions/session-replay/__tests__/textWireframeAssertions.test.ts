@@ -13,6 +13,7 @@ import { mockSessionReplayWireframe } from './__utils__/wireframes.mock';
 const wireframeMock = mockSessionReplayWireframe({
     type: 'text',
     text: 'mock',
+    id: 1,
     border: {
         color: 'red',
         width: 2
