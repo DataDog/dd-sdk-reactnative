@@ -7,11 +7,19 @@
 import XCTest
 @testable import DatadogSDKReactNativeSessionReplay
 import DatadogSessionReplay
+import DatadogSDKReactNative
+import DatadogInternal
 import React
 
 internal class DdSessionReplayTests: XCTestCase {
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
+    
+    override func setUp() {
+        super.setUp()
+        let mockDatadogCore = MockDatadogCore()
+        DatadogSDKWrapper.shared.setCoreInstance(core: mockDatadogCore)
+    }
  
     func testEnablesSessionReplayWithZeroReplaySampleRate() {
         let sessionReplayMock = MockSessionReplay()
@@ -75,7 +83,7 @@ private class MockSessionReplay: SessionReplayProtocol {
 
     public var calledMethods = [CalledMethod]()
 
-    func enable(with configuration: SessionReplay.Configuration) {
+    func enable(with configuration: SessionReplay.Configuration, in core: DatadogCoreProtocol) {
         calledMethods.append(
             .enable(
                 replaySampleRate: configuration.replaySampleRate,
@@ -87,3 +95,19 @@ private class MockSessionReplay: SessionReplayProtocol {
 }
 
 private class MockUIManager: RCTUIManager {}
+
+private class MockDatadogCore: DatadogCoreProtocol {
+    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
+    
+    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
+    
+    func register<T>(feature: T) throws where T : DatadogInternal.DatadogFeature {}
+    
+    func get<T>(feature type: T.Type) -> T? where T : DatadogInternal.DatadogFeature {
+        return nil
+    }
+    
+    func scope(for feature: String) -> DatadogInternal.FeatureScope? {
+        return nil
+    }
+}

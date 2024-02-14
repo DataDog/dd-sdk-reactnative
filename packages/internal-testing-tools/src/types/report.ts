@@ -17,6 +17,8 @@ type FailedAssertion = {
     error: Error;
 };
 
-export type EventTypeAssertions = Record<string, (...args: any[]) => void>;
-
+export type EventTypeAssertions = Record<string, Assertion>;
 export type Assertion = (...args: any[]) => void;
+
+export type EventTypeFinders = Record<string, Finder>;
+export type Finder = (...args: any[]) => EventTypeAssertions | undefined;

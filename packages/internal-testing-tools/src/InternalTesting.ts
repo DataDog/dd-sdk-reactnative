@@ -5,9 +5,11 @@
  */
 
 import { Platform } from 'react-native';
+import type { WireframeType } from 'rum-events-format';
 
 import { buildLogsAssertions } from './assertions/logs';
 import { buildRumAssertions } from './assertions/rum/rum';
+import { buildSessionReplayAssertions } from './assertions/session-replay/sessionReplay';
 import { buildTraceAssertions } from './assertions/trace';
 import type { NativeInternalTestingType } from './nativeModulesTypes';
 import { Report } from './report/Report';
@@ -42,8 +44,13 @@ export class InternalTestingWrapper {
         const logsEvents = await this.getAllEvents('logging');
         const traceEvents = await this.getAllEvents('tracing');
         const rumEvents = await this.getAllEvents('rum');
+        const sessionReplayEvents = await this.getAllEvents('session-replay');
 
         const rumAssertions = buildRumAssertions(rumEvents);
+        const sessionReplayAssertions = buildSessionReplayAssertions(
+            sessionReplayEvents,
+            rumEvents
+        );
 
         return {
             logs: this.report.connectAssertionsToReport(
@@ -68,7 +75,26 @@ export class InternalTestingWrapper {
                 views: this.report.connectAssertionsToReport(
                     rumAssertions.views
                 )
-            }
+            },
+            sessionReplay: this.report.connectFindersToReport({
+                findViewWireframes: (
+                    type: WireframeType,
+                    matchers: { viewName: string }
+                ) =>
+                    this.report.connectAssertionsToReport(
+                        sessionReplayAssertions.findViewWireframes(
+                            type,
+                            matchers
+                        )
+                    ),
+                findViewTextWireframe: (matchers: {
+                    viewName: string;
+                    text: string;
+                }) =>
+                    this.report.connectAssertionsToReport(
+                        sessionReplayAssertions.findViewTextWireframe(matchers)
+                    )
+            })
         };
     };
 

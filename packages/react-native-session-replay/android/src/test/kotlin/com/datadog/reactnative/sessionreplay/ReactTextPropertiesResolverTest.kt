@@ -10,6 +10,7 @@ import android.widget.TextView
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.COLOR_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.FONT_FAMILY_FIELD_NAME
+import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.IS_COLOR_SET_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.MONOSPACE_FAMILY_NAME
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.TEXT_ATTRIBUTES_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.ShadowNodeWrapper.Companion.UI_IMPLEMENTATION_FIELD_NAME
@@ -238,11 +239,13 @@ internal class ReactTextPropertiesResolverTest {
     }
 
     @Test
-    fun `M resolve font color W addReactNativeProperties()`(
+    fun `M resolve font color W addReactNativeProperties() { color is defined by developer }`(
         @IntForgery fakeTextColor: Int
     ) {
         // Given
         whenever(mockTextView.background).thenReturn(null)
+        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
+            .thenReturn(true)
         whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, COLOR_FIELD_NAME))
             .thenReturn(fakeTextColor)
 
@@ -254,9 +257,29 @@ internal class ReactTextPropertiesResolverTest {
     }
 
     @Test
+    fun `M resolve font color W addReactNativeProperties() { color is not defined by developer }`(
+        @IntForgery fakeTextColor: Int
+    ) {
+        // Given
+        whenever(mockTextView.background).thenReturn(null)
+        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
+            .thenReturn(false)
+        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, COLOR_FIELD_NAME))
+            .thenReturn(fakeTextColor)
+
+        // When
+        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.color).isEqualTo("#000000FF")
+    }
+
+    @Test
     fun `M fallback W addReactNativeProperties() { cannot resolve fontColor }`() {
         // Given
         whenever(mockTextView.background).thenReturn(null)
+        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
+            .thenReturn(true)
         whenever(mockShadowNodeWrapper.getDeclaredShadowNodeField(COLOR_FIELD_NAME))
             .thenReturn(null)
 
