@@ -733,6 +733,11 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        // Check that we have jumped to another thread and returned before actually calling RUM:
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
+
+        // Wait for async execution on the sharedQueue to be over:
+        sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.20)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
@@ -754,6 +759,8 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertFalse(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.20)
+        // Wait for async execution on the sharedQueue to be over:
+        sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
@@ -775,6 +782,11 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
+        // Check that we have jumped to another thread and returned before actually calling RUM:
+        XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
+
+        // Wait for async execution on the sharedQueue to be over:
+        sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
@@ -797,9 +809,13 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
         
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.05)
+        // Wait for async execution on the sharedQueue to be over:
+        sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
 
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.25)
+        // Wait for async execution on the sharedQueue to be over:
+        sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
