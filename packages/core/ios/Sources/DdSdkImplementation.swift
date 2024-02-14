@@ -427,11 +427,22 @@ public class DdSdkImplementation: NSObject {
         }
 
         func frameTimeCallback(frameTime: Double) {
-            if (jsRefreshRateMonitoringEnabled && frameTime > 0) {
-                RUMMonitorInternalProvider()?.updatePerformanceMetric(at: Date(), metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
-            }
-            if (jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000) {
-                RUMMonitorInternalProvider()?.addLongTask(at: Date(), duration: frameTime, attributes: ["long_task.target": "javascript"])
+            // These checks happen before dispatching because they are quick and less overhead than the dispatch itself.
+            let shouldRecordFrameTime = jsRefreshRateMonitoringEnabled && frameTime > 0
+            let shouldRecordLongTask = jsLongTaskMonitoringEnabled && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000
+            guard shouldRecordFrameTime || shouldRecordLongTask,
+                  let rumMonitorInternal = RUMMonitorInternalProvider() else { return }
+
+            // Record current timestamp, it may change slightly before event is created on background thread.
+            let now = Date()
+            // Leave JS thread ASAP to give as much time to JS engine work.
+            sharedQueue.async {
+                if (shouldRecordFrameTime) {
+                    rumMonitorInternal.updatePerformanceMetric(at: now, metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
+                }
+                if (shouldRecordLongTask) {
+                    rumMonitorInternal.addLongTask(at: now, duration: frameTime, attributes: ["long_task.target": "javascript"])
+                }
             }
         }
         
