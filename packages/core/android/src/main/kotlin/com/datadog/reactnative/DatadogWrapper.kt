@@ -10,7 +10,6 @@ import android.content.Context
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.TraceConfiguration
@@ -25,13 +24,13 @@ interface DatadogWrapper {
      * Enables RUM for logs.
      * By default, RUM is enabled for logs.
      */
-    var bundleWithRum : Boolean
+    var bundleLogsWithRum : Boolean
 
     /**
      * Enables Traces for logs.
      * By default, Traces is enabled for logs.
      */
-    var bundleWithTraces : Boolean
+    var bundleLogsWithTraces : Boolean
 
     /**
      * Sets the verbosity of the Datadog library.

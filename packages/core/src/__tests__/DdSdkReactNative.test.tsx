@@ -371,7 +371,7 @@ describe('DdSdkReactNative', () => {
             );
         });
 
-        it('initializes with bundleWithRum false when it is specified', async () => {
+        it('initializes with bundleLogsWithRum false when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -381,7 +381,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.bundleWithRum = false;
+            configuration.bundleLogsWithRum = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -394,7 +394,7 @@ describe('DdSdkReactNative', () => {
             ).toBe(false);
         });
 
-        it('initializes with bundleWithTraces false when it is specified', async () => {
+        it('initializes with bundleLogsWithTraces false when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
@@ -404,7 +404,7 @@ describe('DdSdkReactNative', () => {
                 fakeEnvName,
                 fakeAppId
             );
-            configuration.bundleWithTraces = false;
+            configuration.bundleLogsWithTraces = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);

@@ -35,8 +35,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "additionalConfig": {},
                   "applicationId": "fake-app-id",
                   "batchSize": "MEDIUM",
-                  "bundleWithRum": true,
-                  "bundleWithTraces": true,
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
                   "customEndpoints": {},
                   "env": "fake-env",
@@ -116,8 +116,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                             logs: 'https://logs.example.com/',
                             trace: 'https://trace.example.com/'
                         },
-                        bundleWithRum: true,
-                        bundleWithTraces: true
+                        bundleLogsWithRum: true,
+                        bundleLogsWithTraces: true
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -129,8 +129,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   },
                   "applicationId": "fake-app-id",
                   "batchSize": "LARGE",
-                  "bundleWithRum": true,
-                  "bundleWithTraces": true,
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
                   "customEndpoints": {
                     "logs": "https://logs.example.com/",
@@ -203,8 +203,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackFrustrations: false,
                         trackBackgroundEvents: false,
                         customEndpoints: {},
-                        bundleWithRum: false,
-                        bundleWithTraces: false
+                        bundleLogsWithRum: false,
+                        bundleLogsWithTraces: false
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -213,8 +213,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "additionalConfig": {},
                   "applicationId": "",
                   "batchSize": "MEDIUM",
-                  "bundleWithRum": false,
-                  "bundleWithTraces": false,
+                  "bundleLogsWithRum": false,
+                  "bundleLogsWithTraces": false,
                   "clientToken": "",
                   "customEndpoints": {},
                   "env": "",
