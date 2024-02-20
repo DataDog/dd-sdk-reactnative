@@ -27,7 +27,8 @@ Pod::Spec.new do |s|
   s.dependency 'DatadogWebViewTracking', '~> 2.7.1'
   
   s.test_spec 'Tests' do |test_spec|
-    test_spec.source_files = 'ios/Tests/*.swift'
+    test_spec.source_files = 'ios/Tests/**/*.{swift,json}'
+    test_spec.resources = 'ios/Tests/Fixtures'
   end
 
   

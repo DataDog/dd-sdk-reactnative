@@ -110,7 +110,7 @@ extension NSDictionary {
             port = Int(string)
         }
 
-        switch type {
+        switch type?.lowercased() {
         case "http", "https":
             // CFNetwork support HTTP and tunneling HTTPS proxies.
             // As intakes will most likely be https, we enable both channels.
@@ -161,7 +161,7 @@ extension NSArray {
     
     func asTracingHeaderType() -> Set<TracingHeaderType> {
         return Set(compactMap { headerType in
-            switch(headerType as? String) {
+            switch((headerType as? String)?.lowercased()) {
             case "datadog":
                 return TracingHeaderType.datadog
             case "b3":
@@ -174,5 +174,64 @@ extension NSArray {
                 return nil
             }
         })
+    }
+}
+
+extension Dictionary where Key == String, Value == AnyObject {
+    func asDdSdkConfigurationFromJSON() throws -> DdSdkConfiguration {
+        if let configuration = self["configuration"] as? Dictionary<String, Any?> {
+            let clientToken = configuration["clientToken"] as? String
+            let env = configuration["env"] as? String
+            let applicationId = configuration["applicationId"] as? String
+            let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
+            let nativeLongTaskThresholdMs = configuration["nativeLongTaskThresholdMs"] as? Double
+            let longTaskThresholdMs = configuration["longTaskThresholdMs"] as? Double
+            let sampleRate = configuration["sessionSamplingRate"] as? Double
+            let site = configuration["site"] as? NSString
+            let trackingConsent = configuration["trackingConsent"] as? NSString
+            let telemetrySampleRate = configuration["telemetrySampleRate"] as? Double
+            let vitalsUpdateFrequency = configuration["vitalsUpdateFrequency"] as? NSString
+            let trackFrustrations = configuration["trackFrustrations"] as? Bool
+            let uploadFrequency = configuration["uploadFrequency"] as? NSString
+            let batchSize = configuration["batchSize"] as? NSString
+            let trackBackgroundEvents = configuration["trackBackgroundEvents"] as? Bool
+            let customEndpoints = configuration["customEndpoints"] as? NSDictionary
+            let additionalConfig = configuration["additionalConfiguration"] as? NSDictionary
+            let configurationForTelemetry = configuration["configurationForTelemetry"] as? NSDictionary
+            let nativeViewTracking = configuration["nativeViewTracking"] as? Bool
+            let nativeInteractionTracking = configuration["nativeInteractionTracking"] as? Bool
+            let verbosity = configuration["verbosity"] as? NSString
+            let proxyConfig = configuration["proxy"] as? NSDictionary
+            let serviceName = configuration["serviceName"] as? NSString
+            let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
+
+            return DdSdkConfiguration(
+                clientToken: (clientToken != nil) ? clientToken! : String(),
+                env: (env != nil) ? env! : String(),
+                applicationId: (applicationId != nil) ? applicationId! : String(),
+                nativeCrashReportEnabled: nativeCrashReportEnabled,
+                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
+                longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : Double(),
+                sampleRate: sampleRate,
+                site: site,
+                trackingConsent: trackingConsent,
+                telemetrySampleRate: telemetrySampleRate,
+                vitalsUpdateFrequency: vitalsUpdateFrequency,
+                trackFrustrations: trackFrustrations,
+                uploadFrequency: uploadFrequency,
+                batchSize: batchSize,
+                trackBackgroundEvents: trackBackgroundEvents,
+                customEndpoints: customEndpoints?.asCustomEndpoints(),
+                additionalConfig: additionalConfig,
+                configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
+                nativeViewTracking: nativeViewTracking,
+                nativeInteractionTracking: nativeInteractionTracking,
+                verbosity: verbosity,
+                proxyConfig: proxyConfig?.asProxyConfig(),
+                serviceName: serviceName,
+                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts()
+            )
+        }
+        throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
     }
 }

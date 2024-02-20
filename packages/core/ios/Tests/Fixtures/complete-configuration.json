@@ -1,0 +1,48 @@
+{
+    "$schema": "../../../../../datadog-configuration.schema.json",
+    "configuration": {
+        "applicationId": "fake-app-id",
+        "env": "fake-env",
+        "clientToken": "fake-client-token",
+        "trackInteractions": true,
+        "trackResources": true,
+        "trackErrors": true,
+        "trackingConsent": "NOT_GRANTED",
+        "longTaskThresholdMs": 44,
+        "verbosity": "WARN",
+        "actionNameAttribute": "action-name-attr",
+        "resourceTracingSamplingRate": 33,
+        "batchSize": "SMALL",
+        "customEndpoints": {
+            "logs": "https://logs.example.com",
+            "rum": "https://rum.example.com",
+            "trace": "https://trace.example.com"
+        },
+        "firstPartyHosts": [
+            {
+                "match": "example.com",
+                "propagatorTypes": ["B3MULTI", "TRACECONTEXT"]
+            }
+        ],
+        "nativeCrashReportEnabled": true,
+        "nativeInteractionTracking": true,
+        "nativeLongTaskThresholdMs": 333,
+        "nativeViewTracking": true,
+        "proxy": {
+            "address": "1.1.1.1",
+            "port": 4444,
+            "type": "HTTPS",
+            "password": "proxypassword",
+            "username": "proxyusername"
+        },
+        "serviceName": "my.app",
+        "sessionSamplingRate": 80,
+        "site": "US3",
+        "telemetrySampleRate": 60,
+        "trackBackgroundEvents": true,
+        "trackFrustrations": false,
+        "uploadFrequency": "FREQUENT",
+        "version": "2.3.1",
+        "vitalsUpdateFrequency": "NEVER"
+    }
+}
