@@ -58,7 +58,7 @@ body:
     id: rn_version
     attributes:
       label: React Native Version
-      description: e.g. 0.73
+      description: e.g. 0.73.3
   - type: textarea
     id: package_json
     attributes:

@@ -24,6 +24,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: logs
+    attributes:
+      label: SDK logs
+      description: |
+        Please provide javascript and native logs from before, during and after the bug occurs. Refer to [our troubleshooting page](https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#3-review-native-logs) on how to collect native logs. 
+    validations:
+      required: false
+  - type: textarea
     id: device_info
     attributes:
       label: Device Information
@@ -53,7 +61,7 @@ body:
     id: rn_version
     attributes:
       label: React Native Version
-      description: e.g. 0.73
+      description: e.g. 0.73.3
   - type: textarea
     id: package_json
     attributes:
