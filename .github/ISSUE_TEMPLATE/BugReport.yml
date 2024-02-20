@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Ensure you go through our [troubleshooting](https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#debugging) page before creating a new issue. 
+        Ensure you go through our [troubleshooting](https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#react-native) page before creating a new issue. 
         Before getting started, if the problem is urgent or easier to investigate with access to your organization's data please use our [official support channel](https://www.datadoghq.com/support/).
   - type: textarea
     id: description
