@@ -1,0 +1,85 @@
+name: Setup Issue
+description: Having a hard time setting up the SDK for the first time? Maybe a compilation issue or just nothing seems to be happening. Seek help with this.
+labels: ["setup"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before creating an issue, please ensure you go through the [troubleshooting page](https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#react-native).
+  - type: textarea
+    id: issue
+    attributes:
+      label: Describe the issue 
+      description: Provide a clear and concise description of the issue. Include compilation logs and SDK debug logs if relevant. 
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: |
+        Provide a self-contained piece of code demonstrating the issue.
+        For a more complex setup consider creating a small app that showcases the problem. 
+        **Note** - Avoid sharing any business logic, credentials or tokens.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: SDK logs
+      description: |
+        Please provide javascript and native logs from before, during and after the bug occurs. Refer to [our troubleshooting page](https://docs.datadoghq.com/real_user_monitoring/mobile_and_tv_monitoring/troubleshooting/#3-review-native-logs) on how to collect native logs. 
+    validations:
+      required: false
+  - type: textarea
+    id: device_info
+    attributes:
+      label: Device Information
+      description: |
+        What are the common characteristics of devices you're seeing this issue in? 
+        Simulators, specific models, OS versions, network state (wifi / cellular / offline), power state (plugged in / battery), etc.
+    validations:
+      required: false
+  - type: input
+    id: sdk_version
+    attributes:
+      label: SDK version
+      description: Which SDK version are you trying to use?
+    validations:
+      required: true
+  - type: dropdown
+    id: integration_method
+    attributes:
+      label: Integration Methods
+      options:
+        - NPM
+        - Yarn
+        - Source
+    validations:
+        required: true
+  - type: input
+    id: rn_version
+    attributes:
+      label: React Native Version
+      description: e.g. 0.73.3
+  - type: textarea
+    id: package_json
+    attributes:
+      label: Package.json Contents
+  - type: textarea
+    id: pod
+    attributes:
+      label: iOS Setup
+      description: What are the contents of **Podfile** and **Podfile.lock** 
+  - type: textarea
+    id: gradle
+    attributes:
+      label: Android Setup
+      description: What are the contents of **androd/build.gradle** and **android/app/build.gradle**    
+  - type: textarea
+    id: other_info
+    attributes:
+      label: Other relevant information
+      description: |
+        Other relevant information such as additional tooling in place, proxies, etc.
+        Anything that might be relevant for troubleshooting your setup. 
