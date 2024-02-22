@@ -45,12 +45,7 @@ On iOS, add the Datadog iOS SDKs to your dependencies in your `ios/Podfile` to u
 
 ```ruby
 # Make sure the version matches the one from node_modules/@datadog/mobile-react-native/DatadogSDKReactNative.podspec
-pod 'DatadogCoreObjc', '~> 2.5.0'
-pod 'DatadogLogsObjc', '~> 2.5.0'
-pod 'DatadogTraceObjc', '~> 2.5.0'
-pod 'DatadogRUMObjc', '~> 2.5.0'
-pod 'DatadogCrashReportingObjc', '~> 2.5.0'
-pod 'DatadogWebViewTrackingObjc', '~> 2.5.0'
+pod 'DatadogSDKObjc', '~> 2.5.0'
 ```
 
 #### Tracking native RUM Views
