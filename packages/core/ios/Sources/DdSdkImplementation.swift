@@ -78,7 +78,7 @@ public class DdSdkImplementation: NSObject {
                 resolve(nil)
                 return
             }
-            self.setVerbosityLevel(additionalConfig: sdkConfiguration.additionalConfig)
+            self.setVerbosityLevel(configuration: sdkConfiguration)
 
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
@@ -187,10 +187,10 @@ public class DdSdkImplementation: NSObject {
             clientToken: configuration.clientToken,
             env: configuration.env,
             site: configuration.site,
-            service: configuration.additionalConfig?[InternalConfigurationAttributes.serviceName] as? String ?? nil,
+            service: configuration.serviceName as? String,
             batchSize: configuration.batchSize,
             uploadFrequency: configuration.uploadFrequency,
-            proxyConfiguration: buildProxyConfiguration(config: configuration.additionalConfig)
+            proxyConfiguration: configuration.proxyConfig
         )
 
         if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {
@@ -209,7 +209,7 @@ public class DdSdkImplementation: NSObject {
     
     func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
         var longTaskThreshold: TimeInterval? = nil
-        if let threshold = configuration.nativeLongTaskThresholdMs as? TimeInterval {
+        if let threshold = configuration.nativeLongTaskThresholdMs {
             if (threshold != 0) {
                 // `nativeLongTaskThresholdMs` attribute is in milliseconds
                 longTaskThreshold = threshold / 1_000
@@ -217,21 +217,21 @@ public class DdSdkImplementation: NSObject {
         }
         
         var uiKitViewsPredicate: UIKitRUMViewsPredicate? = nil
-        if let enableViewTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeViewTracking] as? Bool, enableViewTracking {
+        if let enableViewTracking = configuration.nativeViewTracking, enableViewTracking {
             uiKitViewsPredicate = DefaultUIKitRUMViewsPredicate()
         }
 
         var uiKitActionsPredicate: UIKitRUMActionsPredicate? = nil
-        if let enableInteractionTracking = configuration.additionalConfig?[InternalConfigurationAttributes.nativeInteractionTracking] as? Bool, enableInteractionTracking {
+        if let enableInteractionTracking = configuration.nativeInteractionTracking, enableInteractionTracking {
             uiKitActionsPredicate = DefaultUIKitRUMActionsPredicate()
         }
         
         var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
-        if let firstPartyHosts = configuration.additionalConfig?[InternalConfigurationAttributes.firstPartyHosts] as? NSArray {
+        if let firstPartyHosts = configuration.firstPartyHosts {
             // We will always fall under this condition as firstPartyHosts is an empty array by default
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
-                    hostsWithHeaders: firstPartyHosts.asFirstPartyHosts(),
+                    hostsWithHeaders: firstPartyHosts,
                     sampleRate: 100.0
                 )
             )
@@ -294,46 +294,6 @@ public class DdSdkImplementation: NSObject {
         return Trace.Configuration(customEndpoint: customTraceEndpointURL)
     }
 
-    func buildProxyConfiguration(config: NSDictionary?) -> [AnyHashable: Any]? {
-        guard let address = config?[ProxyAttributes.address] as? String else {
-            return nil
-        }
-
-        var proxy: [AnyHashable: Any] = [:]
-        proxy[kCFProxyUsernameKey] = config?[ProxyAttributes.username]
-        proxy[kCFProxyPasswordKey] = config?[ProxyAttributes.password]
-
-        let type = config?[ProxyAttributes.type] as? String
-        var port = config?[ProxyAttributes.port] as? Int
-        if let string = config?[ProxyAttributes.port] as? String {
-            port = Int(string)
-        }
-
-        switch type {
-        case "http", "https":
-            // CFNetwork support HTTP and tunneling HTTPS proxies.
-            // As intakes will most likely be https, we enable both channels.
-            //
-            // We use constants string keys because there is an issue with
-            // cross-platform availability for proxy configuration symbols.
-            // see. https://developer.apple.com/forums/thread/19356?answerId=131709022#131709022
-            proxy["HTTPEnable"] = 1
-            proxy["HTTPProxy"] = address
-            proxy["HTTPPort"] = port
-            proxy["HTTPSEnable"] = 1
-            proxy["HTTPSProxy"] = address
-            proxy["HTTPSPort"] = port
-        case "socks":
-            proxy["SOCKSEnable"] = 1
-            proxy["SOCKSProxy"] = address
-            proxy["SOCKSPort"] = port
-        default:
-            break
-        }
-
-        return proxy
-    }
-
     func buildTrackingConsent(consent: NSString?) -> TrackingConsent {
         let trackingConsent: TrackingConsent
         switch consent?.lowercased {
@@ -394,9 +354,8 @@ public class DdSdkImplementation: NSObject {
         return size
     }
 
-    func setVerbosityLevel(additionalConfig: NSDictionary?) {
-        let verbosityLevel = (additionalConfig?[InternalConfigurationAttributes.sdkVerbosity]) as? NSString
-        switch verbosityLevel?.lowercased {
+    func setVerbosityLevel(configuration: DdSdkConfiguration) {
+        switch configuration.verbosity?.lowercased {
         case "debug":
             Datadog.verbosityLevel = .debug
         case "info":

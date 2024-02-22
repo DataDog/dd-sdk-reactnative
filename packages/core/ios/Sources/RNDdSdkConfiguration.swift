@@ -28,8 +28,15 @@ extension NSDictionary {
         let batchSize = object(forKey: "batchSize") as? NSString
         let trackBackgroundEvents = object(forKey: "trackBackgroundEvents") as? Bool
         let customEndpoints = object(forKey: "customEndpoints") as? NSDictionary
-        let additionalConfig = object(forKey: "additionalConfig") as? NSDictionary
+        let additionalConfig = object(forKey: "additionalConfiguration") as? NSDictionary
         let configurationForTelemetry = object(forKey: "configurationForTelemetry") as? NSDictionary
+        let nativeViewTracking = object(forKey: "nativeViewTracking") as? Bool
+        let nativeInteractionTracking = object(forKey: "nativeInteractionTracking") as? Bool
+        let verbosity = object(forKey: "verbosity") as? NSString
+        let proxyConfig = object(forKey: "proxyConfig") as? NSDictionary
+        let serviceName = object(forKey: "serviceName") as? NSString
+        let firstPartyHosts = object(forKey: "firstPartyHosts") as? NSArray
+
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
             env: (env != nil) ? env! : String(),
@@ -48,7 +55,13 @@ extension NSDictionary {
             trackBackgroundEvents: trackBackgroundEvents,
             customEndpoints: customEndpoints?.asCustomEndpoints(),
             additionalConfig: additionalConfig,
-            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
+            nativeViewTracking: nativeViewTracking,
+            nativeInteractionTracking: nativeInteractionTracking,
+            verbosity: verbosity,
+            proxyConfig: proxyConfig?.asProxyConfig(),
+            serviceName: serviceName,
+            firstPartyHosts: firstPartyHosts?.asFirstPartyHosts()
         )
     }
     
@@ -80,6 +93,46 @@ extension NSDictionary {
             logs: logs,
             trace: trace
         )
+    }
+    
+    func asProxyConfig() -> [AnyHashable: Any]? {
+        guard let address = object(forKey: "address") as? String else {
+            return nil
+        }
+
+        var proxy: [AnyHashable: Any] = [:]
+        proxy[kCFProxyUsernameKey] = object(forKey: "username")
+        proxy[kCFProxyPasswordKey] = object(forKey: "password")
+
+        let type = object(forKey: "type") as? String
+        var port = object(forKey: "port") as? Int
+        if let string = object(forKey: "port") as? String {
+            port = Int(string)
+        }
+
+        switch type {
+        case "http", "https":
+            // CFNetwork support HTTP and tunneling HTTPS proxies.
+            // As intakes will most likely be https, we enable both channels.
+            //
+            // We use constants string keys because there is an issue with
+            // cross-platform availability for proxy configuration symbols.
+            // see. https://developer.apple.com/forums/thread/19356?answerId=131709022#131709022
+            proxy["HTTPEnable"] = 1
+            proxy["HTTPProxy"] = address
+            proxy["HTTPPort"] = port
+            proxy["HTTPSEnable"] = 1
+            proxy["HTTPSProxy"] = address
+            proxy["HTTPSPort"] = port
+        case "socks":
+            proxy["SOCKSEnable"] = 1
+            proxy["SOCKSProxy"] = address
+            proxy["SOCKSPort"] = port
+        default:
+            break
+        }
+
+        return proxy
     }
 }
 

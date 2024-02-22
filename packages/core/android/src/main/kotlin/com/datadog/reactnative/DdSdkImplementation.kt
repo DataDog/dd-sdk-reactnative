@@ -26,13 +26,9 @@ import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
-import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-import java.net.InetSocketAddress
-import java.net.Proxy
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -155,9 +151,8 @@ class DdSdkImplementation(
     // region Internal
 
     private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {
-        val verbosityConfig = configuration.additionalConfig?.get(DD_SDK_VERBOSITY) as? String
         val verbosity =
-            when (verbosityConfig?.lowercase(Locale.US)) {
+            when (configuration.verbosity?.lowercase(Locale.US)) {
                 "debug" -> Log.DEBUG
                 "info" -> Log.INFO
                 "warn" -> Log.WARN
@@ -213,17 +208,14 @@ class DdSdkImplementation(
             configBuilder.trackLongTasks(longTask)
         }
 
-        val viewTracking = configuration.additionalConfig?.get(DD_NATIVE_VIEW_TRACKING) as? Boolean
-        if (viewTracking == true) {
+        if (configuration.nativeViewTracking == true) {
             // Use sensible default
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
 
-        val interactionTracking =
-            configuration.additionalConfig?.get(DD_NATIVE_INTERACTION_TRACKING) as? Boolean
-        if (interactionTracking == false) {
+        if (configuration.nativeInteractionTracking == false) {
             configBuilder.disableUserInteractionTracking()
         }
 
@@ -313,41 +305,12 @@ class DdSdkImplementation(
         return configBuilder.build()
     }
 
-    private fun buildFirstPartyHosts(
-        firstPartyHosts: List<ReadableMap>
-    ): Map<String, Set<TracingHeaderType>> {
-        /**
-         * Adapts the data format from the React Native SDK configuration to match with the Android
-         * SDK configuration. For example:
-         *
-         * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }] Android config: {
-         * "example.com": [DATADOG, B3] }
-         */
-        val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
-
-        for (it in firstPartyHosts) {
-            val match = it.getString("match")
-            val propagatorTypes = it.getArray("propagatorTypes")?.asTracingHeaderTypes()
-            if (match != null && propagatorTypes != null && propagatorTypes.isNotEmpty()) {
-                val hostMatch = firstPartyHostsWithHeaderTypes[match]
-                if (hostMatch != null) {
-                    hostMatch.addAll(propagatorTypes)
-                } else {
-                    firstPartyHostsWithHeaderTypes[match] = propagatorTypes.toMutableSet()
-                }
-            }
-        }
-
-        return firstPartyHostsWithHeaderTypes
-    }
-
     private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
-        val serviceName = configuration.additionalConfig?.get(DD_SERVICE_NAME) as? String
         val configBuilder = Configuration.Builder(
             clientToken = configuration.clientToken,
             env = configuration.env,
             variant = "",
-            service = serviceName
+            service = configuration.serviceName
         )
 
         val additionalConfig = configuration.additionalConfig?.toMutableMap()
@@ -371,18 +334,12 @@ class DdSdkImplementation(
             buildBatchSize(configuration.batchSize)
         )
 
-        buildProxyConfiguration(configuration)?.let { (proxy, authenticator) ->
+        configuration.proxyConfig?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        val firstPartyHosts =
-            (configuration.additionalConfig?.get(DD_FIRST_PARTY_HOSTS) as? ReadableArray)
-                ?.toArrayList() as?
-                    List<ReadableMap>
-        if (firstPartyHosts != null) {
-            val firstPartyHostsWithHeaderTypes = buildFirstPartyHosts(firstPartyHosts)
-            configBuilder.setFirstPartyHostsWithHeaderType(firstPartyHostsWithHeaderTypes)
+        if (configuration.firstPartyHosts != null) {
+            configBuilder.setFirstPartyHostsWithHeaderType(configuration.firstPartyHosts)
         }
 
         return configBuilder.build()
@@ -402,48 +359,6 @@ class DdSdkImplementation(
                 TrackingConsent.PENDING
             }
         }
-    }
-
-    internal fun buildProxyConfiguration(
-        configuration: DdSdkConfiguration
-    ): Pair<Proxy, ProxyAuthenticator?>? {
-        val additionalConfig = configuration.additionalConfig ?: return null
-
-        val address = additionalConfig[DD_PROXY_ADDRESS] as? String
-        val port = (additionalConfig[DD_PROXY_PORT] as? Number)?.toInt()
-        val type =
-            (additionalConfig[DD_PROXY_TYPE] as? String)?.let {
-                when (it.lowercase(Locale.US)) {
-                    "http", "https" -> Proxy.Type.HTTP
-                    "socks" -> Proxy.Type.SOCKS
-                    else -> {
-                        Log.w(
-                            DdSdk::class.java.canonicalName,
-                            "Unknown proxy type given: $it, skipping proxy configuration."
-                        )
-                        null
-                    }
-                }
-            }
-
-        val proxy =
-            if (address != null && port != null && type != null) {
-                Proxy(type, InetSocketAddress(address, port))
-            } else {
-                return null
-            }
-
-        val username = additionalConfig[DD_PROXY_USERNAME] as? String
-        val password = additionalConfig[DD_PROXY_PASSWORD] as? String
-
-        val authenticator =
-            if (username != null && password != null) {
-                ProxyAuthenticator(username, password)
-            } else {
-                null
-            }
-
-        return Pair(proxy, authenticator)
     }
 
     private fun buildSite(site: String?): DatadogSite {

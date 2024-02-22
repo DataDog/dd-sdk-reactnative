@@ -47,13 +47,10 @@ import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import java.net.InetSocketAddress
-import java.net.Proxy
 import java.util.Locale
 import java.util.stream.Stream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -97,7 +94,7 @@ fun mockChoreographerInstance(mock: Choreographer = mock()) {
     ExtendWith(ForgeExtension::class)
 )
 @MockitoSettings(strictness = Strictness.LENIENT)
-@ForgeConfiguration(BaseConfigurator::class)
+@ForgeConfiguration(value = BaseConfigurator::class)
 internal class DdSdkTest {
 
     lateinit var testedBridgeSdk: DdSdkImplementation
@@ -871,45 +868,12 @@ internal class DdSdkTest {
     // endregion
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {no view tracking by default}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(additionalConfig = null)
-        val sdkConfigCaptor = argumentCaptor<Configuration>()
-        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
-        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
-        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
-            }
-    }
-
-    @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {no view tracking}`(
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to false
-            )
+            nativeViewTracking = false
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -942,9 +906,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_NATIVE_VIEW_TRACKING to true
-            )
+            nativeViewTracking = true
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -977,9 +939,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to false
-            )
+            nativeInteractionTracking = false
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1002,7 +962,7 @@ internal class DdSdkTest {
         }
         assertThat(rumConfigCaptor.firstValue)
             .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
+                it.hasFieldEqualTo("userActionTracking", false)
             }
     }
 
@@ -1078,44 +1038,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to true
-            )
-        )
-        val sdkConfigCaptor = argumentCaptor<Configuration>()
-        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
-        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
-        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("userActionTracking", true)
-            }
-    }
-
-    @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {invalid user action tracking}`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_NATIVE_INTERACTION_TRACKING to null
-            )
+            nativeInteractionTracking = true
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1156,9 +1079,7 @@ internal class DdSdkTest {
             else -> ""
         }
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_SDK_VERBOSITY to verbosityName
-            )
+            verbosity = verbosityName
         )
 
         // When
@@ -1175,9 +1096,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_SDK_VERBOSITY to verbosity
-            )
+            verbosity = verbosity
         )
 
         // When
@@ -1194,9 +1113,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_SERVICE_NAME to serviceName
-            )
+            serviceName = serviceName
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1345,9 +1262,7 @@ internal class DdSdkTest {
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
-            )
+            firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1406,9 +1321,7 @@ internal class DdSdkTest {
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
-            )
+            firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1474,9 +1387,7 @@ internal class DdSdkTest {
 
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
-                DdSdkImplementation.DD_FIRST_PARTY_HOSTS to firstPartyHosts.toReadableArray()
-            )
+            firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2334,176 +2245,6 @@ internal class DdSdkTest {
 
         // Then
         verify(mockDatadog).setTrackingConsent(consent.asTrackingConsent())
-    }
-
-    @Test
-    fun `𝕄 not build proxy config 𝕎 no proxy config specified`(
-        @Forgery configuration: DdSdkConfiguration
-    ) {
-        // Given
-        val config = configuration.copy(additionalConfig = null)
-
-        // When
-        val proxyConfig = testedBridgeSdk.buildProxyConfiguration(config)
-
-        // Then
-        assertThat(proxyConfig).isNull()
-    }
-
-    @Test
-    fun `𝕄 not build proxy config 𝕎 buildProxyConfiguration() { type is missing }`(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val proxyConfig = testedBridgeSdk.buildProxyConfiguration(config)
-
-        // Then
-        assertThat(proxyConfig).isNull()
-    }
-
-    @Test
-    fun `𝕄 not build proxy config 𝕎 buildProxyConfiguration() { wrong type is used } `(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-
-        val proxyType = forge.anAlphabeticalString()
-        assumeTrue(proxyType.lowercase(Locale.US) !in arrayOf("http", "https", "socks"))
-
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
-            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val proxyConfig = testedBridgeSdk.buildProxyConfiguration(config)
-
-        // Then
-        assertThat(proxyConfig).isNull()
-    }
-
-    @Test
-    fun `𝕄 not build proxy config 𝕎 buildProxyConfiguration() { address is missing }`(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
-            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val proxyConfig = testedBridgeSdk.buildProxyConfiguration(config)
-
-        // Then
-        assertThat(proxyConfig).isNull()
-    }
-
-    @Test
-    fun `𝕄 not build proxy config 𝕎 buildProxyConfiguration() { port is missing }`(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_TYPE to forge.anElementFrom("http", "https", "socks"),
-            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1"
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val proxyConfig = testedBridgeSdk.buildProxyConfiguration(config)
-
-        // Then
-        assertThat(proxyConfig).isNull()
-    }
-
-    @Test
-    fun `𝕄 build proxy configuration 𝕎 buildProxyConfiguration() { no credentials }`(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-        val proxyType = forge.anElementFrom("http", "https", "socks")
-
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
-            DdSdkImplementation.DD_PROXY_ADDRESS to "1.1.1.1",
-            DdSdkImplementation.DD_PROXY_PORT to forge.anInt(min = 0, max = 65536)
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val (proxy, authenticator) = testedBridgeSdk.buildProxyConfiguration(config)!!
-
-        // Then
-        assertThat(proxy.type()).matches {
-            when (proxyType) {
-                "http", "https" -> it == Proxy.Type.HTTP
-                else -> it == Proxy.Type.SOCKS
-            }
-        }
-
-        assertThat(proxy.address()).isNotNull
-
-        assertThat(authenticator).isNull()
-    }
-
-    @Test
-    fun `𝕄 build proxy configuration+authenticator 𝕎 buildProxyConfiguration() { +credentials }`(
-        @Forgery configuration: DdSdkConfiguration,
-        forge: Forge
-    ) {
-        // Given
-        val proxyType = forge.anElementFrom("http", "https", "socks")
-        val proxyUsername = forge.anAlphabeticalString()
-        val proxyPassword = forge.anAlphabeticalString()
-        val proxyPort = forge.anInt(min = 0, max = 65536)
-        val proxyAddress = "1.1.1.1"
-
-        val additionalConfig = mapOf(
-            DdSdkImplementation.DD_PROXY_TYPE to proxyType,
-            DdSdkImplementation.DD_PROXY_ADDRESS to proxyAddress,
-            DdSdkImplementation.DD_PROXY_PORT to proxyPort,
-            DdSdkImplementation.DD_PROXY_USERNAME to proxyUsername,
-            DdSdkImplementation.DD_PROXY_PASSWORD to proxyPassword
-        )
-        val config = configuration.copy(additionalConfig = additionalConfig)
-
-        // When
-        val (proxy, authenticator) = testedBridgeSdk.buildProxyConfiguration(config)!!
-
-        // Then
-        assertThat(proxy.type()).matches {
-            when (proxyType) {
-                "http", "https" -> it == Proxy.Type.HTTP
-                else -> it == Proxy.Type.SOCKS
-            }
-        }
-
-        assertThat(proxy.address()).isNotNull
-        assertThat(proxy.address()).isInstanceOf(InetSocketAddress::class.java)
-        (proxy.address() as InetSocketAddress).let {
-            assertThat(it.port).isEqualTo(proxyPort)
-            assertThat(it.address.hostAddress).isEqualTo(proxyAddress)
-        }
-
-        assertThat(authenticator).isNotNull
-        assertThat(authenticator?.username).isEqualTo(proxyUsername)
-        assertThat(authenticator?.password).isEqualTo(proxyPassword)
     }
 
     fun `𝕄 initialize native SDK 𝕎 initialize() {with custom endpoints}`(

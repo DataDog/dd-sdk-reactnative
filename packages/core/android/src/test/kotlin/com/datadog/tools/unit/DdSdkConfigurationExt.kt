@@ -12,8 +12,10 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
+import com.datadog.reactnative.ProxyAuthenticator
 import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
+import java.net.Proxy
 
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     val map = mutableMapOf<String, Any?>()
@@ -85,6 +87,17 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     configurationForTelemetry?.let {
         map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
     }
+    map.put("nativeViewTracking", nativeViewTracking)
+    map.put("nativeInteractionTracking", nativeInteractionTracking)
+    verbosity?.let { map.put("verbosity", it) }
+    proxyConfig?.let {
+        map.put("proxyConfig", it.toReadableMap())
+    }
+    serviceName?.let { map.put("serviceName", it) }
+    firstPartyHosts?.let {
+        map.put("firstPartyHosts", it.toFirstPartyHostsReadableArray())
+    }
+
     return map.toReadableMap()
 }
 
@@ -104,5 +117,18 @@ internal fun CustomEndpoints.toReadableJavaOnlyMap(): ReadableMap {
     rum?.let { map.put("rum", it) }
     logs?.let { map.put("logs", it) }
     trace?.let { map.put("trace", it) }
+    return map.toReadableMap()
+}
+
+internal fun Pair<Proxy, ProxyAuthenticator?>.toReadableMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    val inetAddress = first.address().toString()
+    val address = inetAddress.substringBeforeLast(":")
+    val port = inetAddress.substringAfterLast(":").toInt()
+    map.put("type", first.type())
+    map.put("address", address)
+    map.put("port", port)
+    map.put("username", second?.username)
+    map.put("password", second?.password)
     return map.toReadableMap()
 }

@@ -71,7 +71,13 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 rum = forge.aNullable { aString() },
                 logs = forge.aNullable { aString() },
                 trace = forge.aNullable { aString() }
-            )
+            ),
+            nativeViewTracking = forge.aBool(),
+            nativeInteractionTracking = forge.aBool(),
+            verbosity = forge.aNullable { anElementFrom("debug", "info", "warn", "error") },
+            proxyConfig = null,
+            serviceName = forge.aNullable { forge.anAlphabeticalString() },
+            firstPartyHosts = null
         )
     }
 }

@@ -8,7 +8,7 @@ import { NativeModules } from 'react-native';
 
 import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
-import { ProxyType } from '../ProxyConfiguration';
+import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
 import { DdLogs } from '../logs/DdLogs';
@@ -106,12 +106,13 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.trackingConsent).toBe(
                 TrackingConsent.GRANTED
             );
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.nativeInteractionTracking).toBe(false);
+            expect(ddSdkConfiguration.nativeViewTracking).toBe(false);
+            expect(ddSdkConfiguration.firstPartyHosts).toEqual([]);
+
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
         });
 
@@ -143,12 +144,9 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.trackingConsent).toBe(
                 TrackingConsent.GRANTED
             );
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
 
             expect(DdSdkReactNative['wasInitialized']).toBe(false);
@@ -188,12 +186,9 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
         });
 
@@ -223,17 +218,18 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
         });
 
         it('logs a warning when initialize { with socks proxy config + proxy credentials }', async () => {
             // GIVEN
+            const spyConsoleWarn = jest
+                .spyOn(console, 'warn')
+                .mockImplementation();
+
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
@@ -251,18 +247,15 @@ describe('DdSdkReactNative', () => {
                 false,
                 false
             );
-            configuration.proxyConfig = {
-                type: proxyType,
-                address: proxyAddress,
-                port: proxyPort,
-                username: proxyUsername,
-                password: proxyPassword
-            };
+            configuration.proxyConfig = new ProxyConfiguration(
+                proxyType,
+                proxyAddress,
+                proxyPort,
+                proxyUsername,
+                proxyPassword
+            );
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
-            const spyConsoleWarn = jest
-                .spyOn(console, 'warn')
-                .mockImplementation();
 
             try {
                 // WHEN
@@ -277,15 +270,16 @@ describe('DdSdkReactNative', () => {
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
                 expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                expect(ddSdkConfiguration.proxyConfig).toEqual({
+                    type: proxyType,
+                    address: proxyAddress,
+                    port: proxyPort
+                });
+                expect(
+                    ddSdkConfiguration.additionalConfiguration
+                ).toStrictEqual({
                     '_dd.source': 'react-native',
-                    '_dd.sdk_version': sdkVersion,
-                    '_dd.native_view_tracking': false,
-                    '_dd.native_interaction_tracking': false,
-                    '_dd.proxy.type': proxyType,
-                    '_dd.proxy.address': proxyAddress,
-                    '_dd.proxy.port': proxyPort,
-                    '_dd.first_party_hosts': []
+                    '_dd.sdk_version': sdkVersion
                 });
                 expect(spyConsoleWarn).toHaveBeenCalledTimes(1);
             } finally {
@@ -379,9 +373,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
-            expect(ddSdkConfiguration.additionalConfig['_dd.version']).toBe(
-                '2.0.0'
-            );
+            expect(
+                ddSdkConfiguration.additionalConfiguration['_dd.version']
+            ).toBe('2.0.0');
         });
 
         it('initialized with a version suffix when a version suffix is specified', async () => {
@@ -403,10 +397,10 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(
-                ddSdkConfiguration.additionalConfig['_dd.version']
+                ddSdkConfiguration.additionalConfiguration['_dd.version']
             ).toBeUndefined();
             expect(
-                ddSdkConfiguration.additionalConfig['_dd.version_suffix']
+                ddSdkConfiguration.additionalConfiguration['_dd.version_suffix']
             ).toBe('-codepush-3');
         });
 
@@ -429,11 +423,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
-            expect(ddSdkConfiguration.additionalConfig['_dd.version']).toBe(
-                '2.0.0-codepush-3'
-            );
             expect(
-                ddSdkConfiguration.additionalConfig['_dd.version_suffix']
+                ddSdkConfiguration.additionalConfiguration['_dd.version']
+            ).toBe('2.0.0-codepush-3');
+            expect(
+                ddSdkConfiguration.additionalConfiguration['_dd.version_suffix']
             ).toBeUndefined();
         });
     });
@@ -463,12 +457,9 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(
                 DdRumUserInteractionTracking.startTracking
@@ -508,21 +499,19 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.firstPartyHosts).toEqual([
+                {
+                    match: 'api.example.com',
+                    propagatorTypes: ['datadog', 'tracecontext']
+                },
+                {
+                    match: 'something.fr',
+                    propagatorTypes: ['datadog']
+                }
+            ]);
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': [
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: ['datadog', 'tracecontext']
-                    },
-                    {
-                        match: 'something.fr',
-                        propagatorTypes: ['datadog']
-                    }
-                ]
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledTimes(
                 1
@@ -569,12 +558,9 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -770,13 +756,10 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.serviceName).toBe(fakeServiceName);
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.service_name': fakeServiceName,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -808,13 +791,10 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.verbosity).toBe(SdkVerbosity.DEBUG);
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.sdk_verbosity': SdkVerbosity.DEBUG,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -846,12 +826,10 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.nativeViewTracking).toBe(true);
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': true,
-                '_dd.native_interaction_tracking': false,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -883,12 +861,10 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+            expect(ddSdkConfiguration.nativeInteractionTracking).toBe(true);
+            expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.source': 'react-native',
-                '_dd.sdk_version': sdkVersion,
-                '_dd.native_view_tracking': false,
-                '_dd.native_interaction_tracking': true,
-                '_dd.first_party_hosts': []
+                '_dd.sdk_version': sdkVersion
             });
             expect(DdRumErrorTracking.startTracking).toHaveBeenCalledTimes(1);
         });
@@ -1085,15 +1061,16 @@ describe('DdSdkReactNative', () => {
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
                 expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                expect(ddSdkConfiguration.proxyConfig).toStrictEqual({
+                    type: proxyType,
+                    address: proxyAddress,
+                    port: proxyPort
+                });
+                expect(
+                    ddSdkConfiguration.additionalConfiguration
+                ).toStrictEqual({
                     '_dd.source': 'react-native',
-                    '_dd.sdk_version': sdkVersion,
-                    '_dd.native_view_tracking': false,
-                    '_dd.native_interaction_tracking': false,
-                    '_dd.proxy.type': proxyType,
-                    '_dd.proxy.address': proxyAddress,
-                    '_dd.proxy.port': proxyPort,
-                    '_dd.first_party_hosts': []
+                    '_dd.sdk_version': sdkVersion
                 });
             });
         }
@@ -1144,17 +1121,18 @@ describe('DdSdkReactNative', () => {
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
                 expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.additionalConfig).toStrictEqual({
+                expect(ddSdkConfiguration.proxyConfig).toStrictEqual({
+                    type: proxyType,
+                    address: proxyAddress,
+                    port: proxyPort,
+                    username: proxyUsername,
+                    password: proxyPassword
+                });
+                expect(
+                    ddSdkConfiguration.additionalConfiguration
+                ).toStrictEqual({
                     '_dd.source': 'react-native',
-                    '_dd.sdk_version': sdkVersion,
-                    '_dd.native_view_tracking': false,
-                    '_dd.native_interaction_tracking': false,
-                    '_dd.proxy.type': proxyType,
-                    '_dd.proxy.address': proxyAddress,
-                    '_dd.proxy.port': proxyPort,
-                    '_dd.proxy.username': proxyUsername,
-                    '_dd.proxy.password': proxyPassword,
-                    '_dd.first_party_hosts': []
+                    '_dd.sdk_version': sdkVersion
                 });
             });
         }

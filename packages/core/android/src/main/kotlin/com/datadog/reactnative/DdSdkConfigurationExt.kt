@@ -6,10 +6,14 @@
 
 package com.datadog.reactnative
 
+import android.util.Log
 import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableNativeMap
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.util.Locale
 
 internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     return DdSdkConfiguration(
@@ -32,7 +36,13 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         additionalConfig = getMap("additionalConfig")?.toHashMap(),
         configurationForTelemetry = getMap(
             "configurationForTelemetry"
-        )?.asConfigurationForTelemetry()
+        )?.asConfigurationForTelemetry(),
+        nativeViewTracking = getBoolean("nativeViewTracking"),
+        nativeInteractionTracking = getBoolean("nativeInteractionTracking"),
+        verbosity = getString("verbosity"),
+        proxyConfig = getMap("proxyConfig")?.asProxyConfig(),
+        serviceName = getString("serviceName"),
+        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts()
     )
 }
 
@@ -53,6 +63,78 @@ internal fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
         logs = getString("logs"),
         trace = getString("trace"),
     )
+}
+
+@Suppress("ComplexMethod")
+internal fun ReadableMap.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
+    val address: String? = getString("address")
+
+    // getInt expects the value to be non-null
+    var port: Int? = null
+    if (hasKey("port")) {
+        port = getInt("port")
+    }
+
+    val type =
+        getString("type")?.let {
+            when (it.lowercase(Locale.US)) {
+                "http", "https" -> Proxy.Type.HTTP
+                "socks" -> Proxy.Type.SOCKS
+                else -> {
+                    Log.w(
+                        DdSdk::class.java.canonicalName,
+                        "Unknown proxy type given: $it, skipping proxy configuration."
+                    )
+                    null
+                }
+            }
+        }
+
+    val proxy =
+        if (address != null && port != null && type != null) {
+            Proxy(type, InetSocketAddress(address, port))
+        } else {
+            return null
+        }
+
+    val username = getString("username")
+    val password = getString("password")
+
+    val authenticator =
+        if (username != null && password != null) {
+            ProxyAuthenticator(username, password)
+        } else {
+            null
+        }
+
+    return Pair(proxy, authenticator)
+}
+
+internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderType>> {
+    /**
+     * Adapts the data format from the React Native SDK configuration to match with the Android
+     * SDK configuration. For example:
+     *
+     * RN config: [{ match: "example.com", propagatorTypes: [DATADOG, B3] }] Android config: {
+     * "example.com": [DATADOG, B3] }
+     */
+    val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
+
+    val firstPartyHosts = this.toArrayList() as List<ReadableMap>
+    for (it in firstPartyHosts) {
+        val match = it.getString("match")
+        val propagatorTypes = it.getArray("propagatorTypes")?.asTracingHeaderTypes()
+        if (match != null && propagatorTypes != null && propagatorTypes.isNotEmpty()) {
+            val hostMatch = firstPartyHostsWithHeaderTypes[match]
+            if (hostMatch != null) {
+                hostMatch.addAll(propagatorTypes)
+            } else {
+                firstPartyHostsWithHeaderTypes[match] = propagatorTypes.toMutableSet()
+            }
+        }
+    }
+
+    return firstPartyHostsWithHeaderTypes
 }
 
 internal fun ReadableArray.asTracingHeaderTypes(): Set<TracingHeaderType> {

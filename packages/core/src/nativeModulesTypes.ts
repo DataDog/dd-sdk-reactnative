@@ -36,7 +36,7 @@ export class DdNativeSdkConfiguration {
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfig: object
+        readonly additionalConfiguration: object
     ) {}
 }
 
