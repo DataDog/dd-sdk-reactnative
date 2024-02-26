@@ -10,7 +10,7 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
 #endif
 #import "DdSdk.h"
-#import <React/RCTBridge+Private.h>
+#import <React/RCTBridge.h>
 
 @implementation DdSdk
 
