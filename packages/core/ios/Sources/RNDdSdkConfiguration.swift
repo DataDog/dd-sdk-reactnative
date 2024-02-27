@@ -196,7 +196,6 @@ extension Dictionary where Key == String, Value == AnyObject {
             let batchSize = configuration["batchSize"] as? NSString
             let trackBackgroundEvents = configuration["trackBackgroundEvents"] as? Bool
             let customEndpoints = configuration["customEndpoints"] as? NSDictionary
-            let additionalConfig = configuration["additionalConfiguration"] as? NSDictionary
             let configurationForTelemetry = configuration["configurationForTelemetry"] as? NSDictionary
             let nativeViewTracking = configuration["nativeViewTracking"] as? Bool
             let nativeInteractionTracking = configuration["nativeInteractionTracking"] as? Bool
@@ -222,7 +221,10 @@ extension Dictionary where Key == String, Value == AnyObject {
                 batchSize: batchSize,
                 trackBackgroundEvents: trackBackgroundEvents,
                 customEndpoints: customEndpoints?.asCustomEndpoints(),
-                additionalConfig: additionalConfig,
+                additionalConfig: [
+                    CrossPlatformAttributes.ddsource: "react-native",
+                    CrossPlatformAttributes.sdkVersion: SdkVersion
+                ],
                 configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
                 nativeViewTracking: nativeViewTracking,
                 nativeInteractionTracking: nativeInteractionTracking,
