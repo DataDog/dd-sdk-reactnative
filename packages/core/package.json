@@ -30,7 +30,8 @@
         "ios/DdSdkReactNative.xcodeproj/*.pbxproj",
         "jest",
         "DatadogSDKReactNative.podspec",
-        "datadog-sourcemaps.gradle"
+        "datadog-sourcemaps.gradle",
+        "datadog-configuration.schema.json"
     ],
     "types": "lib/typescript/index.d.ts",
     "react-native": "src/index",
