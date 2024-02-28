@@ -177,6 +177,25 @@ extension NSArray {
     }
 }
 
+internal struct DefaultConfiguration {
+    static let nativeCrashReportEnabled = false
+    static let sessionSamplingRate = 100.0
+    static let resourceTracingSamplingRate = 20.0
+    static let site = NSString("US1")
+    static let longTaskThresholdMs = 0.0
+    static let nativeLongTaskThresholdMs = 200.0
+    static let nativeViewTracking = false
+    static let nativeInteractionTracking = false
+    static let firstPartyHosts: [String: Set<TracingHeaderType>] = [:]
+    static let trackingConsent = NSString("GRANTED")
+    static let telemetrySampleRate = 20.0
+    static let vitalsUpdateFrequency = NSString("AVERAGE")
+    static let trackFrustrations = true
+    static let uploadFrequency = NSString("AVERAGE")
+    static let batchSize = NSString("MEDIUM")
+    static let trackBackgroundEvents = false
+}
+
 extension Dictionary where Key == String, Value == AnyObject {
     func asDdSdkConfigurationFromJSON() throws -> DdSdkConfiguration {
         if let configuration = self["configuration"] as? Dictionary<String, Any?> {
@@ -205,33 +224,33 @@ extension Dictionary where Key == String, Value == AnyObject {
             let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
 
             return DdSdkConfiguration(
-                clientToken: (clientToken != nil) ? clientToken! : String(),
-                env: (env != nil) ? env! : String(),
-                applicationId: (applicationId != nil) ? applicationId! : String(),
-                nativeCrashReportEnabled: nativeCrashReportEnabled,
-                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
-                longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : Double(),
-                sampleRate: sampleRate,
-                site: site,
-                trackingConsent: trackingConsent,
-                telemetrySampleRate: telemetrySampleRate,
-                vitalsUpdateFrequency: vitalsUpdateFrequency,
-                trackFrustrations: trackFrustrations,
-                uploadFrequency: uploadFrequency,
-                batchSize: batchSize,
-                trackBackgroundEvents: trackBackgroundEvents,
+                clientToken: clientToken ?? String(),
+                env: env ?? String(),
+                applicationId: applicationId ?? String(),
+                nativeCrashReportEnabled: nativeCrashReportEnabled ?? DefaultConfiguration.nativeCrashReportEnabled,
+                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs ?? DefaultConfiguration.nativeLongTaskThresholdMs,
+                longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : DefaultConfiguration.longTaskThresholdMs,
+                sampleRate: sampleRate ?? DefaultConfiguration.sessionSamplingRate,
+                site: site ?? DefaultConfiguration.site,
+                trackingConsent: trackingConsent ?? DefaultConfiguration.trackingConsent,
+                telemetrySampleRate: telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate,
+                vitalsUpdateFrequency: vitalsUpdateFrequency ?? DefaultConfiguration.vitalsUpdateFrequency,
+                trackFrustrations: trackFrustrations ?? DefaultConfiguration.trackFrustrations,
+                uploadFrequency: uploadFrequency ?? DefaultConfiguration.uploadFrequency,
+                batchSize: batchSize ?? DefaultConfiguration.batchSize,
+                trackBackgroundEvents: trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
                 customEndpoints: customEndpoints?.asCustomEndpoints(),
                 additionalConfig: [
                     CrossPlatformAttributes.ddsource: "react-native",
                     CrossPlatformAttributes.sdkVersion: SdkVersion
                 ],
                 configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
-                nativeViewTracking: nativeViewTracking,
-                nativeInteractionTracking: nativeInteractionTracking,
+                nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
+                nativeInteractionTracking: nativeInteractionTracking ?? DefaultConfiguration.nativeInteractionTracking,
                 verbosity: verbosity,
                 proxyConfig: proxyConfig?.asProxyConfig(),
                 serviceName: serviceName,
-                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts()
+                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
             )
         }
         throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
