@@ -95,7 +95,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        Datadog.set(trackingConsent: buildTrackingConsent(consent: trackingConsent))
+        Datadog.set(trackingConsent: (trackingConsent as NSString?).asTrackingConsent())
         resolve(nil)
     }
     
@@ -107,7 +107,7 @@ public class DdSdkImplementation: NSObject {
     
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
     
@@ -149,38 +149,8 @@ public class DdSdkImplementation: NSObject {
         }
     }
 
-    func buildTrackingConsent(consent: NSString?) -> TrackingConsent {
-        let trackingConsent: TrackingConsent
-        switch consent?.lowercased {
-        case "pending":
-            trackingConsent = .pending
-        case "granted":
-            trackingConsent = .granted
-        case "not_granted":
-            trackingConsent = .notGranted
-        default:
-            trackingConsent = .pending
-        }
-        return trackingConsent
-    }
-
-    func buildVitalsUpdateFrequency(frequency: NSString?) -> RUM.Configuration.VitalsFrequency? {
-        switch frequency?.lowercased {
-        case "never":
-            return nil
-        case "rare":
-            return .rare
-        case "average":
-            return .average
-        case "frequent":
-            return .frequent
-        default:
-            return .average
-        }
-    }
-
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
-        let jsRefreshRateMonitoringEnabled = buildVitalsUpdateFrequency(frequency: sdkConfiguration.vitalsUpdateFrequency) != nil
+        let jsRefreshRateMonitoringEnabled = sdkConfiguration.vitalsUpdateFrequency.asVitalsUpdateFrequency() != nil
         let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
         
         if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {

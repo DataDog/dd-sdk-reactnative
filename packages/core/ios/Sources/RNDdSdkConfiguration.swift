@@ -256,3 +256,84 @@ extension Dictionary where Key == String, Value == AnyObject {
         throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
     }
 }
+
+extension NSString? {
+    func asTrackingConsent() -> TrackingConsent {
+        let trackingConsent: TrackingConsent
+        switch self?.lowercased {
+        case "pending":
+            trackingConsent = .pending
+        case "granted":
+            trackingConsent = .granted
+        case "not_granted":
+            trackingConsent = .notGranted
+        default:
+            trackingConsent = .pending
+        }
+        return trackingConsent
+    }
+    
+    func asVitalsUpdateFrequency() -> RUM.Configuration.VitalsFrequency? {
+        switch self?.lowercased {
+        case "never":
+            return nil
+        case "rare":
+            return .rare
+        case "average":
+            return .average
+        case "frequent":
+            return .frequent
+        default:
+            return .average
+        }
+    }
+    
+    func asUploadFrequency() -> Datadog.Configuration.UploadFrequency {
+        let uploadFrequency: Datadog.Configuration.UploadFrequency
+        switch self?.lowercased {
+        case "rare":
+            uploadFrequency = .rare
+        case "average":
+            uploadFrequency = .average
+        case "frequent":
+            uploadFrequency = .frequent
+        default:
+            uploadFrequency = .average
+        }
+        return uploadFrequency
+    }
+    
+    func asBatchSize() -> Datadog.Configuration.BatchSize {
+        let size: Datadog.Configuration.BatchSize
+        switch self?.lowercased {
+        case "small":
+            size = .small
+        case "medium":
+            size = .medium
+        case "large":
+            size = .large
+        default:
+            size = .medium
+        }
+        return size
+    }
+    
+    func asSite() -> DatadogSite {
+        switch self?.lowercased {
+        case "us1", "us":
+            return .us1
+        case "eu1", "eu":
+            return .eu1
+        case "us3":
+            return .us3
+        case "us5":
+            return .us5
+        case "us1_fed", "gov":
+            return .us1_fed
+        case "ap1":
+            return .ap1
+        default:
+            return .us1
+        }
+    }
+}

@@ -52,7 +52,7 @@ public class DdSdkNativeInitialization: NSObject {
             self.setVerbosityLevel(configuration: sdkConfiguration)
 
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
-            let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
+            let consent = sdkConfiguration.trackingConsent.asTrackingConsent()
             DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: consent)
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration)
@@ -167,7 +167,7 @@ public class DdSdkNativeInitialization: NSObject {
             trackFrustrations: configuration.trackFrustrations ?? true,
             trackBackgroundEvents: configuration.trackBackgroundEvents ?? false,
             longTaskThreshold: longTaskThreshold,
-            vitalsUpdateFrequency: buildVitalsUpdateFrequency(frequency: configuration.vitalsUpdateFrequency),
+            vitalsUpdateFrequency: configuration.vitalsUpdateFrequency.asVitalsUpdateFrequency(),
             resourceEventMapper: { resourceEvent in
                 if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
                     return nil
@@ -206,66 +206,6 @@ public class DdSdkNativeInitialization: NSObject {
         }
         
         return Trace.Configuration(customEndpoint: customTraceEndpointURL)
-    }
-
-    func buildTrackingConsent(consent: NSString?) -> TrackingConsent {
-        let trackingConsent: TrackingConsent
-        switch consent?.lowercased {
-        case "pending":
-            trackingConsent = .pending
-        case "granted":
-            trackingConsent = .granted
-        case "not_granted":
-            trackingConsent = .notGranted
-        default:
-            trackingConsent = .pending
-        }
-        return trackingConsent
-    }
-
-    func buildVitalsUpdateFrequency(frequency: NSString?) -> RUM.Configuration.VitalsFrequency? {
-        switch frequency?.lowercased {
-        case "never":
-            return nil
-        case "rare":
-            return .rare
-        case "average":
-            return .average
-        case "frequent":
-            return .frequent
-        default:
-            return .average
-        }
-    }
-
-    func buildUploadFrequency(frequency: NSString?) -> Datadog.Configuration.UploadFrequency {
-        let uploadFrequency: Datadog.Configuration.UploadFrequency
-        switch frequency?.lowercased {
-        case "rare":
-            uploadFrequency = .rare
-        case "average":
-            uploadFrequency = .average
-        case "frequent":
-            uploadFrequency = .frequent
-        default:
-            uploadFrequency = .average
-        }
-        return uploadFrequency
-    }
-
-    func buildBatchSize(batchSize: NSString?) -> Datadog.Configuration.BatchSize {
-        let size: Datadog.Configuration.BatchSize
-        switch batchSize?.lowercased {
-        case "small":
-            size = .small
-        case "medium":
-            size = .medium
-        case "large":
-            size = .large
-        default:
-            size = .medium
-        }
-        return size
     }
 
     func setVerbosityLevel(configuration: DdSdkConfiguration) {

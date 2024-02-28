@@ -482,34 +482,6 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
 
-    func testBuildTrackingConsentPending() {
-        let consent: NSString? = "pending"
-        let trackingConsent = DdSdkImplementation().buildTrackingConsent(consent: consent)
-
-        XCTAssertEqual(trackingConsent, TrackingConsent.pending)
-    }
-
-    func testBuildTrackingConsentGranted() {
-        let consent: NSString? = "granted"
-        let trackingConsent = DdSdkImplementation().buildTrackingConsent(consent: consent)
-
-        XCTAssertEqual(trackingConsent, TrackingConsent.granted)
-    }
-
-    func testBuildTrackingConsentNotGranted() {
-        let consent: NSString? = "not_granted"
-        let trackingConsent = DdSdkImplementation().buildTrackingConsent(consent: consent)
-
-        XCTAssertEqual(trackingConsent, TrackingConsent.notGranted)
-    }
-
-    func testBuildTrackingConsentNil() {
-        let consent: NSString? = nil
-        let trackingConsent = DdSdkImplementation().buildTrackingConsent(consent: consent)
-
-        XCTAssertEqual(trackingConsent, TrackingConsent.pending)
-    }
-
     func testBuildLongTaskThreshold() {
         let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2_500)
 
