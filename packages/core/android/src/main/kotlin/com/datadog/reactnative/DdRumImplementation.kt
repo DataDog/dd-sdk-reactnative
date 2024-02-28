@@ -314,6 +314,9 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
             "patch" -> RumResourceMethod.PATCH
             "put" -> RumResourceMethod.PUT
             "post" -> RumResourceMethod.POST
+            "trace" -> RumResourceMethod.TRACE
+            "options" -> RumResourceMethod.OPTIONS
+            "connect" -> RumResourceMethod.CONNECT
             else -> {
                 Log.w(
                     DdRum::class.java.canonicalName,
