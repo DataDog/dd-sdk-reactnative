@@ -192,7 +192,8 @@ extension RUMConnectivity {
             cellular: .init(
                 carrierName: .mockRandom(),
                 technology: .mockRandom()
-            ),
+            ), 
+            effectiveType: [.effectiveType2g, .effectiveType3g, .effectiveType4g, .slow2g].randomElement(),
             interfaces: [.bluetooth, .cellular].randomElements(),
             status: [.connected, .maybe, .notConnected].randomElement()!
         )

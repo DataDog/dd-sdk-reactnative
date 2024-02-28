@@ -42,7 +42,7 @@ internal class DdSdkTests: XCTestCase {
         defer { consolePrint = originalConsolePrint }
 
         var printedMessage = ""
-        consolePrint = { msg in printedMessage += msg }
+        consolePrint = { (msg, level) in printedMessage += msg }
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),

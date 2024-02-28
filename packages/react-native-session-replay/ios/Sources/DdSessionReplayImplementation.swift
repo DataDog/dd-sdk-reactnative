@@ -49,7 +49,7 @@ public class DdSessionReplayImplementation: NSObject {
                 in: core
             )
         } else {
-            consolePrint("Core instance was not found when initializing Session Replay.")
+            consolePrint("Core instance was not found when initializing Session Replay.", .critical)
         }
 
         resolve(nil)

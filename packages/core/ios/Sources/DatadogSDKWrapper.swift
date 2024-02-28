@@ -72,7 +72,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             RUM.enable(with: configuration, in: core)
         } else {
-            consolePrint("Core instance was not found when initializing RUM.")
+            consolePrint("Core instance was not found when initializing RUM.", .critical)
         }
     }
 
@@ -80,7 +80,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             Logs.enable(with: configuration, in: core)
         } else {
-            consolePrint("Core instance was not found when initializing Logs.")
+            consolePrint("Core instance was not found when initializing Logs.", .critical)
         }
     }
 
@@ -88,7 +88,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             Trace.enable(with: configuration, in: core)
         } else {
-            consolePrint("Core instance was not found when initializing Trace.")
+            consolePrint("Core instance was not found when initializing Trace.", .critical)
         }
     }
 
@@ -96,7 +96,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             CrashReporting.enable(in: core)
         } else {
-            consolePrint("Core instance was not found when initializing CrashReporting.")
+            consolePrint("Core instance was not found when initializing CrashReporting.", .critical)
         }
     }
 
@@ -104,7 +104,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             return Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short), in: core)
         } else {
-            consolePrint("Core instance was not found when creating Logger.")
+            consolePrint("Core instance was not found when creating Logger.", .critical)
             return Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short))
         }
     }
@@ -151,7 +151,7 @@ public class DatadogSDKWrapper {
         if let core = coreInstance {
             webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
         } else {
-            consolePrint("Core instance was not found when initializing Webview tracking.")
+            consolePrint("Core instance was not found when initializing Webview tracking.", .critical)
         }
     }
     

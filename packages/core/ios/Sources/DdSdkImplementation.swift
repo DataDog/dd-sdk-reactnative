@@ -68,7 +68,7 @@ public class DdSdkImplementation: NSObject {
             if DatadogSDKWrapper.shared.isInitialized() {
                 // Initializing the SDK twice results in Global.rum and
                 // Global.sharedTracer to be set to no-op instances
-                consolePrint("Datadog SDK is already initialized, skipping initialization.")
+                consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
                 DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
                 
                 // This block is called when SDK is reinitialized and the javascript has been wiped out.
