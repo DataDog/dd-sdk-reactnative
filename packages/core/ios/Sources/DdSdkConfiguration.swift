@@ -7,6 +7,7 @@
 import Foundation
 import DatadogCore
 import DatadogInternal
+import DatadogRUM
 
 /**
  A configuration object to initialize Datadog's features.
@@ -46,9 +47,9 @@ public class DdSdkConfiguration: NSObject {
     public var longTaskThresholdMs: Double = 0.0
     public var sampleRate: Double? = nil
     public var site: DatadogSite
-    public var trackingConsent: NSString? = nil
+    public var trackingConsent: TrackingConsent
     public var telemetrySampleRate: Double? = nil
-    public var vitalsUpdateFrequency: NSString? = nil
+    public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
     public var trackFrustrations: Bool? = nil
     public var uploadFrequency: Datadog.Configuration.UploadFrequency
     public var batchSize: Datadog.Configuration.BatchSize
@@ -71,13 +72,13 @@ public class DdSdkConfiguration: NSObject {
         nativeLongTaskThresholdMs: Double?,
         longTaskThresholdMs: Double,
         sampleRate: Double?,
-        site: NSString?,
-        trackingConsent: NSString?,
+        site: DatadogSite,
+        trackingConsent: TrackingConsent,
         telemetrySampleRate: Double?,
-        vitalsUpdateFrequency: NSString?,
+        vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency?,
         trackFrustrations: Bool?,
-        uploadFrequency: NSString?,
-        batchSize: NSString?,
+        uploadFrequency: Datadog.Configuration.UploadFrequency,
+        batchSize: Datadog.Configuration.BatchSize,
         trackBackgroundEvents: Bool?,
         customEndpoints: CustomEndpoints?,
         additionalConfig: NSDictionary?,
@@ -96,13 +97,13 @@ public class DdSdkConfiguration: NSObject {
         self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.longTaskThresholdMs = longTaskThresholdMs
         self.sampleRate = sampleRate
-        self.site = site.asSite()
+        self.site = site
         self.trackingConsent = trackingConsent
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackFrustrations = trackFrustrations
-        self.uploadFrequency = uploadFrequency.asUploadFrequency()
-        self.batchSize = batchSize.asBatchSize()
+        self.uploadFrequency = uploadFrequency
+        self.batchSize = batchSize
         self.trackBackgroundEvents = trackBackgroundEvents
         self.customEndpoints = customEndpoints
         self.additionalConfig = additionalConfig

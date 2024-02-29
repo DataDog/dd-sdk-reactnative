@@ -52,8 +52,7 @@ public class DdSdkNativeInitialization: NSObject {
             self.setVerbosityLevel(configuration: sdkConfiguration)
 
             let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
-            let consent = sdkConfiguration.trackingConsent.asTrackingConsent()
-            DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: consent)
+            DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: sdkConfiguration.trackingConsent)
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration)
         }
@@ -167,7 +166,7 @@ public class DdSdkNativeInitialization: NSObject {
             trackFrustrations: configuration.trackFrustrations ?? true,
             trackBackgroundEvents: configuration.trackBackgroundEvents ?? false,
             longTaskThreshold: longTaskThreshold,
-            vitalsUpdateFrequency: configuration.vitalsUpdateFrequency.asVitalsUpdateFrequency(),
+            vitalsUpdateFrequency: configuration.vitalsUpdateFrequency,
             resourceEventMapper: { resourceEvent in
                 if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
                     return nil

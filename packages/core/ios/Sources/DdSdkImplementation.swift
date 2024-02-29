@@ -150,7 +150,7 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration)-> ((Double) -> ())? {
-        let jsRefreshRateMonitoringEnabled = sdkConfiguration.vitalsUpdateFrequency.asVitalsUpdateFrequency() != nil
+        let jsRefreshRateMonitoringEnabled = sdkConfiguration.vitalsUpdateFrequency != nil
         let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
         
         if (!jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled) {
