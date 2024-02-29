@@ -63,7 +63,8 @@
             "<rootDir>/lib/"
         ],
         "testPathIgnorePatterns": [
-            "/__utils__/"
+            "/__utils__/",
+            "/__fixtures__/"
         ],
         "setupFiles": [
             "./../../node_modules/react-native-gesture-handler/jestSetup.js",

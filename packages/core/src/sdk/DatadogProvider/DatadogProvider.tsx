@@ -17,6 +17,7 @@ import type {
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import type { FileBasedConfiguration } from '../FileBasedConfiguration/FileBasedConfiguration';
 
 let isInitialized = false;
 
@@ -28,7 +29,8 @@ type Props = PropsWithChildren<{
      */
     configuration:
         | DatadogProviderConfiguration
-        | AutoInstrumentationConfiguration;
+        | AutoInstrumentationConfiguration
+        | FileBasedConfiguration;
     /**
      * Callback to be run once the SDK starts sending events.
      */

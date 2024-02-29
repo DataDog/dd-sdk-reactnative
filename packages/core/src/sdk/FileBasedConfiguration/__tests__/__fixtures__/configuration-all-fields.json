@@ -1,0 +1,22 @@
+{
+    "$schema": "../../../../../datadog-configuration.schema.json",
+    "configuration": {
+        "applicationId": "fake-app-id",
+        "env": "fake-env",
+        "clientToken": "fake-client-token",
+        "trackInteractions": true,
+        "trackResources": true,
+        "trackErrors": true,
+        "trackingConsent": "NOT_GRANTED",
+        "longTaskThresholdMs": 44,
+        "verbosity": "WARN",
+        "actionNameAttribute": "action-name-attr",
+        "resourceTracingSamplingRate": 33,
+        "firstPartyHosts": [
+            {
+                "match": "example.com",
+                "propagatorTypes": ["B3MULTI", "TRACECONTEXT"]
+            }
+        ]
+    }
+}
