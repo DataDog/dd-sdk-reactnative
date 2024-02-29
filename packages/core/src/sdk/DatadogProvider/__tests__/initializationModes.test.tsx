@@ -169,8 +169,7 @@ describe('DatadogProvider', () => {
 
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(
-                NativeModules.DdSdk.initialize.mock.calls[0][0]
-                    .additionalConfig['_dd.first_party_hosts']
+                NativeModules.DdSdk.initialize.mock.calls[0][0].firstPartyHosts
             ).toEqual([
                 {
                     match: 'api.com',

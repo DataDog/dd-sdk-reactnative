@@ -13,7 +13,10 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
 
-internal class ProxyAuthenticator(
+/**
+ * Class representing the authentication for Proxy.
+ */
+class ProxyAuthenticator(
     internal val username: String,
     internal val password: String
 ) : Authenticator {

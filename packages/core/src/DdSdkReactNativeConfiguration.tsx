@@ -101,7 +101,7 @@ const DEFAULTS = {
     nativeViewTracking: false,
     nativeInteractionTracking: false,
     getFirstPartyHosts: () => [],
-    getAdditionalConfig: () => ({}),
+    getAdditionalConfiguration: () => ({}),
     trackingConsent: TrackingConsent.GRANTED,
     telemetrySampleRate: 20.0,
     vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE,
@@ -274,9 +274,9 @@ export class DdSdkReactNativeConfiguration {
     public actionEventMapper: ActionEventMapper | null =
         DEFAULTS.actionEventMapper;
 
-    public additionalConfig: {
+    public additionalConfiguration: {
         [k: string]: any;
-    } = DEFAULTS.getAdditionalConfig();
+    } = DEFAULTS.getAdditionalConfiguration();
 
     public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
 
@@ -371,7 +371,7 @@ export type PartialInitializationConfiguration = {
     readonly serviceName?: string;
     readonly version?: string;
     versionSuffix?: string;
-    readonly additionalConfig?: { [k: string]: any };
+    readonly additionalConfiguration?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
     readonly longTaskThresholdMs?: number | false;
     readonly nativeLongTaskThresholdMs?: number | false;

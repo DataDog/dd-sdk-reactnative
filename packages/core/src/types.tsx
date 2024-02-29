@@ -18,7 +18,7 @@ export class DdSdkConfiguration {
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfig: object,
+        readonly additionalConfiguration: object,
         readonly telemetrySampleRate: number,
         readonly vitalsUpdateFrequency: string,
         readonly uploadFrequency: string,
@@ -37,7 +37,21 @@ export class DdSdkConfiguration {
             trackNetworkRequests: boolean;
             reactVersion: string;
             reactNativeVersion: string;
-        }
+        },
+        readonly nativeViewTracking: boolean,
+        readonly nativeInteractionTracking: boolean,
+        readonly verbosity: string | undefined,
+        readonly proxyConfig:
+            | {
+                  type: string;
+                  address: string;
+                  port: number;
+                  username?: string;
+                  password?: string;
+              }
+            | undefined,
+        readonly serviceName: string | undefined,
+        readonly firstPartyHosts: { match: string; propagatorTypes: string[] }[]
     ) {}
 }
 

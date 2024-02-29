@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit
 
+import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReadableArray
@@ -23,7 +24,30 @@ fun Map<*, *>.toReadableMap(): ReadableMap {
     return JavaOnlyMap.of(*keysAndValues.toTypedArray())
 }
 
+fun Map<String, Set<TracingHeaderType>>.toFirstPartyHostsReadableArray(): ReadableArray {
+    val list = mutableListOf<Any>()
+
+    entries.forEach {
+        list.add(
+            mapOf(
+                "match" to it.key,
+                "propagatorTypes" to it.value.map {
+                        tracingHeaderType ->
+                    tracingHeaderType.toString().lowercase()
+                }.toReadableArray()
+            ).toReadableMap()
+        )
+    }
+
+    return JavaOnlyArray.from(list)
+}
+
 fun List<*>.toReadableArray(): ReadableArray {
     // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
     return JavaOnlyArray.from(this)
+}
+
+fun Set<*>.toReadableArray(): ReadableArray {
+    // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
+    return JavaOnlyArray.from(this.toList())
 }

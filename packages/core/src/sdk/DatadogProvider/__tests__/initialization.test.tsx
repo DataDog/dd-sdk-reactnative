@@ -57,13 +57,12 @@ describe('DatadogProvider', () => {
             // We remove the sdk version from the configuration as it would require to update this snapshot
             const receivedConfiguration =
                 NativeModules.DdSdk.initialize.mock.calls[0][0];
-            delete receivedConfiguration.additionalConfig['_dd.sdk_version'];
+            delete receivedConfiguration.additionalConfiguration[
+                '_dd.sdk_version'
+            ];
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkConfiguration {
-                  "additionalConfig": {
-                    "_dd.first_party_hosts": [],
-                    "_dd.native_interaction_tracking": false,
-                    "_dd.native_view_tracking": false,
+                  "additionalConfiguration": {
                     "_dd.source": "react-native",
                   },
                   "applicationId": "fakeApplicationId",
@@ -79,16 +78,22 @@ describe('DatadogProvider', () => {
                   },
                   "customEndpoints": {},
                   "env": "fakeEnv",
+                  "firstPartyHosts": [],
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
+                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
+                  "nativeViewTracking": false,
+                  "proxyConfig": undefined,
                   "sampleRate": 100,
+                  "serviceName": undefined,
                   "site": "US1",
                   "telemetrySampleRate": 20,
                   "trackBackgroundEvents": false,
                   "trackFrustrations": true,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
+                  "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);

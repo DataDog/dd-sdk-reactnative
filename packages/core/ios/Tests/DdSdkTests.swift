@@ -76,7 +76,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationUIKitViewsTrackingDisabled() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_view_tracking": false])
+        let configuration: DdSdkConfiguration = .mockAny(nativeViewTracking: false)
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
@@ -84,7 +84,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationUIKitViewsTrackingEnabled() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_view_tracking": true])
+        let configuration: DdSdkConfiguration = .mockAny(nativeViewTracking: true)
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
@@ -100,7 +100,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationUIKitUserActionsTrackingDisabled() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_interaction_tracking": false])
+        let configuration: DdSdkConfiguration = .mockAny(nativeInteractionTracking: false)
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
@@ -108,7 +108,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationUIKitUserActionsTrackingEnabled() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.native_interaction_tracking": true])
+        let configuration: DdSdkConfiguration = .mockAny(nativeInteractionTracking: true)
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
@@ -116,7 +116,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityDebug() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "debug"])
+        let validConfiguration: NSDictionary = .mockAny(verbosity: "debug")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -132,7 +132,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityInfo() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "info"])
+        let validConfiguration: NSDictionary = .mockAny(verbosity: "info")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -148,7 +148,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityWarn() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "warn"])
+        let validConfiguration: NSDictionary = .mockAny(verbosity: "warn")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -164,7 +164,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityError() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "error"])
+        let validConfiguration: NSDictionary = .mockAny(verbosity: "error")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -180,7 +180,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityNil() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: nil)
+        let validConfiguration: NSDictionary = .mockAny()
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -196,7 +196,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithVerbosityUnknown() {
-        let validConfiguration: NSDictionary = .mockAny(additionalConfig: ["_dd.sdk_verbosity": "foo"])
+        let validConfiguration: NSDictionary = .mockAny(verbosity: "foo")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -342,7 +342,7 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildConfigurationWithServiceName() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.service_name": "com.example.app"])
+        let configuration: DdSdkConfiguration = .mockAny(serviceName: "com.example.app")
 
         let ddConfig = DdSdkImplementation().buildSDKConfiguration(configuration: configuration)
 
@@ -526,54 +526,15 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.longTaskThreshold, nil)
     }
 
-    func testBuildFirstPartyHosts() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
+    func testFirstPartyHosts() {
+        let configuration: DdSdkConfiguration = .mockAny(firstPartyHosts: ([
             ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
             ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
-        ]])
+        ] as NSArray).asFirstPartyHosts())
 
         let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
 
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext]]
-        var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
-        switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace(_,_): break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
-            case .none: break
-        }
-
-        XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
-    }
-    
-    func testBuildMalformedFirstPartyHosts() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
-            ["match": "example.com", "propagatorTypes": ["badPropagatorType", "b3"]],
-        ]])
-
-        let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
-        
-        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3]]
-        var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
-        switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace(_,_): break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
-            case .none: break
-        }
-
-        XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
-    }
-    
-    func testBuildFirstPartyHostsWithDuplicatedMatchKey() {
-        let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.first_party_hosts": [
-            ["match": "example.com", "propagatorTypes": ["b3"]],
-            ["match": "example.com", "propagatorTypes": ["tracecontext"]],
-        ]])
-
-        let ddConfig = DdSdkImplementation().buildRUMConfiguration(configuration: configuration)
-        
-        let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3, .tracecontext]]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
             case .trace(_,_): break
@@ -593,57 +554,15 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.telemetrySampleRate, 42.0)
     }
 
-    func testBuildProxyConfiguration() {
-        let configuration: NSMutableDictionary = [
-            "_dd.proxy.address": "host",
-            "_dd.proxy.port": 99,
-            "_dd.proxy.username": "username",
-            "_dd.proxy.password": "pwd"
-        ]
-
-        var proxy = DdSdkImplementation().buildProxyConfiguration(config: configuration)
-
-        XCTAssertEqual(proxy?[kCFProxyUsernameKey] as? String, "username")
-        XCTAssertEqual(proxy?[kCFProxyPasswordKey] as? String, "pwd")
-
-        configuration.setValue("http", forKey: "_dd.proxy.type")
-        proxy = DdSdkImplementation().buildProxyConfiguration(config: configuration)
-        XCTAssertEqual(proxy?["HTTPEnable"] as? Int, 1)
-        XCTAssertEqual(proxy?["HTTPProxy"] as? String, "host")
-        XCTAssertEqual(proxy?["HTTPPort"] as? Int, 99)
-        XCTAssertEqual(proxy?["HTTPSEnable"] as? Int, 1)
-        XCTAssertEqual(proxy?["HTTPSProxy"] as? String, "host")
-        XCTAssertEqual(proxy?["HTTPSPort"] as? Int, 99)
-
-        configuration.setValue("https", forKey: "_dd.proxy.type")
-        proxy = DdSdkImplementation().buildProxyConfiguration(config: configuration)
-        XCTAssertEqual(proxy?["HTTPEnable"] as? Int, 1)
-        XCTAssertEqual(proxy?["HTTPProxy"] as? String, "host")
-        XCTAssertEqual(proxy?["HTTPPort"] as? Int, 99)
-        XCTAssertEqual(proxy?["HTTPSEnable"] as? Int, 1)
-        XCTAssertEqual(proxy?["HTTPSProxy"] as? String, "host")
-        XCTAssertEqual(proxy?["HTTPSPort"] as? Int, 99)
-
-        configuration.setValue("socks", forKey: "_dd.proxy.type")
-        proxy = DdSdkImplementation().buildProxyConfiguration(config: configuration)
-        XCTAssertEqual(proxy?["SOCKSEnable"] as? Int, 1)
-        XCTAssertEqual(proxy?["SOCKSProxy"] as? String, "host")
-        XCTAssertEqual(proxy?["SOCKSPort"] as? Int, 99)
-
-        configuration.setValue("99", forKey: "_dd.proxy.port")
-        proxy = DdSdkImplementation().buildProxyConfiguration(config: configuration)
-        XCTAssertEqual(proxy?["SOCKSPort"] as? NSNumber, 99)
-    }
-
     func testProxyConfiguration() {
         let configuration: DdSdkConfiguration = .mockAny(
-            additionalConfig: [
-                "_dd.proxy.address": "host",
-                "_dd.proxy.port": 99,
-                "_dd.proxy.type": "http",
-                "_dd.proxy.username": "username",
-                "_dd.proxy.password": "pwd"
-            ]
+            proxyConfig: ([
+                "type": "http",
+                "address": "host",
+                "port": 99,
+                "username": "username",
+                "password": "pwd"
+            ] as NSDictionary).asProxyConfig()
         )
 
         let ddConfig = DdSdkImplementation().buildSDKConfiguration(configuration: configuration)
@@ -1073,7 +992,13 @@ extension DdSdkConfiguration {
         uploadFrequency: NSString = "AVERAGE",
         batchSize: NSString = "MEDIUM",
         trackBackgroundEvents: Bool? = nil,
-        customEndpoints: NSDictionary? = nil
+        customEndpoints: NSDictionary? = nil,
+        nativeViewTracking: Bool? = nil,
+        nativeInteractionTracking: Bool? = nil,
+        verbosity: NSString? = nil,
+        proxyConfig: [AnyHashable: Any]? = nil,
+        serviceName: NSString? = nil,
+        firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1093,7 +1018,13 @@ extension DdSdkConfiguration {
             trackBackgroundEvents: trackBackgroundEvents,
             customEndpoints: customEndpoints?.asCustomEndpoints(),
             additionalConfig: additionalConfig,
-            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry()
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
+            nativeViewTracking: nativeViewTracking,
+            nativeInteractionTracking: nativeInteractionTracking,
+            verbosity: verbosity,
+            proxyConfig: proxyConfig,
+            serviceName: serviceName,
+            firstPartyHosts: firstPartyHosts
         )
     }
 }
@@ -1116,7 +1047,13 @@ extension NSDictionary {
         uploadFrequency: NSString = "AVERAGE",
         batchSize: NSString = "MEDIUM",
         trackBackgroundEvents: Bool? = nil,
-        customEndpoints: NSDictionary? = nil
+        customEndpoints: NSDictionary? = nil,
+        nativeViewTracking: Bool? = nil,
+        nativeInteractionTracking: Bool? = nil,
+        verbosity: NSString? = nil,
+        proxyConfig: NSDictionary? = nil,
+        serviceName: NSString? = nil,
+        firstPartyHosts: NSArray? = nil
     ) -> NSDictionary {
         NSDictionary(
             dictionary: [
@@ -1136,7 +1073,13 @@ extension NSDictionary {
                 "trackBackgroundEvents": trackBackgroundEvents,
                 "uploadFrequency": uploadFrequency,
                 "batchSize": batchSize,
-                "customEndpoints": customEndpoints
+                "customEndpoints": customEndpoints,
+                "nativeViewTracking": nativeViewTracking,
+                "nativeInteractionTracking": nativeInteractionTracking,
+                "verbosity": verbosity,
+                "proxyConfig": proxyConfig,
+                "serviceName": serviceName,
+                "firstPartyHosts": firstPartyHosts
             ]
         )
     }

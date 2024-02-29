@@ -21,7 +21,6 @@ import type {
     InitializationModeForTelemetry
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
-import { ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
@@ -45,21 +44,8 @@ import { version as sdkVersion } from './version';
 export class DdSdkReactNative {
     private static readonly DD_SOURCE_KEY = '_dd.source';
     private static readonly DD_SDK_VERSION = '_dd.sdk_version';
-    private static readonly DD_SERVICE_NAME = '_dd.service_name';
-    private static readonly DD_SDK_VERBOSITY_KEY = '_dd.sdk_verbosity';
-    private static readonly DD_NATIVE_VIEW_TRACKING_KEY =
-        '_dd.native_view_tracking';
-    private static readonly DD_NATIVE_INTERACTION_TRACKING_KEY =
-        '_dd.native_interaction_tracking';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
-
-    // Proxy
-    private static readonly DD_PROXY_TYPE_KEY = '_dd.proxy.type';
-    private static readonly DD_PROXY_ADDRESS_KEY = '_dd.proxy.address';
-    private static readonly DD_PROXY_PORT_KEY = '_dd.proxy.port';
-    private static readonly DD_PROXY_USERNAME_KEY = '_dd.proxy.username';
-    private static readonly DD_PROXY_PASSWORD_KEY = '_dd.proxy.password';
 
     private static wasInitialized = false;
     private static wasAutoInstrumented = false;
@@ -100,41 +86,8 @@ export class DdSdkReactNative {
 
         InternalLog.verbosity = configuration.verbosity;
 
-        DdSdkReactNative.buildConfiguration(configuration);
-
         await DdSdk.initialize(
-            new DdSdkConfiguration(
-                configuration.clientToken,
-                configuration.env,
-                configuration.applicationId,
-                configuration.nativeCrashReportEnabled,
-                adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
-                adaptLongTaskThreshold(configuration.longTaskThresholdMs),
-                configuration.sampleRate === undefined
-                    ? configuration.sessionSamplingRate
-                    : configuration.sampleRate,
-                configuration.site,
-                configuration.trackingConsent,
-                configuration.additionalConfig,
-                configuration.telemetrySampleRate,
-                configuration.vitalsUpdateFrequency,
-                configuration.uploadFrequency,
-                configuration.batchSize,
-                configuration.trackFrustrations,
-                configuration.trackBackgroundEvents,
-                configuration.customEndpoints,
-                {
-                    initializationType: params.initializationModeForTelemetry,
-                    trackErrors: configuration.trackErrors,
-                    trackInteractions: configuration.trackInteractions,
-                    trackNetworkRequests: configuration.trackResources,
-                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-                    reactNativeVersion: require('react-native/package.json')
-                        .version,
-                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-                    reactVersion: require('react/package.json').version
-                }
-            )
+            DdSdkReactNative.buildConfiguration(configuration, params)
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
         DdSdkReactNative.wasInitialized = true;
@@ -254,76 +207,72 @@ export class DdSdkReactNative {
     };
 
     private static buildConfiguration = (
-        configuration: DdSdkReactNativeConfiguration
-    ) => {
-        configuration.additionalConfig[DdSdkReactNative.DD_SOURCE_KEY] =
+        configuration: DdSdkReactNativeConfiguration,
+        params: {
+            initializationModeForTelemetry: InitializationModeForTelemetry;
+        }
+    ): DdSdkConfiguration => {
+        configuration.additionalConfiguration[DdSdkReactNative.DD_SOURCE_KEY] =
             'react-native';
-        configuration.additionalConfig[
+        configuration.additionalConfiguration[
             DdSdkReactNative.DD_SDK_VERSION
         ] = sdkVersion;
-        configuration.additionalConfig[
-            DdSdkReactNative.DD_NATIVE_VIEW_TRACKING_KEY
-        ] = configuration.nativeViewTracking;
-        configuration.additionalConfig[
-            DdSdkReactNative.DD_NATIVE_INTERACTION_TRACKING_KEY
-        ] = configuration.nativeInteractionTracking;
-
-        if (configuration.verbosity) {
-            configuration.additionalConfig[
-                DdSdkReactNative.DD_SDK_VERBOSITY_KEY
-            ] = configuration.verbosity;
-        }
-
-        if (configuration.proxyConfig) {
-            const additionalConfig = configuration.additionalConfig;
-            const proxyConfig = configuration.proxyConfig;
-
-            additionalConfig[DdSdkReactNative.DD_PROXY_TYPE_KEY] =
-                proxyConfig.type;
-            additionalConfig[DdSdkReactNative.DD_PROXY_ADDRESS_KEY] =
-                proxyConfig.address;
-            additionalConfig[DdSdkReactNative.DD_PROXY_PORT_KEY] =
-                proxyConfig.port;
-            if (proxyConfig.username && proxyConfig.password) {
-                if (proxyConfig.type === ProxyType.SOCKS) {
-                    console.warn(
-                        "SOCKS proxy configuration doesn't support Basic authentication."
-                    );
-                } else {
-                    additionalConfig[DdSdkReactNative.DD_PROXY_USERNAME_KEY] =
-                        proxyConfig.username;
-                    additionalConfig[DdSdkReactNative.DD_PROXY_PASSWORD_KEY] =
-                        proxyConfig.password;
-                }
-            }
-        }
-
-        if (configuration.serviceName) {
-            configuration.additionalConfig[DdSdkReactNative.DD_SERVICE_NAME] =
-                configuration.serviceName;
-        }
 
         if (configuration.version) {
-            configuration.additionalConfig[DdSdkReactNative.DD_VERSION] = `${
-                configuration.version
-            }${
+            configuration.additionalConfiguration[
+                DdSdkReactNative.DD_VERSION
+            ] = `${configuration.version}${
                 configuration.versionSuffix
                     ? `-${configuration.versionSuffix}`
                     : ''
             }`;
         }
-
         // If both version and version suffix are provided, we merge them into the version field.
         // To avoid adding it in again the native part, we only set it if the version isn't set.
         if (configuration.versionSuffix && !configuration.version) {
-            configuration.additionalConfig[
+            configuration.additionalConfiguration[
                 DdSdkReactNative.DD_VERSION_SUFFIX
             ] = `-${configuration.versionSuffix}`;
         }
 
-        configuration.additionalConfig[
-            '_dd.first_party_hosts'
-        ] = formatFirstPartyHosts(configuration.firstPartyHosts);
+        return new DdSdkConfiguration(
+            configuration.clientToken,
+            configuration.env,
+            configuration.applicationId,
+            configuration.nativeCrashReportEnabled,
+            adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
+            adaptLongTaskThreshold(configuration.longTaskThresholdMs),
+            configuration.sampleRate === undefined
+                ? configuration.sessionSamplingRate
+                : configuration.sampleRate,
+            configuration.site,
+            configuration.trackingConsent,
+            configuration.additionalConfiguration,
+            configuration.telemetrySampleRate,
+            configuration.vitalsUpdateFrequency,
+            configuration.uploadFrequency,
+            configuration.batchSize,
+            configuration.trackFrustrations,
+            configuration.trackBackgroundEvents,
+            configuration.customEndpoints,
+            {
+                initializationType: params.initializationModeForTelemetry,
+                trackErrors: configuration.trackErrors,
+                trackInteractions: configuration.trackInteractions,
+                trackNetworkRequests: configuration.trackResources,
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                reactNativeVersion: require('react-native/package.json')
+                    .version,
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                reactVersion: require('react/package.json').version
+            },
+            configuration.nativeViewTracking,
+            configuration.nativeInteractionTracking,
+            configuration.verbosity,
+            configuration.proxyConfig,
+            configuration.serviceName,
+            formatFirstPartyHosts(configuration.firstPartyHosts)
+        );
     };
 
     private static enableFeatures(

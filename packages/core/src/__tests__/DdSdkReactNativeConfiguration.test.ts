@@ -32,7 +32,7 @@ describe('DdSdkReactNativeConfiguration', () => {
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": null,
-                  "additionalConfig": {},
+                  "additionalConfiguration": {},
                   "applicationId": "fake-app-id",
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
@@ -122,6 +122,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "additionalConfig": {
                     "additionalField": "fake-value",
                   },
+                  "additionalConfiguration": {},
                   "applicationId": "fake-app-id",
                   "batchSize": "LARGE",
                   "clientToken": "fake-client-token",
@@ -143,10 +144,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "nativeViewTracking": true,
                   "proxyConfig": ProxyConfiguration {
                     "address": "api.com",
-                    "password": undefined,
                     "port": 443,
                     "type": "https",
-                    "username": undefined,
                   },
                   "resourceEventMapper": [Function],
                   "resourceTracingSamplingRate": 100,
@@ -202,6 +201,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": null,
                   "additionalConfig": {},
+                  "additionalConfiguration": {},
                   "applicationId": "",
                   "batchSize": "MEDIUM",
                   "clientToken": "",

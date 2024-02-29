@@ -29,6 +29,12 @@ import DatadogInternal
      - customEndpoints: Custom endpoints for RUM/Logs/Trace features.
      - additionalConfig: Additional configuration parameters.
      - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
+     - nativeViewTracking: Enables/Disables tracking RUM Views on the native level.
+     - nativeInteractionTracking: Enables/Disables tracking RUM Actions on the native level.
+     - verbosity: Verbosity level of the SDK.
+     - proxyConfig: Configuration for proxying SDK data.
+     - serviceName: Custom service name.
+     - firstPartyHosts: List of backend hosts to enable tracing with.    
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -50,6 +56,12 @@ public class DdSdkConfiguration: NSObject {
     public var customEndpoints: CustomEndpoints? = nil
     public var additionalConfig: NSDictionary? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
+    public var nativeViewTracking: Bool? = nil
+    public var nativeInteractionTracking: Bool? = nil
+    public var verbosity: NSString? = nil
+    public var proxyConfig: [AnyHashable: Any]? = nil
+    public var serviceName: NSString? = nil
+    public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
 
     public init(
         clientToken: String,
@@ -69,7 +81,13 @@ public class DdSdkConfiguration: NSObject {
         trackBackgroundEvents: Bool?,
         customEndpoints: CustomEndpoints?,
         additionalConfig: NSDictionary?,
-        configurationForTelemetry: ConfigurationForTelemetry?
+        configurationForTelemetry: ConfigurationForTelemetry?,
+        nativeViewTracking: Bool?,
+        nativeInteractionTracking: Bool?,
+        verbosity: NSString?,
+        proxyConfig: [AnyHashable: Any]?,
+        serviceName: NSString?,
+        firstPartyHosts: [String: Set<TracingHeaderType>]?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -89,6 +107,12 @@ public class DdSdkConfiguration: NSObject {
         self.customEndpoints = customEndpoints
         self.additionalConfig = additionalConfig
         self.configurationForTelemetry = configurationForTelemetry
+        self.nativeViewTracking = nativeViewTracking
+        self.nativeInteractionTracking = nativeInteractionTracking
+        self.verbosity = verbosity
+        self.proxyConfig = proxyConfig
+        self.serviceName = serviceName
+        self.firstPartyHosts = firstPartyHosts
     }
     
     static func buildSite(site: NSString?) -> DatadogSite {

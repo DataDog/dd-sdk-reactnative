@@ -6,6 +6,9 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.trace.TracingHeaderType
+import java.net.Proxy
+
 /**
  * A configuration object to initialize Datadog's features.
  * @param clientToken A valid Datadog client token.
@@ -26,6 +29,12 @@ package com.datadog.reactnative
  * @param customEndpoints Custom endpoints for RUM/Logs/Trace features.
  * @param additionalConfig Additional configuration parameters.
  * @param configurationForTelemetry Additional configuration data for Datadog telemetry.
+ * @param nativeViewTracking Enables/Disables tracking RUM Views on the native level.
+ * @param nativeInteractionTracking Enables/Disables tracking RUM Actions on the native level.
+ * @param verbosity Verbosity level of the SDK.
+ * @param proxyConfig Configuration for proxying SDK data.
+ * @param serviceName Custom service name.
+ * @param firstPartyHosts List of backend hosts to enable tracing with.
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -45,7 +54,13 @@ data class DdSdkConfiguration(
     val trackBackgroundEvents: Boolean? = null,
     val customEndpoints: CustomEndpoints? = null,
     val additionalConfig: Map<String, Any?>? = null,
-    val configurationForTelemetry: ConfigurationForTelemetry? = null
+    val configurationForTelemetry: ConfigurationForTelemetry? = null,
+    val nativeViewTracking: Boolean? = null,
+    val nativeInteractionTracking: Boolean? = null,
+    val verbosity: String? = null,
+    val proxyConfig: Pair<Proxy, ProxyAuthenticator?>? = null,
+    val serviceName: String? = null,
+    val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null
 )
 
 /**

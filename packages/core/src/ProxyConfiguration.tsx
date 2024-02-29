@@ -2,6 +2,9 @@
  * Proxy server configuration.
  */
 class ProxyConfiguration {
+    username?: string;
+    password?: string;
+
     constructor(
         /**
          * Proxy type.
@@ -20,12 +23,23 @@ class ProxyConfiguration {
          *
          * Note: "SOCKS + authentication" scheme is not supported.
          */
-        readonly username?: string,
+        username?: string,
         /**
          * Password for Basic authentication scheme.
          */
-        readonly password?: string
-    ) {}
+        password?: string
+    ) {
+        if (username && password) {
+            if (type === ProxyType.SOCKS) {
+                console.warn(
+                    "SOCKS proxy configuration doesn't support Basic authentication."
+                );
+            } else {
+                this.username = username;
+                this.password = password;
+            }
+        }
+    }
 }
 
 enum ProxyType {
