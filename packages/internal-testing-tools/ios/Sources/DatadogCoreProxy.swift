@@ -67,10 +67,9 @@ private struct FeatureScopeProxy: FeatureScope {
         }
     }
 
-    // Uncomment this on the next release
-//    func context(_ block: @escaping (DatadogInternal.DatadogContext) -> Void) {
-//        proxy.context(block)
-//    }
+    func context(_ block: @escaping (DatadogInternal.DatadogContext) -> Void) {
+        proxy.context(block)
+    }
 }
 
 private class FeatureScopeInterceptor {
