@@ -31,7 +31,7 @@ public class DdInternalTestingImplementation: NSObject {
             let data = try JSONSerialization.data(withJSONObject: events, options: .prettyPrinted)
             resolve(String(data: data, encoding: String.Encoding.utf8) ?? "")
         } catch {
-            consolePrint("\(error)")
+            consolePrint("\(error)", .error)
             reject(nil, "Cannot serialize events, check XCode console for more information", nil)
         }
         return
