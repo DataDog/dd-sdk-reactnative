@@ -164,6 +164,26 @@
                             }
                         }
                     }
+                },
+                "trackInteractions": {
+                    "description": "Track React Native components interactions.",
+                    "type": "boolean"
+                },
+                "trackResources": {
+                    "description": "Track React Native resources.",
+                    "type": "boolean"
+                },
+                "trackErrors": {
+                    "description": "Track React Native errors.",
+                    "type": "boolean"
+                },
+                "actionNameAttribute": {
+                    "description": "Specifies a custom prop to name RUM actions on elements having an `onPress` prop.",
+                    "type": "string"
+                },
+                "resourceTracingSamplingRate": {
+                    "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
+                    "type": "number"
                 }
             },
             "required": ["clientToken", "env", "applicationId"]
