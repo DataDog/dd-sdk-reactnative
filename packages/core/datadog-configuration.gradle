@@ -1,0 +1,23 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+def getConfigurationFilePath() {
+    if (project.hasProperty("datadog")) {
+        if (project.datadog.configurationFilePath) {
+            return project.datadog.configurationFilePath
+        }
+    }
+    return '../../datadog-configuration.json'
+}
+
+task copyDatadogConfigurationFile(type: Copy) {
+    from getConfigurationFilePath()
+    into 'src/main/assets'
+}
+
+gradle.projectsEvaluated {
+     preBuild.dependsOn(copyDatadogConfigurationFile)
+}

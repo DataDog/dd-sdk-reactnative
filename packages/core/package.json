@@ -31,6 +31,7 @@
         "jest",
         "DatadogSDKReactNative.podspec",
         "datadog-sourcemaps.gradle",
+        "datadog-configuration.gradle",
         "datadog-configuration.schema.json"
     ],
     "types": "lib/typescript/index.d.ts",
