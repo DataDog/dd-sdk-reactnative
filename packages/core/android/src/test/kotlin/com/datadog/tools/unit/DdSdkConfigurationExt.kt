@@ -13,7 +13,6 @@ import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
 import com.datadog.reactnative.ProxyAuthenticator
-import com.datadog.reactnative.toReadableMap
 import com.facebook.react.bridge.ReadableMap
 import java.net.Proxy
 
