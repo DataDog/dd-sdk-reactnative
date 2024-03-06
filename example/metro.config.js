@@ -1,3 +1,4 @@
+const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
@@ -8,6 +9,14 @@ const root = path.resolve(__dirname, '..');
 const modules = Object.keys({
   ...pakCore.peerDependencies,
 });
+
+/**
+ * Metro configuration
+ * https://facebook.github.io/metro/docs/configuration
+ *
+ * @type {import('metro-config').MetroConfig}
+ */
+const config = {};
 
 module.exports = {
   projectRoot: __dirname,
@@ -31,12 +40,6 @@ module.exports = {
     }, {}),
   },
 
-  transformer: {
-    getTransformOptions: async () => ({
-      transform: {
-        experimentalImportSupport: false,
-        inlineRequires: true,
-      },
-    }),
-  },
 };
+
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);
