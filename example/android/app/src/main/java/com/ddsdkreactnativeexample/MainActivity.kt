@@ -4,10 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.ddsdkreactnativeexample;
+package com.ddsdkreactnativeexample
 
-import com.reactnativenavigation.NavigationActivity;
+import com.reactnativenavigation.NavigationActivity
 
-public class MainActivity extends NavigationActivity {
-
-}
+class MainActivity : NavigationActivity()
