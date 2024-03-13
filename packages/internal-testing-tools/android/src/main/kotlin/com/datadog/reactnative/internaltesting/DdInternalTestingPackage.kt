@@ -15,7 +15,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of internal testing native modules.
  */
-class DatadogInternalTestingPackage : TurboReactPackage() {
+class DdInternalTestingPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return when (name) {
             DdInternalTestingImplementation.NAME -> DdInternalTesting(reactContext)

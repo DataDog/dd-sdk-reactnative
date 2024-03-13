@@ -9,7 +9,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <DatadogInternalTesting/DatadogInternalTesting.h>
+#import <DdInternalTesting/DdInternalTesting.h>
 @interface DdInternalTesting: NSObject <NativeDdInternalTestingSpec>
 
 #else
