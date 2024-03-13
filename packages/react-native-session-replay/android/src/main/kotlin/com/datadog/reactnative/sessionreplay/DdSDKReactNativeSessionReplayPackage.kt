@@ -15,7 +15,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DatadogSDKReactNativeSessionReplayPackage : TurboReactPackage() {
+class DdSDKReactNativeSessionReplayPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return when (name) {
             DdSessionReplayImplementation.NAME -> DdSessionReplay(reactContext)

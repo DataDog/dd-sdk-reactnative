@@ -81,7 +81,7 @@
         ]
     },
     "codegenConfig": {
-        "name": "DatadogSDKReactNativeSessionReplay",
+        "name": "DdSDKReactNativeSessionReplay",
         "type": "modules",
         "jsSrcsDir": "./src/specs",
         "android": {

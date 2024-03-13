@@ -17,7 +17,7 @@ class DdSessionReplay(
     reactContext: ReactApplicationContext
 ) : NativeDdSessionReplaySpec(reactContext) {
 
-    private val implementation = DdSessionReplayImplementation()
+    private val implementation = DdSessionReplayImplementation(reactContext)
 
     override fun getName(): String = DdSessionReplayImplementation.NAME
     
