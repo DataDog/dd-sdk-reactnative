@@ -141,11 +141,12 @@ public class DdSdkNativeInitialization: NSObject {
         
         var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
         if let firstPartyHosts = configuration.firstPartyHosts {
-            // We will always fall under this condition as firstPartyHosts is an empty array by default
+            // This is applied to make sure we also add headers to requests made on the native side.
+            // The sampling rate here does not impact the sampling rate for JS requests.
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
-                    sampleRate: 100.0
+                    sampleRate: (configuration.resourceTracingSamplingRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.resourceTracingSamplingRate)
                 )
             )
         }
@@ -159,7 +160,7 @@ public class DdSdkNativeInitialization: NSObject {
         
         return RUM.Configuration(
             applicationID: configuration.applicationId,
-            sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? 100.0,
+            sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.sessionSamplingRate),
             uiKitViewsPredicate: uiKitViewsPredicate,
             uiKitActionsPredicate: uiKitActionsPredicate,
             urlSessionTracking: urlSessionTracking,
@@ -180,7 +181,7 @@ public class DdSdkNativeInitialization: NSObject {
                 return actionEvent
             },
             customEndpoint: customRUMEndpointURL,
-            telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? 20.0
+            telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.telemetrySampleRate)
         )
     }
     

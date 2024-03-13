@@ -63,6 +63,7 @@ public class DdSdkConfiguration: NSObject {
     public var proxyConfig: [AnyHashable: Any]? = nil
     public var serviceName: NSString? = nil
     public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
+    public var resourceTracingSamplingRate: Double? = nil
 
     public init(
         clientToken: String,
@@ -88,7 +89,8 @@ public class DdSdkConfiguration: NSObject {
         verbosity: NSString?,
         proxyConfig: [AnyHashable: Any]?,
         serviceName: NSString?,
-        firstPartyHosts: [String: Set<TracingHeaderType>]?
+        firstPartyHosts: [String: Set<TracingHeaderType>]?,
+        resourceTracingSamplingRate: Double?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -114,6 +116,7 @@ public class DdSdkConfiguration: NSObject {
         self.proxyConfig = proxyConfig
         self.serviceName = serviceName
         self.firstPartyHosts = firstPartyHosts
+        self.resourceTracingSamplingRate = resourceTracingSamplingRate
     }
 }
 

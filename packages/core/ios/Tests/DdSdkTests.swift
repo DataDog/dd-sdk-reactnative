@@ -502,20 +502,24 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(firstPartyHosts: ([
             ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
             ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
-        ] as NSArray).asFirstPartyHosts())
+        ] as NSArray).asFirstPartyHosts(), resourceTracingSamplingRate: 66)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(configuration: configuration)
 
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext]]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
+        var actualTracingSamplingRate: Float?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
             case .trace(_,_): break
-            case let .traceWithHeaders(hostsWithHeaders, _):
-                return actualFirstPartyHosts = hostsWithHeaders
+            case let .traceWithHeaders(hostsWithHeaders, samplingRate):
+                actualFirstPartyHosts = hostsWithHeaders
+                actualTracingSamplingRate = samplingRate
+                break
             case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
+        XCTAssertEqual(actualTracingSamplingRate, 66)
     }
 
     func testBuildTelemetrySampleRate() {
@@ -969,7 +973,8 @@ extension DdSdkConfiguration {
         verbosity: NSString? = nil,
         proxyConfig: [AnyHashable: Any]? = nil,
         serviceName: NSString? = nil,
-        firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
+        firstPartyHosts: [String: Set<TracingHeaderType>]? = nil,
+        resourceTracingSamplingRate: Double? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -995,7 +1000,8 @@ extension DdSdkConfiguration {
             verbosity: verbosity,
             proxyConfig: proxyConfig,
             serviceName: serviceName,
-            firstPartyHosts: firstPartyHosts
+            firstPartyHosts: firstPartyHosts,
+            resourceTracingSamplingRate: resourceTracingSamplingRate
         )
     }
 }

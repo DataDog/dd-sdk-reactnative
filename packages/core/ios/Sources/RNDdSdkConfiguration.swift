@@ -36,6 +36,7 @@ extension NSDictionary {
         let proxyConfig = object(forKey: "proxyConfig") as? NSDictionary
         let serviceName = object(forKey: "serviceName") as? NSString
         let firstPartyHosts = object(forKey: "firstPartyHosts") as? NSArray
+        let resourceTracingSamplingRate = object(forKey: "resourceTracingSamplingRate") as? Double
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -61,7 +62,8 @@ extension NSDictionary {
             verbosity: verbosity,
             proxyConfig: proxyConfig?.asProxyConfig(),
             serviceName: serviceName,
-            firstPartyHosts: firstPartyHosts?.asFirstPartyHosts()
+            firstPartyHosts: firstPartyHosts?.asFirstPartyHosts(),
+            resourceTracingSamplingRate: resourceTracingSamplingRate
         )
     }
     
@@ -217,6 +219,7 @@ extension Dictionary where Key == String, Value == AnyObject {
             let proxyConfig = configuration["proxy"] as? NSDictionary
             let serviceName = configuration["serviceName"] as? NSString
             let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
+            let resourceTracingSamplingRate = configuration["resourceTracingSamplingRate"] as? Double
 
             return DdSdkConfiguration(
                 clientToken: clientToken ?? String(),
@@ -245,7 +248,8 @@ extension Dictionary where Key == String, Value == AnyObject {
                 verbosity: verbosity,
                 proxyConfig: proxyConfig?.asProxyConfig(),
                 serviceName: serviceName,
-                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
+                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts,
+                resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate
             )
         }
         throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
