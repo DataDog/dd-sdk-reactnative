@@ -195,81 +195,80 @@ internal struct DefaultConfiguration {
 
 extension Dictionary where Key == String, Value == AnyObject {
     func asDdSdkConfigurationFromJSON() throws -> DdSdkConfiguration {
-        if let configuration = self["configuration"] as? Dictionary<String, Any?> {
-            let clientToken = configuration["clientToken"] as? String
-            let env = configuration["env"] as? String
-            let applicationId = configuration["applicationId"] as? String
-            let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
-            let nativeLongTaskThresholdMs = configuration["nativeLongTaskThresholdMs"] as? Double
-            let longTaskThresholdMs = configuration["longTaskThresholdMs"] as? Double
-            let sampleRate = configuration["sessionSamplingRate"] as? Double
-            let site = configuration["site"] as? NSString
-            let trackingConsent = configuration["trackingConsent"] as? NSString
-            let telemetrySampleRate = configuration["telemetrySampleRate"] as? Double
-            let vitalsUpdateFrequency = configuration["vitalsUpdateFrequency"] as? NSString
-            let trackFrustrations = configuration["trackFrustrations"] as? Bool
-            let uploadFrequency = configuration["uploadFrequency"] as? NSString
-            let batchSize = configuration["batchSize"] as? NSString
-            let trackBackgroundEvents = configuration["trackBackgroundEvents"] as? Bool
-            let customEndpoints = configuration["customEndpoints"] as? NSDictionary
-            let configurationForTelemetry = configuration["configurationForTelemetry"] as? NSDictionary
-            let nativeViewTracking = configuration["nativeViewTracking"] as? Bool
-            let nativeInteractionTracking = configuration["nativeInteractionTracking"] as? Bool
-            let verbosity = configuration["verbosity"] as? NSString
-            let proxyConfig = configuration["proxy"] as? NSDictionary
-            let serviceName = configuration["serviceName"] as? NSString
-            let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
-            let resourceTracingSamplingRate = configuration["resourceTracingSamplingRate"] as? Double
-
-            return DdSdkConfiguration(
-                clientToken: clientToken ?? String(),
-                env: env ?? String(),
-                applicationId: applicationId ?? String(),
-                nativeCrashReportEnabled: nativeCrashReportEnabled ?? DefaultConfiguration.nativeCrashReportEnabled,
-                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs ?? DefaultConfiguration.nativeLongTaskThresholdMs,
-                longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : DefaultConfiguration.longTaskThresholdMs,
-                sampleRate: sampleRate ?? DefaultConfiguration.sessionSamplingRate,
-                site: site.asSite(),
-                trackingConsent: trackingConsent.asTrackingConsent(),
-                telemetrySampleRate: telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate,
-                vitalsUpdateFrequency: vitalsUpdateFrequency.asVitalsUpdateFrequency(),
-                trackFrustrations: trackFrustrations ?? DefaultConfiguration.trackFrustrations,
-                uploadFrequency: uploadFrequency.asUploadFrequency(),
-                batchSize: batchSize.asBatchSize(),
-                trackBackgroundEvents: trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
-                customEndpoints: customEndpoints?.asCustomEndpoints(),
-                additionalConfig: [
-                    CrossPlatformAttributes.ddsource: "react-native",
-                    CrossPlatformAttributes.sdkVersion: SdkVersion
-                ],
-                configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
-                nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
-                nativeInteractionTracking: nativeInteractionTracking ?? DefaultConfiguration.nativeInteractionTracking,
-                verbosity: verbosity,
-                proxyConfig: proxyConfig?.asProxyConfig(),
-                serviceName: serviceName,
-                firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts,
-                resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate
-            )
+        guard let configuration = self["configuration"] as? Dictionary<String, Any?> else {
+            throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
         }
-        throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
+
+        let clientToken = configuration["clientToken"] as? String
+        let env = configuration["env"] as? String
+        let applicationId = configuration["applicationId"] as? String
+        let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
+        let nativeLongTaskThresholdMs = configuration["nativeLongTaskThresholdMs"] as? Double
+        let longTaskThresholdMs = configuration["longTaskThresholdMs"] as? Double
+        let sampleRate = configuration["sessionSamplingRate"] as? Double
+        let site = configuration["site"] as? NSString
+        let trackingConsent = configuration["trackingConsent"] as? NSString
+        let telemetrySampleRate = configuration["telemetrySampleRate"] as? Double
+        let vitalsUpdateFrequency = configuration["vitalsUpdateFrequency"] as? NSString
+        let trackFrustrations = configuration["trackFrustrations"] as? Bool
+        let uploadFrequency = configuration["uploadFrequency"] as? NSString
+        let batchSize = configuration["batchSize"] as? NSString
+        let trackBackgroundEvents = configuration["trackBackgroundEvents"] as? Bool
+        let customEndpoints = configuration["customEndpoints"] as? NSDictionary
+        let configurationForTelemetry = configuration["configurationForTelemetry"] as? NSDictionary
+        let nativeViewTracking = configuration["nativeViewTracking"] as? Bool
+        let nativeInteractionTracking = configuration["nativeInteractionTracking"] as? Bool
+        let verbosity = configuration["verbosity"] as? NSString
+        let proxyConfig = configuration["proxy"] as? NSDictionary
+        let serviceName = configuration["serviceName"] as? NSString
+        let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
+        let resourceTracingSamplingRate = configuration["resourceTracingSamplingRate"] as? Double
+
+        return DdSdkConfiguration(
+            clientToken: clientToken ?? String(),
+            env: env ?? String(),
+            applicationId: applicationId ?? String(),
+            nativeCrashReportEnabled: nativeCrashReportEnabled ?? DefaultConfiguration.nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs ?? DefaultConfiguration.nativeLongTaskThresholdMs,
+            longTaskThresholdMs: (longTaskThresholdMs != nil) ? longTaskThresholdMs! : DefaultConfiguration.longTaskThresholdMs,
+            sampleRate: sampleRate ?? DefaultConfiguration.sessionSamplingRate,
+            site: site.asSite(),
+            trackingConsent: trackingConsent.asTrackingConsent(),
+            telemetrySampleRate: telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate,
+            vitalsUpdateFrequency: vitalsUpdateFrequency.asVitalsUpdateFrequency(),
+            trackFrustrations: trackFrustrations ?? DefaultConfiguration.trackFrustrations,
+            uploadFrequency: uploadFrequency.asUploadFrequency(),
+            batchSize: batchSize.asBatchSize(),
+            trackBackgroundEvents: trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
+            customEndpoints: customEndpoints?.asCustomEndpoints(),
+            additionalConfig: [
+                CrossPlatformAttributes.ddsource: "react-native",
+                CrossPlatformAttributes.sdkVersion: SdkVersion
+            ],
+            configurationForTelemetry: configurationForTelemetry?.asConfigurationForTelemetry(),
+            nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
+            nativeInteractionTracking: nativeInteractionTracking ?? DefaultConfiguration.nativeInteractionTracking,
+            verbosity: verbosity,
+            proxyConfig: proxyConfig?.asProxyConfig(),
+            serviceName: serviceName,
+            firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts,
+            resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate
+        )
     }
 }
 
 extension NSString? {
     func asTrackingConsent() -> TrackingConsent {
-        let trackingConsent: TrackingConsent
         switch self?.lowercased {
         case "pending":
-            trackingConsent = .pending
+            return .pending
         case "granted":
-            trackingConsent = .granted
+            return .granted
         case "not_granted":
-            trackingConsent = .notGranted
+            return .notGranted
         default:
-            trackingConsent = .pending
+            return .pending
         }
-        return trackingConsent
     }
     
     func asVitalsUpdateFrequency() -> RUM.Configuration.VitalsFrequency? {
@@ -288,33 +287,29 @@ extension NSString? {
     }
     
     func asUploadFrequency() -> Datadog.Configuration.UploadFrequency {
-        let uploadFrequency: Datadog.Configuration.UploadFrequency
         switch self?.lowercased {
         case "rare":
-            uploadFrequency = .rare
+            return .rare
         case "average":
-            uploadFrequency = .average
+            return .average
         case "frequent":
-            uploadFrequency = .frequent
+            return .frequent
         default:
-            uploadFrequency = .average
+            return .average
         }
-        return uploadFrequency
     }
     
     func asBatchSize() -> Datadog.Configuration.BatchSize {
-        let size: Datadog.Configuration.BatchSize
         switch self?.lowercased {
         case "small":
-            size = .small
+            return .small
         case "medium":
-            size = .medium
+            return .medium
         case "large":
-            size = .large
+            return .large
         default:
-            size = .medium
+            return .medium
         }
-        return size
     }
     
     func asSite() -> DatadogSite {
