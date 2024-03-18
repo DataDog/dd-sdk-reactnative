@@ -80,9 +80,14 @@ public class DdSdkImplementation: NSObject {
             }
             self.setVerbosityLevel(configuration: sdkConfiguration)
 
-            let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
+            let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
             let consent = self.buildTrackingConsent(consent: sdkConfiguration.trackingConsent)
-            DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: consent)
+
+            DatadogSDKWrapper.shared.initialize(
+                coreConfiguration: coreConfiguration,
+                loggerConfiguration: Logger.Configuration(configuration),
+                trackingConsent: consent
+            )
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration)
             self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)

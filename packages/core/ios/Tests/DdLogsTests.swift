@@ -45,7 +45,22 @@ internal class DdLogsTests: XCTestCase {
         GlobalState.globalAttributes.removeAll()
         super.tearDown()
     }
- 
+
+    func testConfigurationMapping() {
+        let defaultConfiguration = Logger.Configuration([:] as NSDictionary)
+        XCTAssertEqual(defaultConfiguration.networkInfoEnabled, true)
+        XCTAssertEqual(defaultConfiguration.bundleWithRumEnabled, true)
+        XCTAssertEqual(defaultConfiguration.bundleWithTraceEnabled, true)
+
+        let overridenConfiguration = Logger.Configuration([
+            "bundleLogsWithRum": false,
+            "bundleLogsWithTraces": false
+        ])
+        XCTAssertEqual(overridenConfiguration.networkInfoEnabled, true)
+        XCTAssertEqual(overridenConfiguration.bundleWithRumEnabled, false)
+        XCTAssertEqual(overridenConfiguration.bundleWithTraceEnabled, false)
+    }
+
     func testItInitializesNativeLoggerOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize logger once")

@@ -779,6 +779,25 @@ internal class DdSdkTests: XCTestCase {
         Datadog.internalFlushAndDeinitialize()
     }
 
+    func testSDKInitializationWithLoggerConfiguration() {
+        let configuration: NSDictionary = .mockAny(
+            bundleLogsWithRum: false,
+            bundleLogsWithTraces: false
+        )
+
+        let rumMonitorMock = MockRUMMonitor()
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: MockJSRefreshRateMonitor(),
+            RUMMonitorProvider: { rumMonitorMock },
+            RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
+        ).initialize(configuration: configuration, resolve: mockResolve, reject: mockReject)
+
+        XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithRumEnabled)
+        XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithTraceEnabled)
+    }
+
     func testBackgroundTrackingEnabled() {
         let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: true)
 
@@ -1053,35 +1072,37 @@ extension NSDictionary {
         verbosity: NSString? = nil,
         proxyConfig: NSDictionary? = nil,
         serviceName: NSString? = nil,
-        firstPartyHosts: NSArray? = nil
+        firstPartyHosts: NSArray? = nil,
+        bundleLogsWithRum: Bool? = nil,
+        bundleLogsWithTraces: Bool? = nil
     ) -> NSDictionary {
-        NSDictionary(
-            dictionary: [
-                "clientToken": clientToken,
-                "env": env,
-                "applicationId": applicationId,
-                "nativeCrashReportEnabled": nativeCrashReportEnabled,
-                "nativeLongTaskThresholdMs": nativeLongTaskThresholdMs,
-                "longTaskThresholdMs": longTaskThresholdMs,
-                "sampleRate": sampleRate,
-                "site": site,
-                "trackingConsent": trackingConsent,
-                "telemetrySampleRate": telemetrySampleRate,
-                "vitalsUpdateFrequency": vitalsUpdateFrequency,
-                "additionalConfig": additionalConfig,
-                "configurationForTelemetry": configurationForTelemetry,
-                "trackBackgroundEvents": trackBackgroundEvents,
-                "uploadFrequency": uploadFrequency,
-                "batchSize": batchSize,
-                "customEndpoints": customEndpoints,
-                "nativeViewTracking": nativeViewTracking,
-                "nativeInteractionTracking": nativeInteractionTracking,
-                "verbosity": verbosity,
-                "proxyConfig": proxyConfig,
-                "serviceName": serviceName,
-                "firstPartyHosts": firstPartyHosts
-            ]
-        )
+        var config = NSMutableDictionary()
+        config["clientToken"] = clientToken
+        config["env"] = env
+        config["applicationId"] = applicationId
+        config["nativeCrashReportEnabled"] = nativeCrashReportEnabled
+        config["nativeLongTaskThresholdMs"] = nativeLongTaskThresholdMs
+        config["longTaskThresholdMs"] = longTaskThresholdMs
+        config["sampleRate"] = sampleRate
+        config["site"] = site
+        config["trackingConsent"] = trackingConsent
+        config["telemetrySampleRate"] = telemetrySampleRate
+        config["vitalsUpdateFrequency"] = vitalsUpdateFrequency
+        config["additionalConfig"] = additionalConfig
+        config["configurationForTelemetry"] = configurationForTelemetry
+        config["trackBackgroundEvents"] = trackBackgroundEvents
+        config["uploadFrequency"] = uploadFrequency
+        config["batchSize"] = batchSize
+        config["customEndpoints"] = customEndpoints
+        config["nativeViewTracking"] = nativeViewTracking
+        config["nativeInteractionTracking"] = nativeInteractionTracking
+        config["verbosity"] = verbosity
+        config["proxyConfig"] = proxyConfig
+        config["serviceName"] = serviceName
+        config["firstPartyHosts"] = firstPartyHosts
+        config["bundleLogsWithRum"] = bundleLogsWithRum
+        config["bundleLogsWithTraces"] = bundleLogsWithTraces
+        return config
     }
 }
 
