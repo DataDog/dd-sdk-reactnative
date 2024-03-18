@@ -47,8 +47,10 @@ describe('DatadogProvider', () => {
     });
     describe('initialization', () => {
         it('renders its children and initializes the SDK once', async () => {
-            const { getByText, rerenderWithRandomConfig } =
-                renderWithProvider();
+            const {
+                getByText,
+                rerenderWithRandomConfig
+            } = renderWithProvider();
             getByText('I am a test application');
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
 
