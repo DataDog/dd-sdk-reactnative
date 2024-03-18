@@ -86,7 +86,7 @@
         ]
     },
     "codegenConfig": {
-        "name": "DatadogInternalTesting",
+        "name": "DdInternalTesting",
         "type": "modules",
         "jsSrcsDir": "./src/specs",
         "android": {

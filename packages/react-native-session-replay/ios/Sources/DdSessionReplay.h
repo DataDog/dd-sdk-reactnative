@@ -9,7 +9,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay.h>
+#import <DdSDKReactNativeSessionReplay/DdSDKReactNativeSessionReplay.h>
 @interface DdSessionReplay: NSObject <NativeDdSessionReplaySpec>
 
 #else
