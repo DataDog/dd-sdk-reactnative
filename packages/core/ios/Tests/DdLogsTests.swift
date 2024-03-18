@@ -45,7 +45,34 @@ internal class DdLogsTests: XCTestCase {
         GlobalState.globalAttributes.removeAll()
         super.tearDown()
     }
- 
+
+    func testConfigurationMapping() {
+        let enabledSdkConfiguration: DdSdkConfiguration = .mockAny(
+            bundleLogsWithRum: true,
+            bundleLogsWithTraces: true
+        )
+        let enabledLoggerConfiguration = Logger.Configuration(enabledSdkConfiguration)
+        XCTAssertEqual(enabledLoggerConfiguration.networkInfoEnabled, true)
+        XCTAssertEqual(enabledLoggerConfiguration.bundleWithRumEnabled, true)
+        XCTAssertEqual(enabledLoggerConfiguration.bundleWithTraceEnabled, true)
+
+        let disabledSdkConfiguration: DdSdkConfiguration = .mockAny(
+            bundleLogsWithRum: false,
+            bundleLogsWithTraces: false
+        )
+        let disabledLoggerConfiguration = Logger.Configuration(disabledSdkConfiguration)
+        XCTAssertEqual(disabledLoggerConfiguration.bundleWithRumEnabled, false)
+        XCTAssertEqual(disabledLoggerConfiguration.bundleWithTraceEnabled, false)
+
+        let oneDisabledSdkConfiguration: DdSdkConfiguration = .mockAny(
+            bundleLogsWithRum: false,
+            bundleLogsWithTraces: true
+        )
+        let oneDisabledLoggerConfiguration = Logger.Configuration(oneDisabledSdkConfiguration)
+        XCTAssertEqual(oneDisabledLoggerConfiguration.bundleWithRumEnabled, false)
+        XCTAssertEqual(oneDisabledLoggerConfiguration.bundleWithTraceEnabled, true)
+    }
+
     func testItInitializesNativeLoggerOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize logger once")

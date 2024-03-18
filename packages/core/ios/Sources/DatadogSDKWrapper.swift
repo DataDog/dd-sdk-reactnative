@@ -21,17 +21,17 @@ public class DatadogSDKWrapper {
     // Singleton
     public static var shared = DatadogSDKWrapper()
 
-    private init() {}
-
     // Initialization callbacks
     internal var onCoreInitializedListeners: [OnCoreInitializedListener] = []
-    
+    internal var loggerConfiguration = Logger.Configuration()
+    // Core instance
+    private var coreInstance: DatadogCoreProtocol? = nil
+
+    private init() { }
+
     public func addOnCoreInitializedListener(listener:@escaping OnCoreInitializedListener) {
         onCoreInitializedListeners.append(listener)
     }
-
-    // Core instance
-    private var coreInstance: DatadogCoreProtocol? = nil
 
     /// This is intended for internal testing only.
     public func setCoreInstance(core: DatadogCoreProtocol?) {
@@ -45,14 +45,17 @@ public class DatadogSDKWrapper {
 
     // SDK Wrapper
     internal func initialize(
-        with configuration: Datadog.Configuration,
+        coreConfiguration: Datadog.Configuration,
+        loggerConfiguration: Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
-        let core = Datadog.initialize(with: configuration, trackingConsent: trackingConsent)
+        let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
         setCoreInstance(core: core)
         for listener in onCoreInitializedListeners {
             listener(core)
         }
+
+        self.loggerConfiguration = loggerConfiguration
     }
 
     internal func isInitialized() -> Bool {
@@ -101,12 +104,12 @@ public class DatadogSDKWrapper {
     }
 
     internal func createLogger() -> LoggerProtocol {
-        if let core = coreInstance {
-            return Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short), in: core)
-        } else {
+        let core = coreInstance ?? {
             consolePrint("Core instance was not found when creating Logger.", .critical)
-            return Logger.create(with: Logger.Configuration(networkInfoEnabled: true, consoleLogFormat: .short))
-        }
+            return CoreRegistry.default
+        }()
+
+        return Logger.create(with: loggerConfiguration, in: core)
     }
 
     // Telemetry

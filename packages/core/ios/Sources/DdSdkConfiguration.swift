@@ -35,7 +35,9 @@ import DatadogRUM
      - verbosity: Verbosity level of the SDK.
      - proxyConfig: Configuration for proxying SDK data.
      - serviceName: Custom service name.
-     - firstPartyHosts: List of backend hosts to enable tracing with.    
+     - firstPartyHosts: List of backend hosts to enable tracing with.
+     - bundleLogsWithRum: Correlates logs with RUM.
+     - bundleLogsWithTraces: Correlates logs with traces.
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -64,6 +66,8 @@ public class DdSdkConfiguration: NSObject {
     public var serviceName: NSString? = nil
     public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
     public var resourceTracingSamplingRate: Double? = nil
+    public var bundleLogsWithRum: Bool
+    public var bundleLogsWithTraces: Bool
 
     public init(
         clientToken: String,
@@ -90,7 +94,9 @@ public class DdSdkConfiguration: NSObject {
         proxyConfig: [AnyHashable: Any]?,
         serviceName: NSString?,
         firstPartyHosts: [String: Set<TracingHeaderType>]?,
-        resourceTracingSamplingRate: Double?
+        resourceTracingSamplingRate: Double?,
+        bundleLogsWithRum: Bool,
+        bundleLogsWithTraces: Bool
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -117,6 +123,8 @@ public class DdSdkConfiguration: NSObject {
         self.serviceName = serviceName
         self.firstPartyHosts = firstPartyHosts
         self.resourceTracingSamplingRate = resourceTracingSamplingRate
+        self.bundleLogsWithRum = bundleLogsWithRum
+        self.bundleLogsWithTraces = bundleLogsWithTraces
     }
 }
 
