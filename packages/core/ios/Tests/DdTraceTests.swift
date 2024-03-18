@@ -222,8 +222,6 @@ private class MockSpan: OTSpan {
     func baggageItem(withKey key: String) -> String? {
         fatalError("Should not be called")
     }
-    func setActive() -> OTSpan {
-        fatalError("Should not be called")
-    }
+    func setActive() -> OTSpan { self }
     // swiftlint:enable unavailable_function
 }
