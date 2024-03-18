@@ -47,10 +47,8 @@ describe('DatadogProvider', () => {
     });
     describe('initialization', () => {
         it('renders its children and initializes the SDK once', async () => {
-            const {
-                getByText,
-                rerenderWithRandomConfig
-            } = renderWithProvider();
+            const { getByText, rerenderWithRandomConfig } =
+                renderWithProvider();
             getByText('I am a test application');
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
 
@@ -72,7 +70,7 @@ describe('DatadogProvider', () => {
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
-                    "reactNativeVersion": "0.71.10",
+                    "reactNativeVersion": "0.73.6",
                     "reactVersion": "18.2.0",
                     "trackErrors": true,
                     "trackInteractions": true,
