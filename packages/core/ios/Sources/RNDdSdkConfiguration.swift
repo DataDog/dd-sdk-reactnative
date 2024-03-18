@@ -64,7 +64,7 @@ extension NSDictionary {
             firstPartyHosts: firstPartyHosts?.asFirstPartyHosts()
         )
     }
-    
+
     func asConfigurationForTelemetry() -> ConfigurationForTelemetry {
         let initializationType = object(forKey: "initializationType") as? NSString
         let trackErrors = object(forKey: "trackErrors") as? Bool

@@ -152,7 +152,7 @@ public class DdSdkImplementation: NSObject {
     
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as? String, stack: stack as? String)
+        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
     
