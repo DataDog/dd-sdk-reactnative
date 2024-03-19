@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import {
-    DdRumReactNativeNavigationTracking,
-    ViewNamePredicate
-} from './rum/instrumentation/DdRumReactNativeNavigationTracking';
+import type { ViewNamePredicate } from './rum/instrumentation/DdRumReactNativeNavigationTracking';
+import { DdRumReactNativeNavigationTracking } from './rum/instrumentation/DdRumReactNativeNavigationTracking';
 
-export { DdRumReactNativeNavigationTracking, ViewNamePredicate };
+export { DdRumReactNativeNavigationTracking };
+
+export type { ViewNamePredicate };
