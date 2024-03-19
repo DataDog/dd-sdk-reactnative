@@ -4,10 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import {
-    SessionReplay,
-    SessionReplayConfiguration,
-    SessionReplayPrivacy
-} from './SessionReplay';
+import type { SessionReplayConfiguration } from './SessionReplay';
+import { SessionReplay, SessionReplayPrivacy } from './SessionReplay';
 
-export { SessionReplay, SessionReplayConfiguration, SessionReplayPrivacy };
+export { SessionReplay, SessionReplayPrivacy };
+
+export type { SessionReplayConfiguration };
