@@ -37,6 +37,8 @@ extension NSDictionary {
         let serviceName = object(forKey: "serviceName") as? NSString
         let firstPartyHosts = object(forKey: "firstPartyHosts") as? NSArray
         let resourceTracingSamplingRate = object(forKey: "resourceTracingSamplingRate") as? Double
+        let bundleLogsWithRum = object(forKey: "bundleLogsWithRum") as? Bool
+        let bundleLogsWithTraces = object(forKey: "bundleLogsWithTraces") as? Bool
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -63,10 +65,12 @@ extension NSDictionary {
             proxyConfig: proxyConfig?.asProxyConfig(),
             serviceName: serviceName,
             firstPartyHosts: firstPartyHosts?.asFirstPartyHosts(),
-            resourceTracingSamplingRate: resourceTracingSamplingRate
+            resourceTracingSamplingRate: resourceTracingSamplingRate,
+            bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
+            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces
         )
     }
-    
+
     func asConfigurationForTelemetry() -> ConfigurationForTelemetry {
         let initializationType = object(forKey: "initializationType") as? NSString
         let trackErrors = object(forKey: "trackErrors") as? Bool
@@ -191,6 +195,8 @@ internal struct DefaultConfiguration {
     static let telemetrySampleRate = 20.0
     static let trackFrustrations = true
     static let trackBackgroundEvents = false
+    static let bundleLogsWithRum = true
+    static let bundleLogsWithTraces = true
 }
 
 extension Dictionary where Key == String, Value == AnyObject {
@@ -223,6 +229,8 @@ extension Dictionary where Key == String, Value == AnyObject {
         let serviceName = configuration["serviceName"] as? NSString
         let firstPartyHosts = configuration["firstPartyHosts"] as? NSArray
         let resourceTracingSamplingRate = configuration["resourceTracingSamplingRate"] as? Double
+        let bundleLogsWithRum = configuration["bundleLogsWithRum"] as? Bool
+        let bundleLogsWithTraces = configuration["bundleLogsWithTraces"] as? Bool
 
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -252,7 +260,9 @@ extension Dictionary where Key == String, Value == AnyObject {
             proxyConfig: proxyConfig?.asProxyConfig(),
             serviceName: serviceName,
             firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts,
-            resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate
+            resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate,
+            bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
+            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces
         )
     }
 }

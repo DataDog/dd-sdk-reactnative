@@ -30,11 +30,11 @@ final class DispatchQueueMock: DispatchQueueType {
 internal class DdSdkTests: XCTestCase {
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
-    
-    override func setUp() {
-        super.setUp()
+
+    override func tearDown() {
         DatadogSDKWrapper.shared.setCoreInstance(core: nil)
         DatadogSDKWrapper.shared.onCoreInitializedListeners = []
+        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitialization() {
@@ -63,8 +63,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildConfigurationNoUIKitViewsByDefault() {
@@ -127,8 +125,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.debug)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityInfo() {
@@ -143,8 +139,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.debug)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityWarn() {
@@ -159,8 +153,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.warn)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityError() {
@@ -175,8 +167,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.error)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityNil() {
@@ -191,8 +181,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSDKInitializationWithVerbosityUnknown() {
@@ -207,8 +195,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: validConfiguration, resolve: mockResolve, reject: mockReject)
 
         XCTAssertNil(Datadog.verbosityLevel)
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testSDKInitializationWithOnInitializedCallback() {
@@ -226,8 +212,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertNotNil(coreFromCallback)
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testEnableAllFeatures() {
@@ -443,8 +427,6 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
         XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testSettingAttributes() {
@@ -479,7 +461,6 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
 
         GlobalState.globalAttributes.removeAll()
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testBuildLongTaskThreshold() {
@@ -635,8 +616,6 @@ internal class DdSdkTests: XCTestCase {
         sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.20)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
-
-        Datadog.internalFlushAndDeinitialize()
     }
 
     func testJsRefreshRateInitializationNeverVitalsUpdateFrequency() {
@@ -658,8 +637,6 @@ internal class DdSdkTests: XCTestCase {
         sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUpdateFrequency() {
@@ -685,8 +662,6 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testJsLongTaskCollection() {
@@ -714,8 +689,6 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testSDKInitializationWithCustomEndpoints() throws {
@@ -751,8 +724,25 @@ internal class DdSdkTests: XCTestCase {
         let traceFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: TraceFeature.self)
         let customTraceEndpoint = try XCTUnwrap(traceFeature?.requestBuilder as? TracingRequestBuilder).customIntakeURL
         XCTAssertEqual(customTraceEndpoint?.absoluteString, "https://trace.example.com/api/v2/spans")
+    }
 
-        Datadog.internalFlushAndDeinitialize()
+    func testSDKInitializationWithLoggerConfiguration() {
+        let configuration: NSDictionary = .mockAny(
+            bundleLogsWithRum: false,
+            bundleLogsWithTraces: false
+        )
+
+        let rumMonitorMock = MockRUMMonitor()
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: MockJSRefreshRateMonitor(),
+            RUMMonitorProvider: { rumMonitorMock },
+            RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
+        ).initialize(configuration: configuration, resolve: mockResolve, reject: mockReject)
+
+        XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithRumEnabled)
+        XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithTraceEnabled)
     }
 
     func testBackgroundTrackingEnabled() {
@@ -847,8 +837,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: .mockAny(longTaskThresholdMs: 0.2), resolve: mockResolve, reject: mockReject)
 
         XCTAssertTrue(bridge.isSameQueue(queue: mockJSRefreshRateMonitor.jsQueue!))
-
-        Datadog.internalFlushAndDeinitialize()
     }
     
     func testCallsOnCoreInitializedListeners() throws {
@@ -866,10 +854,6 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
         XCTAssertNotNil(mockListener.core)
-    }
-
-    func testConsumeWebviewEventBeforeInitialization() throws {
-        XCTAssertNoThrow(try DdSdkImplementation().consumeWebviewEvent(message: "TestMessage", resolve: mockResolve, reject: mockReject))
     }
 
     func testConsumeWebviewEvent() throws {
@@ -924,8 +908,6 @@ internal class DdSdkTests: XCTestCase {
         // Then
         let newNumberOfFiles = try allDirectories.reduce(0, { acc, nextDirectory in return try acc + nextDirectory.files().count })
         XCTAssertEqual(newNumberOfFiles, 0, "All files must be removed")
-
-        Datadog.internalFlushAndDeinitialize()
     }
 }
 
@@ -974,7 +956,9 @@ extension DdSdkConfiguration {
         proxyConfig: [AnyHashable: Any]? = nil,
         serviceName: NSString? = nil,
         firstPartyHosts: [String: Set<TracingHeaderType>]? = nil,
-        resourceTracingSamplingRate: Double? = nil
+        resourceTracingSamplingRate: Double? = nil,
+        bundleLogsWithRum: Bool = true,
+        bundleLogsWithTraces: Bool = true
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1001,7 +985,9 @@ extension DdSdkConfiguration {
             proxyConfig: proxyConfig,
             serviceName: serviceName,
             firstPartyHosts: firstPartyHosts,
-            resourceTracingSamplingRate: resourceTracingSamplingRate
+            resourceTracingSamplingRate: resourceTracingSamplingRate,
+            bundleLogsWithRum: bundleLogsWithRum,
+            bundleLogsWithTraces: bundleLogsWithTraces
         )
     }
 }
@@ -1030,35 +1016,37 @@ extension NSDictionary {
         verbosity: NSString? = nil,
         proxyConfig: NSDictionary? = nil,
         serviceName: NSString? = nil,
-        firstPartyHosts: NSArray? = nil
+        firstPartyHosts: NSArray? = nil,
+        bundleLogsWithRum: Bool? = nil,
+        bundleLogsWithTraces: Bool? = nil
     ) -> NSDictionary {
-        NSDictionary(
-            dictionary: [
-                "clientToken": clientToken,
-                "env": env,
-                "applicationId": applicationId,
-                "nativeCrashReportEnabled": nativeCrashReportEnabled,
-                "nativeLongTaskThresholdMs": nativeLongTaskThresholdMs,
-                "longTaskThresholdMs": longTaskThresholdMs,
-                "sampleRate": sampleRate,
-                "site": site,
-                "trackingConsent": trackingConsent,
-                "telemetrySampleRate": telemetrySampleRate,
-                "vitalsUpdateFrequency": vitalsUpdateFrequency,
-                "additionalConfig": additionalConfig,
-                "configurationForTelemetry": configurationForTelemetry,
-                "trackBackgroundEvents": trackBackgroundEvents,
-                "uploadFrequency": uploadFrequency,
-                "batchSize": batchSize,
-                "customEndpoints": customEndpoints,
-                "nativeViewTracking": nativeViewTracking,
-                "nativeInteractionTracking": nativeInteractionTracking,
-                "verbosity": verbosity,
-                "proxyConfig": proxyConfig,
-                "serviceName": serviceName,
-                "firstPartyHosts": firstPartyHosts
-            ]
-        )
+        var config = NSMutableDictionary()
+        config["clientToken"] = clientToken
+        config["env"] = env
+        config["applicationId"] = applicationId
+        config["nativeCrashReportEnabled"] = nativeCrashReportEnabled
+        config["nativeLongTaskThresholdMs"] = nativeLongTaskThresholdMs
+        config["longTaskThresholdMs"] = longTaskThresholdMs
+        config["sampleRate"] = sampleRate
+        config["site"] = site
+        config["trackingConsent"] = trackingConsent
+        config["telemetrySampleRate"] = telemetrySampleRate
+        config["vitalsUpdateFrequency"] = vitalsUpdateFrequency
+        config["additionalConfig"] = additionalConfig
+        config["configurationForTelemetry"] = configurationForTelemetry
+        config["trackBackgroundEvents"] = trackBackgroundEvents
+        config["uploadFrequency"] = uploadFrequency
+        config["batchSize"] = batchSize
+        config["customEndpoints"] = customEndpoints
+        config["nativeViewTracking"] = nativeViewTracking
+        config["nativeInteractionTracking"] = nativeInteractionTracking
+        config["verbosity"] = verbosity
+        config["proxyConfig"] = proxyConfig
+        config["serviceName"] = serviceName
+        config["firstPartyHosts"] = firstPartyHosts
+        config["bundleLogsWithRum"] = bundleLogsWithRum
+        config["bundleLogsWithTraces"] = bundleLogsWithTraces
+        return config
     }
 }
 

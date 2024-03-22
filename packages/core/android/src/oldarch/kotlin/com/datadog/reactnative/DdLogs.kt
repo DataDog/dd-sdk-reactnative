@@ -16,10 +16,11 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's Logs feature.
  */
 class DdLogs(
-    reactContext: ReactApplicationContext
+    reactContext: ReactApplicationContext,
+    datadogWrapper: DatadogWrapper
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    private val implementation = DdLogsImplementation()
+    private val implementation = DdLogsImplementation(datadog = datadogWrapper)
 
     override fun getName(): String = DdLogsImplementation.NAME
 

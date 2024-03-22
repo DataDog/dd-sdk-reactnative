@@ -7,25 +7,11 @@
 package com.datadog.reactnative
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
 import android.view.Choreographer
-import com.datadog.android.DatadogSite
-import com.datadog.android.core.configuration.BatchSize
-import com.datadog.android.core.configuration.Configuration
-import com.datadog.android.core.configuration.UploadFrequency
-import com.datadog.android.event.EventMapper
-import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
-import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
-import com.datadog.android.rum._RumInternalProxy
-import com.datadog.android.rum.model.ActionEvent
-import com.datadog.android.rum.model.ResourceEvent
-import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
-import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
-import com.datadog.android.trace.TraceConfiguration
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -53,7 +39,6 @@ class DdSdkImplementation(
 
         val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
-
         monitorJsRefreshRate(ddSdkConfiguration)
         initialized.set(true)
 
@@ -147,7 +132,7 @@ class DdSdkImplementation(
                 Log.w(
                     DdSdk::class.java.canonicalName,
                     "Unknown consent given: $trackingConsent, " +
-                        "using ${TrackingConsent.PENDING} as default"
+                            "using ${TrackingConsent.PENDING} as default"
                 )
                 TrackingConsent.PENDING
             }
@@ -192,7 +177,7 @@ class DdSdkImplementation(
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
             buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
-                VitalsUpdateFrequency.NEVER
+                    VitalsUpdateFrequency.NEVER
         val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
@@ -208,8 +193,8 @@ class DdSdkImplementation(
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                        ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
-                    )
+                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
@@ -220,18 +205,8 @@ class DdSdkImplementation(
 
     companion object {
         internal const val DEFAULT_APP_VERSION = "?"
-        internal const val DD_NATIVE_VIEW_TRACKING = "_dd.native_view_tracking"
-        internal const val DD_NATIVE_INTERACTION_TRACKING = "_dd.native_interaction_tracking"
-        internal const val DD_SDK_VERBOSITY = "_dd.sdk_verbosity"
-        internal const val DD_SERVICE_NAME = "_dd.service_name"
-        internal const val DD_FIRST_PARTY_HOSTS = "_dd.first_party_hosts"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
-        internal const val DD_PROXY_ADDRESS = "_dd.proxy.address"
-        internal const val DD_PROXY_PORT = "_dd.proxy.port"
-        internal const val DD_PROXY_TYPE = "_dd.proxy.type"
-        internal const val DD_PROXY_USERNAME = "_dd.proxy.username"
-        internal const val DD_PROXY_PASSWORD = "_dd.proxy.password"
         internal const val DD_DROP_RESOURCE = "_dd.resource.drop_resource"
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"

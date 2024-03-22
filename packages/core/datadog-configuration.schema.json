@@ -184,6 +184,14 @@
                 "resourceTracingSamplingRate": {
                     "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
                     "type": "number"
+                },
+                "bundleLogsWithRum": {
+                    "description": "Enables RUM correlation with logs.",
+                    "type": "boolean"
+                },
+                "bundleLogsWithTraces": {
+                    "description": "Enables Traces correlation with logs.",
+                    "type": "boolean"
                 }
             },
             "required": ["clientToken", "env", "applicationId"]

@@ -67,6 +67,8 @@ describe('DatadogProvider', () => {
                   },
                   "applicationId": "fakeApplicationId",
                   "batchSize": "MEDIUM",
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",

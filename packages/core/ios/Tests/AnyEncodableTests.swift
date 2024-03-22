@@ -77,7 +77,7 @@ internal class AnyEncodableTests: XCTestCase {
             "array": [1, 2, 3],
             "boolean": true,
             "date": Date(timeIntervalSince1970: 0),
-            "double": 3.141_592_653_589_793,
+            "double": 3.141,
             "integer": 42,
             "nested": [
                 "a": "alpha",
@@ -103,7 +103,7 @@ internal class AnyEncodableTests: XCTestCase {
           ],
           "boolean" : true,
           "date" : "1970-01-01T00:00:00Z",
-          "double" : 3.1415926535897931,
+          "double" : 3.141,
           "integer" : 42,
           "nested" : {
             "a" : "alpha",

@@ -29,12 +29,14 @@ public class DdTraceImplementation: NSObject {
         let startDate = Date(timeIntervalSince1970: timeIntervalSince1970)
 
         objc_sync_enter(self)
-        spanDictionary[id] = tracer.startSpan(
+        let span = tracer.startSpan(
             operationName: operation,
             childOf: nil,
             tags: castAttributesToSwift(context).mergeWithGlobalAttributes(),
             startTime: startDate
         )
+        span.setActive()
+        spanDictionary[id] = span
         objc_sync_exit(self)
 
         resolve(id)

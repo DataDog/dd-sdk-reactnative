@@ -111,3 +111,17 @@ public class DdLogsImplementation: NSObject {
         resolve(nil)
     }
 }
+
+internal extension Logger.Configuration {
+    /// Creates a Logger configuration from briged configuration dictionary.
+    ///
+    /// - Parameter dictionnary: The configuration from the bridge.
+    init(_ sdkConfiguration: DdSdkConfiguration) {
+        self.init(
+            networkInfoEnabled: true,
+            bundleWithRumEnabled: sdkConfiguration.bundleLogsWithRum ?? true,
+            bundleWithTraceEnabled: sdkConfiguration.bundleLogsWithTraces ?? true,
+            consoleLogFormat: .short
+        )
+    }
+}

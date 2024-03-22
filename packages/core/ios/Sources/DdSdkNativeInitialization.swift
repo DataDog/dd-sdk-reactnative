@@ -51,8 +51,12 @@ public class DdSdkNativeInitialization: NSObject {
             }
             self.setVerbosityLevel(configuration: sdkConfiguration)
 
-            let sdkConfig = self.buildSDKConfiguration(configuration: sdkConfiguration)
-            DatadogSDKWrapper.shared.initialize(with: sdkConfig, trackingConsent: sdkConfiguration.trackingConsent)
+            let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
+            DatadogSDKWrapper.shared.initialize(
+                coreConfiguration: coreConfiguration,
+                loggerConfiguration: Logger.Configuration(sdkConfiguration),
+                trackingConsent: sdkConfiguration.trackingConsent
+            )
 
             self.enableFeatures(sdkConfiguration: sdkConfiguration)
         }

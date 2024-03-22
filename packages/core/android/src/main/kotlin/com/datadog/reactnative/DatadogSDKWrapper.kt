@@ -70,6 +70,8 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
+    override var bundleLogsWithRum = DefaultConfiguration.bundleLogsWithRum
+    override var bundleLogsWithTraces = DefaultConfiguration.bundleLogsWithTraces
 
     // We use Kotlin backing field here to initialize once the telemetry proxy
     // and make sure it is only after SDK is initialized.

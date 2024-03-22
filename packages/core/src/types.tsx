@@ -51,7 +51,12 @@ export class DdSdkConfiguration {
               }
             | undefined,
         readonly serviceName: string | undefined,
-        readonly firstPartyHosts: { match: string; propagatorTypes: string[] }[]
+        readonly firstPartyHosts: {
+            match: string;
+            propagatorTypes: string[];
+        }[],
+        readonly bundleLogsWithRum: boolean,
+        readonly bundleLogsWithTraces: boolean
     ) {}
 }
 

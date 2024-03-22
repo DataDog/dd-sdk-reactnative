@@ -35,6 +35,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "additionalConfiguration": {},
                   "applicationId": "fake-app-id",
                   "batchSize": "MEDIUM",
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
                   "customEndpoints": {},
                   "env": "fake-env",
@@ -95,11 +97,12 @@ describe('DdSdkReactNativeConfiguration', () => {
                             'api.com',
                             443
                         ),
-
                         serviceName: 'com.test.app',
                         version: '1.4.5',
                         versionSuffix: 'codepush-3',
-                        additionalConfig: { additionalField: 'fake-value' },
+                        additionalConfiguration: {
+                            additionalField: 'fake-value'
+                        },
                         trackingConsent: TrackingConsent.PENDING,
                         nativeCrashReportEnabled: true,
                         nativeLongTaskThresholdMs: 345,
@@ -112,19 +115,22 @@ describe('DdSdkReactNativeConfiguration', () => {
                             rum: 'https://rum.example.com/',
                             logs: 'https://logs.example.com/',
                             trace: 'https://trace.example.com/'
-                        }
+                        },
+                        bundleLogsWithRum: true,
+                        bundleLogsWithTraces: true
                     }
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": [Function],
                   "actionNameAttribute": "testID",
-                  "additionalConfig": {
+                  "additionalConfiguration": {
                     "additionalField": "fake-value",
                   },
-                  "additionalConfiguration": {},
                   "applicationId": "fake-app-id",
                   "batchSize": "LARGE",
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
                   "customEndpoints": {
                     "logs": "https://logs.example.com/",
@@ -188,22 +194,25 @@ describe('DdSdkReactNativeConfiguration', () => {
                         serviceName: '',
                         version: '',
                         versionSuffix: '',
-                        additionalConfig: {},
+                        additionalConfiguration: {},
                         nativeCrashReportEnabled: false,
                         nativeLongTaskThresholdMs: false,
                         longTaskThresholdMs: false,
                         trackFrustrations: false,
                         trackBackgroundEvents: false,
-                        customEndpoints: {}
+                        customEndpoints: {},
+                        bundleLogsWithRum: false,
+                        bundleLogsWithTraces: false
                     }
                 )
             ).toMatchInlineSnapshot(`
                 DdSdkReactNativeConfiguration {
                   "actionEventMapper": null,
-                  "additionalConfig": {},
                   "additionalConfiguration": {},
                   "applicationId": "",
                   "batchSize": "MEDIUM",
+                  "bundleLogsWithRum": false,
+                  "bundleLogsWithTraces": false,
                   "clientToken": "",
                   "customEndpoints": {},
                   "env": "",
