@@ -32,6 +32,7 @@ import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSinglet
 import type { Attributes } from './sdk/AttributesSingleton/types';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from './sdk/DdSdk';
+import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';
@@ -101,6 +102,11 @@ export class DdSdkReactNative {
         configuration: DatadogProviderConfiguration
     ): Promise<void> {
         DdSdkReactNative.enableFeatures(configuration);
+        if (configuration instanceof FileBasedConfiguration) {
+            return DdSdkReactNative.initializeNativeSDK(configuration, {
+                initializationModeForTelemetry: 'FILE'
+            });
+        }
         if (configuration.initializationMode === InitializationMode.SYNC) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
                 initializationModeForTelemetry: 'SYNC'

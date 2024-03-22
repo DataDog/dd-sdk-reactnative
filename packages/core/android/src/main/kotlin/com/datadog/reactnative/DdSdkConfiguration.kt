@@ -63,6 +63,48 @@ data class DdSdkConfiguration(
     val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null
 )
 
+internal data class JSONConfigurationFile(
+    val configuration: JSONDdSdkConfiguration
+)
+
+internal data class JSONDdSdkConfiguration(
+    val clientToken: String,
+    val env: String,
+    val applicationId: String,
+    val nativeCrashReportEnabled: Boolean? = null,
+    val nativeLongTaskThresholdMs: Double? = null,
+    val longTaskThresholdMs: Double? = null,
+    val sessionSamplingRate: Double? = null,
+    val site: String? = null,
+    val trackingConsent: String? = null,
+    val telemetrySampleRate: Double? = null,
+    val vitalsUpdateFrequency: String? = null,
+    val trackFrustrations: Boolean? = null,
+    val uploadFrequency: String? = null,
+    val batchSize: String? = null,
+    val trackBackgroundEvents: Boolean? = null,
+    val customEndpoints: CustomEndpoints? = null,
+    val nativeViewTracking: Boolean? = null,
+    val nativeInteractionTracking: Boolean? = null,
+    val verbosity: String? = null,
+    val proxy: JSONProxyConfiguration? = null,
+    val serviceName: String? = null,
+    val firstPartyHosts: List<JSONFirstPartyHost>? = null
+)
+
+internal data class JSONProxyConfiguration(
+    val type: String,
+    val address: String,
+    val port: Int,
+    val username: String? = null,
+    val password: String? = null
+)
+
+internal data class JSONFirstPartyHost(
+    val match: String,
+    val propagatorTypes: List<String>
+)
+
 /**
  * Additional configuration data for Datadog telemetry.
  * @param initializationType Type of initialization used.

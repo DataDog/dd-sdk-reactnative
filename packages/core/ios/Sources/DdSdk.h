@@ -21,4 +21,6 @@
 
 @property (nonatomic, strong) DdSdkImplementation* ddSdkImplementation;
 
++ (void)initFromNative;
+
 @end

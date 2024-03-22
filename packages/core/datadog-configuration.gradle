@@ -1,0 +1,57 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+def getConfigurationFilePath() {
+    if (project.hasProperty("datadog")) {
+        if (project.datadog.configurationFilePath) {
+            return project.datadog.configurationFilePath
+        }
+    }
+    return '../../datadog-configuration.json'
+}
+
+def getBuildAssetsDirectory(sourceName) {
+    return project.layout.buildDirectory
+        .dir("generated/assets/datadog/configuration$sourceName")
+}
+
+def getConfigurationFile() {
+    def filePath = getConfigurationFilePath()
+    def rootProjectPath = projectDir.getAbsolutePath()
+
+    // The path to the configuration file is relative to the app's android/app/ directory.
+    def absoluteFilePath = "$rootProjectPath/$filePath"
+
+    assert file(absoluteFilePath).exists() : "Datadog configuration file at $absoluteFilePath does not exist"
+    return absoluteFilePath
+}
+
+/*
+ * Copies the configuration file into the build directory and renames it.
+ */
+task copyDatadogConfigurationFile() {
+    // Note: there can be multiple source sets depending on the variants declared, so we
+    // create a configuration for all of them. This prevents warnings in Android Studio when 
+    // adding the same directory to sources for different variants.
+    android.sourceSets.forEach { source ->
+        copy {
+            from getConfigurationFile()
+            into getBuildAssetsDirectory(source.name)
+            rename {
+                'datadog-configuration.json'
+            }
+        }
+    }
+
+    // Adds the copied configuration file to the assets of the app for every sourceSet. 
+    android.sourceSets.forEach { source ->
+        source.assets.srcDir(getBuildAssetsDirectory(source.name))
+    }
+}
+
+gradle.projectsEvaluated {
+    preBuild.dependsOn(copyDatadogConfigurationFile)
+}

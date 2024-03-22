@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("TooManyFunctions")
 package com.datadog.reactnative
 
 import android.util.Log
@@ -75,42 +76,87 @@ internal fun ReadableMap.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
         port = getInt("port")
     }
 
-    val type =
-        getString("type")?.let {
-            when (it.lowercase(Locale.US)) {
-                "http", "https" -> Proxy.Type.HTTP
-                "socks" -> Proxy.Type.SOCKS
-                else -> {
-                    Log.w(
-                        DdSdk::class.java.canonicalName,
-                        "Unknown proxy type given: $it, skipping proxy configuration."
-                    )
-                    null
-                }
-            }
-        }
+    val type = getString("type")
 
-    val proxy =
-        if (address != null && port != null && type != null) {
-            Proxy(type, InetSocketAddress(address, port))
-        } else {
-            return null
-        }
-
-    val username = getString("username")
-    val password = getString("password")
-
-    val authenticator =
-        if (username != null && password != null) {
-            ProxyAuthenticator(username, password)
-        } else {
-            null
-        }
-
-    return Pair(proxy, authenticator)
+    return if (address != null && port != null && type != null) {
+        buildProxyConfig(
+            type,
+            address,
+            port,
+            getString("username"),
+            getString("password")
+        )
+    } else {
+        null
+    }
 }
 
 internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderType>> {
+    val firstPartyHosts = this.toArrayList() as List<ReadableMap>
+    return firstPartyHosts.mapNotNull<ReadableMap, JSONFirstPartyHost> {
+        val match = it.getString("match")
+        val propagatorTypes = it.getArray("propagatorTypes")
+        if (match != null && propagatorTypes != null) {
+            JSONFirstPartyHost(match, propagatorTypes.toArrayList() as List<String>)
+        } else null
+    }.asFirstPartyHosts()
+}
+
+internal object DefaultConfiguration {
+    const val nativeCrashReportEnabled = false
+    const val sessionSamplingRate = 100.0
+    const val site = "US1"
+    const val longTaskThresholdMs = 0.0
+    const val nativeLongTaskThresholdMs = 200.0
+    const val nativeViewTracking = false
+    const val nativeInteractionTracking = false
+    const val trackingConsent = "GRANTED"
+    const val telemetrySampleRate = 20.0
+    const val vitalsUpdateFrequency = "AVERAGE"
+    const val trackFrustrations = true
+    const val uploadFrequency = "AVERAGE"
+    const val batchSize = "MEDIUM"
+    const val trackBackgroundEvents = false
+}
+
+@Suppress("ComplexMethod")
+internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
+    return DdSdkConfiguration(
+        this.clientToken,
+        this.env,
+        this.applicationId,
+        this.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
+        this.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
+        this.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,
+        this.sessionSamplingRate ?: DefaultConfiguration.sessionSamplingRate,
+        this.site ?: DefaultConfiguration.site,
+        this.trackingConsent ?: DefaultConfiguration.trackingConsent,
+        this.telemetrySampleRate ?: DefaultConfiguration.telemetrySampleRate,
+        this.vitalsUpdateFrequency ?: DefaultConfiguration.vitalsUpdateFrequency,
+        this.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
+        this.uploadFrequency ?: DefaultConfiguration.uploadFrequency,
+        this.batchSize ?: DefaultConfiguration.batchSize,
+        this.trackBackgroundEvents ?: DefaultConfiguration.trackBackgroundEvents,
+        this.customEndpoints,
+        mapOf(
+            "_dd.source" to "react-native",
+            "_dd.sdk_version" to SDK_VERSION
+        ),
+        null,
+        this.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
+        this.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
+        this.verbosity,
+        this.proxy?.asProxyConfig(),
+        this.serviceName,
+        this.firstPartyHosts?.asFirstPartyHosts()
+    )
+}
+
+internal fun JSONProxyConfiguration.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
+    return buildProxyConfig(type, address, port, username, password)
+}
+
+internal fun List<JSONFirstPartyHost>.asFirstPartyHosts(): Map<String, Set<TracingHeaderType>> {
     /**
      * Adapts the data format from the React Native SDK configuration to match with the Android
      * SDK configuration. For example:
@@ -120,16 +166,13 @@ internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderTyp
      */
     val firstPartyHostsWithHeaderTypes = mutableMapOf<String, MutableSet<TracingHeaderType>>()
 
-    val firstPartyHosts = this.toArrayList() as List<ReadableMap>
-    for (it in firstPartyHosts) {
-        val match = it.getString("match")
-        val propagatorTypes = it.getArray("propagatorTypes")?.asTracingHeaderTypes()
-        if (match != null && propagatorTypes != null && propagatorTypes.isNotEmpty()) {
-            val hostMatch = firstPartyHostsWithHeaderTypes[match]
+    for (host in this) {
+        if (host.propagatorTypes.isNotEmpty()) {
+            val hostMatch = firstPartyHostsWithHeaderTypes[host.match]
             if (hostMatch != null) {
-                hostMatch.addAll(propagatorTypes)
+                hostMatch.addAll(host.propagatorTypes.asTracingHeaderTypes())
             } else {
-                firstPartyHostsWithHeaderTypes[match] = propagatorTypes.toMutableSet()
+                firstPartyHostsWithHeaderTypes[host.match] = host.propagatorTypes.asTracingHeaderTypes().toMutableSet()
             }
         }
     }
@@ -137,9 +180,9 @@ internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderTyp
     return firstPartyHostsWithHeaderTypes
 }
 
-internal fun ReadableArray.asTracingHeaderTypes(): Set<TracingHeaderType> {
-    return this.toArrayList().mapNotNull {
-        when (it) {
+internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
+    return this.mapNotNull {
+        when (it.lowercase()) {
             "datadog" -> TracingHeaderType.DATADOG
             "b3" -> TracingHeaderType.B3
             "b3multi" -> TracingHeaderType.B3MULTI
@@ -188,4 +231,33 @@ internal fun CustomEndpoints.toReadableMap(): ReadableMap {
     logs?.let { map.putString("logs", it) }
     trace?.let { map.putString("trace", it) }
     return map
+}
+
+private fun buildProxyConfig(type: String, address: String, port: Int, username: String?, password: String?): Pair<Proxy, ProxyAuthenticator?>? {
+    val proxyType = when (type.lowercase(Locale.US)) {
+        "http", "https" -> Proxy.Type.HTTP
+        "socks" -> Proxy.Type.SOCKS
+        else -> {
+            Log.w(
+                DdSdk::class.java.canonicalName,
+                "Unknown proxy type given: $type, skipping proxy configuration."
+            )
+            null
+        }
+    }
+
+    if (proxyType == null) {
+        return null
+    }
+
+    val proxy = Proxy(proxyType, InetSocketAddress(address, port))
+
+    val authenticator =
+        if (username != null && password != null) {
+            ProxyAuthenticator(username, password)
+        } else {
+            null
+        }
+
+    return Pair(proxy, authenticator)
 }

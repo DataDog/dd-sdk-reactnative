@@ -1,0 +1,192 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/DataDog/dd-sdk-reactnative/blob/develop/datadog-configuration.schema.json",
+    "title": "Datadog React Native SDK Configuration",
+    "description": "Configuration for initializing the Datadog React Native SDK from the native layers.",
+    "type": "object",
+    "properties": {
+        "configuration": {
+            "description": "Configuration used for initializing the Datadog SDK.",
+            "type": "object",
+            "properties": {
+                "clientToken": {
+                    "description": "A valid Datadog client token.",
+                    "type": "string"
+                },
+                "env": {
+                    "description": "The application’s environment, for example: prod, pre-prod, staging, etc.",
+                    "type": "string"
+                },
+                "applicationId": {
+                    "description": "The RUM application ID.",
+                    "type": "string"
+                },
+                "nativeCrashReportEnabled": {
+                    "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
+                    "type": "boolean"
+                },
+                "nativeLongTaskThresholdMs": {
+                    "description": "The threshold for native long tasks reporting in milliseconds.",
+                    "type": "integer"
+                },
+                "longTaskThresholdMs": {
+                    "description": "The threshold for javascript long tasks reporting in milliseconds.",
+                    "type": "integer"
+                },
+                "sessionSamplingRate": {
+                    "description": "Percentage of sampled RUM sessions. Range `0`-`100`.",
+                    "type": "integer"
+                },
+                "site": {
+                    "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1' or 'EU1', default is 'US1').",
+                    "type": "string",
+                    "enum": ["US1", "US1_FED", "US3", "US5", "EU1", "AP1"]
+                },
+                "trackingConsent": {
+                    "description": "Consent, which can take one of the following values: 'PENDING', 'GRANTED', 'NOT_GRANTED'.",
+                    "type": "string",
+                    "enum": ["PENDING", "GRANTED", "NOT_GRANTED"]
+                },
+                "telemetrySampleRate": {
+                    "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100`.",
+                    "type": "integer"
+                },
+                "vitalsUpdateFrequency": {
+                    "description": "Sets the preferred frequency for collecting mobile vitals.",
+                    "type": "string",
+                    "enum": ["NEVER", "RARE", "AVERAGE", "FREQUENT"]
+                },
+                "uploadFrequency": {
+                    "description": "Sets the preferred frequency for uploading batches of data.",
+                    "type": "string",
+                    "enum": ["RARE", "AVERAGE", "FREQUENT"]
+                },
+                "batchSize": {
+                    "description": "Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.",
+                    "type": "string",
+                    "enum": ["SMALL", "MEDIUM", "LARGE"]
+                },
+                "trackFrustrations": {
+                    "description": "Enables tracking of frustration signals (error taps). Defaults to `true`.",
+                    "type": "boolean"
+                },
+                "trackBackgroundEvents": {
+                    "description": "Enables tracking of RUM event when no RUM View is active.",
+                    "type": "boolean"
+                },
+                "customEndpoints": {
+                    "type": "object",
+                    "description": "Target a custom server for RUM, Logs and Traces features.",
+                    "properties": {
+                        "rum": {
+                            "type": "string"
+                        },
+                        "logs": {
+                            "type": "string"
+                        },
+                        "trace": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "nativeViewTracking": {
+                    "description": "Enables native views tracking.",
+                    "type": "boolean"
+                },
+                "nativeInteractionTracking": {
+                    "description": "Enables native interaction tracking.",
+                    "type": "boolean"
+                },
+                "verbosity": {
+                    "description": "Verbosity for internal SDK logging.",
+                    "type": "string",
+                    "enum": ["DEBUG", "INFO", "WARN", "ERROR"]
+                },
+                "proxy": {
+                    "type": "object",
+                    "description": "Configuration for proxying SDK data.",
+                    "properties": {
+                        "type": {
+                            "description": "Proxy type.",
+                            "type": "string",
+                            "enum": ["HTTP", "HTTPS", "SOCKS"]
+                        },
+                        "address": {
+                            "description": "Proxy address. Can be either in the IP address format, ex. '1.1.1.1', or hostname, ex. 'example.com'.",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "Proxy port.",
+                            "type": "integer"
+                        },
+                        "username": {
+                            "description": "Username for Basic authentication scheme. Note: SOCKS + authentication scheme is not supported.",
+                            "type": "string"
+                        },
+                        "password": {
+                            "description": "Password for Basic authentication scheme.",
+                            "type": "string"
+                        }
+                    },
+                    "required": ["type", "port", "address"]
+                },
+                "serviceName": {
+                    "description": "Custom service name.",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Overrides the reported version of the app.",
+                    "type": "string"
+                },
+                "firstPartyHosts": {
+                    "description": "List of your backends hosts to enable tracing with.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "match": {
+                                "description": "Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`. Regular expressions are NOT supported.",
+                                "type": "string"
+                            },
+                            "propagatorTypes": {
+                                "description": "Types of instrumentation on the host.",
+                                "type": "array",
+                                "items": {
+                                    "description": "Type of instrumentation on the host.",
+                                    "type": "string",
+                                    "enum": [
+                                        "DATADOG",
+                                        "B3",
+                                        "B3MULTI",
+                                        "TRACECONTEXT"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "trackInteractions": {
+                    "description": "Track React Native components interactions.",
+                    "type": "boolean"
+                },
+                "trackResources": {
+                    "description": "Track React Native resources.",
+                    "type": "boolean"
+                },
+                "trackErrors": {
+                    "description": "Track React Native errors.",
+                    "type": "boolean"
+                },
+                "actionNameAttribute": {
+                    "description": "Specifies a custom prop to name RUM actions on elements having an `onPress` prop.",
+                    "type": "string"
+                },
+                "resourceTracingSamplingRate": {
+                    "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
+                    "type": "number"
+                }
+            },
+            "required": ["clientToken", "env", "applicationId"]
+        }
+    }
+}

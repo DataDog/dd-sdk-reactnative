@@ -7,6 +7,7 @@
 import Foundation
 import DatadogCore
 import DatadogInternal
+import DatadogRUM
 
 /**
  A configuration object to initialize Datadog's features.
@@ -46,9 +47,9 @@ public class DdSdkConfiguration: NSObject {
     public var longTaskThresholdMs: Double = 0.0
     public var sampleRate: Double? = nil
     public var site: DatadogSite
-    public var trackingConsent: NSString? = nil
+    public var trackingConsent: TrackingConsent
     public var telemetrySampleRate: Double? = nil
-    public var vitalsUpdateFrequency: NSString? = nil
+    public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
     public var trackFrustrations: Bool? = nil
     public var uploadFrequency: Datadog.Configuration.UploadFrequency
     public var batchSize: Datadog.Configuration.BatchSize
@@ -62,6 +63,7 @@ public class DdSdkConfiguration: NSObject {
     public var proxyConfig: [AnyHashable: Any]? = nil
     public var serviceName: NSString? = nil
     public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
+    public var resourceTracingSamplingRate: Double? = nil
 
     public init(
         clientToken: String,
@@ -71,13 +73,13 @@ public class DdSdkConfiguration: NSObject {
         nativeLongTaskThresholdMs: Double?,
         longTaskThresholdMs: Double,
         sampleRate: Double?,
-        site: NSString?,
-        trackingConsent: NSString?,
+        site: DatadogSite,
+        trackingConsent: TrackingConsent,
         telemetrySampleRate: Double?,
-        vitalsUpdateFrequency: NSString?,
+        vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency?,
         trackFrustrations: Bool?,
-        uploadFrequency: NSString?,
-        batchSize: NSString?,
+        uploadFrequency: Datadog.Configuration.UploadFrequency,
+        batchSize: Datadog.Configuration.BatchSize,
         trackBackgroundEvents: Bool?,
         customEndpoints: CustomEndpoints?,
         additionalConfig: NSDictionary?,
@@ -87,7 +89,8 @@ public class DdSdkConfiguration: NSObject {
         verbosity: NSString?,
         proxyConfig: [AnyHashable: Any]?,
         serviceName: NSString?,
-        firstPartyHosts: [String: Set<TracingHeaderType>]?
+        firstPartyHosts: [String: Set<TracingHeaderType>]?,
+        resourceTracingSamplingRate: Double?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -96,13 +99,13 @@ public class DdSdkConfiguration: NSObject {
         self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.longTaskThresholdMs = longTaskThresholdMs
         self.sampleRate = sampleRate
-        self.site = DdSdkConfiguration.buildSite(site: site)
+        self.site = site
         self.trackingConsent = trackingConsent
         self.telemetrySampleRate = telemetrySampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackFrustrations = trackFrustrations
-        self.uploadFrequency = DdSdkConfiguration.buildUploadFrequency(uploadFrequency: uploadFrequency)
-        self.batchSize = DdSdkConfiguration.buildBatchSize(batchSize: batchSize)
+        self.uploadFrequency = uploadFrequency
+        self.batchSize = batchSize
         self.trackBackgroundEvents = trackBackgroundEvents
         self.customEndpoints = customEndpoints
         self.additionalConfig = additionalConfig
@@ -113,51 +116,7 @@ public class DdSdkConfiguration: NSObject {
         self.proxyConfig = proxyConfig
         self.serviceName = serviceName
         self.firstPartyHosts = firstPartyHosts
-    }
-    
-    static func buildSite(site: NSString?) -> DatadogSite {
-        switch site?.lowercased ?? "us" {
-        case "us1", "us":
-            return .us1
-        case "eu1", "eu":
-            return .eu1
-        case "us3":
-            return .us3
-        case "us5":
-            return .us5
-        case "us1_fed", "gov":
-            return .us1_fed
-        case "ap1":
-            return .ap1
-        default:
-            return .us1
-        }
-    }
-    
-    static func buildBatchSize(batchSize: NSString?) -> Datadog.Configuration.BatchSize {
-        switch batchSize?.lowercased ?? "" {
-        case "small":
-            return .small
-        case "medium":
-            return .medium
-        case "large":
-            return .large
-        default:
-            return .medium
-        }
-    }
-    
-    static func buildUploadFrequency(uploadFrequency: NSString?) -> Datadog.Configuration.UploadFrequency {
-        switch uploadFrequency?.lowercased ?? "" {
-        case "rare":
-            return .rare
-        case "average":
-            return .average
-        case "frequent":
-            return .frequent
-        default:
-            return .average
-        }
+        self.resourceTracingSamplingRate = resourceTracingSamplingRate
     }
 }
 

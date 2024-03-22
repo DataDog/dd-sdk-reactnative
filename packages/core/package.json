@@ -30,7 +30,9 @@
         "ios/DdSdkReactNative.xcodeproj/*.pbxproj",
         "jest",
         "DatadogSDKReactNative.podspec",
-        "datadog-sourcemaps.gradle"
+        "datadog-sourcemaps.gradle",
+        "datadog-configuration.gradle",
+        "datadog-configuration.schema.json"
     ],
     "types": "lib/typescript/index.d.ts",
     "react-native": "src/index",
@@ -62,7 +64,8 @@
             "<rootDir>/lib/"
         ],
         "testPathIgnorePatterns": [
-            "/__utils__/"
+            "/__utils__/",
+            "/__fixtures__/"
         ],
         "setupFiles": [
             "./../../node_modules/react-native-gesture-handler/jestSetup.js",

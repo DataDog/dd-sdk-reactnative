@@ -91,7 +91,7 @@ export const formatFirstPartyHosts = (
     });
 };
 
-const DEFAULTS = {
+export const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
     resourceTracingSamplingRate: 20.0,
@@ -491,4 +491,5 @@ export type InitializationModeForTelemetry =
     | 'LEGACY'
     | 'SYNC'
     | 'ASYNC'
-    | 'PARTIAL';
+    | 'PARTIAL'
+    | 'FILE';

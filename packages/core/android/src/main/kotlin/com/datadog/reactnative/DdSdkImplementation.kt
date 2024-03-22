@@ -50,23 +50,11 @@ class DdSdkImplementation(
      */
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
-        val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
-        val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
-        val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
-        configureSdkVerbosity(ddSdkConfiguration)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
+        nativeInitialization.initialize(ddSdkConfiguration)
 
-        datadog.initialize(appContext, sdkConfiguration, trackingConsent)
-
-        datadog.enableRum(rumConfiguration)
         monitorJsRefreshRate(ddSdkConfiguration)
-
-        datadog.enableTrace(traceConfiguration)
-
-        datadog.enableLogs(logsConfiguration)
-
         initialized.set(true)
 
         promise.resolve(null)
@@ -150,201 +138,6 @@ class DdSdkImplementation(
 
     // region Internal
 
-    private fun configureSdkVerbosity(configuration: DdSdkConfiguration) {
-        val verbosity =
-            when (configuration.verbosity?.lowercase(Locale.US)) {
-                "debug" -> Log.DEBUG
-                "info" -> Log.INFO
-                "warn" -> Log.WARN
-                "error" -> Log.ERROR
-                else -> null
-            }
-        if (verbosity != null) {
-            datadog.setVerbosity(verbosity)
-        }
-    }
-
-    private fun getDefaultAppVersion(): String {
-        val packageName = appContext.packageName
-        val packageInfo =
-            try {
-                appContext.packageManager.getPackageInfo(packageName, 0)
-            } catch (e: PackageManager.NameNotFoundException) {
-                datadog.telemetryError(e.message ?: PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
-                return DEFAULT_APP_VERSION
-            }
-
-        return packageInfo?.let {
-            // we need to use the deprecated method because getLongVersionCode method is only
-            // available from API 28 and above
-            @Suppress("DEPRECATION")
-            it.versionName ?: it.versionCode.toString()
-        }
-            ?: DEFAULT_APP_VERSION
-    }
-
-    @Suppress("ComplexMethod", "LongMethod", "UnsafeCallOnNullableType")
-    private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
-        val configBuilder =
-            RumConfiguration.Builder(
-                applicationId = configuration.applicationId
-            )
-        if (configuration.sampleRate != null) {
-            configBuilder.setSessionSampleRate(configuration.sampleRate.toFloat())
-        }
-
-        configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
-        configBuilder.trackBackgroundEvents(configuration.trackBackgroundEvents ?: false)
-
-        configBuilder.setVitalsUpdateFrequency(
-            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
-        )
-
-        val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
-        telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
-
-        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
-        if (longTask != null) {
-            configBuilder.trackLongTasks(longTask)
-        }
-
-        if (configuration.nativeViewTracking == true) {
-            // Use sensible default
-            configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
-        } else {
-            configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
-        }
-
-        if (configuration.nativeInteractionTracking == false) {
-            configBuilder.disableUserInteractionTracking()
-        }
-
-        configBuilder.setResourceEventMapper(
-            object : EventMapper<ResourceEvent> {
-                override fun map(event: ResourceEvent): ResourceEvent? {
-                    if (event.context?.additionalProperties?.containsKey(DD_DROP_RESOURCE) ==
-                        true
-                    ) {
-                        return null
-                    }
-                    return event
-                }
-            }
-        )
-
-        configBuilder.setActionEventMapper(
-            object : EventMapper<ActionEvent> {
-                override fun map(event: ActionEvent): ActionEvent? {
-                    if (event.context?.additionalProperties?.containsKey(DD_DROP_ACTION) == true
-                    ) {
-                        return null
-                    }
-                    return event
-                }
-            }
-        )
-
-        _RumInternalProxy.setTelemetryConfigurationEventMapper(
-            configBuilder,
-            object : EventMapper<TelemetryConfigurationEvent> {
-                override fun map(
-                    event: TelemetryConfigurationEvent
-                ): TelemetryConfigurationEvent? {
-                    event.telemetry.configuration.trackNativeErrors =
-                        configuration.nativeCrashReportEnabled
-                    // trackCrossPlatformLongTasks will be deprecated for trackLongTask
-                    event.telemetry.configuration.trackCrossPlatformLongTasks =
-                        configuration.longTaskThresholdMs != 0.0
-                    event.telemetry.configuration.trackLongTask =
-                        configuration.longTaskThresholdMs != 0.0
-                    event.telemetry.configuration.trackNativeLongTasks =
-                        configuration.nativeLongTaskThresholdMs != 0.0
-
-                    event.telemetry.configuration.initializationType =
-                        configuration.configurationForTelemetry?.initializationType
-                    event.telemetry.configuration.trackInteractions =
-                        configuration.configurationForTelemetry?.trackInteractions
-                    event.telemetry.configuration.trackErrors =
-                        configuration.configurationForTelemetry?.trackErrors
-                    event.telemetry.configuration.trackResources =
-                        configuration.configurationForTelemetry?.trackNetworkRequests
-                    event.telemetry.configuration.trackNetworkRequests =
-                        configuration.configurationForTelemetry?.trackNetworkRequests
-                    event.telemetry.configuration.reactVersion =
-                        configuration.configurationForTelemetry?.reactVersion
-                    event.telemetry.configuration.reactNativeVersion =
-                        configuration.configurationForTelemetry?.reactNativeVersion
-
-                    return event
-                }
-            }
-        )
-
-        configuration.customEndpoints?.rum?.let {
-            configBuilder.useCustomEndpoint(it)
-        }
-
-        return configBuilder.build()
-    }
-
-    private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
-        val configBuilder = LogsConfiguration.Builder()
-        configuration.customEndpoints?.logs?.let {
-            configBuilder.useCustomEndpoint(it)
-        }
-
-        return configBuilder.build()
-    }
-
-    private fun buildTraceConfiguration(configuration: DdSdkConfiguration): TraceConfiguration {
-        val configBuilder = TraceConfiguration.Builder()
-        configuration.customEndpoints?.trace?.let {
-            configBuilder.useCustomEndpoint(it)
-        }
-
-        return configBuilder.build()
-    }
-
-    private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
-        val configBuilder = Configuration.Builder(
-            clientToken = configuration.clientToken,
-            env = configuration.env,
-            variant = "",
-            service = configuration.serviceName
-        )
-
-        val additionalConfig = configuration.additionalConfig?.toMutableMap()
-        val versionSuffix = configuration.additionalConfig?.get(DD_VERSION_SUFFIX) as? String
-        if (versionSuffix != null && additionalConfig != null) {
-            val defaultVersion = getDefaultAppVersion()
-            additionalConfig.put(DD_VERSION, defaultVersion + versionSuffix)
-        }
-        configBuilder.setAdditionalConfiguration(
-            additionalConfig?.filterValues { it != null }?.mapValues {
-                it.value
-            } as Map<String, Any>? ?: emptyMap()
-        )
-
-        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
-        configBuilder.useSite(buildSite(configuration.site))
-        configBuilder.setUploadFrequency(
-            buildUploadFrequency(configuration.uploadFrequency)
-        )
-        configBuilder.setBatchSize(
-            buildBatchSize(configuration.batchSize)
-        )
-
-        configuration.proxyConfig?.let { (proxy, authenticator) ->
-            configBuilder.setProxy(proxy, authenticator)
-        }
-
-        if (configuration.firstPartyHosts != null) {
-            configBuilder.setFirstPartyHostsWithHeaderType(configuration.firstPartyHosts)
-        }
-
-        return configBuilder.build()
-    }
-
     internal fun buildTrackingConsent(trackingConsent: String?): TrackingConsent {
         return when (trackingConsent?.lowercase(Locale.US)) {
             "pending" -> TrackingConsent.PENDING
@@ -361,19 +154,6 @@ class DdSdkImplementation(
         }
     }
 
-    private fun buildSite(site: String?): DatadogSite {
-        val siteLower = site?.lowercase(Locale.US)
-        return when (siteLower) {
-            "us1", "us" -> DatadogSite.US1
-            "eu1", "eu" -> DatadogSite.EU1
-            "us3" -> DatadogSite.US3
-            "us5" -> DatadogSite.US5
-            "us1_fed", "gov" -> DatadogSite.US1_FED
-            "ap1" -> DatadogSite.AP1
-            else -> DatadogSite.US1
-        }
-    }
-
     private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
         val vitalUpdateFrequencyLower = vitalsUpdateFrequency?.lowercase(Locale.US)
         return when (vitalUpdateFrequencyLower) {
@@ -382,24 +162,6 @@ class DdSdkImplementation(
             "average" -> VitalsUpdateFrequency.AVERAGE
             "frequent" -> VitalsUpdateFrequency.FREQUENT
             else -> VitalsUpdateFrequency.AVERAGE
-        }
-    }
-
-    private fun buildUploadFrequency(uploadFrequency: String?): UploadFrequency {
-        return when (uploadFrequency?.lowercase(Locale.US)) {
-            "rare" -> UploadFrequency.RARE
-            "average" -> UploadFrequency.AVERAGE
-            "frequent" -> UploadFrequency.FREQUENT
-            else -> UploadFrequency.AVERAGE
-        }
-    }
-
-    private fun buildBatchSize(batchSize: String?): BatchSize {
-        return when (batchSize?.lowercase(Locale.US)) {
-            "small" -> BatchSize.SMALL
-            "medium" -> BatchSize.MEDIUM
-            "large" -> BatchSize.LARGE
-            else -> BatchSize.MEDIUM
         }
     }
 

@@ -91,5 +91,32 @@ class RNDdSdkConfigurationTests: XCTestCase {
 
         XCTAssertEqual(firstPartyHosts.asFirstPartyHosts(), expectedFirstPartyHosts)
     }
+    
+    func testBuildTrackingConsentPending() {
+        let consent: NSString? = "pending"
+        let trackingConsent = consent.asTrackingConsent()
 
+        XCTAssertEqual(trackingConsent, TrackingConsent.pending)
+    }
+
+    func testBuildTrackingConsentGranted() {
+        let consent: NSString? = "granted"
+        let trackingConsent = consent.asTrackingConsent()
+
+        XCTAssertEqual(trackingConsent, TrackingConsent.granted)
+    }
+
+    func testBuildTrackingConsentNotGranted() {
+        let consent: NSString? = "not_granted"
+        let trackingConsent = consent.asTrackingConsent()
+
+        XCTAssertEqual(trackingConsent, TrackingConsent.notGranted)
+    }
+
+    func testBuildTrackingConsentNil() {
+        let consent: NSString? = nil
+        let trackingConsent = consent.asTrackingConsent()
+
+        XCTAssertEqual(trackingConsent, TrackingConsent.pending)
+    }
 }

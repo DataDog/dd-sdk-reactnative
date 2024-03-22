@@ -96,6 +96,11 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     return NO;
 }
 
++ (void)initFromNative {
+    DdSdkNativeInitialization *nativeInitialization = [[DdSdkNativeInitialization alloc] init];
+    [nativeInitialization initializeFromNative];
+}
+
 - (dispatch_queue_t)methodQueue {
     return [RNQueue getSharedQueue];
 }

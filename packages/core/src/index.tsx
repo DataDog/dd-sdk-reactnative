@@ -26,11 +26,13 @@ import {
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
+import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { DdTrace } from './trace/DdTrace';
 
 export {
     DatadogProvider,
     DatadogProviderConfiguration,
+    FileBasedConfiguration,
     InitializationMode,
     DdLogs,
     DdTrace,
