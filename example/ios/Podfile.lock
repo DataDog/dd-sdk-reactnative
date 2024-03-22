@@ -582,11 +582,11 @@ SPEC CHECKSUMS:
   DatadogSessionReplay: f189054bd2fc2d14c487fd614f04b2b8041dd81f
   DatadogTrace: a63da746c609bd4c683bca61a94429889e33b11e
   DatadogWebViewTracking: 713f862ddd89173e0a3f5342cefa23def40f0f48
-  DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
+  DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 90fc1a90b4b7a171e0a7c20ea426c1bf6ce4399c
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
+  glog: c5d68082e772fa1c511173d6b30a9de2c05a69a2
   hermes-engine: d27603b55a48402501ad1928c05411dae9cd6b85
   HMSegmentedControl: 34c1f54d822d8308e7b24f5d901ec674dfa31352
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
@@ -629,4 +629,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: c13458ce5aca9de130799f13a0494e537a800b3c
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.14.3
