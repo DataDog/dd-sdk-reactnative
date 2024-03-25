@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "13.4", :tvos => "11.0" }
+  s.platforms    = { :ios => "11.0", :tvos => "11.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
   
@@ -25,6 +25,7 @@ Pod::Spec.new do |s|
   s.test_spec 'Tests' do |test_spec|
     test_spec.dependency "React-RCTText"
     test_spec.source_files = 'ios/Tests/*.swift'
+    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 
   

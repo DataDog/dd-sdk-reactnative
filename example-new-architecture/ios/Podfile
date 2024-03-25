@@ -44,7 +44,22 @@ target 'DdSdkReactNativeExample' do
     # Pods for testing
   end
 
-  post_install do |installer|
+  ios11Targets = [
+    'DatadogSDK',
+    'DatadogSDKCrashReporting',
+    'DatadogSDKReactNative'
+  ]
+  
+    post_install do |installer|
+      installer.pods_project.targets.each do |target|
+        # Bump minimum deployment version
+        if ios11Targets.include?(target.name)
+          target.build_configurations.each do |config|
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
+          end
+        end
+      end
+      
       # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,

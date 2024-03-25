@@ -1328,8 +1328,8 @@ SPEC CHECKSUMS:
   DatadogInternal: b9217da25018284c087a2ed4b9bb3b0f26c767c0
   DatadogLogs: 3b4132eefa67f196bb3ab2d603c1a2acd1292615
   DatadogRUM: 8845815ba89f5ab8ceee765ee268f7de36f3e35d
-  DatadogSDKReactNative: 4367bbafa363ab39112c8e273ad79e1d46c3d9fa
-  DatadogSDKReactNativeSessionReplay: e8e43bdf87e920640542974a8c7fd92ed6bfcac6
+  DatadogSDKReactNative: b363b08392601b5ed609ae148ac3f0a1488d540b
+  DatadogSDKReactNativeSessionReplay: 633f5c401501e78bbf58970b74c622145f1f3b17
   DatadogSessionReplay: f189054bd2fc2d14c487fd614f04b2b8041dd81f
   DatadogTrace: a63da746c609bd4c683bca61a94429889e33b11e
   DatadogWebViewTracking: 713f862ddd89173e0a3f5342cefa23def40f0f48
