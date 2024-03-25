@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.7.1)
   - DatadogRUM (2.7.1):
     - DatadogInternal (= 2.7.1)
-  - DatadogSDKReactNative (2.2.0):
+  - DatadogSDKReactNative (2.3.0):
     - DatadogCore (~> 2.7.1)
     - DatadogCrashReporting (~> 2.7.1)
     - DatadogLogs (~> 2.7.1)
@@ -18,7 +18,7 @@ PODS:
     - DatadogTrace (~> 2.7.1)
     - DatadogWebViewTracking (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNative/Tests (2.2.0):
+  - DatadogSDKReactNative/Tests (2.3.0):
     - DatadogCore (~> 2.7.1)
     - DatadogCrashReporting (~> 2.7.1)
     - DatadogLogs (~> 2.7.1)
@@ -26,11 +26,11 @@ PODS:
     - DatadogTrace (~> 2.7.1)
     - DatadogWebViewTracking (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay (2.2.0-alpha.0):
+  - DatadogSDKReactNativeSessionReplay (2.3.0-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay/Tests (2.2.0-alpha.0):
+  - DatadogSDKReactNativeSessionReplay/Tests (2.3.0-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.7.1)
     - React-Core
@@ -577,8 +577,8 @@ SPEC CHECKSUMS:
   DatadogInternal: b9217da25018284c087a2ed4b9bb3b0f26c767c0
   DatadogLogs: 3b4132eefa67f196bb3ab2d603c1a2acd1292615
   DatadogRUM: 8845815ba89f5ab8ceee765ee268f7de36f3e35d
-  DatadogSDKReactNative: 12490ebd711f2133bd7e12eaaab9bdc8075aca24
-  DatadogSDKReactNativeSessionReplay: ad782e91dce3671c22bbd33f681db62d214a8e68
+  DatadogSDKReactNative: 6a8163a6bd13a4fbd290c9afd1bd600143367be1
+  DatadogSDKReactNativeSessionReplay: 15bbd09eed7e63e524d034f5d695961f9140fdb8
   DatadogSessionReplay: f189054bd2fc2d14c487fd614f04b2b8041dd81f
   DatadogTrace: a63da746c609bd4c683bca61a94429889e33b11e
   DatadogWebViewTracking: 713f862ddd89173e0a3f5342cefa23def40f0f48
@@ -627,6 +627,6 @@ SPEC CHECKSUMS:
   RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
   Yoga: e7ea9e590e27460d28911403b894722354d73479
 
-PODFILE CHECKSUM: c13458ce5aca9de130799f13a0494e537a800b3c
+PODFILE CHECKSUM: b1707128c59999c0ab7d1f282d1f4d0ab619867d
 
 COCOAPODS: 1.14.3
