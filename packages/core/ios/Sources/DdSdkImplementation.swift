@@ -61,11 +61,11 @@ public class DdSdkImplementation: NSObject {
     @objc
     public func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
         let sdkConfiguration = configuration.asDdSdkConfiguration()
-        let nativeInitialization = DdSdkNativeInitialization(mainDispatchQueue: mainDispatchQueue)
+        let nativeInitialization = DdSdkNativeInitialization()
 
         nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
-        overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
+        self.overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
 
         resolve(nil)
     }

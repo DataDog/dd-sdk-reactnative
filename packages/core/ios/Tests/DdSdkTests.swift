@@ -65,6 +65,29 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
     }
 
+    func testResolvesPromiseAfterInitializationIsDone() throws {
+        let bridge = DispatchQueueMock()
+        let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let mockListener = MockOnCoreInitializedListener()
+        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: mockListener.listener)
+
+        let expectation = self.expectation(description: "Core is set when promise resolves")
+        func mockPromiseResolve(_: Any?) {
+            XCTAssertNotNil(mockListener.core)
+            expectation.fulfill()
+        }
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueue.main,
+            jsDispatchQueue: bridge,
+            jsRefreshRateMonitor: mockJSRefreshRateMonitor,
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        ).initialize(configuration: .mockAny(), resolve: mockPromiseResolve, reject: mockReject)
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+    }
+
     func testBuildConfigurationNoUIKitViewsByDefault() {
         let configuration: DdSdkConfiguration = .mockAny()
 

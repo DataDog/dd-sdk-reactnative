@@ -20,7 +20,6 @@ class DdSdkNativeInitializationTests: XCTestCase {
     func testReturnsConfigurationWithAllData() {
         let mockJSONFileReader = MockJSONFileReader(mockResourceFilePath: "Fixtures/complete-configuration")
         let nativeInitialization = DdSdkNativeInitialization(
-            mainDispatchQueue: DispatchQueueMock(),
             jsonFileReader: mockJSONFileReader
         )
         
@@ -62,7 +61,6 @@ class DdSdkNativeInitializationTests: XCTestCase {
     func testReturnsConfigurationWithMinimalData() {
         let mockJSONFileReader = MockJSONFileReader(mockResourceFilePath: "Fixtures/minimal-configuration")
         let nativeInitialization = DdSdkNativeInitialization(
-            mainDispatchQueue: DispatchQueueMock(),
             jsonFileReader: mockJSONFileReader
         )
         
@@ -104,7 +102,6 @@ class DdSdkNativeInitializationTests: XCTestCase {
 
         let mockJSONFileReader = MockJSONFileReader(mockResourceFilePath: "Fixtures/malformed-configuration")
         let nativeInitialization = DdSdkNativeInitialization(
-            mainDispatchQueue: DispatchQueueMock(),
             jsonFileReader: mockJSONFileReader
         )
         

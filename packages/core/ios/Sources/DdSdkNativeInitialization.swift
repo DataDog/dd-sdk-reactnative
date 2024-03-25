@@ -16,50 +16,38 @@ import React
 
 @objc
 public class DdSdkNativeInitialization: NSObject {
-    let mainDispatchQueue: DispatchQueueType
     let jsonFileReader: ResourceFileReader
     
     @objc
     public convenience override init() {
-        self.init(mainDispatchQueue: DispatchQueue.main, jsonFileReader: JSONFileReader())
-    }
-
-    internal convenience init(
-        mainDispatchQueue: DispatchQueueType
-    ) {
-        self.init(mainDispatchQueue: mainDispatchQueue, jsonFileReader: JSONFileReader())
+        self.init(jsonFileReader: JSONFileReader())
     }
 
     init(
-        mainDispatchQueue: DispatchQueueType,
         jsonFileReader: ResourceFileReader
     ) {
-        self.mainDispatchQueue = mainDispatchQueue
         self.jsonFileReader = jsonFileReader
     }
     
     internal func initialize(sdkConfiguration: DdSdkConfiguration) {
-        // Datadog SDK init needs to happen on the main thread: https://github.com/DataDog/dd-sdk-reactnative/issues/198
-        self.mainDispatchQueue.async {
-            // TODO: see if this `if` is still needed
-            if DatadogSDKWrapper.shared.isInitialized() {
-                // Initializing the SDK twice results in Global.rum and
-                // Global.sharedTracer to be set to no-op instances
-                consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
-                DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
-                return
-            }
-            self.setVerbosityLevel(configuration: sdkConfiguration)
-
-            let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
-            DatadogSDKWrapper.shared.initialize(
-                coreConfiguration: coreConfiguration,
-                loggerConfiguration: Logger.Configuration(sdkConfiguration),
-                trackingConsent: sdkConfiguration.trackingConsent
-            )
-
-            self.enableFeatures(sdkConfiguration: sdkConfiguration)
+        // TODO: see if this `if` is still needed
+        if DatadogSDKWrapper.shared.isInitialized() {
+            // Initializing the SDK twice results in Global.rum and
+            // Global.sharedTracer to be set to no-op instances
+            consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
+            DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+            return
         }
+        self.setVerbosityLevel(configuration: sdkConfiguration)
+
+        let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
+        DatadogSDKWrapper.shared.initialize(
+            coreConfiguration: coreConfiguration,
+            loggerConfiguration: Logger.Configuration(sdkConfiguration),
+            trackingConsent: sdkConfiguration.trackingConsent
+        )
+
+        self.enableFeatures(sdkConfiguration: sdkConfiguration)
     }
     
     internal func getConfigurationFromJSONFile() -> DdSdkConfiguration? {
