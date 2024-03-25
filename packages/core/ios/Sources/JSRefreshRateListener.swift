@@ -25,6 +25,7 @@ internal final class JSRefreshRateMonitor: RefreshRateMonitor {
     }
     
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
+        self.refreshRateListener.stop()
         self.refreshRateListener = JSRefreshRateListener(jsQueue: jsQueue, frameTimeCallback: frameTimeCallback)
         self.refreshRateListener.start()
     }
