@@ -57,6 +57,11 @@ RCT_REMAP_METHOD(enable, withResolve:(RCTPromiseResolveBlock)resolve
     return NO;
 }
 
++ (void)enableFromNative {
+    DdInternalTestingNativeInitialization *internalTesting = [[DdInternalTestingNativeInitialization alloc] init];
+    [internalTesting enableFromNative];
+}
+
 - (void)clearData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddInternalTestingImplementation clearDataWithResolve:resolve reject:reject];
 }
