@@ -21,4 +21,6 @@
 
 @property (nonatomic, strong) DdInternalTestingImplementation* ddInternalTestingImplementation;
 
++ (void)enableFromNative;
+
 @end

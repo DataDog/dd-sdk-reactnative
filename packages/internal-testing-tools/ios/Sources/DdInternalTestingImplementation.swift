@@ -12,14 +12,13 @@ import DatadogInternal
 
 @objc
 public class DdInternalTestingImplementation: NSObject {
-    private var coreProxy: DatadogCoreProxy? = nil
-
     @objc
     public func clearData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        self.coreProxy?.waitAndDeleteEvents(ofFeature: "rum")
-        self.coreProxy?.waitAndDeleteEvents(ofFeature: "logging")
-        self.coreProxy?.waitAndDeleteEvents(ofFeature: "tracing")
-        self.coreProxy?.waitAndDeleteEvents(ofFeature: "session-replay")
+        let coreProxy = (DatadogSDKWrapper.shared.getCoreInstance() as! DatadogCoreProxy)
+        coreProxy.waitAndDeleteEvents(ofFeature: "rum")
+        coreProxy.waitAndDeleteEvents(ofFeature: "logging")
+        coreProxy.waitAndDeleteEvents(ofFeature: "tracing")
+        coreProxy.waitAndDeleteEvents(ofFeature: "session-replay")
 
         resolve(nil)
     }
@@ -27,7 +26,8 @@ public class DdInternalTestingImplementation: NSObject {
     @objc
     public func getAllEvents(feature: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do {
-            let events = coreProxy?.waitAndReturnEventsData(ofFeature: feature) ?? []
+            let coreProxy = (DatadogSDKWrapper.shared.getCoreInstance() as! DatadogCoreProxy)
+            let events = coreProxy.waitAndReturnEventsData(ofFeature: feature)
             let data = try JSONSerialization.data(withJSONObject: events, options: .prettyPrinted)
             resolve(String(data: data, encoding: String.Encoding.utf8) ?? "")
         } catch {
@@ -42,8 +42,18 @@ public class DdInternalTestingImplementation: NSObject {
         DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: {core in
             let proxiedCore = DatadogCoreProxy(core: core)
             DatadogSDKWrapper.shared.setCoreInstance(core: proxiedCore)
-            self.coreProxy = proxiedCore
         })
         resolve(nil)
+    }
+}
+
+// This is to be used for native initialization
+public class DdInternalTestingNativeInitialization: NSObject {
+    @objc
+    public func enableFromNative() -> Void {
+        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: {core in
+            let proxiedCore = DatadogCoreProxy(core: core)
+            DatadogSDKWrapper.shared.setCoreInstance(core: proxiedCore)
+        })
     }
 }
