@@ -43,7 +43,7 @@ public class DdSdkNativeInitialization: NSObject {
         let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
         DatadogSDKWrapper.shared.initialize(
             coreConfiguration: coreConfiguration,
-            loggerConfiguration: Logger.Configuration(sdkConfiguration),
+            loggerConfiguration: DatadogLogs.Logger.Configuration(sdkConfiguration),
             trackingConsent: sdkConfiguration.trackingConsent
         )
 

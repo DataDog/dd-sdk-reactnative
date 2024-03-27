@@ -23,7 +23,7 @@ public class DatadogSDKWrapper {
 
     // Initialization callbacks
     internal var onCoreInitializedListeners: [OnCoreInitializedListener] = []
-    internal var loggerConfiguration = Logger.Configuration()
+    internal var loggerConfiguration = DatadogLogs.Logger.Configuration()
     // Core instance
     private var coreInstance: DatadogCoreProtocol? = nil
 
@@ -46,7 +46,7 @@ public class DatadogSDKWrapper {
     // SDK Wrapper
     internal func initialize(
         coreConfiguration: Datadog.Configuration,
-        loggerConfiguration: Logger.Configuration,
+        loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
         let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
@@ -109,7 +109,7 @@ public class DatadogSDKWrapper {
             return CoreRegistry.default
         }()
 
-        return Logger.create(with: loggerConfiguration, in: core)
+        return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
     }
 
     // Telemetry
