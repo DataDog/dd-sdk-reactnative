@@ -82,7 +82,7 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     customEndpoints?.let {
         map.put("customEndpoints", it.toReadableJavaOnlyMap())
     }
-    additionalConfig?.let { map.put("additionalConfig", it.toReadableMap()) }
+    additionalConfig?.let { map.put("additionalConfiguration", it.toReadableMap()) }
     configurationForTelemetry?.let {
         map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
     }

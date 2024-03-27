@@ -34,7 +34,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         batchSize = getString("batchSize"),
         trackBackgroundEvents = getBoolean("trackBackgroundEvents"),
         customEndpoints = getMap("customEndpoints")?.asCustomEndpoints(),
-        additionalConfig = getMap("additionalConfig")?.toHashMap(),
+        additionalConfig = getMap("additionalConfiguration")?.toHashMap(),
         configurationForTelemetry = getMap(
             "configurationForTelemetry"
         )?.asConfigurationForTelemetry(),
