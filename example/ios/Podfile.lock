@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.7.1)
   - DatadogRUM (2.7.1):
     - DatadogInternal (= 2.7.1)
-  - DatadogSDKReactNative (2.3.0):
+  - DatadogSDKReactNative (2.3.1):
     - DatadogCore (~> 2.7.1)
     - DatadogCrashReporting (~> 2.7.1)
     - DatadogLogs (~> 2.7.1)
@@ -18,7 +18,7 @@ PODS:
     - DatadogTrace (~> 2.7.1)
     - DatadogWebViewTracking (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNative/Tests (2.3.0):
+  - DatadogSDKReactNative/Tests (2.3.1):
     - DatadogCore (~> 2.7.1)
     - DatadogCrashReporting (~> 2.7.1)
     - DatadogLogs (~> 2.7.1)
@@ -26,11 +26,11 @@ PODS:
     - DatadogTrace (~> 2.7.1)
     - DatadogWebViewTracking (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay (2.3.0-alpha.0):
+  - DatadogSDKReactNativeSessionReplay (2.3.1-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.7.1)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay/Tests (2.3.0-alpha.0):
+  - DatadogSDKReactNativeSessionReplay/Tests (2.3.1-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.7.1)
     - React-Core
@@ -577,16 +577,16 @@ SPEC CHECKSUMS:
   DatadogInternal: b9217da25018284c087a2ed4b9bb3b0f26c767c0
   DatadogLogs: 3b4132eefa67f196bb3ab2d603c1a2acd1292615
   DatadogRUM: 8845815ba89f5ab8ceee765ee268f7de36f3e35d
-  DatadogSDKReactNative: 6a8163a6bd13a4fbd290c9afd1bd600143367be1
-  DatadogSDKReactNativeSessionReplay: 15bbd09eed7e63e524d034f5d695961f9140fdb8
+  DatadogSDKReactNative: b4fda56c29e413be09ef97688b85040900616988
+  DatadogSDKReactNativeSessionReplay: 78612979263ecd7b57d31ba30b2a43f030c2bdb4
   DatadogSessionReplay: f189054bd2fc2d14c487fd614f04b2b8041dd81f
   DatadogTrace: a63da746c609bd4c683bca61a94429889e33b11e
   DatadogWebViewTracking: 713f862ddd89173e0a3f5342cefa23def40f0f48
-  DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
+  DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: ddb55c55295ea51ed98aa7e2e08add2f826309d5
   FBReactNativeSpec: 90fc1a90b4b7a171e0a7c20ea426c1bf6ce4399c
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: c5d68082e772fa1c511173d6b30a9de2c05a69a2
+  glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: d27603b55a48402501ad1928c05411dae9cd6b85
   HMSegmentedControl: 34c1f54d822d8308e7b24f5d901ec674dfa31352
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
