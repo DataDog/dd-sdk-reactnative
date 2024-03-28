@@ -5,6 +5,7 @@
  */
 
 @file:Suppress("TooManyFunctions")
+
 package com.datadog.reactnative
 
 import android.util.Log
@@ -94,13 +95,27 @@ internal fun ReadableMap.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
 }
 
 internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderType>> {
-    val firstPartyHosts = this.toArrayList() as List<ReadableMap>
-    return firstPartyHosts.mapNotNull<ReadableMap, JSONFirstPartyHost> {
-        val match = it.getString("match")
-        val propagatorTypes = it.getArray("propagatorTypes")
-        if (match != null && propagatorTypes != null) {
-            JSONFirstPartyHost(match, propagatorTypes.toArrayList() as List<String>)
-        } else null
+    return this.toList().mapNotNull {
+        if (it == null) {
+            null
+        } else if (it !is Map<*, *>) {
+            Log.e(
+                javaClass.simpleName,
+                "Ignoring $it (${it.javaClass.simpleName}) because it is not of type Map"
+            )
+            null
+        } else {
+            val match = it["match"] as? String
+
+            @Suppress("UNCHECKED_CAST")
+            val propagatorTypes = it["propagatorTypes"] as? List<String>
+
+            if (match != null && propagatorTypes != null) {
+                JSONFirstPartyHost(match, propagatorTypes)
+            } else {
+                null
+            }
+        }
     }.asFirstPartyHosts()
 }
 
@@ -239,7 +254,13 @@ internal fun CustomEndpoints.toReadableMap(): ReadableMap {
     return map
 }
 
-private fun buildProxyConfig(type: String, address: String, port: Int, username: String?, password: String?): Pair<Proxy, ProxyAuthenticator?>? {
+private fun buildProxyConfig(
+    type: String,
+    address: String,
+    port: Int,
+    username: String?,
+    password: String?
+): Pair<Proxy, ProxyAuthenticator?>? {
     val proxyType = when (type.lowercase(Locale.US)) {
         "http", "https" -> Proxy.Type.HTTP
         "socks" -> Proxy.Type.SOCKS
@@ -250,11 +271,7 @@ private fun buildProxyConfig(type: String, address: String, port: Int, username:
             )
             null
         }
-    }
-
-    if (proxyType == null) {
-        return null
-    }
+    } ?: return null
 
     val proxy = Proxy(proxyType, InetSocketAddress(address, port))
 
