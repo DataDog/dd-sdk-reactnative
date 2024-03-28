@@ -9,8 +9,11 @@ package com.datadog.reactnative
 
 import android.util.Log
 import com.datadog.android.trace.TracingHeaderType
+import com.facebook.infer.annotation.Assertions
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableNativeMap
+import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.WritableNativeMap
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -94,12 +97,15 @@ internal fun ReadableMap.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
 }
 
 internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderType>> {
-    val firstPartyHosts = this.toArrayList() as List<ReadableMap>
-    return firstPartyHosts.mapNotNull<ReadableMap, JSONFirstPartyHost> {
-        val match = it.getString("match")
-        val propagatorTypes = it.getArray("propagatorTypes")
+    val firstPartyHosts = this.toHashMapArrayList()
+    return firstPartyHosts.mapNotNull {
+        val match = it["match"] as? String
+
+        @Suppress("UNCHECKED_CAST")
+        val propagatorTypes = it["propagatorTypes"] as? List<String>
+
         if (match != null && propagatorTypes != null) {
-            JSONFirstPartyHost(match, propagatorTypes.toArrayList() as List<String>)
+            JSONFirstPartyHost(match, propagatorTypes)
         } else null
     }.asFirstPartyHosts()
 }
