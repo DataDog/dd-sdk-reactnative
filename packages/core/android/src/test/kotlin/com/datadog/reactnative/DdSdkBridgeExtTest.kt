@@ -14,22 +14,22 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
 
-
 @Extensions(
-        ExtendWith(MockitoExtension::class),
-        ExtendWith(ForgeExtension::class)
+    ExtendWith(MockitoExtension::class),
+    ExtendWith(ForgeExtension::class)
 )
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ForgeConfiguration(value = BaseConfigurator::class)
 internal class DdSdkBridgeExtTest {
     @Test
     fun `M call toKotlinHashMap W 1-level JavaOnlyMap`() {
-        val readableMap = mapOf(
-            "null" to null,
-            "boolean" to true,
-            "number" to 1.23,
-            "string" to "test"
-        ).toReadableMap()
+        val readableMap =
+            mapOf(
+                "null" to null,
+                "boolean" to true,
+                "number" to 1.23,
+                "string" to "test"
+            ).toReadableMap()
 
         val hashMap = readableMap.toKotlinHashMap()
 
@@ -41,15 +41,17 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toKotlinHashMap W JavaOnlyMap with nested JavaOnlyMap`() {
-        val readableMap = mapOf(
-            "null" to null,
-            "boolean" to true,
-            "number" to 1.23,
-            "string" to "test",
-            "map" to mapOf(
-                "test" to "test"
+        val readableMap =
+            mapOf(
+                "null" to null,
+                "boolean" to true,
+                "number" to 1.23,
+                "string" to "test",
+                "map" to
+                    mapOf(
+                        "test" to "test"
+                    ).toReadableMap()
             ).toReadableMap()
-        ).toReadableMap()
 
         val hashMap = readableMap.toKotlinHashMap()
 
@@ -58,18 +60,19 @@ internal class DdSdkBridgeExtTest {
         assert(hashMap["number"] == 1.23)
         assert(hashMap["string"] == "test")
         assert(hashMap["map"] is HashMap<*, *>)
-        assert((hashMap["map"] as HashMap<*,*>)["test"] == "test")
+        assert((hashMap["map"] as HashMap<*, *>)["test"] == "test")
     }
 
     @Test
     fun `M call toKotlinHashMap W JavaOnlyMap with nested JavaOnlyArray`() {
-        val readableMap = mapOf(
+        val readableMap =
+            mapOf(
                 "null" to null,
                 "boolean" to true,
                 "number" to 1.23,
                 "string" to "test",
                 "array" to listOf(null, true, 1.23, "test").toReadableArray()
-        ).toReadableMap()
+            ).toReadableMap()
 
         val hashMap = readableMap.toKotlinHashMap()
 
@@ -87,16 +90,18 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toKotlinHashMap W JavaOnlyMap with nested JavaOnlyMap and JavaOnlyArray`() {
-        val readableMap = mapOf(
+        val readableMap =
+            mapOf(
                 "null" to null,
                 "boolean" to true,
                 "number" to 1.23,
                 "string" to "test",
-                "map" to mapOf(
+                "map" to
+                    mapOf(
                         "test" to "test"
-                ).toReadableMap(),
-                "array" to listOf(null, true, 1.23, "test").toReadableArray(),
-        ).toReadableMap()
+                    ).toReadableMap(),
+                "array" to listOf(null, true, 1.23, "test").toReadableArray()
+            ).toReadableMap()
 
         val hashMap = readableMap.toKotlinHashMap()
 
@@ -105,7 +110,7 @@ internal class DdSdkBridgeExtTest {
         assert(hashMap["number"] == 1.23)
         assert(hashMap["string"] == "test")
         assert(hashMap["map"] is HashMap<*, *>)
-        assert((hashMap["map"] as HashMap<*,*>)["test"] == "test")
+        assert((hashMap["map"] as HashMap<*, *>)["test"] == "test")
 
         val array = hashMap["array"] as ArrayList<*>
         assert(array[0] == null)
@@ -115,25 +120,29 @@ internal class DdSdkBridgeExtTest {
     }
 
     @Test
-    fun `M call toKotlinHashMap W JavaOnlyMap with multiple nested JavaOnlyMap and JavaOnlyArray`() {
-        val readableMap = mapOf(
+    fun `M call toKotlinHashMap W JavaOnlyMap with multiple nested JavaOnlyMap & JavaOnlyArray`() {
+        val readableMap =
+            mapOf(
                 "null" to null,
                 "boolean" to true,
                 "number" to 1.23,
                 "string" to "test",
-                "map1" to mapOf(
+                "map1" to
+                    mapOf(
                         "test" to "test"
-                ).toReadableMap(),
+                    ).toReadableMap(),
                 "array1" to listOf(null, true, 1.23, "test").toReadableArray(),
-                "map2" to mapOf(
+                "map2" to
+                    mapOf(
                         "nested_map" to mapOf("test" to "test").toReadableMap(),
                         "nested_array" to listOf(null, true, 1.23, "test").toReadableArray()
-                ).toReadableMap(),
-                "array2" to listOf(
-                    mapOf("test" to "test").toReadableMap(),
-                    listOf(null, true, 1.23, "test").toReadableArray()
-                ).toReadableArray()
-        ).toReadableMap()
+                    ).toReadableMap(),
+                "array2" to
+                    listOf(
+                        mapOf("test" to "test").toReadableMap(),
+                        listOf(null, true, 1.23, "test").toReadableArray()
+                    ).toReadableArray()
+            ).toReadableMap()
 
         val hashMap = readableMap.toKotlinHashMap()
 
@@ -142,7 +151,7 @@ internal class DdSdkBridgeExtTest {
         assert(hashMap["number"] == 1.23)
         assert(hashMap["string"] == "test")
         assert(hashMap["map1"] is HashMap<*, *>)
-        assert((hashMap["map1"] as HashMap<*,*>)["test"] == "test")
+        assert((hashMap["map1"] as HashMap<*, *>)["test"] == "test")
 
         val array = hashMap["array1"] as ArrayList<*>
         assert(array[0] == null)
@@ -172,14 +181,15 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toKotlinArrayList W JavaOnlyArray with nested objects`() {
-        val readableArray = listOf(
-            null,
-            true,
-            1.23,
-            "test",
-            mapOf("test" to "test").toReadableMap(),
-            listOf(null, true, 1.23, "test").toReadableArray()
-        ).toReadableArray()
+        val readableArray =
+            listOf(
+                null,
+                true,
+                1.23,
+                "test",
+                mapOf("test" to "test").toReadableMap(),
+                listOf(null, true, 1.23, "test").toReadableArray()
+            ).toReadableArray()
 
         val kotlinArray = readableArray.toKotlinArrayList()
         assert(kotlinArray[0] == null)
@@ -197,9 +207,10 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toKotlinHashMap W malformed ReadableMap`() {
-        val readableMap = mapOf(
-            "map" to mapOf("test" to "test") // NOT a ReadableMap
-        ).toReadableMap()
+        val readableMap =
+            mapOf(
+                "map" to mapOf("test" to "test") // NOT a ReadableMap
+            ).toReadableMap()
 
         assertThrows<IllegalArgumentException> {
             readableMap.toKotlinHashMap()
@@ -208,10 +219,11 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toKotlinArrayList W malformed ReadableArray`() {
-        val readableArray = listOf(
-            mapOf("test" to "test"), // NOT a ReadableMap
-            listOf(null, true, 1.23, "test") // NOT a ReadableArray
-        ).toReadableArray()
+        val readableArray =
+            listOf(
+                mapOf("test" to "test"), // NOT a ReadableMap
+                listOf(null, true, 1.23, "test") // NOT a ReadableArray
+            ).toReadableArray()
 
         assertThrows<IllegalArgumentException> {
             readableArray.toKotlinArrayList()
@@ -220,11 +232,12 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toHashMapArrayList W valid readable array`() {
-        val readableArray = listOf(
-            mapOf("a1" to "a2").toReadableMap(),
-            mapOf("b1" to "b2").toReadableMap(),
-            mapOf("c1" to "c2").toReadableMap()
-        ).toReadableArray()
+        val readableArray =
+            listOf(
+                mapOf("a1" to "a2").toReadableMap(),
+                mapOf("b1" to "b2").toReadableMap(),
+                mapOf("c1" to "c2").toReadableMap()
+            ).toReadableArray()
 
         assertDoesNotThrow {
             val kotlinArray = readableArray.toHashMapArrayList()
@@ -234,11 +247,12 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toHashMapArrayList W malformed readable array`() {
-        val readableArray = listOf(
-            mapOf("a1" to "a2").toReadableMap(),
-            listOf("test", 1, false).toReadableArray(),
-            mapOf("c1" to "c2").toReadableMap()
-        ).toReadableArray()
+        val readableArray =
+            listOf(
+                mapOf("a1" to "a2").toReadableMap(),
+                listOf("test", 1, false).toReadableArray(),
+                mapOf("c1" to "c2").toReadableMap()
+            ).toReadableArray()
 
         assertThrows<TypeCastException> {
             readableArray.toHashMapArrayList()
@@ -247,11 +261,12 @@ internal class DdSdkBridgeExtTest {
 
     @Test
     fun `M call toHashMapArrayList W null values skips null`() {
-        val readableArray = listOf(
-            mapOf("a1" to "a2").toReadableMap(),
-            null,
-            mapOf("c1" to "c2").toReadableMap()
-        ).toReadableArray()
+        val readableArray =
+            listOf(
+                mapOf("a1" to "a2").toReadableMap(),
+                null,
+                mapOf("c1" to "c2").toReadableMap()
+            ).toReadableArray()
 
         assertDoesNotThrow {
             val kotlinArray = readableArray.toHashMapArrayList()

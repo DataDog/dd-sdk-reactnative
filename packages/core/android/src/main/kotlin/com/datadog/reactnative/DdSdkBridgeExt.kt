@@ -9,11 +9,9 @@ package com.datadog.reactnative
 import com.facebook.infer.annotation.Assertions
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.bridge.ReadableNativeMap
 import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
-import java.lang.NullPointerException
 
 /**
  * Converts the List to a WritableNativeArray.
@@ -42,7 +40,7 @@ internal fun List<*>.toWritableArray(): WritableNativeArray {
  */
 internal fun Map<*, *>.toWritableMap(): WritableNativeMap {
     val map = WritableNativeMap()
-    for ((k,v) in iterator()) {
+    for ((k, v) in iterator()) {
         val key = (k as? String) ?: k.toString()
         @Suppress("NotImplementedDeclaration")
         when (v) {
@@ -69,8 +67,10 @@ internal fun ReadableArray.toHashMapArrayList(): List<HashMap<*, *>> {
         if (it is HashMap<*, *> || it == null) {
             it as HashMap<*, *>?
         } else {
-            throw TypeCastException("Cannot convert ReadableArray to ArrayList of HashMap(s): " +
-                    "$it is not of type HashMap<*,*>")
+            throw TypeCastException(
+                "Cannot convert ReadableArray to ArrayList of HashMap(s): " +
+                    "$it is not of type HashMap<*,*>",
+            )
         }
     }
 }
@@ -106,23 +106,23 @@ internal fun ReadableMap.toKotlinHashMap(): HashMap<String, Any> {
  */
 internal fun ReadableArray.toKotlinArrayList(): ArrayList<*> {
     val arrayList = ArrayList<Any?>()
-        for (i in 0 until size()) {
-            // ReadableArray throws a null pointer exception if getMap(i) or getArray(i) returns null
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                when (getType(i)) {
-                    ReadableType.Null -> arrayList.add(null as Any?)
-                    ReadableType.Boolean -> arrayList.add(getBoolean(i))
-                    ReadableType.Number -> arrayList.add(getDouble(i))
-                    ReadableType.String -> arrayList.add(getString(i))
-                    ReadableType.Map -> arrayList.add(getMap(i).toKotlinHashMap())
-                    ReadableType.Array -> arrayList.add(getArray(i).toKotlinArrayList())
-                    else -> throw IllegalArgumentException("Unhandled ReadableType: $i.")
-                }
-            }  catch (err: NullPointerException) {
-                throw IllegalArgumentException("Could not convert object at index: $i.", err)
+    for (i in 0 until size()) {
+        // ReadableArray throws a null pointer exception if getMap(i) or getArray(i) returns null
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            when (getType(i)) {
+                ReadableType.Null -> arrayList.add(null as Any?)
+                ReadableType.Boolean -> arrayList.add(getBoolean(i))
+                ReadableType.Number -> arrayList.add(getDouble(i))
+                ReadableType.String -> arrayList.add(getString(i))
+                ReadableType.Map -> arrayList.add(getMap(i).toKotlinHashMap())
+                ReadableType.Array -> arrayList.add(getArray(i).toKotlinArrayList())
+                else -> throw IllegalArgumentException("Unhandled ReadableType: $i.")
             }
+        } catch (err: NullPointerException) {
+            throw IllegalArgumentException("Could not convert object at index: $i.", err)
         }
+    }
 
     return arrayList
 }
