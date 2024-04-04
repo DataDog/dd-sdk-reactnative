@@ -6,33 +6,90 @@
 
 package com.datadog.reactnative
 
+import android.util.Log
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
+import com.facebook.react.bridge.WritableArray
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
 
-internal fun List<*>.toWritableArray(): WritableNativeArray {
-    val list = WritableNativeArray()
-    for (it in iterator()) {
-        @Suppress("NotImplementedDeclaration")
-        when (it) {
-            null -> list.pushNull()
-            is Int -> list.pushInt(it)
-            is Long -> list.pushDouble(it.toDouble())
-            is Float -> list.pushDouble(it.toDouble())
-            is Double -> list.pushDouble(it)
-            is String -> list.pushString(it)
-            is List<*> -> list.pushArray(it.toWritableArray())
-            is Map<*, *> -> list.pushMap(it.toWritableMap())
-            else -> TODO()
-        }
-    }
-    return list
+/**
+ * Converts the [List] to a [WritableNativeArray].
+ */
+internal fun List<*>.toWritableArray(): WritableArray {
+    return this.toWritableArray(
+        createWritableMap = { WritableNativeMap() },
+        createWritableArray = { WritableNativeArray() }
+    )
 }
 
-internal fun Map<*, *>.toWritableMap(): WritableNativeMap {
-    val map = WritableNativeMap()
-    for ((k,v) in iterator()) {
+/**
+ * Converts the [List] to a [WritableArray].
+ * @param createWritableMap a function to provide a concrete instance of new WritableMap(s)
+ * @param createWritableArray a function to provide a concrete instance of new WritableArray(s)
+ */
+internal fun List<*>.toWritableArray(
+    createWritableMap: () -> WritableMap,
+    createWritableArray: () -> WritableArray
+): WritableArray {
+    val writableArray = createWritableArray()
+
+    for (it in iterator()) {
+        when (it) {
+            null -> writableArray.pushNull()
+            is Int -> writableArray.pushInt(it)
+            is Long -> writableArray.pushDouble(it.toDouble())
+            is Float -> writableArray.pushDouble(it.toDouble())
+            is Double -> writableArray.pushDouble(it)
+            is String -> writableArray.pushString(it)
+            is Boolean -> writableArray.pushBoolean(it)
+            is List<*> -> writableArray.pushArray(
+                it.toWritableArray(
+                    createWritableMap,
+                    createWritableArray
+                )
+            )
+            is Map<*, *> -> writableArray.pushMap(
+                it.toWritableMap(
+                    createWritableMap,
+                    createWritableArray
+                )
+            )
+            else -> Log.e(
+                javaClass.simpleName,
+                "toWritableArray(): Unhandled type ${it.javaClass.simpleName} has been ignored"
+            )
+        }
+    }
+
+    return writableArray
+}
+
+/**
+ * Converts the [Map] to a [WritableNativeMap].
+ */
+internal fun Map<*, *>.toWritableMap(): WritableMap {
+    return this.toWritableMap(
+        createWritableMap = { WritableNativeMap() },
+        createWritableArray = { WritableNativeArray() }
+    )
+}
+
+/**
+ * Converts the [Map] to a [WritableMap].
+ * @param createWritableMap a function to provide a concrete instance for WritableMap(s)
+ * @param createWritableArray a function to provide a concrete instance for WritableArray(s)
+ */
+internal fun Map<*, *>.toWritableMap(
+    createWritableMap: () -> WritableMap,
+    createWritableArray: () -> WritableArray
+): WritableMap {
+    val map = createWritableMap()
+
+    for ((k, v) in iterator()) {
         val key = (k as? String) ?: k.toString()
-        @Suppress("NotImplementedDeclaration")
         when (v) {
             null -> map.putNull(key)
             is Int -> map.putInt(key, v)
@@ -40,10 +97,110 @@ internal fun Map<*, *>.toWritableMap(): WritableNativeMap {
             is Float -> map.putDouble(key, v.toDouble())
             is Double -> map.putDouble(key, v)
             is String -> map.putString(key, v)
-            is List<*> -> map.putArray(key, v.toWritableArray())
-            is Map<*, *> -> map.putMap(key, v.toWritableMap())
-            else -> TODO()
+            is Boolean -> map.putBoolean(key, v)
+            is List<*> -> map.putArray(
+                key,
+                v.toWritableArray(
+                    createWritableMap,
+                    createWritableArray
+                )
+            )
+            is Map<*, *> -> map.putMap(
+                key,
+                v.toWritableMap(
+                    createWritableMap,
+                    createWritableArray
+                )
+            )
+            else -> Log.e(
+                javaClass.simpleName,
+                "toWritableMap(): Unhandled type ${v.javaClass.simpleName} has been ignored"
+            )
         }
     }
+
     return map
+}
+
+/**
+ * Recursively converts the [ReadableMap] to a [Map] which only contains Kotlin stdlib objects,
+ * such as [List], [Map] and the raw types.
+ */
+internal fun ReadableMap.toMap(): Map<String, Any> {
+    val map = this.toHashMap()
+    val iterator = map.keys.iterator()
+
+    fun updateMap(key: String, value: Any?) {
+        if (value != null) {
+            map[key] = value
+        } else {
+            map.remove(key)
+            Log.e(
+                javaClass.simpleName,
+                "toMap(): Cannot convert nested object for key: $key"
+            )
+        }
+    }
+
+    while (iterator.hasNext()) {
+        val key = iterator.next()
+        try {
+            when (val type = getType(key)) {
+                ReadableType.Map -> updateMap(key, getMap(key)?.toMap())
+                ReadableType.Array -> updateMap(key, getArray(key)?.toList())
+                ReadableType.Null, ReadableType.Boolean, ReadableType.Number, ReadableType.String -> {}
+                else -> {
+                    map.remove(key)
+                    Log.e(
+                        javaClass.simpleName,
+                        "toMap(): Skipping unhandled type [${type.name}] for key: $key"
+                    )
+                }
+            }
+        } catch (err: IllegalArgumentException) {
+            map.remove(key)
+            Log.e(
+                javaClass.simpleName,
+                "toMap(): Could not convert object for key: $key",
+                err
+            )
+        }
+    }
+
+    return map
+}
+
+/**
+ * Recursively converts the [ReadableArray] to a [List] which only contains Kotlin stdlib objects,
+ * such as [List], [Map] and the raw types.
+ * or [List], instead of [ReadableMap] and [ReadableArray] respectively).
+ */
+internal fun ReadableArray.toList(): List<*> {
+    val list = mutableListOf<Any?>()
+    for (i in 0 until size()) {
+        // ReadableArray throws a null pointer exception if getMap(i) or getArray(i) returns null
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            when (val type = getType(i)) {
+                ReadableType.Null -> list.add(null)
+                ReadableType.Boolean -> list.add(getBoolean(i))
+                ReadableType.Number -> list.add(getDouble(i))
+                ReadableType.String -> list.add(getString(i))
+                ReadableType.Map -> list.add(getMap(i).toMap())
+                ReadableType.Array -> list.add(getArray(i).toList())
+                else -> Log.e(
+                    javaClass.simpleName,
+                    "toList(): Unhandled ReadableType: ${type.name}."
+                )
+            }
+        } catch (err: NullPointerException) {
+            Log.e(
+                javaClass.simpleName,
+                "toList(): Could not convert object at index: $i.",
+                err
+            )
+        }
+    }
+
+    return list
 }

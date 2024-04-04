@@ -51,3 +51,12 @@ fun Set<*>.toReadableArray(): ReadableArray {
     // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
     return JavaOnlyArray.from(this.toList())
 }
+
+fun ReadableMap.keys(): List<String> {
+    val keys = mutableListOf<String>()
+    val iterator = this.keySetIterator()
+    while (iterator.hasNextKey()) {
+        keys.add(iterator.nextKey())
+    }
+    return keys
+}
