@@ -31,6 +31,7 @@ package/android/src/oldarch/kotlin/com/datadog/reactnative/DdSdk.kt
 package/android/src/oldarch/kotlin/com/datadog/reactnative/DdTrace.kt
 package/android/src/test/kotlin/com/datadog/reactnative/DdLogsTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/DdRumTest.kt
+package/android/src/test/kotlin/com/datadog/reactnative/DdSdkBridgeExtTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/DdSdkConfigurationTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/DdSdkNativeInitializationTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/DdSdkTest.kt
