@@ -18,7 +18,7 @@ import com.facebook.react.bridge.ReadableMap
 @Suppress("TooManyFunctions")
 class DdRum(
     reactContext: ReactApplicationContext,
-    datadogWrapper: DatadogWrapper
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
     private val implementation = DdRumImplementation(datadog = datadogWrapper)
@@ -30,7 +30,8 @@ class DdRum(
      * @param key The view unique key identifier.
      * @param name The view name.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the view started (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the view started (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     fun startView(

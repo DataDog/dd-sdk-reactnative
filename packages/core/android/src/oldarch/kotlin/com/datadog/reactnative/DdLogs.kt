@@ -17,7 +17,7 @@ import com.facebook.react.bridge.ReadableMap
  */
 class DdLogs(
     reactContext: ReactApplicationContext,
-    datadogWrapper: DatadogWrapper
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
     private val implementation = DdLogsImplementation(datadog = datadogWrapper)

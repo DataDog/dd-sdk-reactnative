@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.facebook.fbreact.specs.NativeDdLogsSpec
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -15,10 +16,11 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's Logs feature.
  */
 class DdLogs(
-    reactContext: ReactApplicationContext
+    reactContext: ReactApplicationContext,
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : NativeDdLogsSpec(reactContext) {
 
-    private val implementation = DdLogsImplementation()
+    private val implementation = DdLogsImplementation(datadog = datadogWrapper)
 
     override fun getName(): String = DdLogsImplementation.NAME
 

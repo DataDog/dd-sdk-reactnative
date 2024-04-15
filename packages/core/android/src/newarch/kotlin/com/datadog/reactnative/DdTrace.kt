@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.facebook.fbreact.specs.NativeDdTraceSpec
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -26,7 +27,8 @@ class DdTrace(
      * Start a span, and returns a unique identifier for the span.
      * @param operation The operation name of the span.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the operation started (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the operation started (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun startSpan(operation: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
@@ -37,7 +39,8 @@ class DdTrace(
      * Finish a started span.
      * @param spanId The unique identifier of the span.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the operation stopped (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the operation stopped (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun finishSpan(spanId: String, context: ReadableMap, timestampMs: Double, promise: Promise) {

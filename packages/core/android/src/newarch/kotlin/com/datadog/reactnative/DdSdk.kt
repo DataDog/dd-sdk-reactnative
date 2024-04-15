@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.facebook.fbreact.specs.NativeDdSdkSpec
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -13,10 +14,11 @@ import com.facebook.react.bridge.ReadableMap
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
-    reactContext: ReactApplicationContext
+    reactContext: ReactApplicationContext,
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : NativeDdSdkSpec(reactContext) {
 
-    private val implementation = DdSdkImplementation(reactContext)
+    private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
 
     override fun getName(): String = DdSdkImplementation.NAME
 
