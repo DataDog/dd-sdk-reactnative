@@ -6,7 +6,6 @@
 
 package com.datadog.reactnative
 
-import com.facebook.fbreact.specs.NativeDdLogsSpec
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
