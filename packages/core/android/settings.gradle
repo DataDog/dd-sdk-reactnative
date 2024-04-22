@@ -1,1 +1,2 @@
-includeBuild('../../../node_modules/react-native-gradle-plugin')
+// Uncomment here and in build.gradle for getting rid of IDE errors for new architecture:
+//includeBuild('../../../node_modules/react-native-gradle-plugin')
