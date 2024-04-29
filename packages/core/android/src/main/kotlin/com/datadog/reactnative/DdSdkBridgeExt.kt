@@ -7,6 +7,7 @@
 package com.datadog.reactnative
 
 import android.util.Log
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
@@ -186,8 +187,18 @@ internal fun ReadableArray.toList(): List<*> {
                 ReadableType.Boolean -> list.add(getBoolean(i))
                 ReadableType.Number -> list.add(getDouble(i))
                 ReadableType.String -> list.add(getString(i))
-                ReadableType.Map -> list.add(getMap(i).toMap())
-                ReadableType.Array -> list.add(getArray(i).toList())
+                ReadableType.Map -> {
+                    // getMap() return type is nullable in previous RN versions
+                    @Suppress("USELESS_ELVIS")
+                    val readableMap = getMap(i) ?: Arguments.createMap()
+                    list.add(readableMap.toMap())
+                }
+                ReadableType.Array -> {
+                    // getArray() return type is nullable in previous RN versions
+                    @Suppress("USELESS_ELVIS")
+                    val readableArray = getArray(i) ?: Arguments.createArray()
+                    list.add(readableArray.toList())
+                }
                 else -> Log.e(
                     javaClass.simpleName,
                     "toList(): Unhandled ReadableType: ${type.name}."
