@@ -8417,6 +8417,7 @@ __metadata:
     react: 18.2.0
     react-native: 0.71.10
     react-native-builder-bob: 0.17.1
+    react-native-gradle-plugin: ^0.71.19
     react-native-webview: 11.26.1
     react-test-renderer: 18.1.0
     typescript: 4.8.4
