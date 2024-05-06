@@ -18,6 +18,8 @@ buildscript {
     classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
     classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
     classpath 'com.github.bjoernq:unmockplugin:0.7.9'
+// Uncomment here and in settings.gradle for getting rid of IDE errors for new architecture:
+//    classpath "com.facebook.react:react-native-gradle-plugin"
   }
 }
 

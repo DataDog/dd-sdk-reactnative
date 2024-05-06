@@ -15,9 +15,12 @@ import com.facebook.react.bridge.ReadableMap
  * The entry point to use Datadog's RUM feature.
  */
 @Suppress("TooManyFunctions")
-class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContext) {
+class DdRum(
+    reactContext: ReactApplicationContext,
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
+) : NativeDdRumSpec(reactContext) {
 
-    private val implementation = DdRumImplementation()
+    private val implementation = DdRumImplementation(datadog = datadogWrapper)
 
     override fun getName(): String = DdRumImplementation.NAME
 
@@ -26,7 +29,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param key The view unique key identifier.
      * @param name The view name.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the view started (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the view started (in milliseconds). If not provided,
+     * current timestamp will be used.
      */
     @ReactMethod
     override fun startView(
@@ -43,7 +47,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * Stop tracking a RUM View.
      * @param key The view unique key identifier.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the view stopped (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the view stopped (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun stopView(key: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
@@ -55,7 +60,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the action started (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the action started (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun startAction(
@@ -73,7 +79,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the action stopped (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the action stopped (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun stopAction(
@@ -91,7 +98,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the action occurred (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @ReactMethod
     override fun addAction(
@@ -110,7 +118,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param method The resource method (GET, POST, …).
      * @param url The resource url.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the resource started (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the resource started (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @Suppress("LongParameterList")
     @ReactMethod
@@ -132,7 +141,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param kind The resource's kind (xhr, document, image, css, font, …).
      * @param size The resource size in bytes.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the resource stopped (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the resource stopped (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @Suppress("LongParameterList")
     @ReactMethod
@@ -154,7 +164,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
      * @param source The error source (network, source, console, logger, …).
      * @param stacktrace The error stacktrace.
      * @param context The additional context to send.
-     * @param timestampMs The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
+     * @param timestampMs The timestamp when the error occurred (in milliseconds).
+     * If not provided, current timestamp will be used.
      */
     @Suppress("LongParameterList")
     @ReactMethod
@@ -170,8 +181,11 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
     }
 
     /**
-     * Adds a specific timing in the active View. The timing duration will be computed as the difference between the time the View was started and the time this function was called.
-     * @param name The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
+     * Adds a specific timing in the active View. The timing duration will be computed as the
+     * difference between the time the View was started and the time this function was called.
+     * @param name The name of the new custom timing attribute.
+     * Timings can be nested up to 8 levels deep.
+     * Names using more than 8 levels will be sanitized by SDK.
      */
     @ReactMethod
     override fun addTiming(name: String, promise: Promise) {
@@ -188,7 +202,8 @@ class DdRum(reactContext: ReactApplicationContext) : NativeDdRumSpec(reactContex
 
     /**
      * Adds result of evaluating a feature flag to the view.
-     * Feature flag evaluations are local to the active view and are cleared when the view is stopped.
+     * Feature flag evaluations are local to the active view and are cleared when the view
+     * is stopped.
      * @param name The name of the feature flag
      * @param value The value the feature flag evaluated to, encapsulated in a Map
      */
