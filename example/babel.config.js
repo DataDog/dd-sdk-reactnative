@@ -4,7 +4,7 @@ const pakNavigation = require('../packages/react-navigation/package.json');
 const pakNativeNavigation = require('../packages/react-native-navigation/package.json');
 
 module.exports = {
-  presets: ['module:metro-react-native-babel-preset'],
+  presets: ['module:@react-native/babel-preset'],
   plugins: [
     [
       'module-resolver',
