@@ -3911,7 +3911,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-code-push@workspace:packages/codepush"
   dependencies:
-    "@datadog/mobile-react-native": ^2.3.2
+    "@datadog/mobile-react-native": ^2.3.3
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.17.1
     react-native-code-push: 7.0.5
@@ -3927,7 +3927,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-navigation@workspace:packages/react-native-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.3.2
+    "@datadog/mobile-react-native": ^2.3.3
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.17.1
     react-native-gesture-handler: 1.10.3
@@ -3967,7 +3967,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native@^2.3.2, @datadog/mobile-react-native@workspace:packages/core":
+"@datadog/mobile-react-native@^2.3.3, @datadog/mobile-react-native@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
@@ -3983,7 +3983,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-navigation@workspace:packages/react-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.3.2
+    "@datadog/mobile-react-native": ^2.3.3
     "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.8"
     "@react-navigation/native-v6": "npm:@react-navigation/native@6.1.2"
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2"
@@ -15919,6 +15919,13 @@ __metadata:
     invariant: "npm:^2.2.4"
     prop-types: "npm:^15.7.2"
   checksum: fd06147df96fe0b38752c653a2d4bf49570396922719939a31b494197fd30e6775e4c5e73f889af808204dcfbc087eb00f31a0b676c838d5a35e2b017ae9a419
+  languageName: node
+  linkType: hard
+
+"react-native-gradle-plugin@npm:^0.71.19":
+  version: 0.71.19
+  resolution: "react-native-gradle-plugin@npm:0.71.19"
+  checksum: 2e3ab679f0b81edd81b9fb88a73a16c8b9b6dbef4e7158fd894c42e6dff04ba8d11f1b9663ffa2c30d0d9deee3cd44b033cd280322c010be3c290e4422088a7a
   languageName: node
   linkType: hard
 
