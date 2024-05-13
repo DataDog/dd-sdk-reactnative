@@ -47,10 +47,9 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERSION = '_dd.sdk_version';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
-
-    private static wasInitialized = false;
     private static wasAutoInstrumented = false;
     private static features?: AutoInstrumentationConfiguration;
+    private static _isInitialized = false;
 
     /**
      * Initializes the Datadog SDK.
@@ -72,7 +71,7 @@ export class DdSdkReactNative {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): Promise<void> => {
-        if (DdSdkReactNative.wasInitialized) {
+        if (DdSdkReactNative._isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
                 SdkVerbosity.WARN
@@ -91,7 +90,7 @@ export class DdSdkReactNative {
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
-        DdSdkReactNative.wasInitialized = true;
+        DdSdkReactNative._isInitialized = true;
         BufferSingleton.onInitialization();
     };
 
@@ -211,6 +210,13 @@ export class DdSdkReactNative {
         InternalLog.log('Clearing all data', SdkVerbosity.DEBUG);
         return DdSdk.clearAllData();
     };
+
+    /**
+     * Returns `true` if the SDK was initialized, `false` otherwise.
+     */
+    public static isInitialized() {
+        return DdSdkReactNative._isInitialized;
+    }
 
     private static buildConfiguration = (
         configuration: DdSdkReactNativeConfiguration,

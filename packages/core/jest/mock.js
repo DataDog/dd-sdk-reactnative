@@ -26,6 +26,7 @@ module.exports = {
         initialize: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        isInitialized: jest.fn().mockImplementation(() => true),
         setUser: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
@@ -105,7 +106,12 @@ module.exports = {
             .mockImplementation(() => new Promise(resolve => resolve())),
         stopSession: jest
             .fn()
-            .mockImplementation(() => new Promise(resolve => resolve()))
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        getCurrentSessionId: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve('test-session-id'))
+            )
     },
 
     DatadogProvider: DatadogProviderMock

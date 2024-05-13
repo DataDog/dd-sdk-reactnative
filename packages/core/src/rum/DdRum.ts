@@ -6,6 +6,7 @@
 
 import type { GestureResponderEvent } from 'react-native';
 
+import { DdSdkReactNative } from '../DdSdkReactNative';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
@@ -346,6 +347,13 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.addFeatureFlagEvaluation(name, { value })
         );
     };
+
+    async getCurrentSessionId(): Promise<string | undefined> {
+        if (!DdSdkReactNative.isInitialized()) {
+            return undefined;
+        }
+        return this.nativeRum.getCurrentSessionId();
+    }
 
     registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {
         this.errorEventMapper = generateErrorEventMapper(errorEventMapper);

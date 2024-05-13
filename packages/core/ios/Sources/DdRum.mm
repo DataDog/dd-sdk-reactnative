@@ -120,6 +120,13 @@ RCT_REMAP_METHOD(addFeatureFlagEvaluation, withName:(NSString*)name
     [self addFeatureFlagEvaluation:name value:value resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(getCurrentSessionId,
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self getCurrentSessionId:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -155,6 +162,10 @@ RCT_REMAP_METHOD(addFeatureFlagEvaluation, withName:(NSString*)name
 
 - (void)addFeatureFlagEvaluation:(NSString *)name value:(NSDictionary *)value resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation addFeatureFlagEvaluationWithName:name value:value resolve:resolve reject:reject];
+}
+
+- (void)getCurrentSessionId:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation getCurrentSessionId:resolve reject:reject];
 }
 
 - (void)addTiming:(NSString *)name resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

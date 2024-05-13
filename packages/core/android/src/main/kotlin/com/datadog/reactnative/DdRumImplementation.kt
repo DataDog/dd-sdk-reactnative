@@ -264,6 +264,15 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         promise.resolve(null)
     }
 
+    /**
+     * Returns current session ID, or null if unavailable.
+     */
+    fun getCurrentSessionId(promise: Promise) {
+        datadog.getRumMonitor().getCurrentSessionId {
+            promise.resolve(it)
+        }
+    }
+
     // region Internal
 
     private fun String.asRumActionType(): RumActionType {

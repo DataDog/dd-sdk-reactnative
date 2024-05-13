@@ -41,7 +41,7 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        DdSdkReactNative['wasInitialized'] = false;
+        DdSdkReactNative['_isInitialized'] = false;
         DdSdkReactNative['wasAutoInstrumented'] = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();

@@ -211,4 +211,12 @@ class DdRum(
     override fun addFeatureFlagEvaluation(name: String, value: ReadableMap, promise: Promise) {
         implementation.addFeatureFlagEvaluation(name, value, promise)
     }
+
+    /**
+     * Returns current session ID, or null if unavailable.
+     */
+    @ReactMethod
+    fun getCurrentSessionId(promise: Promise) {
+        implementation.getCurrentSessionId(promise)
+    }
 }
