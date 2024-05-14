@@ -147,6 +147,11 @@ export type DdRumType = {
      * Stops the current RUM Session.
      */
     stopSession(): Promise<void>;
+
+    /**
+     * Returns current session ID, or undefined if unavailable.
+     */
+    getCurrentSessionId(): Promise<string | undefined>;
 };
 
 /**

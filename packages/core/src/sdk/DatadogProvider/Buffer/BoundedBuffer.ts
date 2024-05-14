@@ -54,7 +54,7 @@ export class BoundedBuffer extends DatadogBuffer {
         if (this.buffer.length < this.bufferSize) {
             this.buffer.push({ callback, _type: 'VOID' });
         } else {
-            this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
+            this.logBufferOverflow();
         }
 
         return new Promise<void>(resolve => resolve(undefined));
@@ -71,21 +71,12 @@ export class BoundedBuffer extends DatadogBuffer {
                 });
                 this.idTable[bufferId] = null;
             } else {
-                this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
+                this.logBufferOverflow();
             }
 
             return new Promise<string>(resolve => resolve(bufferId));
-        } catch (error) {
-            this.addTelemetryEvent(
-                'Could not generate enough random numbers',
-                getErrorStackTrace(error),
-                'RandomIdGenerationError'
-            );
-            // Not using InternalLog here as it is not yet instantiated
-            console.warn(
-                `[Datadog] Could not generate enough random numbers for RUM buffer. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`
-            );
-
+        } catch (error: any) {
+            this.logRandomIdGenerationError(error);
             return new Promise<string>(resolve => resolve(''));
         }
     };
@@ -101,7 +92,7 @@ export class BoundedBuffer extends DatadogBuffer {
                 _type: 'WITH_ID'
             });
         } else {
-            this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
+            this.logBufferOverflow();
         }
 
         return new Promise<void>(resolve => resolve(undefined));
@@ -162,6 +153,23 @@ export class BoundedBuffer extends DatadogBuffer {
         this.buffer = [];
 
         this.drainTelemetry();
+    };
+
+    private logBufferOverflow() {
+        this.addTelemetryEvent('Buffer overflow', '', 'BufferOverflow');
+    }
+
+    private logRandomIdGenerationError = (error: any): void => {
+        this.addTelemetryEvent(
+            'Could not generate enough random numbers',
+            getErrorStackTrace(error),
+            'RandomIdGenerationError'
+        );
+
+        // Not using InternalLog here as it is not yet instantiated
+        console.warn(
+            `[Datadog] Could not generate enough random numbers for RUM buffer. Please check that Math.random is not overwritten. Math.random returns: ${Math.random()}`
+        );
     };
 
     private generateRandomBufferId = (): string => {

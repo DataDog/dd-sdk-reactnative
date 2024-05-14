@@ -146,6 +146,11 @@ export interface Spec extends TurboModule {
      * @param value: The value of the feature flag, encapsulated in an Object to accept all types
      */
     addFeatureFlagEvaluation(name: string, value: Object): Promise<void>;
+
+    /**
+     * Get current Session ID, or `undefined` if not available.
+     */
+    getCurrentSessionId(): Promise<string | undefined>;
 }
 
 export default TurboModuleRegistry.get<Spec>('DdRum');

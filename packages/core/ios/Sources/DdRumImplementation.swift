@@ -181,6 +181,13 @@ public class DdRumImplementation: NSObject {
         }
         resolve(nil)
     }
+    
+    @objc
+    public func getCurrentSessionId(_ resolve: @escaping (Any?) -> Void, reject: RCTPromiseRejectBlock) -> Void {
+        nativeRUM.currentSessionID { sessionId in
+            resolve(sessionId)
+        }
+    }
 
     // MARK: - Private methods
 
