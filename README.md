@@ -8,6 +8,8 @@ See the dedicated [Datadog React Native RUM Collection documentation][1] to lear
 
 The RUM React Native SDK supports [Expo][2]. For more information, see the [Expo documentation][3].
 
+The RUM React Native SDK supports the monitoring of hybrid applications. For more information, see the [hybrid app documentation][8]
+
 ## Troubleshooting
 
 If you encounter any issue when using the Datadog SDK for React Native, please take a look at the [troubleshooting documentation][4], or at the [existing issues][5].
@@ -27,3 +29,4 @@ For more information, see [Apache License, v2.0][7]
 [5]: https://github.com/DataDog/dd-sdk-reactnative/issues?q=is%3Aissue
 [6]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/CONTRIBUTING.md
 [7]: https://github.com/DataDog/dd-sdk-reactnative/blob/main/LICENSE
+[8]: https://docs.datadoghq.com/real_user_monitoring/guide/monitor-hybrid-react-native-applications/
