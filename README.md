@@ -8,7 +8,7 @@ See the dedicated [Datadog React Native RUM Collection documentation][1] to lear
 
 The RUM React Native SDK supports [Expo][2]. For more information, see the [Expo documentation][3].
 
-The RUM React Native SDK supports the monitoring of hybrid applications. For more information, see the [hybrid app documentation][8].
+The RUM React Native SDK supports monitoring hybrid applications. For more information, see the [hybrid app documentation][8].
 
 The RUM React Native SDK supports [OpenTelemetry][9] and distributed traces through header generation. For more information, see the [OpenTelemetry documentation][10].
 
