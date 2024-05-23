@@ -18,7 +18,8 @@ afterEvaluate {
 
     androidExtension.applicationVariants.all { variant ->
 
-        def releaseVersion = variant.versionName
+        def releaseVersion = getVersionName(variant)
+
         def buildVersion = variant.versionCode
 
         if (releaseVersion == null) {
@@ -44,6 +45,7 @@ afterEvaluate {
         }
 
         def serviceName = getServiceName(variant)
+        logger.info("Release version used for the upload of variant=${targetName} is ${releaseVersion}.")
         logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
 
         def bundleAssetName = reactConfig.bundleAssetName
@@ -203,10 +205,19 @@ private def runShellCommand(
 }
 
 private def getServiceName(variant) {
-    if (project.hasProperty("datadog")) {
+    if (project.hasProperty("datadog") && project.datadog.hasProperty("serviceName")) {
         if (project.datadog.serviceName) {
             return project.datadog.serviceName
         }
     }
     return variant.applicationId
+}
+
+private def getVersionName(variant) {
+    def envVersionName = System.getenv('DATADOG_RELEASE_VERSION')
+    if (envVersionName != null) {
+        return envVersionName;
+    }
+
+    return variant.versionName
 }
