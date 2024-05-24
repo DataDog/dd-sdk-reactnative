@@ -26,6 +26,8 @@ it('M use performance W available', () => {
             unix: 6.0,
             react_native: 7.0 + expectedDuration
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -46,6 +48,8 @@ it('M use Date W performance data is never available', () => {
             unix: 5.0 + expectedDuration,
             react_native: null
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -66,6 +70,8 @@ it('M use Date W performance data is not available on start', () => {
             unix: 5.0 + expectedDuration,
             react_native: 13.0
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -86,6 +92,8 @@ it('M use Date W performance data is not available on stop', () => {
             unix: 5.0 + expectedDuration,
             react_native: null
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -117,6 +125,8 @@ it('M return duration between two ticks W performance is available', () => {
             react_native:
                 13.0 + expectedDuration1 + expectedDuration2 + expectedDuration3
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -153,6 +163,8 @@ it('M return duration between two ticks W performance is not available', () => {
                 5.0 + expectedDuration1 + expectedDuration2 + expectedDuration3,
             react_native: null
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -198,6 +210,8 @@ it('M return time for tick W performance is available', () => {
             unix: 6.0,
             react_native: 13.0 + expectedDuration1 + expectedDuration2
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
@@ -224,6 +238,8 @@ it('M return time for tick W performance is not available', () => {
             unix: 5.0 + expectedDuration1 + expectedDuration2,
             react_native: null
         });
+
+    // @ts-expect-error mockTimeProvider does not mock all the TimeProvider public methods
     const timer = new Timer(mockTimeProvider);
 
     // WHEN
