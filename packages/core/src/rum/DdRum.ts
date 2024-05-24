@@ -12,7 +12,8 @@ import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
-import { TimeProvider } from '../utils/TimeProvider';
+import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
+import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateActionEventMapper } from './eventMappers/actionEventMapper';
@@ -27,8 +28,6 @@ import type {
     ErrorSource
 } from './types';
 
-const timeProvider = new TimeProvider();
-
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
 class DdRumWrapper implements DdRumType {
@@ -39,12 +38,13 @@ class DdRumWrapper implements DdRumType {
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
+    private timeProvider: TimeProvider = new DefaultTimeProvider();
 
     startView = (
         key: string,
         name: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
         InternalLog.log(
             `Starting RUM View “${name}” #${key}`,
@@ -58,7 +58,7 @@ class DdRumWrapper implements DdRumType {
     stopView = (
         key: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
         InternalLog.log(`Stopping RUM View #${key}`, SdkVerbosity.DEBUG);
         return bufferVoidNativeCall(() =>
@@ -70,7 +70,7 @@ class DdRumWrapper implements DdRumType {
         type: RumActionType,
         name: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
         InternalLog.log(
             `Starting RUM Action “${name}” (${type})`,
@@ -99,6 +99,10 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
         return this.callNativeStopAction(...nativeCallArgs);
+    };
+
+    setTimeProvider = (timeProvider: TimeProvider): void => {
+        this.timeProvider = timeProvider;
     };
 
     private callNativeStopAction = (
@@ -158,7 +162,7 @@ class DdRumWrapper implements DdRumType {
                 args[0],
                 args[1],
                 args[2] || {},
-                args[3] || timeProvider.now()
+                args[3] || this.timeProvider.now()
             ];
         }
         if (isOldStopActionAPI(args)) {
@@ -171,7 +175,7 @@ class DdRumWrapper implements DdRumType {
                     type,
                     name,
                     args[0] || {},
-                    args[1] || timeProvider.now()
+                    args[1] || this.timeProvider.now()
                 ];
             }
             InternalLog.log(
@@ -192,7 +196,7 @@ class DdRumWrapper implements DdRumType {
         type: RumActionType,
         name: string,
         context: object = {},
-        timestampMs: number = timeProvider.now(),
+        timestampMs: number = this.timeProvider.now(),
         actionContext?: GestureResponderEvent
     ): Promise<void> => {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
@@ -224,7 +228,7 @@ class DdRumWrapper implements DdRumType {
         method: string,
         url: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
         InternalLog.log(
             `Starting RUM Resource #${key} ${method}: ${url}`,
@@ -241,7 +245,7 @@ class DdRumWrapper implements DdRumType {
         kind: ResourceKind,
         size: number = -1,
         context: object = {},
-        timestampMs: number = timeProvider.now(),
+        timestampMs: number = this.timeProvider.now(),
         resourceContext?: XMLHttpRequest
     ): Promise<void> => {
         const mappedEvent = this.resourceEventMapper.applyEventMapper({
@@ -294,7 +298,7 @@ class DdRumWrapper implements DdRumType {
         source: ErrorSource,
         stacktrace: string,
         context: object = {},
-        timestampMs: number = timeProvider.now()
+        timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
         const mappedEvent = this.errorEventMapper.applyEventMapper({
             message,

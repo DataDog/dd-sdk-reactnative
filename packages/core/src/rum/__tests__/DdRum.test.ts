@@ -16,9 +16,9 @@ import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
-jest.mock('../../utils/TimeProvider', () => {
+jest.mock('../../utils/time-provider/DefaultTimeProvider', () => {
     return {
-        TimeProvider: jest.fn().mockImplementation(() => {
+        DefaultTimeProvider: jest.fn().mockImplementation(() => {
             return { now: jest.fn().mockReturnValue(456) };
         })
     };
@@ -28,12 +28,16 @@ describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
-
     });
 
     describe('DdRum.stopAction', () => {
         test('calls the native SDK when called with new API', async () => {
-            await DdRum.stopAction(RumActionType.SCROLL, 'page', { user: 'me' }, 123);
+            await DdRum.stopAction(
+                RumActionType.SCROLL,
+                'page',
+                { user: 'me' },
+                123
+            );
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
                 RumActionType.SCROLL,
                 'page',

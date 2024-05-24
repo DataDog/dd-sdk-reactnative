@@ -12,9 +12,9 @@ import {
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import type { DdTraceType } from '../types';
-import { TimeProvider } from '../utils/TimeProvider';
+import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 
-const timeProvider = new TimeProvider();
+const timeProvider = new DefaultTimeProvider();
 
 class DdTraceWrapper implements DdTraceType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
