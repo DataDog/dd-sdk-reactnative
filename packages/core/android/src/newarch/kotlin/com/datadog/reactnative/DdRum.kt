@@ -216,7 +216,7 @@ class DdRum(
      * Returns current session ID, or null if unavailable.
      */
     @ReactMethod
-    fun getCurrentSessionId(promise: Promise) {
+    override fun getCurrentSessionId(promise: Promise) {
         implementation.getCurrentSessionId(promise)
     }
 }
