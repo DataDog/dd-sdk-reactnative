@@ -11,7 +11,7 @@ import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
-import { TimeProvider } from '../../../utils/TimeProvider';
+import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -25,15 +25,15 @@ import {
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
 
-jest.mock('../../../utils/TimeProvider', () => {
+jest.mock('../../../utils/time-provider/DefaultTimeProvider', () => {
     const now = jest.fn();
     return {
-        TimeProvider: jest.fn().mockImplementation(() => {
+        DefaultTimeProvider: jest.fn().mockImplementation(() => {
             return { now };
         })
     };
 });
-const nowMock = new TimeProvider().now;
+const nowMock = new DefaultTimeProvider().now;
 
 const flushPromises = () =>
     new Promise<void>(jest.requireActual('timers').setImmediate);

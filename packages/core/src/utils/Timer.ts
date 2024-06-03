@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { Timestamp } from './TimeProvider';
-import { TimeProvider } from './TimeProvider';
+import { DefaultTimeProvider } from './time-provider/DefaultTimeProvider';
+import type { TimeProvider, Timestamp } from './time-provider/TimeProvider';
 
 const START_LABEL = '__start';
 const STOP_LABEL = '__stop';
@@ -18,7 +18,7 @@ export default class Timer {
     private timeProvider: TimeProvider;
     private times: Record<string, Timestamp> = {};
 
-    constructor(timeProvider: TimeProvider = new TimeProvider()) {
+    constructor(timeProvider: TimeProvider = new DefaultTimeProvider()) {
         this.timeProvider = timeProvider;
     }
 
@@ -67,8 +67,8 @@ export default class Timer {
     }
 
     private durationBetweenTicks(start: Timestamp, end: Timestamp): number {
-        if (start.react_native != null && end.react_native != null) {
-            return end.react_native - start.react_native;
+        if (start.reactNative != null && end.reactNative != null) {
+            return end.reactNative - start.reactNative;
         }
         return end.unix - start.unix;
     }

@@ -16,9 +16,9 @@ import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
-jest.mock('../../utils/TimeProvider', () => {
+jest.mock('../../utils/time-provider/DefaultTimeProvider', () => {
     return {
-        TimeProvider: jest.fn().mockImplementation(() => {
+        DefaultTimeProvider: jest.fn().mockImplementation(() => {
             return { now: jest.fn().mockReturnValue(456) };
         })
     };
@@ -32,9 +32,14 @@ describe('DdRum', () => {
 
     describe('DdRum.stopAction', () => {
         test('calls the native SDK when called with new API', async () => {
-            await DdRum.stopAction('scroll', 'page', { user: 'me' }, 123);
+            await DdRum.stopAction(
+                RumActionType.SCROLL,
+                'page',
+                { user: 'me' },
+                123
+            );
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
-                'scroll',
+                RumActionType.SCROLL,
                 'page',
                 { user: 'me' },
                 123
@@ -42,9 +47,9 @@ describe('DdRum', () => {
         });
 
         test('calls the native SDK when called with new API with default values', async () => {
-            await DdRum.stopAction('scroll', 'page');
+            await DdRum.stopAction(RumActionType.SCROLL, 'page');
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
-                'scroll',
+                RumActionType.SCROLL,
                 'page',
                 {},
                 456
@@ -58,10 +63,10 @@ describe('DdRum', () => {
         });
 
         test('calls the native SDK when called with old API', async () => {
-            await DdRum.startAction('scroll', 'page_old_api');
+            await DdRum.startAction(RumActionType.SCROLL, 'page_old_api');
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
-                'scroll',
+                RumActionType.SCROLL,
                 'page_old_api',
                 { user: 'me' },
                 789
@@ -72,10 +77,10 @@ describe('DdRum', () => {
         });
 
         test('calls the native SDK when called with old API with default values', async () => {
-            await DdRum.startAction('scroll', 'page_old_api');
+            await DdRum.startAction(RumActionType.SCROLL, 'page_old_api');
             await DdRum.stopAction();
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
-                'scroll',
+                RumActionType.SCROLL,
                 'page_old_api',
                 {},
                 456
@@ -86,7 +91,7 @@ describe('DdRum', () => {
         });
 
         test('cleans the action data when stopAction is called', async () => {
-            await DdRum.startAction('scroll', 'page_old_api');
+            await DdRum.startAction(RumActionType.SCROLL, 'page_old_api');
             await DdRum.stopAction();
             await DdRum.stopAction();
             expect(NativeModules.DdRum.stopAction).toHaveBeenCalledTimes(1);
@@ -102,7 +107,7 @@ describe('DdRum', () => {
         it('M add error source type W addError()', async () => {
             // Given
             const message = 'Oops I did it again!';
-            const source = 'SOURCE';
+            const source = ErrorSource.SOURCE;
             const stacktrace = 'doSomething() at ./path/to/file.js:67:3';
 
             // When
@@ -124,7 +129,7 @@ describe('DdRum', () => {
         it('M add error source type W addError() {with custom attributes}', async () => {
             // Given
             const message = 'Oops I did it again!';
-            const source = 'SOURCE';
+            const source = ErrorSource.SOURCE;
             const stacktrace = 'doSomething() at ./path/to/file.js:67:3';
             const random = Math.random();
             const attributes = {

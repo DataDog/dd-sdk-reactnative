@@ -111,7 +111,9 @@ module.exports = {
             .fn()
             .mockImplementation(
                 () => new Promise(resolve => resolve('test-session-id'))
-            )
+            ),
+        setTimeProvider: jest.fn().mockImplementation(() => {}),
+        timeProvider: jest.fn().mockReturnValue(undefined)
     },
 
     DatadogProvider: DatadogProviderMock
