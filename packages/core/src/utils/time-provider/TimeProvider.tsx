@@ -36,7 +36,12 @@ export abstract class TimeProvider {
 
     now(): number {
         const timestamp = this.getTimestamp();
-        if (timestamp.reactNative == null) {
+
+        if (timestamp.reactNative != null && this.baseOffset === 0) {
+            this.baseOffset = timestamp.unix - timestamp.reactNative;
+        }
+
+        if (timestamp.reactNative == null || this.baseOffset === 0) {
             return timestamp.unix;
         } else {
             return this.baseOffset + timestamp.reactNative;
