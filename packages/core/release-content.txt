@@ -199,8 +199,6 @@ package/lib/commonjs/trace/DdTrace.js
 package/lib/commonjs/trace/DdTrace.js.map
 package/lib/commonjs/types.js
 package/lib/commonjs/types.js.map
-package/lib/commonjs/utils/TimeProvider.js
-package/lib/commonjs/utils/TimeProvider.js.map
 package/lib/commonjs/utils/Timer.js
 package/lib/commonjs/utils/Timer.js.map
 package/lib/commonjs/utils/errorUtils.js
@@ -209,6 +207,10 @@ package/lib/commonjs/utils/jsUtils.js
 package/lib/commonjs/utils/jsUtils.js.map
 package/lib/commonjs/utils/longTasksUtils.js
 package/lib/commonjs/utils/longTasksUtils.js.map
+package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js
+package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js.map
+package/lib/commonjs/utils/time-provider/TimeProvider.js
+package/lib/commonjs/utils/time-provider/TimeProvider.js.map
 package/lib/commonjs/version.js
 package/lib/commonjs/version.js.map
 package/lib/module/DdSdkReactNative.js
@@ -323,8 +325,6 @@ package/lib/module/trace/DdTrace.js
 package/lib/module/trace/DdTrace.js.map
 package/lib/module/types.js
 package/lib/module/types.js.map
-package/lib/module/utils/TimeProvider.js
-package/lib/module/utils/TimeProvider.js.map
 package/lib/module/utils/Timer.js
 package/lib/module/utils/Timer.js.map
 package/lib/module/utils/errorUtils.js
@@ -333,6 +333,10 @@ package/lib/module/utils/jsUtils.js
 package/lib/module/utils/jsUtils.js.map
 package/lib/module/utils/longTasksUtils.js
 package/lib/module/utils/longTasksUtils.js.map
+package/lib/module/utils/time-provider/DefaultTimeProvider.js
+package/lib/module/utils/time-provider/DefaultTimeProvider.js.map
+package/lib/module/utils/time-provider/TimeProvider.js
+package/lib/module/utils/time-provider/TimeProvider.js.map
 package/lib/module/version.js
 package/lib/module/version.js.map
 package/lib/typescript/DdSdkReactNative.d.ts
@@ -391,11 +395,12 @@ package/lib/typescript/specs/NativeDdSdk.d.ts
 package/lib/typescript/specs/NativeDdTrace.d.ts
 package/lib/typescript/trace/DdTrace.d.ts
 package/lib/typescript/types.d.ts
-package/lib/typescript/utils/TimeProvider.d.ts
 package/lib/typescript/utils/Timer.d.ts
 package/lib/typescript/utils/errorUtils.d.ts
 package/lib/typescript/utils/jsUtils.d.ts
 package/lib/typescript/utils/longTasksUtils.d.ts
+package/lib/typescript/utils/time-provider/DefaultTimeProvider.d.ts
+package/lib/typescript/utils/time-provider/TimeProvider.d.ts
 package/lib/typescript/version.d.ts
 package/package.json
 package/scripts/replace-react-require.js
@@ -422,7 +427,9 @@ package/src/logs/eventMapper.ts
 package/src/logs/types.ts
 package/src/nativeModulesTypes.ts
 package/src/rum/DdRum.ts
+package/src/rum/__mocks__/MockTimeProvider.ts
 package/src/rum/__tests__/DdRum.test.ts
+package/src/rum/__tests__/DdRumTimeProvider.test.ts
 package/src/rum/eventMappers/actionEventMapper.ts
 package/src/rum/eventMappers/errorEventMapper.ts
 package/src/rum/eventMappers/resourceEventMapper.ts
@@ -489,7 +496,6 @@ package/src/specs/NativeDdSdk.ts
 package/src/specs/NativeDdTrace.ts
 package/src/trace/DdTrace.ts
 package/src/types.tsx
-package/src/utils/TimeProvider.tsx
 package/src/utils/Timer.ts
 package/src/utils/__mocks__/jsUtils.ts
 package/src/utils/__tests__/TimeProvider.test.tsx
@@ -499,4 +505,6 @@ package/src/utils/__tests__/longTasksUtils.test.ts
 package/src/utils/errorUtils.ts
 package/src/utils/jsUtils.ts
 package/src/utils/longTasksUtils.ts
+package/src/utils/time-provider/DefaultTimeProvider.tsx
+package/src/utils/time-provider/TimeProvider.tsx
 package/src/version.ts
