@@ -67,11 +67,12 @@ package/lib/typescript/core/src/specs/NativeDdSdk.d.ts
 package/lib/typescript/core/src/specs/NativeDdTrace.d.ts
 package/lib/typescript/core/src/trace/DdTrace.d.ts
 package/lib/typescript/core/src/types.d.ts
-package/lib/typescript/core/src/utils/TimeProvider.d.ts
 package/lib/typescript/core/src/utils/Timer.d.ts
 package/lib/typescript/core/src/utils/errorUtils.d.ts
 package/lib/typescript/core/src/utils/jsUtils.d.ts
 package/lib/typescript/core/src/utils/longTasksUtils.d.ts
+package/lib/typescript/core/src/utils/time-provider/DefaultTimeProvider.d.ts
+package/lib/typescript/core/src/utils/time-provider/TimeProvider.d.ts
 package/lib/typescript/core/src/version.d.ts
 package/lib/typescript/react-navigation/src/index.d.ts
 package/lib/typescript/react-navigation/src/rum/instrumentation/DdRumReactNavigationTracking.d.ts
