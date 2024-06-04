@@ -115,7 +115,8 @@ export const DEFAULTS = {
     trackBackgroundEvents: false,
     getCustomEndpoints: () => ({}),
     bundleLogsWithRum: true,
-    bundleLogsWithTraces: true
+    bundleLogsWithTraces: true,
+    useAccessibilityLabel: true
 };
 
 /**
@@ -303,7 +304,8 @@ export class DdSdkReactNativeConfiguration {
         readonly trackInteractions: boolean = false,
         readonly trackResources: boolean = false,
         readonly trackErrors: boolean = false,
-        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent
+        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
+        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel
     ) {}
 }
 
@@ -321,6 +323,7 @@ export type AutoInstrumentationConfiguration = {
     readonly errorEventMapper?: ErrorEventMapper | null;
     readonly resourceEventMapper?: ResourceEventMapper | null;
     readonly actionEventMapper?: ActionEventMapper | null;
+    readonly useAccessibilityLabel?: boolean;
     readonly actionNameAttribute?: string;
 };
 
@@ -337,6 +340,7 @@ export type AutoInstrumentationParameters = {
     readonly errorEventMapper: ErrorEventMapper | null;
     readonly resourceEventMapper: ResourceEventMapper | null;
     readonly actionEventMapper: ActionEventMapper | null;
+    readonly useAccessibilityLabel: boolean;
     readonly actionNameAttribute?: string;
 };
 
@@ -370,7 +374,8 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
         actionEventMapper:
             features.actionEventMapper === undefined
                 ? DEFAULTS.actionEventMapper
-                : features.actionEventMapper
+                : features.actionEventMapper,
+        useAccessibilityLabel: DEFAULTS.useAccessibilityLabel
     };
 };
 
@@ -434,7 +439,8 @@ export const buildConfigurationFromPartialConfiguration = (
         features.trackInteractions,
         features.trackResources,
         features.trackErrors,
-        configuration.trackingConsent
+        configuration.trackingConsent,
+        features.useAccessibilityLabel
     );
 
     (Object.keys(

@@ -299,9 +299,11 @@ export class DdSdkReactNative {
             );
             return;
         }
+
         if (configuration.trackInteractions) {
             DdRumUserInteractionTracking.startTracking({
-                actionNameAttribute: configuration.actionNameAttribute
+                actionNameAttribute: configuration.actionNameAttribute,
+                useAccessibilityLabel: configuration.useAccessibilityLabel
             });
         }
 

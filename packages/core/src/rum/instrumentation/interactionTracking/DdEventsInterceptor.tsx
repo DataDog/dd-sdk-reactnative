@@ -18,6 +18,17 @@ const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10;
 const HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS = 1;
 const DD_ACTION_NAME_PROP = 'dd-action-name';
 
+export type DdEventsInterceptorOptions = {
+    /**
+     * Specifies a custom prop to name RUM actions on elements having an `onPress` prop
+     * */
+    actionNameAttribute?: string;
+    /**
+     * Determines whether the accessibility label can be used to resolve the action name.
+     * */
+    useAccessibilityLabel?: boolean;
+};
+
 export class DdEventsInterceptor implements EventsInterceptor {
     static ACTION_EVENT_DROPPED_DEBUG_MESSAGE =
         'An action event was dropped because either the `onPress` method arguments' +
@@ -29,11 +40,11 @@ export class DdEventsInterceptor implements EventsInterceptor {
     private debouncingStartedTimestamp = Number.MIN_VALUE;
 
     private actionNameAttribute?: string;
+    private useAccessibilityLabel: boolean;
 
-    constructor({
-        actionNameAttribute
-    }: { actionNameAttribute?: string } = {}) {
-        this.actionNameAttribute = actionNameAttribute;
+    constructor(options: DdEventsInterceptorOptions = {}) {
+        this.actionNameAttribute = options.actionNameAttribute;
+        this.useAccessibilityLabel = options.useAccessibilityLabel ?? true;
     }
 
     interceptOnPress(...args: any[]): void {
@@ -75,10 +86,15 @@ export class DdEventsInterceptor implements EventsInterceptor {
         if (closestActionLabel != null) {
             return closestActionLabel;
         }
-        const accessibilityLabel = targetNode.memoizedProps?.accessibilityLabel;
-        if (accessibilityLabel != null) {
-            return accessibilityLabel;
+
+        if (this.useAccessibilityLabel) {
+            const accessibilityLabel =
+                targetNode.memoizedProps?.accessibilityLabel;
+            if (accessibilityLabel != null) {
+                return accessibilityLabel;
+            }
         }
+
         const elementTypeName = this.resolveElementTypeName(
             targetNode.elementType
         );

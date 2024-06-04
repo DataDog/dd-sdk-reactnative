@@ -62,6 +62,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackResources": false,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
+                  "useAccessibilityLabel": true,
                   "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
@@ -81,7 +82,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         errorEventMapper: event => event,
                         resourceEventMapper: event => event,
                         actionEventMapper: event => event,
-                        actionNameAttribute: 'testID'
+                        actionNameAttribute: 'testID',
+                        useAccessibilityLabel: true
                     },
                     {
                         applicationId: 'fake-app-id',
@@ -166,6 +168,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackResources": true,
                   "trackingConsent": "pending",
                   "uploadFrequency": "FREQUENT",
+                  "useAccessibilityLabel": true,
                   "verbosity": "debug",
                   "version": "1.4.5",
                   "versionSuffix": "codepush-3",
@@ -181,7 +184,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                         trackErrors: false,
                         trackInteractions: false,
                         trackResources: false,
-                        resourceTracingSamplingRate: 0
+                        resourceTracingSamplingRate: 0,
+                        useAccessibilityLabel: false
                     },
                     {
                         applicationId: '',
@@ -238,6 +242,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "trackResources": false,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
+                  "useAccessibilityLabel": false,
                   "verbosity": undefined,
                   "version": "",
                   "versionSuffix": "",

@@ -181,6 +181,10 @@
                     "description": "Specifies a custom prop to name RUM actions on elements having an `onPress` prop.",
                     "type": "string"
                 },
+                "useAccessibilityLabel": {
+                    "description": "Determines whether the accessibility labels can be used to name RUM actions (default is true)",
+                    "type": "boolean"
+                },
                 "resourceTracingSamplingRate": {
                     "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
                     "type": "number"

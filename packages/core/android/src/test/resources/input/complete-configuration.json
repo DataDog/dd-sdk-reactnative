@@ -11,6 +11,7 @@
         "longTaskThresholdMs": 44,
         "verbosity": "WARN",
         "actionNameAttribute": "action-name-attr",
+        "useAccessibilityLabel": true,
         "resourceTracingSamplingRate": 33,
         "batchSize": "SMALL",
         "customEndpoints": {
