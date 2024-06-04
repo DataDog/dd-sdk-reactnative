@@ -22,7 +22,10 @@
         "firstPartyHosts": [
             {
                 "match": "example.com",
-                "propagatorTypes": ["B3MULTI", "TRACECONTEXT"]
+                "propagatorTypes": [
+                    "B3MULTI",
+                    "TRACECONTEXT"
+                ]
             }
         ],
         "nativeCrashReportEnabled": true,

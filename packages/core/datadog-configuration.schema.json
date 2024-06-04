@@ -40,12 +40,23 @@
                 "site": {
                     "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1' or 'EU1', default is 'US1').",
                     "type": "string",
-                    "enum": ["US1", "US1_FED", "US3", "US5", "EU1", "AP1"]
+                    "enum": [
+                        "US1",
+                        "US1_FED",
+                        "US3",
+                        "US5",
+                        "EU1",
+                        "AP1"
+                    ]
                 },
                 "trackingConsent": {
                     "description": "Consent, which can take one of the following values: 'PENDING', 'GRANTED', 'NOT_GRANTED'.",
                     "type": "string",
-                    "enum": ["PENDING", "GRANTED", "NOT_GRANTED"]
+                    "enum": [
+                        "PENDING",
+                        "GRANTED",
+                        "NOT_GRANTED"
+                    ]
                 },
                 "telemetrySampleRate": {
                     "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100`.",
@@ -54,17 +65,30 @@
                 "vitalsUpdateFrequency": {
                     "description": "Sets the preferred frequency for collecting mobile vitals.",
                     "type": "string",
-                    "enum": ["NEVER", "RARE", "AVERAGE", "FREQUENT"]
+                    "enum": [
+                        "NEVER",
+                        "RARE",
+                        "AVERAGE",
+                        "FREQUENT"
+                    ]
                 },
                 "uploadFrequency": {
                     "description": "Sets the preferred frequency for uploading batches of data.",
                     "type": "string",
-                    "enum": ["RARE", "AVERAGE", "FREQUENT"]
+                    "enum": [
+                        "RARE",
+                        "AVERAGE",
+                        "FREQUENT"
+                    ]
                 },
                 "batchSize": {
                     "description": "Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.",
                     "type": "string",
-                    "enum": ["SMALL", "MEDIUM", "LARGE"]
+                    "enum": [
+                        "SMALL",
+                        "MEDIUM",
+                        "LARGE"
+                    ]
                 },
                 "trackFrustrations": {
                     "description": "Enables tracking of frustration signals (error taps). Defaults to `true`.",
@@ -100,7 +124,12 @@
                 "verbosity": {
                     "description": "Verbosity for internal SDK logging.",
                     "type": "string",
-                    "enum": ["DEBUG", "INFO", "WARN", "ERROR"]
+                    "enum": [
+                        "DEBUG",
+                        "INFO",
+                        "WARN",
+                        "ERROR"
+                    ]
                 },
                 "proxy": {
                     "type": "object",
@@ -109,7 +138,11 @@
                         "type": {
                             "description": "Proxy type.",
                             "type": "string",
-                            "enum": ["HTTP", "HTTPS", "SOCKS"]
+                            "enum": [
+                                "HTTP",
+                                "HTTPS",
+                                "SOCKS"
+                            ]
                         },
                         "address": {
                             "description": "Proxy address. Can be either in the IP address format, ex. '1.1.1.1', or hostname, ex. 'example.com'.",
@@ -128,7 +161,11 @@
                             "type": "string"
                         }
                     },
-                    "required": ["type", "port", "address"]
+                    "required": [
+                        "type",
+                        "port",
+                        "address"
+                    ]
                 },
                 "serviceName": {
                     "description": "Custom service name.",
@@ -198,7 +235,11 @@
                     "type": "boolean"
                 }
             },
-            "required": ["clientToken", "env", "applicationId"]
+            "required": [
+                "clientToken",
+                "env",
+                "applicationId"
+            ]
         }
     }
 }
