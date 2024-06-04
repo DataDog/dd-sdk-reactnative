@@ -12,7 +12,7 @@ import type { RumActionType } from '../types';
 
 type RawAction = {
     readonly type: RumActionType;
-    readonly name: string;
+    name: string;
     context: object;
     readonly timestampMs: number;
     actionContext?: GestureResponderEvent;
@@ -60,7 +60,6 @@ const formatActionEventToNativeAction = (
     return {
         ...action,
         type: originalEvent.type,
-        name: originalEvent.name,
         timestampMs: originalEvent.timestampMs
     };
 };

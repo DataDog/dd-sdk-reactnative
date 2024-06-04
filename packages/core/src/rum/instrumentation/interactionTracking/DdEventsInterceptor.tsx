@@ -75,10 +75,6 @@ export class DdEventsInterceptor implements EventsInterceptor {
         if (closestActionLabel != null) {
             return closestActionLabel;
         }
-        const accessibilityLabel = targetNode.memoizedProps?.accessibilityLabel;
-        if (accessibilityLabel != null) {
-            return accessibilityLabel;
-        }
         const elementTypeName = this.resolveElementTypeName(
             targetNode.elementType
         );
