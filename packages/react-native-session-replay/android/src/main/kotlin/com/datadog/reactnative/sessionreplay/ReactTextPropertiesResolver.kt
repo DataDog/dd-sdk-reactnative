@@ -67,6 +67,11 @@ internal class ReactTextPropertiesResolver(
         pixelDensity: Float,
     ):
             Pair<MobileSegment.TextStyle, MobileSegment.TextPosition>? {
+
+        if (!reactContext.hasActiveReactInstance()) {
+            return null
+        }
+
         val shadowNodeWrapper: ShadowNodeWrapper =
             ShadowNodeWrapper.getShadowNodeWrapper(
                 reactContext = reactContext,

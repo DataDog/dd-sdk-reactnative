@@ -103,6 +103,7 @@ internal class ReactTextPropertiesResolverTest {
         whenever(mockReactContext.runOnNativeModulesQueueThread(any())).thenAnswer {
             (it.arguments[0] as Runnable).run()
         }
+        whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
 
         testedResolver = ReactTextPropertiesResolver(
             reactContext = mockReactContext,
@@ -288,6 +289,20 @@ internal class ReactTextPropertiesResolverTest {
 
         // Then
         assertThat(result.textStyle.color).isEqualTo(fakeWireframe.textStyle.color)
+    }
+
+    @Test
+    fun `M return legacy textStyle W addReactNativeProperties() { no valid react context }`() {
+        // Given
+        whenever(mockReactContext.hasActiveReactInstance()).thenReturn(false)
+        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, FONT_FAMILY_FIELD_NAME))
+            .thenReturn(MONOSPACE_FAMILY_NAME)
+
+        // When
+        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.family).isNotEqualTo(MONOSPACE_FAMILY_NAME)
     }
 
     // endregion
