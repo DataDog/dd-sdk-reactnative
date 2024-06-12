@@ -59,7 +59,7 @@ afterEvaluate {
 
             def execCommand = { jsBundleFile ->
                 return [
-                        "$reactConfig.root/node_modules/.bin/datadog-ci",
+                        "${getDatadogCiExecPath(reactConfig)}",
                         "react-native",
                         "upload",
                         "--platform",
@@ -95,6 +95,69 @@ afterEvaluate {
         bundleTask.finalizedBy uploadTask
 
     }
+}
+
+/**
+ * We use a function here to resolve the datadog-ci executable path.
+ * If DATADOG_CI_EXEC env variable is defined, it will be returned (if valid).
+ */
+private def getDatadogCiExecPath(reactConfig) {
+    def defaultPath = "${reactConfig.root}/node_modules/.bin/datadog-ci"
+
+    // Try to retrieve the path from ENV variable
+    def envPath = System.getenv('DATADOG_CI_EXEC')
+    if (envPath != null) {
+        if (isValidDatadogCiExec(envPath)) {
+            return envPath
+        } else {
+            println("WARNING: Ignoring DATADOG_CI_EXEC as it does not point to a valid datadog-ci executable")
+        }
+    }
+
+    def nodeExecutable = Os.isFamily(Os.FAMILY_WINDOWS) ? 'node.exe' : 'node'
+    def nodeScript = '''
+    const path = require('path');
+    const modulePath = require.resolve('@datadog/datadog-ci/package.json');
+    const nodeModulesDir = path.resolve(path.dirname(modulePath), '../../');
+    const datadogCiExec = path.join(nodeModulesDir, '.bin', 'datadog-ci');
+    console.log(datadogCiExec);
+    '''
+
+    def stdout = new ByteArrayOutputStream()
+    def process = new ProcessBuilder(nodeExecutable)
+            .redirectErrorStream(true)
+            .start()
+
+    process.outputStream.withWriter { writer ->
+        writer << nodeScript
+    }
+
+    process.inputStream.eachLine { line ->
+        stdout << line << '\n'
+    }
+    
+    process.waitFor()
+
+    def resolvedPath = stdout.toString().trim()
+    if (isValidDatadogCiExec(resolvedPath)) {
+        return resolvedPath
+    } else {
+        println("WARNING: Could not resolve datadog-ci executable path, falling back to default: ${defaultPath}")
+    }
+
+    return defaultPath
+}
+
+/**
+ * Function to validate datadog-ci executable path.
+ */
+private def isValidDatadogCiExec(String path) {
+    def file = new File(path)
+    if (!file.exists() || !file.canExecute()) {
+        return false
+    }
+    
+    return true
 }
 
 /**
