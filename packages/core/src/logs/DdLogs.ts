@@ -7,6 +7,7 @@
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
+import { validateContext } from '../utils/argsUtils';
 
 import { generateEventMapper } from './eventMapper';
 import type {
@@ -49,11 +50,11 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                args[4] || {},
+                validateContext(args[4]),
                 'debug'
             );
         }
-        return this.log(args[0], args[1] || {}, 'debug');
+        return this.log(args[0], validateContext(args[1]), 'debug');
     };
 
     info = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -63,11 +64,11 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                args[4] || {},
+                validateContext(args[4]),
                 'info'
             );
         }
-        return this.log(args[0], args[1] || {}, 'info');
+        return this.log(args[0], validateContext(args[1]), 'info');
     };
 
     warn = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -77,11 +78,11 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                args[4] || {},
+                validateContext(args[4]),
                 'warn'
             );
         }
-        return this.log(args[0], args[1] || {}, 'warn');
+        return this.log(args[0], validateContext(args[1]), 'warn');
     };
 
     error = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -91,11 +92,11 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                args[4] || {},
+                validateContext(args[4]),
                 'error'
             );
         }
-        return this.log(args[0], args[1] || {}, 'error');
+        return this.log(args[0], validateContext(args[1]), 'error');
     };
 
     /**
