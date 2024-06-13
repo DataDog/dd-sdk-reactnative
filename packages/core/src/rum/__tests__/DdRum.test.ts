@@ -8,6 +8,8 @@
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../../DdSdkReactNative';
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from '../../sdk/DdSdk';
 import { DdRum } from '../DdRum';
@@ -24,10 +26,560 @@ jest.mock('../../utils/time-provider/DefaultTimeProvider', () => {
     };
 });
 
+jest.mock('../../InternalLog', () => {
+    return {
+        InternalLog: {
+            log: jest.fn()
+        },
+        DATADOG_MESSAGE_PREFIX: 'DATADOG:'
+    };
+});
+
 describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
+    });
+
+    describe('Context validation', () => {
+        describe('DdRum.startView', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+                await DdRum.startView('key', 'name', context);
+
+                expect(NativeModules.DdRum.startView).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+                await DdRum.startView('key', 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.startView).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+                await DdRum.startView('key', 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.startView).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.stopView', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+                await DdRum.startView('key', 'name');
+                await DdRum.stopView('key', context);
+
+                expect(NativeModules.DdRum.stopView).toHaveBeenCalledWith(
+                    'key',
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+
+                await DdRum.startView('key', 'name');
+                await DdRum.stopView('key', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    3,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.stopView).toHaveBeenCalledWith(
+                    'key',
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+
+                await DdRum.startView('key', 'name');
+                await DdRum.stopView('key', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    3,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.stopView).toHaveBeenCalledWith(
+                    'key',
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.startAction', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+                await DdRum.startAction(RumActionType.SCROLL, 'name', context);
+
+                expect(NativeModules.DdRum.startAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+                await DdRum.startAction(RumActionType.SCROLL, 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.startAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+                await DdRum.startAction(RumActionType.SCROLL, 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.startAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.stopAction', () => {
+            describe('New API', () => {
+                test('uses given context when context is valid', async () => {
+                    const context = {
+                        testA: 123,
+                        testB: 'ok'
+                    };
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(
+                        RumActionType.SCROLL,
+                        'name',
+                        context
+                    );
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        context,
+                        expect.anything()
+                    );
+                });
+
+                test('uses empty context with error when context is invalid or null', async () => {
+                    const context: any = 123;
+
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(
+                        RumActionType.SCROLL,
+                        'name',
+                        context
+                    );
+
+                    expect(InternalLog.log).toHaveBeenNthCalledWith(
+                        3,
+                        expect.anything(),
+                        SdkVerbosity.ERROR
+                    );
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        {},
+                        expect.anything()
+                    );
+                });
+
+                test('nests given context in new object when context is array', async () => {
+                    const context: any = [123, '456'];
+
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(
+                        RumActionType.SCROLL,
+                        'name',
+                        context
+                    );
+
+                    expect(InternalLog.log).toHaveBeenNthCalledWith(
+                        3,
+                        expect.anything(),
+                        SdkVerbosity.WARN
+                    );
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        { context },
+                        expect.anything()
+                    );
+                });
+            });
+
+            describe('Old API', () => {
+                test('uses given context when context is valid', async () => {
+                    const context = {
+                        testA: 123,
+                        testB: 'ok'
+                    };
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(context);
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        context,
+                        expect.anything()
+                    );
+                });
+
+                test('uses empty context with error when context is invalid or null', async () => {
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(undefined);
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        {},
+                        expect.anything()
+                    );
+                });
+
+                test('nests given context in new object when context is array', async () => {
+                    const context: any = [123, '456'];
+
+                    await DdRum.startAction(RumActionType.SCROLL, 'name');
+                    await DdRum.stopAction(context);
+
+                    expect(InternalLog.log).toHaveBeenNthCalledWith(
+                        3,
+                        expect.anything(),
+                        SdkVerbosity.WARN
+                    );
+
+                    expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
+                        RumActionType.SCROLL,
+                        'name',
+                        { context },
+                        expect.anything()
+                    );
+                });
+            });
+        });
+
+        describe('DdRum.startResource', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+                await DdRum.startResource('key', 'method', 'url', context);
+
+                expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
+                    'key',
+                    'method',
+                    'url',
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+
+                await DdRum.startResource('key', 'method', 'url', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
+                    'key',
+                    'method',
+                    'url',
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+
+                await DdRum.startResource('key', 'method', 'url', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
+                    'key',
+                    'method',
+                    'url',
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.stopResource', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+
+                await DdRum.startResource('key', 'method', 'url', {});
+                await DdRum.stopResource('key', 200, 'other', -1, context);
+
+                expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                    'key',
+                    200,
+                    'other',
+                    -1,
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+
+                await DdRum.startResource('key', 'method', 'url', {});
+                await DdRum.stopResource('key', 200, 'other', -1, context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                    'key',
+                    200,
+                    'other',
+                    -1,
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+
+                await DdRum.startResource('key', 'method', 'url', {});
+                await DdRum.stopResource('key', 200, 'other', -1, context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
+                    'key',
+                    200,
+                    'other',
+                    -1,
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.addAction', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+                await DdRum.addAction(RumActionType.SCROLL, 'name', context);
+
+                expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    context,
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+                await DdRum.addAction(RumActionType.SCROLL, 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    {},
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+                await DdRum.addAction(RumActionType.SCROLL, 'name', context);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.anything(),
+                    { context },
+                    expect.anything()
+                );
+            });
+        });
+
+        describe('DdRum.addError', () => {
+            test('uses given context when context is valid', async () => {
+                const context = {
+                    testA: 123,
+                    testB: 'ok'
+                };
+
+                await DdRum.addError(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    context
+                );
+
+                expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    {
+                        ...context,
+                        '_dd.error.source_type': 'react-native'
+                    },
+                    expect.anything()
+                );
+            });
+
+            test('uses empty context with error when context is invalid or null', async () => {
+                const context: any = 123;
+                await DdRum.addError(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    context
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    {
+                        '_dd.error.source_type': 'react-native'
+                    },
+                    expect.anything()
+                );
+            });
+
+            test('nests given context in new object when context is array', async () => {
+                const context: any = [123, '456'];
+                await DdRum.addError(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    context
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                    'error',
+                    ErrorSource.CUSTOM,
+                    'stacktrace',
+                    {
+                        context,
+                        '_dd.error.source_type': 'react-native'
+                    },
+                    expect.anything()
+                );
+            });
+        });
     });
 
     describe('DdRum.stopAction', () => {
