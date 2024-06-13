@@ -12,6 +12,7 @@ import {
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import type { DdTraceType } from '../types';
+import { validateContext } from '../utils/argsUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 
 const timeProvider = new DefaultTimeProvider();
@@ -27,7 +28,11 @@ class DdTraceWrapper implements DdTraceType {
         timestampMs: number = timeProvider.now()
     ): Promise<string> => {
         const spanId = bufferNativeCallReturningId(() =>
-            this.nativeTrace.startSpan(operation, context, timestampMs)
+            this.nativeTrace.startSpan(
+                operation,
+                validateContext(context),
+                timestampMs
+            )
         );
         InternalLog.log(
             `Starting span “${operation}” #${spanId}`,
@@ -43,7 +48,12 @@ class DdTraceWrapper implements DdTraceType {
     ): Promise<void> => {
         InternalLog.log(`Finishing span #${spanId}`, SdkVerbosity.DEBUG);
         return bufferNativeCallWithId(
-            id => this.nativeTrace.finishSpan(id, context, timestampMs),
+            id =>
+                this.nativeTrace.finishSpan(
+                    id,
+                    validateContext(context),
+                    timestampMs
+                ),
             spanId
         );
     };

@@ -7,6 +7,7 @@
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
 import type { DdNativeLogsType } from '../../nativeModulesTypes';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
@@ -215,6 +216,548 @@ describe('DdLogs', () => {
             expect(consoleSpy).toHaveBeenCalledWith(
                 'DATADOG: Dropping info log as the SDK is not initialized yet: "original message"'
             );
+        });
+    });
+
+    describe('log context', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdLogs.unregisterLogEventMapper();
+        });
+
+        describe('debug logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.debug('message', undefined);
+                expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.debug('message', [1, 2, 3]);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+                expect(
+                    NativeModules.DdLogs.debug
+                ).toHaveBeenCalledWith('message', { context: [1, 2, 3] });
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.debug('message', obj);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+                expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.debug('message', { test: '123' });
+                expect(
+                    NativeModules.DdLogs.debug
+                ).toHaveBeenCalledWith('message', { test: '123' });
+            });
+        });
+
+        describe('warn logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.warn('message', undefined);
+                expect(NativeModules.DdLogs.warn).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.warn('message', [1, 2, 3]);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+                expect(
+                    NativeModules.DdLogs.warn
+                ).toHaveBeenCalledWith('message', { context: [1, 2, 3] });
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.warn('message', obj);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+                expect(NativeModules.DdLogs.warn).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.warn('message', { test: '123' });
+                expect(
+                    NativeModules.DdLogs.warn
+                ).toHaveBeenCalledWith('message', { test: '123' });
+            });
+        });
+
+        describe('info logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.info('message', undefined);
+                expect(NativeModules.DdLogs.info).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.info('message', [1, 2, 3]);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+                expect(
+                    NativeModules.DdLogs.info
+                ).toHaveBeenCalledWith('message', { context: [1, 2, 3] });
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.info('message', obj);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+                expect(NativeModules.DdLogs.info).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.info('message', { test: '123' });
+                expect(
+                    NativeModules.DdLogs.info
+                ).toHaveBeenCalledWith('message', { test: '123' });
+            });
+        });
+
+        describe('error logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.error('message', undefined);
+                expect(NativeModules.DdLogs.error).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.error('message', [1, 2, 3]);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+                expect(
+                    NativeModules.DdLogs.error
+                ).toHaveBeenCalledWith('message', { context: [1, 2, 3] });
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.error('message', obj);
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+                expect(NativeModules.DdLogs.error).toHaveBeenCalledWith(
+                    'message',
+                    {}
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.error('message', { test: '123' });
+                expect(
+                    NativeModules.DdLogs.error
+                ).toHaveBeenCalledWith('message', { test: '123' });
+            });
+        });
+    });
+
+    describe('log with error context', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            DdLogs.unregisterLogEventMapper();
+        });
+
+        describe('debug logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.debug(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    undefined
+                );
+                expect(
+                    NativeModules.DdLogs.debugWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.debug('message', 'kind', 'message', 'stacktrace', [
+                    1,
+                    2,
+                    3
+                ]);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(
+                    NativeModules.DdLogs.debugWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    {
+                        context: [1, 2, 3],
+                        '_dd.error.source_type': 'react-native'
+                    }
+                );
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.debug(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    obj
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(
+                    NativeModules.DdLogs.debugWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.debug('message', 'kind', 'message', 'stacktrace', {
+                    test: '123'
+                });
+                expect(
+                    NativeModules.DdLogs.debugWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { test: '123', '_dd.error.source_type': 'react-native' }
+                );
+            });
+        });
+
+        describe('warn logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.warn(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    undefined
+                );
+                expect(
+                    NativeModules.DdLogs.warnWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.warn('message', 'kind', 'message', 'stacktrace', [
+                    1,
+                    2,
+                    3
+                ]);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdLogs.warnWithError).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    {
+                        context: [1, 2, 3],
+                        '_dd.error.source_type': 'react-native'
+                    }
+                );
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.warn(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    obj
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(
+                    NativeModules.DdLogs.warnWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.warn('message', 'kind', 'message', 'stacktrace', {
+                    test: '123'
+                });
+                expect(
+                    NativeModules.DdLogs.warnWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { test: '123', '_dd.error.source_type': 'react-native' }
+                );
+            });
+        });
+
+        describe('info logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.info(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    undefined
+                );
+                expect(
+                    NativeModules.DdLogs.infoWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.info('message', 'kind', 'message', 'stacktrace', [
+                    1,
+                    2,
+                    3
+                ]);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    {
+                        context: [1, 2, 3],
+                        '_dd.error.source_type': 'react-native'
+                    }
+                );
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.info(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    obj
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(
+                    NativeModules.DdLogs.infoWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.info('message', 'kind', 'message', 'stacktrace', {
+                    test: '123'
+                });
+                expect(
+                    NativeModules.DdLogs.infoWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { test: '123', '_dd.error.source_type': 'react-native' }
+                );
+            });
+        });
+
+        describe('error logs', () => {
+            it('native context is empty W context is undefined', async () => {
+                await DdLogs.error(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    undefined
+                );
+                expect(
+                    NativeModules.DdLogs.errorWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is an object with nested property W context is an array', async () => {
+                await DdLogs.error('message', 'kind', 'message', 'stacktrace', [
+                    1,
+                    2,
+                    3
+                ]);
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.WARN
+                );
+
+                expect(
+                    NativeModules.DdLogs.errorWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    {
+                        context: [1, 2, 3],
+                        '_dd.error.source_type': 'react-native'
+                    }
+                );
+            });
+
+            it('native context is empty W context is raw type', async () => {
+                const obj: any = 123;
+                await DdLogs.error(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    obj
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    1,
+                    expect.anything(),
+                    SdkVerbosity.ERROR
+                );
+
+                expect(
+                    NativeModules.DdLogs.errorWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { '_dd.error.source_type': 'react-native' }
+                );
+            });
+
+            it('native context is unmodified W context is a valid object', async () => {
+                await DdLogs.error('message', 'kind', 'message', 'stacktrace', {
+                    test: '123'
+                });
+                expect(
+                    NativeModules.DdLogs.errorWithError
+                ).toHaveBeenCalledWith(
+                    'message',
+                    'kind',
+                    'message',
+                    'stacktrace',
+                    { test: '123', '_dd.error.source_type': 'react-native' }
+                );
+            });
         });
     });
 });

@@ -12,6 +12,7 @@ import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
+import { validateContext } from '../utils/argsUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
@@ -51,7 +52,12 @@ class DdRumWrapper implements DdRumType {
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() =>
-            this.nativeRum.startView(key, name, context, timestampMs)
+            this.nativeRum.startView(
+                key,
+                name,
+                validateContext(context),
+                timestampMs
+            )
         );
     };
 
@@ -62,7 +68,7 @@ class DdRumWrapper implements DdRumType {
     ): Promise<void> => {
         InternalLog.log(`Stopping RUM View #${key}`, SdkVerbosity.DEBUG);
         return bufferVoidNativeCall(() =>
-            this.nativeRum.stopView(key, context, timestampMs)
+            this.nativeRum.stopView(key, validateContext(context), timestampMs)
         );
     };
 
@@ -78,7 +84,12 @@ class DdRumWrapper implements DdRumType {
         );
         this.lastActionData = { type, name };
         return bufferVoidNativeCall(() =>
-            this.nativeRum.startAction(type, name, context, timestampMs)
+            this.nativeRum.startAction(
+                type,
+                name,
+                validateContext(context),
+                timestampMs
+            )
         );
     };
 
@@ -105,93 +116,6 @@ class DdRumWrapper implements DdRumType {
         this.timeProvider = timeProvider;
     };
 
-    private callNativeStopAction = (
-        type: RumActionType,
-        name: string,
-        context: object,
-        timestampMs: number
-    ): Promise<void> => {
-        const mappedEvent = this.actionEventMapper.applyEventMapper({
-            type,
-            name,
-            context,
-            timestampMs
-        });
-        if (!mappedEvent) {
-            return bufferVoidNativeCall(() =>
-                this.nativeRum.stopAction(
-                    type,
-                    name,
-                    {
-                        '_dd.action.drop_action': true
-                    },
-                    timestampMs
-                )
-            );
-        }
-
-        return bufferVoidNativeCall(() =>
-            this.nativeRum.stopAction(
-                mappedEvent.type,
-                mappedEvent.name,
-                mappedEvent.context,
-                mappedEvent.timestampMs
-            )
-        );
-    };
-
-    private getStopActionNativeCallArgs = (
-        args:
-            | [
-                  type: RumActionType,
-                  name: string,
-                  context?: object,
-                  timestampMs?: number
-              ]
-            | [context?: object, timestampMs?: number]
-    ):
-        | [
-              type: RumActionType,
-              name: string,
-              context: object,
-              timestampMs: number
-          ]
-        | null => {
-        if (isNewStopActionAPI(args)) {
-            return [
-                args[0],
-                args[1],
-                args[2] || {},
-                args[3] || this.timeProvider.now()
-            ];
-        }
-        if (isOldStopActionAPI(args)) {
-            if (this.lastActionData) {
-                DdSdk.telemetryDebug(
-                    'DDdRum.stopAction called with the old signature'
-                );
-                const { type, name } = this.lastActionData;
-                return [
-                    type,
-                    name,
-                    args[0] || {},
-                    args[1] || this.timeProvider.now()
-                ];
-            }
-            InternalLog.log(
-                'DdRum.startAction needs to be called before DdRum.stopAction',
-                SdkVerbosity.WARN
-            );
-        } else {
-            InternalLog.log(
-                'DdRum.stopAction was called with wrong arguments',
-                SdkVerbosity.WARN
-            );
-        }
-
-        return null;
-    };
-
     addAction = (
         type: RumActionType,
         name: string,
@@ -202,7 +126,7 @@ class DdRumWrapper implements DdRumType {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
             type,
             name,
-            context,
+            context: validateContext(context),
             timestampMs,
             actionContext
         });
@@ -234,8 +158,15 @@ class DdRumWrapper implements DdRumType {
             `Starting RUM Resource #${key} ${method}: ${url}`,
             SdkVerbosity.DEBUG
         );
+
         return bufferVoidNativeCall(() =>
-            this.nativeRum.startResource(key, method, url, context, timestampMs)
+            this.nativeRum.startResource(
+                key,
+                method,
+                url,
+                validateContext(context),
+                timestampMs
+            )
         );
     };
 
@@ -253,7 +184,7 @@ class DdRumWrapper implements DdRumType {
             statusCode,
             kind,
             size,
-            context,
+            context: validateContext(context),
             timestampMs,
             resourceContext
         });
@@ -304,7 +235,7 @@ class DdRumWrapper implements DdRumType {
             message,
             source,
             stacktrace,
-            context,
+            context: validateContext(context),
             timestampMs
         });
         if (!mappedEvent) {
@@ -384,6 +315,93 @@ class DdRumWrapper implements DdRumType {
     unregisterActionEventMapper() {
         this.actionEventMapper = generateActionEventMapper(undefined);
     }
+
+    private callNativeStopAction = (
+        type: RumActionType,
+        name: string,
+        context: object,
+        timestampMs: number
+    ): Promise<void> => {
+        const mappedEvent = this.actionEventMapper.applyEventMapper({
+            type,
+            name,
+            context: validateContext(context),
+            timestampMs
+        });
+        if (!mappedEvent) {
+            return bufferVoidNativeCall(() =>
+                this.nativeRum.stopAction(
+                    type,
+                    name,
+                    {
+                        '_dd.action.drop_action': true
+                    },
+                    timestampMs
+                )
+            );
+        }
+
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.stopAction(
+                mappedEvent.type,
+                mappedEvent.name,
+                mappedEvent.context,
+                mappedEvent.timestampMs
+            )
+        );
+    };
+
+    private getStopActionNativeCallArgs = (
+        args:
+            | [
+                  type: RumActionType,
+                  name: string,
+                  context?: object,
+                  timestampMs?: number
+              ]
+            | [context?: object, timestampMs?: number]
+    ):
+        | [
+              type: RumActionType,
+              name: string,
+              context: object,
+              timestampMs: number
+          ]
+        | null => {
+        if (isNewStopActionAPI(args)) {
+            return [
+                args[0],
+                args[1],
+                validateContext(args[2]),
+                args[3] || this.timeProvider.now()
+            ];
+        }
+        if (isOldStopActionAPI(args)) {
+            if (this.lastActionData) {
+                DdSdk.telemetryDebug(
+                    'DDdRum.stopAction called with the old signature'
+                );
+                const { type, name } = this.lastActionData;
+                return [
+                    type,
+                    name,
+                    validateContext(args[0]),
+                    args[1] || this.timeProvider.now()
+                ];
+            }
+            InternalLog.log(
+                'DdRum.startAction needs to be called before DdRum.stopAction',
+                SdkVerbosity.WARN
+            );
+        } else {
+            InternalLog.log(
+                'DdRum.stopAction was called with wrong arguments',
+                SdkVerbosity.WARN
+            );
+        }
+
+        return null;
+    };
 }
 
 const isNewStopActionAPI = (
