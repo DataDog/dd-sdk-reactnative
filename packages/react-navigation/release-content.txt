@@ -68,6 +68,7 @@ package/lib/typescript/core/src/specs/NativeDdTrace.d.ts
 package/lib/typescript/core/src/trace/DdTrace.d.ts
 package/lib/typescript/core/src/types.d.ts
 package/lib/typescript/core/src/utils/Timer.d.ts
+package/lib/typescript/core/src/utils/argsUtils.d.ts
 package/lib/typescript/core/src/utils/errorUtils.d.ts
 package/lib/typescript/core/src/utils/jsUtils.d.ts
 package/lib/typescript/core/src/utils/longTasksUtils.d.ts
