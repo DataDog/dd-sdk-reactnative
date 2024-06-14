@@ -55,7 +55,7 @@ public class DdSessionReplayImplementation: NSObject {
         resolve(nil)
     }
     
-    func buildPrivacyLevel(privacyLevel: NSString) -> SessionReplay.Configuration.PrivacyLevel {
+    func buildPrivacyLevel(privacyLevel: NSString) -> SessionReplayPrivacyLevel {
         switch privacyLevel.lowercased {
         case "mask":
             return .mask

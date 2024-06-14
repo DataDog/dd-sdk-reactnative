@@ -513,17 +513,20 @@ internal class DdSdkTests: XCTestCase {
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext]]
         var actualFirstPartyHosts: [String: Set<TracingHeaderType>]?
         var actualTracingSamplingRate: Float?
+        var actualTraceContextInjection: TraceContextInjection?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace(_,_): break
-            case let .traceWithHeaders(hostsWithHeaders, samplingRate):
+            case .trace(_,_,_): break
+            case let .traceWithHeaders(hostsWithHeaders, samplingRate, traceContextInjection):
                 actualFirstPartyHosts = hostsWithHeaders
                 actualTracingSamplingRate = samplingRate
+                actualTraceContextInjection = traceContextInjection
                 break
             case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(actualTracingSamplingRate, 66)
+        XCTAssertEqual(actualTraceContextInjection, .all)
     }
 
     func testBuildTelemetrySampleRate() {
@@ -806,7 +809,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(core.configuration?.initializationType, "LEGACY")
         XCTAssertEqual(core.configuration?.trackErrors, true)
-        XCTAssertEqual(core.configuration?.trackInteractions, true)
+        XCTAssertEqual(core.configuration?.trackUserInteractions, true)
         XCTAssertEqual(core.configuration?.trackNetworkRequests, true)
         XCTAssertEqual(core.configuration?.trackNativeErrors, false)
         XCTAssertEqual(core.configuration?.trackNativeLongTasks, false)
@@ -886,7 +889,7 @@ internal class DdSdkTests: XCTestCase {
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
         
-        DdSdkImplementation().consumeWebviewEvent(message: "{\"eventType\":\"RUM\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
+        DdSdkImplementation().consumeWebviewEvent(message: "{\"eventType\":\"rum\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
         
         XCTAssertNotNil(core.baggages["browser-rum-event"])
     }

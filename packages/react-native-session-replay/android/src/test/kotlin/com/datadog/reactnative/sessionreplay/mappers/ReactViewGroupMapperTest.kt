@@ -9,10 +9,11 @@
 package com.datadog.reactnative.sessionreplay.mappers
 
 import android.graphics.drawable.ColorDrawable
-import com.datadog.android.sessionreplay.internal.AsyncJobStatusCallback
-import com.datadog.android.sessionreplay.internal.recorder.MappingContext
-import com.datadog.android.sessionreplay.internal.recorder.SystemInformation
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
+import com.datadog.android.sessionreplay.recorder.MappingContext
+import com.datadog.android.sessionreplay.recorder.SystemInformation
+import com.datadog.android.sessionreplay.utils.AsyncJobStatusCallback
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.ReactViewBackgroundDrawableUtils
 import com.facebook.react.views.view.ReactViewBackgroundDrawable
@@ -49,6 +50,9 @@ internal class ReactViewGroupMapperTest {
 
     @Mock
     private lateinit var mockAsyncJobStatusCallback: AsyncJobStatusCallback
+
+    @Mock
+    private lateinit var mockInternalLogger: InternalLogger
 
     @Mock
     private lateinit var mockSystemInformation: SystemInformation
@@ -92,7 +96,8 @@ internal class ReactViewGroupMapperTest {
         val result = testedMapper.map(
             view = mockReactViewGroup,
             mappingContext = mockMappingContext,
-            asyncJobStatusCallback = mockAsyncJobStatusCallback
+            asyncJobStatusCallback = mockAsyncJobStatusCallback,
+            internalLogger = mockInternalLogger
         )[0] as MobileSegment.Wireframe.ShapeWireframe
 
         // Then
@@ -121,7 +126,8 @@ internal class ReactViewGroupMapperTest {
         val result = testedMapper.map(
             view = mockReactViewGroup,
             mappingContext = mockMappingContext,
-            asyncJobStatusCallback = mockAsyncJobStatusCallback
+            asyncJobStatusCallback = mockAsyncJobStatusCallback,
+            internalLogger = mockInternalLogger
         )[0] as MobileSegment.Wireframe.ShapeWireframe
 
         // Then

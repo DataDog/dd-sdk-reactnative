@@ -7,17 +7,12 @@
 package com.datadog.reactnative.sessionreplay
 
 import com.datadog.android.api.InternalLogger
-import com.datadog.android.sessionreplay.SessionReplayPrivacy
-import com.datadog.reactnative.sessionreplay.mappers.ReactMaskInputTextMapper
-import com.datadog.reactnative.sessionreplay.mappers.ReactMaskTextMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactEditTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.UIManagerModule
-import com.facebook.react.views.text.ReactTextView
-import com.facebook.react.views.textinput.ReactEditText
-import com.facebook.react.views.view.ReactViewGroup
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -65,51 +60,18 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
     fun `M get custom view mappers W getCustomViewMappers()`() {
         // When
         val customViewMappers = testedExtensionSupport.getCustomViewMappers()
-        val allowMappers = customViewMappers[SessionReplayPrivacy.ALLOW]
 
         // Then
-        check(allowMappers != null)
-        assertThat(allowMappers).hasSize(3)
-        assertThat(allowMappers[ReactViewGroup::class.java])
+        assertThat(customViewMappers).hasSize(3)
+
+        assertThat(customViewMappers[0].getUnsafeMapper())
             .isInstanceOf(ReactViewGroupMapper::class.java)
-        assertThat(allowMappers[ReactTextView::class.java])
+
+        assertThat(customViewMappers[1].getUnsafeMapper())
             .isInstanceOf(ReactTextMapper::class.java)
-        assertThat(allowMappers[ReactEditText::class.java])
-            .isInstanceOf(ReactTextMapper::class.java)
-    }
 
-    @Test
-    fun `M get mask input mappers W getCustomViewMappers()`() {
-        // When
-        val customViewMappers = testedExtensionSupport.getCustomViewMappers()
-        val maskUserInputMappers = customViewMappers[SessionReplayPrivacy.MASK_USER_INPUT]
-
-        // Then
-        check(maskUserInputMappers != null)
-        assertThat(maskUserInputMappers).hasSize(3)
-        assertThat(maskUserInputMappers[ReactViewGroup::class.java])
-            .isInstanceOf(ReactViewGroupMapper::class.java)
-        assertThat(maskUserInputMappers[ReactTextView::class.java])
-            .isInstanceOf(ReactMaskInputTextMapper::class.java)
-        assertThat(maskUserInputMappers[ReactEditText::class.java])
-            .isInstanceOf(ReactMaskInputTextMapper::class.java)
-    }
-
-    @Test
-    fun `M get mask mappers W getCustomViewMappers()`() {
-        // When
-        val customViewMappers = testedExtensionSupport.getCustomViewMappers()
-        val maskMappers = customViewMappers[SessionReplayPrivacy.MASK]
-
-        // Then
-        check(maskMappers != null)
-        assertThat(maskMappers).hasSize(3)
-        assertThat(maskMappers[ReactViewGroup::class.java])
-            .isInstanceOf(ReactViewGroupMapper::class.java)
-        assertThat(maskMappers[ReactTextView::class.java])
-            .isInstanceOf(ReactMaskTextMapper::class.java)
-        assertThat(maskMappers[ReactEditText::class.java])
-            .isInstanceOf(ReactMaskTextMapper::class.java)
+        assertThat(customViewMappers[2].getUnsafeMapper())
+            .isInstanceOf(ReactEditTextMapper::class.java)
     }
 
     @Test

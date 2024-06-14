@@ -27,11 +27,10 @@ internal class RCTTextViewRecorderTests: XCTestCase {
     )
 
     let mockAllowContext = SessionReplayViewTreeRecordingContext(
-        recorder: .init(privacy: SessionReplayPrivacyLevel.allow, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
+        recorder: .init(privacy: .allow, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
         coordinateSpace: UIView(),
         ids: .init(),
-        imageDataProvider: ImageDataProvider()
-    )
+        webViewCache: .init())
 
     var mockShadowView: RCTTextShadowView {
         // The shadow view must be initialized with a bridge so that we can insert React Subviews into it.
@@ -133,10 +132,10 @@ internal class RCTTextViewRecorderTests: XCTestCase {
     
     func testReturnsBuilderWithCorrectInformationWhenTextIsObfuscated() throws {
         let mockMaskContext = SessionReplayViewTreeRecordingContext(
-            recorder: .init(privacy: SessionReplayPrivacyLevel.mask, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
+            recorder: .init(privacy: .mask, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
             coordinateSpace: UIView(),
             ids: .init(),
-            imageDataProvider: ImageDataProvider()
+            webViewCache: .init()
         )
         let reactTag = NSNumber(value: 44)
         let uiManagerMock = MockUIManager(reactTag: reactTag, shadowView: mockShadowView)

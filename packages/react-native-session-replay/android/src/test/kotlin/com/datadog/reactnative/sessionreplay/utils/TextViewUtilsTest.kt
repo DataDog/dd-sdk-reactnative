@@ -10,9 +10,9 @@ import android.content.res.Resources
 import android.graphics.Typeface
 import android.util.DisplayMetrics
 import android.widget.TextView
-import com.datadog.android.sessionreplay.internal.recorder.MappingContext
-import com.datadog.android.sessionreplay.internal.recorder.SystemInformation
 import com.datadog.android.sessionreplay.model.MobileSegment
+import com.datadog.android.sessionreplay.recorder.MappingContext
+import com.datadog.android.sessionreplay.recorder.SystemInformation
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.junit5.ForgeExtension

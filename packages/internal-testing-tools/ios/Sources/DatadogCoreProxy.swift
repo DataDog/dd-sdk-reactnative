@@ -9,16 +9,13 @@ import DatadogCore
 import DatadogInternal
 
 internal class DatadogCoreProxy: DatadogCoreProtocol {
+    
     let core: DatadogCoreProtocol
     
     private var featureScopeInterceptors: [String: FeatureScopeInterceptor] = [:]
 
     init(core: DatadogCoreProtocol) {
         self.core = core
-    }
-
-    func get<T>(feature type: T.Type) -> T? where T : DatadogInternal.DatadogFeature {
-        return core.get(feature: type)
     }
 
     func register<T>(feature: T) throws where T: DatadogFeature {
@@ -29,14 +26,19 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
             // TODO: add logging here
         }
     }
-
-    func scope(for feature: String) -> FeatureScope? {
-        if let interceptor = featureScopeInterceptors[feature] {
-            return core.scope(for: feature).map { scope in
-                FeatureScopeProxy(proxy: scope, interceptor: interceptor)
-            }
+    
+    func feature<T>(named name: String, type: T.Type) -> T? {
+        return core.feature(named: name, type: type)
+    }
+    
+    func scope<T>(for featureType: T.Type) -> any DatadogInternal.FeatureScope where T : DatadogInternal.DatadogFeature {
+        if let interceptor = featureScopeInterceptors[featureType.name] {
+            return FeatureScopeProxy(
+                proxy: core.scope(for: featureType),
+                interceptor: interceptor
+            )
         }
-        return core.scope(for: feature)
+        return core.scope(for: featureType)
     }
 
     func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {
@@ -46,17 +48,18 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
     func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
         core.set(baggage: baggage, forKey: key)
     }
-
-
 }
 
 private struct FeatureScopeProxy: FeatureScope {
     let proxy: FeatureScope
     let interceptor: FeatureScopeInterceptor
+    
+    var dataStore: DataStore { proxy.dataStore }
+    var telemetry: Telemetry { proxy.telemetry }
 
-    func eventWriteContext(bypassConsent: Bool, forceNewBatch: Bool, _ block: @escaping (DatadogContext, Writer) -> Void) {
+    func eventWriteContext(bypassConsent: Bool, _ block: @escaping (DatadogInternal.DatadogContext, any DatadogInternal.Writer) -> Void) {
         interceptor.enter()
-        proxy.eventWriteContext(bypassConsent: bypassConsent, forceNewBatch: forceNewBatch) { context, writer in
+        proxy.eventWriteContext(bypassConsent: bypassConsent) { context, writer in
             block(context, interceptor.intercept(writer: writer))
             interceptor.leave()
         }
@@ -64,6 +67,14 @@ private struct FeatureScopeProxy: FeatureScope {
 
     func context(_ block: @escaping (DatadogInternal.DatadogContext) -> Void) {
         proxy.context(block)
+    }
+    
+    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {
+        proxy.send(message: message, else: fallback)
+    }
+    
+    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
+        proxy.set(baggage: baggage, forKey: key)
     }
 }
 

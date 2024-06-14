@@ -7,10 +7,16 @@
 package com.datadog.reactnative.sessionreplay.mappers
 
 import android.widget.TextView
-import com.datadog.android.sessionreplay.internal.AsyncJobStatusCallback
-import com.datadog.android.sessionreplay.internal.recorder.MappingContext
-import com.datadog.android.sessionreplay.internal.recorder.mapper.TextViewMapper
+import com.datadog.android.api.InternalLogger
+import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.sessionreplay.model.MobileSegment
+import com.datadog.android.sessionreplay.recorder.MappingContext
+import com.datadog.android.sessionreplay.recorder.mapper.TextViewMapper
+import com.datadog.android.sessionreplay.utils.AsyncJobStatusCallback
+import com.datadog.android.sessionreplay.utils.DefaultColorStringFormatter
+import com.datadog.android.sessionreplay.utils.DefaultViewBoundsResolver
+import com.datadog.android.sessionreplay.utils.DefaultViewIdentifierResolver
+import com.datadog.android.sessionreplay.utils.DrawableToColorMapper
 import com.datadog.reactnative.sessionreplay.NoopTextPropertiesResolver
 import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver
 import com.datadog.reactnative.sessionreplay.TextPropertiesResolver
@@ -21,8 +27,13 @@ import com.facebook.react.uimanager.UIManagerModule
 internal class ReactTextMapper(
     private val reactTextPropertiesResolver: TextPropertiesResolver =
         NoopTextPropertiesResolver(),
-    private val textViewUtils: TextViewUtils = TextViewUtils()
-): TextViewMapper() {
+    private val textViewUtils: TextViewUtils = TextViewUtils(),
+): TextViewMapper<TextView>(
+    viewIdentifierResolver = DefaultViewIdentifierResolver,
+    colorStringFormatter = DefaultColorStringFormatter,
+    viewBoundsResolver = DefaultViewBoundsResolver,
+    drawableToColorMapper = DrawableToColorMapper.getDefault()
+) {
 
     internal constructor(
         reactContext: ReactContext,
@@ -41,9 +52,10 @@ internal class ReactTextMapper(
     override fun map(
         view: TextView,
         mappingContext: MappingContext,
-        asyncJobStatusCallback: AsyncJobStatusCallback
+        asyncJobStatusCallback: AsyncJobStatusCallback,
+        internalLogger: InternalLogger
     ): List<MobileSegment.Wireframe> {
-        val wireframes = super.map(view, mappingContext, asyncJobStatusCallback)
+        val wireframes = super.map(view, mappingContext, asyncJobStatusCallback, internalLogger)
         return textViewUtils.mapTextViewToWireframes(
             wireframes = wireframes,
             view = view,
