@@ -5,6 +5,7 @@
  */
 
 import { DdRum } from '../../../../../DdRum';
+import { TracingIdFormat } from '../../../distributedTracing/TracingIdentifier';
 import type { RUMResource } from '../../interfaces/RumResource';
 
 import { createTimings } from './resourceTiming';
@@ -37,8 +38,12 @@ const formatResourceStartContext = (
 ): Record<string, string | number> => {
     const attributes: Record<string, string | number> = {};
     if (tracingAttributes.samplingPriorityHeader !== '0') {
-        attributes['_dd.span_id'] = tracingAttributes.spanId.toString(10);
-        attributes['_dd.trace_id'] = tracingAttributes.traceId.toString(10);
+        attributes['_dd.span_id'] = tracingAttributes.spanId.toString(
+            TracingIdFormat.decimal
+        );
+        attributes['_dd.trace_id'] = tracingAttributes.traceId.toString(
+            TracingIdFormat.paddedHex
+        );
         attributes['_dd.rule_psr'] = tracingAttributes.rulePsr;
     }
 

@@ -6,11 +6,9 @@
 
 import { PropagatorType } from '../../../types';
 
-import type {
-    DdRumResourceTracingAttributes,
-    SpanId,
-    TraceId
-} from './distributedTracing';
+import { TracingIdFormat } from './TracingIdentifier';
+import type { TraceId, SpanId } from './TracingIdentifier';
+import type { DdRumResourceTracingAttributes } from './distributedTracing';
 
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 /**
@@ -20,6 +18,9 @@ export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
 export const ORIGIN_RUM = 'rum';
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
+export const TAGS_HEADER_KEY = 'x-datadog-tags';
+export const DD_TRACE_ID_TAG = '_dd.p.tid';
+
 /**
  * OTel headers
  */
@@ -51,11 +52,21 @@ export const getTracingHeaders = (
                     },
                     {
                         header: TRACE_ID_HEADER_KEY,
-                        value: tracingAttributes.traceId.toString(10)
+                        value: tracingAttributes.traceId.toString(
+                            TracingIdFormat.lowDecimal
+                        )
                     },
                     {
                         header: PARENT_ID_HEADER_KEY,
-                        value: tracingAttributes.spanId.toString(10)
+                        value: tracingAttributes.spanId.toString(
+                            TracingIdFormat.decimal
+                        )
+                    },
+                    {
+                        header: TAGS_HEADER_KEY,
+                        value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
+                            TracingIdFormat.paddedHighHex
+                        )}`
                     }
                 );
                 break;
@@ -99,11 +110,15 @@ export const getTracingHeaders = (
                 headers.push(
                     {
                         header: B3_MULTI_TRACE_ID_HEADER_KEY,
-                        value: tracingAttributes.traceId.toPaddedString(16, 32)
+                        value: tracingAttributes.traceId.toString(
+                            TracingIdFormat.paddedHex
+                        )
                     },
                     {
                         header: B3_MULTI_SPAN_ID_HEADER_KEY,
-                        value: tracingAttributes.spanId.toPaddedString(16, 16)
+                        value: tracingAttributes.spanId.toString(
+                            TracingIdFormat.paddedHex
+                        )
                     },
                     {
                         header: B3_MULTI_SAMPLED_HEADER_KEY,
@@ -129,10 +144,9 @@ const generateTraceContextHeader = ({
     isSampled: boolean;
 }) => {
     const flags = isSampled ? '01' : '00';
-    return `${version}-${traceId.toPaddedString(
-        16,
-        32
-    )}-${parentId.toPaddedString(16, 16)}-${flags}`;
+    return `${version}-${traceId.toString(
+        TracingIdFormat.paddedHex
+    )}-${parentId.toString(TracingIdFormat.paddedHex)}-${flags}`;
 };
 
 const generateTraceStateHeader = ({
@@ -144,7 +158,7 @@ const generateTraceStateHeader = ({
 }) => {
     const sampled = `s:${isSampled ? '1' : '0'}`;
     const origin = 'o:rum';
-    const parent = `p:${parentId.toPaddedString(16, 16)}`;
+    const parent = `p:${parentId.toString(TracingIdFormat.paddedHex)}`;
 
     return `dd=${sampled};${origin};${parent}`;
 };
@@ -158,9 +172,9 @@ const generateB3Header = ({
     spanId: SpanId;
     isSampled: boolean;
 }) => {
-    const flags = isSampled ? '1' : '0';
-    return `${traceId.toPaddedString(16, 32)}-${spanId.toPaddedString(
-        16,
-        16
-    )}-${flags}`;
+    return [
+        traceId.toString(TracingIdFormat.paddedHex),
+        spanId.toString(TracingIdFormat.paddedHex),
+        isSampled ? '1' : '0'
+    ].join('-');
 };
