@@ -13,6 +13,7 @@ import com.datadog.android.api.context.TimeInfo
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.storage.EventBatchWriter
+import com.datadog.android.api.storage.EventType
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.core.internal.net.FirstPartyHostHeaderTypeResolver
@@ -145,7 +146,8 @@ internal class EventBatchInterceptor: EventBatchWriter {
 
     override fun write(
         event: RawBatchEvent,
-        batchMetadata: ByteArray?
+        batchMetadata: ByteArray?,
+        eventType: EventType
     ): Boolean {
         val eventContent = String(event.data)
 

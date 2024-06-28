@@ -139,11 +139,11 @@ public class DatadogSDKWrapper {
             reactVersion: reactVersion,
             trackCrossPlatformLongTasks: trackCrossPlatformLongTasks,
             trackErrors: trackErrors,
-            trackInteractions: trackInteractions,
-            trackLongTask: trackLongTask,
+            trackLongTask: trackLongTask, 
             trackNativeErrors: trackNativeErrors,
             trackNativeLongTasks: trackNativeLongTasks,
-            trackNetworkRequests: trackNetworkRequests
+            trackNetworkRequests: trackNetworkRequests,
+            trackUserInteractions: trackInteractions
         )
     }
 

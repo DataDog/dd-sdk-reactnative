@@ -26,7 +26,7 @@ internal class DdSessionReplayTests: XCTestCase {
         let uiManagerMock = MockUIManager()
         DdSessionReplayImplementation(sessionReplayProvider:{ sessionReplayMock }, uiManager: uiManagerMock)
             .enable(replaySampleRate: 0, defaultPrivacyLevel: "MASK", customEndpoint: "", resolve: mockResolve, reject: mockReject)
-        
+
         XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(replaySampleRate: 0.0, privacyLevel: .mask, customEndpoint: nil))
     }
     
@@ -78,7 +78,7 @@ internal class DdSessionReplayTests: XCTestCase {
 
 private class MockSessionReplay: SessionReplayProtocol {
     enum CalledMethod: Equatable {
-        case enable(replaySampleRate: Float, privacyLevel: SessionReplay.Configuration.PrivacyLevel, customEndpoint: URL?)
+        case enable(replaySampleRate: Float, privacyLevel: SessionReplayPrivacyLevel, customEndpoint: URL?)
     }
 
     public var calledMethods = [CalledMethod]()
@@ -97,17 +97,15 @@ private class MockSessionReplay: SessionReplayProtocol {
 private class MockUIManager: RCTUIManager {}
 
 private class MockDatadogCore: DatadogCoreProtocol {
-    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
+    func scope<T>(for featureType: T.Type) -> any DatadogInternal.FeatureScope where T : DatadogInternal.DatadogFeature {
+        return NOPFeatureScope()
+    }
     
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
-    
+    func feature<T>(named name: String, type: T.Type) -> T? {
+        return nil
+    }
+
     func register<T>(feature: T) throws where T : DatadogInternal.DatadogFeature {}
-    
-    func get<T>(feature type: T.Type) -> T? where T : DatadogInternal.DatadogFeature {
-        return nil
-    }
-    
-    func scope(for feature: String) -> DatadogInternal.FeatureScope? {
-        return nil
-    }
+    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
+    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
 }

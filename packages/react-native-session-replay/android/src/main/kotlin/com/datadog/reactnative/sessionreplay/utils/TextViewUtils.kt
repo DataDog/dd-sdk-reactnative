@@ -9,8 +9,8 @@
 package com.datadog.reactnative.sessionreplay.utils
 
 import android.widget.TextView
-import com.datadog.android.sessionreplay.internal.recorder.MappingContext
 import com.datadog.android.sessionreplay.model.MobileSegment
+import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.reactnative.sessionreplay.TextPropertiesResolver
 
 internal class TextViewUtils {

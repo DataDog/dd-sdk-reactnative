@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit.forge
 
+import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -49,8 +50,20 @@ internal class TelemetryConfigurationEventForgeryFactory :
                     forge.aNullable { aLong() },
                     forge.aNullable { aLong() },
                     forge.aNullable { aLong() },
+                    forge.aNullable {
+                        aValueFrom(
+                            TelemetryConfigurationEvent.TraceContextInjection::class.java
+                        )
+                    },
                     forge.aNullable { aLong() },
                     forge.aNullable { aLong() },
+                    forge.aNullable { aLong() },
+                    forge.aNullable {
+                        aValueFrom(
+                            TelemetryConfigurationEvent.TrackingConsent::class.java
+                        )
+                    },
+                    forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
@@ -80,6 +93,8 @@ internal class TelemetryConfigurationEventForgeryFactory :
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
 
+                    forge.aNullable { aBool() },
+                    forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aBool() },
                     forge.aNullable { aList { aString() } },

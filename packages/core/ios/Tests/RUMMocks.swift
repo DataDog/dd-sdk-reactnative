@@ -279,10 +279,15 @@ extension RUMResourceEvent: RandomMockable {
             os: .mockRandom(),
             resource: .init(
                 connect: .init(duration: .mockRandom(), start: .mockRandom()),
+                decodedBodySize: .mockRandom(),
                 dns: .init(duration: .mockRandom(), start: .mockRandom()),
                 download: .init(duration: .mockRandom(), start: .mockRandom()),
                 duration: .mockRandom(),
+                encodedBodySize: .mockRandom(),
                 firstByte: .init(duration: .mockRandom(), start: .mockRandom()),
+                graphql: .init(
+                    operationName: .mockRandom(),
+                    operationType: [.query, .mutation, .subscription].randomElement()!),
                 id: .mockRandom(),
                 method: .mockRandom(),
                 provider: .init(
@@ -291,9 +296,11 @@ extension RUMResourceEvent: RandomMockable {
                     type: Bool.random() ? .firstParty : nil
                 ),
                 redirect: .init(duration: .mockRandom(), start: .mockRandom()),
+                renderBlockingStatus: [.blocking, .nonBlocking].randomElement()!,
                 size: .mockRandom(),
                 ssl: .init(duration: .mockRandom(), start: .mockRandom()),
                 statusCode: .mockRandom(),
+                transferSize: .mockRandom(),
                 type: [.native, .image].randomElement()!,
                 url: .mockRandom()
             ),
@@ -340,10 +347,15 @@ extension RUMResourceEvent: RandomMockable {
             os: .mockRandom(),
             resource: .init(
                 connect: .init(duration: .mockRandom(), start: .mockRandom()),
+                decodedBodySize: .mockRandom(),
                 dns: .init(duration: .mockRandom(), start: .mockRandom()),
                 download: .init(duration: .mockRandom(), start: .mockRandom()),
                 duration: .mockRandom(),
+                encodedBodySize: .mockRandom(),
                 firstByte: .init(duration: .mockRandom(), start: .mockRandom()),
+                graphql: .init(
+                    operationName: .mockRandom(),
+                    operationType: [.query, .mutation, .subscription].randomElement()!),
                 id: .mockRandom(),
                 method: .mockRandom(),
                 provider: .init(
@@ -352,9 +364,11 @@ extension RUMResourceEvent: RandomMockable {
                     type: Bool.random() ? .firstParty : nil
                 ),
                 redirect: .init(duration: .mockRandom(), start: .mockRandom()),
+                renderBlockingStatus: [.blocking, .nonBlocking].randomElement()!,
                 size: .mockRandom(),
                 ssl: .init(duration: .mockRandom(), start: .mockRandom()),
                 statusCode: .mockRandom(),
+                transferSize: .mockRandom(),
                 type: [.native, .image].randomElement()!,
                 url: .mockRandom()
             ),

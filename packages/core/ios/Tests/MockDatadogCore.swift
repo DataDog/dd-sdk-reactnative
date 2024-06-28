@@ -8,8 +8,6 @@
 @testable import DatadogInternal
 
 internal class MockDatadogCore: DatadogCoreProtocol {
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
-    
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
         if  // Configuration Telemetry Message
             case .telemetry(let telemetry) = message,
@@ -20,6 +18,10 @@ internal class MockDatadogCore: DatadogCoreProtocol {
         if case .baggage(let key, let baggage) = message {
             self.baggages[key] = baggage
         }
+        
+        if case .webview(let webViewMessage) = message {
+            self.baggages["browser-rum-event"] = webViewMessage
+        }
     }
    
     @ReadWriteLock
@@ -29,20 +31,20 @@ internal class MockDatadogCore: DatadogCoreProtocol {
     @ReadWriteLock
     private(set) var baggages: [String: Any] = [:]
 
-    func register<T>(feature: T) throws where T : DatadogFeature {
+    func register<T>(feature: T) throws where T : DatadogInternal.DatadogFeature {
         features[T.name] = feature
     }
     
-    func get<T>(feature type: T.Type) -> T? where T : DatadogFeature {
+    func feature<T>(named name: String, type: T.Type) -> T? {
         return nil
     }
     
-    func scope(for feature: String) -> FeatureScope? {
-        return nil
+    func scope<T>(for featureType: T.Type) -> any DatadogInternal.FeatureScope where T : DatadogInternal.DatadogFeature {
+        return NOPFeatureScope()
     }
     
-    func set(feature: String, attributes: @escaping () -> FeatureBaggage) {}
-    
-    func update(feature: String, attributes: @escaping () -> FeatureBaggage) {}
+    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
+        baggages[key] = baggage
+    }
 }
 

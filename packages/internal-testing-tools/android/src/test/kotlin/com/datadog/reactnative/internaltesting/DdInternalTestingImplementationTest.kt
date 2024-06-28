@@ -11,6 +11,7 @@ import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.storage.EventBatchWriter
+import com.datadog.android.api.storage.EventType
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.reactnative.DatadogSDKWrapperStorage
@@ -76,7 +77,8 @@ internal class DdInternalTestingImplementationTest {
             .withWriteContext { _, eventBatchWriter ->
                 eventBatchWriter.write(
                     RawBatchEvent(data = "mock event for test".toByteArray()),
-                    batchMetadata = null
+                    batchMetadata = null,
+                    eventType = EventType.DEFAULT
                 )
             }
 
