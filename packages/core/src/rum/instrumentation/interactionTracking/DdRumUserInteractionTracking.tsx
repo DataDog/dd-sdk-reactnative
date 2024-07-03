@@ -12,6 +12,7 @@ import { DdSdk } from '../../../sdk/DdSdk';
 import { getErrorMessage } from '../../../utils/errorUtils';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
+import type { DdEventsInterceptorOptions } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
 import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
@@ -58,9 +59,7 @@ export class DdRumUserInteractionTracking {
      * Please note that we are only considering as valid - for - tracking only the user interactions that have
      * a visible output (either an UI state change or a Resource request)
      */
-    static startTracking({
-        actionNameAttribute
-    }: { actionNameAttribute?: string } = {}): void {
+    static startTracking(options: DdEventsInterceptorOptions): void {
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumUserInteractionTracking.isTracking) {
             InternalLog.log(
@@ -70,7 +69,7 @@ export class DdRumUserInteractionTracking {
             return;
         }
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor(
-            { actionNameAttribute }
+            options
         );
 
         const original = React.createElement;

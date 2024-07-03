@@ -77,6 +77,38 @@ it('M intercept and send a RUM event W onPress { Button component }', async () =
     );
 });
 
+it('M intercept and send a RUM event with elementType W onPress { Button component, useAccessibilityLabel = false }', async () => {
+    // GIVEN
+    DdRumUserInteractionTracking.startTracking({
+        useAccessibilityLabel: false
+    });
+
+    const { getByText } = render(
+        <View>
+            <Button title="Click me" onPress={event => {}} />
+        </View>
+    );
+    const testButton = getByText('Click me');
+
+    // WHEN
+    fireEvent(testButton, 'press', {
+        _targetInst: {
+            elementType: 'test_element_type',
+            memoizedProps: {
+                accessibilityLabel: 'click_me_button'
+            }
+        }
+    });
+
+    // THEN
+    expect(DdRum.addAction).toBeCalledWith(
+        'TAP',
+        'test_element_type',
+        expect.anything(),
+        expect.anything()
+    );
+});
+
 it('M intercept and send a RUM event W onPress { custom action name prop used }', async () => {
     // GIVEN
     DdRumUserInteractionTracking.startTracking({

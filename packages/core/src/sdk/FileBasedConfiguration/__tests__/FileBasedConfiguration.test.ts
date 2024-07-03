@@ -30,6 +30,7 @@ describe('FileBasedConfiguration', () => {
                         longTaskThresholdMs: 44,
                         verbosity: 'WARN',
                         actionNameAttribute: 'action-name-attr',
+                        useAccessibilityLabel: true,
                         resourceTracingSamplingRate: 33,
                         firstPartyHosts: [
                             {
@@ -90,6 +91,7 @@ describe('FileBasedConfiguration', () => {
                   "trackResources": true,
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
+                  "useAccessibilityLabel": true,
                   "verbosity": "warn",
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
@@ -140,6 +142,7 @@ describe('FileBasedConfiguration', () => {
                   "trackResources": false,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
+                  "useAccessibilityLabel": true,
                   "verbosity": undefined,
                   "vitalsUpdateFrequency": "AVERAGE",
                 }

@@ -11,6 +11,7 @@
         "longTaskThresholdMs": 44,
         "verbosity": "WARN",
         "actionNameAttribute": "action-name-attr",
+        "useAccessibilityLabel": true,
         "resourceTracingSamplingRate": 33,
         "batchSize": "SMALL",
         "customEndpoints": {
@@ -21,7 +22,10 @@
         "firstPartyHosts": [
             {
                 "match": "example.com",
-                "propagatorTypes": ["B3MULTI", "TRACECONTEXT"]
+                "propagatorTypes": [
+                    "B3MULTI",
+                    "TRACECONTEXT"
+                ]
             }
         ],
         "nativeCrashReportEnabled": true,

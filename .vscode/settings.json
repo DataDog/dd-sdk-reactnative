@@ -6,6 +6,10 @@
         "typescript",
         "typescriptreact"
     ],
+    "[json]": {
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true,
+    },
     "[ignore]": {
         "editor.formatOnSave": false
     },
