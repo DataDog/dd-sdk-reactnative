@@ -168,7 +168,7 @@ describe('TracingIdentifier', () => {
         it('M return valid string representations for zero ID w toString', () => {
             // GIVEN
             const tracingId = TracingIdentifier.createTraceId();
-            (tracingId as any)['id'] = 0n;
+            (tracingId as any)['id'] = BigInt(0);
 
             // THEN
 
@@ -314,7 +314,7 @@ describe('TracingIdentifier', () => {
         it('M return valid string representations for zero ID w toString', () => {
             // GIVEN
             const tracingId = TracingIdentifier.createSpanId();
-            (tracingId as any)['id'] = 0n;
+            (tracingId as any)['id'] = BigInt(0);
 
             // THEN
 
