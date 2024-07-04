@@ -47,6 +47,7 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERSION = '_dd.sdk_version';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
+
     private static wasAutoInstrumented = false;
     private static features?: AutoInstrumentationConfiguration;
     private static _isInitialized = false;

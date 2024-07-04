@@ -12,6 +12,7 @@ import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/Bu
 import { DdRum } from '../../../../../DdRum';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
+import TracingIdentifierUtils from '../../../distributedTracing/__tests__/__utils__/tracingIdentifierUtils';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
@@ -23,7 +24,8 @@ import {
     B3_MULTI_SAMPLED_HEADER_KEY,
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
-    TRACESTATE_HEADER_KEY
+    TRACESTATE_HEADER_KEY,
+    TAGS_HEADER_KEY
 } from '../../../distributedTracing/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
 import {
@@ -450,12 +452,107 @@ describe('XHRProxy', () => {
 
             // THEN
             const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
-            expect(contextHeader).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+            expect(contextHeader).toMatch(
+                /^00-[0-9a-f]{8}[0]{8}[0-9a-f]{16}-[0-9a-f]{16}-01$/
+            );
 
             // Parent value of the context header is the 3rd part of it
             const parentValue = contextHeader.split('-')[2];
             const stateHeader = xhr.requestHeaders[TRACESTATE_HEADER_KEY];
             expect(stateHeader).toBe(`dd=s:1;o:rum;p:${parentValue}`);
+        });
+
+        it('adds correct trace IDs headers for all propagatorTypes', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.TRACECONTEXT]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.B3MULTI]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+
+            /* =================================================================================
+             *  Verify that the trace id in the traceparent header is a 128 bit trace ID (hex).
+             * ================================================================================= */
+            const traceparentHeader =
+                xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
+            const traceparentTraceId = traceparentHeader.split('-')[1];
+
+            expect(traceparentTraceId).toMatch(
+                /^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/
+            );
+            expect(
+                TracingIdentifierUtils.isWithin128Bits(traceparentTraceId, 16)
+            );
+
+            /* =========================================================================
+             *  Verify that the trace id in the x-datadog-trace-id is a 64 bit decimal.
+             * ========================================================================= */
+
+            // x-datadog-trace-id is a decimal representing the low 64 bits of the 128 bits Trace ID
+            const xDatadogTraceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+
+            expect(TracingIdentifierUtils.isWithin64Bits(xDatadogTraceId));
+
+            /* ===============================================================
+             *  Verify that the trace id in x-datadog-tags headers is HEX 16.
+             * =============================================================== */
+
+            // x-datadog-tags is a HEX 16 contains the high 64 bits of the 128 bits Trace ID
+            const xDatadogTagsTraceId = xhr.requestHeaders[
+                TAGS_HEADER_KEY
+            ].split('=')[1];
+
+            expect(xDatadogTagsTraceId).toMatch(/^[a-f0-9]{16}$/);
+            expect(
+                TracingIdentifierUtils.isWithin64Bits(xDatadogTagsTraceId, 16)
+            );
+
+            /* =========================================================================
+             *  Verify that the trace id in the b3 header is a 128 bit trace ID (hex).
+             * ========================================================================= */
+
+            const b3Header = xhr.requestHeaders[B3_HEADER_KEY];
+            const b3TraceId = b3Header.split('-')[0];
+
+            expect(b3TraceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
+            expect(TracingIdentifierUtils.isWithin128Bits(b3TraceId, 16));
+
+            /* =================================================================================
+             *  Verify that the trace id in the X-B3-TraceId header is a 128 bit trace ID (hex).
+             * ================================================================================= */
+
+            const xB3TraceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
+
+            expect(xB3TraceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
+            expect(TracingIdentifierUtils.isWithin128Bits(xB3TraceId, 16));
         });
 
         it('adds tracing headers with matching value when all headers are added', async () => {
@@ -493,13 +590,33 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const datadogTraceValue = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
-            const datadogParentValue = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
 
+            // x-datadog-trace-id is just the low 64 bits (DECIMAL)
+            const datadogLowTraceValue =
+                xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+
+            // We convert the low 64 bits to HEX
+            const datadogLowTraceValueHex = `${BigInt(datadogLowTraceValue)
+                .toString(16)
+                .padStart(16, '0')}`;
+
+            // The high 64 bits are expressed in x-datadog-tags (HEX)
+            const datadogHighTraceValueHex = xhr.requestHeaders[
+                TAGS_HEADER_KEY
+            ].split('=')[1]; // High HEX 64 bits
+
+            // We re-compose the full 128 bit trace-id by joining the strings
+            const datadogTraceValue128BitHex = `${datadogHighTraceValueHex}${datadogLowTraceValueHex}`;
+
+            // We then get the decimal value of the trace-id
+            const datadogTraceValue128BitDec = hexToDecimal(
+                datadogTraceValue128BitHex
+            );
+
+            const datadogParentValue = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
             const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
             const traceContextValue = contextHeader.split('-')[1];
             const parentContextValue = contextHeader.split('-')[2];
-
             const b3MultiTraceHeader =
                 xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
             const b3MultiParentHeader =
@@ -509,13 +626,17 @@ describe('XHRProxy', () => {
             const traceB3Value = b3Header.split('-')[0];
             const parentB3Value = b3Header.split('-')[1];
 
-            expect(hexToDecimal(traceContextValue)).toBe(datadogTraceValue);
+            expect(hexToDecimal(traceContextValue)).toBe(
+                datadogTraceValue128BitDec
+            );
             expect(hexToDecimal(parentContextValue)).toBe(datadogParentValue);
-
-            expect(hexToDecimal(b3MultiTraceHeader)).toBe(datadogTraceValue);
+            //
+            expect(hexToDecimal(b3MultiTraceHeader)).toBe(
+                datadogTraceValue128BitDec
+            );
             expect(hexToDecimal(b3MultiParentHeader)).toBe(datadogParentValue);
 
-            expect(hexToDecimal(traceB3Value)).toBe(datadogTraceValue);
+            expect(hexToDecimal(traceB3Value)).toBe(datadogTraceValue128BitDec);
             expect(hexToDecimal(parentB3Value)).toBe(datadogParentValue);
         });
 
@@ -549,7 +670,7 @@ describe('XHRProxy', () => {
             const traceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
             const spanId = xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
             const sampled = xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY];
-            expect(traceId).toMatch(/^[0-9a-f]{32}$/);
+            expect(traceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
             expect(spanId).toMatch(/^[0-9a-f]{16}$/);
             expect(sampled).toBe('1');
         });
@@ -582,7 +703,9 @@ describe('XHRProxy', () => {
 
             // THEN
             const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
-            expect(headerValue).toMatch(/^[0-9a-f]{32}-[0-9a-f]{16}-1$/);
+            expect(headerValue).toMatch(
+                /^[0-9a-f]{8}[0]{8}[0-9a-f]{16}-[0-9a-f]{16}-1$/
+            );
         });
 
         it('adds all headers when the host is matched for different propagators', async () => {

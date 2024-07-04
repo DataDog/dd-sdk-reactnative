@@ -84,3 +84,6 @@ packages/**/*.tgz
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Jest
+coverage
