@@ -30,6 +30,7 @@ package/lib/typescript/core/src/rum/instrumentation/interactionTracking/NoOpEven
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/ShallowObjectEqualityChecker.d.ts
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/getJsxRuntime.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/firstPartyHosts.d.ts
