@@ -85,12 +85,13 @@ export enum TracingIdType {
 /**
  * Value used to mask the low 64 bits of the trace identifier.
  */
-const LOW_64BIT_MASK = (BigInt('0xffffffff') << 32n) + BigInt('0xffffffff');
+const LOW_64BIT_MASK =
+    (BigInt('0xffffffff') << BigInt(32)) + BigInt('0xffffffff');
 
 /**
  * Value used to mask the low 32 bits of the trace identifier.
  */
-const LOW_32BIT_MASK = (BigInt('0xffff') << 16n) + BigInt('0xffff');
+const LOW_32BIT_MASK = (BigInt('0xffff') << BigInt(16)) + BigInt('0xffff');
 
 /**
  * A {@link TracingIdentifier} is a unique UUID that can be 64bit or 128bit, and provides
@@ -181,7 +182,8 @@ export class TracingIdentifier {
     public toString(format: TracingIdFormat): string {
         const lowTraceMask =
             this.type === TracingIdType.trace ? LOW_64BIT_MASK : LOW_32BIT_MASK;
-        const highTraceMask = this.type === TracingIdType.trace ? 64n : 32n;
+        const highTraceMask =
+            this.type === TracingIdType.trace ? BigInt(64) : BigInt(32);
         const padding = this.type === TracingIdType.trace ? 32 : 16;
 
         switch (format) {
