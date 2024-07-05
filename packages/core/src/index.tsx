@@ -3,7 +3,9 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+/* eslint-disable arca/import-ordering */
 
+import './polyfills';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
@@ -31,6 +33,8 @@ import { DdTrace } from './trace/DdTrace';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
+
+/* eslint-enable arca/import-ordering */
 
 export {
     DatadogProvider,
