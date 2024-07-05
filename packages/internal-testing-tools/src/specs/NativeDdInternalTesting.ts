@@ -40,4 +40,5 @@ export interface Spec extends TurboModule {
     getAllEvents(feature: string): Promise<any>;
 }
 
+// eslint-disable-next-line import/no-default-export
 export default TurboModuleRegistry.get<Spec>('DdInternalTesting');

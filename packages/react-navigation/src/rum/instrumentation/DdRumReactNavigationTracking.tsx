@@ -77,6 +77,8 @@ export class DdRumReactNavigationTracking {
      */
     static startTrackingViews(
         navigationRef: NavigationContainerRef | null,
+
+        // eslint-disable-next-line func-names
         viewNamePredicate: ViewNamePredicate = function (
             _route: Route<string, any | undefined>,
             trackedName: string
@@ -135,6 +137,8 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.backHandler?.remove();
             DdRumReactNavigationTracking.backHandler = null;
             DdRumReactNavigationTracking.registeredContainer = null;
+
+            // eslint-disable-next-line func-names
             DdRumReactNavigationTracking.viewNamePredicate = function (
                 _route: Route<string, any | undefined>,
                 trackedName: string

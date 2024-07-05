@@ -18,6 +18,7 @@ export class XMLHttpRequestMock implements XMLHttpRequest {
     public requestHeaders: Map<string, string> = new Map();
     public responseHeaders: Map<string, string> = new Map();
 
+    // eslint-disable-next-line no-empty-function
     constructor() {}
     responseText: string;
     responseURL: string;

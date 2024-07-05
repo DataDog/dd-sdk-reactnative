@@ -106,6 +106,8 @@ it('M send a RUM ViewEvent W startTracking() for the first view', async () => {
 
 it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPredicate }', async () => {
     // GIVEN
+
+    // eslint-disable-next-line func-names
     const predicate: ViewNamePredicate = function (
         _event: ComponentDidAppearEvent,
         _trackedName: string
@@ -136,6 +138,8 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPre
 it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewPredicate returns null }', async () => {
     // GIVEN
     let viewDropped = false;
+
+    // eslint-disable-next-line func-names
     const predicate: ViewNamePredicate = function (
         _event: ComponentDidAppearEvent,
         _trackedName: string

@@ -153,4 +153,5 @@ export interface Spec extends TurboModule {
     getCurrentSessionId(): Promise<string | undefined>;
 }
 
+// eslint-disable-next-line import/no-default-export
 export default TurboModuleRegistry.get<Spec>('DdRum');
