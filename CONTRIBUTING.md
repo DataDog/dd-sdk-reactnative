@@ -130,7 +130,7 @@ Now you can proceed to `/ios`:
 2. make the changes below in `Podfile` and run `pod install`
 
 ```
-platform :ios, '11.0'
+platform :ios, '12.0'
 use_frameworks!
 
 # and disable Flipper related lines
