@@ -39,4 +39,5 @@ export interface Spec extends TurboModule {
     ): Promise<void>;
 }
 
+// eslint-disable-next-line import/no-default-export
 export default TurboModuleRegistry.get<Spec>('DdTrace');

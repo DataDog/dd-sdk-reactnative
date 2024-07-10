@@ -12,6 +12,7 @@ import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
+import { GlobalState } from '../../GlobalState/GlobalState';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -41,13 +42,13 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        DdSdkReactNative['_isInitialized'] = false;
+        GlobalState.instance.isInitialized = false;
         DdSdkReactNative['wasAutoInstrumented'] = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
         DdRumUserInteractionTracking.stopTracking();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
-        global.XMLHttpRequest = XMLHttpRequestMock;
+        global.XMLHttpRequest = XMLHttpRequestMock as any;
     });
 
     describe('initializationMode SYNC', () => {

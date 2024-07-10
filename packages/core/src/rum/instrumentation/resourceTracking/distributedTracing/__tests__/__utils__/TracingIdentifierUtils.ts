@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export default class TracingIdentifierUtils {
+export class TracingIdentifierUtils {
     /**
      * Extracts the Unix timestamp from the 128-bit hex string representation.
      * @param idHex - The 128-bit ID as a hexadecimal string.

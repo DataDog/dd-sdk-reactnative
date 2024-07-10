@@ -6,7 +6,7 @@
 
 import { TracingIdentifier, TracingIdFormat } from '../TracingIdentifier';
 
-import TracingIdentifierUtils from './__utils__/tracingIdentifierUtils';
+import { TracingIdentifierUtils } from './__utils__/tracingIdentifierUtils';
 
 describe('TracingIdentifier', () => {
     it('M return an unique identifier W toString', async () => {

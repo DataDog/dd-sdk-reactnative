@@ -64,4 +64,5 @@ export interface Spec extends TurboModule {
     clearAllData(): Promise<void>;
 }
 
+// eslint-disable-next-line import/no-default-export
 export default TurboModuleRegistry.get<Spec>('DdSdk');

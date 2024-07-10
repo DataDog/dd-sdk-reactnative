@@ -45,7 +45,6 @@ const privateProperties = {
         'DD_SDK_VERSION',
         'DD_VERSION',
         'DD_VERSION_SUFFIX',
-        '_isInitialized',
         'wasAutoInstrumented',
         'initializeNativeSDK',
         '_initializeFromDatadogProviderWithConfigurationAsync',

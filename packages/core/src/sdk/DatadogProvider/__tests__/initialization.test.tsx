@@ -7,11 +7,11 @@
 import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { DdRum } from '../../../rum/DdRum';
 import { RumActionType } from '../../../rum/types';
 import { DdTrace } from '../../../trace/DdTrace';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
+import { GlobalState } from '../../GlobalState/GlobalState';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
 import {
     DatadogProvider,
@@ -41,7 +41,7 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     afterEach(() => {
         jest.clearAllMocks();
-        DdSdkReactNative['_isInitialized'] = false;
+        GlobalState.instance.isInitialized = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
         (nowMock as any).mockReturnValue('timestamp_not_specified');

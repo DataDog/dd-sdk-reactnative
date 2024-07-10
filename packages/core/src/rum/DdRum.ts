@@ -6,12 +6,12 @@
 
 import type { GestureResponderEvent } from 'react-native';
 
-import { DdSdkReactNative } from '../DdSdkReactNative';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
+import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { validateContext } from '../utils/argsUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
@@ -284,7 +284,7 @@ class DdRumWrapper implements DdRumType {
     };
 
     async getCurrentSessionId(): Promise<string | undefined> {
-        if (!DdSdkReactNative.isInitialized()) {
+        if (!GlobalState.instance.isInitialized) {
             return undefined;
         }
         return this.nativeRum.getCurrentSessionId();

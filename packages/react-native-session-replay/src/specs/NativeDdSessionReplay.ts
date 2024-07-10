@@ -27,4 +27,5 @@ export interface Spec extends TurboModule {
     ): Promise<void>;
 }
 
+// eslint-disable-next-line func-names
 export default TurboModuleRegistry.get<Spec>('DdSessionReplay');

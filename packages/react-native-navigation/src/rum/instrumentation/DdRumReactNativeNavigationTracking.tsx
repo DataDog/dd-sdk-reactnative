@@ -49,6 +49,7 @@ export class DdRumReactNativeNavigationTracking {
      * Starts tracking the Navigation and sends a RUM View event every time a root View component appear/disappear.
      */
     static startTracking(
+        // eslint-disable-next-line func-names
         viewNamePredicate: ViewNamePredicate = function (
             _event: ComponentDidAppearEvent,
             trackedName: string
@@ -109,6 +110,8 @@ export class DdRumReactNativeNavigationTracking {
 
         DdRumReactNativeNavigationTracking.lastView = undefined;
         DdRumReactNativeNavigationTracking.isTracking = false;
+
+        // eslint-disable-next-line func-names
         DdRumReactNativeNavigationTracking.viewNamePredicate = function (
             _event: ComponentDidAppearEvent,
             trackedName: string

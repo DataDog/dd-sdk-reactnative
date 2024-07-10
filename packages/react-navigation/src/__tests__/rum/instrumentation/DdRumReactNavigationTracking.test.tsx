@@ -154,6 +154,8 @@ describe.each([
                 );
                 const goToAboutButton = getByText('Go to About');
                 const customViewName = 'custom_view_name';
+
+                // eslint-disable-next-line func-names
                 const predicate: ViewNamePredicate = function (
                     _route: Route<string, any | undefined>,
                     _trackedName: string
@@ -183,12 +185,15 @@ describe.each([
                     <FakeNavigator1 navigationRef={navigationRef} />
                 );
                 const goToAboutButton = getByText('Go to About');
+
+                // eslint-disable-next-line func-names
                 const predicate: ViewNamePredicate = function (
                     _route: Route<string, any | undefined>,
                     _trackedName: string
                 ) {
                     return null;
                 };
+
                 DdRumReactNavigationTracking.startTrackingViews(
                     navigationRef.current,
                     predicate

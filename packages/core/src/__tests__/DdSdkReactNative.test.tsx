@@ -19,6 +19,7 @@ import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/D
 import { ErrorSource, PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { DdSdk } from '../sdk/DdSdk';
+import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
@@ -56,7 +57,7 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
 });
 
 beforeEach(async () => {
-    DdSdkReactNative['_isInitialized'] = false;
+    GlobalState.instance.isInitialized = false;
     DdSdkReactNative['wasAutoInstrumented'] = false;
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.setAttributes.mockClear();
@@ -151,7 +152,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion
             });
 
-            expect(DdSdkReactNative['_isInitialized']).toBe(false);
+            expect(GlobalState.instance.isInitialized).toBe(false);
             expect(DdRumUserInteractionTracking.startTracking).toBeCalledTimes(
                 0
             );

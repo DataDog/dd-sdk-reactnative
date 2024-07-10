@@ -12,7 +12,7 @@ import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/Bu
 import { DdRum } from '../../../../../DdRum';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
-import TracingIdentifierUtils from '../../../distributedTracing/__tests__/__utils__/tracingIdentifierUtils';
+import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/tracingIdentifierUtils';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
