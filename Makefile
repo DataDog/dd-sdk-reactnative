@@ -5,7 +5,7 @@ RELEASE_PACKAGE_VERSION := $(shell node --eval="require('./packages/core/package
 define ReleaseTestAppPodfile
 require_relative '../node_modules/react-native/scripts/react_native_pods'\n
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'\n
-platform :ios, '11.0'\n
+platform :ios, '12.0'\n
 use_frameworks!\n
 target '${RELEASE_TEST_APP_NAME}' do\n
   config = use_native_modules!\n
