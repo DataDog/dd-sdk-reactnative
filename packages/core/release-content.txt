@@ -109,6 +109,8 @@ package/lib/commonjs/logs/types.js
 package/lib/commonjs/logs/types.js.map
 package/lib/commonjs/nativeModulesTypes.js
 package/lib/commonjs/nativeModulesTypes.js.map
+package/lib/commonjs/polyfills.js
+package/lib/commonjs/polyfills.js.map
 package/lib/commonjs/rum/DdRum.js
 package/lib/commonjs/rum/DdRum.js.map
 package/lib/commonjs/rum/eventMappers/actionEventMapper.js
@@ -185,6 +187,8 @@ package/lib/commonjs/sdk/EventMappers/utils/deepClone.js
 package/lib/commonjs/sdk/EventMappers/utils/deepClone.js.map
 package/lib/commonjs/sdk/FileBasedConfiguration/FileBasedConfiguration.js
 package/lib/commonjs/sdk/FileBasedConfiguration/FileBasedConfiguration.js.map
+package/lib/commonjs/sdk/GlobalState/GlobalState.js
+package/lib/commonjs/sdk/GlobalState/GlobalState.js.map
 package/lib/commonjs/sdk/UserInfoSingleton/UserInfoSingleton.js
 package/lib/commonjs/sdk/UserInfoSingleton/UserInfoSingleton.js.map
 package/lib/commonjs/sdk/UserInfoSingleton/types.js
@@ -239,6 +243,8 @@ package/lib/module/logs/types.js
 package/lib/module/logs/types.js.map
 package/lib/module/nativeModulesTypes.js
 package/lib/module/nativeModulesTypes.js.map
+package/lib/module/polyfills.js
+package/lib/module/polyfills.js.map
 package/lib/module/rum/DdRum.js
 package/lib/module/rum/DdRum.js.map
 package/lib/module/rum/eventMappers/actionEventMapper.js
@@ -315,6 +321,8 @@ package/lib/module/sdk/EventMappers/utils/deepClone.js
 package/lib/module/sdk/EventMappers/utils/deepClone.js.map
 package/lib/module/sdk/FileBasedConfiguration/FileBasedConfiguration.js
 package/lib/module/sdk/FileBasedConfiguration/FileBasedConfiguration.js.map
+package/lib/module/sdk/GlobalState/GlobalState.js
+package/lib/module/sdk/GlobalState/GlobalState.js.map
 package/lib/module/sdk/UserInfoSingleton/UserInfoSingleton.js
 package/lib/module/sdk/UserInfoSingleton/UserInfoSingleton.js.map
 package/lib/module/sdk/UserInfoSingleton/types.js
@@ -396,6 +404,7 @@ package/lib/typescript/sdk/DdSdk.d.ts
 package/lib/typescript/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/sdk/EventMappers/utils/deepClone.d.ts
 package/lib/typescript/sdk/FileBasedConfiguration/FileBasedConfiguration.d.ts
+package/lib/typescript/sdk/GlobalState/GlobalState.d.ts
 package/lib/typescript/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/sdk/UserInfoSingleton/types.d.ts
 package/lib/typescript/specs/NativeDdLogs.d.ts
@@ -436,6 +445,7 @@ package/src/logs/__tests__/eventMapper.test.ts
 package/src/logs/eventMapper.ts
 package/src/logs/types.ts
 package/src/nativeModulesTypes.ts
+package/src/polyfills.js
 package/src/rum/DdRum.ts
 package/src/rum/__mocks__/MockTimeProvider.ts
 package/src/rum/__tests__/DdRum.test.ts
@@ -499,6 +509,7 @@ package/src/sdk/FileBasedConfiguration/FileBasedConfiguration.ts
 package/src/sdk/FileBasedConfiguration/__tests__/FileBasedConfiguration.test.ts
 package/src/sdk/FileBasedConfiguration/__tests__/__fixtures__/configuration-all-fields.json
 package/src/sdk/FileBasedConfiguration/__tests__/__fixtures__/malformed-configuration.json
+package/src/sdk/GlobalState/GlobalState.tsx
 package/src/sdk/UserInfoSingleton/UserInfoSingleton.ts
 package/src/sdk/UserInfoSingleton/__tests__/UserInfoSingleton.test.ts
 package/src/sdk/UserInfoSingleton/types.ts
