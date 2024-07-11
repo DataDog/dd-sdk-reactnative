@@ -60,6 +60,7 @@ package/lib/typescript/core/src/sdk/DdSdk.d.ts
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/core/src/sdk/EventMappers/utils/deepClone.d.ts
 package/lib/typescript/core/src/sdk/FileBasedConfiguration/FileBasedConfiguration.d.ts
+package/lib/typescript/core/src/sdk/GlobalState/GlobalState.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/types.d.ts
 package/lib/typescript/core/src/specs/NativeDdLogs.d.ts
