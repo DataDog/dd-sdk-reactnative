@@ -43,6 +43,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    jest.restoreAllMocks();
     DdRumUserInteractionTracking.stopTracking();
 });
 
@@ -51,7 +52,7 @@ afterEach(() => {
 
 it('M intercept and send a RUM event W onPress { Button component }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <Button title="Click me" onPress={event => {}} />
@@ -142,9 +143,9 @@ it('M intercept and send a RUM event W onPress { custom action name prop used }'
 
 it('M intercept only once W startTracking { called multiple times }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
-    DdRumUserInteractionTracking.startTracking();
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
+    DdRumUserInteractionTracking.startTracking({});
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <Button title="Click me" onPress={event => {}} />
@@ -172,7 +173,7 @@ it('M intercept only once W startTracking { called multiple times }', async () =
 
 it('M intercept and send a RUM event W onPress { TouchableOpacity component }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <TouchableOpacity style={styles.button} onPress={event => {}}>
@@ -202,7 +203,7 @@ it('M intercept and send a RUM event W onPress { TouchableOpacity component }', 
 
 it('M intercept and send a RUM event W onPress { TouchableHighlight component }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <TouchableHighlight onPress={event => {}} underlayColor="white">
@@ -234,7 +235,7 @@ it('M intercept and send a RUM event W onPress { TouchableHighlight component }'
 
 it('M intercept and send a RUM event W onPress { TouchableNativeFeedback component }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <TouchableNativeFeedback onPress={event => {}}>
@@ -266,7 +267,7 @@ it('M intercept and send a RUM event W onPress { TouchableNativeFeedback compone
 
 it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback component }', async () => {
     // GIVEN
-    DdRumUserInteractionTracking.startTracking();
+    DdRumUserInteractionTracking.startTracking({});
     const { getByText } = render(
         <View>
             <TouchableWithoutFeedback onPress={event => {}}>
@@ -308,7 +309,7 @@ describe('startTracking memoization', () => {
 
     it('M keep memoization working for elements W an onPress prop is passed', async () => {
         // GIVEN
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
         const DummyComponent = props => {
             rendersCount++;
@@ -340,7 +341,7 @@ describe('startTracking memoization', () => {
 
     it('M keep memoization working for elements W no onPress prop is passed', async () => {
         // GIVEN
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
         const DummyComponent = props => {
             rendersCount++;
@@ -367,7 +368,7 @@ describe('startTracking memoization', () => {
 
     it('M keep memoization working for elements W an onPress prop is passed and custom arePropsEqual specified', async () => {
         // GIVEN
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
         const DummyComponent = props => {
             rendersCount++;
@@ -407,7 +408,7 @@ describe('startTracking memoization', () => {
 
     it('M keep memoization working for elements W an onPress prop is passed and custom arePropsEqual specified including onPress check', async () => {
         // GIVEN
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
         const DummyComponent = props => {
             rendersCount++;
@@ -449,10 +450,11 @@ describe('startTracking', () => {
      * to be run in this order
      */
     it('does not crash if jsx-runtime does not contain jsx', () => {
+        jest.replaceProperty(global, '__DEV__' as any, false);
+
         expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
         jest.setMock('react/jsx-runtime', {});
-
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
         expect(DdSdk.telemetryDebug).toBeCalledWith(
             'React jsx runtime does not export new jsx transform'
@@ -462,7 +464,7 @@ describe('startTracking', () => {
         expect(DdRumUserInteractionTracking['isTracking']).toBe(false);
         jest.setMock('react/package.json', { version: '16.13.0' });
 
-        DdRumUserInteractionTracking.startTracking();
+        DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
         expect(DdSdk.telemetryDebug).toBeCalledWith(
             'React version does not support new jsx transform'

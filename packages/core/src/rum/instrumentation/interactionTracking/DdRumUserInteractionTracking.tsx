@@ -16,7 +16,7 @@ import type { DdEventsInterceptorOptions } from './DdEventsInterceptor';
 import type EventsInterceptor from './EventsInterceptor';
 import NoOpEventsInterceptor from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
-import { getJsxRuntime } from './getJsxRuntime';
+import { getJsxRuntimes } from './getJsxRuntime';
 
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
@@ -28,6 +28,7 @@ export class DdRumUserInteractionTracking {
     private static originalCreateElement = React.createElement;
     private static originalMemo = React.memo;
     private static originalJsx = null;
+    private static originalDevJsx = null;
 
     private static patchCreateElementFunction = (
         originalFunction: typeof React.createElement,
@@ -68,6 +69,7 @@ export class DdRumUserInteractionTracking {
             );
             return;
         }
+
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor(
             options
         );
@@ -80,14 +82,31 @@ export class DdRumUserInteractionTracking {
         };
 
         try {
-            const jsxRuntime = getJsxRuntime();
-            const originalJsx = jsxRuntime.jsx;
+            const [jsxRuntime, jsxDevRuntime] = getJsxRuntimes();
+            const originalJsx = jsxRuntime?.jsx;
+            const originalDevJsx = jsxDevRuntime?.jsxDEV;
+
             this.originalJsx = originalJsx;
-            jsxRuntime.jsx = (
-                ...args: Parameters<typeof React.createElement>
-            ): ReturnType<typeof React.createElement> => {
-                return this.patchCreateElementFunction(originalJsx, args);
-            };
+            this.originalDevJsx = originalDevJsx;
+
+            if (originalJsx) {
+                jsxRuntime.jsx = (
+                    ...args: Parameters<typeof React.createElement>
+                ): ReturnType<typeof React.createElement> => {
+                    return this.patchCreateElementFunction(originalJsx, args);
+                };
+            }
+
+            if (originalDevJsx) {
+                jsxRuntime.jsxDEV = (
+                    ...args: Parameters<typeof React.createElement>
+                ): ReturnType<typeof React.createElement> => {
+                    return this.patchCreateElementFunction(
+                        originalDevJsx,
+                        args
+                    );
+                };
+            }
         } catch (e) {
             DdSdk.telemetryDebug(getErrorMessage(e));
         }
@@ -135,10 +154,14 @@ export class DdRumUserInteractionTracking {
         React.createElement = this.originalCreateElement;
         React.memo = this.originalMemo;
         DdRumUserInteractionTracking.isTracking = false;
-        if (this.originalJsx) {
-            const jsxRuntime = getJsxRuntime();
+        if (this.originalJsx || this.originalDevJsx) {
+            const [jsxRuntime, jsxDevRuntime] = getJsxRuntimes();
+
             jsxRuntime.jsx = this.originalJsx;
+            jsxDevRuntime.jsxDEV = this.originalDevJsx;
+
             this.originalJsx = null;
+            this.originalDevJsx = null;
         }
     }
 }
