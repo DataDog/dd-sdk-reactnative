@@ -9,7 +9,6 @@ import DatadogCore
 import DatadogInternal
 
 internal class DatadogCoreProxy: DatadogCoreProtocol {
-    
     let core: DatadogCoreProtocol
     
     private var featureScopeInterceptors: [String: FeatureScopeInterceptor] = [:]
@@ -20,44 +19,40 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
 
     func register<T>(feature: T) throws where T: DatadogFeature {
         do {
-            try self.core.register(feature: feature)
-            featureScopeInterceptors[T.name] = FeatureScopeInterceptor()
+            try core.register(feature: feature)
         } catch {
-            // TODO: add logging here
+            // TODO: Add logging here
         }
     }
-    
+
     func feature<T>(named name: String, type: T.Type) -> T? {
         return core.feature(named: name, type: type)
     }
-    
-    func scope<T>(for featureType: T.Type) -> any DatadogInternal.FeatureScope where T : DatadogInternal.DatadogFeature {
-        if let interceptor = featureScopeInterceptors[featureType.name] {
-            return FeatureScopeProxy(
-                proxy: core.scope(for: featureType),
-                interceptor: interceptor
-            )
+
+    func scope<T>(for featureType: T.Type) -> FeatureScope where T: DatadogFeature {
+        if featureScopeInterceptors[T.name] == nil {
+            featureScopeInterceptors[T.name] = FeatureScopeInterceptor()
         }
-        return core.scope(for: featureType)
+        return FeatureScopeProxy(
+            proxy: core.scope(for: featureType),
+            interceptor: featureScopeInterceptors[T.name]!
+        )
     }
 
-    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {
-        core.send(message: message, else: fallback)
-    }
-
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
+    func set(baggage: @escaping () -> FeatureBaggage?, forKey key: String) {
         core.set(baggage: baggage, forKey: key)
+    }
+
+    func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
+        core.send(message: message, else: fallback)
     }
 }
 
 private struct FeatureScopeProxy: FeatureScope {
     let proxy: FeatureScope
     let interceptor: FeatureScopeInterceptor
-    
-    var dataStore: DataStore { proxy.dataStore }
-    var telemetry: Telemetry { proxy.telemetry }
 
-    func eventWriteContext(bypassConsent: Bool, _ block: @escaping (DatadogInternal.DatadogContext, any DatadogInternal.Writer) -> Void) {
+    func eventWriteContext(bypassConsent: Bool, _ block: @escaping (DatadogContext, Writer) -> Void) {
         interceptor.enter()
         proxy.eventWriteContext(bypassConsent: bypassConsent) { context, writer in
             block(context, interceptor.intercept(writer: writer))
@@ -65,15 +60,22 @@ private struct FeatureScopeProxy: FeatureScope {
         }
     }
 
-    func context(_ block: @escaping (DatadogInternal.DatadogContext) -> Void) {
-        proxy.context(block)
+    func context(_ block: @escaping (DatadogContext) -> Void) {
+        interceptor.enter()
+        proxy.context { context in
+            block(context)
+            interceptor.leave()
+        }
     }
-    
-    func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {
+
+    var telemetry: Telemetry { proxy.telemetry }
+    var dataStore: DataStore { proxy.dataStore }
+
+    func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
         proxy.send(message: message, else: fallback)
     }
-    
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
+
+    func set(baggage: @escaping () -> FeatureBaggage?, forKey key: String) {
         proxy.set(baggage: baggage, forKey: key)
     }
 }
@@ -82,10 +84,14 @@ private class FeatureScopeInterceptor {
     struct InterceptingWriter: Writer {
         static let jsonEncoder = JSONEncoder.dd.default()
 
+        let group: DispatchGroup
         let actualWriter: Writer
         unowned var interception: FeatureScopeInterceptor?
 
         func write<T: Encodable, M: Encodable>(value: T, metadata: M) {
+            group.enter()
+            defer { group.leave() }
+
             actualWriter.write(value: value, metadata: metadata)
 
             let event = value
@@ -95,7 +101,7 @@ private class FeatureScopeInterceptor {
     }
 
     func intercept(writer: Writer) -> Writer {
-        return InterceptingWriter(actualWriter: writer, interception: self)
+        return InterceptingWriter(group: group, actualWriter: writer, interception: self)
     }
 
     // MARK: - Synchronizing and awaiting events:
@@ -108,14 +114,14 @@ private class FeatureScopeInterceptor {
     func enter() { group.enter() }
     func leave() { group.leave() }
 
+    func waitAndReturnEvents(timeout: DispatchTime) -> [(event: Any, data: Data)] {
+        _ = group.wait(timeout: timeout)
+        return events
+    }
+    
     func waitAndDeleteEvents() -> Void {
         _ = group.wait(timeout: .distantFuture)
         events = []
-    }
-
-    func waitAndReturnEvents() -> [(event: Any, data: Data)] {
-        _ = group.wait(timeout: .distantFuture)
-        return events
     }
 }
 
@@ -125,22 +131,25 @@ extension DatadogCoreProxy {
     ///   - name: The Feature to retrieve events from
     ///   - type: The type of events to filter out
     /// - Returns: A list of events.
-    public func waitAndReturnEvents<T>(ofFeature name: String, ofType type: T.Type) -> [T] where T: Encodable {
-        if let interceptor = self.featureScopeInterceptors[name] {
-            return interceptor.waitAndReturnEvents().compactMap { $0.event as? T }
+    func waitAndReturnEvents<T>(ofFeature name: String, ofType type: T.Type, timeout: DispatchTime = .distantFuture) -> [T] where T: Encodable {
+        guard let interceptor = self.featureScopeInterceptors[name] else {
+            return [] // feature scope was not requested, so there's no interception
         }
-        return []
+        return interceptor.waitAndReturnEvents(timeout: timeout).compactMap { $0.event as? T }
     }
 
     /// Returns serialized events of given Feature.
     ///
     /// - Parameter feature: The Feature to retrieve events from
     /// - Returns: A list of serialized events.
-    public func waitAndReturnEventsData(ofFeature name: String) -> [String] {
-        if let interceptor = self.featureScopeInterceptors[name] {
-            return interceptor.waitAndReturnEvents().compactMap { $0.data.base64EncodedString() }
+    func waitAndReturnEventsData(ofFeature name: String, timeout: DispatchTime = .distantFuture) -> [String] {
+        guard let interceptor = self.featureScopeInterceptors[name] else {
+            return [] // feature scope was not requested, so there's no interception
         }
-        return []
+        
+        return interceptor
+            .waitAndReturnEvents(timeout: timeout)
+            .compactMap { $0.data.base64EncodedString() }
     }
 
     /// Clears all events of a given Feature
