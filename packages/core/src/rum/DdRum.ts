@@ -16,6 +16,7 @@ import { validateContext } from '../utils/argsUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
+import { DdAttributes } from './DdAttributes';
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
@@ -23,10 +24,10 @@ import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
 import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
 import type {
+    ErrorSource,
     DdRumType,
     RumActionType,
-    ResourceKind,
-    ErrorSource
+    ResourceKind
 } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -229,28 +230,32 @@ class DdRumWrapper implements DdRumType {
         source: ErrorSource,
         stacktrace: string,
         context: object = {},
-        timestampMs: number = this.timeProvider.now()
+        timestampMs: number = this.timeProvider.now(),
+        fingerprint?: string
     ): Promise<void> => {
         const mappedEvent = this.errorEventMapper.applyEventMapper({
             message,
             source,
             stacktrace,
             context: validateContext(context),
-            timestampMs
+            timestampMs,
+            fingerprint: fingerprint ?? ''
         });
+
         if (!mappedEvent) {
             return generateEmptyPromise();
         }
         InternalLog.log(`Adding RUM Error “${message}”`, SdkVerbosity.DEBUG);
         const updatedContext: any = mappedEvent.context;
-        updatedContext['_dd.error.source_type'] = 'react-native';
+        updatedContext[DdAttributes.errorSourceType] = 'react-native';
         return bufferVoidNativeCall(() =>
             this.nativeRum.addError(
                 mappedEvent.message,
                 mappedEvent.source,
                 mappedEvent.stacktrace,
                 updatedContext,
-                mappedEvent.timestampMs
+                mappedEvent.timestampMs,
+                mappedEvent.fingerprint
             )
         );
     };

@@ -73,7 +73,8 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -114,7 +115,8 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -153,7 +155,8 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(DdRum.addError.mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
@@ -199,7 +202,8 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(DdRum.addError.mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
@@ -246,7 +250,8 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -292,7 +297,8 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -338,7 +344,8 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -384,7 +391,8 @@ it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -436,7 +444,8 @@ it('M not report error in console handler W onGlobalError() {with console report
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(consoleReportingErrorHandler).toBeCalledTimes(1);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
@@ -480,7 +489,8 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
         {
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -522,7 +532,8 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
         {
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -556,7 +567,8 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
         {
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -597,7 +609,8 @@ it('M intercept and send a RUM event W onConsole() {Error with source file and n
         {
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -644,7 +657,8 @@ describe.each([
             {
                 '_dd.error.source_type': 'react-native'
             },
-            expect.any(Number)
+            expect.any(Number),
+            ''
         );
         expect(baseConsoleErrorCalled).toStrictEqual(true);
         expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
@@ -683,7 +697,8 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(DdRum.addError.mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
@@ -723,7 +738,8 @@ it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}'
         {
             '_dd.error.source_type': 'react-native'
         },
-        expect.any(Number)
+        expect.any(Number),
+        ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
     expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);

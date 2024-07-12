@@ -679,7 +679,8 @@ describe('DdSdkReactNative', () => {
                 {
                     '_dd.error.source_type': 'react-native'
                 },
-                456
+                456,
+                ''
             );
         });
 

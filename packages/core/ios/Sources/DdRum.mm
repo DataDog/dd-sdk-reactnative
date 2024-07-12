@@ -93,10 +93,11 @@ RCT_REMAP_METHOD(addError, withMessage:(NSString*)message
                  withStacktrace:(NSString*)stacktrace
                  withContext:(NSDictionary*)context
                  withTimestampms:(double)timestampMs
+                 withFingerprint:(NSString*)fingerprint
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self addError:message source:source stacktrace:stacktrace context:context timestampMs:timestampMs resolve:resolve reject:reject];
+    [self addError:message source:source stacktrace:stacktrace context:context timestampMs:timestampMs fingerprint: fingerprint resolve:resolve reject:reject];
 }
 
 RCT_REMAP_METHOD(addTiming, withName:(NSString*)name
@@ -156,8 +157,8 @@ RCT_REMAP_METHOD(getCurrentSessionId,
     [self.ddRumImplementation addActionWithType:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-- (void)addError:(NSString *)message source:(NSString *)source stacktrace:(NSString *)stacktrace context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddRumImplementation addErrorWithMessage:message source:source stacktrace:stacktrace context:context timestampMs:timestampMs resolve:resolve reject:reject];
+- (void)addError:(NSString *)message source:(NSString *)source stacktrace:(NSString *)stacktrace context:(NSDictionary *)context timestampMs:(double)timestampMs fingerprint:(NSString *)fingerprint resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation addErrorWithMessage:message source:source stacktrace:stacktrace context:context timestampMs:timestampMs fingerprint:fingerprint resolve:resolve reject:reject];
 }
 
 - (void)addFeatureFlagEvaluation:(NSString *)name value:(NSDictionary *)value resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

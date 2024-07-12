@@ -234,7 +234,7 @@ internal class DdRumTests: XCTestCase {
     }
 
     func testAddError() throws {
-        rum.addError(message: "error message", source: "webview", stacktrace: "error trace", context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
+        rum.addError(message: "error message", source: "webview", stacktrace: "error trace", context: ["foo": 123], timestampMs: randomTimestamp, fingerprint: "", resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
         XCTAssertEqual(mockNativeRUM.calledMethods.last, .addError(message: "error message", source: .webview, stack: "error trace"))
