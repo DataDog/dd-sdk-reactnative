@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export const getJsxRuntime = () => {
+export const getJsxRuntimes = () => {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     const [major, minor] = require('react/package.json').version.split('.');
     // We need to check on the version of React before requiring 'react/jsx-runtime') as
@@ -21,12 +21,19 @@ export const getJsxRuntime = () => {
     // disable all further imports.
     // /!\/!\/!\/!\/!\/!\
     //
+    let jsxDevRuntime;
+    if (__DEV__) {
+        // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+        jsxDevRuntime = require('react/jsx-dev-runtime');
+    }
+
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     const jsxRuntime = require('react/jsx-runtime');
-    if (!jsxRuntime.jsx) {
+    if (!jsxRuntime.jsx && !__DEV__) {
         throw new Error('React jsx runtime does not export new jsx transform');
     }
-    return jsxRuntime;
+
+    return [jsxRuntime, jsxDevRuntime];
 };
 
 /**
