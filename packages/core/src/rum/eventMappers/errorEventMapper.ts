@@ -14,6 +14,7 @@ type RawError = {
     stacktrace: string;
     context: object;
     timestampMs: number;
+    fingerprint: string;
 };
 
 type ErrorEvent = RawError & AdditionalEventDataForMapper;
@@ -24,6 +25,7 @@ type NativeError = {
     stacktrace: string;
     context: object;
     timestampMs: number;
+    fingerprint: string;
 };
 
 export type ErrorEventMapper = (event: ErrorEvent) => ErrorEvent | null;

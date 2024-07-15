@@ -175,9 +175,18 @@ class DdRum(
         stacktrace: String,
         context: ReadableMap,
         timestampMs: Double,
+        fingerprint: String,
         promise: Promise
     ) {
-        implementation.addError(message, source, stacktrace, context, timestampMs, promise)
+        implementation.addError(
+            message,
+            source,
+            stacktrace,
+            context,
+            timestampMs,
+            fingerprint,
+            promise
+        )
     }
 
     /**

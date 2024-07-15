@@ -54,6 +54,7 @@ export type RawLogWithError = {
     stacktrace: string;
     context: object;
     status: LogStatus;
+    fingerprint?: string;
 };
 
 /**
@@ -69,6 +70,7 @@ export type NativeLogWithError = {
     errorMessage: string;
     stacktrace: string;
     context: object;
+    fingerprint?: string;
 };
 
 export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
@@ -79,6 +81,7 @@ export type LogEvent = {
     errorKind?: string;
     errorMessage?: string;
     stacktrace?: string;
+    fingerprint?: string;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
     readonly userInfo: UserInfo;
@@ -94,5 +97,6 @@ export type LogWithErrorArguments = [
     errorKind?: string,
     errorMessage?: string,
     stacktrace?: string,
-    context?: object
+    context?: object,
+    fingerprint?: string
 ];

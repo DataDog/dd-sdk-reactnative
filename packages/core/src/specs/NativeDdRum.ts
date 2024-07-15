@@ -119,13 +119,15 @@ export interface Spec extends TurboModule {
      * @param stacktrace: The error stacktrace.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
+     * @param fingerprint: Optional custom error fingerprint.
      */
     addError(
         message: string,
         source: string,
         stacktrace: string,
         context: Object,
-        timestampMs: number
+        timestampMs: number,
+        fingerprint: string
     ): Promise<void>;
 
     /**

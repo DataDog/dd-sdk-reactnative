@@ -65,6 +65,7 @@ private extension RUMMethod {
 @objc
 public class DdRumImplementation: NSObject {
     internal static let timestampKey = "_dd.timestamp"
+    internal static let fingerprintKey = "_dd.error.fingerprint"
     internal static let resourceTimingsKey = "_dd.resource_timings"
 
     internal static let fetchTimingKey = "fetch"
@@ -156,8 +157,20 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addError(message: message, type: nil, stack: stacktrace, source: RUMErrorSource(from: source), attributes: attributes(from: context, with: timestampMs), file: nil, line: nil)
+    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, fingerprint: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    
+        func addErrorWithContext(errorContext: NSDictionary) -> Void {
+            nativeRUM.addError(message: message, type: nil, stack: stacktrace, source: RUMErrorSource(from: source), attributes: attributes(from: errorContext, with: timestampMs), file: nil, line: nil)
+        }
+        
+        if !fingerprint.isEmpty {
+            let updatedContext = NSMutableDictionary(dictionary: context)
+            updatedContext[Self.fingerprintKey] = fingerprint
+            addErrorWithContext(errorContext: updatedContext)
+        } else {
+            addErrorWithContext(errorContext: context)
+        }
+        
         resolve(nil)
     }
 

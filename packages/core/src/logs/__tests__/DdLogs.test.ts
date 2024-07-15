@@ -184,6 +184,128 @@ describe('DdLogs', () => {
             }
         );
 
+        it.each([
+            [
+                'kind',
+                'message',
+                'stacktrace',
+                { context: 'value' },
+                'custom-fingerprint-0'
+            ],
+            // 1 argument is undefined
+            [
+                undefined,
+                'message',
+                'stacktrace',
+                { context: 'value' },
+                'custom-fingerprint-1'
+            ],
+            [
+                'kind',
+                undefined,
+                'stacktrace',
+                { context: 'value' },
+                'custom-fingerprint-2'
+            ],
+            [
+                'kind',
+                'message',
+                undefined,
+                { context: 'value' },
+                'custom-fingerprint-3'
+            ],
+            ['kind', 'message', 'stacktrace', undefined, 'custom-fingerprint'],
+            // 2 arguments are undefined
+            [
+                undefined,
+                undefined,
+                'stacktrace',
+                { context: 'value' },
+                'custom-fingerprint-4'
+            ],
+            [
+                undefined,
+                'message',
+                undefined,
+                { context: 'value' },
+                'custom-fingerprint-5'
+            ],
+            [
+                undefined,
+                'message',
+                'stacktrace',
+                undefined,
+                'custom-fingerprint-6'
+            ],
+            [
+                'kind',
+                undefined,
+                undefined,
+                { context: 'value' },
+                'custom-fingerprint-7'
+            ],
+            [
+                'kind',
+                undefined,
+                'stacktrace',
+                undefined,
+                'custom-fingerprint-8'
+            ],
+            ['kind', 'message', undefined, undefined, 'custom-fingerprint-9'],
+            // 3 arguments are undefined
+            [
+                undefined,
+                undefined,
+                'stacktrace',
+                undefined,
+                'custom-fingerprint-10'
+            ],
+            [
+                undefined,
+                'message',
+                undefined,
+                undefined,
+                'custom-fingerprint-11'
+            ],
+            ['kind', undefined, undefined, undefined, 'custom-fingerprint-12'],
+            [
+                undefined,
+                undefined,
+                undefined,
+                { context: 'value' },
+                'custom-fingerprint-13'
+            ]
+        ])(
+            'sends error info with custom fingerprint when provided for %s %s %s %s %s',
+            async (
+                errorKind,
+                errorMessage,
+                stacktrace,
+                context,
+                fingerprint
+            ) => {
+                await DdLogs.info(
+                    'message',
+                    errorKind,
+                    errorMessage,
+                    stacktrace,
+                    context,
+                    fingerprint
+                );
+                expect(NativeModules.DdLogs.infoWithError).toHaveBeenCalledWith(
+                    'message',
+                    errorKind,
+                    errorMessage,
+                    stacktrace,
+                    {
+                        ...(context || {}),
+                        '_dd.error.source_type': 'react-native',
+                        '_dd.error.fingerprint': fingerprint
+                    }
+                );
+            }
+        );
+
         it('does not send error info when no error and no context is passed', async () => {
             await DdLogs.info(
                 'message',

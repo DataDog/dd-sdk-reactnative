@@ -523,7 +523,8 @@ describe('DdRum', () => {
                         ...context,
                         '_dd.error.source_type': 'react-native'
                     },
-                    expect.anything()
+                    expect.anything(),
+                    ''
                 );
             });
 
@@ -549,7 +550,8 @@ describe('DdRum', () => {
                     {
                         '_dd.error.source_type': 'react-native'
                     },
-                    expect.anything()
+                    expect.anything(),
+                    ''
                 );
             });
 
@@ -576,7 +578,8 @@ describe('DdRum', () => {
                         context,
                         '_dd.error.source_type': 'react-native'
                     },
-                    expect.anything()
+                    expect.anything(),
+                    ''
                 );
             });
         });
@@ -678,6 +681,38 @@ describe('DdRum', () => {
             );
         });
 
+        it('M add error fingerprint W addError() { with custom fingerprint }', async () => {
+            // Given
+            const message = 'Oops I did it again!';
+            const source = ErrorSource.SOURCE;
+            const stacktrace = 'doSomething() at ./path/to/file.js:67:3';
+
+            // When
+            DdRum.addError(
+                message,
+                source,
+                stacktrace,
+                undefined,
+                undefined,
+                'custom-fingerprint'
+            );
+
+            // Then
+            expect(NativeModules.DdRum.addError.mock.calls.length).toBe(1);
+            expect(NativeModules.DdRum.addError.mock.calls[0][0]).toBe(message);
+            expect(NativeModules.DdRum.addError.mock.calls[0][1]).toBe(source);
+            expect(NativeModules.DdRum.addError.mock.calls[0][2]).toBe(
+                stacktrace
+            );
+            const context = NativeModules.DdRum.addError.mock.calls[0][3];
+            expect(context['_dd.error.source_type']).toStrictEqual(
+                'react-native'
+            );
+            expect(NativeModules.DdRum.addError.mock.calls[0][5]).toBe(
+                'custom-fingerprint'
+            );
+        });
+
         it('M add error source type W addError() {with custom attributes}', async () => {
             // Given
             const message = 'Oops I did it again!';
@@ -730,7 +765,8 @@ describe('DdRum', () => {
                     '_dd.error.source_type': 'react-native',
                     isFatal: true
                 },
-                456
+                456,
+                ''
             );
         });
 

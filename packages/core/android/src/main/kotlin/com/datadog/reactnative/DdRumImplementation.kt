@@ -219,11 +219,17 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         stacktrace: String,
         context: ReadableMap,
         timestampMs: Double,
+        fingerprint: String,
         promise: Promise
     ) {
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
+
+        if (fingerprint.isNotEmpty()) {
+            attributes[RumAttributes.ERROR_FINGERPRINT] = fingerprint
+        }
+
         datadog.getRumMonitor().addErrorWithStacktrace(
             message = message,
             source = source.asErrorSource(),

@@ -381,10 +381,38 @@ internal class DdRumTest {
             stackTrace,
             fakeContext.toReadableMap(),
             fakeTimestamp,
+            "",
             mockPromise
         )
 
         // Then
+        verify(mockRumMonitor).addErrorWithStacktrace(message, source, stackTrace, updatedContext)
+    }
+
+    @Test
+    fun `M call addError with custom fingerprint W addError() with fingerprint`(
+        @StringForgery message: String,
+        @Forgery source: RumErrorSource,
+        @StringForgery stackTrace: String
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+
+        // When
+        testedDdRum.addError(
+            message,
+            source.name,
+            stackTrace,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            "custom-error-fingerprint",
+            mockPromise
+        )
+
+        // Then
+        updatedContext["_dd.error.fingerprint"] = "custom-error-fingerprint"
         verify(mockRumMonitor).addErrorWithStacktrace(message, source, stackTrace, updatedContext)
     }
 
@@ -406,6 +434,7 @@ internal class DdRumTest {
             stackTrace,
             fakeContext.toReadableMap(),
             fakeTimestamp,
+            "",
             mockPromise
         )
 

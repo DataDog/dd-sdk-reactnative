@@ -139,12 +139,14 @@ export interface DdNativeRumType extends NativeDdRum {
      * @param stacktrace: The error stacktrace.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
+     * @param fingerprint: Optional custom error fingerprint.
      */
     addError(
         message: string,
         source: ErrorSource,
         stacktrace: string,
         context: object,
-        timestampMs: number
+        timestampMs: number,
+        fingerprint: string | undefined
     ): Promise<void>;
 }
