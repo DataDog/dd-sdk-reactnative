@@ -8,10 +8,10 @@ package com.datadog.reactnative
 
 import android.content.Context
 import android.util.Log
-import android.view.Choreographer
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.RumPerformanceMetric
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -21,12 +21,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** The entry point to initialize Datadog's features. */
 class DdSdkImplementation(
-    reactContext: ReactApplicationContext,
-    private val datadog: DatadogWrapper = DatadogSDKWrapper()
+    private val reactContext: ReactApplicationContext,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val uiThreadExecutor: UiThreadExecutor = ReactUiThreadExecutor()
 ) {
     internal val appContext: Context = reactContext.applicationContext
-    internal val reactContext: ReactApplicationContext = reactContext
     internal val initialized = AtomicBoolean(false)
+    private var frameRateProvider: FrameRateProvider? = null
 
     // region DdSdk
 
@@ -39,7 +40,23 @@ class DdSdkImplementation(
 
         val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
-        monitorJsRefreshRate(ddSdkConfiguration)
+
+        this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)
+
+        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
+            override fun onHostResume() {
+                frameRateProvider?.start()
+            }
+
+            override fun onHostPause() {
+                frameRateProvider?.stop()
+            }
+
+            override fun onHostDestroy() {
+                frameRateProvider?.stop()
+            }
+        })
+
         initialized.set(true)
 
         promise.resolve(null)
@@ -150,26 +167,16 @@ class DdSdkImplementation(
         }
     }
 
-    private fun handlePostFrameCallbackError(e: IllegalStateException) {
-        datadog.telemetryError(e.message ?: MONITOR_JS_ERROR_MESSAGE, e)
-    }
-
-    private fun monitorJsRefreshRate(ddSdkConfiguration: DdSdkConfiguration) {
-        val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration)
-        if (frameTimeCallback != null) {
-            reactContext.runOnJSQueueThread {
-                val vitalFrameCallback =
-                    VitalFrameCallback(frameTimeCallback, ::handlePostFrameCallbackError) {
-                        initialized.get()
-                    }
-                try {
-                    Choreographer.getInstance().postFrameCallback(vitalFrameCallback)
-                } catch (e: IllegalStateException) {
-                    // This should never happen as the React Native thread always has a Looper
-                    handlePostFrameCallbackError(e)
-                }
-            }
+    private fun createFrameRateProvider(
+        ddSdkConfiguration: DdSdkConfiguration
+    ): FrameRateProvider? {
+        val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration) ?: return null
+        val frameRateProvider = FrameRateProvider(frameTimeCallback, uiThreadExecutor)
+        reactContext.runOnJSQueueThread {
+            frameRateProvider.start()
         }
+
+        return frameRateProvider
     }
 
     private fun buildFrameTimeCallback(
