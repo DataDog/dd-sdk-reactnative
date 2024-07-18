@@ -97,6 +97,10 @@ private class MockSessionReplay: SessionReplayProtocol {
 private class MockUIManager: RCTUIManager {}
 
 private class MockDatadogCore: DatadogCoreProtocol {
+    func mostRecentModifiedFileAt(before: Date) throws -> Date? {
+        return nil
+    }
+    
     func scope<T>(for featureType: T.Type) -> any DatadogInternal.FeatureScope where T : DatadogInternal.DatadogFeature {
         return NOPFeatureScope()
     }

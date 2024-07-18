@@ -46,6 +46,10 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
         core.send(message: message, else: fallback)
     }
+    
+    func mostRecentModifiedFileAt(before: Date) throws -> Date? {
+        return try core.mostRecentModifiedFileAt(before: before)
+    }
 }
 
 private struct FeatureScopeProxy: FeatureScope {
