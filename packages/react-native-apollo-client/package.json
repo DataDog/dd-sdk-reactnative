@@ -41,7 +41,7 @@
         "@apollo/client": "^3.8.3",
         "@testing-library/react-native": "7.0.2",
         "graphql": "^16.8.0",
-        "react-native-builder-bob": "0.17.1"
+        "react-native-builder-bob": "0.26.0"
     },
     "peerDependencies": {
         "@apollo/client": ">=3.0",
