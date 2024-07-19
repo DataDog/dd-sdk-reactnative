@@ -10,7 +10,8 @@ import type {
     RumErrorEvent,
     RumLongTaskEvent,
     RumResourceEvent,
-    MobileSegment
+    MobileSegment,
+    RumVitalEvent
 } from 'rum-events-format';
 
 export type Feature = 'rum' | 'tracing' | 'logging' | 'session-replay';
@@ -56,7 +57,8 @@ export type RumEvent =
     | RumViewEvent
     | RumErrorEvent
     | RumLongTaskEvent
-    | RumResourceEvent;
+    | RumResourceEvent
+    | RumVitalEvent;
 
 export type DDEvent = LogEvent | TraceEvent | RumEvent | SessionReplayEvent;
 

@@ -73,7 +73,7 @@ describe('DatadogProvider', () => {
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
-                    "reactNativeVersion": "0.73.6",
+                    "reactNativeVersion": "0.73.9",
                     "reactVersion": "18.2.0",
                     "trackErrors": true,
                     "trackInteractions": true,

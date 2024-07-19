@@ -40,8 +40,8 @@
     "devDependencies": {
         "@datadog/mobile-react-native": "^2.4.1",
         "@testing-library/react-native": "7.0.2",
-        "react-native-builder-bob": "0.17.1",
-        "react-native-code-push": "7.0.5"
+        "react-native-builder-bob": "0.26.0",
+        "react-native-code-push": "7.1.0"
     },
     "peerDependencies": {
         "@datadog/mobile-react-native": "^2.0.1",
