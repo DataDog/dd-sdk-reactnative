@@ -46,5 +46,9 @@ internal class MockDatadogCore: DatadogCoreProtocol {
     func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
         baggages[key] = baggage
     }
+    
+    func mostRecentModifiedFileAt(before: Date) throws -> Date? {
+        return nil
+    }
 }
 
