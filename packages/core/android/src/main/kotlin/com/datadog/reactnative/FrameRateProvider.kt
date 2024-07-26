@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.facebook.react.modules.core.ChoreographerCompat
+import android.view.Choreographer
 
 internal class FrameRateProvider(
     reactFrameRateCallback: ((Double) -> Unit),
@@ -30,9 +30,9 @@ internal class FrameRateProvider(
 internal class FpsFrameCallback(
     private val reactFrameRateCallback: ((Double) -> Unit),
     private val uiThreadExecutor: UiThreadExecutor
-) : ChoreographerCompat.FrameCallback() {
+) : Choreographer.FrameCallback {
 
-    private var choreographer: ChoreographerCompat? = null
+    private var choreographer: Choreographer? = null
     private var lastFrameTime = -1L
 
     override fun doFrame(time: Long) {
@@ -45,14 +45,14 @@ internal class FpsFrameCallback(
 
     fun start() {
         uiThreadExecutor.runOnUiThread {
-            choreographer = ChoreographerCompat.getInstance()
+            choreographer = Choreographer.getInstance()
             choreographer?.postFrameCallback(this@FpsFrameCallback)
         }
     }
 
     fun stop() {
         uiThreadExecutor.runOnUiThread {
-            choreographer = ChoreographerCompat.getInstance()
+            choreographer = Choreographer.getInstance()
             choreographer?.removeFrameCallback(this@FpsFrameCallback)
         }
     }
