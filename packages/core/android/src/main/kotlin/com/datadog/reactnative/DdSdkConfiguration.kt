@@ -37,6 +37,7 @@ import java.net.Proxy
  * @param firstPartyHosts List of backend hosts to enable tracing with.
  * @param bundleLogsWithRum Enables RUM correlation with logs.
  * @param bundleLogsWithTraces Enables Traces correlation with logs.
+ * @param trackNonFatalAnrs Enables tracking of non-fatal ANRs on Android.
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -64,7 +65,8 @@ data class DdSdkConfiguration(
     val serviceName: String? = null,
     val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
     val bundleLogsWithRum: Boolean? = null,
-    val bundleLogsWithTraces: Boolean? = null
+    val bundleLogsWithTraces: Boolean? = null,
+    val trackNonFatalAnrs: Boolean? = null
 )
 
 internal data class JSONConfigurationFile(
@@ -95,7 +97,8 @@ internal data class JSONDdSdkConfiguration(
     val serviceName: String? = null,
     val firstPartyHosts: List<JSONFirstPartyHost>? = null,
     val bundleLogsWithRum: Boolean? = null,
-    val bundleLogsWithTraces: Boolean? = null
+    val bundleLogsWithTraces: Boolean? = null,
+    val trackNonFatalAnrs: Boolean? = null
 )
 
 internal data class JSONProxyConfiguration(

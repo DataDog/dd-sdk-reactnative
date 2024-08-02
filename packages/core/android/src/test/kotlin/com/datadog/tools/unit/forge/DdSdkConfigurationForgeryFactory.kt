@@ -79,7 +79,8 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             serviceName = forge.aNullable { forge.anAlphabeticalString() },
             firstPartyHosts = null,
             bundleLogsWithRum = forge.aBool(),
-            bundleLogsWithTraces = forge.aBool()
+            bundleLogsWithTraces = forge.aBool(),
+            trackNonFatalAnrs = forge.aBool()
         )
     }
 }

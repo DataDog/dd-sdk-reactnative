@@ -215,3 +215,15 @@ internal fun ReadableArray.toList(): List<*> {
 
     return list
 }
+
+/**
+ * Returns the boolean for the given key, or null if the entry is
+ * not in the map.
+ */
+internal fun ReadableMap.getBooleanOrNull(key: String): Boolean? {
+    return if (hasKey(key)) {
+        getBoolean(key)
+    } else {
+        null
+    }
+}

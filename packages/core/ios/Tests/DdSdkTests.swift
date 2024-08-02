@@ -984,7 +984,8 @@ extension DdSdkConfiguration {
         firstPartyHosts: [String: Set<TracingHeaderType>]? = nil,
         resourceTracingSamplingRate: Double? = nil,
         bundleLogsWithRum: Bool = true,
-        bundleLogsWithTraces: Bool = true
+        bundleLogsWithTraces: Bool = true,
+        appHangThreshold: Double? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1013,7 +1014,8 @@ extension DdSdkConfiguration {
             firstPartyHosts: firstPartyHosts,
             resourceTracingSamplingRate: resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum,
-            bundleLogsWithTraces: bundleLogsWithTraces
+            bundleLogsWithTraces: bundleLogsWithTraces,
+            appHangThreshold: appHangThreshold
         )
     }
 }

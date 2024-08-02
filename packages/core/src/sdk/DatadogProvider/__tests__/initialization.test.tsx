@@ -66,6 +66,7 @@ describe('DatadogProvider', () => {
                   "additionalConfiguration": {
                     "_dd.source": "react-native",
                   },
+                  "appHangThreshold": undefined,
                   "applicationId": "fakeApplicationId",
                   "batchSize": "MEDIUM",
                   "bundleLogsWithRum": true,
@@ -94,6 +95,7 @@ describe('DatadogProvider', () => {
                   "telemetrySampleRate": 20,
                   "trackBackgroundEvents": false,
                   "trackFrustrations": true,
+                  "trackNonFatalAnrs": undefined,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,

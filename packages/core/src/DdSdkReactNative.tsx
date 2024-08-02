@@ -279,7 +279,9 @@ export class DdSdkReactNative {
             configuration.serviceName,
             formatFirstPartyHosts(configuration.firstPartyHosts),
             configuration.bundleLogsWithRum,
-            configuration.bundleLogsWithTraces
+            configuration.bundleLogsWithTraces,
+            configuration.trackNonFatalAnrs,
+            configuration.appHangThreshold
         );
     };
 

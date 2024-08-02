@@ -159,6 +159,7 @@ public class DdSdkNativeInitialization: NSObject {
             trackFrustrations: configuration.trackFrustrations ?? true,
             trackBackgroundEvents: configuration.trackBackgroundEvents ?? false,
             longTaskThreshold: longTaskThreshold,
+            appHangThreshold: configuration.appHangThreshold,
             vitalsUpdateFrequency: configuration.vitalsUpdateFrequency,
             resourceEventMapper: { resourceEvent in
                 if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
