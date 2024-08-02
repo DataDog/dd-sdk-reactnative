@@ -16,7 +16,6 @@
     },
     "license": "Apache-2.0",
     "main": "lib/commonjs/index",
-    "private": true,
     "files": [
         "src/**",
         "lib/**",
