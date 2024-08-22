@@ -188,7 +188,7 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.datadoghq:dd-sdk-android-session-replay:2.11.0"
+  implementation "com.datadoghq:dd-sdk-android-session-replay:2.12.1"
   implementation project(path: ':datadog_mobile-react-native')
 
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
