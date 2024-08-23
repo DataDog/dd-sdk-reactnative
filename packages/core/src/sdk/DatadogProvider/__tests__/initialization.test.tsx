@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
@@ -64,6 +65,7 @@ describe('DatadogProvider', () => {
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkConfiguration {
                   "additionalConfiguration": {
+                    "_dd.react_native_version": "${reactNativeVersion}",
                     "_dd.source": "react-native",
                   },
                   "applicationId": "fakeApplicationId",
