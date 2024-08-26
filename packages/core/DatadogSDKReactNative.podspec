@@ -24,7 +24,9 @@ Pod::Spec.new do |s|
   s.dependency 'DatadogTrace', '~> 2.14.1'
   s.dependency 'DatadogRUM', '~> 2.14.1'
   s.dependency 'DatadogCrashReporting', '~> 2.14.1'
-  s.dependency 'DatadogWebViewTracking', '~> 2.14.1'
+
+  # DatadogWebViewTracking is not available for tvOS
+  s.ios.dependency 'DatadogWebViewTracking', '~> 2.14.1'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/**/*.{swift,json}'
