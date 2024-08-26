@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { version as reactNativeVersion } from 'react-native/package.json';
 import { InteractionManager } from 'react-native';
 
 import {
@@ -48,6 +49,8 @@ export class DdSdkReactNative {
     private static readonly DD_SDK_VERSION = '_dd.sdk_version';
     private static readonly DD_VERSION = '_dd.version';
     private static readonly DD_VERSION_SUFFIX = '_dd.version_suffix';
+    private static readonly DD_REACT_NATIVE_VERSION =
+        '_dd.react_native_version';
 
     private static wasAutoInstrumented = false;
     private static features?: AutoInstrumentationConfiguration;
@@ -239,6 +242,12 @@ export class DdSdkReactNative {
             configuration.additionalConfiguration[
                 DdSdkReactNative.DD_VERSION_SUFFIX
             ] = `-${configuration.versionSuffix}`;
+        }
+
+        if (reactNativeVersion) {
+            configuration.additionalConfiguration[
+                DdSdkReactNative.DD_REACT_NATIVE_VERSION
+            ] = `${reactNativeVersion}`;
         }
 
         return new DdSdkConfiguration(

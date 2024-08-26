@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
@@ -114,6 +115,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.bundleLogsWithTraces).toBe(true);
 
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -148,6 +150,7 @@ describe('DdSdkReactNative', () => {
                 TrackingConsent.GRANTED
             );
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -190,6 +193,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -222,6 +226,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -281,6 +286,7 @@ describe('DdSdkReactNative', () => {
                 expect(
                     ddSdkConfiguration.additionalConfiguration
                 ).toStrictEqual({
+                    '_dd.react_native_version': reactNativeVersion,
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion
                 });
@@ -503,6 +509,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -555,6 +562,7 @@ describe('DdSdkReactNative', () => {
                 }
             ]);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -604,6 +612,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -804,6 +813,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.serviceName).toBe(fakeServiceName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -839,6 +849,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.verbosity).toBe(SdkVerbosity.DEBUG);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -874,6 +885,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.nativeViewTracking).toBe(true);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -909,6 +921,7 @@ describe('DdSdkReactNative', () => {
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.nativeInteractionTracking).toBe(true);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
+                '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
                 '_dd.sdk_version': sdkVersion
             });
@@ -1115,6 +1128,7 @@ describe('DdSdkReactNative', () => {
                 expect(
                     ddSdkConfiguration.additionalConfiguration
                 ).toStrictEqual({
+                    '_dd.react_native_version': reactNativeVersion,
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion
                 });
@@ -1177,6 +1191,7 @@ describe('DdSdkReactNative', () => {
                 expect(
                     ddSdkConfiguration.additionalConfiguration
                 ).toStrictEqual({
+                    '_dd.react_native_version': reactNativeVersion,
                     '_dd.source': 'react-native',
                     '_dd.sdk_version': sdkVersion
                 });
