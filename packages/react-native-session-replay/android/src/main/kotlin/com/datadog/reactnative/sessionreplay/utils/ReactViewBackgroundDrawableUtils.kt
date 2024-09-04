@@ -28,7 +28,7 @@ internal class ReactViewBackgroundDrawableUtils(
         }
 
         val cornerRadius =
-            drawable.fullBorderRadius.toLong().convertToDensityNormalized(pixelDensity)
+            drawable.fullBorderWidth.toLong().convertToDensityNormalized(pixelDensity)
 
         return MobileSegment.ShapeStyle(
             colorHexString,
