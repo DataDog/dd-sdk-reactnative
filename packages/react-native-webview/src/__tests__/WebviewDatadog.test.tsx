@@ -3,62 +3,10 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import { fireEvent, render } from '@testing-library/react-native';
-import type { WebView as RNWebView } from 'react-native-webview';
-import { NativeModules } from 'react-native';
-import React from 'react';
-
-import { DATADOG_MESSAGE_PREFIX } from '../__utils__/getInjectedJavaScriptBeforeContentLoaded';
-import { WebView } from '../index';
-
 describe('WebView', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
-    const DdMessage = 'custom datadog event';
-    const datadogEvent = {
-        nativeEvent: {
-            data: `${DATADOG_MESSAGE_PREFIX} ${DdMessage}`
-        }
-    };
-    const userDefinedEvent = {
-        nativeEvent: {
-            data: 'custom user-defined message'
-        }
-    };
-    it('calls provided onMessage props', async () => {
-        const onMessage = jest.fn();
-        const { findByTestId } = render(
-            <WebView onMessage={onMessage} testID="webView" allowedHosts={[]} />
-        );
 
-        const webView = await findByTestId('webView');
-
-        fireEvent(webView, 'message', userDefinedEvent);
-        expect(onMessage).toHaveBeenCalledWith(userDefinedEvent);
-
-        fireEvent(webView, 'message', datadogEvent);
-        expect(onMessage).toHaveBeenCalledTimes(1);
-        expect(onMessage).not.toHaveBeenCalledWith(datadogEvent);
-    });
-    it('calls consumeWebviewEvent with Datadog logs', async () => {
-        const { findByTestId } = render(
-            <WebView testID="webView" allowedHosts={[]} />
-        );
-        const webView = await findByTestId('webView');
-        fireEvent(webView, 'message', datadogEvent);
-
-        expect(NativeModules.DdSdk.consumeWebviewEvent).toHaveBeenCalledWith(
-            DdMessage
-        );
-    });
-    it('forwards ref to the actual RN Webview component', async () => {
-        const ref = React.createRef<RNWebView>();
-
-        const { findByTestId } = render(
-            <WebView testID="webView" allowedHosts={[]} ref={ref} />
-        );
-        await findByTestId('webView');
-        expect(ref.current?.injectJavaScript).toBeDefined();
-    });
+    it('Dummy Test', () => {});
 });

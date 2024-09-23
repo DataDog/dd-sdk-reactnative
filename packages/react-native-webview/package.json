@@ -23,7 +23,11 @@
     "main": "lib/commonjs/index",
     "files": [
         "src/**",
-        "lib/**"
+        "lib/**",
+        "android/build.gradle",
+        "android/detekt.yml",
+        "android/gradle.properties",
+        "android/src/**"
     ],
     "types": "lib/typescript/index.d.ts",
     "react-native": "src/index",
@@ -39,7 +43,8 @@
     },
     "devDependencies": {
         "@testing-library/react-native": "7.0.2",
-        "react-native-builder-bob": "0.26.0"
+        "react-native-builder-bob": "0.26.0",
+        "react-native-webview": "^13.12.2"
     },
     "peerDependencies": {
         "@datadog/mobile-react-native": "^2.0.1",
@@ -75,5 +80,13 @@
                 }
             ]
         ]
+    },
+    "codegenConfig": {
+        "name": "DdSdkReactNativeWebView",
+        "type": "all",
+        "jsSrcsDir": "./src/specs",
+        "android": {
+            "javaPackageName": "com.datadog.reactnative.webview"
+        }
     }
 }
