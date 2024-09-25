@@ -6,6 +6,8 @@
 
 package com.datadog.reactnative.webview
 
+import com.datadog.android.webview.WebViewTracking
+import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
@@ -17,7 +19,9 @@ class DdSdkReactNativeWebViewPackage : TurboReactPackage() {
     override fun createViewManagers(
         reactContext: ReactApplicationContext
     ): MutableList<ViewManager<*,*>> {
-        return mutableListOf(DdSdkReactNativeWebViewManager(reactContext))
+        return mutableListOf(DdSdkReactNativeWebViewManager(
+            reactContext
+        ))
     }
     
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {

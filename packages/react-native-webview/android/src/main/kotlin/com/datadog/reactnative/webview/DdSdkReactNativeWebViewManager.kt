@@ -23,55 +23,20 @@ import com.reactnativecommunity.webview.RNCWebViewWrapper
 /**
  * The entry point to use Datadog auto-instrumented WebView feature.
  */
-class DdSdkReactNativeWebViewManager(private val reactContext: ReactContext) : RNCWebViewManager() {
+class DdSdkReactNativeWebViewManager(
+    private val reactContext: ReactContext
+) : RNCWebViewManager() {
     // Custom WebView Client
     private class DatadogWebViewClient : RNCWebViewClient()
 
     // Custom WebView
     @SuppressLint("SetJavaScriptEnabled")
-    private class DatadogWebView(reactContext: ThemedReactContext) : RNCWebView(reactContext) {
-        @Volatile
-        var isWebViewTrackingEnabled: Boolean = false
-
+    private class DatadogWebView(
+        reactContext: ThemedReactContext
+    ) : RNCWebView(reactContext) {
         init {
             // JavaScript has to be enabled for auto-instrumentation.
             this.settings.javaScriptEnabled = true
-        }
-
-        /**
-         * Enables Datadog tracking on the WebView.
-         * @param allowedHosts the list of allowed hosts
-         */
-        fun enableTracking(
-            reactContext: ReactContext,
-            sdkCore: SdkCore?,
-            allowedHosts: List<String>
-        ) {
-            if (sdkCore != null) {
-                enableWebViewTracking(reactContext, sdkCore, allowedHosts)
-            } else {
-                DatadogSDKWrapperStorage.addOnInitializedListener { core ->
-                    enableWebViewTracking(reactContext, core, allowedHosts)
-                }
-            }
-        }
-
-        private fun enableWebViewTracking(
-            reactContext: ReactContext,
-            sdkCore: SdkCore,
-            allowedHosts: List<String>
-        ) {
-            if (isWebViewTrackingEnabled) {
-                return
-            }
-
-            WebViewTracking.enable(
-                this,
-                allowedHosts = allowedHosts,
-                sdkCore = sdkCore
-            )
-
-            isWebViewTrackingEnabled = true
         }
     }
 
@@ -83,23 +48,39 @@ class DdSdkReactNativeWebViewManager(private val reactContext: ReactContext) : R
     /**
      * The instance of Datadog SDK Core.
      */
-    @Volatile
-    private var datadogCore: SdkCore? = null
+    @Volatile private var _datadogCore: SdkCore? = null
+    val datadogCore: SdkCore?
+        get() = _datadogCore
+
+    /**
+     * Whether WebView tracking has been enabled or not.
+     */
+    @Volatile private var _isWebViewTrackingEnabled: Boolean = false
+    val isWebViewTrackingEnabled: Boolean
+        get() = _isWebViewTrackingEnabled
 
     init {
         DatadogSDKWrapperStorage.addOnInitializedListener { core ->
-            datadogCore = core
+            _datadogCore = core
         }
     }
 
     // The Custom WebView exposed properties.
     @ReactProp(name = "allowedHosts")
     fun setAllowedHosts(view: RNCWebViewWrapper, allowedHosts: ReadableArray) {
-        (view.webView as DatadogWebView).enableTracking(
-            reactContext,
-            datadogCore,
-            toStringList(allowedHosts)
-        )
+        // TODO: Log failures w Telemetry
+        val webView = view.webView as? RNCWebView ?: return
+        val datadogCore = _datadogCore
+        val hosts = toStringList(allowedHosts)
+        if (datadogCore != null) {
+            this.enableWebViewTracking(webView, datadogCore, hosts)
+        } else {
+            DatadogSDKWrapperStorage.addOnInitializedListener { core ->
+                reactContext.runOnUiQueueThread {
+                    this.enableWebViewTracking(webView, core, hosts)
+                }
+            }
+        }
     }
 
     // Overrides the default ViewInstance by binding the CustomWebView to it.
@@ -118,6 +99,25 @@ class DdSdkReactNativeWebViewManager(private val reactContext: ReactContext) : R
     // Utility function for converting the ReadableArray to a list of strings.
     private fun toStringList(props: ReadableArray): List<String> {
         return props.toArrayList().filterIsInstance<String>()
+    }
+
+    // Utility function to enable WebView tracking
+    private fun enableWebViewTracking(
+        webView: RNCWebView,
+        sdkCore: SdkCore,
+        allowedHosts: List<String>
+    ) {
+        if (_isWebViewTrackingEnabled) {
+            return
+        }
+
+        WebViewTracking.enable(
+            webView,
+            allowedHosts = allowedHosts,
+            sdkCore = sdkCore
+        )
+
+        _isWebViewTrackingEnabled = true
     }
 
     // The name used to reference this custom View from React Native.
