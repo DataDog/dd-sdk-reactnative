@@ -27,7 +27,12 @@
         "android/build.gradle",
         "android/detekt.yml",
         "android/gradle.properties",
-        "android/src/**"
+        "android/src/**",
+        "ios/Sources/**",
+        "ios/DatadogSDKReactNativeWebView.xcodeproj/project.xcworkspace/xcsharedata",
+        "ios/DatadogSDKReactNativeWebView.xcodeproj/project.xcworkspace/*.xcworkspacedata",
+        "ios/DatadogSDKReactNativeWebView.xcodeproj/*.pbxproj",
+        "DatadogSDKReactNativeWebView.podspec"
     ],
     "types": "lib/typescript/index.d.ts",
     "react-native": "src/index",

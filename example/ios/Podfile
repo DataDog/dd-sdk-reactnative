@@ -17,6 +17,7 @@ end
 target 'ddSdkReactnativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
   pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeWebView', :path => '../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec', :testspecs => ['Tests']
 
   config = use_native_modules!
 
