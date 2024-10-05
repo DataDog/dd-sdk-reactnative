@@ -1055,6 +1055,25 @@ describe('DdSdkReactNative', () => {
         });
     });
 
+    describe('addUserExtraInfo', () => {
+        it('calls SDK method when addUserExtraInfo, and updates the user in UserProvider', async () => {
+            // GIVEN
+            await DdSdkReactNative.setUser({ id: 'id' });
+            const extraInfo = { id: 'updatedId', foo: 'bar' };
+
+            // WHEN
+            await DdSdkReactNative.addUserExtraInfo(extraInfo);
+
+            // THEN
+            expect(DdSdk.setUser).toHaveBeenCalledTimes(2);
+            expect(DdSdk.setUser).toHaveBeenCalledWith(extraInfo);
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+                id: 'updatedId',
+                foo: 'bar'
+            });
+        });
+    });
+
     describe('setTrackingConsent', () => {
         it('calls SDK method when setTrackingConsent', async () => {
             // GIVEN

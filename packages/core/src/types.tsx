@@ -83,6 +83,12 @@ export type DdSdkType = {
     setUser(user: object): Promise<void>;
 
     /**
+     * Add additional user information.
+     * @param extraUserInfo: The extra info object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     */
+    addUserExtraInfo(extraUserInfo: object): Promise<void>;
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */
