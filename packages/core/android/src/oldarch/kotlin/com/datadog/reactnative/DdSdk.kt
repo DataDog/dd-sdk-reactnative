@@ -6,6 +6,8 @@
 
 package com.datadog.reactnative
 
+import android.app.Activity
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -21,6 +23,23 @@ class DdSdk(
     private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
 
     override fun getName(): String = DdSdkImplementation.NAME
+
+    init {
+        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
+            override fun onHostResume() {
+                val currentActivity: Activity? = currentActivity
+                if (currentActivity != null) {
+                    val intent = currentActivity.intent
+                    val extras = intent.extras
+                    DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
+                    DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
+                }
+            }
+
+            override fun onHostPause() {}
+            override fun onHostDestroy() {}
+        })
+    }
 
     /**
      * Initializes Datadog's features.

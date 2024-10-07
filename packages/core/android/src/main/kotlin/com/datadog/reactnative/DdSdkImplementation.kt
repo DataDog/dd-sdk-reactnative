@@ -9,8 +9,9 @@ package com.datadog.reactnative
 import android.content.Context
 import android.util.Log
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.configuration.VitalsUpdateFrequency
+import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
+import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -56,6 +57,8 @@ class DdSdkImplementation(
                 frameRateProvider?.stop()
             }
         })
+
+        configureSynthetics()
 
         initialized.set(true)
 
@@ -154,6 +157,17 @@ class DdSdkImplementation(
                 TrackingConsent.PENDING
             }
         }
+    }
+
+    private fun configureSynthetics() {
+        if (DdSdkSynthetics.testId.isNullOrBlank() || DdSdkSynthetics.resultId.isNullOrBlank()) {
+            return
+        }
+
+        datadog.getRumMonitor()._getInternal()?.setSyntheticsAttribute(
+            DdSdkSynthetics.testId,
+            DdSdkSynthetics.resultId
+        )
     }
 
     private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {

@@ -2294,6 +2294,23 @@ internal class DdSdkTest {
     }
 
     @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {synthethics attributes}`() {
+        // Given
+        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        DdSdkSynthetics.testId = "unit-test-test-id"
+        DdSdkSynthetics.resultId = "unit-test-result-id"
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        verify(mockRumInternalProxy).setSyntheticsAttribute(
+            "unit-test-test-id",
+            "unit-test-result-id"
+        )
+    }
+
+    @Test
     fun `𝕄 clear all data 𝕎 clearAllData()`() {
         // When
         testedBridgeSdk.clearAllData(mockPromise)
