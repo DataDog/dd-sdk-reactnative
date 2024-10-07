@@ -28,6 +28,8 @@ final class DispatchQueueMock: DispatchQueueType {
 }
 
 internal class DdSdkTests: XCTestCase {
+    var consoleMessage = ""
+
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 
@@ -39,20 +41,14 @@ internal class DdSdkTests: XCTestCase {
 
     func testSDKInitialization() {
         let originalConsolePrint = consolePrint
-        defer { consolePrint = originalConsolePrint }
+        defer {
+            consolePrint = originalConsolePrint
+            self.consoleMessage = ""
+        }
 
-        var printedMessage = ""
-        consolePrint = { (msg, level) in printedMessage += msg }
-
-        DdSdkImplementation(
-            mainDispatchQueue: DispatchQueueMock(),
-            jsDispatchQueue: DispatchQueueMock(),
-            jsRefreshRateMonitor: JSRefreshRateMonitor(),
-            RUMMonitorProvider: { MockRUMMonitor() },
-            RUMMonitorInternalProvider: { nil }
-        ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
-
-        XCTAssertEqual(printedMessage, "")
+        consolePrint = { [weak self] (msg, level) in
+            self?.consoleMessage += msg
+        }
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -62,7 +58,17 @@ internal class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(printedMessage, "Datadog SDK is already initialized, skipping initialization.")
+        XCTAssertEqual(self.consoleMessage, "")
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
+
+        XCTAssertEqual(self.consoleMessage, "Datadog SDK is already initialized, skipping initialization.")
     }
 
     func testResolvesPromiseAfterInitializationIsDone() throws {
