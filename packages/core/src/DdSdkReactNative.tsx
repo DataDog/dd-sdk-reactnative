@@ -197,6 +197,24 @@ export class DdSdkReactNative {
     };
 
     /**
+     * Set the user information.
+     * @param extraUserInfo: The extra info object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     * @returns a Promise.
+     */
+    static addUserExtraInfo = async (
+        extraUserInfo: UserInfo
+    ): Promise<void> => {
+        InternalLog.log(
+            `Adding extra user info ${JSON.stringify(extraUserInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+        const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        const updatedUserInfo = { ...userInfo, ...extraUserInfo };
+        await DdSdk.setUser(updatedUserInfo);
+        UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
+    };
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: One of TrackingConsent values.
      * @returns a Promise.
