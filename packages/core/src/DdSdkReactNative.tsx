@@ -201,7 +201,9 @@ export class DdSdkReactNative {
      * @param extraUserInfo: The extra info object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
      * @returns a Promise.
      */
-    static addUserExtraInfo = async (extraUserInfo: UserInfo): Promise<void> => {
+    static addUserExtraInfo = async (
+        extraUserInfo: UserInfo
+    ): Promise<void> => {
         InternalLog.log(
             `Adding extra user info ${JSON.stringify(extraUserInfo)}`,
             SdkVerbosity.DEBUG
