@@ -164,9 +164,7 @@ class DdSdkImplementation(
             return
         }
 
-        val core = DatadogSDKWrapperStorage.getSdkCore()
-        val monitor = GlobalRumMonitor.get(core)
-        monitor._getInternal()?.setSyntheticsAttribute(
+        datadog.getRumMonitor()._getInternal()?.setSyntheticsAttribute(
             DdSdkSynthetics.testId,
             DdSdkSynthetics.resultId
         )
