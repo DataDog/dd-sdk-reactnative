@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ErrorSource } from '../rum/types';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
 /**
@@ -49,12 +50,13 @@ export type RawLog = {
 };
 export type RawLogWithError = {
     message: string;
-    errorKind: string;
-    errorMessage: string;
-    stacktrace: string;
+    errorKind?: string;
+    errorMessage?: string;
+    stacktrace?: string;
     context: object;
     status: LogStatus;
     fingerprint?: string;
+    source?: ErrorSource;
 };
 
 /**
@@ -82,6 +84,7 @@ export type LogEvent = {
     errorMessage?: string;
     stacktrace?: string;
     fingerprint?: string;
+    readonly source?: ErrorSource;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
     readonly userInfo: UserInfo;
@@ -98,5 +101,6 @@ export type LogWithErrorArguments = [
     errorMessage?: string,
     stacktrace?: string,
     context?: object,
-    fingerprint?: string
+    fingerprint?: string,
+    source?: ErrorSource
 ];
