@@ -56,7 +56,9 @@ export class DdSdkConfiguration {
             propagatorTypes: string[];
         }[],
         readonly bundleLogsWithRum: boolean,
-        readonly bundleLogsWithTraces: boolean
+        readonly bundleLogsWithTraces: boolean,
+        readonly trackNonFatalAnrs: boolean | undefined,
+        readonly appHangThreshold: number | undefined
     ) {}
 }
 

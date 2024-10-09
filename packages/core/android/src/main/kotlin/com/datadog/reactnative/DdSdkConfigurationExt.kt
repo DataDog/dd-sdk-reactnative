@@ -46,7 +46,8 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         serviceName = getString("serviceName"),
         firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
         bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
-        bundleLogsWithTraces = getBoolean("bundleLogsWithTraces")
+        bundleLogsWithTraces = getBoolean("bundleLogsWithTraces"),
+        trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs")
     )
 }
 
@@ -169,7 +170,8 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         this.serviceName,
         this.firstPartyHosts?.asFirstPartyHosts(),
         this.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
-        this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces
+        this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces,
+        this.trackNonFatalAnrs
     )
 }
 
@@ -231,6 +233,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     uploadFrequency?.let { map.putString("uploadFrequency", it) }
     batchSize?.let { map.putString("batchSize", it) }
     trackBackgroundEvents?.let { map.putBoolean("trackBackgroundEvents", it) }
+    trackNonFatalAnrs?.let { map.putBoolean("trackNonFatalAnrs", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
     return map
 }

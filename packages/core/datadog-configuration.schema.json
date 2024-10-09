@@ -233,6 +233,14 @@
                 "bundleLogsWithTraces": {
                     "description": "Enables Traces correlation with logs.",
                     "type": "boolean"
+                },
+                "appHangThreshold": {
+                    "description": "The app hang threshold in seconds for non-fatal app hangs on iOS.",
+                    "type": "number"
+                },
+                "trackNonFatalAnrs": {
+                    "description": "Enables tracking of non-fatal ANRs on Android.",
+                    "type": "boolean"
                 }
             },
             "required": [

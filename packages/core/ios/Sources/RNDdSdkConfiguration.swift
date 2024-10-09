@@ -39,6 +39,7 @@ extension NSDictionary {
         let resourceTracingSamplingRate = object(forKey: "resourceTracingSamplingRate") as? Double
         let bundleLogsWithRum = object(forKey: "bundleLogsWithRum") as? Bool
         let bundleLogsWithTraces = object(forKey: "bundleLogsWithTraces") as? Bool
+        let appHangThreshold = object(forKey: "appHangThreshold") as? Double
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -67,7 +68,8 @@ extension NSDictionary {
             firstPartyHosts: firstPartyHosts?.asFirstPartyHosts(),
             resourceTracingSamplingRate: resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
-            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces
+            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
+            appHangThreshold: appHangThreshold
         )
     }
 
@@ -231,6 +233,7 @@ extension Dictionary where Key == String, Value == AnyObject {
         let resourceTracingSamplingRate = configuration["resourceTracingSamplingRate"] as? Double
         let bundleLogsWithRum = configuration["bundleLogsWithRum"] as? Bool
         let bundleLogsWithTraces = configuration["bundleLogsWithTraces"] as? Bool
+        let appHangThreshold = configuration["appHangThreshold"] as? Double
 
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -262,7 +265,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             firstPartyHosts: firstPartyHosts?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts,
             resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
-            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces
+            bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
+            appHangThreshold: appHangThreshold
         )
     }
 }

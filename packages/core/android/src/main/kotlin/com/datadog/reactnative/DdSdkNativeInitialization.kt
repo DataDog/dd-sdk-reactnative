@@ -96,6 +96,7 @@ class DdSdkNativeInitialization internal constructor(
             ?: DdSdkImplementation.DEFAULT_APP_VERSION
     }
 
+    @Suppress("ComplexMethod")
     private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
@@ -194,6 +195,10 @@ class DdSdkNativeInitialization internal constructor(
 
         configuration.customEndpoints?.rum?.let {
             configBuilder.useCustomEndpoint(it)
+        }
+
+        configuration.trackNonFatalAnrs?.let {
+            configBuilder.trackNonFatalAnrs(it)
         }
 
         return configBuilder.build()

@@ -268,6 +268,30 @@ export class DdSdkReactNativeConfiguration {
     public bundleLogsWithTraces: boolean = DEFAULTS.bundleLogsWithTraces;
 
     /**
+     * Enables tracking of non-fatal ANRs on Android.
+     * By default, the reporting of non-fatal ANRs on Android 30+ is disabled because it would
+     * create too much noise over fatal ANRs. On Android 29 and below, however,
+     * the reporting of non-fatal ANRs is enabled by default,
+     * as fatal ANRs cannot be reported on those versions.
+     */
+    public trackNonFatalAnrs?: boolean;
+
+    /**
+     * The app hang threshold in seconds for non-fatal app hangs on iOS.
+     *
+     * App hangs are an iOS-specific type of error that happens when the application is unresponsive for too long.
+     * By default, app hangs reporting is disabled, but you can enable it and set your
+     * own threshold to monitor app hangs that last more than a specified
+     * duration by using the this parameter.
+     *
+     * Set the `appHangThreshold` parameter to the minimal duration you want
+     * app hangs to be reported. For example, enter 0.25 to report hangs lasting at least 250 ms.
+     * See [Configure the app hang threshold](https://docs.datadoghq.com/real_user_monitoring/error_tracking/mobile/ios/?tab=cocoapods#configure-the-app-hang-threshold)
+     * for more guidance on what to set this value to.
+     */
+    public appHangThreshold?: number;
+
+    /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
      *
      * For example if you set it to `testID`, the value of the `testID` prop is used as a custom action name:

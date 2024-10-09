@@ -38,6 +38,7 @@ import DatadogRUM
      - firstPartyHosts: List of backend hosts to enable tracing with.
      - bundleLogsWithRum: Correlates logs with RUM.
      - bundleLogsWithTraces: Correlates logs with traces.
+     - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -68,6 +69,7 @@ public class DdSdkConfiguration: NSObject {
     public var resourceTracingSamplingRate: Double? = nil
     public var bundleLogsWithRum: Bool
     public var bundleLogsWithTraces: Bool
+    public var appHangThreshold: Double? = nil
 
     public init(
         clientToken: String,
@@ -96,7 +98,8 @@ public class DdSdkConfiguration: NSObject {
         firstPartyHosts: [String: Set<TracingHeaderType>]?,
         resourceTracingSamplingRate: Double?,
         bundleLogsWithRum: Bool,
-        bundleLogsWithTraces: Bool
+        bundleLogsWithTraces: Bool,
+        appHangThreshold: Double?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -125,6 +128,7 @@ public class DdSdkConfiguration: NSObject {
         self.resourceTracingSamplingRate = resourceTracingSamplingRate
         self.bundleLogsWithRum = bundleLogsWithRum
         self.bundleLogsWithTraces = bundleLogsWithTraces
+        self.appHangThreshold = appHangThreshold
     }
 }
 

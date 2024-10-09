@@ -241,6 +241,34 @@ internal class DdSdkBridgeExtTest {
         assertThat(list).isEmpty()
     }
 
+    @Test
+    fun `M returns a boolean W getBooleanOrNull { entry in the map }`() {
+        // Given
+        val readableMap = mapOf(
+            "testKey" to true
+        ).toReadableMap()
+
+        // When
+        val value = readableMap.getBooleanOrNull("testKey")
+
+        // Then
+        assertThat(value).isTrue()
+    }
+
+    @Test
+    fun `M returns null W getBooleanOrNull { entry not in the map }`() {
+        // Given
+        val readableMap = mapOf(
+            "dummy" to false
+        ).toReadableMap()
+
+        // When
+        val value = readableMap.getBooleanOrNull("testKey")
+
+        // Then
+        assertThat(value).isNull()
+    }
+
     private fun getTestMap(): MutableMap<String, Any?> = mutableMapOf(
         "null" to null,
         "int" to 1,

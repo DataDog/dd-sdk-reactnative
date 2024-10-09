@@ -99,6 +99,8 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     map.put("bundleLogsWithRum", bundleLogsWithRum)
     map.put("bundleLogsWithTraces", bundleLogsWithTraces)
 
+    trackNonFatalAnrs?.let { map.put("trackNonFatalAnrs", it) }
+
     return map.toReadableMap()
 }
 
