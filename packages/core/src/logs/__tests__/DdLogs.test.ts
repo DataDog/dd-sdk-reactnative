@@ -6,9 +6,12 @@
 
 import { NativeModules } from 'react-native';
 
+import { DdSdkReactNativeConfiguration } from '../../DdSdkReactNativeConfiguration';
+import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import type { DdNativeLogsType } from '../../nativeModulesTypes';
+import { ErrorSource } from '../../rum/types';
 import { DdLogs } from '../DdLogs';
 import type { LogEventMapper } from '../types';
 
@@ -132,6 +135,150 @@ describe('DdLogs', () => {
             expect(NativeModules.DdLogs.info).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenCalledWith(
                 'info log dropped by log mapper: "original message"',
+                'debug'
+            );
+        });
+
+        it('log with error events can be filtered by error source', async () => {
+            const logEventMapper: LogEventMapper = logEvent => {
+                if (logEvent.source === ErrorSource.CONSOLE) {
+                    return null;
+                }
+
+                return logEvent;
+            };
+
+            DdLogs.registerLogEventMapper(logEventMapper);
+
+            await DdLogs.error(
+                'message',
+                'kind',
+                'message',
+                'stacktrace',
+                {},
+                'fingerprint',
+                ErrorSource.CONSOLE
+            );
+
+            // Call with filtered ErrorSource.CONSOLE type
+            expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'error log dropped by log mapper: "message"',
+                'debug'
+            );
+
+            // Call with valid ErrorSource.CUSTOM type
+            await DdLogs.error(
+                'message',
+                'kind',
+                'message',
+                'stacktrace',
+                {},
+                'fingerprint',
+                ErrorSource.CUSTOM
+            );
+
+            expect(NativeModules.DdLogs.errorWithError).toHaveBeenCalledWith(
+                'message',
+                'kind',
+                'message',
+                'stacktrace',
+                {
+                    '_dd.error.fingerprint': 'fingerprint',
+                    '_dd.error.source_type': 'react-native'
+                }
+            );
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'Tracking error log "message"',
+                'debug'
+            );
+        });
+
+        it('console errors can be filtered with mappers when trackErrors=true', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true // Track Errors
+            );
+
+            // Register log event mapper to filter console log events
+            configuration.logEventMapper = logEvent => {
+                if (logEvent.source === ErrorSource.CONSOLE) {
+                    return null;
+                }
+
+                return logEvent;
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            console.error('console-error-message');
+            expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'error log dropped by log mapper: "console-error-message"',
+                'debug'
+            );
+
+            // Call with valid ErrorSource.CUSTOM type
+            await DdLogs.error(
+                'message',
+                'kind',
+                'message',
+                'stacktrace',
+                {},
+                'fingerprint',
+                ErrorSource.CUSTOM
+            );
+
+            expect(NativeModules.DdLogs.errorWithError).toHaveBeenCalledWith(
+                'message',
+                'kind',
+                'message',
+                'stacktrace',
+                {
+                    '_dd.error.fingerprint': 'fingerprint',
+                    '_dd.error.source_type': 'react-native'
+                }
+            );
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'Tracking error log "message"',
+                'debug'
+            );
+        });
+
+        it('console errors are reported in logs when trackErrors=true', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId,
+                false,
+                false,
+                true // Track Errors
+            );
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            console.error('console-error-message');
+            expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'Tracking error log "console-error-message"',
                 'debug'
             );
         });

@@ -8,6 +8,7 @@ import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { DdAttributes } from '../rum/DdAttributes';
+import type { ErrorSource } from '../rum/types';
 import { validateContext } from '../utils/argsUtils';
 
 import { generateEventMapper } from './eventMapper';
@@ -16,7 +17,8 @@ import type {
     LogArguments,
     LogEventMapper,
     LogWithErrorArguments,
-    NativeLogWithError
+    NativeLogWithError,
+    RawLogWithError
 } from './types';
 
 const SDK_NOT_INITIALIZED_MESSAGE = 'DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT';
@@ -99,7 +101,8 @@ class DdLogsWrapper implements DdLogsType {
                 args[3],
                 validateContext(args[4]),
                 'error',
-                args[5]
+                args[5],
+                args[6]
             );
         }
         return this.log(args[0], validateContext(args[1]), 'error');
@@ -177,26 +180,31 @@ class DdLogsWrapper implements DdLogsType {
         stacktrace: string | undefined,
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error',
-        fingerprint?: string
+        fingerprint?: string,
+        source?: ErrorSource
     ): Promise<void> => {
-        const event = this.logEventMapper.applyEventMapper({
+        const rawLogEvent: RawLogWithError = {
             message,
             errorKind,
             errorMessage,
             stacktrace,
             context,
             status,
-            fingerprint: fingerprint ?? ''
-        });
-        if (!event) {
+            fingerprint: fingerprint ?? '',
+            source
+        };
+
+        const mappedEvent = this.logEventMapper.applyEventMapper(rawLogEvent);
+
+        if (!mappedEvent) {
             this.printLogDroppedByMapper(message, status);
             return generateEmptyPromise();
         }
 
-        this.printLogTracked(event.message, status);
+        this.printLogTracked(mappedEvent.message, status);
         try {
             const updatedContext = {
-                ...event.context,
+                ...mappedEvent.context,
                 [DdAttributes.errorSourceType]: 'react-native'
             };
 
@@ -205,10 +213,10 @@ class DdLogsWrapper implements DdLogsType {
             }
 
             return await this.nativeLogs[`${status}WithError`](
-                event.message,
-                (event as NativeLogWithError).errorKind,
-                (event as NativeLogWithError).errorMessage,
-                (event as NativeLogWithError).stacktrace,
+                mappedEvent.message,
+                (mappedEvent as NativeLogWithError).errorKind,
+                (mappedEvent as NativeLogWithError).errorMessage,
+                (mappedEvent as NativeLogWithError).stacktrace,
                 updatedContext
             );
         } catch (error) {

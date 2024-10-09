@@ -5,6 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { ErrorSource } from '../../rum/types';
 import { formatRawLogToLogEvent } from '../eventMapper';
 
 describe('formatRawLogToLogEvent', () => {
@@ -77,6 +78,42 @@ describe('formatRawLogToLogEvent', () => {
             stacktrace: 'stacktrace',
             context: { loggedIn: true },
             status: 'info',
+            userInfo: {
+                name: 'userName',
+                extraInfo: { loggedIn: true }
+            },
+            attributes: { appType: 'student' }
+        });
+    });
+
+    it('formats a raw log with error attributes and with context, userInfo, attributes and source to a LogEvent', () => {
+        expect(
+            formatRawLogToLogEvent(
+                {
+                    message: 'original',
+                    errorKind: 'TypeError',
+                    errorMessage: 'something went wrong',
+                    stacktrace: 'stacktrace',
+                    context: { loggedIn: true },
+                    status: 'info',
+                    source: ErrorSource.CONSOLE
+                },
+                {
+                    userInfo: {
+                        name: 'userName',
+                        extraInfo: { loggedIn: true }
+                    },
+                    attributes: { appType: 'student' }
+                }
+            )
+        ).toEqual({
+            message: 'original',
+            errorKind: 'TypeError',
+            errorMessage: 'something went wrong',
+            stacktrace: 'stacktrace',
+            context: { loggedIn: true },
+            status: 'info',
+            source: ErrorSource.CONSOLE,
             userInfo: {
                 name: 'userName',
                 extraInfo: { loggedIn: true }
