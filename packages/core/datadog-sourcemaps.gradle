@@ -5,6 +5,8 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 afterEvaluate {
 
@@ -39,55 +41,42 @@ afterEvaluate {
             logger.info("Cannot find JS bundle task for variant=${targetName}.")
             return
         }
+
         if (!bundleTask.enabled) {
             logger.info("JS bundle task for variant=${targetName} is not enabled.")
             return
         }
 
+        def (bundleOutput, sourcemapOutput) = forceSourcemapsGenFromBundleTask(bundleTask)
+        
         def serviceName = getServiceName(variant)
         logger.info("Release version used for the upload of variant=${targetName} is ${releaseVersion}.")
         logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
-
-        def bundleAssetName = reactConfig.bundleAssetName
-
-        def jsSourceMapsDir = file("$buildDir/generated/sourcemaps/react/${targetPath}")
-        def jsOutputSourceMapFile = file("$jsSourceMapsDir/${bundleAssetName}.map")
 
         def uploadTask = tasks.create("upload${targetName}Sourcemaps") {
             group = "datadog"
             description = "Uploads sourcemaps to Datadog."
 
-            def execCommand = { jsBundleFile ->
-                return [
-                        "${getDatadogCiExecPath(reactConfig)}",
-                        "react-native",
-                        "upload",
-                        "--platform",
-                        "android",
-                        "--service",
-                        serviceName,
-                        "--bundle",
-                        jsBundleFile.absolutePath,
-                        "--sourcemap",
-                        jsOutputSourceMapFile.absolutePath,
-                        "--release-version",
-                        releaseVersion,
-                        "--build-version",
-                        buildVersion
-                ]
-            }
+            def execCommand = [
+                    "${getDatadogCiExecPath(reactConfig)}",
+                    "react-native",
+                    "upload",
+                    "--platform",
+                    "android",
+                    "--service",
+                    serviceName,
+                    "--bundle",
+                    bundleOutput,
+                    "--sourcemap",
+                    sourcemapOutput,
+                    "--release-version",
+                    releaseVersion,
+                    "--build-version",
+                    buildVersion
+            ]
 
             doFirst {
-                def jsBundleFile = reactConfig.bundleFileResolver()
-                if (jsBundleFile == null) {
-                    throw new GradleException("JS bundle file doesn't exist, aborting upload.")
-                }
-
-                if (!jsOutputSourceMapFile.exists()) {
-                    throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
-                }
-
-                runShellCommand(execCommand(jsBundleFile), reactRoot)
+                runShellCommand(execCommand, reactRoot)
             }
         }
 
@@ -96,6 +85,104 @@ afterEvaluate {
 
     }
 }
+
+// Function to force the generation of a source map from the bundle task
+private def forceSourcemapsGenFromBundleTask(bundleTask) {
+    def taskProperties = bundleTask.getProperties()
+    def cmdLine = taskProperties.get("commandLine") as List<String>
+    def args = taskProperties.get("args") as List<String>
+
+    def (outputBundle, outputSourceMap) = getBundleTaskArguments(bundleTask, args)
+
+    // Override 'outputBundle' path if 'DATADOG_BUNDLE_OUTPUT' environment variable is set
+    def envOutputBundle = System.getenv('DATADOG_BUNDLE_OUTPUT')
+    if (envOutputBundle != null) {
+        project.logger.info("Overriding bundle output path with DATADOG_BUNDLE_OUTPUT=${envOutputBundle}")
+        outputBundle = new File(envOutputBundle)
+    }
+
+    // Override 'outputSourceMap' path if 'DATADOG_SOURCEMAP_OUTPUT' environment variable is set
+    def envOutputSourceMap = System.getenv('DATADOG_SOURCEMAP_OUTPUT')
+    if (envOutputSourceMap != null) {
+        project.logger.info("Overriding source map output path with DATADOG_SOURCEMAP_OUTPUT=${envOutputSourceMap}")
+        outputSourceMap = new File(envOutputSourceMap)
+    }
+
+    if (outputSourceMap == null) {
+        outputSourceMap = outputBundle + ".map"
+
+        cmdLine.addAll(["--sourcemap-output", outputSourceMap])
+        args.addAll(["--sourcemap-output", outputSourceMap])
+
+        bundleTask.setProperty("commandLine", cmdLine)
+        bundleTask.setProperty("args", args)
+
+        project.logger.info("Forced source map output for `${bundleTask.name}` task")
+    } else {
+        project.logger.info("Using source map file: ${outputSourceMap}")
+    }
+
+    return [outputBundle, outputSourceMap]
+}
+
+// Function to get bundle task arguments
+private def getBundleTaskArguments(bundleTask, args) {
+    def (outputBundle, outputSourceMap) = retrieveBundleTaskArgs(bundleTask)
+    if (outputBundle == null) {
+        (outputBundle, outputSourceMap) = retrieveBundleTaskArgsLegacy(args)
+    }
+    return [outputBundle, outputSourceMap]
+}
+
+// Function to retrieve bundle task arguments for React Native 71 and above
+private def retrieveBundleTaskArgs(bundleTask) {
+    def taskProperties = bundleTask.getProperties()
+    def bundleFileName = taskProperties.bundleAssetName?.get()
+
+    if (bundleFileName == null) {
+        return [null, null]
+    }
+
+    def jsBundleFile = new File(taskProperties.jsBundleDir.get().asFile.absolutePath, bundleFileName)
+    def jsSourceMapFile = new File(taskProperties.jsSourceMapsDir.get().asFile.absolutePath, "${bundleFileName}.map")
+
+    project.logger.info("jsBundleFile: `${jsBundleFile}`")
+    project.logger.info("jsSourceMapFile: `${jsSourceMapFile}`")
+    return [jsBundleFile, jsSourceMapFile]
+}
+
+// Function to retrieve legacy bundle task arguments
+private def retrieveBundleTaskArgsLegacy(args) {
+    def outputBundle = null
+    def outputSourceMap = null
+
+    args.eachWithIndex { String argument, int index ->
+        if (argument == "--bundle-output") {
+            outputBundle = args[index + 1]
+            project.logger.info("--bundle-output: `${outputBundle}`")
+        } else if (argument == "--sourcemap-output") {
+            outputSourceMap = args[index + 1]
+            project.logger.info("--sourcemap-output param: `${outputSourceMap}`")
+        }
+    }
+
+    // Check and correct paths if Hermes is enabled
+    def hermesEnabled = project.ext.react.get("enableHermes", false);
+    project.logger.info("Hermes enabled: `${hermesEnabled}`")
+
+    if (outputBundle != null && outputSourceMap != null && hermesEnabled) {
+        def pattern = Pattern.compile("(/|\\\\)intermediates\\1sourcemaps\\1react\\1")
+        Matcher matcher = pattern.matcher(outputSourceMap)
+        if (matcher.find()) {
+            project.logger.info("Correcting path for sourcemapOutput.")
+            outputSourceMap = outputBundle.replaceAll("(/|\\\\)generated\\1assets\\1react\\1", "\$1generated\$1sourcemaps\$1react\$1") + ".map"
+            project.logger.info("New sourcemapOutput path: `${outputSourceMap}`")
+        }
+    }
+
+    return [outputBundle, outputSourceMap]
+}
+
 
 /**
  * We use a function here to resolve the datadog-ci executable path.
