@@ -14,6 +14,7 @@ package/android/src/main/kotlin/com/datadog/reactnative/DdSdkConfigurationExt.kt
 package/android/src/main/kotlin/com/datadog/reactnative/DdSdkImplementation.kt
 package/android/src/main/kotlin/com/datadog/reactnative/DdSdkNativeInitialization.kt
 package/android/src/main/kotlin/com/datadog/reactnative/DdSdkReactNativePackage.kt
+package/android/src/main/kotlin/com/datadog/reactnative/DdSdkSynthetics.kt
 package/android/src/main/kotlin/com/datadog/reactnative/DdTraceImplementation.kt
 package/android/src/main/kotlin/com/datadog/reactnative/FrameRateProvider.kt
 package/android/src/main/kotlin/com/datadog/reactnative/GlobalState.kt

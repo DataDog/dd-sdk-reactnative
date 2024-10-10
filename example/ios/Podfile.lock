@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.18.0)
   - DatadogRUM (2.18.0):
     - DatadogInternal (= 2.18.0)
-  - DatadogSDKReactNative (2.4.3):
+  - DatadogSDKReactNative (2.4.4):
     - DatadogCore (~> 2.18.0)
     - DatadogCrashReporting (~> 2.18.0)
     - DatadogLogs (~> 2.18.0)
@@ -18,7 +18,7 @@ PODS:
     - DatadogTrace (~> 2.18.0)
     - DatadogWebViewTracking (~> 2.18.0)
     - React-Core
-  - DatadogSDKReactNative/Tests (2.4.3):
+  - DatadogSDKReactNative/Tests (2.4.4):
     - DatadogCore (~> 2.18.0)
     - DatadogCrashReporting (~> 2.18.0)
     - DatadogLogs (~> 2.18.0)
@@ -26,11 +26,11 @@ PODS:
     - DatadogTrace (~> 2.18.0)
     - DatadogWebViewTracking (~> 2.18.0)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay (2.4.3-alpha.0):
+  - DatadogSDKReactNativeSessionReplay (2.4.4-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.18.0)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay/Tests (2.4.3-alpha.0):
+  - DatadogSDKReactNativeSessionReplay/Tests (2.4.4-alpha.0):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.18.0)
     - React-Core
@@ -1213,14 +1213,14 @@ PODS:
     - React-logger (= 0.74.3)
     - React-perflogger (= 0.74.3)
     - React-utils (= 0.74.3)
-  - ReactNativeNavigation (7.38.2):
+  - ReactNativeNavigation (7.40.1):
     - HMSegmentedControl
     - React-Core
     - React-CoreModules
     - React-RCTImage
     - React-RCTText
-    - ReactNativeNavigation/Core (= 7.38.2)
-  - ReactNativeNavigation/Core (7.38.2):
+    - ReactNativeNavigation/Core (= 7.40.1)
+  - ReactNativeNavigation/Core (7.40.1):
     - HMSegmentedControl
     - React-Core
     - React-CoreModules
@@ -1476,8 +1476,8 @@ SPEC CHECKSUMS:
   DatadogInternal: 4719225e5e3a5550a52196930cecdf2a589820b2
   DatadogLogs: 0365989aebbf3d0c7cb7346cf2bbb932c0eacc01
   DatadogRUM: 8461273acc87ddfe4a8bbc6e6672ae9542471f86
-  DatadogSDKReactNative: 18393899c440460e72428b7bb70ceb6ce7b26ae6
-  DatadogSDKReactNativeSessionReplay: be2fab2b7ae689cc9e4c3b0e7e6d11bce1bb99f3
+  DatadogSDKReactNative: 1bdbebae33aa0b9dd4e9054a6a9bb09d8ca875c8
+  DatadogSDKReactNativeSessionReplay: b44da5bca3a58700b2add61e0ddc554c71da6fba
   DatadogSessionReplay: c08f0df752e916639b04251eb3bf06dcda80591a
   DatadogTrace: cc8ae210c274aa40658da83c9cc15de85bde405a
   DatadogWebViewTracking: eeb8ea3fa13983752d2cc4dc0994664bf8388e15
@@ -1538,7 +1538,7 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 0c80752bceb80924cb8a4babc2a8e3ed70d41e87
   React-utils: a06061b3887c702235d2dac92dacbd93e1ea079e
   ReactCommon: f00e436b3925a7ae44dfa294b43ef360fbd8ccc4
-  ReactNativeNavigation: 1bacf9c6c29029e386bb10a837c06b0d72e9ae11
+  ReactNativeNavigation: 84cfcceb62947491beda20b96c5999c15ff5b959
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
   RNCMaskedView: 0e1bc4bfa8365eba5fbbb71e07fbdc0555249489
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
