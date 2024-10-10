@@ -27,7 +27,14 @@ internal class RCTTextViewRecorderTests: XCTestCase {
     )
 
     let mockAllowContext = SessionReplayViewTreeRecordingContext(
-        recorder: .init(privacy: .allow, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
+        recorder: .init(textAndInputPrivacy: .maskSensitiveInputs,
+                        imagePrivacy: .maskNone,
+                        touchPrivacy: .show,
+                        applicationID: "app_id",
+                        sessionID: "session_id",
+                        viewID: "view_id",
+                        viewServerTimeOffset: nil
+                       ),
         coordinateSpace: UIView(),
         ids: .init(),
         webViewCache: .init())
@@ -132,7 +139,14 @@ internal class RCTTextViewRecorderTests: XCTestCase {
     
     func testReturnsBuilderWithCorrectInformationWhenTextIsObfuscated() throws {
         let mockMaskContext = SessionReplayViewTreeRecordingContext(
-            recorder: .init(privacy: .mask, applicationID: "app_id", sessionID: "session_id", viewID: "view_id", viewServerTimeOffset: nil),
+            recorder: .init(
+                textAndInputPrivacy: .maskAll,
+                imagePrivacy: .maskAll,
+                touchPrivacy: .hide,
+                applicationID: "app_id",
+                sessionID: "session_id",
+                viewID: "view_id",
+                viewServerTimeOffset: nil),
             coordinateSpace: UIView(),
             ids: .init(),
             webViewCache: .init()

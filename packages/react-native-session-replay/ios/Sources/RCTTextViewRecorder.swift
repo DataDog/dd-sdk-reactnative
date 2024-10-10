@@ -11,7 +11,7 @@ import React
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
     internal var textObfuscator: (SessionReplayViewTreeRecordingContext) -> SessionReplayTextObfuscating = { context in
-        return context.recorder.privacy.staticTextObfuscator
+        return context.recorder.textAndInputPrivacy.staticTextObfuscator
     }
 
     internal var identifier = UUID()

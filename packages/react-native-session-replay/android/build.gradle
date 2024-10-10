@@ -12,7 +12,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:7.2.2'
+    classpath 'com.android.tools.build:gradle:7.3.1'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
@@ -96,15 +96,19 @@ def getExtOrIntegerDefault(name) {
 android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
+
   def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+
   if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
     namespace = "com.datadog.reactnative.sessionreplay"
   }
+
   if (agpVersion.tokenize('.')[0].toInteger() >= 8) {
     buildFeatures {
       buildConfig = true
     }
   }
+
   if (agpVersion.tokenize('.')[0].toInteger() < 8) {
     compileOptions {
       sourceCompatibility JavaVersion.VERSION_11
@@ -150,10 +154,6 @@ android {
   lintOptions {
     disable 'GradleCompatible'
   }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
-  }
 }
 
 repositories {
@@ -188,7 +188,7 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.datadoghq:dd-sdk-android-session-replay:2.11.0"
+  implementation "com.datadoghq:dd-sdk-android-session-replay:2.14.0"
   implementation project(path: ':datadog_mobile-react-native')
 
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"

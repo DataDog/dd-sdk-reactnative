@@ -13,6 +13,7 @@ import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.EventType
 import com.datadog.android.api.storage.RawBatchEvent
+import com.datadog.android.api.storage.datastore.DataStoreHandler
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.doReturn
@@ -90,6 +92,8 @@ internal class DdInternalTestingImplementationTest {
 }
 
 internal class MockFeatureScope(private val feature: Feature) : FeatureScope {
+    override val dataStore: DataStoreHandler = mock()
+
     override fun sendEvent(event: Any) {}
 
     override fun <T : Feature> unwrap(): T {

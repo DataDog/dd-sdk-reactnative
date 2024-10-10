@@ -1,47 +1,47 @@
 PODS:
   - boost (1.83.0)
-  - DatadogCore (2.14.2):
-    - DatadogInternal (= 2.14.2)
-  - DatadogCrashReporting (2.14.2):
-    - DatadogInternal (= 2.14.2)
+  - DatadogCore (2.18.0):
+    - DatadogInternal (= 2.18.0)
+  - DatadogCrashReporting (2.18.0):
+    - DatadogInternal (= 2.18.0)
     - PLCrashReporter (~> 1.11.2)
-  - DatadogInternal (2.14.2)
-  - DatadogLogs (2.14.2):
-    - DatadogInternal (= 2.14.2)
-  - DatadogRUM (2.14.2):
-    - DatadogInternal (= 2.14.2)
+  - DatadogInternal (2.18.0)
+  - DatadogLogs (2.18.0):
+    - DatadogInternal (= 2.18.0)
+  - DatadogRUM (2.18.0):
+    - DatadogInternal (= 2.18.0)
   - DatadogSDKReactNative (2.4.3):
-    - DatadogCore (~> 2.14.1)
-    - DatadogCrashReporting (~> 2.14.1)
-    - DatadogLogs (~> 2.14.1)
-    - DatadogRUM (~> 2.14.1)
-    - DatadogTrace (~> 2.14.1)
-    - DatadogWebViewTracking (~> 2.14.1)
+    - DatadogCore (~> 2.18.0)
+    - DatadogCrashReporting (~> 2.18.0)
+    - DatadogLogs (~> 2.18.0)
+    - DatadogRUM (~> 2.18.0)
+    - DatadogTrace (~> 2.18.0)
+    - DatadogWebViewTracking (~> 2.18.0)
     - React-Core
   - DatadogSDKReactNative/Tests (2.4.3):
-    - DatadogCore (~> 2.14.1)
-    - DatadogCrashReporting (~> 2.14.1)
-    - DatadogLogs (~> 2.14.1)
-    - DatadogRUM (~> 2.14.1)
-    - DatadogTrace (~> 2.14.1)
-    - DatadogWebViewTracking (~> 2.14.1)
+    - DatadogCore (~> 2.18.0)
+    - DatadogCrashReporting (~> 2.18.0)
+    - DatadogLogs (~> 2.18.0)
+    - DatadogRUM (~> 2.18.0)
+    - DatadogTrace (~> 2.18.0)
+    - DatadogWebViewTracking (~> 2.18.0)
     - React-Core
   - DatadogSDKReactNativeSessionReplay (2.4.3-alpha.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (~> 2.14.1)
+    - DatadogSessionReplay (~> 2.18.0)
     - React-Core
   - DatadogSDKReactNativeSessionReplay/Tests (2.4.3-alpha.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (~> 2.14.1)
+    - DatadogSessionReplay (~> 2.18.0)
     - React-Core
     - React-RCTText
-  - DatadogSessionReplay (2.14.2):
-    - DatadogInternal (= 2.14.2)
-  - DatadogTrace (2.14.2):
-    - DatadogInternal (= 2.14.2)
+  - DatadogSessionReplay (2.18.0):
+    - DatadogInternal (= 2.18.0)
+  - DatadogTrace (2.18.0):
+    - DatadogInternal (= 2.18.0)
     - OpenTelemetrySwiftApi (= 1.6.0)
-  - DatadogWebViewTracking (2.14.2):
-    - DatadogInternal (= 2.14.2)
+  - DatadogWebViewTracking (2.18.0):
+    - DatadogInternal (= 2.18.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.74.3)
   - fmt (9.1.0)
@@ -1471,16 +1471,16 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  DatadogCore: a3429f62b7da0e715e179833b3daa0203ba2a5ad
-  DatadogCrashReporting: 3b5e496c1f61971a93b9a1bff3312297be03f031
-  DatadogInternal: 11798eea970f195ad720168f9a51712e71affe33
-  DatadogLogs: 4192cc1979467ce0c2521d73ba92b6197e0c7f06
-  DatadogRUM: f732009eba7a848d6e2df9ef12944e30f0e94ba2
-  DatadogSDKReactNative: f418f95923dc78ad7b4dcd1710804f1672d8abfa
-  DatadogSDKReactNativeSessionReplay: 5120a9df176bc6cf49d33237e078d99c8b1c3b24
-  DatadogSessionReplay: a5df3975d9cd0acec876e98bbfc64dd85e21b888
-  DatadogTrace: 5687191622d91152f10616e206500fe5acd8a342
-  DatadogWebViewTracking: cb818ee5943de63940b4f536320361c17af0f7b1
+  DatadogCore: 24f3bf4daa04949ef98b706ec4d4cb3cfde5443c
+  DatadogCrashReporting: 1a16f982c569f0d7058779a4540d4506002c89c6
+  DatadogInternal: 4719225e5e3a5550a52196930cecdf2a589820b2
+  DatadogLogs: 0365989aebbf3d0c7cb7346cf2bbb932c0eacc01
+  DatadogRUM: 8461273acc87ddfe4a8bbc6e6672ae9542471f86
+  DatadogSDKReactNative: 18393899c440460e72428b7bb70ceb6ce7b26ae6
+  DatadogSDKReactNativeSessionReplay: be2fab2b7ae689cc9e4c3b0e7e6d11bce1bb99f3
+  DatadogSessionReplay: c08f0df752e916639b04251eb3bf06dcda80591a
+  DatadogTrace: cc8ae210c274aa40658da83c9cc15de85bde405a
+  DatadogWebViewTracking: eeb8ea3fa13983752d2cc4dc0994664bf8388e15
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: 7e977dd099937dc5458851233141583abba49ff2
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120

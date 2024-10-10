@@ -9,6 +9,8 @@ import XCTest
 @testable import DatadogInternal
 
 class DdSdkNativeInitializationTests: XCTestCase {
+    var consoleMessage = ""
+
     override func setUp() {
         super.setUp()
     }
@@ -95,18 +97,22 @@ class DdSdkNativeInitializationTests: XCTestCase {
 
     func testPrintsMessageWithIncorrectFile() {
         let originalConsolePrint = consolePrint
-        defer { consolePrint = originalConsolePrint }
+        defer {
+            consolePrint = originalConsolePrint
+            self.consoleMessage = ""
+        }
 
-        var printedMessage = ""
-        consolePrint = { (msg, level) in printedMessage += msg }
-
+        consolePrint = { [weak self] (msg, level) in
+            self?.consoleMessage += msg
+        }
+            
         let mockJSONFileReader = MockJSONFileReader(mockResourceFilePath: "Fixtures/malformed-configuration")
         let nativeInitialization = DdSdkNativeInitialization(
             jsonFileReader: mockJSONFileReader
         )
         
         XCTAssertNil(nativeInitialization.getConfigurationFromJSONFile())
-        XCTAssertEqual(printedMessage, "Error parsing datadog-configuration.json file: 🔥 Datadog SDK usage error: JSON configuration file is missing top-level \"configuration\" key.")
+        XCTAssertEqual(self.consoleMessage, "Error parsing datadog-configuration.json file: 🔥 Datadog SDK usage error: JSON configuration file is missing top-level \"configuration\" key.")
     }
 }
 

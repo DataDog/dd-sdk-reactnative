@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit
 
+import com.datadog.android.rum.ExperimentalRumApi
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumMonitor
@@ -47,6 +48,9 @@ class MockRumMonitor : RumMonitor {
     override fun addFeatureFlagEvaluations(featureFlags: Map<String, Any>) {}
 
     override fun addTiming(name: String) {}
+
+    @ExperimentalRumApi
+    override fun addViewLoadingTime(overwrite: Boolean) {}
 
     override fun clearAttributes() {}
 

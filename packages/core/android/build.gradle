@@ -12,7 +12,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:7.2.2'
+    classpath 'com.android.tools.build:gradle:7.3.1'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
@@ -98,15 +98,19 @@ def getExtOrIntegerDefault(name) {
 android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
+
   def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+
   if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
     namespace = "com.datadog.reactnative"
   }
+
   if (agpVersion.tokenize('.')[0].toInteger() >= 8) {
     buildFeatures {
       buildConfig = true
     }
   }
+
   if (agpVersion.tokenize('.')[0].toInteger() < 8) {
     compileOptions {
       sourceCompatibility JavaVersion.VERSION_11
@@ -188,10 +192,10 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
   
-  implementation "com.datadoghq:dd-sdk-android-rum:2.11.0"
-  implementation "com.datadoghq:dd-sdk-android-logs:2.11.0"
-  implementation "com.datadoghq:dd-sdk-android-trace:2.11.0"
-  implementation "com.datadoghq:dd-sdk-android-webview:2.11.0"
+  implementation "com.datadoghq:dd-sdk-android-rum:2.14.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:2.14.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:2.14.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:2.14.0"
   implementation "com.google.code.gson:gson:2.10.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"

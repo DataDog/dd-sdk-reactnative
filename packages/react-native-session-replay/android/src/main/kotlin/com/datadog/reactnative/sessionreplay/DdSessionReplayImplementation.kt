@@ -6,10 +6,11 @@
 
 package com.datadog.reactnative.sessionreplay
 
-import com.datadog.android.Datadog
 import com.datadog.android.api.feature.FeatureSdkCore
+import com.datadog.android.sessionreplay.ImagePrivacy
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
-import com.datadog.android.sessionreplay.SessionReplayPrivacy
+import com.datadog.android.sessionreplay.TextAndInputPrivacy
+import com.datadog.android.sessionreplay.TouchPrivacy
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
@@ -34,7 +35,7 @@ class DdSessionReplayImplementation(
         val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
-            .setPrivacy(buildPrivacy(defaultPrivacyLevel))
+            .configurePrivacy(defaultPrivacyLevel)
             .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(reactContext, logger))
 
         if (customEndpoint != "") {
@@ -45,16 +46,30 @@ class DdSessionReplayImplementation(
         promise.resolve(null)
     }
 
-    private fun buildPrivacy(defaultPrivacyLevel: String): SessionReplayPrivacy {
-        return when (defaultPrivacyLevel?.lowercase(Locale.US)) {
-            "mask" -> SessionReplayPrivacy.MASK
-            "mask_user_input" -> SessionReplayPrivacy.MASK_USER_INPUT
-            "allow" -> SessionReplayPrivacy.ALLOW
-            else -> {
-                SessionReplayPrivacy.MASK
+    @Deprecated("Privacy should be set with separate properties mapped to " +
+            "`setImagePrivacy`, `setTouchPrivacy`, `setTextAndInputPrivacy`, but they are" +
+            " currently unavailable.")
+    private fun SessionReplayConfiguration.Builder.configurePrivacy(
+        defaultPrivacyLevel: String
+    ): SessionReplayConfiguration.Builder {
+        when (defaultPrivacyLevel.lowercase(Locale.US)) {
+            "mask" -> {
+                this.setTextAndInputPrivacy(TextAndInputPrivacy.MASK_ALL)
+                this.setImagePrivacy(ImagePrivacy.MASK_ALL)
+                this.setTouchPrivacy(TouchPrivacy.HIDE)
+            }
+            "mask_user_input" -> {
+                this.setTextAndInputPrivacy(TextAndInputPrivacy.MASK_ALL_INPUTS)
+                this.setImagePrivacy(ImagePrivacy.MASK_NONE)
+                this.setTouchPrivacy(TouchPrivacy.HIDE)
+            }
+            "allow" -> {
+                this.setTextAndInputPrivacy(TextAndInputPrivacy.MASK_SENSITIVE_INPUTS)
+                this.setImagePrivacy(ImagePrivacy.MASK_NONE)
+                this.setTouchPrivacy(TouchPrivacy.SHOW)
             }
         }
-
+        return this
     }
 
     companion object {

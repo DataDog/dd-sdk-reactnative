@@ -45,78 +45,78 @@ internal class TelemetryConfigurationEventForgeryFactory :
             dd = TelemetryConfigurationEvent.Dd(),
             telemetry = TelemetryConfigurationEvent.Telemetry(
                 configuration = TelemetryConfigurationEvent.Configuration(
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable {
+                    sessionSampleRate = forge.aNullable { aLong() },
+                    telemetrySampleRate = forge.aNullable { aLong() },
+                    telemetryConfigurationSampleRate = forge.aNullable { aLong() },
+                    telemetryUsageSampleRate = forge.aNullable { aLong() },
+                    traceSampleRate = forge.aNullable { aLong() },
+                    traceContextInjection = forge.aNullable {
                         aValueFrom(
                             TelemetryConfigurationEvent.TraceContextInjection::class.java
                         )
                     },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable {
+                    premiumSampleRate = forge.aNullable { aLong() },
+                    replaySampleRate = forge.aNullable { aLong() },
+                    sessionReplaySampleRate = forge.aNullable { aLong() },
+                    trackingConsent = forge.aNullable {
                         aValueFrom(
                             TelemetryConfigurationEvent.TrackingConsent::class.java
                         )
                     },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aString() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable {
+                    startSessionReplayRecordingManually = forge.aNullable { aBool() },
+                    useProxy = forge.aNullable { aBool() },
+                    useBeforeSend = forge.aNullable { aBool() },
+                    silentMultipleInit = forge.aNullable { aBool() },
+                    trackSessionAcrossSubdomains = forge.aNullable { aBool() },
+                    trackResources = forge.aNullable { aBool() },
+                    trackLongTask = forge.aNullable { aBool() },
+                    useCrossSiteSessionCookie = forge.aNullable { aBool() },
+                    usePartitionedCrossSiteSessionCookie = forge.aNullable { aBool() },
+                    useSecureSessionCookie = forge.aNullable { aBool() },
+                    allowFallbackToLocalStorage = forge.aNullable { aBool() },
+                    storeContextsAcrossPages = forge.aNullable { aBool() },
+                    allowUntrustedEvents = forge.aNullable { aBool() },
+                    actionNameAttribute = forge.aNullable { aString() },
+                    useAllowedTracingOrigins = forge.aNullable { aBool() },
+                    useAllowedTracingUrls = forge.aNullable { aBool() },
+                    selectedTracingPropagators = forge.aNullable {
                         aList {
                             aValueFrom(
                                 TelemetryConfigurationEvent.SelectedTracingPropagator::class.java
                             )
                         }
                     },
-                    forge.aNullable { aString() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
+                    defaultPrivacyLevel = forge.aNullable { aString() },
+                    enablePrivacyForActionName = forge.aNullable { aBool() },
+                    useExcludedActivityUrls = forge.aNullable { aBool() },
+                    useWorkerUrl = forge.aNullable { aBool() },
+                    compressIntakeRequests = forge.aNullable { aBool() },
+                    trackFrustrations = forge.aNullable { aBool() },
 
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aList { aString() } },
-                    forge.aNullable { aList { aString() } },
-                    forge.aNullable { aBool() },
-                    forge.aNullable {
+                    trackViewsManually = forge.aNullable { aBool() },
+                    trackInteractions = forge.aNullable { aBool() },
+                    trackUserInteractions = forge.aNullable { aBool() },
+                    forwardErrorsToLogs = forge.aNullable { aBool() },
+                    forwardConsoleLogs = forge.aNullable { aList { aString() } },
+                    forwardReports = forge.aNullable { aList { aString() } },
+                    useLocalEncryption = forge.aNullable { aBool() },
+                    viewTrackingStrategy = forge.aNullable {
                         aValueFrom(TelemetryConfigurationEvent.ViewTrackingStrategy::class.java)
                     },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aString() },
-                    forge.aNullable { aBool() },
-                    forge.aNullable { aLong() },
-                    forge.aNullable { aLong() }
+                    trackBackgroundEvents = forge.aNullable { aBool() },
+                    mobileVitalsUpdatePeriod = forge.aNullable { aLong() },
+                    trackErrors = forge.aNullable { aBool() },
+                    trackNetworkRequests = forge.aNullable { aBool() },
+                    useTracing = forge.aNullable { aBool() },
+                    trackNativeViews = forge.aNullable { aBool() },
+                    trackNativeErrors = forge.aNullable { aBool() },
+                    trackNativeLongTasks = forge.aNullable { aBool() },
+                    trackCrossPlatformLongTasks = forge.aNullable { aBool() },
+                    useFirstPartyHosts = forge.aNullable { aBool() },
+                    initializationType = forge.aNullable { aString() },
+                    trackFlutterPerformance = forge.aNullable { aBool() },
+                    batchSize = forge.aNullable { aLong() },
+                    batchUploadFrequency = forge.aNullable { aLong() }
                 )
             )
         )
