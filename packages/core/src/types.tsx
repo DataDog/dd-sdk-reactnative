@@ -58,7 +58,8 @@ export class DdSdkConfiguration {
         readonly bundleLogsWithRum: boolean,
         readonly bundleLogsWithTraces: boolean,
         readonly trackNonFatalAnrs: boolean | undefined,
-        readonly appHangThreshold: number | undefined
+        readonly appHangThreshold: number | undefined,
+        readonly trackWatchdogTerminations: boolean | undefined
     ) {}
 }
 

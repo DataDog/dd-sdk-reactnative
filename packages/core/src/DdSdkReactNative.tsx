@@ -308,7 +308,8 @@ export class DdSdkReactNative {
             configuration.bundleLogsWithRum,
             configuration.bundleLogsWithTraces,
             configuration.trackNonFatalAnrs,
-            configuration.appHangThreshold
+            configuration.appHangThreshold,
+            configuration.trackWatchdogTerminations
         );
     };
 
