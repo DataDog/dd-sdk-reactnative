@@ -40,6 +40,7 @@ extension NSDictionary {
         let bundleLogsWithRum = object(forKey: "bundleLogsWithRum") as? Bool
         let bundleLogsWithTraces = object(forKey: "bundleLogsWithTraces") as? Bool
         let appHangThreshold = object(forKey: "appHangThreshold") as? Double
+        let trackWatchdogTerminations = object(forKey: "trackWatchdogTerminations") as? Bool
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -69,7 +70,8 @@ extension NSDictionary {
             resourceTracingSamplingRate: resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
-            appHangThreshold: appHangThreshold
+            appHangThreshold: appHangThreshold,
+            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations
         )
     }
 
@@ -199,6 +201,7 @@ internal struct DefaultConfiguration {
     static let trackBackgroundEvents = false
     static let bundleLogsWithRum = true
     static let bundleLogsWithTraces = true
+    static let trackWatchdogTerminations = false
 }
 
 extension Dictionary where Key == String, Value == AnyObject {
@@ -234,6 +237,7 @@ extension Dictionary where Key == String, Value == AnyObject {
         let bundleLogsWithRum = configuration["bundleLogsWithRum"] as? Bool
         let bundleLogsWithTraces = configuration["bundleLogsWithTraces"] as? Bool
         let appHangThreshold = configuration["appHangThreshold"] as? Double
+        let trackWatchdogTerminations = configuration["trackWatchdogTerminations"] as? Bool
 
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -266,7 +270,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             resourceTracingSamplingRate: resourceTracingSamplingRate ?? DefaultConfiguration.resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
-            appHangThreshold: appHangThreshold
+            appHangThreshold: appHangThreshold,
+            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations
         )
     }
 }

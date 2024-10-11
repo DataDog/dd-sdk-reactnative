@@ -99,6 +99,7 @@ describe('DatadogProvider', () => {
                   "trackBackgroundEvents": false,
                   "trackFrustrations": true,
                   "trackNonFatalAnrs": undefined,
+                  "trackWatchdogTerminations": false,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,

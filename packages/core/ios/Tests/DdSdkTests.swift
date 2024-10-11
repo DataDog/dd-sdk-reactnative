@@ -991,7 +991,8 @@ extension DdSdkConfiguration {
         resourceTracingSamplingRate: Double? = nil,
         bundleLogsWithRum: Bool = true,
         bundleLogsWithTraces: Bool = true,
-        appHangThreshold: Double? = nil
+        appHangThreshold: Double? = nil,
+        trackWatchdogTerminations: Bool = false
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1021,7 +1022,8 @@ extension DdSdkConfiguration {
             resourceTracingSamplingRate: resourceTracingSamplingRate,
             bundleLogsWithRum: bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces,
-            appHangThreshold: appHangThreshold
+            appHangThreshold: appHangThreshold,
+            trackWatchdogTerminations: trackWatchdogTerminations
         )
     }
 }

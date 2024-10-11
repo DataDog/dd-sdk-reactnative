@@ -39,6 +39,7 @@ import DatadogRUM
      - bundleLogsWithRum: Correlates logs with RUM.
      - bundleLogsWithTraces: Correlates logs with traces.
      - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
+     - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -70,6 +71,7 @@ public class DdSdkConfiguration: NSObject {
     public var bundleLogsWithRum: Bool
     public var bundleLogsWithTraces: Bool
     public var appHangThreshold: Double? = nil
+    public var trackWatchdogTerminations: Bool
 
     public init(
         clientToken: String,
@@ -99,7 +101,8 @@ public class DdSdkConfiguration: NSObject {
         resourceTracingSamplingRate: Double?,
         bundleLogsWithRum: Bool,
         bundleLogsWithTraces: Bool,
-        appHangThreshold: Double?
+        appHangThreshold: Double?,
+        trackWatchdogTerminations: Bool
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -129,6 +132,7 @@ public class DdSdkConfiguration: NSObject {
         self.bundleLogsWithRum = bundleLogsWithRum
         self.bundleLogsWithTraces = bundleLogsWithTraces
         self.appHangThreshold = appHangThreshold
+        self.trackWatchdogTerminations = trackWatchdogTerminations
     }
 }
 
