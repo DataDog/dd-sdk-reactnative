@@ -116,7 +116,8 @@ export const DEFAULTS = {
     getCustomEndpoints: () => ({}),
     bundleLogsWithRum: true,
     bundleLogsWithTraces: true,
-    useAccessibilityLabel: true
+    useAccessibilityLabel: true,
+    trackWatchdogTerminations: false
 };
 
 /**
@@ -290,6 +291,12 @@ export class DdSdkReactNativeConfiguration {
      * for more guidance on what to set this value to.
      */
     public appHangThreshold?: number;
+
+    /**
+     * Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`.
+     */
+    public trackWatchdogTerminations: boolean =
+        DEFAULTS.trackWatchdogTerminations;
 
     /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
