@@ -7,6 +7,7 @@ import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { WebView as RNWebView } from 'react-native-webview';
 import React, { forwardRef, useCallback } from 'react';
 
+import NativeDdLogs from './ext-specs/NativeDdLogs';
 import { NativeDdWebView } from './specs/NativeDdWebView';
 import type { DatadogMessageFormat } from './utils/format-utils';
 import { wrapJsCodeInTryAndCatch } from './utils/format-utils';
@@ -37,6 +38,7 @@ const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
                     ddMessage.message != null &&
                     (props.logUserCodeErrors ?? false)
                 ) {
+                    NativeDdLogs?.error(ddMessage.message, {});
                     // TODO: Log Error through Turbo Registry native call.
                     // DdLogs.error(ddMessage.message, 'USER_CODE_WEBVIEW_ERROR');
                 }
