@@ -39,8 +39,6 @@ const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
                     (props.logUserCodeErrors ?? false)
                 ) {
                     NativeDdLogs?.error(ddMessage.message, {});
-                    // TODO: Log Error through Turbo Registry native call.
-                    // DdLogs.error(ddMessage.message, 'USER_CODE_WEBVIEW_ERROR');
                 }
             };
 
