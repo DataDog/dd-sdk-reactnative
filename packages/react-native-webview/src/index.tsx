@@ -71,6 +71,9 @@ const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
                     allowedHosts: props.allowedHosts
                 }
             }}
+            injectedJavaScript={wrapJsCodeInTryAndCatch(
+                props.injectedJavaScript
+            )}
             injectedJavaScriptBeforeContentLoaded={wrapJsCodeInTryAndCatch(
                 props.injectedJavaScriptBeforeContentLoaded
             )}

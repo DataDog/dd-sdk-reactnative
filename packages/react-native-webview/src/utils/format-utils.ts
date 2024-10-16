@@ -14,8 +14,11 @@ export type DatadogMessageFormat = {
     message: string;
 };
 
-export const wrapJsCodeInTryAndCatch = (javascriptCode?: string): string =>
-    `
+export const wrapJsCodeInTryAndCatch = (
+    javascriptCode?: string
+): string | undefined =>
+    javascriptCode
+        ? `
     try{
       ${javascriptCode}
     }
@@ -27,4 +30,5 @@ export const wrapJsCodeInTryAndCatch = (javascriptCode?: string): string =>
         message: errorMsg
       }));
       true;
-    }`;
+    }`
+        : undefined;
