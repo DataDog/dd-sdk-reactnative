@@ -48,6 +48,16 @@
                ReferencedContainer = "container:Pods/Pods.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "78809F2595CEAB87DE2759AB2D8ACC1A"
+               BuildableName = "DatadogSDKReactNativeWebView-Unit-Tests.xctest"
+               BlueprintName = "DatadogSDKReactNativeWebView-Unit-Tests"
+               ReferencedContainer = "container:Pods/Pods.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -60,7 +60,7 @@
         "react-native": "0.73.9",
         "react-native-builder-bob": "0.26.0",
         "react-native-gradle-plugin": "^0.71.19",
-        "react-native-webview": "11.26.1",
+        "react-native-webview": "13.12.2",
         "react-test-renderer": "18.1.0",
         "typescript": "5.0.4"
     },

@@ -1,0 +1,7 @@
+// This is only used for building locally and testing the package.
+// If the package is used in an app that contains ":datadog_mobile-react-native" it will be resolved correctly.
+include ':datadog_mobile-react-native'
+project(':datadog_mobile-react-native').projectDir = new File('../../core/android')
+
+include ':react-native-webview'
+project(':react-native-webview').projectDir = new File(rootProject.projectDir, '../../../node_modules/react-native-webview/android')

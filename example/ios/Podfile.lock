@@ -35,6 +35,18 @@ PODS:
     - DatadogSessionReplay (~> 2.18.0)
     - React-Core
     - React-RCTText
+  - DatadogSDKReactNativeWebView (2.4.4):
+    - DatadogInternal (~> 2.18.0)
+    - DatadogSDKReactNative
+    - DatadogWebViewTracking (~> 2.18.0)
+    - React-Core
+  - DatadogSDKReactNativeWebView/Tests (2.4.4):
+    - DatadogInternal (~> 2.18.0)
+    - DatadogSDKReactNative
+    - DatadogWebViewTracking (~> 2.18.0)
+    - React-Core
+    - react-native-webview
+    - React-RCTText
   - DatadogSessionReplay (2.18.0):
     - DatadogInternal (= 2.18.0)
   - DatadogTrace (2.18.0):
@@ -984,6 +996,27 @@ PODS:
     - React-Core
   - react-native-safe-area-context (4.10.8):
     - React-Core
+  - react-native-webview (13.12.2):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - React-nativeconfig (0.74.3)
   - React-NativeModulesApple (0.74.3):
     - glog
@@ -1262,6 +1295,8 @@ DEPENDENCIES:
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNativeSessionReplay (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DatadogSDKReactNativeSessionReplay/Tests (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
+  - DatadogSDKReactNativeWebView (from `../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec`)
+  - DatadogSDKReactNativeWebView/Tests (from `../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -1295,6 +1330,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - react-native-crash-tester (from `../node_modules/react-native-crash-tester`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-webview (from `../node_modules/react-native-webview`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1347,6 +1383,8 @@ EXTERNAL SOURCES:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
   DatadogSDKReactNativeSessionReplay:
     :path: "../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
+  DatadogSDKReactNativeWebView:
+    :path: "../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -1410,6 +1448,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-crash-tester"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-webview:
+    :path: "../node_modules/react-native-webview"
   React-nativeconfig:
     :path: "../node_modules/react-native/ReactCommon"
   React-NativeModulesApple:
@@ -1478,6 +1518,7 @@ SPEC CHECKSUMS:
   DatadogRUM: 8461273acc87ddfe4a8bbc6e6672ae9542471f86
   DatadogSDKReactNative: 1bdbebae33aa0b9dd4e9054a6a9bb09d8ca875c8
   DatadogSDKReactNativeSessionReplay: b44da5bca3a58700b2add61e0ddc554c71da6fba
+  DatadogSDKReactNativeWebView: c63eda46a8060a126ed309d52a64c44c03b93e2e
   DatadogSessionReplay: c08f0df752e916639b04251eb3bf06dcda80591a
   DatadogTrace: cc8ae210c274aa40658da83c9cc15de85bde405a
   DatadogWebViewTracking: eeb8ea3fa13983752d2cc4dc0994664bf8388e15
@@ -1515,6 +1556,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 9f68550e7c6839d01411ac8896aea5c868eff63a
   react-native-crash-tester: 8b270c754febeab8a5761a8f50bc89ed26985f10
   react-native-safe-area-context: b7daa1a8df36095a032dff095a1ea8963cb48371
+  react-native-webview: 8d746f921964c87b87b190bf6a46fa148d40cd0f
   React-nativeconfig: fa5de9d8f4dbd5917358f8ad3ad1e08762f01dcb
   React-NativeModulesApple: 585d1b78e0597de364d259cb56007052d0bda5e5
   React-perflogger: 7bb9ba49435ff66b666e7966ee10082508a203e8
@@ -1546,6 +1588,6 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 04f1db30bb810187397fa4c37dd1868a27af229c
 
-PODFILE CHECKSUM: 82a277ceb4b375dcd70cc36bab9e782fc3365650
+PODFILE CHECKSUM: 54f3e178906b491e7b20bd99da6e8788777ec12e
 
 COCOAPODS: 1.15.2

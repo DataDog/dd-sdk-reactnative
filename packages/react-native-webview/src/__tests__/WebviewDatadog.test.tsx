@@ -3,62 +3,58 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import { fireEvent, render } from '@testing-library/react-native';
-import type { WebView as RNWebView } from 'react-native-webview';
-import { NativeModules } from 'react-native';
+
+import { render } from '@testing-library/react-native';
+import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
 
-import { DATADOG_MESSAGE_PREFIX } from '../__utils__/getInjectedJavaScriptBeforeContentLoaded';
 import { WebView } from '../index';
+import { NativeDdWebView } from '../specs/NativeDdWebView';
+
+jest.mock('react-native-webview', () => {
+    return {
+        WebView: jest.fn()
+    };
+});
+
+jest.mock('../specs/NativeDdWebView', () => {
+    return {
+        NativeDdWebView: jest.fn()
+    };
+});
 
 describe('WebView', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
-    const DdMessage = 'custom datadog event';
-    const datadogEvent = {
-        nativeEvent: {
-            data: `${DATADOG_MESSAGE_PREFIX} ${DdMessage}`
-        }
-    };
-    const userDefinedEvent = {
-        nativeEvent: {
-            data: 'custom user-defined message'
-        }
-    };
-    it('calls provided onMessage props', async () => {
-        const onMessage = jest.fn();
-        const { findByTestId } = render(
-            <WebView onMessage={onMessage} testID="webView" allowedHosts={[]} />
-        );
 
-        const webView = await findByTestId('webView');
+    it('WebView is rendered with native component', () => {
+        // Given
+        const allowedHosts = ['example.com', 'localhost'];
 
-        fireEvent(webView, 'message', userDefinedEvent);
-        expect(onMessage).toHaveBeenCalledWith(userDefinedEvent);
+        // When
+        render(<WebView allowedHosts={allowedHosts} />);
 
-        fireEvent(webView, 'message', datadogEvent);
-        expect(onMessage).toHaveBeenCalledTimes(1);
-        expect(onMessage).not.toHaveBeenCalledWith(datadogEvent);
+        // Then
+        const mockedWebView = jest.mocked(RNWebView);
+        const component =
+            mockedWebView.mock.calls[0][0].nativeConfig?.component;
+        const mockedNativeWebView = jest.mocked(NativeDdWebView);
+
+        expect(component).toBe(mockedNativeWebView);
     });
-    it('calls consumeWebviewEvent with Datadog logs', async () => {
-        const { findByTestId } = render(
-            <WebView testID="webView" allowedHosts={[]} />
-        );
-        const webView = await findByTestId('webView');
-        fireEvent(webView, 'message', datadogEvent);
 
-        expect(NativeModules.DdSdk.consumeWebviewEvent).toHaveBeenCalledWith(
-            DdMessage
-        );
-    });
-    it('forwards ref to the actual RN Webview component', async () => {
-        const ref = React.createRef<RNWebView>();
+    it('Datadog WebView allowedHosts are forwarded to WebView nativeConfig props', () => {
+        // Given
+        const allowedHosts = ['example.com', 'localhost'];
 
-        const { findByTestId } = render(
-            <WebView testID="webView" allowedHosts={[]} ref={ref} />
-        );
-        await findByTestId('webView');
-        expect(ref.current?.injectJavaScript).toBeDefined();
+        // When
+        render(<WebView allowedHosts={allowedHosts} />);
+
+        // Then
+        const mockedWebView = jest.mocked(RNWebView);
+        const props = mockedWebView.mock.calls[0][0].nativeConfig?.props as any;
+
+        expect(props?.allowedHosts).toBe(allowedHosts);
     });
 });
