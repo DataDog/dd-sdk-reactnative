@@ -3,6 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+
 import { render } from '@testing-library/react-native';
 import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
@@ -20,8 +21,15 @@ describe('WebView performance', () => {
         jest.clearAllMocks();
     });
     it('should update the onMessage prop of the RNWebView component', () => {
+        /**
+         * GIVEN
+         */
         const onMessage = jest.fn();
         const allowedHosts = ['localhost', 'example.com'];
+
+        /**
+         * WHEN
+         */
         const { rerender } = render(
             <WebView onMessage={onMessage} allowedHosts={allowedHosts} />
         );
@@ -34,6 +42,10 @@ describe('WebView performance', () => {
         rerender(
             <WebView onMessage={newOnMessage} allowedHosts={allowedHosts} />
         );
+
+        /**
+         * THEN
+         */
         const mockedWebView = jest.mocked(RNWebView);
         // Verify that the onMessage prop of the RNWebView component has changed
         expect(mockedWebView.mock.calls[0][0].onMessage).toBe(
