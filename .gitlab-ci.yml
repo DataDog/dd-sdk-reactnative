@@ -1,0 +1,70 @@
+include:
+  - 'https://gitlab-templates.ddbuild.io/slack-notifier/v1/template.yml'
+
+# SETUP
+
+variables:
+  GIT_DEPTH: 5
+
+  ANDROID_SDK_VERSION: "commandlinetools-mac-11076708_latest"
+  EMULATOR_NAME: "android_emulator"
+  ANDROID_ARCH: "arm64-v8a"
+  ANDROID_API: "35"
+  ANDROID_EMULATOR_IMAGE: "system-images;android-$ANDROID_API;google_apis;${ANDROID_ARCH}"
+  ANDROID_PLATFORM: "platforms;android-$ANDROID_API"
+  ANDROID_BUILD_TOOLS: "build-tools;$ANDROID_API.0.0"
+  # KUBERNETES_MEMORY_REQUEST: "8Gi"
+  # KUBERNETES_MEMORY_LIMIT: "13Gi"
+
+stages:
+  - test
+  - notify
+
+
+.snippets:
+  install-android-sdk:
+    - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
+    - rm -rf ~/android_sdk
+    - rm -rf ~/cmdline-tools
+    - unzip -q commandlinetools -d ~/
+    - mkdir -p ~/android_sdk/cmdline-tools/latest
+    - mv ~/cmdline-tools/* ~/android_sdk/cmdline-tools/latest
+    - rm ./commandlinetools.zip
+    - export ANDROID_HOME="$HOME/android_sdk/"
+    - export ANDROID_SDK_ROOT="$HOME/android_sdk/"
+    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator"
+    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "platform-tools"
+    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_PLATFORM"
+    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_BUILD_TOOLS"
+    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_EMULATOR_IMAGE"
+    - yes | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+    - echo "no" | ~/android_sdk/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "$EMULATOR_NAME" --package "$ANDROID_EMULATOR_IMAGE"
+
+# TESTS
+
+test:lint:
+  tags: [ "macos:sonoma" ]
+  stage: test
+  timeout: 1h
+  script:
+    - yarn
+    - yarn run lint 
+
+test:js:
+  tags: [ "macos:sonoma" ]
+  stage: test
+  timeout: 1h
+  script:
+    - yarn
+    - cp jestSetup.js.override node_modules/react-native-gesture-handler/jestSetup.js
+    - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test 
+
+test:native-android:
+  tags: [ "macos:sonoma" ]
+  stage: test
+  timeout: 1h
+  script:
+    - !reference [.snippets, install-android-sdk]
+    - (cd packages/core/android && ./gradlew build)
+    - (cd packages/react-native-session-replay/android && ./gradlew build)
+    - (cd packages/internal-testing-tools/android && ./gradlew build)
