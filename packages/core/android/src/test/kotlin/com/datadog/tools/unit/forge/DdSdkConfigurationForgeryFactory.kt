@@ -80,7 +80,14 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             firstPartyHosts = null,
             bundleLogsWithRum = forge.aBool(),
             bundleLogsWithTraces = forge.aBool(),
-            trackNonFatalAnrs = forge.aBool()
+            trackNonFatalAnrs = forge.aBool(),
+            batchProcessingLevel = forge.aNullable {
+                anElementFrom(
+                    "LOW",
+                    "MEDIUM",
+                    "HIGH"
+                )
+            }
         )
     }
 }

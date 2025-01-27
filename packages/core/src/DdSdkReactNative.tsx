@@ -310,7 +310,8 @@ export class DdSdkReactNative {
             configuration.trackNonFatalAnrs,
             configuration.appHangThreshold,
             configuration.resourceTracingSamplingRate,
-            configuration.trackWatchdogTerminations
+            configuration.trackWatchdogTerminations,
+            configuration.batchProcessingLevel
         );
     };
 

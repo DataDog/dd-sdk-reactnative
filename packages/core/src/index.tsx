@@ -11,7 +11,8 @@ import {
     InitializationMode,
     VitalsUpdateFrequency,
     UploadFrequency,
-    BatchSize
+    BatchSize,
+    BatchProcessingLevel
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
@@ -57,6 +58,7 @@ export {
     PropagatorType,
     UploadFrequency,
     BatchSize,
+    BatchProcessingLevel,
     TimeProvider,
     DefaultTimeProvider,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,

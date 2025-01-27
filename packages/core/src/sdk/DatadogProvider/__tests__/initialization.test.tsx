@@ -70,6 +70,7 @@ describe('DatadogProvider', () => {
                   },
                   "appHangThreshold": undefined,
                   "applicationId": "fakeApplicationId",
+                  "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
                   "bundleLogsWithRum": true,
                   "bundleLogsWithTraces": true,

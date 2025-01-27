@@ -51,6 +51,21 @@ export enum BatchSize {
     SMALL = 'SMALL'
 }
 
+export enum BatchProcessingLevel {
+    /**
+     * Only 1 batch will be sent in a single upload cycle.
+     */
+    LOW = 'LOW',
+    /**
+     * 10 batches will be sent in a single upload cycle
+     */
+    MEDIUM = 'MEDIUM',
+    /**
+     * 100 batches will be sent in a single upload cycle.
+     */
+    HIGH = 'HIGH'
+}
+
 export type FirstPartyHostsConfiguration = (
     | FirstPartyHost
     | LegacyFirstPartyHost
@@ -117,7 +132,8 @@ export const DEFAULTS = {
     bundleLogsWithRum: true,
     bundleLogsWithTraces: true,
     useAccessibilityLabel: true,
-    trackWatchdogTerminations: false
+    trackWatchdogTerminations: false,
+    batchProcessingLevel: BatchProcessingLevel.MEDIUM
 };
 
 /**
@@ -267,6 +283,12 @@ export class DdSdkReactNativeConfiguration {
      * By default, Traces is enabled for logs.
      */
     public bundleLogsWithTraces: boolean = DEFAULTS.bundleLogsWithTraces;
+
+    /**
+     * Sets the preferred level for processing batches of data.
+     */
+    public batchProcessingLevel: BatchProcessingLevel =
+        DEFAULTS.batchProcessingLevel;
 
     /**
      * Enables tracking of non-fatal ANRs on Android.
@@ -437,6 +459,7 @@ export type PartialInitializationConfiguration = {
     readonly customEndpoints?: CustomEndpoints;
     readonly bundleLogsWithRum?: boolean;
     readonly bundleLogsWithTraces?: boolean;
+    readonly batchProcessingLevel?: BatchProcessingLevel;
 };
 
 const setConfigurationAttribute = <

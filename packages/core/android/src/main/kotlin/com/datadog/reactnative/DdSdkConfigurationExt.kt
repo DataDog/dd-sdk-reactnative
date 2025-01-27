@@ -47,7 +47,8 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
         bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
         bundleLogsWithTraces = getBoolean("bundleLogsWithTraces"),
-        trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs")
+        trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs"),
+        batchProcessingLevel = getString("batchProcessingLevel")
     )
 }
 

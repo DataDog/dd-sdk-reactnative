@@ -6,6 +6,7 @@
 
 package com.datadog.tools.unit
 
+import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
@@ -100,6 +101,12 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     map.put("bundleLogsWithTraces", bundleLogsWithTraces)
 
     trackNonFatalAnrs?.let { map.put("trackNonFatalAnrs", it) }
+
+    if (batchProcessingLevel != null) {
+        map["batchProcessingLevel"] = batchProcessingLevel
+    } else {
+        map["batchProcessingLevel"] = BatchProcessingLevel.MEDIUM.toString()
+    }
 
     return map.toReadableMap()
 }
