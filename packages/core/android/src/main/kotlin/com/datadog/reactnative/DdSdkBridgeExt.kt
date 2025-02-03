@@ -127,7 +127,7 @@ internal fun Map<*, *>.toWritableMap(
  * Recursively converts the [ReadableMap] to a [Map] which only contains Kotlin stdlib objects,
  * such as [List], [Map] and the raw types.
  */
-internal fun ReadableMap.toMap(): Map<String, Any> {
+internal fun ReadableMap.toMap(): HashMap<String, Any> {
     val map = this.toHashMap()
     val iterator = map.keys.iterator()
 
@@ -168,7 +168,14 @@ internal fun ReadableMap.toMap(): Map<String, Any> {
         }
     }
 
-    return map
+    val nonNullMap = HashMap<String, Any>()
+    map.entries.forEach { (key, value) ->
+        if (value != null) {
+            nonNullMap[key] = value
+        }
+    }
+    
+    return nonNullMap
 }
 
 /**
