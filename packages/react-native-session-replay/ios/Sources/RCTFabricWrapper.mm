@@ -7,10 +7,18 @@
 #import "RCTFabricWrapper.h"
 
 #if RCT_NEW_ARCH_ENABLED
+#import "RCTVersion.h"
+
 #import <React-RCTFabric/React/RCTParagraphComponentView.h>
 #import <React-RCTFabric/React/RCTConversions.h>
+
+#if RCT_VERSION_MINOR > 74
+#import <React-FabricComponents/react/renderer/components/text/ParagraphProps.h>
+#else
 #import <React-Fabric/react/renderer/components/text/ParagraphProps.h>
-#import "RCTVersion.h"
+#endif
+
+
 namespace rct = facebook::react;
 #endif
 
@@ -89,7 +97,7 @@ namespace rct = facebook::react;
 
 + (UIColor* _Nonnull)getForegroundColorFromAttributes:(rct::TextAttributes)textAttributes {
     @try {
-#if RCT_VERSION_MINOR > 72
+#if RCT_VERSION_MINOR > 73
         rct::Color color = *textAttributes.foregroundColor;
         UIColor* uiColor = (__bridge UIColor*)color.getUIColor().get();
         if (uiColor != nil) {
