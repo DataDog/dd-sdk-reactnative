@@ -76,6 +76,7 @@
     "resolutions": {
         "ejs": "3.1.10",
         "shell-quote": "^1.7.3",
-        "cross-spawn": "7.0.5"
+        "cross-spawn": "7.0.5",
+        "fast-xml-parser": "4.4.1"
     }
 }
