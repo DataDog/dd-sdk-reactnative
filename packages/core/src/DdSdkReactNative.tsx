@@ -309,7 +309,8 @@ export class DdSdkReactNative {
             configuration.bundleLogsWithTraces,
             configuration.trackNonFatalAnrs,
             configuration.appHangThreshold,
-            configuration.resourceTracingSamplingRate
+            configuration.resourceTracingSamplingRate,
+            configuration.trackWatchdogTerminations
         );
     };
 
