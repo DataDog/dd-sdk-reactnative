@@ -98,7 +98,6 @@ module.exports = {
         stopResource: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
-        generateUUID: jest.fn().mockImplementation(() => 'fakeUUID'),
         addError: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
@@ -117,7 +116,14 @@ module.exports = {
                 () => new Promise(resolve => resolve('test-session-id'))
             ),
         setTimeProvider: jest.fn().mockImplementation(() => {}),
-        timeProvider: jest.fn().mockReturnValue(undefined)
+        timeProvider: jest.fn().mockReturnValue(undefined),
+        getTracingHeaders: jest.fn().mockReturnValue([]),
+        injectTracingHeaders: jest.fn().mockImplementation(() => {}),
+        buildTracingHeadersInjector: jest.fn().mockReturnValue({
+            inject: (url, injectHeaders) => {}
+        }),
+        generateTraceId: jest.fn().mockReturnValue('mock-trace-id'),
+        generateSpanId: jest.fn().mockReturnValue('mock-span-id')
     },
 
     DatadogProvider: DatadogProviderMock

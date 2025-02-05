@@ -17,22 +17,22 @@ import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider'
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
 import { DdAttributes } from './DdAttributes';
-import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateActionEventMapper } from './eventMappers/actionEventMapper';
-import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
+import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
-import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
 import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
-import {
-    TracingIdFormat,
-    TracingIdType,
-    TracingIdentifier
-} from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
+import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
+import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
+import { getTracingHeaders } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import type {
     ErrorSource,
     DdRumType,
     RumActionType,
-    ResourceKind
+    ResourceKind,
+    FirstPartyHost,
+    TracingHeadersInjector
 } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -230,26 +230,6 @@ class DdRumWrapper implements DdRumType {
         );
     };
 
-    generateUUID = (type: TracingIdType): string => {
-        switch (type) {
-            case TracingIdType.trace:
-                return TracingIdentifier.createTraceId().toString(
-                    TracingIdFormat.paddedHex
-                );
-            case TracingIdType.span:
-                return TracingIdentifier.createSpanId().toString(
-                    TracingIdFormat.decimal
-                );
-            default:
-                console.warn(
-                    `Unsupported tracing ID type '${type}' for generateUUID. Falling back to 64 bit Span ID.`
-                );
-                return TracingIdentifier.createSpanId().toString(
-                    TracingIdFormat.decimal
-                );
-        }
-    };
-
     addError = (
         message: string,
         source: ErrorSource,
@@ -318,6 +298,56 @@ class DdRumWrapper implements DdRumType {
             return undefined;
         }
         return this.nativeRum.getCurrentSessionId();
+    }
+
+    getTracingHeaders = (
+        url: string,
+        tracingSamplingRate: number,
+        firstPartyHosts: FirstPartyHost[]
+    ): { header: string; value: string }[] => {
+        return getTracingHeaders(url, tracingSamplingRate, firstPartyHosts);
+    };
+
+    injectTracingHeaders(
+        url: string,
+        tracingSamplingRate: number,
+        firstPartyHosts: FirstPartyHost[],
+        injectHeaders: (header: string, value: string) => void
+    ) {
+        getTracingHeaders(url, tracingSamplingRate, firstPartyHosts).forEach(
+            ({ header, value }) => {
+                injectHeaders(header, value);
+            }
+        );
+    }
+
+    buildTracingHeadersInjector(
+        tracingSamplingRate: number,
+        firstPartyHosts: FirstPartyHost[]
+    ): TracingHeadersInjector {
+        const _firstPartyHosts = [...firstPartyHosts];
+        return {
+            inject: (
+                url: string,
+                injectHeaders: (header: string, value: string) => void
+            ) => {
+                getTracingHeaders(
+                    url,
+                    tracingSamplingRate,
+                    _firstPartyHosts
+                ).forEach(({ header, value }) => {
+                    injectHeaders(header, value);
+                });
+            }
+        };
+    }
+
+    generateTraceId(): DatadogTracingIdentifier {
+        return new DatadogTracingIdentifier(TracingIdentifier.createTraceId());
+    }
+
+    generateSpanId(): DatadogTracingIdentifier {
+        return new DatadogTracingIdentifier(TracingIdentifier.createSpanId());
     }
 
     registerErrorEventMapper(errorEventMapper: ErrorEventMapper) {

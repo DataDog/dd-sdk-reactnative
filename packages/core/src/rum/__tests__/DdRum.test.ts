@@ -5,7 +5,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import BigInt from 'big-integer';
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
@@ -17,9 +16,13 @@ import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
-import { TracingIdType } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
+import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
+import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
+import type { FirstPartyHost } from '../types';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
+
+import * as TracingHeadersUtils from './__utils__/TracingHeadersUtils';
 
 jest.mock('../../utils/time-provider/DefaultTimeProvider', () => {
     return {
@@ -451,34 +454,345 @@ describe('DdRum', () => {
             });
         });
 
-        describe('DdRum.generateUUID', () => {
-            it('generates a valid trace id in paddedHex format', () => {
-                const uuid = DdRum.generateUUID(TracingIdType.trace);
+        describe('Tracing Headers APIs', () => {
+            describe('Types and Enums', () => {
+                it('exposes TracingIdFormat enum', () => {
+                    expect(TracingIdFormat).toBeDefined();
+                });
 
-                expect(uuid).toBeDefined(); // Ensure the value is defined
-                expect(BigInt(uuid, 16).greater(BigInt(0))).toBe(true); // Ensure it's a valid positive number
-                expect(TracingIdentifierUtils.isWithin128Bits(uuid)).toBe(true); // Ensure the value is within 128 bits
-                expect(uuid).toMatch(/^[0-9a-f]{32}$/); // Ensure the value is in paddedHex format
+                it('exposes DatadogTracingIdentifier enum', () => {
+                    expect(DatadogTracingIdentifier).toBeDefined();
+                });
             });
 
-            it('generates a valid span id in decimal format', () => {
-                const uuid = DdRum.generateUUID(TracingIdType.span);
-
-                expect(uuid).toBeDefined(); // Ensure the value is defined
-                expect(BigInt(uuid).greater(BigInt(0))).toBe(true); // Ensure it's a valid positive number
-                expect(TracingIdentifierUtils.isWithin64Bits(uuid)).toBe(true); // Ensure the value is within 64 bits
-                expect(uuid).toMatch(/^[0-9]+$/); // Ensure the value contains only decimal digits
+            describe('DdRum.generateTraceId', () => {
+                it('generates 128-bit trace ID (100 iterations)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const traceId = DdRum.generateTraceId();
+                        expect(traceId).toBeDefined();
+                        expect(
+                            TracingIdentifierUtils.isWithin128Bits(
+                                traceId.toString(TracingIdFormat.decimal)
+                            )
+                        ).toBe(true);
+                    }
+                });
             });
 
-            it('falls back to 64 bit span id when wrong tracingIdType is passed', () => {
-                const uuid = DdRum.generateUUID(
-                    ('wrong' as unknown) as TracingIdType
-                );
+            describe('DdRum.generateSpanId', () => {
+                it('generates 64-bit span ID (100 iterations)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const spanId = DdRum.generateSpanId();
+                        expect(spanId).toBeDefined();
+                        expect(
+                            TracingIdentifierUtils.isWithin64Bits(
+                                spanId.toString(TracingIdFormat.decimal)
+                            )
+                        ).toBe(true);
+                    }
+                });
+            });
 
-                expect(uuid).toBeDefined(); // Ensure the value is defined
-                expect(BigInt(uuid).greater(BigInt(0))).toBe(true); // Ensure it's a valid positive number
-                expect(TracingIdentifierUtils.isWithin64Bits(uuid)).toBe(true); // Ensure the value is within 64 bits
-                expect(uuid).toMatch(/^[0-9]+$/); // Ensure the value contains only decimal digits
+            describe('DdRum.getTracingHeaders', () => {
+                it('returns tracing headers with DATADOG propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [PropagatorType.DATADOG]
+                            }
+                        ];
+
+                        const headers = DdRum.getTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        expect(headers).toHaveLength(5);
+                        TracingHeadersUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing headers with TRACECONTEXT propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [PropagatorType.TRACECONTEXT]
+                            }
+                        ];
+
+                        const headers = DdRum.getTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        expect(headers).toHaveLength(2);
+                        TracingHeadersUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing headers with B3 propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [PropagatorType.B3]
+                            }
+                        ];
+
+                        const headers = DdRum.getTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        expect(headers).toHaveLength(1);
+                        TracingHeadersUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing headers with B3MULTI propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [PropagatorType.B3MULTI]
+                            }
+                        ];
+
+                        const headers = DdRum.getTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        expect(headers).toHaveLength(3);
+                        TracingHeadersUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT,
+                                    PropagatorType.B3,
+                                    PropagatorType.B3MULTI
+                                ]
+                            }
+                        ];
+
+                        const headers = DdRum.getTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingHeadersUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns empty headers array for non-matching host with all propagators and sampling rate 100', () => {
+                    const url = 'https://not-the-right-host.com';
+                    const firstPartyHosts: FirstPartyHost[] = [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3,
+                                PropagatorType.B3MULTI
+                            ]
+                        }
+                    ];
+
+                    const headers = DdRum.getTracingHeaders(
+                        url,
+                        100,
+                        firstPartyHosts
+                    );
+
+                    expect(headers).toHaveLength(0);
+                });
+
+                it('returns empty headers with no propagators and sampling rate 100', () => {
+                    const url = 'https://www.example.com';
+                    const firstPartyHosts: FirstPartyHost[] = [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: []
+                        }
+                    ];
+
+                    const headers = DdRum.getTracingHeaders(
+                        url,
+                        100,
+                        firstPartyHosts
+                    );
+
+                    expect(headers).toHaveLength(0);
+                });
+            });
+
+            describe('DdRum.injectTracingHeaders', () => {
+                it('injects all headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT,
+                                    PropagatorType.B3,
+                                    PropagatorType.B3MULTI
+                                ]
+                            }
+                        ];
+
+                        const headers: { header: string; value: string }[] = [];
+
+                        DdRum.injectTracingHeaders(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts,
+                            (header, value) => {
+                                headers.push({ header, value });
+                            }
+                        );
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingHeadersUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+            });
+
+            describe('DdRum.buildTracingHeadersInjector', () => {
+                it('built tracingHeadersInjector injects all headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT,
+                                    PropagatorType.B3,
+                                    PropagatorType.B3MULTI
+                                ]
+                            }
+                        ];
+
+                        const headers: { header: string; value: string }[] = [];
+
+                        const injector = DdRum.buildTracingHeadersInjector(
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        injector.inject(url, (header, value) => {
+                            headers.push({ header, value });
+                        });
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingHeadersUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingHeadersUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
             });
         });
 

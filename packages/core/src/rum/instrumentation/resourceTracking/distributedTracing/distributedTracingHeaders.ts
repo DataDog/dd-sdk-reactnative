@@ -4,11 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FirstPartyHost } from '../../../types';
 import { PropagatorType } from '../../../types';
+import { URLHostParser } from '../requestProxy/XHRProxy/URLHostParser';
 
 import { TracingIdFormat } from './TracingIdentifier';
 import type { TraceId, SpanId } from './TracingIdentifier';
+import { getTracingAttributes } from './distributedTracing';
 import type { DdRumResourceTracingAttributes } from './distributedTracing';
+import { firstPartyHostsRegexMapBuilder } from './firstPartyHosts';
 
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 /**
@@ -31,7 +35,7 @@ export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
 export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
 export const B3_MULTI_SAMPLED_HEADER_KEY = 'X-B3-Sampled';
 
-export const getTracingHeaders = (
+export const getTracingHeadersFromAttributes = (
     tracingAttributes: DdRumResourceTracingAttributes
 ): { header: string; value: string }[] => {
     const headers: { header: string; value: string }[] = [];
@@ -130,6 +134,23 @@ export const getTracingHeaders = (
     });
 
     return headers;
+};
+
+export const getTracingHeaders = (
+    url: string,
+    tracingSamplingRate: number,
+    firstPartyHosts: FirstPartyHost[]
+): { header: string; value: string }[] => {
+    const hostname = URLHostParser(url);
+    const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
+        firstPartyHosts
+    );
+    const tracingAttributes = getTracingAttributes({
+        hostname,
+        firstPartyHostsRegexMap,
+        tracingSamplingRate
+    });
+    return getTracingHeadersFromAttributes(tracingAttributes);
 };
 
 const generateTraceContextHeader = ({
