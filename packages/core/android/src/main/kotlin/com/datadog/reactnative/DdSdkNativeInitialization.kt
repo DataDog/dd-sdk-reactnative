@@ -13,6 +13,7 @@ import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
+import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.event.EventMapper
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
@@ -251,6 +252,7 @@ class DdSdkNativeInitialization internal constructor(
             buildBatchSize(configuration.batchSize)
         )
 
+
         configuration.proxyConfig?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
@@ -258,6 +260,8 @@ class DdSdkNativeInitialization internal constructor(
         if (configuration.firstPartyHosts != null) {
             configBuilder.setFirstPartyHostsWithHeaderType(configuration.firstPartyHosts)
         }
+
+        configBuilder.setBatchProcessingLevel(buildBatchProcessingLevel(configuration.batchProcessingLevel))
 
         return configBuilder.build()
     }
@@ -317,6 +321,16 @@ class DdSdkNativeInitialization internal constructor(
             "medium" -> BatchSize.MEDIUM
             "large" -> BatchSize.LARGE
             else -> BatchSize.MEDIUM
+        }
+    }
+
+
+    private fun buildBatchProcessingLevel(batchProcessingLevel: String?): BatchProcessingLevel {
+        return when (batchProcessingLevel?.lowercase(Locale.US)) {
+            "low" -> BatchProcessingLevel.LOW
+            "medium" -> BatchProcessingLevel.MEDIUM
+            "high" -> BatchProcessingLevel.HIGH
+            else -> BatchProcessingLevel.MEDIUM
         }
     }
 

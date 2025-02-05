@@ -6,8 +6,11 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.trace.TracingHeaderType
 import java.net.Proxy
+
+
 
 /**
  * A configuration object to initialize Datadog's features.
@@ -38,6 +41,7 @@ import java.net.Proxy
  * @param bundleLogsWithRum Enables RUM correlation with logs.
  * @param bundleLogsWithTraces Enables Traces correlation with logs.
  * @param trackNonFatalAnrs Enables tracking of non-fatal ANRs on Android.
+ * @param batchProcessingLevel The preferred number of batches of data that will be sent in a single upload (can be 'LOW', 'MEDIUM' (default), 'HIGH')
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -66,7 +70,8 @@ data class DdSdkConfiguration(
     val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
     val bundleLogsWithRum: Boolean? = null,
     val bundleLogsWithTraces: Boolean? = null,
-    val trackNonFatalAnrs: Boolean? = null
+    val trackNonFatalAnrs: Boolean? = null,
+    val batchProcessingLevel: String? = null
 )
 
 internal data class JSONConfigurationFile(
@@ -98,7 +103,8 @@ internal data class JSONDdSdkConfiguration(
     val firstPartyHosts: List<JSONFirstPartyHost>? = null,
     val bundleLogsWithRum: Boolean? = null,
     val bundleLogsWithTraces: Boolean? = null,
-    val trackNonFatalAnrs: Boolean? = null
+    val trackNonFatalAnrs: Boolean? = null,
+    val batchProcessingLevel: String? = null
 )
 
 internal data class JSONProxyConfiguration(

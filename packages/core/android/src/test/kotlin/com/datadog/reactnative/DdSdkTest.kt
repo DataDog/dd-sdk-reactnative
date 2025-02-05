@@ -11,6 +11,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.Choreographer
 import com.datadog.android.DatadogSite
+import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
@@ -1502,6 +1503,45 @@ internal class DdSdkTest {
             }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideBatchProcessingLevel")
+    fun `𝕄 initialize native SDK 𝕎 initialize() {batch processing level}`(
+        input: String,
+        expectedBatchSize: BatchProcessingLevel,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            batchProcessingLevel = input
+        )
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
+            .hasField("coreConfig") { coreConfig ->
+                coreConfig.hasFieldEqualTo(
+                    "batchProcessingLevel",
+                    expectedBatchSize
+                )
+            }
+    }
+
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {trackBackgroundEvents}`(
         @Forgery configuration: DdSdkConfiguration,
@@ -2356,6 +2396,15 @@ internal class DdSdkTest {
                 Arguments.of("RARE", UploadFrequency.RARE),
                 Arguments.of("AVERAGE", UploadFrequency.AVERAGE),
                 Arguments.of("FREQUENT", UploadFrequency.FREQUENT)
+            )
+        }
+
+        @JvmStatic
+        fun provideBatchProcessingLevel(): Stream<Arguments?>? {
+            return Stream.of(
+                Arguments.of("LOW", BatchProcessingLevel.LOW),
+                Arguments.of("MEDIUM", BatchProcessingLevel.MEDIUM),
+                Arguments.of("HIGH", BatchProcessingLevel.HIGH)
             )
         }
     }

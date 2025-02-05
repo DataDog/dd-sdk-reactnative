@@ -95,7 +95,8 @@ public class DdSdkNativeInitialization: NSObject {
             service: configuration.serviceName as? String,
             batchSize: configuration.batchSize,
             uploadFrequency: configuration.uploadFrequency,
-            proxyConfiguration: configuration.proxyConfig
+            proxyConfiguration: configuration.proxyConfig,
+            batchProcessingLevel: configuration.batchProcessingLevel
         )
 
         if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {

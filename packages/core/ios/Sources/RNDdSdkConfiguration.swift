@@ -41,6 +41,7 @@ extension NSDictionary {
         let bundleLogsWithTraces = object(forKey: "bundleLogsWithTraces") as? Bool
         let appHangThreshold = object(forKey: "appHangThreshold") as? Double
         let trackWatchdogTerminations = object(forKey: "trackWatchdogTerminations") as? Bool
+        let batchProcessingLevel = object(forKey: "batchProcessingLevel") as? NSString
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -71,7 +72,8 @@ extension NSDictionary {
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
             appHangThreshold: appHangThreshold,
-            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations
+            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
+            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel()
         )
     }
 
@@ -238,6 +240,7 @@ extension Dictionary where Key == String, Value == AnyObject {
         let bundleLogsWithTraces = configuration["bundleLogsWithTraces"] as? Bool
         let appHangThreshold = configuration["appHangThreshold"] as? Double
         let trackWatchdogTerminations = configuration["trackWatchdogTerminations"] as? Bool
+        let batchProcessingLevel = configuration["batchProcessingLevel"] as? NSString
 
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -271,7 +274,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
             appHangThreshold: appHangThreshold,
-            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations
+            trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
+            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel()
         )
     }
 }
@@ -347,6 +351,19 @@ extension NSString? {
             return .ap1
         default:
             return .us1
+        }
+    }
+    
+    func asBatchProcessingLevel() -> Datadog.Configuration.BatchProcessingLevel {
+        switch self?.lowercased {
+        case "low":
+            return .low
+        case "medium":
+            return .medium
+        case "high":
+            return .high
+        default:
+            return .medium
         }
     }
 }

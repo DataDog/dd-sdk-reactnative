@@ -4,21 +4,20 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
-import XCTest
-@testable import DatadogSDKReactNative
 @testable import DatadogCore
-@testable import DatadogRUM
+@testable import DatadogCrashReporting
 @testable import DatadogInternal
 @testable import DatadogLogs
+@testable import DatadogRUM
+@testable import DatadogSDKReactNative
 @testable import DatadogTrace
-@testable import DatadogCrashReporting
-import DatadogLogs
+import XCTest
 
 final class DispatchQueueMock: DispatchQueueType {
     func async(execute work: @escaping @convention(block) () -> Void) {
         work()
     }
-    
+
     func isSameQueue(queue: DispatchQueueType) -> Bool {
         guard let queueAsMock = queue as? DispatchQueueMock else {
             return false
@@ -27,11 +26,11 @@ final class DispatchQueueMock: DispatchQueueType {
     }
 }
 
-internal class DdSdkTests: XCTestCase {
+class DdSdkTests: XCTestCase {
     var consoleMessage = ""
 
-    private func mockResolve(args: Any?) {}
-    private func mockReject(args: String?, arg: String?, err: Error?) {}
+    private func mockResolve(args _: Any?) {}
+    private func mockReject(args _: String?, arg _: String?, err _: Error?) {}
 
     override func tearDown() {
         DatadogSDKWrapper.shared.setCoreInstance(core: nil)
@@ -46,7 +45,7 @@ internal class DdSdkTests: XCTestCase {
             self.consoleMessage = ""
         }
 
-        consolePrint = { [weak self] (msg, level) in
+        consolePrint = { [weak self] msg, _ in
             self?.consoleMessage += msg
         }
 
@@ -58,7 +57,7 @@ internal class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(self.consoleMessage, "")
+        XCTAssertEqual(consoleMessage, "")
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -68,7 +67,7 @@ internal class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         ).initialize(configuration: .mockAny(), resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(self.consoleMessage, "Datadog SDK is already initialized, skipping initialization.")
+        XCTAssertEqual(consoleMessage, "Datadog SDK is already initialized, skipping initialization.")
     }
 
     func testResolvesPromiseAfterInitializationIsDone() throws {
@@ -117,7 +116,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNotNil(ddConfig.uiKitViewsPredicate)
     }
-    
+
     func testBuildConfigurationNoUIKitUserActionsByDefault() {
         let configuration: DdSdkConfiguration = .mockAny()
 
@@ -225,7 +224,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNil(Datadog.verbosityLevel)
     }
-    
+
     func testSDKInitializationWithOnInitializedCallback() {
         var coreFromCallback: DatadogCoreProtocol? = nil
         DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: { core in
@@ -242,14 +241,14 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertNotNil(coreFromCallback)
     }
-    
+
     func testEnableAllFeatures() {
         let core = MockDatadogCore()
         let configuration: DdSdkConfiguration = .mockAny()
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
-        
+
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
         XCTAssertNotNil(core.features[TraceFeature.name])
@@ -367,7 +366,7 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
 
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
-        
+
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
 
@@ -376,7 +375,7 @@ internal class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
 
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
-        
+
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
 
@@ -386,10 +385,10 @@ internal class DdSdkTests: XCTestCase {
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
-        
+
         XCTAssertNotNil(core.features[CrashReportingFeature.name])
     }
-    
+
     func testBuildConfigurationWithVersionSuffix() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: ["_dd.version_suffix": ":codepush-3"])
 
@@ -397,7 +396,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.additionalConfiguration["_dd.version"] as! String, "1.2.3:codepush-3")
     }
-    
+
     func testBuildConfigurationFrustrationTrackingEnabledByDefault() {
         let configuration: DdSdkConfiguration = .mockAny()
 
@@ -405,7 +404,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.trackFrustrations, true)
     }
-    
+
     func testBuildConfigurationFrustrationTrackingEnabledExplicitly() {
         let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: true)
 
@@ -413,7 +412,7 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(ddConfig.trackFrustrations, true)
     }
-    
+
     func testBuildConfigurationFrustrationTrackingDisabled() {
         let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: false)
 
@@ -440,7 +439,7 @@ internal class DdSdkTests: XCTestCase {
                     "email": "john@doe.com",
                     "extra-info-1": 123,
                     "extra-info-2": "abc",
-                    "extra-info-3": true
+                    "extra-info-3": true,
                 ]
             ),
             resolve: mockResolve,
@@ -474,7 +473,7 @@ internal class DdSdkTests: XCTestCase {
                 dictionary: [
                     "attribute-1": 123,
                     "attribute-2": "abc",
-                    "attribute-3": true
+                    "attribute-3": true,
                 ]
             ),
             resolve: mockResolve,
@@ -493,13 +492,13 @@ internal class DdSdkTests: XCTestCase {
     }
 
     func testBuildLongTaskThreshold() {
-        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2_500)
+        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2500)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(configuration: configuration)
 
         XCTAssertEqual(ddConfig.longTaskThreshold, 2.5)
     }
-    
+
     func testBuildNoLongTaskTracking() {
         let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
 
@@ -511,7 +510,7 @@ internal class DdSdkTests: XCTestCase {
     func testFirstPartyHosts() {
         let configuration: DdSdkConfiguration = .mockAny(firstPartyHosts: ([
             ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
-            ["match": "datadog.com",  "propagatorTypes": ["b3multi", "tracecontext"]]
+            ["match": "datadog.com", "propagatorTypes": ["b3multi", "tracecontext"]],
         ] as NSArray).asFirstPartyHosts(), resourceTracingSamplingRate: 66)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(configuration: configuration)
@@ -521,13 +520,12 @@ internal class DdSdkTests: XCTestCase {
         var actualTracingSamplingRate: Float?
         var actualTraceContextInjection: TraceContextInjection?
         switch ddConfig.urlSessionTracking?.firstPartyHostsTracing {
-            case .trace(_,_,_): break
-            case let .traceWithHeaders(hostsWithHeaders, samplingRate, traceContextInjection):
-                actualFirstPartyHosts = hostsWithHeaders
-                actualTracingSamplingRate = samplingRate
-                actualTraceContextInjection = traceContextInjection
-                break
-            case .none: break
+        case .trace: break
+        case let .traceWithHeaders(hostsWithHeaders, samplingRate, traceContextInjection):
+            actualFirstPartyHosts = hostsWithHeaders
+            actualTracingSamplingRate = samplingRate
+            actualTraceContextInjection = traceContextInjection
+        case .none: break
         }
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
@@ -550,7 +548,7 @@ internal class DdSdkTests: XCTestCase {
                 "address": "host",
                 "port": 99,
                 "username": "username",
-                "password": "pwd"
+                "password": "pwd",
             ] as NSDictionary).asProxyConfig()
         )
 
@@ -602,6 +600,14 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.uploadFrequency, .rare)
     }
 
+    func testBuildConfigurationSmallBatchSize() {
+        let configuration: DdSdkConfiguration = .mockAny(batchSize: "SMALL")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchSize, .small)
+    }
+
     func testBuildConfigurationMediumBatchSize() {
         let configuration: DdSdkConfiguration = .mockAny(batchSize: "MEDIUM")
 
@@ -618,14 +624,30 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.batchSize, .large)
     }
 
-    func testBuildConfigurationSmallBatchSize() {
-        let configuration: DdSdkConfiguration = .mockAny(batchSize: "SMALL")
+    func testBuildConfigurationLowBatchProcessingLevel() {
+        let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "LOW")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(configuration: configuration)
 
-        XCTAssertEqual(ddConfig.batchSize, .small)
+        XCTAssertEqual(ddConfig.batchProcessingLevel, .low)
     }
-    
+
+    func testBuildConfigurationMediumBatchProcessingLevel() {
+        let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "MEDIUM")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchProcessingLevel, .medium)
+    }
+
+    func testBuildConfigurationHighBatchProcessingLevel() {
+        let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "HIGH")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(configuration: configuration)
+
+        XCTAssertEqual(ddConfig.batchProcessingLevel, .high)
+    }
+
     func testJsRefreshRateInitializationWithLongTaskDisabled() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
@@ -670,7 +692,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], nil)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 0)
     }
-    
+
     func testJsLongTaskCollectionWithRefreshRateInitializationNeverVitalsUpdateFrequency() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
@@ -695,7 +717,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.count, 1)
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
     }
-    
+
     func testJsLongTaskCollection() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
@@ -709,7 +731,7 @@ internal class DdSdkTests: XCTestCase {
         ).initialize(configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"), resolve: mockResolve, reject: mockReject)
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
-        
+
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.05)
         // Wait for async execution on the sharedQueue to be over:
         sharedQueue.sync {}
@@ -722,7 +744,7 @@ internal class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
     }
-    
+
     func testSDKInitializationWithCustomEndpoints() throws {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
@@ -748,7 +770,7 @@ internal class DdSdkTests: XCTestCase {
         let logsFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: LogsFeature.self)
         let customLogsEndpoint = try XCTUnwrap(logsFeature?.requestBuilder as? DatadogLogs.RequestBuilder).customIntakeURL
         XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com/api/v2/logs")
-        
+
         let rumFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(feature: RUMFeature.self)
         let customRumEndpoint = try XCTUnwrap(rumFeature?.requestBuilder as? DatadogRUM.RequestBuilder).customIntakeURL
         XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com/api/v2/rum")
@@ -809,7 +831,7 @@ internal class DdSdkTests: XCTestCase {
             longTaskThresholdMs: 0.1,
             configurationForTelemetry: ["initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true, "trackNetworkRequests": true, "reactVersion": "18.2.0", "reactNativeVersion": "0.71.0"]
         )
-        
+
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration)
 
@@ -870,13 +892,13 @@ internal class DdSdkTests: XCTestCase {
 
         XCTAssertTrue(bridge.isSameQueue(queue: mockJSRefreshRateMonitor.jsQueue!))
     }
-    
+
     func testCallsOnCoreInitializedListeners() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
         let mockListener = MockOnCoreInitializedListener()
         DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: mockListener.listener)
-        
+
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             jsDispatchQueue: bridge,
@@ -894,17 +916,17 @@ internal class DdSdkTests: XCTestCase {
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(sdkConfiguration: configuration)
-        
+
         DdSdkImplementation().consumeWebviewEvent(message: "{\"eventType\":\"rum\",\"event\":{\"blabla\":\"custom message\"}}", resolve: mockResolve, reject: mockReject)
-        
+
         XCTAssertNotNil(core.baggages["browser-rum-event"])
     }
-    
+
     func testClearAllData() throws {
         // Given
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
-        
+
         let sdk = DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             jsDispatchQueue: bridge,
@@ -919,16 +941,16 @@ internal class DdSdkTests: XCTestCase {
         // data removal in `unauthorised` (`.pending`) directory. To not cause test flakiness, we must ensure that
         // mock data is written only after this operation completes - otherwise, migration may delete mocked files.
         core.readWriteQueue.sync {}
-        
-        let featureDirectories: [FeatureDirectories] = [
-            try core.directory.getFeatureDirectories(forFeatureNamed: "logging"),
-            try core.directory.getFeatureDirectories(forFeatureNamed: "tracing"),
+
+        let featureDirectories: [FeatureDirectories] = try [
+            core.directory.getFeatureDirectories(forFeatureNamed: "logging"),
+            core.directory.getFeatureDirectories(forFeatureNamed: "tracing"),
         ]
 
         let allDirectories: [Directory] = featureDirectories.flatMap { [$0.authorized, $0.unauthorized] }
         try allDirectories.forEach { directory in _ = try directory.createFile(named: .mockRandom()) }
 
-        let numberOfFiles = try allDirectories.reduce(0, { acc, nextDirectory in return try acc + nextDirectory.files().count })
+        let numberOfFiles = try allDirectories.reduce(0) { acc, nextDirectory in try acc + nextDirectory.files().count }
         XCTAssertEqual(numberOfFiles, 4, "Each feature stores 2 files - one authorised and one unauthorised")
 
         // When
@@ -938,7 +960,7 @@ internal class DdSdkTests: XCTestCase {
         core.readWriteQueue.sync {}
 
         // Then
-        let newNumberOfFiles = try allDirectories.reduce(0, { acc, nextDirectory in return try acc + nextDirectory.files().count })
+        let newNumberOfFiles = try allDirectories.reduce(0) { acc, nextDirectory in try acc + nextDirectory.files().count }
         XCTAssertEqual(newNumberOfFiles, 0, "All files must be removed")
     }
 }
@@ -948,17 +970,17 @@ private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
     private var frameTimeCallback: frame_time_callback?
     var isStarted: Bool = false
     private(set) var jsQueue: DispatchQueueType?
-    
+
     init() {}
-    
+
     public func startMonitoring(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
         self.frameTimeCallback = frameTimeCallback
         self.jsQueue = jsQueue
         isStarted = true
     }
-    
+
     func executeFrameCallback(frameTime: TimeInterval) {
-        self.frameTimeCallback?(frameTime)
+        frameTimeCallback?(frameTime)
     }
 }
 
@@ -992,7 +1014,8 @@ extension DdSdkConfiguration {
         bundleLogsWithRum: Bool = true,
         bundleLogsWithTraces: Bool = true,
         appHangThreshold: Double? = nil,
-        trackWatchdogTerminations: Bool = false
+        trackWatchdogTerminations: Bool = false,
+        batchProcessingLevel: NSString? = "MEDIUM"
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1023,7 +1046,8 @@ extension DdSdkConfiguration {
             bundleLogsWithRum: bundleLogsWithRum,
             bundleLogsWithTraces: bundleLogsWithTraces,
             appHangThreshold: appHangThreshold,
-            trackWatchdogTerminations: trackWatchdogTerminations
+            trackWatchdogTerminations: trackWatchdogTerminations,
+            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel()
         )
     }
 }
@@ -1054,7 +1078,8 @@ extension NSDictionary {
         serviceName: NSString? = nil,
         firstPartyHosts: NSArray? = nil,
         bundleLogsWithRum: Bool? = nil,
-        bundleLogsWithTraces: Bool? = nil
+        bundleLogsWithTraces: Bool? = nil,
+        batchProcessingLevel: NSString = "MEDIUM"
     ) -> NSDictionary {
         var config = NSMutableDictionary()
         config["clientToken"] = clientToken
@@ -1082,25 +1107,26 @@ extension NSDictionary {
         config["firstPartyHosts"] = firstPartyHosts
         config["bundleLogsWithRum"] = bundleLogsWithRum
         config["bundleLogsWithTraces"] = bundleLogsWithTraces
+        config["batchProcessingLevel"] = batchProcessingLevel
         return config
     }
 }
 
 extension DdSdkImplementation {
-    internal override convenience init() {
+    override convenience init() {
         self.init(
             mainDispatchQueue: DispatchQueue.main,
             jsDispatchQueue: DispatchQueue.main,
-            jsRefreshRateMonitor: JSRefreshRateMonitor.init(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         )
     }
 }
 
-internal class MockOnCoreInitializedListener {
-    var core: DatadogCoreProtocol? = nil
-    
+class MockOnCoreInitializedListener {
+    var core: DatadogCoreProtocol?
+
     func listener(core: DatadogCoreProtocol) {
         self.core = core
     }

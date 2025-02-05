@@ -40,6 +40,7 @@ import DatadogRUM
      - bundleLogsWithTraces: Correlates logs with traces.
      - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
      - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
+     - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -72,6 +73,7 @@ public class DdSdkConfiguration: NSObject {
     public var bundleLogsWithTraces: Bool
     public var appHangThreshold: Double? = nil
     public var trackWatchdogTerminations: Bool
+    public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
 
     public init(
         clientToken: String,
@@ -102,7 +104,8 @@ public class DdSdkConfiguration: NSObject {
         bundleLogsWithRum: Bool,
         bundleLogsWithTraces: Bool,
         appHangThreshold: Double?,
-        trackWatchdogTerminations: Bool
+        trackWatchdogTerminations: Bool,
+        batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -133,6 +136,7 @@ public class DdSdkConfiguration: NSObject {
         self.bundleLogsWithTraces = bundleLogsWithTraces
         self.appHangThreshold = appHangThreshold
         self.trackWatchdogTerminations = trackWatchdogTerminations
+        self.batchProcessingLevel = batchProcessingLevel
     }
 }
 

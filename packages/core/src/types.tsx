@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
+
 /**
  * A configuration object to initialize Datadog's features.
  */
@@ -60,7 +62,8 @@ export class DdSdkConfiguration {
         readonly trackNonFatalAnrs: boolean | undefined,
         readonly appHangThreshold: number | undefined,
         readonly resourceTracingSamplingRate: number | undefined,
-        readonly trackWatchdogTerminations: boolean | undefined
+        readonly trackWatchdogTerminations: boolean | undefined,
+        readonly batchProcessingLevel: BatchProcessingLevel
     ) {}
 }
 
