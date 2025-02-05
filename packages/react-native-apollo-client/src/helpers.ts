@@ -8,15 +8,28 @@
  * NOTE: Do not import from '@apollo/client/utilities' as the package does not exist in Apollo Client < v3.
  */
 
+import { version } from '@apollo/client/package.json';
 import type { Operation } from '@apollo/client';
+import { DdSdk } from '@datadog/mobile-react-native';
 import type { DefinitionNode, OperationDefinitionNode } from 'graphql';
+
+import { ErrorCode, errorMessages } from './types';
+
+const apolloVersion = `[Apollo v${version}]`;
 
 export const getVariables = (operation: Operation): string | null => {
     if (operation.variables) {
         try {
             return JSON.stringify(operation.variables);
         } catch (e) {
-            // TODO RUM-1206: telemetry
+            DdSdk?.telemetryError(
+                _getErrorMessage(
+                    ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR,
+                    apolloVersion
+                ),
+                _getErrorStack(e),
+                ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR
+            );
             return null;
         }
     }
@@ -48,7 +61,24 @@ export const getOperationType = (
                 })[0] || null
         );
     } catch (e) {
-        // TODO RUM-1206: telemetry
+        DdSdk?.telemetryError(
+            _getErrorMessage(ErrorCode.GQL_OPERATION_TYPE_ERROR, apolloVersion),
+            _getErrorStack(e),
+            ErrorCode.GQL_OPERATION_TYPE_ERROR
+        );
         return null;
     }
+};
+
+const _getErrorMessage = (code: ErrorCode, details: string) =>
+    `${errorMessages[code]} - ${details}`;
+
+const _getErrorStack = (error: unknown): string => {
+    if (!error) {
+        return '';
+    }
+
+    return error instanceof Error
+        ? error.stack ?? 'No stack trace available'
+        : `Non-Error thrown: ${error}`;
 };

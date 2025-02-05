@@ -2909,7 +2909,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
   peerDependencies:
     "@apollo/client": ">=3.0"
-    "@datadog/mobile-react-native": ^2.0.1
+    "@datadog/mobile-react-native": ^2.6.1
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown

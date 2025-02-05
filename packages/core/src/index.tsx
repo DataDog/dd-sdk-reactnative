@@ -14,6 +14,7 @@ import {
     BatchSize
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
+import { DdSdk } from './sdk/DdSdk';
 import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -48,6 +49,7 @@ export {
     ErrorSource,
     DdSdkReactNativeConfiguration,
     DdSdkReactNative,
+    DdSdk,
     InternalLog,
     ProxyConfiguration,
     ProxyType,
