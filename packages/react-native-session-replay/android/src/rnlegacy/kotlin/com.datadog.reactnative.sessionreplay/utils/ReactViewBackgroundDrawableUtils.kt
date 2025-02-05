@@ -1,7 +1,6 @@
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
-import com.datadog.android.internal.utils.densityNormalized
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
@@ -19,10 +18,7 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
         }
 
         val borderProps = resolveBorder(drawable, pixelDensity)
-        val cornerRadius = drawable
-            .fullBorderRadius
-            .toLong()
-            .densityNormalized(pixelDensity)
+        val cornerRadius = (drawable.fullBorderRadius / pixelDensity).toLong()
 
         val backgroundColor = getBackgroundColor(drawable)
         val colorHexString = if (backgroundColor != null) {
@@ -63,8 +59,7 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
         backgroundDrawable: ReactViewBackgroundDrawable,
         pixelDensity: Float
     ): MobileSegment.ShapeBorder {
-        val borderWidth =
-            backgroundDrawable.fullBorderWidth.toLong().densityNormalized(pixelDensity)
+        val borderWidth = (backgroundDrawable.fullBorderWidth / pixelDensity).toLong()
         val borderColor = formatAsRgba(backgroundDrawable.getBorderColor(Spacing.ALL))
 
         return MobileSegment.ShapeBorder(

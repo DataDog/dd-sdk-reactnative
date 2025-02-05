@@ -25,7 +25,6 @@ import com.datadog.reactnative.sessionreplay.TextPropertiesResolver
 import com.datadog.reactnative.sessionreplay.utils.TextViewUtils
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.UIManagerModule
-import com.facebook.react.views.image.ReactImageView
 import com.facebook.react.views.textinput.ReactEditText
 
 internal class ReactEditTextMapper(
@@ -102,7 +101,7 @@ internal class ReactEditTextMapper(
         mappingContext: MappingContext,
         asyncJobStatusCallback: AsyncJobStatusCallback
     ): MobileSegment.Wireframe? {
-        if (view !is ReactImageView) {
+        if (view !is ReactEditText) {
             return super.resolveBackgroundAsImageWireframe(
                 view,
                 bounds,
