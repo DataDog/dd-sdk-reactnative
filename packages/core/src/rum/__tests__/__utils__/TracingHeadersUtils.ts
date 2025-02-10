@@ -5,9 +5,29 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { DatadogTracingContext } from '../../instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
+import { TracingIdFormat } from '../../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
 
 type Header = { header: string; value: string };
+
+export const verifyRumResourceContext = (
+    tracingContext: DatadogTracingContext,
+    resourceContext?: Record<string, string | number>
+) => {
+    const rumResourceContext =
+        resourceContext ?? tracingContext.getRumResourceContext();
+    const traceId = rumResourceContext['_dd.trace_id'];
+    const spanId = rumResourceContext['_dd.span_id'];
+
+    expect(traceId).toBe(
+        tracingContext.traceId?.toString(TracingIdFormat.paddedHex)
+    );
+
+    expect(spanId).toBe(
+        tracingContext.spanId?.toString(TracingIdFormat.decimal)
+    );
+};
 
 export const verifyDatadogHeaders = (
     headersArray: Header[],

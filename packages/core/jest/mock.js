@@ -117,11 +117,7 @@ module.exports = {
             ),
         setTimeProvider: jest.fn().mockImplementation(() => {}),
         timeProvider: jest.fn().mockReturnValue(undefined),
-        getTracingHeaders: jest.fn().mockReturnValue([]),
-        injectTracingHeaders: jest.fn().mockImplementation(() => {}),
-        buildTracingHeadersInjector: jest.fn().mockReturnValue({
-            inject: (url, injectHeaders) => {}
-        }),
+        getTracingContext: jest.fn().mockReturnValue(undefined),
         generateTraceId: jest.fn().mockReturnValue('mock-trace-id'),
         generateSpanId: jest.fn().mockReturnValue('mock-span-id')
     },

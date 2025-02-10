@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import type { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 
 /**
@@ -156,55 +157,18 @@ export type DdRumType = {
     getCurrentSessionId(): Promise<string | undefined>;
 
     /**
-     * Returns the Datadog tracing headers for manual instrumentation of your requests.
+     * Gets the tracing context for the given url, tracingSamplingRate and firstPartyHosts.
+     * The returned {@link DatadogTracingContext} can be used to retrieve the tracing headers
+     * to append to your network request, and the attributes to add to your RUM Resource.
      * @param url the request URL.
      * @param tracingSamplingRate Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
-     * @param firstPartyHosts List of your backends hosts to enable tracing with.
-     * @returns The generated tracing headers as a list of { header: string; value: string}.
+     * @param firstPartyHosts List of your backends hosts with propagator types.
      */
-    getTracingHeaders(
+    getTracingContext(
         url: string,
         tracingSamplingRate: number,
         firstPartyHosts: FirstPartyHost[]
-    ): { header: string; value: string }[];
-
-    /**
-     * A function that can be used to manually retrieve the tracing headers for manual instrumentation of your requests.
-     * @param url the request URL.
-     * @param tracingSamplingRate Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
-     * @param firstPartyHosts List of your backends hosts to enable tracing with.
-     * @param injectHeaders A callback function which returns the generated tracing headers for the given parameters.
-     */
-    injectTracingHeaders(
-        url: string,
-        tracingSamplingRate: number,
-        firstPartyHosts: FirstPartyHost[],
-        injectHeaders: (key: string, value: string) => void
-    ): void;
-
-    /**
-     * An alternative to {@link injectTracingHeaders}.
-     * It returns an object for the given `tracingSamplingRate` and `firstPartyHosts`, which can be used to call `.inject` with the
-     * request URL, and a callback to get the tracing headers.
-     *
-     * It's particularly useful to avoid specifying the `tracingSamplingRate` and `firstPartyHosts` for each call.
-     *
-     * Usage:
-     *
-     *  const injector = this.getTracingHeadersInjector(tracingSamplingRate, firstPartyHosts);
-     *  const headers = new Map<string, string>();
-     *  injector.inject('myurl', (header: string, value: string) => {
-     *      headers.set(header, value);
-     *  });
-     *
-     * @param tracingSamplingRate Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
-     * @param firstPartyHosts List of your backends hosts to enable tracing with.
-     * @returns an object that can be used to manually inject Datadog tracing headers
-     */
-    buildTracingHeadersInjector(
-        tracingSamplingRate: number,
-        firstPartyHosts: FirstPartyHost[]
-    ): TracingHeadersInjector;
+    ): DatadogTracingContext;
 
     /**
      * Generates a unique 128bit Trace ID.
@@ -271,11 +235,4 @@ export enum PropagatorType {
 export type FirstPartyHost = {
     match: string;
     propagatorTypes: PropagatorType[];
-};
-
-export type TracingHeadersInjector = {
-    inject: (
-        url: string,
-        injectHeaders: (header: string, value: string) => void
-    ) => void;
 };

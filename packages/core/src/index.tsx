@@ -27,7 +27,6 @@ import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
-import type { TracingHeadersInjector } from './rum/types';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
@@ -40,6 +39,7 @@ import {
     TracingIdFormat
 } from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
+import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 
 /* eslint-enable arca/import-ordering */
 
@@ -73,7 +73,8 @@ export {
     DATADOG_GRAPH_QL_VARIABLES_HEADER,
     TracingIdType,
     TracingIdFormat,
-    DatadogTracingIdentifier
+    DatadogTracingIdentifier,
+    DatadogTracingContext
 };
 
-export type { Timestamp, TracingHeadersInjector };
+export type { Timestamp };

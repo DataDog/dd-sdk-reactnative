@@ -4,10 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { FirstPartyHost } from '../../../types';
 import { PropagatorType } from '../../../types';
+import type { FirstPartyHost } from '../../../types';
 import { URLHostParser } from '../requestProxy/XHRProxy/URLHostParser';
 
+import { DatadogTracingContext } from './DatadogTracingContext';
 import { TracingIdFormat } from './TracingIdentifier';
 import type { TraceId, SpanId } from './TracingIdentifier';
 import { getTracingAttributes } from './distributedTracing';
@@ -136,11 +137,11 @@ export const getTracingHeadersFromAttributes = (
     return headers;
 };
 
-export const getTracingHeaders = (
+export const getTracingContext = (
     url: string,
     tracingSamplingRate: number,
     firstPartyHosts: FirstPartyHost[]
-): { header: string; value: string }[] => {
+): DatadogTracingContext => {
     const hostname = URLHostParser(url);
     const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
         firstPartyHosts
@@ -150,7 +151,31 @@ export const getTracingHeaders = (
         firstPartyHostsRegexMap,
         tracingSamplingRate
     });
-    return getTracingHeadersFromAttributes(tracingAttributes);
+    const requestHeaders = getTracingHeadersFromAttributes(tracingAttributes);
+    const resourceContext: Record<string, string | number> = {};
+
+    const spanId = tracingAttributes.spanId;
+    if (spanId) {
+        resourceContext['_dd.span_id'] = spanId.toString(
+            TracingIdFormat.decimal
+        );
+    }
+
+    const traceId = tracingAttributes.traceId;
+    if (traceId) {
+        resourceContext['_dd.trace_id'] = traceId.toString(
+            TracingIdFormat.paddedHex
+        );
+    }
+
+    resourceContext['_dd.rule_psr'] = tracingSamplingRate / 100;
+
+    return new DatadogTracingContext(
+        requestHeaders,
+        resourceContext,
+        tracingAttributes.traceId,
+        tracingAttributes.spanId
+    );
 };
 
 const generateTraceContextHeader = ({

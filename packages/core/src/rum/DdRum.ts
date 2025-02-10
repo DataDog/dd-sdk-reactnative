@@ -23,16 +23,16 @@ import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
 import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
-import { getTracingHeaders } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
+import { getTracingContext } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import type {
     ErrorSource,
     DdRumType,
     RumActionType,
     ResourceKind,
-    FirstPartyHost,
-    TracingHeadersInjector
+    FirstPartyHost
 } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -300,47 +300,13 @@ class DdRumWrapper implements DdRumType {
         return this.nativeRum.getCurrentSessionId();
     }
 
-    getTracingHeaders = (
+    getTracingContext = (
         url: string,
         tracingSamplingRate: number,
         firstPartyHosts: FirstPartyHost[]
-    ): { header: string; value: string }[] => {
-        return getTracingHeaders(url, tracingSamplingRate, firstPartyHosts);
+    ): DatadogTracingContext => {
+        return getTracingContext(url, tracingSamplingRate, firstPartyHosts);
     };
-
-    injectTracingHeaders(
-        url: string,
-        tracingSamplingRate: number,
-        firstPartyHosts: FirstPartyHost[],
-        injectHeaders: (header: string, value: string) => void
-    ) {
-        getTracingHeaders(url, tracingSamplingRate, firstPartyHosts).forEach(
-            ({ header, value }) => {
-                injectHeaders(header, value);
-            }
-        );
-    }
-
-    buildTracingHeadersInjector(
-        tracingSamplingRate: number,
-        firstPartyHosts: FirstPartyHost[]
-    ): TracingHeadersInjector {
-        const _firstPartyHosts = [...firstPartyHosts];
-        return {
-            inject: (
-                url: string,
-                injectHeaders: (header: string, value: string) => void
-            ) => {
-                getTracingHeaders(
-                    url,
-                    tracingSamplingRate,
-                    _firstPartyHosts
-                ).forEach(({ header, value }) => {
-                    injectHeaders(header, value);
-                });
-            }
-        };
-    }
 
     generateTraceId(): DatadogTracingIdentifier {
         return new DatadogTracingIdentifier(TracingIdentifier.createTraceId());

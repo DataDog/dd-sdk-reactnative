@@ -16,13 +16,14 @@ import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
+import { DatadogTracingContext } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
 import type { FirstPartyHost } from '../types';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
-import * as TracingHeadersUtils from './__utils__/TracingHeadersUtils';
+import * as TracingContextUtils from './__utils__/TracingHeadersUtils';
 
 jest.mock('../../utils/time-provider/DefaultTimeProvider', () => {
     return {
@@ -454,7 +455,7 @@ describe('DdRum', () => {
             });
         });
 
-        describe('Tracing Headers APIs', () => {
+        describe('Tracing Context APIs', () => {
             describe('Types and Enums', () => {
                 it('exposes TracingIdFormat enum', () => {
                     expect(TracingIdFormat).toBeDefined();
@@ -462,6 +463,10 @@ describe('DdRum', () => {
 
                 it('exposes DatadogTracingIdentifier enum', () => {
                     expect(DatadogTracingIdentifier).toBeDefined();
+                });
+
+                it('exposes DatadogTracingContext class', () => {
+                    expect(DatadogTracingContext).toBeDefined();
                 });
             });
 
@@ -493,8 +498,8 @@ describe('DdRum', () => {
                 });
             });
 
-            describe('DdRum.getTracingHeaders', () => {
-                it('returns tracing headers with DATADOG propagator and sampling rate (50% 0, 50% 100)', () => {
+            describe('DdRum.getTracingContext', () => {
+                it('returns tracing context with DATADOG propagator and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const url = 'https://www.example.com';
                         const tracingSamplingRate =
@@ -506,21 +511,29 @@ describe('DdRum', () => {
                             }
                         ];
 
-                        const headers = DdRum.getTracingHeaders(
+                        const tracingContext = DdRum.getTracingContext(
                             url,
                             tracingSamplingRate,
                             firstPartyHosts
                         );
 
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
                         expect(headers).toHaveLength(5);
-                        TracingHeadersUtils.verifyDatadogHeaders(
+                        TracingContextUtils.verifyDatadogHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
                     }
                 });
 
-                it('returns tracing headers with TRACECONTEXT propagator and sampling rate (50% 0, 50% 100)', () => {
+                it('returns tracing context with TRACECONTEXT propagator and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const url = 'https://www.example.com';
                         const tracingSamplingRate =
@@ -532,21 +545,30 @@ describe('DdRum', () => {
                             }
                         ];
 
-                        const headers = DdRum.getTracingHeaders(
+                        const tracingContext = DdRum.getTracingContext(
                             url,
                             tracingSamplingRate,
                             firstPartyHosts
                         );
 
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
                         expect(headers).toHaveLength(2);
-                        TracingHeadersUtils.verifyTraceContextHeaders(
+                        TracingContextUtils.verifyTraceContextHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
                     }
                 });
 
-                it('returns tracing headers with B3 propagator and sampling rate (50% 0, 50% 100)', () => {
+                it('returns tracing context with B3 propagator and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const url = 'https://www.example.com';
                         const tracingSamplingRate =
@@ -558,21 +580,30 @@ describe('DdRum', () => {
                             }
                         ];
 
-                        const headers = DdRum.getTracingHeaders(
+                        const tracingContext = DdRum.getTracingContext(
                             url,
                             tracingSamplingRate,
                             firstPartyHosts
                         );
 
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
                         expect(headers).toHaveLength(1);
-                        TracingHeadersUtils.verifyB3Headers(
+                        TracingContextUtils.verifyB3Headers(
                             headers,
                             tracingSamplingRate === 100
                         );
                     }
                 });
 
-                it('returns tracing headers with B3MULTI propagator and sampling rate (50% 0, 50% 100)', () => {
+                it('returns tracing context with B3MULTI propagator and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const url = 'https://www.example.com';
                         const tracingSamplingRate =
@@ -584,21 +615,30 @@ describe('DdRum', () => {
                             }
                         ];
 
-                        const headers = DdRum.getTracingHeaders(
+                        const tracingContext = DdRum.getTracingContext(
                             url,
                             tracingSamplingRate,
                             firstPartyHosts
                         );
 
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
                         expect(headers).toHaveLength(3);
-                        TracingHeadersUtils.verifyB3MultiHeaders(
+                        TracingContextUtils.verifyB3MultiHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
                     }
                 });
 
-                it('returns tracing headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                it('returns tracing context with all propagators and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const url = 'https://www.example.com';
                         const tracingSamplingRate =
@@ -615,37 +655,117 @@ describe('DdRum', () => {
                             }
                         ];
 
-                        const headers = DdRum.getTracingHeaders(
+                        const tracingContext = DdRum.getTracingContext(
                             url,
                             tracingSamplingRate,
                             firstPartyHosts
                         );
 
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
                         expect(headers).toHaveLength(11);
 
-                        TracingHeadersUtils.verifyDatadogHeaders(
+                        TracingContextUtils.verifyDatadogHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
 
-                        TracingHeadersUtils.verifyTraceContextHeaders(
+                        TracingContextUtils.verifyTraceContextHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
 
-                        TracingHeadersUtils.verifyB3Headers(
+                        TracingContextUtils.verifyB3Headers(
                             headers,
                             tracingSamplingRate === 100
                         );
 
-                        TracingHeadersUtils.verifyB3MultiHeaders(
+                        TracingContextUtils.verifyB3MultiHeaders(
                             headers,
                             tracingSamplingRate === 100
                         );
                     }
                 });
 
-                it('returns empty headers array for non-matching host with all propagators and sampling rate 100', () => {
+                it('injects headers and context correctly with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const url = 'https://www.example.com';
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const firstPartyHosts: FirstPartyHost[] = [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT,
+                                    PropagatorType.B3,
+                                    PropagatorType.B3MULTI
+                                ]
+                            }
+                        ];
+
+                        const tracingContext = DdRum.getTracingContext(
+                            url,
+                            tracingSamplingRate,
+                            firstPartyHosts
+                        );
+
+                        const resourceContext: Record<
+                            string,
+                            string | number
+                        > = {};
+
+                        tracingContext.injectRumResourceContext(
+                            (attribute: string, value: string | number) => {
+                                resourceContext[attribute] = value;
+                            }
+                        );
+
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext,
+                            resourceContext
+                        );
+
+                        const headers: { header: string; value: string }[] = [];
+                        tracingContext.injectHeadersForRequest(
+                            (header: string, value: string) => {
+                                headers.push({ header, value });
+                            }
+                        );
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingContextUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns empty tracing context for non-matching host with all propagators and sampling rate 100', () => {
                     const url = 'https://not-the-right-host.com';
                     const firstPartyHosts: FirstPartyHost[] = [
                         {
@@ -659,16 +779,25 @@ describe('DdRum', () => {
                         }
                     ];
 
-                    const headers = DdRum.getTracingHeaders(
+                    const tracingContext = DdRum.getTracingContext(
                         url,
                         100,
                         firstPartyHosts
                     );
 
+                    const resourceContext = tracingContext.getRumResourceContext();
+                    expect(Object.keys(resourceContext)).toHaveLength(1);
+
+                    TracingContextUtils.verifyRumResourceContext(
+                        tracingContext
+                    );
+
+                    const headers = tracingContext.getHeadersForRequestAsArray();
+
                     expect(headers).toHaveLength(0);
                 });
 
-                it('returns empty headers with no propagators and sampling rate 100', () => {
+                it('returns empty tracing context with no propagators and sampling rate 100', () => {
                     const url = 'https://www.example.com';
                     const firstPartyHosts: FirstPartyHost[] = [
                         {
@@ -677,121 +806,22 @@ describe('DdRum', () => {
                         }
                     ];
 
-                    const headers = DdRum.getTracingHeaders(
+                    const tracingContext = DdRum.getTracingContext(
                         url,
                         100,
                         firstPartyHosts
                     );
 
+                    const resourceContext = tracingContext.getRumResourceContext();
+                    expect(Object.keys(resourceContext)).toHaveLength(1);
+
+                    TracingContextUtils.verifyRumResourceContext(
+                        tracingContext
+                    );
+
+                    const headers = tracingContext.getHeadersForRequestAsArray();
+
                     expect(headers).toHaveLength(0);
-                });
-            });
-
-            describe('DdRum.injectTracingHeaders', () => {
-                it('injects all headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
-                    for (let i = 0; i < 100; i++) {
-                        const url = 'https://www.example.com';
-                        const tracingSamplingRate =
-                            Math.random() < 0.5 ? 0 : 100;
-                        const firstPartyHosts: FirstPartyHost[] = [
-                            {
-                                match: 'example.com',
-                                propagatorTypes: [
-                                    PropagatorType.DATADOG,
-                                    PropagatorType.TRACECONTEXT,
-                                    PropagatorType.B3,
-                                    PropagatorType.B3MULTI
-                                ]
-                            }
-                        ];
-
-                        const headers: { header: string; value: string }[] = [];
-
-                        DdRum.injectTracingHeaders(
-                            url,
-                            tracingSamplingRate,
-                            firstPartyHosts,
-                            (header, value) => {
-                                headers.push({ header, value });
-                            }
-                        );
-
-                        expect(headers).toHaveLength(11);
-
-                        TracingHeadersUtils.verifyDatadogHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyTraceContextHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyB3Headers(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyB3MultiHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-                    }
-                });
-            });
-
-            describe('DdRum.buildTracingHeadersInjector', () => {
-                it('built tracingHeadersInjector injects all headers with all propagators and sampling rate (50% 0, 50% 100)', () => {
-                    for (let i = 0; i < 100; i++) {
-                        const url = 'https://www.example.com';
-                        const tracingSamplingRate =
-                            Math.random() < 0.5 ? 0 : 100;
-                        const firstPartyHosts: FirstPartyHost[] = [
-                            {
-                                match: 'example.com',
-                                propagatorTypes: [
-                                    PropagatorType.DATADOG,
-                                    PropagatorType.TRACECONTEXT,
-                                    PropagatorType.B3,
-                                    PropagatorType.B3MULTI
-                                ]
-                            }
-                        ];
-
-                        const headers: { header: string; value: string }[] = [];
-
-                        const injector = DdRum.buildTracingHeadersInjector(
-                            tracingSamplingRate,
-                            firstPartyHosts
-                        );
-
-                        injector.inject(url, (header, value) => {
-                            headers.push({ header, value });
-                        });
-
-                        expect(headers).toHaveLength(11);
-
-                        TracingHeadersUtils.verifyDatadogHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyTraceContextHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyB3Headers(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-
-                        TracingHeadersUtils.verifyB3MultiHeaders(
-                            headers,
-                            tracingSamplingRate === 100
-                        );
-                    }
                 });
             });
         });
