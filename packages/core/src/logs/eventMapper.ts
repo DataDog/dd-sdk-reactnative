@@ -4,10 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { DdAttributes } from '../rum/DdAttributes';
 import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { EventMapper } from '../sdk/EventMappers/EventMapper';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
+import { InternalLogEvent } from './types';
 import type {
     LogEvent,
     LogEventMapper,
@@ -20,12 +22,17 @@ import type {
 export const formatLogEventToNativeLog = (
     logEvent: LogEvent
 ): NativeLog | NativeLogWithError => {
-    return logEvent;
+    return new InternalLogEvent(logEvent);
 };
 
 export const formatRawLogToNativeEvent = (
     rawLog: RawLog | RawLogWithError
 ): NativeLog | NativeLogWithError => {
+    if ((rawLog as RawLogWithError).fingerprint) {
+        (rawLog.context as any)[
+            DdAttributes.errorFingerprint
+        ] = (rawLog as RawLogWithError).fingerprint;
+    }
     return rawLog;
 };
 
@@ -36,11 +43,11 @@ export const formatRawLogToLogEvent = (
         attributes: Attributes;
     }
 ): LogEvent => {
-    return {
+    return new InternalLogEvent({
         ...rawLog,
         userInfo: additionalInformation.userInfo,
         attributes: additionalInformation.attributes
-    };
+    });
 };
 
 export const generateEventMapper = (

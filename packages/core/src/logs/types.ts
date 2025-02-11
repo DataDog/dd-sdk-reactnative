@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { DdAttributes } from '../rum/DdAttributes';
 import type { ErrorSource } from '../rum/types';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
@@ -90,6 +91,38 @@ export type LogEvent = {
     readonly userInfo: UserInfo;
     readonly attributes?: object;
 };
+
+export class InternalLogEvent implements LogEvent {
+    message: string;
+    context: object;
+    errorKind?: string | undefined;
+    errorMessage?: string | undefined;
+    stacktrace?: string | undefined;
+    source?: ErrorSource | undefined;
+    status: LogStatus;
+    userInfo: UserInfo;
+    attributes?: object | undefined;
+
+    public get fingerprint(): string | undefined {
+        return (this.context as any)[DdAttributes.errorFingerprint] as string;
+    }
+    public set fingerprint(value: string | undefined) {
+        (this.context as any)[DdAttributes.errorFingerprint] = value;
+    }
+
+    constructor(props: LogEvent) {
+        this.message = props.message;
+        this.context = props.context;
+        this.errorKind = props.errorKind;
+        this.errorMessage = props.errorMessage;
+        this.stacktrace = props.stacktrace;
+        this.fingerprint = props.fingerprint;
+        this.status = props.status;
+        this.source = props.source;
+        this.userInfo = props.userInfo;
+        this.attributes = props.attributes;
+    }
+}
 
 export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
 

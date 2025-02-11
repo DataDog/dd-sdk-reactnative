@@ -33,6 +33,10 @@ const isLogWithError = (
     args: LogArguments | LogWithErrorArguments
 ): args is LogWithErrorArguments => {
     return (
+        (args.length > 3 &&
+            (args[1] !== undefined ||
+                args[2] !== undefined ||
+                args[3] !== undefined)) ||
         typeof args[1] === 'string' ||
         typeof args[2] === 'string' ||
         typeof args[3] === 'string' ||
@@ -105,6 +109,7 @@ class DdLogsWrapper implements DdLogsType {
                 args[6]
             );
         }
+
         return this.log(args[0], validateContext(args[1]), 'error');
     };
 
@@ -180,7 +185,7 @@ class DdLogsWrapper implements DdLogsType {
         stacktrace: string | undefined,
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error',
-        fingerprint?: string,
+        fingerprint: string = '',
         source?: ErrorSource
     ): Promise<void> => {
         const rawLogEvent: RawLogWithError = {
@@ -190,7 +195,7 @@ class DdLogsWrapper implements DdLogsType {
             stacktrace,
             context,
             status,
-            fingerprint: fingerprint ?? '',
+            fingerprint,
             source
         };
 
@@ -207,10 +212,6 @@ class DdLogsWrapper implements DdLogsType {
                 ...mappedEvent.context,
                 [DdAttributes.errorSourceType]: 'react-native'
             };
-
-            if (fingerprint && fingerprint !== '') {
-                updatedContext[DdAttributes.errorFingerprint] = fingerprint;
-            }
 
             return await this.nativeLogs[`${status}WithError`](
                 mappedEvent.message,

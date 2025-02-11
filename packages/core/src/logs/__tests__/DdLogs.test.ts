@@ -12,8 +12,9 @@ import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import type { DdNativeLogsType } from '../../nativeModulesTypes';
 import { ErrorSource } from '../../rum/types';
+import { GlobalState } from '../../sdk/GlobalState/GlobalState';
 import { DdLogs } from '../DdLogs';
-import type { LogEventMapper } from '../types';
+import type { LogEvent, LogEventMapper } from '../types';
 
 jest.mock('../../InternalLog', () => {
     return {
@@ -24,7 +25,34 @@ jest.mock('../../InternalLog', () => {
     };
 });
 
+const initializeSdk = async () => {
+    if (GlobalState.instance.isInitialized) {
+        return;
+    }
+
+    // GIVEN
+    const fakeAppId = '1';
+    const fakeClientToken = '2';
+    const fakeEnvName = 'env';
+    const configuration = new DdSdkReactNativeConfiguration(
+        fakeClientToken,
+        fakeEnvName,
+        fakeAppId,
+        false,
+        false,
+        true // Track Errors
+    );
+
+    NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+    // WHEN
+    await DdSdkReactNative.initialize(configuration);
+};
+
 describe('DdLogs', () => {
+    beforeAll(async () => {
+        await initializeSdk();
+    });
     describe('log event mapper', () => {
         beforeEach(() => {
             jest.clearAllMocks();
@@ -194,35 +222,45 @@ describe('DdLogs', () => {
             );
         });
 
+        it('fingerprint can be injected with mappers in error logs', async () => {
+            // GIVEN
+            const errorFingerprint = 'my-custom-fingerprint';
+
+            // Register log event mapper to add error fingerprint
+            DdLogs.registerLogEventMapper((logEvent: LogEvent) => {
+                logEvent.fingerprint = errorFingerprint;
+                return logEvent;
+            });
+
+            console.error('test-error');
+            expect(NativeModules.DdLogs.errorWithError).toHaveBeenCalledWith(
+                'test-error',
+                'Error',
+                'test-error',
+                '',
+                {
+                    '_dd.error.fingerprint': errorFingerprint,
+                    '_dd.error.source_type': 'react-native',
+                    '_dd.error_log.is_crash': true
+                }
+            );
+        });
+
         it('console errors can be filtered with mappers when trackErrors=true', async () => {
             // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId,
-                false,
-                false,
-                true // Track Errors
-            );
-
-            // Register log event mapper to filter console log events
-            configuration.logEventMapper = logEvent => {
+            // Log event mapper to filter console log events
+            DdLogs.registerLogEventMapper(logEvent => {
                 if (logEvent.source === ErrorSource.CONSOLE) {
                     return null;
                 }
 
                 return logEvent;
-            };
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+            });
 
             // WHEN
-            await DdSdkReactNative.initialize(configuration);
-
             console.error('console-error-message');
+
+            // THEN
             expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenCalledWith(
                 'error log dropped by log mapper: "console-error-message"',
@@ -257,24 +295,7 @@ describe('DdLogs', () => {
         });
 
         it('console errors are reported in logs when trackErrors=true', async () => {
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId,
-                false,
-                false,
-                true // Track Errors
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await DdSdkReactNative.initialize(configuration);
-
+            // trackErrors is true in initializeSdk() configuration
             console.error('console-error-message');
             expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenCalledWith(
