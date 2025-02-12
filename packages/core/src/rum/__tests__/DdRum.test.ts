@@ -816,6 +816,31 @@ describe('DdRum', () => {
             });
             expect(NativeModules.DdRum.addError).not.toHaveBeenCalled();
         });
+
+        it('can inject fingerprint from custom mapper', async () => {
+            const errorFingerprint = 'custom-error-fingerprint';
+            const errorEventMapper: ErrorEventMapper = error => {
+                error.fingerprint = errorFingerprint;
+                return error;
+            };
+
+            DdRum.registerErrorEventMapper(errorEventMapper);
+
+            await DdRum.addError('ERROR MESSAGE', ErrorSource.CUSTOM, 'stack', {
+                isFatal: true
+            });
+            expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
+                'ERROR MESSAGE',
+                'CUSTOM',
+                'stack',
+                {
+                    '_dd.error.source_type': 'react-native',
+                    isFatal: true
+                },
+                456,
+                errorFingerprint
+            );
+        });
     });
 
     describe('DdRum.stopResource', () => {
