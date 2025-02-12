@@ -19,18 +19,11 @@ import com.datadog.android.sessionreplay.utils.DefaultViewBoundsResolver
 import com.datadog.android.sessionreplay.utils.DefaultViewIdentifierResolver
 import com.datadog.android.sessionreplay.utils.DrawableToColorMapper
 import com.datadog.android.sessionreplay.utils.GlobalBounds
-import com.datadog.reactnative.sessionreplay.NoopTextPropertiesResolver
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver
-import com.datadog.reactnative.sessionreplay.TextPropertiesResolver
-import com.datadog.reactnative.sessionreplay.utils.TextViewUtils
-import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.UIManagerModule
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.views.textinput.ReactEditText
 
 internal class ReactEditTextMapper(
-    private val reactTextPropertiesResolver: TextPropertiesResolver =
-        NoopTextPropertiesResolver(),
-    private val textViewUtils: TextViewUtils = TextViewUtils(),
+    private val textViewUtils: TextViewUtils
 ) : BaseAsyncBackgroundWireframeMapper<ReactEditText>(
     viewIdentifierResolver = DefaultViewIdentifierResolver,
     colorStringFormatter = DefaultColorStringFormatter,
@@ -44,20 +37,6 @@ internal class ReactEditTextMapper(
         colorStringFormatter = colorStringFormatter,
         viewBoundsResolver = viewBoundsResolver,
         drawableToColorMapper = drawableToColorMapper,
-    )
-
-    internal constructor(
-        reactContext: ReactContext,
-        uiManagerModule: UIManagerModule?
-    ) : this(
-        reactTextPropertiesResolver = if (uiManagerModule == null) {
-            NoopTextPropertiesResolver()
-        } else {
-            ReactTextPropertiesResolver(
-                reactContext = reactContext,
-                uiManagerModule = uiManagerModule
-            )
-        }
     )
 
     override fun map(
@@ -88,7 +67,6 @@ internal class ReactEditTextMapper(
             wireframes = backgroundWireframes,
             view = view,
             mappingContext = mappingContext,
-            reactTextPropertiesResolver = reactTextPropertiesResolver
         )
     }
 

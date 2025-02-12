@@ -1,33 +1,42 @@
-/*
- * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
- * This product includes software developed at Datadog (https://www.datadoghq.com/).
- * Copyright 2016-Present Datadog, Inc.
- */
-
-package com.datadog.reactnative.sessionreplay
+package com.datadog.reactnative.sessionreplay.utils.text
 
 import ReactViewBackgroundDrawableUtils
 import android.view.Gravity
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
-import com.datadog.android.internal.utils.densityNormalized
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
+import com.datadog.android.sessionreplay.recorder.MappingContext
+import com.datadog.reactnative.sessionreplay.BuildConfig
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.ReflectionUtils
-import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.UIManagerModule
-import com.facebook.react.views.text.TextAttributes
-import java.util.Locale
 
-internal class ReactTextPropertiesResolver(
-    private val reactContext: ReactContext,
-    private val uiManagerModule: UIManagerModule,
-    private val reflectionUtils: ReflectionUtils = ReflectionUtils(),
-    private val drawableUtils: DrawableUtils =
-        ReactViewBackgroundDrawableUtils()
-): TextPropertiesResolver {
-    override fun addReactNativeProperties(
+internal abstract class TextViewUtils(private val reactContext: ReactContext, private val drawableUtils: DrawableUtils) {
+    fun mapTextViewToWireframes(
+        wireframes: List<MobileSegment.Wireframe>,
+        view: TextView,
+        mappingContext: MappingContext,
+    ): List<MobileSegment.Wireframe> {
+        val result = mutableListOf<MobileSegment.Wireframe>()
+        val pixelDensity = mappingContext.systemInformation.screenDensity
+
+        for (originalWireframe in wireframes) {
+            if (originalWireframe !is MobileSegment.Wireframe.TextWireframe) {
+                result.add(originalWireframe)
+            } else {
+                result.add(addReactNativeProperties(
+                    originalWireframe = originalWireframe,
+                    view = view,
+                    pixelDensity = pixelDensity,
+                ))
+            }
+        }
+
+        return result
+    }
+
+    fun addReactNativeProperties(
         originalWireframe: MobileSegment.Wireframe.TextWireframe,
         view: TextView,
         pixelDensity: Float,
@@ -59,25 +68,17 @@ internal class ReactTextPropertiesResolver(
         )
     }
 
-    private fun resolveTextStyleAndPosition(
+
+    protected fun resolveTextStyleAndPosition(
         originalWireframe: MobileSegment.Wireframe.TextWireframe,
         view: TextView,
-        pixelDensity: Float,
-    ):
-            Pair<MobileSegment.TextStyle, MobileSegment.TextPosition>? {
-
+        pixelDensity: Float
+    ): Pair<MobileSegment.TextStyle, MobileSegment.TextPosition>? {
         if (!reactContext.hasActiveReactInstance()) {
             return null
         }
 
-        val shadowNodeWrapper: ShadowNodeWrapper =
-            ShadowNodeWrapper.getShadowNodeWrapper(
-                reactContext = reactContext,
-                uiManagerModule = uiManagerModule,
-                reflectionUtils = reflectionUtils,
-                viewId = view.id) ?: return null
-
-        val textStyle = resolveTextStyle(originalWireframe, pixelDensity, shadowNodeWrapper)
+        val textStyle = resolveTextStyle(originalWireframe, pixelDensity, view) ?: return null
         val alignment = resolveTextAlignment(view, originalWireframe)
 
         val textPosition = MobileSegment.TextPosition(
@@ -88,7 +89,7 @@ internal class ReactTextPropertiesResolver(
         return textStyle to textPosition
     }
 
-    private fun resolveShapeStyleAndBorder(
+    protected fun resolveShapeStyleAndBorder(
         view: TextView,
         pixelDensity: Float,
     ): Pair<MobileSegment.ShapeStyle?, MobileSegment.ShapeBorder?>? {
@@ -105,7 +106,7 @@ internal class ReactTextPropertiesResolver(
         return shapeStyle to border
     }
 
-    private fun resolveTextAlignment(
+    protected fun resolveTextAlignment(
         view: TextView,
         textWireframe: MobileSegment.Wireframe.TextWireframe
     ): MobileSegment.Alignment {
@@ -126,64 +127,7 @@ internal class ReactTextPropertiesResolver(
         )
     }
 
-    private fun resolveTextStyle(
-        textWireframe: MobileSegment.Wireframe.TextWireframe,
-        pixelsDensity: Float,
-        shadowNodeWrapper: ShadowNodeWrapper
-    ): MobileSegment.TextStyle {
-        val fontFamily = getFontFamily(shadowNodeWrapper)
-            ?: textWireframe.textStyle.family
-        val fontSize = getFontSize(shadowNodeWrapper)
-            ?.densityNormalized(pixelsDensity)
-            ?: textWireframe.textStyle.size
-        val fontColor = getTextColor(shadowNodeWrapper)
-            ?: textWireframe.textStyle.color
-
-        return MobileSegment.TextStyle(
-            family = fontFamily,
-            size = fontSize,
-            color = fontColor
-        )
-    }
-
-    private fun getTextColor(shadowNodeWrapper: ShadowNodeWrapper): String? {
-        val isColorSet = shadowNodeWrapper
-            .getDeclaredShadowNodeField(IS_COLOR_SET_FIELD_NAME) as Boolean?
-        if (isColorSet != true) {
-            // Improvement: get default text color if different from black
-            return "#000000FF"
-        }
-        val resolvedColor = shadowNodeWrapper
-            .getDeclaredShadowNodeField(COLOR_FIELD_NAME) as Int?
-        if (resolvedColor != null) {
-            return formatAsRgba(resolvedColor)
-        }
-
-        return null
-    }
-
-    private fun getFontSize(shadowNodeWrapper: ShadowNodeWrapper): Long? {
-        val textAttributes = shadowNodeWrapper
-            .getDeclaredShadowNodeField(TEXT_ATTRIBUTES_FIELD_NAME) as? TextAttributes?
-        if (textAttributes != null) {
-            return textAttributes.effectiveFontSize.toLong()
-        }
-
-        return null
-    }
-
-    private fun getFontFamily(shadowNodeWrapper: ShadowNodeWrapper): String? {
-        val fontFamily = shadowNodeWrapper
-            .getDeclaredShadowNodeField(FONT_FAMILY_FIELD_NAME) as? String
-
-        if (fontFamily != null) {
-            return resolveFontFamily(fontFamily.lowercase(Locale.US))
-        }
-
-        return null
-    }
-
-    private fun resolveFontFamily(typefaceName: String): String =
+    protected fun resolveFontFamily(typefaceName: String): String =
         when (typefaceName) {
             ROBOTO_TYPEFACE_NAME -> SANS_SERIF_FAMILY_NAME
             MONOSPACE_FAMILY_NAME -> MONOSPACE_FAMILY_NAME
@@ -191,16 +135,36 @@ internal class ReactTextPropertiesResolver(
             else -> SANS_SERIF_FAMILY_NAME
         }
 
+    protected abstract fun resolveTextStyle( textWireframe: MobileSegment.Wireframe.TextWireframe,
+                                   pixelsDensity: Float,
+                                   view: TextView
+    ): MobileSegment.TextStyle?
+
     @VisibleForTesting
-    internal companion object {
+    companion object {
         internal const val TEXT_ATTRIBUTES_FIELD_NAME = "mTextAttributes"
         internal const val FONT_FAMILY_FIELD_NAME = "mFontFamily"
         internal const val COLOR_FIELD_NAME = "mColor"
         internal const val IS_COLOR_SET_FIELD_NAME = "mIsColorSet"
+        internal const val SPANNED_FIELD_NAME = "mSpanned"
 
         private const val ROBOTO_TYPEFACE_NAME = "roboto"
         private const val SERIF_FAMILY_NAME = "serif"
         private const val SANS_SERIF_FAMILY_NAME = "roboto, sans-serif"
         internal const val MONOSPACE_FAMILY_NAME = "monospace"
+
+
+        internal const val RESOLVE_UIMANAGERMODULE_ERROR = "Unable to resolve UIManagerModule"
+        internal const val RESOLVE_FABRICFIELD_ERROR = "Unable to resolve field from fabric view"
+        internal const val NULL_FABRICFIELD_ERROR = "Null value found when trying to resolve field from fabric view"
+
+
+        fun create(reactContext: ReactContext, logger: InternalLogger): TextViewUtils {
+            return when (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+                true -> FabricTextViewUtils(reactContext, logger, ReactViewBackgroundDrawableUtils())
+                false -> LegacyTextViewUtils(reactContext, logger, ReflectionUtils(), ReactViewBackgroundDrawableUtils())
+            }
+        }
     }
+
 }

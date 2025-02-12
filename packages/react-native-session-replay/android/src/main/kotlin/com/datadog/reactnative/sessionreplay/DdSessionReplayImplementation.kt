@@ -6,15 +6,13 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import android.annotation.SuppressLint
 import com.datadog.android.api.feature.FeatureSdkCore
-import com.datadog.android.sessionreplay.ImagePrivacy
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
-import com.datadog.android.sessionreplay.TextAndInputPrivacy
-import com.datadog.android.sessionreplay.TouchPrivacy
 import com.datadog.reactnative.DatadogSDKWrapperStorage
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
-import java.util.Locale
 
 /**
  * The entry point to use Datadog's Session Replay feature.
@@ -33,6 +31,7 @@ class DdSessionReplayImplementation(
      * @param customEndpoint Custom server url for sending replay data.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      */
+    @SuppressLint("VisibleForTests")
     fun enable(
         replaySampleRate: Double,
         customEndpoint: String,
@@ -42,12 +41,13 @@ class DdSessionReplayImplementation(
     ) {
         val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
         val logger = sdkCore.internalLogger
+        val textViewUtils = TextViewUtils.create(reactContext, logger)
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .startRecordingImmediately(startRecordingImmediately)
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
-            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(reactContext, logger))
+            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils))
 
         if (customEndpoint != "") {
             configuration.useCustomEndpoint(customEndpoint)
