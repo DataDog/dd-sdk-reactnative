@@ -11,6 +11,7 @@ import com.datadog.reactnative.sessionreplay.mappers.ReactEditTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactNativeImageViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.UIManagerModule
@@ -51,10 +52,8 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
         whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
             .doReturn(mockUiManagerModule)
 
-        testedExtensionSupport = ReactNativeSessionReplayExtensionSupport(
-            logger = mockLogger,
-            reactContext = mockReactContext
-        )
+        val textViewUtils = TextViewUtils.create(mockReactContext, mockLogger)
+        testedExtensionSupport = ReactNativeSessionReplayExtensionSupport(textViewUtils)
     }
 
     @Test
@@ -76,18 +75,5 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
 
         assertThat(customViewMappers[3].getUnsafeMapper())
             .isInstanceOf(ReactEditTextMapper::class.java)
-    }
-
-    @Test
-    fun `M return null W getUiManagerModule() { cannot get uiManagerModule }`() {
-        // Given
-        whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
-            .thenThrow(IllegalStateException())
-
-        // When
-        val uiManagerModule = testedExtensionSupport.getUiManagerModule()
-
-        // Then
-        assertThat(uiManagerModule).isNull()
     }
 }

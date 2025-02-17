@@ -4,20 +4,30 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.sessionreplay
+package com.datadog.reactnative.sessionreplay.utils.text
 
+import android.content.res.Resources
+import android.graphics.Typeface
+import android.text.Spannable
+import android.text.style.ForegroundColorSpan
+import android.util.DisplayMetrics
 import android.widget.TextView
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.COLOR_FIELD_NAME
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.FONT_FAMILY_FIELD_NAME
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.IS_COLOR_SET_FIELD_NAME
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.MONOSPACE_FAMILY_NAME
-import com.datadog.reactnative.sessionreplay.ReactTextPropertiesResolver.Companion.TEXT_ATTRIBUTES_FIELD_NAME
+import com.datadog.android.sessionreplay.recorder.MappingContext
+import com.datadog.android.sessionreplay.recorder.SystemInformation
+import com.datadog.reactnative.sessionreplay.ShadowNodeWrapper
 import com.datadog.reactnative.sessionreplay.ShadowNodeWrapper.Companion.UI_IMPLEMENTATION_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.ReflectionUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.COLOR_FIELD_NAME
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.FONT_FAMILY_FIELD_NAME
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.IS_COLOR_SET_FIELD_NAME
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.MONOSPACE_FAMILY_NAME
+import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.TEXT_ATTRIBUTES_FIELD_NAME
 import com.datadog.reactnative.tools.unit.forge.ForgeConfigurator
+import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.ReactShadowNode
 import com.facebook.react.uimanager.UIImplementation
@@ -34,7 +44,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
@@ -48,9 +62,7 @@ import org.mockito.quality.Strictness
 )
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ForgeConfiguration(ForgeConfigurator::class)
-internal class ReactTextPropertiesResolverTest {
-    private lateinit var testedResolver: ReactTextPropertiesResolver
-
+internal class TextViewUtilsTest {
     @Mock
     lateinit var mockReactContext: ReactContext
 
@@ -84,10 +96,44 @@ internal class ReactTextPropertiesResolverTest {
     @Mock
     private lateinit var mockShadowNode: ReactShadowNode<out ReactShadowNode<*>>
 
+    @Mock
+    private lateinit var mockLogger: InternalLogger
+
+    @Mock
+    private lateinit var mockMappingContext: MappingContext
+
+    @Mock
+    private lateinit var mockSystemInformation: SystemInformation
+
+    @Mock
+    private lateinit var mockResources: Resources
+
+    @Mock
+    private lateinit var mockDisplayMetrics: DisplayMetrics
+
+    @Mock
+    private lateinit var testedUtils: LegacyTextViewUtils
+
+    @Mock
+    private lateinit var fabricTestedUtils: FabricTextViewUtils
+
     @BeforeEach
     fun `set up`(forge: Forge) {
+        whenever(mockResources.displayMetrics).thenReturn(mockDisplayMetrics)
+        whenever(mockTextView.resources).thenReturn(mockResources)
+        whenever(mockSystemInformation.screenDensity).thenReturn(0f)
+        whenever(mockMappingContext.systemInformation).thenReturn(mockSystemInformation)
+        whenever(mockTextView.text).thenReturn(forge.aString())
+        whenever(mockTextView.typeface).thenReturn(Typeface.SANS_SERIF)
+
+        whenever(mockReactContext.getNativeModule(UIManagerModule::class.java))
+            .thenReturn(mockUiManagerModule)
+
         whenever(
-            mockReflectionUtils.getDeclaredField(mockUiManagerModule, UI_IMPLEMENTATION_FIELD_NAME)
+            mockReflectionUtils.getDeclaredField(
+                eq(mockUiManagerModule),
+                eq(UI_IMPLEMENTATION_FIELD_NAME)
+            )
         ).thenReturn(mockUiImplementation)
 
         whenever(
@@ -101,12 +147,64 @@ internal class ReactTextPropertiesResolverTest {
         }
         whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
 
-        testedResolver = ReactTextPropertiesResolver(
-            reactContext = mockReactContext,
-            uiManagerModule = mockUiManagerModule,
-            drawableUtils = mockDrawableUtils,
-            reflectionUtils = mockReflectionUtils
-        )
+        val realUtils =
+            LegacyTextViewUtils(
+                mockReactContext,
+                mockLogger,
+                mockReflectionUtils,
+                mockDrawableUtils
+            )
+
+        val realFabricUtils =
+            FabricTextViewUtils(
+                mockReactContext,
+                mockLogger,
+                mockDrawableUtils
+            )
+
+        testedUtils = spy(realUtils)
+        fabricTestedUtils = spy(realFabricUtils)
+    }
+
+    @Test
+    fun `M return wireframe W map() { even if not TextWireframeType }`(
+        @Mock mockImageWireframe: MobileSegment.Wireframe.ImageWireframe
+    ) {
+        // When
+        val result =
+            testedUtils.mapTextViewToWireframes(
+                wireframes = listOf(mockImageWireframe),
+                view = mockTextView,
+                mappingContext = mockMappingContext
+            )
+
+        // Then
+        assertThat(result).contains(mockImageWireframe)
+    }
+
+    @Test
+    fun `M return textWireframe W map()`(
+        @Mock mockTextWireframe: MobileSegment.Wireframe.TextWireframe
+    ) {
+        // Given
+        doReturn(mockTextWireframe)
+            .whenever(testedUtils)
+            .addReactNativeProperties(
+                originalWireframe = eq(mockTextWireframe),
+                view = eq(mockTextView),
+                pixelDensity = eq(0f)
+            )
+
+        // When
+        val result =
+            testedUtils.mapTextViewToWireframes(
+                wireframes = listOf(mockTextWireframe),
+                view = mockTextView,
+                mappingContext = mockMappingContext
+            )[0] as MobileSegment.Wireframe.TextWireframe
+
+        // Then
+        assertThat(result).isEqualTo(mockTextWireframe)
     }
 
     // region addReactNativeProperties
@@ -118,16 +216,15 @@ internal class ReactTextPropertiesResolverTest {
         whenever(mockUiImplementation.resolveShadowNode(any())).thenReturn(null)
 
         // When
-        val result = testedResolver.addReactNativeProperties(mockWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(mockWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result).isEqualTo(mockWireframe)
     }
 
     @Test
-    fun `M add drawable properties W addReactNativeProperties() { has reactBackgroundDrawable }`(
-        forge: Forge
-    ) {
+    fun `M add drawable properties W addReactNativeProperties() { has reactBackgroundDrawable }`
+    (forge: Forge) {
         // Given
         val pixelDensity = 0f
         val fakeBorderRadius = forge.aPositiveFloat()
@@ -150,18 +247,20 @@ internal class ReactTextPropertiesResolverTest {
                 backgroundColor = formatAsRgba(fakeBorderColor),
                 opacity = 0f,
                 cornerRadius = fakeBorderRadius.toLong()
-            ) to MobileSegment.ShapeBorder(
-                color = formatAsRgba(fakeBorderColor),
-                width = fakeBorderWidth.toLong()
-            )
+            ) to
+                MobileSegment.ShapeBorder(
+                    color = formatAsRgba(fakeBorderColor),
+                    width = fakeBorderWidth.toLong()
+                )
         )
 
         // When
-        val result = testedResolver.addReactNativeProperties(
-            fakeWireframe,
-            mockTextView,
-            pixelDensity
-        )
+        val result =
+            testedUtils.addReactNativeProperties(
+                fakeWireframe,
+                mockTextView,
+                pixelDensity
+            )
 
         // Then
         assertThat(result.shapeStyle?.cornerRadius).isEqualTo(fakeBorderRadius.toLong())
@@ -178,8 +277,9 @@ internal class ReactTextPropertiesResolverTest {
         whenever(mockTextView.background).thenReturn(null)
 
         // When
-        val result = testedResolver
-            .addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result =
+            testedUtils
+                .addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.family)
@@ -194,7 +294,7 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(null)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.family).isEqualTo(fakeWireframe.textStyle.family)
@@ -212,7 +312,7 @@ internal class ReactTextPropertiesResolverTest {
         whenever(mockTextAttributes.effectiveFontSize).thenReturn(fakeTextSize)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.size).isEqualTo(fakeTextSize.toLong())
@@ -228,7 +328,7 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(null)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.size).isEqualTo(fakeWireframe.textStyle.size)
@@ -246,7 +346,7 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(fakeTextColor)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.color).isEqualTo(formatAsRgba(fakeTextColor))
@@ -264,7 +364,7 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(fakeTextColor)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.color).isEqualTo("#000000FF")
@@ -280,7 +380,7 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(null)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.color).isEqualTo(fakeWireframe.textStyle.color)
@@ -294,10 +394,43 @@ internal class ReactTextPropertiesResolverTest {
             .thenReturn(MONOSPACE_FAMILY_NAME)
 
         // When
-        val result = testedResolver.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
         assertThat(result.textStyle.family).isNotEqualTo(MONOSPACE_FAMILY_NAME)
+    }
+
+    @Test
+    fun `M return fabric textStyle (color) W addReactNativeProperties`() {
+        val mockForegroundColorSpan = mock(ForegroundColorSpan::class.java)
+        whenever(mockForegroundColorSpan.foregroundColor).thenReturn(-1)
+
+        val spannable = mock(Spannable::class.java)
+        doReturn(spannable).whenever(fabricTestedUtils).getFieldFromView(any(), any())
+
+        whenever(spannable.getSpans(anyInt(), anyInt(), eq(ForegroundColorSpan::class.java)))
+            .thenReturn(
+                arrayOf(mockForegroundColorSpan)
+            )
+
+        val result = fabricTestedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        assertThat(result.textStyle.color).isEqualTo("#ffffffff")
+    }
+
+    // endregion
+
+    // region getUiManagerModule
+    @Test
+    fun `M return null W getUiManagerModule() { cannot get uiManagerModule }`() {
+        // Given
+        whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
+            .thenThrow(IllegalStateException())
+
+        // When
+        val uiManagerModule = testedUtils.getUiManagerModule()
+
+        // Then
+        assertThat(uiManagerModule).isNull()
     }
 
     // endregion

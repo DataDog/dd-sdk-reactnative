@@ -33,7 +33,7 @@ internal class ShadowNodeWrapper(
     internal companion object {
         internal fun getShadowNodeWrapper(
             reactContext: ReactContext,
-            uiManagerModule: UIManagerModule,
+            uiManagerModule: UIManagerModule?,
             reflectionUtils: ReflectionUtils,
             viewId: Int
         ): ShadowNodeWrapper? {
@@ -41,7 +41,7 @@ internal class ShadowNodeWrapper(
             var target: ReactShadowNode<out ReactShadowNode<*>>? = null
 
             val shadowNodeRunnable = Runnable {
-                val node = resolveShadowNode(reflectionUtils, uiManagerModule, viewId)
+                val node = uiManagerModule?.let { resolveShadowNode(reflectionUtils, it, viewId) }
                 if (node != null) {
                     target = node
                 }
