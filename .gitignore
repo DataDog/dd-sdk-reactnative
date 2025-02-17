@@ -87,3 +87,6 @@ packages/**/*.tgz
 
 # Jest
 coverage
+
+# Auto-generated iOS Header
+packages/react-native-session-replay/ios/Sources/RCTVersion.h
