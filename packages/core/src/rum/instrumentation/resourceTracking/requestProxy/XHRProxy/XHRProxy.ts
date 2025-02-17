@@ -5,7 +5,7 @@
  */
 
 import Timer from '../../../../../utils/Timer';
-import { getTracingHeaders } from '../../distributedTracing/distributedTracingHeaders';
+import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
 import {
@@ -125,7 +125,7 @@ const proxySend = (providers: XHRProxyProviders): void => {
             // keep track of start time
             this._datadog_xhr.timer.start();
 
-            const tracingHeaders = getTracingHeaders(
+            const tracingHeaders = getTracingHeadersFromAttributes(
                 this._datadog_xhr.tracingAttributes
             );
             tracingHeaders.forEach(({ header, value }) => {

@@ -63,10 +63,14 @@ export const getTracingAttributes = ({
     return DISCARDED_TRACE_ATTRIBUTES;
 };
 
-const generateTracingAttributesWithSampling = (
+export const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number,
     propagatorTypes: PropagatorType[]
 ): DdRumResourceTracingAttributes => {
+    if (!propagatorTypes || propagatorTypes.length === 0) {
+        return DISCARDED_TRACE_ATTRIBUTES;
+    }
+
     const traceId = TracingIdentifier.createTraceId();
     const hash = Number(traceId.id.multiply(knuthFactor).remainder(twoPow64));
     const threshold = (tracingSamplingRate / 100) * Number(twoPow64);

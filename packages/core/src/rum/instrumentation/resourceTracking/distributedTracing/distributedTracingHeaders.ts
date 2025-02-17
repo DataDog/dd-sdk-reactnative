@@ -5,10 +5,18 @@
  */
 
 import { PropagatorType } from '../../../types';
+import type { FirstPartyHost } from '../../../types';
+import { URLHostParser } from '../requestProxy/XHRProxy/URLHostParser';
 
+import { DatadogTracingContext } from './DatadogTracingContext';
 import { TracingIdFormat } from './TracingIdentifier';
 import type { TraceId, SpanId } from './TracingIdentifier';
+import {
+    generateTracingAttributesWithSampling,
+    getTracingAttributes
+} from './distributedTracing';
 import type { DdRumResourceTracingAttributes } from './distributedTracing';
+import { firstPartyHostsRegexMapBuilder } from './firstPartyHosts';
 
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 /**
@@ -31,7 +39,7 @@ export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
 export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
 export const B3_MULTI_SAMPLED_HEADER_KEY = 'X-B3-Sampled';
 
-export const getTracingHeaders = (
+export const getTracingHeadersFromAttributes = (
     tracingAttributes: DdRumResourceTracingAttributes
 ): { header: string; value: string }[] => {
     const headers: { header: string; value: string }[] = [];
@@ -130,6 +138,68 @@ export const getTracingHeaders = (
     });
 
     return headers;
+};
+
+export const getTracingContext = (
+    url: string,
+    tracingSamplingRate: number,
+    firstPartyHosts: FirstPartyHost[]
+): DatadogTracingContext => {
+    const hostname = URLHostParser(url);
+    const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
+        firstPartyHosts
+    );
+    const tracingAttributes = getTracingAttributes({
+        hostname,
+        firstPartyHostsRegexMap,
+        tracingSamplingRate
+    });
+
+    return getTracingContextForAttributes(
+        tracingAttributes,
+        tracingSamplingRate
+    );
+};
+
+export const getTracingContextForPropagators = (
+    propagators: PropagatorType[],
+    tracingSamplingRate: number
+): DatadogTracingContext => {
+    return getTracingContextForAttributes(
+        generateTracingAttributesWithSampling(tracingSamplingRate, propagators),
+        tracingSamplingRate
+    );
+};
+
+const getTracingContextForAttributes = (
+    tracingAttributes: DdRumResourceTracingAttributes,
+    tracingSamplingRate: number
+): DatadogTracingContext => {
+    const requestHeaders = getTracingHeadersFromAttributes(tracingAttributes);
+    const resourceContext: Record<string, string | number> = {};
+
+    const spanId = tracingAttributes.spanId;
+    if (spanId) {
+        resourceContext['_dd.span_id'] = spanId.toString(
+            TracingIdFormat.decimal
+        );
+    }
+
+    const traceId = tracingAttributes.traceId;
+    if (traceId) {
+        resourceContext['_dd.trace_id'] = traceId.toString(
+            TracingIdFormat.paddedHex
+        );
+    }
+
+    resourceContext['_dd.rule_psr'] = tracingSamplingRate / 100;
+
+    return new DatadogTracingContext(
+        requestHeaders,
+        resourceContext,
+        tracingAttributes.traceId,
+        tracingAttributes.spanId
+    );
 };
 
 const generateTraceContextHeader = ({

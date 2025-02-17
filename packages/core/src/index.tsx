@@ -34,7 +34,12 @@ import { DdTrace } from './trace/DdTrace';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
-import { TracingIdType } from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
+import {
+    TracingIdType,
+    TracingIdFormat
+} from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
+import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
+import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 
 /* eslint-enable arca/import-ordering */
 
@@ -66,7 +71,10 @@ export {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER,
-    TracingIdType
+    TracingIdType,
+    TracingIdFormat,
+    DatadogTracingIdentifier,
+    DatadogTracingContext
 };
 
 export type { Timestamp };
