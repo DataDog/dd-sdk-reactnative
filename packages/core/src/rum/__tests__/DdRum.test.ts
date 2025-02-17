@@ -824,6 +824,242 @@ describe('DdRum', () => {
                     expect(headers).toHaveLength(0);
                 });
             });
+
+            describe('DdRum.getTracingContextForPropagators', () => {
+                it('returns tracing context with DATADOG propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [PropagatorType.DATADOG],
+                            tracingSamplingRate
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+                        expect(headers).toHaveLength(5);
+                        TracingContextUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing context with TRACECONTEXT propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [PropagatorType.TRACECONTEXT],
+                            tracingSamplingRate
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
+                        expect(headers).toHaveLength(2);
+                        TracingContextUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing context with B3 propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [PropagatorType.B3],
+                            tracingSamplingRate
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
+                        expect(headers).toHaveLength(1);
+                        TracingContextUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing context with B3MULTI propagator and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [PropagatorType.B3MULTI],
+                            tracingSamplingRate
+                        );
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
+                        expect(headers).toHaveLength(3);
+                        TracingContextUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns tracing context with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            tracingSamplingRate
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext
+                        );
+
+                        const headers = tracingContext.getHeadersForRequestAsArray();
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingContextUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('injects headers and context correctly with all propagators and sampling rate (50% 0, 50% 100)', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const tracingSamplingRate =
+                            Math.random() < 0.5 ? 0 : 100;
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3,
+                                PropagatorType.B3MULTI
+                            ],
+                            tracingSamplingRate
+                        );
+
+                        const resourceContext: Record<
+                            string,
+                            string | number
+                        > = {};
+
+                        tracingContext.injectRumResourceContext(
+                            (attribute: string, value: string | number) => {
+                                resourceContext[attribute] = value;
+                            }
+                        );
+
+                        expect(Object.keys(resourceContext)).toHaveLength(3);
+                        TracingContextUtils.verifyRumResourceContext(
+                            tracingContext,
+                            resourceContext
+                        );
+
+                        const headers: { header: string; value: string }[] = [];
+                        tracingContext.injectHeadersForRequest(
+                            (header: string, value: string) => {
+                                headers.push({ header, value });
+                            }
+                        );
+
+                        expect(headers).toHaveLength(11);
+
+                        TracingContextUtils.verifyDatadogHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyTraceContextHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3Headers(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+
+                        TracingContextUtils.verifyB3MultiHeaders(
+                            headers,
+                            tracingSamplingRate === 100
+                        );
+                    }
+                });
+
+                it('returns empty tracing context for empty propagators and sampling rate 100', () => {
+                    const tracingContext = DdRum.getTracingContextForPropagators(
+                        [],
+                        100
+                    );
+
+                    const resourceContext = tracingContext.getRumResourceContext();
+                    expect(Object.keys(resourceContext)).toHaveLength(1);
+
+                    TracingContextUtils.verifyRumResourceContext(
+                        tracingContext
+                    );
+
+                    const headers = tracingContext.getHeadersForRequestAsArray();
+
+                    expect(headers).toHaveLength(0);
+                });
+            });
         });
 
         describe('DdRum.addAction', () => {

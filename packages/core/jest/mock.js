@@ -118,6 +118,7 @@ module.exports = {
         setTimeProvider: jest.fn().mockImplementation(() => {}),
         timeProvider: jest.fn().mockReturnValue(undefined),
         getTracingContext: jest.fn().mockReturnValue(undefined),
+        getTracingContextForPropagators: jest.fn().mockReturnValue(undefined),
         generateTraceId: jest.fn().mockReturnValue('mock-trace-id'),
         generateSpanId: jest.fn().mockReturnValue('mock-span-id')
     },

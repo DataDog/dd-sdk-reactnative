@@ -160,7 +160,10 @@ export type DdRumType = {
      * Gets the tracing context for the given url, tracingSamplingRate and firstPartyHosts.
      * The returned {@link DatadogTracingContext} can be used to retrieve the tracing headers
      * to append to your network request, and the attributes to add to your RUM Resource.
-     * @param url the request URL.
+     *
+     * See also `DdRum.getTracingContextForPropagators(...)` if you do not intend to use `firstPartyHosts`.
+     *
+     * @param url The request URL.
      * @param tracingSamplingRate Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
      * @param firstPartyHosts List of your backends hosts with propagator types.
      */
@@ -168,6 +171,19 @@ export type DdRumType = {
         url: string,
         tracingSamplingRate: number,
         firstPartyHosts: FirstPartyHost[]
+    ): DatadogTracingContext;
+
+    /**
+     * Gets the tracing context for the given list of propagator types and tracing sampling rate.
+     *
+     * The returned {@link DatadogTracingContext} can be used to retrieve the tracing headers
+     * to append to your network request, and the attributes to add to your RUM Resource.
+     * @param propagators The list of propagators of type {@link PropagatorType}
+     * @param tracingSamplingRate Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
+     */
+    getTracingContextForPropagators(
+        propagators: PropagatorType[],
+        tracingSamplingRate: number
     ): DatadogTracingContext;
 
     /**

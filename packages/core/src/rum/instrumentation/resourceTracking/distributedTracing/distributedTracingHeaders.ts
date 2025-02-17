@@ -11,7 +11,10 @@ import { URLHostParser } from '../requestProxy/XHRProxy/URLHostParser';
 import { DatadogTracingContext } from './DatadogTracingContext';
 import { TracingIdFormat } from './TracingIdentifier';
 import type { TraceId, SpanId } from './TracingIdentifier';
-import { getTracingAttributes } from './distributedTracing';
+import {
+    generateTracingAttributesWithSampling,
+    getTracingAttributes
+} from './distributedTracing';
 import type { DdRumResourceTracingAttributes } from './distributedTracing';
 import { firstPartyHostsRegexMapBuilder } from './firstPartyHosts';
 
@@ -151,6 +154,27 @@ export const getTracingContext = (
         firstPartyHostsRegexMap,
         tracingSamplingRate
     });
+
+    return getTracingContextForAttributes(
+        tracingAttributes,
+        tracingSamplingRate
+    );
+};
+
+export const getTracingContextForPropagators = (
+    propagators: PropagatorType[],
+    tracingSamplingRate: number
+): DatadogTracingContext => {
+    return getTracingContextForAttributes(
+        generateTracingAttributesWithSampling(tracingSamplingRate, propagators),
+        tracingSamplingRate
+    );
+};
+
+const getTracingContextForAttributes = (
+    tracingAttributes: DdRumResourceTracingAttributes,
+    tracingSamplingRate: number
+): DatadogTracingContext => {
     const requestHeaders = getTracingHeadersFromAttributes(tracingAttributes);
     const resourceContext: Record<string, string | number> = {};
 

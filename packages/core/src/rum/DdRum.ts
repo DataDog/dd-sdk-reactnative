@@ -26,13 +26,17 @@ import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
-import { getTracingContext } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
+import {
+    getTracingContext,
+    getTracingContextForPropagators
+} from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import type {
     ErrorSource,
     DdRumType,
     RumActionType,
     ResourceKind,
-    FirstPartyHost
+    FirstPartyHost,
+    PropagatorType
 } from './types';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -306,6 +310,16 @@ class DdRumWrapper implements DdRumType {
         firstPartyHosts: FirstPartyHost[]
     ): DatadogTracingContext => {
         return getTracingContext(url, tracingSamplingRate, firstPartyHosts);
+    };
+
+    getTracingContextForPropagators = (
+        propagators: PropagatorType[],
+        tracingSamplingRate: number
+    ): DatadogTracingContext => {
+        return getTracingContextForPropagators(
+            propagators,
+            tracingSamplingRate
+        );
     };
 
     generateTraceId(): DatadogTracingIdentifier {
