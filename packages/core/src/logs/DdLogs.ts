@@ -180,7 +180,7 @@ class DdLogsWrapper implements DdLogsType {
         stacktrace: string | undefined,
         context: object,
         status: 'debug' | 'info' | 'warn' | 'error',
-        fingerprint?: string,
+        fingerprint: string = '',
         source?: ErrorSource
     ): Promise<void> => {
         const rawLogEvent: RawLogWithError = {
@@ -190,7 +190,7 @@ class DdLogsWrapper implements DdLogsType {
             stacktrace,
             context,
             status,
-            fingerprint: fingerprint ?? '',
+            fingerprint,
             source
         };
 
