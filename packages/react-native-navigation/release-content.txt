@@ -55,6 +55,10 @@ package/lib/typescript/core/src/rum/instrumentation/interactionTracking/getJsxRu
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/getJsxRuntime.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts.map
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.d.ts.map
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.d.ts

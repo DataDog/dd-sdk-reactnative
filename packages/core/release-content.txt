@@ -138,6 +138,10 @@ package/lib/commonjs/rum/instrumentation/interactionTracking/getJsxRuntime.js
 package/lib/commonjs/rum/instrumentation/interactionTracking/getJsxRuntime.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
+package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.js.map
+package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.js
+package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.js
@@ -272,6 +276,10 @@ package/lib/module/rum/instrumentation/interactionTracking/getJsxRuntime.js
 package/lib/module/rum/instrumentation/interactionTracking/getJsxRuntime.js.map
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js
 package/lib/module/rum/instrumentation/resourceTracking/DdRumResourceTracking.js.map
+package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.js
+package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.js.map
+package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.js
+package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.js.map
 package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.js
 package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.js.map
 package/lib/module/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.js
@@ -406,6 +414,10 @@ package/lib/typescript/rum/instrumentation/interactionTracking/getJsxRuntime.d.t
 package/lib/typescript/rum/instrumentation/interactionTracking/getJsxRuntime.d.ts.map
 package/lib/typescript/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/DdRumResourceTracking.d.ts.map
+package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.d.ts
+package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.d.ts.map
+package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.d.ts
+package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.d.ts.map
 package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts.map
 package/lib/typescript/rum/instrumentation/resourceTracking/distributedTracing/distributedTracing.d.ts
@@ -521,6 +533,7 @@ package/src/rum/DdRum.ts
 package/src/rum/__mocks__/MockTimeProvider.ts
 package/src/rum/__tests__/DdRum.test.ts
 package/src/rum/__tests__/DdRumTimeProvider.test.ts
+package/src/rum/__tests__/__utils__/TracingHeadersUtils.ts
 package/src/rum/eventMappers/actionEventMapper.ts
 package/src/rum/eventMappers/errorEventMapper.ts
 package/src/rum/eventMappers/resourceEventMapper.ts
@@ -534,6 +547,8 @@ package/src/rum/instrumentation/interactionTracking/getJsxRuntime.ts
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
 package/src/rum/instrumentation/resourceTracking/__tests__/DdRumResourceTracking.test.ts
 package/src/rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock.ts
+package/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext.ts
+package/src/rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier.ts
 package/src/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.tsx
 package/src/rum/instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils.ts
 package/src/rum/instrumentation/resourceTracking/distributedTracing/__tests__/distributedTracing.test.ts

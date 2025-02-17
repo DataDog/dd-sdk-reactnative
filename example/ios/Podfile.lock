@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.22.0)
   - DatadogRUM (2.22.0):
     - DatadogInternal (= 2.22.0)
-  - DatadogSDKReactNative (2.6.1):
+  - DatadogSDKReactNative (2.6.2):
     - DatadogCore (~> 2.22.0)
     - DatadogCrashReporting (~> 2.22.0)
     - DatadogLogs (~> 2.22.0)
@@ -18,7 +18,7 @@ PODS:
     - DatadogTrace (~> 2.22.0)
     - DatadogWebViewTracking (~> 2.22.0)
     - React-Core
-  - DatadogSDKReactNative/Tests (2.6.1):
+  - DatadogSDKReactNative/Tests (2.6.2):
     - DatadogCore (~> 2.22.0)
     - DatadogCrashReporting (~> 2.22.0)
     - DatadogLogs (~> 2.22.0)
@@ -26,21 +26,21 @@ PODS:
     - DatadogTrace (~> 2.22.0)
     - DatadogWebViewTracking (~> 2.22.0)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay (2.6.1):
+  - DatadogSDKReactNativeSessionReplay (2.6.2):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.22.0)
     - React-Core
-  - DatadogSDKReactNativeSessionReplay/Tests (2.6.1):
+  - DatadogSDKReactNativeSessionReplay/Tests (2.6.2):
     - DatadogSDKReactNative
     - DatadogSessionReplay (~> 2.22.0)
     - React-Core
     - React-RCTText
-  - DatadogSDKReactNativeWebView (2.6.1):
+  - DatadogSDKReactNativeWebView (2.6.2):
     - DatadogInternal (~> 2.22.0)
     - DatadogSDKReactNative
     - DatadogWebViewTracking (~> 2.22.0)
     - React-Core
-  - DatadogSDKReactNativeWebView/Tests (2.6.1):
+  - DatadogSDKReactNativeWebView/Tests (2.6.2):
     - DatadogInternal (~> 2.22.0)
     - DatadogSDKReactNative
     - DatadogWebViewTracking (~> 2.22.0)
@@ -1893,9 +1893,9 @@ SPEC CHECKSUMS:
   DatadogInternal: 2c9770cd4bb66636f2c1578f4cfbc5984e032e2d
   DatadogLogs: 397a79884d4dff82cf3d1a35b3e61e9ab4b03cf4
   DatadogRUM: 9f23460eb44e2bd2f2fe5e4db9d205dcdd0ef865
-  DatadogSDKReactNative: 262a791c94a78e6f97eb74cd70e65f15627ed4ed
-  DatadogSDKReactNativeSessionReplay: 8004fca16fb1cf50b1a0657b65d40b05c3a4ad8b
-  DatadogSDKReactNativeWebView: 1b177b783d922c9da33e0200dbf9870635cab2b5
+  DatadogSDKReactNative: c1b1052fc981cf87285783d8dd48ca5830801ade
+  DatadogSDKReactNativeSessionReplay: c4c894a227194e3b75b59e19b70c7e56b2782383
+  DatadogSDKReactNativeWebView: 99c8eef4dc80ce5133c7520aab9e65922d599223
   DatadogSessionReplay: 837b6d028534b22b717ccc465707007be5ee8fdf
   DatadogTrace: 637d592a8d98ece1794ee06ad27dbd43a4fe08d0
   DatadogWebViewTracking: 2191682c6af12d86c093ceb3a20a886708bfeb4f
