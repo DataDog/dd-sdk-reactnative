@@ -88,7 +88,14 @@ internal class DdSdkBridgeExtTest {
 
         // Then
         testMap(map)
-        assertThat(map).isEqualTo(writableMap.toHashMap())
+
+        val expectedMap = writableMap
+            .toHashMap()
+            .filterValues { it != null }
+            .mapValues { it.value!! }
+            .toMap(HashMap())
+
+        assertThat(map).isEqualTo(expectedMap)
     }
 
     @Test
@@ -104,13 +111,13 @@ internal class DdSdkBridgeExtTest {
 
         // Then
         assertThat(map).isNotNull()
-        assertThat(map).hasSameSizeAs(writableMap.keys())
+        assertThat(map.size).isEqualTo(writableMap.keys().size - 1)
         testMap(map)
 
         val nestedMap = map["map"]
         assertThat(nestedMap).isNotNull()
         assertThat(nestedMap).isInstanceOf(Map::class.java)
-        assertThat((nestedMap as Map<*, *>)).hasSameSizeAs(nestedTestMap.keys())
+        assertThat((nestedMap as Map<*, *>).size).isEqualTo(nestedTestMap.keys().size - 1)
         testMap(nestedMap)
     }
 
@@ -127,7 +134,7 @@ internal class DdSdkBridgeExtTest {
 
         // Then
         assertThat(map).isNotNull()
-        assertThat(map).hasSameSizeAs(writableMap.keys())
+        assertThat(map.size).isEqualTo(writableMap.keys().size - 1)
         testMap(map)
 
         val nestedArray = map["array"]
@@ -151,11 +158,11 @@ internal class DdSdkBridgeExtTest {
         val map = writableMap.toMap()
 
         // Then
-        assertThat((map as Map<*, *>)).hasSameSizeAs(writableMap.keys())
+        assertThat((map as Map<*, *>).size).isEqualTo(writableMap.keys().size - 1)
         testMap(map)
 
         val nestedMap = map["map"]
-        assertThat((nestedMap as Map<*, *>)).hasSameSizeAs(nestedTestMap.keys())
+        assertThat((nestedMap as Map<*, *>).size).isEqualTo(nestedTestMap.keys().size - 1)
         assertThat(nestedMap).isNotNull()
         assertThat(nestedMap).isInstanceOf(Map::class.java)
         testMap(nestedMap)
@@ -201,7 +208,7 @@ internal class DdSdkBridgeExtTest {
 
         val nestedMap = array[array.size - 2]
         assertThat(nestedMap).isInstanceOf(Map::class.java)
-        assertThat((nestedMap as Map<*, *>)).hasSameSizeAs(nestedTestMap.keys())
+        assertThat((nestedMap as Map<*, *>).size).isEqualTo(nestedTestMap.keys().size - 1)
         testMap(nestedMap)
 
         val nestedArray = array[array.size - 1]
