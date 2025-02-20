@@ -40,6 +40,7 @@ import {
 } from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
+import type { FirstPartyHost } from './rum/types';
 
 /* eslint-enable arca/import-ordering */
 
@@ -77,4 +78,4 @@ export {
     DatadogTracingContext
 };
 
-export type { Timestamp };
+export type { Timestamp, FirstPartyHost };
