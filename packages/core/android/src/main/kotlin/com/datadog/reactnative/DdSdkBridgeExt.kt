@@ -129,6 +129,9 @@ internal fun Map<*, *>.toWritableMap(
  */
 internal fun ReadableMap.toMap(): Map<String, Any> {
     val map = this.toHashMap()
+        .filterValues { it != null }
+        .mapValues { it.value!! }
+        .toMap(HashMap())
     val iterator = map.keys.iterator()
 
     fun updateMap(key: String, value: Any?) {
