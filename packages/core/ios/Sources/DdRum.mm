@@ -107,6 +107,13 @@ RCT_REMAP_METHOD(addTiming, withName:(NSString*)name
     [self addTiming:name resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(addViewLoadingTime, withOverwrite:(BOOL)overwrite
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self addViewLoadingTime:overwrite resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(stopSession, withResolve:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -171,6 +178,10 @@ RCT_REMAP_METHOD(getCurrentSessionId,
 
 - (void)addTiming:(NSString *)name resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation addTimingWithName:name resolve:resolve reject:reject];
+}
+
+- (void)addViewLoadingTime:(BOOL)overwrite resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {\
+    [self.ddRumImplementation addViewLoadingTimeWithOverwrite:overwrite resolve:resolve reject:reject];
 }
 
 - (void)startAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

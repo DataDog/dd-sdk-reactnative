@@ -137,6 +137,13 @@ export interface Spec extends TurboModule {
     addTiming(name: string): Promise<void>;
 
     /**
+     * Adds the loading time of the view to the active view.
+     * It is calculated as the difference between the current time and the start time of the view.
+     * @param overwrite: If true, overwrites the previously calculated view loading time.
+     */
+    addViewLoadingTime(overwrite: boolean): Promise<void>;
+
+    /**
      * Stops the current RUM Session.
      */
     stopSession(): Promise<void>;

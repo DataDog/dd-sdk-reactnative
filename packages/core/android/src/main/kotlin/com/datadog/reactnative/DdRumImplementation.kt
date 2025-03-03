@@ -249,6 +249,16 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     }
 
     /**
+     * Adds the loading time of the view to the active view.
+     * It is calculated as the difference between the current time and the start time of the view.
+     * @param overwrite: If true, overwrites the previously calculated view loading time.
+     */
+    fun addViewLoadingTime(overwrite: Boolean, promise: Promise) {
+        datadog.getRumMonitor().addViewLoadingTime(overwrite)
+        promise.resolve(null)
+    }
+
+    /**
      * Stops the current RUM Session.
      */
     fun stopSession(promise: Promise) {
