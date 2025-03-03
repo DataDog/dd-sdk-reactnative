@@ -38,7 +38,8 @@ const privateProperties = {
         'resourceEventMapper',
         'actionEventMapper',
         'callNativeStopAction',
-        'getStopActionNativeCallArgs'
+        'getStopActionNativeCallArgs',
+        'currentRumSessionId'
     ],
     DdSdkReactNative: [
         'DD_SOURCE_KEY',

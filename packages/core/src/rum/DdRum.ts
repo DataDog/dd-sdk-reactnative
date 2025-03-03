@@ -5,6 +5,7 @@
  */
 
 import type { GestureResponderEvent } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -41,6 +42,8 @@ import type {
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
+const nativeEventEmitter = new NativeEventEmitter(NativeModules.DdSdk);
+
 class DdRumWrapper implements DdRumType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
@@ -50,6 +53,22 @@ class DdRumWrapper implements DdRumType {
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
     private timeProvider: TimeProvider = new DefaultTimeProvider();
+
+    private currentRumSessionId: string | null = null;
+
+    constructor() {
+        // listen to future events
+        nativeEventEmitter.addListener('RumSessionStarted', (e: Event) => {
+            const field = 'sessionId';
+            const sessionId = e[field as keyof Event] as string | null;
+            this.currentRumSessionId = sessionId;
+        });
+
+        // fetch the current session if any (because we might have missed the first RumSessionStarted event)
+        this.getCurrentSessionId().then(value => {
+            this.currentRumSessionId = value ?? null;
+        });
+    }
 
     startView = (
         key: string,
@@ -316,12 +335,21 @@ class DdRumWrapper implements DdRumType {
         return this.nativeRum.getCurrentSessionId();
     }
 
+    getCachedSessionId(): string | null {
+        return this.currentRumSessionId;
+    }
+
     getTracingContext = (
         url: string,
         tracingSamplingRate: number,
         firstPartyHosts: FirstPartyHost[]
     ): DatadogTracingContext => {
-        return getTracingContext(url, tracingSamplingRate, firstPartyHosts);
+        return getTracingContext(
+            url,
+            tracingSamplingRate,
+            firstPartyHosts,
+            this.currentRumSessionId
+        );
     };
 
     getTracingContextForPropagators = (
@@ -330,7 +358,8 @@ class DdRumWrapper implements DdRumType {
     ): DatadogTracingContext => {
         return getTracingContextForPropagators(
             propagators,
-            tracingSamplingRate
+            tracingSamplingRate,
+            this.currentRumSessionId
         );
     };
 

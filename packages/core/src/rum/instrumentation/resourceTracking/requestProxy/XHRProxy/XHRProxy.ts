@@ -5,6 +5,7 @@
  */
 
 import { Timer } from '../../../../../utils/Timer';
+import { DdRum } from '../../../../DdRum';
 import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
@@ -108,7 +109,8 @@ const proxyOpen = (
             tracingAttributes: getTracingAttributes({
                 hostname,
                 firstPartyHostsRegexMap,
-                tracingSamplingRate
+                tracingSamplingRate,
+                rumSessionId: DdRum.getCachedSessionId()
             })
         };
         // eslint-disable-next-line prefer-rest-params

@@ -2,12 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:ddSdkReactnativeExample.xcodeproj">
+      location = "group:DdSdkReactNativeExample.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:DdSdkReactNativeExample.xcodeproj">
    </FileRef>
 </Workspace>

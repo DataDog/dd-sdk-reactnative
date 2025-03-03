@@ -28,6 +28,7 @@ export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const TAGS_HEADER_KEY = 'x-datadog-tags';
 export const DD_TRACE_ID_TAG = '_dd.p.tid';
+export const DD_RUM_SESSION_ID_TAG = '_dd.p.rsid';
 
 /**
  * OTel headers
@@ -69,17 +70,30 @@ export const getTracingHeadersFromAttributes = (
                         value: tracingAttributes.spanId.toString(
                             TracingIdFormat.decimal
                         )
-                    },
-                    {
+                    }
+                );
+                if (tracingAttributes.rumSessionId) {
+                    headers.push({
+                        header: TAGS_HEADER_KEY,
+                        value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
+                            TracingIdFormat.paddedHighHex
+                        )},${DD_RUM_SESSION_ID_TAG}=${
+                            tracingAttributes.rumSessionId
+                        }`
+                    });
+                } else {
+                    headers.push({
                         header: TAGS_HEADER_KEY,
                         value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
                             TracingIdFormat.paddedHighHex
                         )}`
-                    }
-                );
+                    });
+                }
                 break;
             }
             case PropagatorType.TRACECONTEXT: {
+                const isSampled =
+                    tracingAttributes.samplingPriorityHeader === '1';
                 headers.push(
                     {
                         header: TRACECONTEXT_HEADER_KEY,
@@ -87,16 +101,15 @@ export const getTracingHeadersFromAttributes = (
                             version: '00',
                             traceId: tracingAttributes.traceId,
                             parentId: tracingAttributes.spanId,
-                            isSampled:
-                                tracingAttributes.samplingPriorityHeader === '1'
+                            isSampled: isSampled
                         })
                     },
                     {
                         header: TRACESTATE_HEADER_KEY,
                         value: generateTraceStateHeader({
                             parentId: tracingAttributes.spanId,
-                            isSampled:
-                                tracingAttributes.samplingPriorityHeader === '1'
+                            isSampled: isSampled,
+                            rumSessionId: tracingAttributes.rumSessionId
                         })
                     }
                 );
@@ -143,7 +156,8 @@ export const getTracingHeadersFromAttributes = (
 export const getTracingContext = (
     url: string,
     tracingSamplingRate: number,
-    firstPartyHosts: FirstPartyHost[]
+    firstPartyHosts: FirstPartyHost[],
+    rumSessionId: string | null
 ): DatadogTracingContext => {
     const hostname = URLHostParser(url);
     const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
@@ -152,7 +166,8 @@ export const getTracingContext = (
     const tracingAttributes = getTracingAttributes({
         hostname,
         firstPartyHostsRegexMap,
-        tracingSamplingRate
+        tracingSamplingRate,
+        rumSessionId
     });
 
     return getTracingContextForAttributes(
@@ -163,10 +178,15 @@ export const getTracingContext = (
 
 export const getTracingContextForPropagators = (
     propagators: PropagatorType[],
-    tracingSamplingRate: number
+    tracingSamplingRate: number,
+    rumSessionId: string | null
 ): DatadogTracingContext => {
     return getTracingContextForAttributes(
-        generateTracingAttributesWithSampling(tracingSamplingRate, propagators),
+        generateTracingAttributesWithSampling(
+            tracingSamplingRate,
+            propagators,
+            rumSessionId
+        ),
         tracingSamplingRate
     );
 };
@@ -221,16 +241,23 @@ const generateTraceContextHeader = ({
 
 const generateTraceStateHeader = ({
     parentId,
-    isSampled
+    isSampled,
+    rumSessionId
 }: {
     parentId: SpanId;
     isSampled: boolean;
+    rumSessionId: string | null;
 }) => {
     const sampled = `s:${isSampled ? '1' : '0'}`;
     const origin = 'o:rum';
     const parent = `p:${parentId.toString(TracingIdFormat.paddedHex)}`;
-
-    return `dd=${sampled};${origin};${parent}`;
+    const baseHeaderValue = `dd=${sampled};${origin};${parent}`;
+    if (rumSessionId) {
+        const session = `t.rsid:${rumSessionId}`;
+        return `${baseHeaderValue};${session}`;
+    } else {
+        return baseHeaderValue;
+    }
 };
 
 const generateB3Header = ({
