@@ -101,6 +101,9 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     func addTiming(name: String) {
         calledMethods.append(.addTiming(name: name))
     }
+    func addViewLoadingTime(overwrite: Boolean) {
+        calledMethods.append(.addViewLoadingTime(overwrite: overwrite))
+    }
     func stopSession() {
         calledMethods.append(.stopSession())
     }

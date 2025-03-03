@@ -1622,6 +1622,13 @@ describe('DdRum', () => {
         });
     });
 
+    describe('DdRum.addViewLoadingTime', () => {
+        it('calls the native API', async () => {
+            await DdRum.addViewLoadingTime(true);
+            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenCalledWith(true);
+        });
+    });
+
     describe('PropagatorTypes', () => {
         it('matches with the native name of propagators', () => {
             /**
