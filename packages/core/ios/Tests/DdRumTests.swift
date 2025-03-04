@@ -257,7 +257,7 @@ internal class DdRumTests: XCTestCase {
         rum.addViewLoadingTime(overwrite: true, resolve: mockResolve, reject: mockReject)
         
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
-        XCTAssertThrowsError(mockNativeRUM.calledMethods.last, .addViewLoadingTime(overwrite: true))
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .addViewLoadingTime(overwrite: true))
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
 

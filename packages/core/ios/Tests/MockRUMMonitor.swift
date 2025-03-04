@@ -41,6 +41,7 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
         case stopUserAction(type: RUMActionType, name: String?)
         case addUserAction(type: RUMActionType, name: String)
         case addTiming(name: String)
+        case addViewLoadingTime(overwrite: Bool)
         case stopSession(_: Int? = nil) // We need an attribute for the case to be Equatable
         case addResourceMetrics(resourceKey: String,
                                 fetch: Interval,
@@ -53,7 +54,6 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
                                 responseSize: Int64?)
         case addLongTasks(time: Date, duration: TimeInterval)
         case updatePerformanceMetric(time: Date, metric: DatadogRUM.PerformanceMetric, value: Double)
-
     }
 
     public var calledMethods = [CalledMethod]()
@@ -101,7 +101,7 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     func addTiming(name: String) {
         calledMethods.append(.addTiming(name: name))
     }
-    func addViewLoadingTime(overwrite: Boolean) {
+    func addViewLoadingTime(overwrite: Bool) {
         calledMethods.append(.addViewLoadingTime(overwrite: overwrite))
     }
     func stopSession() {
