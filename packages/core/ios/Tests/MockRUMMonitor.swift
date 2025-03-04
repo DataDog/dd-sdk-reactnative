@@ -24,6 +24,14 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     
     func removeAttribute(forKey key: DatadogInternal.AttributeKey) {}
     
+    func addAttributes(_ attributes: [DatadogInternal.AttributeKey : any DatadogInternal.AttributeValue]) {
+        // Not implemented
+    }
+    
+    func removeAttributes(forKeys keys: [DatadogInternal.AttributeKey]) {
+        // Not implemented
+    }
+    
     var debug: Bool
     
     struct Interval: Equatable {
