@@ -192,7 +192,6 @@ class DdRum(
         implementation.addTiming(name, promise)
     }
 
-
     /**
      * Adds the loading time of the view to the active view.
      * It is calculated as the difference between the current time and the start time of the view.
