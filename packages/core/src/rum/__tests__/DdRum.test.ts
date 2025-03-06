@@ -1625,7 +1625,11 @@ describe('DdRum', () => {
     describe('DdRum.addViewLoadingTime', () => {
         it('calls the native API', async () => {
             await DdRum.addViewLoadingTime(true);
-            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenCalledWith(true);
+            await DdRum.addViewLoadingTime(false);
+
+            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenNthCalledWith(1, true);
+            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenNthCalledWith(2, false);
+            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenCalledTimes(2);
         });
     });
 
