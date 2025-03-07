@@ -14,7 +14,7 @@ const STOP_LABEL = '__stop';
  * Simple timer which records time ticks. Shouldn't be re-used once stopped.
  * All timestamps/durations returned are in milliseconds.
  */
-export default class Timer {
+export class Timer {
     private timeProvider: TimeProvider;
     private times: Record<string, Timestamp> = {};
 

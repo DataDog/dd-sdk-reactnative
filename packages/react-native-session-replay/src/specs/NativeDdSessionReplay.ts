@@ -45,5 +45,5 @@ export interface Spec extends TurboModule {
     stopRecording(): Promise<void>;
 }
 
-// eslint-disable-next-line func-names
+// eslint-disable-next-line import/no-default-export
 export default TurboModuleRegistry.get<Spec>('DdSessionReplay');

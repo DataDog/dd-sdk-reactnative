@@ -13,8 +13,8 @@ import { getErrorMessage } from '../../../utils/errorUtils';
 
 import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type { DdEventsInterceptorOptions } from './DdEventsInterceptor';
-import type EventsInterceptor from './EventsInterceptor';
-import NoOpEventsInterceptor from './NoOpEventsInterceptor';
+import type { EventsInterceptor } from './EventsInterceptor';
+import { NoOpEventsInterceptor } from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
 import { getJsxRuntimes } from './getJsxRuntime';
 

@@ -63,7 +63,7 @@ export class DdSdkConfiguration {
         readonly appHangThreshold: number | undefined,
         readonly resourceTracingSamplingRate: number | undefined,
         readonly trackWatchdogTerminations: boolean | undefined,
-        readonly batchProcessingLevel: BatchProcessingLevel
+        readonly batchProcessingLevel: BatchProcessingLevel // eslint-disable-next-line no-empty-function
     ) {}
 }
 

@@ -4,6 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export default interface EventsInterceptor {
+export interface EventsInterceptor {
     interceptOnPress(...args: any[]): void;
 }
