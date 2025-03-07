@@ -3,6 +3,7 @@ example
 example-new-architecture
 dist
 lib
+packages/core/android/build/reports/tests
 // TODO remove that line once bridges updated
 // with proper order of context and timestamp
 packages/**/src/foundation.tsx
