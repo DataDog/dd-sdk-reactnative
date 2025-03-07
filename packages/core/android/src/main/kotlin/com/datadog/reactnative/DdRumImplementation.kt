@@ -317,6 +317,8 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
             "network" -> RumErrorSource.NETWORK
             "source" -> RumErrorSource.SOURCE
             "webview" -> RumErrorSource.WEBVIEW
+            "custom" -> RumErrorSource.CUSTOM
+            "report" -> RumErrorSource.REPORT
             else -> RumErrorSource.SOURCE
         }
     }
