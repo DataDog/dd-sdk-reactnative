@@ -11,6 +11,7 @@ import com.datadog.reactnative.sessionreplay.mappers.ReactEditTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactNativeImageViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactViewModalMapper
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactContext
@@ -62,7 +63,7 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
         val customViewMappers = testedExtensionSupport.getCustomViewMappers()
 
         // Then
-        assertThat(customViewMappers).hasSize(4)
+        assertThat(customViewMappers).hasSize(5)
 
         assertThat(customViewMappers[0].getUnsafeMapper())
             .isInstanceOf(ReactNativeImageViewMapper::class.java)
@@ -75,5 +76,8 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
 
         assertThat(customViewMappers[3].getUnsafeMapper())
             .isInstanceOf(ReactEditTextMapper::class.java)
+
+        assertThat(customViewMappers[4].getUnsafeMapper())
+            .isInstanceOf(ReactViewModalMapper::class.java)
     }
 }

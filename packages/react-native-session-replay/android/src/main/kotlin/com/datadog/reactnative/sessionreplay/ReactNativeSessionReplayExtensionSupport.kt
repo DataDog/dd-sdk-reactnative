@@ -14,8 +14,10 @@ import com.datadog.reactnative.sessionreplay.mappers.ReactEditTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactNativeImageViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
+import com.datadog.reactnative.sessionreplay.mappers.ReactViewModalMapper
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.views.image.ReactImageView
+import com.facebook.react.views.modal.ReactModalHostView
 import com.facebook.react.views.text.ReactTextView
 import com.facebook.react.views.textinput.ReactEditText
 import com.facebook.react.views.view.ReactViewGroup
@@ -34,6 +36,7 @@ internal class ReactNativeSessionReplayExtensionSupport(
             MapperTypeWrapper(ReactViewGroup::class.java, ReactViewGroupMapper()),
             MapperTypeWrapper(ReactTextView::class.java, ReactTextMapper(textViewUtils)),
             MapperTypeWrapper(ReactEditText::class.java, ReactEditTextMapper(textViewUtils)),
+            MapperTypeWrapper(ReactModalHostView::class.java, ReactViewModalMapper()),
         )
     }
 
