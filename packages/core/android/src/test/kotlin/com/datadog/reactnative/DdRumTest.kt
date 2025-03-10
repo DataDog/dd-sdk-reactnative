@@ -457,6 +457,15 @@ internal class DdRumTest {
     }
 
     @Test
+    fun `M call addViewLoadingTime w addViewLoadingTime()`(@BoolForgery overwrite: Boolean) {
+        // When
+        testedDdRum.addViewLoadingTime(overwrite, mockPromise)
+
+        // Then
+        verify(mockRumMonitor).addViewLoadingTime(overwrite)
+    }
+
+    @Test
     fun `M call stopSession W stopSession()`() {
         // When
         testedDdRum.stopSession(mockPromise)

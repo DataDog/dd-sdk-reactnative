@@ -252,6 +252,14 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(mockNativeRUM.calledMethods.last, .addTiming(name: "timing"))
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
+    
+    func testAddViewLoadingTime() throws {
+        rum.addViewLoadingTime(overwrite: true, resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .addViewLoadingTime(overwrite: true))
+        XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
+    }
 
     func testStopSession() throws {
         rum.stopSession(resolve: mockResolve, reject: mockReject)

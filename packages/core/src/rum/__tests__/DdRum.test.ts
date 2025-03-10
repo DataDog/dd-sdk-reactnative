@@ -1622,6 +1622,23 @@ describe('DdRum', () => {
         });
     });
 
+    describe('DdRum.addViewLoadingTime', () => {
+        it('calls the native API', async () => {
+            await DdRum.addViewLoadingTime(true);
+            await DdRum.addViewLoadingTime(false);
+
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenNthCalledWith(1, true);
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenNthCalledWith(2, false);
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe('PropagatorTypes', () => {
         it('matches with the native name of propagators', () => {
             /**

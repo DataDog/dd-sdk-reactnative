@@ -5,6 +5,7 @@
  */
 
 import Foundation
+@_spi(Experimental)
 import DatadogRUM
 import DatadogInternal
 
@@ -177,6 +178,12 @@ public class DdRumImplementation: NSObject {
     @objc
     public func addTiming(name: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addTiming(name: name)
+        resolve(nil)
+    }
+    
+    @objc
+    public func addViewLoadingTime(overwrite: Bool, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.addViewLoadingTime(overwrite: overwrite)
         resolve(nil)
     }
 
