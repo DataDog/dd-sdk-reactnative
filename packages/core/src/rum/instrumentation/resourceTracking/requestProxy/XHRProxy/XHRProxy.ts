@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Timer from '../../../../../utils/Timer';
+import { Timer } from '../../../../../utils/Timer';
 import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
@@ -91,7 +91,7 @@ const proxyOpen = (
     const firstPartyHostsRegexMap = context.firstPartyHostsRegexMap;
     const tracingSamplingRate = context.tracingSamplingRate;
 
-    xhrType.prototype.open = function (
+    xhrType.prototype.open = function open(
         this: DdRumXhr,
         method: string,
         url: string
@@ -120,7 +120,7 @@ const proxySend = (providers: XHRProxyProviders): void => {
     const xhrType = providers.xhrType;
     const originalXhrSend = xhrType.prototype.send;
 
-    xhrType.prototype.send = function (this: DdRumXhr) {
+    xhrType.prototype.send = function send(this: DdRumXhr) {
         if (this._datadog_xhr) {
             // keep track of start time
             this._datadog_xhr.timer.start();
@@ -147,7 +147,7 @@ const proxyOnReadyStateChange = (
     const xhrType = providers.xhrType;
     const originalOnreadystatechange = xhrProxy.onreadystatechange;
 
-    xhrProxy.onreadystatechange = function () {
+    xhrProxy.onreadystatechange = function onreadystatechange() {
         if (xhrProxy.readyState === xhrType.DONE) {
             if (!xhrProxy._datadog_xhr.reported) {
                 reportXhr(xhrProxy, providers.resourceReporter);
@@ -204,7 +204,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
     const xhrType = providers.xhrType;
     const originalXhrSetRequestHeader = xhrType.prototype.setRequestHeader;
 
-    xhrType.prototype.setRequestHeader = function (
+    xhrType.prototype.setRequestHeader = function sendRequestHeader(
         this: DdRumXhr,
         header: string,
         value: string

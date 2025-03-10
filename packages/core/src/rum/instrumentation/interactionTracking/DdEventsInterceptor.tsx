@@ -11,7 +11,7 @@ import { SdkVerbosity } from '../../../SdkVerbosity';
 import { DdRum } from '../../DdRum';
 import { RumActionType } from '../../types';
 
-import type EventsInterceptor from './EventsInterceptor';
+import type { EventsInterceptor } from './EventsInterceptor';
 
 export const UNKNOWN_TARGET_NAME = 'unknown_target';
 const DEBOUNCE_EVENT_THRESHOLD_IN_MS = 10;

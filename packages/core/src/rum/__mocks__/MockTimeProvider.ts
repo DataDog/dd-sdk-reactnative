@@ -7,7 +7,7 @@
 import type { Timestamp } from '../../utils/time-provider/TimeProvider';
 import { TimeProvider } from '../../utils/time-provider/TimeProvider';
 
-export default class MockTimeProvider extends TimeProvider {
+export class MockTimeProvider extends TimeProvider {
     unixMockedTime: number;
     reactNativeMockedTime: number | null;
 

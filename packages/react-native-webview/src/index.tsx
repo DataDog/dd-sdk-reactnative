@@ -105,4 +105,5 @@ const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
 
 export const WebView = forwardRef(WebViewComponent);
 
+// eslint-disable-next-line import/no-default-export
 export default WebView;

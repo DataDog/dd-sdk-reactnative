@@ -5,7 +5,7 @@
  */
 
 import { DdRum } from '../DdRum';
-import MockTimeProvider from '../__mocks__/MockTimeProvider';
+import { MockTimeProvider } from '../__mocks__/MockTimeProvider';
 
 jest.unmock('../../utils/time-provider/TimeProvider');
 
