@@ -39,6 +39,9 @@ internal class ReactTextMapper(
             wireframes = wireframes,
             view = view,
             mappingContext = mappingContext,
-        )
+        ).filterNot {
+            it is MobileSegment.Wireframe.ImageWireframe ||
+                    it is MobileSegment.Wireframe.PlaceholderWireframe
+        }
     }
 }
