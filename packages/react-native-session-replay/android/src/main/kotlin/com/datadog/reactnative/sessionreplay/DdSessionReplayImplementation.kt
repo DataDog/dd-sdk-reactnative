@@ -9,6 +9,7 @@ package com.datadog.reactnative.sessionreplay
 import android.annotation.SuppressLint
 import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
+import com.datadog.android.sessionreplay._SessionReplayInternalProxy
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.Promise
@@ -42,12 +43,17 @@ class DdSessionReplayImplementation(
         val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val textViewUtils = TextViewUtils.create(reactContext, logger)
+        val internalCallback = ReactNativeInternalCallback(reactContext)
         val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .startRecordingImmediately(startRecordingImmediately)
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
             .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils))
+            .let {
+                _SessionReplayInternalProxy(it).setInternalCallback(internalCallback)
+            }
+
 
         if (customEndpoint != "") {
             configuration.useCustomEndpoint(customEndpoint)
