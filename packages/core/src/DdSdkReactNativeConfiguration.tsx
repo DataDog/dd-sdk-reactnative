@@ -358,7 +358,7 @@ export class DdSdkReactNativeConfiguration {
         readonly trackResources: boolean = false,
         readonly trackErrors: boolean = false,
         readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
-        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel
+        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel // eslint-disable-next-line no-empty-function
     ) {}
 }
 

@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type EventsInterceptor from './EventsInterceptor';
+import type { EventsInterceptor } from './EventsInterceptor';
 
-export default class NoOpEventsInterceptor implements EventsInterceptor {
+export class NoOpEventsInterceptor implements EventsInterceptor {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interceptOnPress(..._args: any[]): void {
         // NoOp

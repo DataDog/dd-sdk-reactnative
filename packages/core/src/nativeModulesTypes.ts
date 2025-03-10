@@ -36,7 +36,7 @@ export class DdNativeSdkConfiguration {
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfiguration: object
+        readonly additionalConfiguration: object // eslint-disable-next-line no-empty-function
     ) {}
 }
 

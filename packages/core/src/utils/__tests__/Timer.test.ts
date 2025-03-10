@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Timer from '../Timer';
+import { Timer } from '../Timer';
 
 function randomInt(): number {
     return Math.floor(Math.random() * 65536) + 512;
