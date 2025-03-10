@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import MockTimeProvider from '../../rum/__mocks__/MockTimeProvider';
+import { MockTimeProvider } from '../../rum/__mocks__/MockTimeProvider';
 import { DefaultTimeProvider } from '../time-provider/DefaultTimeProvider';
 
 function mockDateNow(value: number) {

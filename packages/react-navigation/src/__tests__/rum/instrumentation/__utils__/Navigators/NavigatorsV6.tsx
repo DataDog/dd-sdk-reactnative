@@ -123,7 +123,7 @@ export function FakeTogglableNavigator(props: {
 
     useEffect(() => {
         DdRumReactNavigationTracking.stopTrackingViews(navigationRef.current);
-    }, [showNavigator]);
+    }, [navigationRef, showNavigator]);
 
     return showNavigator ? (
         <NavigationContainer
