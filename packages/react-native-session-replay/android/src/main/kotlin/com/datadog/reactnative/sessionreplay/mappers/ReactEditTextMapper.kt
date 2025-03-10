@@ -61,7 +61,10 @@ internal class ReactEditTextMapper(
             mappingContext = mappingContext,
             asyncJobStatusCallback = asyncJobStatusCallback,
             internalLogger = internalLogger
-        ).filterNot { it is MobileSegment.Wireframe.ImageWireframe }
+        ).filterNot {
+            it is MobileSegment.Wireframe.ImageWireframe ||
+                    it is MobileSegment.Wireframe.PlaceholderWireframe
+        }
 
         return textViewUtils.mapTextViewToWireframes(
             wireframes = backgroundWireframes,
