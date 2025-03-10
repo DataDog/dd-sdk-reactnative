@@ -19,8 +19,8 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogWebViewTracking', '~> 2.22.0'
-  s.dependency 'DatadogInternal', '~> 2.22.0'
+  s.dependency 'DatadogWebViewTracking', '~> 2.24.0'
+  s.dependency 'DatadogInternal', '~> 2.24.0'
   s.dependency 'DatadogSDKReactNative'
 
   s.test_spec 'Tests' do |test_spec|

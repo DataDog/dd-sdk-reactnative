@@ -29,8 +29,7 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         layerCornerRadius: CGFloat(1.0),
         alpha: CGFloat(1.0),
         isHidden: false,
-        intrinsicContentSize: CGSize(width: 100.0, height: 100.0),
-        overrides: .init(UIView())
+        intrinsicContentSize: CGSize(width: 100.0, height: 100.0)
     )
 
     let mockAllowContext = SessionReplayViewTreeRecordingContext(
