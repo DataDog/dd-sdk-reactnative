@@ -1627,9 +1627,15 @@ describe('DdRum', () => {
             await DdRum.addViewLoadingTime(true);
             await DdRum.addViewLoadingTime(false);
 
-            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenNthCalledWith(1, true);
-            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenNthCalledWith(2, false);
-            expect(NativeModules.DdRum.addViewLoadingTime).toHaveBeenCalledTimes(2);
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenNthCalledWith(1, true);
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenNthCalledWith(2, false);
+            expect(
+                NativeModules.DdRum.addViewLoadingTime
+            ).toHaveBeenCalledTimes(2);
         });
     });
 

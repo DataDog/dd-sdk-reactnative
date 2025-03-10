@@ -279,10 +279,14 @@ class DdRumWrapper implements DdRumType {
 
     addViewLoadingTime = (overwrite: boolean): Promise<void> => {
         InternalLog.log(
-            overwrite ? `Adding and overwriting view loading to RUM View` : `Adding view loading to RUM View`,
+            overwrite
+                ? 'Adding and overwriting view loading to RUM View'
+                : 'Adding view loading to RUM View',
             SdkVerbosity.DEBUG
         );
-        return bufferVoidNativeCall(() => this.nativeRum.addViewLoadingTime(overwrite));
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addViewLoadingTime(overwrite)
+        );
     };
 
     stopSession = (): Promise<void> => {
