@@ -9,7 +9,6 @@ package com.datadog.reactnative
 import android.content.Context
 import android.util.Log
 import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.GlobalRumMonitor
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.facebook.react.bridge.LifecycleEventListener
@@ -39,7 +38,7 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
-        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, reactContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
 
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)

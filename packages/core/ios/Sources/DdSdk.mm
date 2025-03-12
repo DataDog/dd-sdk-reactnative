@@ -84,6 +84,10 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 #endif
 
 
+- (NSArray<NSString *> *)supportedEvents {
+    return @[@"RumSessionStarted"];
+}
+
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
@@ -110,7 +114,7 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 }
 
 - (void)initialize:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation initializeWithConfiguration:configuration resolve:resolve reject:reject];
+    [self.ddSdkImplementation initializeWithConfiguration:configuration eventEmitter:self resolve:resolve reject:reject];
 }
 
 - (void)setAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

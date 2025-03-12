@@ -10,14 +10,15 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import com.datadog.android.DatadogSite
+import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
-import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.event.EventMapper
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.rum.RumSessionListener
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.model.ActionEvent
@@ -25,6 +26,9 @@ import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.TraceConfiguration
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.google.gson.Gson
 import java.util.Locale
 
@@ -33,12 +37,13 @@ import java.util.Locale
  */
 class DdSdkNativeInitialization internal constructor(
     private val appContext: Context,
+    private val reactContext: ReactApplicationContext,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
     private val jsonFileReader: JSONFileReader = JSONFileReader()
 ) {
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
+        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration, reactContext)
         val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
         val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
@@ -98,7 +103,7 @@ class DdSdkNativeInitialization internal constructor(
     }
 
     @Suppress("ComplexMethod")
-    private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
+    private fun buildRumConfiguration(configuration: DdSdkConfiguration, reactContext: ReactApplicationContext): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
                 applicationId = configuration.applicationId
@@ -202,7 +207,23 @@ class DdSdkNativeInitialization internal constructor(
             configBuilder.trackNonFatalAnrs(it)
         }
 
+        configBuilder.setSessionListener(
+                object : RumSessionListener {
+                    override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
+                        sendSessionIdEvent(sessionId, isDiscarded)
+                    }
+                }
+        )
+
         return configBuilder.build()
+    }
+
+    private fun sendSessionIdEvent(sessionId: String, isDiscarded: Boolean) {
+        val attributes = WritableNativeMap()
+        attributes.putString("sessionId", sessionId)
+        attributes.putBoolean("isDiscarded", isDiscarded)
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit("RumSessionStarted", attributes)
     }
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
@@ -353,8 +374,8 @@ class DdSdkNativeInitialization internal constructor(
          * @param appContext: The application context of your React Native application.
          */
         @JvmStatic
-        fun initFromNative(appContext: Context) {
-            val nativeInitialization = DdSdkNativeInitialization(appContext.applicationContext)
+        fun initFromNative(appContext: Context, reactContext: ReactApplicationContext) {
+            val nativeInitialization = DdSdkNativeInitialization(appContext.applicationContext, reactContext)
             try {
                 nativeInitialization.initialize(nativeInitialization.getConfigurationFromJSONFile())
             } catch (@Suppress("TooGenericExceptionCaught") error: Exception) {

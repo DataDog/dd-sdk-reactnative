@@ -15,7 +15,8 @@
 #else
 
 #import <React/RCTBridgeModule.h>
-@interface DdSdk : NSObject <RCTBridgeModule>
+#import <React/RCTEventEmitter.h>
+@interface DdSdk : RCTEventEmitter <RCTBridgeModule>
 
 #endif
 

@@ -116,4 +116,15 @@ class DdSdk(
     fun clearAllData(promise: Promise) {
         implementation.clearAllData(promise)
     }
+
+    // Required for rn built in EventEmitter Calls.
+    @ReactMethod
+    fun addListener(eventName: String) {
+        // No-op
+    }
+
+    @ReactMethod
+    fun removeListeners(count: Int) {
+        // No-op
+    }
 }
