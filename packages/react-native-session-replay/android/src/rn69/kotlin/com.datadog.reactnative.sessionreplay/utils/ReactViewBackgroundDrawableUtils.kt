@@ -1,4 +1,3 @@
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
@@ -61,32 +60,12 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
         pixelDensity: Float
     ): MobileSegment.ShapeBorder {
         val borderWidth = (backgroundDrawable.fullBorderWidth / pixelDensity).toLong()
-        val borderColor = formatAsRgba(getBorderColor(backgroundDrawable))
+        val borderColor = formatAsRgba(backgroundDrawable.getBorderColor(Spacing.ALL))
 
         return MobileSegment.ShapeBorder(
             color = borderColor,
             width = borderWidth
         )
-    }
-
-    private fun getBorderColor(backgroundDrawable: ReactViewBackgroundDrawable): Int {
-        val borderRgb = reflectionUtils.getDeclaredField(
-            backgroundDrawable,
-            BORDER_RGB_FIELD_NAME
-        ) as Spacing?
-
-        val borderAlpha = reflectionUtils.getDeclaredField(
-            backgroundDrawable,
-            BORDER_ALPHA_FIELD_NAME
-        ) as Spacing?
-
-        val rgb = borderRgb?.get(Spacing.ALL) ?: DEFAULT_BORDER_RGB
-        val alpha = borderAlpha?.get(Spacing.ALL) ?: DEFAULT_BORDER_ALPHA
-
-        val rgbComponent = 0x00FFFFFF and rgb.toInt()
-        val alphaComponent = -0x1000000 and ((alpha.toInt()) shl 24)
-
-        return rgbComponent or alphaComponent
     }
 
     private fun getBackgroundColor(
@@ -100,9 +79,5 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
 
     private companion object {
         private const val COLOR_FIELD_NAME = "mColor"
-        private const val BORDER_RGB_FIELD_NAME = "mBorderRGB"
-        private const val BORDER_ALPHA_FIELD_NAME = "mBorderAlpha"
-        private const val DEFAULT_BORDER_RGB: Int = 0x00FFFFFF and Color.BLACK
-        private const val DEFAULT_BORDER_ALPHA: Int = -0x1000000 and Color.BLACK
     }
 }
