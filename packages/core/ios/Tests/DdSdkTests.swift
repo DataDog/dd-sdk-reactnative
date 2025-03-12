@@ -421,7 +421,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.trackFrustrations, false)
     }
 
-    func testSettingUserInfo() throws {
+    func testSetUser() throws {
         let bridge = DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             jsDispatchQueue: DispatchQueueMock(),
@@ -457,7 +457,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
     }
     
-    func testSettingUserInfoOptionalId() throws {
+    func testSetUserOptionalId() throws {
         let bridge = DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             jsDispatchQueue: DispatchQueueMock(),
@@ -490,6 +490,157 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
         XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
+    }
+    
+    func testSetUserInfo() throws {
+        let bridge = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        )
+        bridge.initialize(configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+
+        bridge.setUserInfo(
+            userInfo: NSDictionary(
+                dictionary: [
+                    "id": "id_123",
+                    "name": "John Doe",
+                    "email": "john@doe.com",
+                    "extraInfo": [
+                        "extra-info-1": 123,
+                        "extra-info-2": "abc",
+                        "extra-info-3": true,
+                        "extra-info-4": [
+                            "nested-extra-info-1" : 456,
+                        ],
+                    ],
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        let ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
+        let userInfo = try XCTUnwrap(ddContext.userInfo)
+        
+        XCTAssertEqual(userInfo.id, "id_123")
+        XCTAssertEqual(userInfo.name, "John Doe")
+        XCTAssertEqual(userInfo.email, "john@doe.com")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
+
+        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"] as? DatadogSDKReactNative.AnyEncodable,
+           let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int] {
+            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
+        } else {
+            XCTFail("extra-info-4 is not of expected type or value")
+        }
+    }
+    
+    func testSetUserInfoOptionalId() throws {
+        let bridge = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        )
+        bridge.initialize(configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+
+        bridge.setUserInfo(
+            userInfo: NSDictionary(
+                dictionary: [
+                    "name": "John Doe",
+                    "email": "john@doe.com",
+                    "extraInfo": [
+                        "extra-info-1": 123,
+                        "extra-info-2": "abc",
+                        "extra-info-3": true,
+                        "extra-info-4": [
+                            "nested-extra-info-1" : 456,
+                        ],
+                    ],
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        let ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
+        let userInfo = try XCTUnwrap(ddContext.userInfo)
+        
+        XCTAssertEqual(userInfo.id, nil)
+        XCTAssertEqual(userInfo.name, "John Doe")
+        XCTAssertEqual(userInfo.email, "john@doe.com")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
+
+        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"] as? DatadogSDKReactNative.AnyEncodable,
+           let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int] {
+            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
+        } else {
+            XCTFail("extra-info-4 is not of expected type or value")
+        }
+    }
+    
+    func testAddUserExtraInfo() throws {
+        let bridge = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        )
+        bridge.initialize(configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+        
+        bridge.setUserInfo(
+            userInfo: NSDictionary(
+                dictionary: [
+                    "id": "id_123",
+                    "name": "John Doe",
+                    "email": "john@doe.com",
+                    "extraInfo": [
+                        "extra-info-1": 123,
+                    ],
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        bridge.addUserExtraInfo(extraInfo: NSDictionary(
+                dictionary: [
+                    "extra-info-2": "abc",
+                    "extra-info-3": true,
+                    "extra-info-4": [
+                        "nested-extra-info-1" : 456,
+                    ],
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        let ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
+        let userInfo = try XCTUnwrap(ddContext.userInfo)
+        
+        XCTAssertEqual(userInfo.id, "id_123")
+        XCTAssertEqual(userInfo.name, "John Doe")
+        XCTAssertEqual(userInfo.email, "john@doe.com")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
+
+        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"] as? DatadogSDKReactNative.AnyEncodable,
+           let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int] {
+            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
+        } else {
+            XCTFail("extra-info-4 is not of expected type or value")
+        }
     }
 
     func testSettingAttributes() {

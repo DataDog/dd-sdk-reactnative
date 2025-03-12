@@ -30,7 +30,7 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
 
  export function onDatadogInitialization() {
     DdLogs.info('The RN Sdk was properly initialized')
-    DdSdkReactNative.setUser({id: "1337", name: "Xavier", email: "xg@example.com", type: "premium"})
+    DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
     DdSdkReactNative.setAttributes({campaign: "ad-network"})
 }
 
@@ -53,7 +53,7 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')
-        DdSdkReactNative.setUser({id: "1337", name: "Xavier", email: "xg@example.com", type: "premium"})
+        DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
         DdSdkReactNative.setAttributes({campaign: "ad-network"})
     });
 }

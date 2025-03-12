@@ -5,8 +5,11 @@
  */
 
 export type UserInfo = {
-    readonly id?: string;
+    readonly id?: string /** @deprecated To be made mandatory when removing DdSdkReactnative.setUser */;
     readonly name?: string;
     readonly email?: string;
-    readonly [key: string]: unknown;
+    readonly extraInfo?: Record<string, unknown>;
+    readonly [
+        key: string
+    ]: unknown /** @deprecated To be removed alongside DdSdkReactnative.setUser */;
 };

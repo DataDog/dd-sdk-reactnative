@@ -84,22 +84,39 @@ export type DdSdkType = {
     setAttributes(attributes: object): Promise<void>;
 
     /**
-     * Set the user information.
+     * Sets the user information.
+     * @deprecated UserInfo id property is now mandatory (please user setUserInfo instead)
      * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
      */
     setUser(user: object): Promise<void>;
 
     /**
-     * Add additional user information.
-     * @param extraUserInfo: The extra info object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     * Sets the user information.
+     * @param id: A unique user identifier (relevant to your business domain)
+     * @param name: The user name or alias.
+     * @param email: The user email.
+     * @param extraInfo: Additional information.
      */
-    addUserExtraInfo(extraUserInfo: object): Promise<void>;
+    setUserInfo(userInfo: UserInfo): Promise<void>;
+
+    /**
+     * Add additional user information.
+     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     */
+    addUserExtraInfo(extraUserInfo: Record<string, unknown>): Promise<void>;
 
     /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */
     setTrackingConsent(trackingConsent: string): Promise<void>;
+};
+
+export type UserInfo = {
+    id: string;
+    name?: string;
+    email?: string;
+    extraInfo?: object;
 };
 
 /**

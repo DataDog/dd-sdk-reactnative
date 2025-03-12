@@ -121,13 +121,29 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         Trace.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
-    override fun setUserInfo(
+    @Deprecated("Use setUserInfo instead; the user ID is now required.")
+    override fun setUser(
         id: String?,
         name: String?,
         email: String?,
         extraInfo: Map<String, Any?>
     ) {
         Datadog.setUserInfo(id, name, email, extraInfo)
+    }
+
+    override fun setUserInfo(
+        id: String,
+        name: String?,
+        email: String?,
+        extraInfo: Map<String, Any?>
+    ) {
+        Datadog.setUserInfo(id, name, email, extraInfo)
+    }
+
+    override fun addUserExtraInfo(
+        extraInfo: Map<String, Any?>
+    ) {
+        Datadog.addUserProperties(extraInfo)
     }
 
     override fun addRumGlobalAttributes(attributes: Map<String, Any?>) {

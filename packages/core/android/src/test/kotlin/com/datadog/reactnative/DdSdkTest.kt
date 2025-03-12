@@ -72,6 +72,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
+import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -2064,7 +2065,7 @@ internal class DdSdkTest {
         // Then
         argumentCaptor<Map<String, Any?>> {
             verify(mockDatadog)
-                .setUserInfo(
+                .setUser(
                     isNull(),
                     isNull(),
                     isNull(),
@@ -2096,7 +2097,7 @@ internal class DdSdkTest {
         // Then
         argumentCaptor<Map<String, Any?>> {
             verify(mockDatadog)
-                .setUserInfo(
+                .setUser(
                     eq(id),
                     isNull(),
                     isNull(),
@@ -2128,7 +2129,7 @@ internal class DdSdkTest {
         // Then
         argumentCaptor<Map<String, Any?>> {
             verify(mockDatadog)
-                .setUserInfo(
+                .setUser(
                     isNull(),
                     eq(name),
                     isNull(),
@@ -2160,7 +2161,7 @@ internal class DdSdkTest {
         // Then
         argumentCaptor<Map<String, Any?>> {
             verify(mockDatadog)
-                .setUserInfo(
+                .setUser(
                     isNull(),
                     isNull(),
                     eq(email),
@@ -2196,6 +2197,127 @@ internal class DdSdkTest {
         // Then
         argumentCaptor<Map<String, Any?>> {
             verify(mockDatadog)
+                .setUser(
+                    eq(id),
+                    eq(name),
+                    eq(email),
+                    capture()
+                )
+
+            assertThat(firstValue)
+                .containsAllEntriesOf(extraInfo)
+                .hasSize(extraInfo.size)
+        }
+    }
+
+    @Test
+    fun `𝕄 set native user info 𝕎 setUserInfo() {with id}`(
+        @StringForgery id: String
+    ) {
+        // Given
+        val userInfo = mapOf(
+            "id" to id
+        )
+
+        // When
+        testedBridgeSdk.setUserInfo(userInfo.toReadableMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
+                .setUserInfo(
+                    eq(id),
+                    isNull(),
+                    isNull(),
+                    capture()
+                )
+
+            assertThat(firstValue).isEmpty()
+        }
+    }
+
+    @Test
+    fun `𝕄 set native user info 𝕎 setUserInfo() {with id and name}`(
+        @StringForgery id: String,
+        @StringForgery name: String
+    ) {
+        // Given
+        val userInfo = mapOf(
+            "id" to id,
+            "name" to name
+        )
+
+        // When
+        testedBridgeSdk.setUserInfo(userInfo.toReadableMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
+                .setUserInfo(
+                    eq(id),
+                    eq(name),
+                    isNull(),
+                    capture()
+                )
+
+            assertThat(firstValue).isEmpty()
+        }
+    }
+
+    @Test
+    fun `𝕄 set native user info 𝕎 setUserInfo() {with id, name and email}`(
+        @StringForgery id: String,
+        @StringForgery name: String,
+        @StringForgery(regex = "\\w+@\\w+\\.[a-z]{3}") email: String
+    ) {
+        // Given
+        val userInfo = mapOf(
+            "id" to id,
+            "name" to name,
+            "email" to email
+        )
+
+        // When
+        testedBridgeSdk.setUserInfo(userInfo.toReadableMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
+                .setUserInfo(
+                    eq(id),
+                    eq(name),
+                    eq(email),
+                    capture()
+                )
+
+            assertThat(firstValue).isEmpty()
+        }
+    }
+
+    @Test
+    fun `𝕄 set native user info 𝕎 setUserInfo() {with id, name, email and extraInfo}`(
+        @StringForgery id: String,
+        @StringForgery name: String,
+        @StringForgery(regex = "\\w+@\\w+\\.[a-z]{3}") email: String,
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) extraInfo: Map<String, String>
+    ) {
+        // Given
+        val userInfo = mapOf(
+            "id" to id,
+            "name" to name,
+            "email" to email,
+            "extraInfo" to extraInfo
+        )
+
+        // When
+        testedBridgeSdk.setUserInfo(userInfo.toReadableMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
                 .setUserInfo(
                     eq(id),
                     eq(name),
@@ -2206,6 +2328,29 @@ internal class DdSdkTest {
             assertThat(firstValue)
                 .containsAllEntriesOf(extraInfo)
                 .hasSize(extraInfo.size)
+        }
+    }
+
+    @Test
+    fun `𝕄 add native extra user info 𝕎 addUserExtraInfo() {with userExtraInfo}`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) userExtraInfo: Map<String, String>
+    ) {
+        // When
+        testedBridgeSdk.addUserExtraInfo(userExtraInfo.toReadableMap(), mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog)
+                .addUserExtraInfo(
+                    capture()
+                )
+
+            assertThat(firstValue)
+                .containsAllEntriesOf(userExtraInfo)
+                .hasSize(userExtraInfo.size)
         }
     }
 

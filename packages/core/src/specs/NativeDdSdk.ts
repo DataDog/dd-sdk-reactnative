@@ -28,9 +28,22 @@ export interface Spec extends TurboModule {
 
     /**
      * Set the user information.
+     * @deprecated: Use setUserInfo instead
      * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
      */
     setUser(user: Object): Promise<Object>;
+
+    /**
+     * Set the user information.
+     * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and any custom attribute under extraInfo).
+     */
+    setUserInfo(user: Object): Promise<Object>;
+
+    /**
+     * Add custom attributes  to the current user information
+     * @param extraInfo: The extraInfo object containing additionall custom attributes
+     */
+    addUserExtraInfo(extraInfo: Object): Promise<Object>;
 
     /**
      * Set the tracking consent regarding the data collection.
