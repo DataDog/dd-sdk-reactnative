@@ -40,23 +40,21 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
     }
 
     override fun getReactBackgroundFromDrawable(drawable: Drawable?): Drawable? {
-        if (drawable is ReactViewBackgroundDrawable) {
-            return drawable
+        return when (drawable) {
+            is ReactViewBackgroundDrawable -> drawable
+            is InsetDrawable -> getReactBackgroundFromDrawable(drawable.drawable)
+            is LayerDrawable -> getDrawableFromLayerDrawable(drawable)
+            else -> null
         }
+    }
 
-        if (drawable is InsetDrawable) {
-            return getReactBackgroundFromDrawable(drawable.drawable)
-        }
-
-        if (drawable is LayerDrawable) {
-            for (layerNumber in 0 until drawable.numberOfLayers) {
-                val layer = drawable.getDrawable(layerNumber)
-                if (layer is ReactViewBackgroundDrawable) {
-                    return layer
-                }
+    private fun getDrawableFromLayerDrawable(layerDrawable: LayerDrawable): Drawable? {
+        for (layerNumber in 0 until layerDrawable.numberOfLayers) {
+            val layer = layerDrawable.getDrawable(layerNumber)
+            if (layer is ReactViewBackgroundDrawable) {
+                return layer
             }
         }
-
         return null
     }
 
@@ -79,7 +77,7 @@ internal class ReactViewBackgroundDrawableUtils() : DrawableUtils() {
         return reflectionUtils.getDeclaredField(
             backgroundDrawable,
             COLOR_FIELD_NAME
-        ) as Int?
+        ) as? Int
     }
 
     private companion object {

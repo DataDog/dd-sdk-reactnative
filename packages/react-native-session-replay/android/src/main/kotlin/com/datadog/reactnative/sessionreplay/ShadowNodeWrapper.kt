@@ -60,7 +60,7 @@ internal class ShadowNodeWrapper(
         }
 
         private fun resolveShadowNode(reflectionUtils: ReflectionUtils, uiManagerModule: UIManagerModule, tag: Int): ReactShadowNode<out ReactShadowNode<*>>? {
-            val uiManagerImplementation = reflectionUtils.getDeclaredField(uiManagerModule, UI_IMPLEMENTATION_FIELD_NAME) as UIImplementation?
+            val uiManagerImplementation = reflectionUtils.getDeclaredField(uiManagerModule, UI_IMPLEMENTATION_FIELD_NAME) as? UIImplementation
             return uiManagerImplementation?.resolveShadowNode(tag)
         }
 
