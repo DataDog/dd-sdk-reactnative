@@ -5,22 +5,23 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <React/RCTEventEmitter.h>
+
 @class DdSdkImplementation;
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import <DdSdkReactNative/DdSdkReactNative.h>
-@interface DdSdk: NSObject <NativeDdSdkSpec>
+@interface DdSdk : RCTEventEmitter <NativeDdSdkSpec>
 
 #else
 
 #import <React/RCTBridgeModule.h>
-#import <React/RCTEventEmitter.h>
 @interface DdSdk : RCTEventEmitter <RCTBridgeModule>
 
 #endif
 
-@property (nonatomic, strong) DdSdkImplementation* ddSdkImplementation;
+@property(nonatomic, strong) DdSdkImplementation *ddSdkImplementation;
 
 + (void)initFromNative;
 

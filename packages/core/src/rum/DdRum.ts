@@ -3,9 +3,8 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-
 import type { GestureResponderEvent } from 'react-native';
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -42,7 +41,10 @@ import type {
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
-const nativeEventEmitter = new NativeEventEmitter(NativeModules.DdSdk);
+const nativeEventEmitter =
+    Platform.OS === 'android'
+        ? new NativeEventEmitter()
+        : new NativeEventEmitter(NativeModules.DdSdk);
 
 class DdRumWrapper implements DdRumType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
