@@ -40,6 +40,16 @@ target 'ddSdkReactnativeExample' do
     datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
     datadog_sdk_target.build_configurations.each do |config|
       config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
-    end    
+    end      
+
+    # Disable code signing for Unit-Tests
+    installer.pods_project.targets.each do |target|
+      if target.name == 'DatadogSDKReactNative-Unit-Tests'
+        target.build_configurations.each do |config|
+          config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        end
+      end
+    end
   end
 end
