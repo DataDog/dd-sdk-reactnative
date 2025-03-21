@@ -88,7 +88,7 @@ export const generateTracingAttributesWithSampling = (
         tracingStrategy: 'KEEP',
         rulePsr: tracingSamplingRate / 100,
         propagatorTypes,
-        rumSessionId: rumSessionId
+        rumSessionId
     };
 
     return tracingAttributes;

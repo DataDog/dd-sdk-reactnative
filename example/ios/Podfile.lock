@@ -1298,7 +1298,7 @@ PODS:
     - React-Core
   - react-native-safe-area-context (5.1.0):
     - React-Core
-  - react-native-webview (13.12.2):
+  - react-native-webview (13.13.4):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1592,11 +1592,11 @@ PODS:
     - React-CoreModules
     - React-RCTImage
     - React-RCTText
-  - RNCAsyncStorage (2.1.0):
+  - RNCAsyncStorage (2.1.2):
     - React-Core
   - RNCMaskedView (0.1.11):
     - React
-  - RNGestureHandler (2.22.0):
+  - RNGestureHandler (2.24.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1938,7 +1938,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 71ca9282bce93b319218d75362c0d646b376eb43
   react-native-crash-tester: 48bde9d6f5256c61ef2e0c52dfc74256b26e55eb
   react-native-safe-area-context: e134b241010ebe2aacdcea013565963d13826faa
-  react-native-webview: 9a11224a769a9084ba99c867c199e32e7dca3f50
+  react-native-webview: f38fd87322055d2ce09058cf19f50f708fb174da
   React-nativeconfig: 8c83d992b9cc7d75b5abe262069eaeea4349f794
   React-NativeModulesApple: 97f606f09fd9840b3868333984d6a0e7bcc425b5
   React-perflogger: 59e1a3182dca2cee7b9f1f7aab204018d46d1914
@@ -1966,9 +1966,9 @@ SPEC CHECKSUMS:
   ReactCodegen: 8b5341ecb61898b8bd40a73ebc443c6bf2d14423
   ReactCommon: 36d48f542b4010786d6b2bcee615fe5f906b7105
   ReactNativeNavigation: 81b3f87d96a0b963f8bdf1f6fb6ac2abe9f653d1
-  RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
+  RNCAsyncStorage: b9f5f78da5d16a853fe3dc22e8268d932fc45a83
   RNCMaskedView: 4c5ee1c8667d56077246cc6d1977f77393923560
-  RNGestureHandler: 43970f04f34f186b4a5b2057cbf99c3039753c36
+  RNGestureHandler: fc491c834d09b0538618a3f328ab75fe8f90f5b4
   RNScreens: df5b744737987bdfe5f04e05579b53ce1bcdbfa9
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 055f92ad73f8c8600a93f0e25ac0b2344c3b07e6

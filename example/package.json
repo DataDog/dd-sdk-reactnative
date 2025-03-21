@@ -15,7 +15,7 @@
         "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
         "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",
         "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",
-        "@react-native-async-storage/async-storage": "^2.1.0",
+        "@react-native-async-storage/async-storage": "^2.1.2",
         "@react-native-community/cli-platform-android": "13.6.9",
         "@react-native-community/masked-view": "^0.1.10",
         "@react-navigation/bottom-tabs": "^6.3.1",
@@ -25,11 +25,11 @@
         "react": "18.3.1",
         "react-native": "0.75.4",
         "react-native-crash-tester": "0.2.3",
-        "react-native-gesture-handler": "^2.22.0",
+        "react-native-gesture-handler": "^2.24.0",
         "react-native-navigation": "7.40.1",
         "react-native-safe-area-context": "5.1.0",
         "react-native-screens": "4.5.0",
-        "react-native-webview": "^13.12.2"
+        "react-native-webview": "^13.13.4"
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",
