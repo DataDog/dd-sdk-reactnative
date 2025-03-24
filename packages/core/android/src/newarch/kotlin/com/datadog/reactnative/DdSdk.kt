@@ -115,4 +115,12 @@ class DdSdk(
     override fun clearAllData(promise: Promise) {
         implementation.clearAllData(promise)
     }
+
+    override fun addListener(eventType: String?) {
+        // No-op
+    }
+
+    override fun removeListeners(count: Double) {
+        // No-op
+    }
 }
