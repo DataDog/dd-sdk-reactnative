@@ -10,14 +10,33 @@ PODS:
     - DatadogInternal (= 2.24.0)
   - DatadogRUM (2.24.0):
     - DatadogInternal (= 2.24.0)
-  - DatadogSDKReactNative (2.6.3):
+  - DatadogSDKReactNative (2.6.4):
     - DatadogCore (~> 2.24.0)
     - DatadogCrashReporting (~> 2.24.0)
     - DatadogLogs (~> 2.24.0)
     - DatadogRUM (~> 2.24.0)
     - DatadogTrace (~> 2.24.0)
     - DatadogWebViewTracking (~> 2.24.0)
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - DatadogTrace (2.24.0):
     - DatadogInternal (= 2.24.0)
     - OpenTelemetrySwiftApi (= 1.13.0)
@@ -1741,7 +1760,7 @@ SPEC CHECKSUMS:
   DatadogInternal: 7dcc19ce0a40fa9d95bcb3a47dc27d1b96b7fa9d
   DatadogLogs: 8c96c96b05db866d261ff672cd1fc3bd44b15afb
   DatadogRUM: 49c494a3f583bbe31f650ad930d7a702e29c270d
-  DatadogSDKReactNative: 44935cd2d8a872857bc98c0ae491d04f484f857d
+  DatadogSDKReactNative: 8c334a3bdcd712b0ae4ab276316c9e493fa7322a
   DatadogTrace: 6d35f3b63de21fcab4a2136542d69c76a7293dac
   DatadogWebViewTracking: 1514fd8ef3cdcb7c0fcb5937d3b8a0d4ea753fd2
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
@@ -1761,16 +1780,16 @@ SPEC CHECKSUMS:
   React-CoreModules: f53e0674e1747fa41c83bc970e82add97b14ad87
   React-cxxreact: 86f3b1692081fd954a0cb27cc90d14674645b64b
   React-debug: 3d21f69d8def0656f8b8ec25c0f05954f4d862c5
-  React-defaultsnativemodule: 2ed121c5a1edeab09cff382b8d9b538260f07848
-  React-domnativemodule: 4393dd5dd7e13dbe42e69ebc791064a616990f91
+  React-defaultsnativemodule: 63cb78c593c87b36eadcc998c1b3ad703633effa
+  React-domnativemodule: 44d361eee205330c7826c619513feac2df9d782c
   React-Fabric: cbf38ceefb1ac6236897abdb538130228e126695
   React-FabricComponents: dd4b01c4a60920d8dc15f3b5594c6fe9e7648a38
   React-FabricImage: 8b13aedfbd20f349b9b3314baf993c71c02995d9
   React-featureflags: ee1abd6f71555604a36cda6476e3c502ca9a48e5
-  React-featureflagsnativemodule: 87b58caf3cd8eca1e53179453789def019af2a65
+  React-featureflagsnativemodule: 59749d488917d6fbffe7c94cb622e2c96a7e9e00
   React-graphics: f5c4cf3abc5aa083e28fe7a866bd95fb3bbbc1e0
   React-hermes: cad69ee9a53870cc38e5386889aa7ea81c75b6a1
-  React-idlecallbacksnativemodule: 445390be0f533797ace18c419eb57110dbfe90d6
+  React-idlecallbacksnativemodule: 0de9d2f5f1214852120cc28ade8fef18436cb5ee
   React-ImageManager: cb78d7a24f45f8f9a5a1640b52fce4c9f637f98d
   React-jserrorhandler: dfe9b96e99a93d4f4858bad66d5bc4813a87a21a
   React-jsi: bc1f6073e203fb540edd6d26f926ad041809b443
@@ -1779,16 +1798,16 @@ SPEC CHECKSUMS:
   React-jsitracing: cac972ccc097db399df8044e49add8e5b25cb34a
   React-logger: 80d87daf2f98bf95ab668b79062c1e0c3f0c2f8a
   React-Mapbuffer: acffb35a53a5f474ede09f082ac609b41aafab2e
-  React-microtasksnativemodule: 71ca9282bce93b319218d75362c0d646b376eb43
+  React-microtasksnativemodule: a397fa9431e377a7e3acacc7be68e4fcc89c3d0e
   React-nativeconfig: 8c83d992b9cc7d75b5abe262069eaeea4349f794
   React-NativeModulesApple: 97f606f09fd9840b3868333984d6a0e7bcc425b5
   React-perflogger: 59e1a3182dca2cee7b9f1f7aab204018d46d1914
   React-performancetimeline: 3e3f5c5576fe1cc2dd5fcfb1ae2046d5dceda3d7
   React-RCTActionSheet: d80e68d3baa163e4012a47c1f42ddd8bcd9672cc
   React-RCTAnimation: 051f0781709c5ed80ba8aa2b421dfb1d72a03162
-  React-RCTAppDelegate: 106d225d076988b06aa4834e68d1ab754f40cacf
+  React-RCTAppDelegate: 6bc8e8a3fc051ea502e5680689c18b061c965ef3
   React-RCTBlob: 895eaf8bca2e76ee1c95b479235c6ccebe586fc6
-  React-RCTFabric: 8d01df202ee9e933f9b5dd44b72ec89a7ac6ee01
+  React-RCTFabric: 8ad8f8ae5be968efab02e95b3471054eb7f2c918
   React-RCTImage: b73149c0cd54b641dba2d6250aaf168fee784d9f
   React-RCTLinking: 23e519712285427e50372fbc6e0265d422abf462
   React-RCTNetwork: a5d06d122588031989115f293654b13353753630
