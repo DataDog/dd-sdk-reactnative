@@ -9,6 +9,7 @@ import type { ErrorHandlerCallback } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdLogs } from '../../logs/DdLogs';
+import { debugId } from '../../metro/debugIdResolver';
 import {
     getErrorMessage,
     getErrorStackTrace,
@@ -145,7 +146,12 @@ export class DdRumErrorTracking {
         context: object = {}
     ): Promise<[void, void]> => {
         return Promise.all([
-            DdRum.addError(message, source, stacktrace, context),
+            DdRum.addError(
+                message,
+                source,
+                stacktrace,
+                DdRumErrorTracking.getErrorContext(context)
+            ),
             DdLogs.error(
                 message,
                 errorName,
@@ -159,5 +165,18 @@ export class DdRumErrorTracking {
                 source
             )
         ]);
+    };
+
+    private static getErrorContext = (
+        originalContext: any
+    ): Record<string, any> => {
+        const _debugId = debugId;
+        if (!_debugId) {
+            return originalContext;
+        }
+        return {
+            ...originalContext,
+            '_dd.debug_id': _debugId
+        };
     };
 }

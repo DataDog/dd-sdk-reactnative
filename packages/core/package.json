@@ -38,6 +38,18 @@
     "react-native": "src/index",
     "source": "src",
     "module": "lib/module/index",
+    "exports": {
+        ".": {
+            "import": "./lib/module/index.js",
+            "require": "./lib/commonjs/index.js",
+            "types": "./lib/typescript/index.d.ts"
+        },
+        "./metro": {
+            "import": "./lib/module/metro.js",
+            "require": "./lib/commonjs/metro.js",
+            "types": "./lib/typescript/metro.d.ts"
+        }
+    },
     "publishConfig": {
         "access": "public"
     },
@@ -58,7 +70,8 @@
     "jest": {
         "preset": "react-native",
         "moduleNameMapper": {
-            "@datadog/mobile-react-native": "<rootDir>../core/src"
+            "@datadog/mobile-react-native": "<rootDir>../core/src",
+            "@datadog/mobile-react-native/metro": "<rootDir>../core/src/metro"
         },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"

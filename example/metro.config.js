@@ -3,6 +3,7 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const pakCore = require('../packages/core/package.json');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withDatadogMetroConfig } = require('@datadog/mobile-react-native/metro');
 
 const root = path.resolve(__dirname, '..');
 
@@ -42,4 +43,4 @@ const config = {
     }
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = withDatadogMetroConfig(mergeConfig(getDefaultConfig(__dirname), config));
