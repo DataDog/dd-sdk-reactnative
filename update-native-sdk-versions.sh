@@ -20,7 +20,60 @@ build_gradle_files=(
     "packages/react-native-session-replay/android/build.gradle"
 )
 
-# Get core package version
+extract_and_validate_version() {
+    local files=("${!1}")
+    local grep_pattern="$2"
+    local sed_expr="$3"
+    local platform_name="$4"
+    local version_var_name="$5"
+
+    local overall_version=""
+
+    for file in "${files[@]}"; do
+        if [ -f "$file" ]; then
+            local version_set=()
+            local line
+            while IFS= read -r line; do
+                local parsed
+                parsed=$(echo "$line" | sed "$sed_expr")
+                if [ -n "$parsed" ]; then
+                    version_set+=("$parsed")
+                fi
+            done < <(grep "$grep_pattern" "$file")
+
+            # Remove duplicates
+            unique_versions=$(printf "%s\n" "${version_set[@]}" | sort -u)
+            version_count=$(printf "%s\n" "${unique_versions}" | wc -l)
+
+            if [ "$version_count" -eq 0 ]; then
+                continue
+            elif [ "$version_count" -gt 1 ]; then
+                echo "Error: Found multiple $platform_name SDK versions in $file:"
+                printf "%s " $unique_versions
+                printf "\nPlease make sure the same SDK version is used."
+                exit 1
+            fi
+
+            extracted_version=$(echo "$unique_versions" | head -n 1)
+
+            if [ -z "$overall_version" ]; then
+                overall_version="$extracted_version"
+            elif [ "$overall_version" != "$extracted_version" ]; then
+                echo "Error: Found different $platform_name SDK versions:"
+                echo "$overall_version and $extracted_version"
+                echo "Please align the versions in all $platform_name files."
+                exit 1
+            fi
+        else
+            echo "Warning: File $file not found"
+        fi
+    done
+
+    eval "$version_var_name=\"$overall_version\""
+}
+
+
+# Get core RN package version
 if [ -f "$core_package_json" ]; then
     core_version=$(grep '"version":' "$core_package_json" | cut -d'"' -f4)
 else
@@ -28,52 +81,11 @@ else
     exit 1
 fi
 
+# Get iOS version
+extract_and_validate_version podspec_files[@] "Datadog.*~>" 's/.*~> \([0-9.]*\).*/\1/' "iOS" ios_version
 
-# Get iOS SDK versions
-for podspec in "${podspec_files[@]}"; do
-    if [ -f "$podspec" ]; then
-        # Look for lines containing both 'Datadog' and '~>' and extract the version number
-        version=$(grep "Datadog.*~>" "$podspec" | sed 's/.*~> \([0-9.]*\).*/\1/' | head -n 1)
-        
-        if [ ! -z "$version" ]; then
-            if [ -z "$ios_version" ]; then
-                ios_version="$version"
-            elif [ "$ios_version" != "$version" ]; then
-                echo "Error: Found different iOS SDK versions: $ios_version and $version"
-                echo "Please align the versions in the podspecs."
-                exit 1
-            fi
-        fi
-    else
-        echo "Warning: File $podspec not found"
-    fi
-done
-
-# Get Android SDK versions
-for gradle in "${build_gradle_files[@]}"; do
-    if [ -f "$gradle" ]; then
-        # Look for lines containing 'com.datadoghq:dd-sdk-android' and extract the version after the last colon
-        version=$(grep "com.datadoghq:dd-sdk-android" "$gradle" | sed 's/.*:\([0-9.]*\).*/\1/' | head -n 1)
-        
-        if [ ! -z "$version" ]; then
-            if [ -z "$android_version" ]; then
-                android_version="$version"
-            elif [ "$android_version" != "$version" ]; then
-                echo "Error: Found different Android SDK versions: $android_version and $version"
-                echo "Please align the versions in the build.gradle files."
-                exit 1
-            fi
-        fi
-
-        android_version="$version"
-    else
-        echo "Warning: File $build_gradle not found"
-    fi
-done
-
-echo "RN SDK version: $core_version"
-echo "iOS SDK version: $ios_version"
-echo "Android SDK version: $android_version"
+# Get Android version
+extract_and_validate_version build_gradle_files[@] "com.datadoghq:dd-sdk-android" 's/.*:\([0-9.]*\).*/\1/' "Android" android_version
 
 # Check if NATIVE_SDK_VERSIONS.md exists, create it otherwise
 if [ ! -f "NATIVE_SDK_VERSIONS.md" ]; then
@@ -89,7 +101,7 @@ if [ ! -z "$core_version" ] && [ ! -z "$ios_version" ] && [ ! -z "$android_versi
     first_version_row=$(sed -n '3p' NATIVE_SDK_VERSIONS.md)
     
     if [ "$first_version_row" = "$new_row" ]; then
-        echo "Version already exists in NATIVE_SDK_VERSIONS.md"
+        echo "Entry for version $core_version already exists in NATIVE_SDK_VERSIONS.md"
     else
         sed -i '' "2a\\
 $new_row\\
