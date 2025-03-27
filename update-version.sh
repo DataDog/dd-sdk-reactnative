@@ -32,5 +32,8 @@ yarn
 (cd ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
 )
 
+# Update NATIVE_SDK_VERSIONS.md
+./update-native-sdk-versions.sh
+
 git add .
 git commit -m "Bump to version $1"
