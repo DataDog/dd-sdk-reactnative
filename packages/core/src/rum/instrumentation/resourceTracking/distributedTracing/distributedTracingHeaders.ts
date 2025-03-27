@@ -101,14 +101,14 @@ export const getTracingHeadersFromAttributes = (
                             version: '00',
                             traceId: tracingAttributes.traceId,
                             parentId: tracingAttributes.spanId,
-                            isSampled: isSampled
+                            isSampled
                         })
                     },
                     {
                         header: TRACESTATE_HEADER_KEY,
                         value: generateTraceStateHeader({
                             parentId: tracingAttributes.spanId,
-                            isSampled: isSampled,
+                            isSampled,
                             rumSessionId: tracingAttributes.rumSessionId
                         })
                     }
