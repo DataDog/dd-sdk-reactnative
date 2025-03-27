@@ -93,7 +93,7 @@ test:native-ios:
   script:
     - yarn
     - (cd example/ios && pod install --repo-update)
-    - set -o pipefail && CODE_SIGNING_REQUIRED=NO && CODE_SIGNING_ALLOWED=NO  && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+    - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
   tags: [ "macos:sonoma", "specific:true" ]
@@ -102,4 +102,4 @@ test:native-ios-sr:
   script:
     - yarn
     - (cd example/ios && pod install --repo-update)
-    - set -o pipefail && CODE_SIGNING_REQUIRED=NO && CODE_SIGNING_ALLOWED=NO && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+    - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
