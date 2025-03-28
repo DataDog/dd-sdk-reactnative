@@ -183,6 +183,7 @@ export class DdSdkReactNative {
 
     /**
      * Set the user information.
+     * @deprecated UserInfo id property is now mandatory (please user setUserInfo instead)
      * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
      * @returns a Promise.
      */
@@ -197,20 +198,51 @@ export class DdSdkReactNative {
     };
 
     /**
+     * Sets the user information.
+     * @param id: A mandatory unique user identifier (relevant to your business domain).
+     * @param name: The user name or alias.
+     * @param email: The user email.
+     * @param extraInfo: Additional information.
+     * @returns a Promise.
+     */
+    static setUserInfo = async (userInfo: {
+        id: string;
+        name?: string;
+        email?: string;
+        extraInfo?: Record<string, unknown>;
+    }): Promise<void> => {
+        InternalLog.log(
+            `Setting user ${JSON.stringify(userInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+
+        await DdSdk.setUserInfo(userInfo);
+        UserInfoSingleton.getInstance().setUserInfo(userInfo);
+    };
+
+    /**
      * Set the user information.
-     * @param extraUserInfo: The extra info object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
+     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
      * @returns a Promise.
      */
     static addUserExtraInfo = async (
-        extraUserInfo: UserInfo
+        extraUserInfo: Record<string, unknown>
     ): Promise<void> => {
         InternalLog.log(
             `Adding extra user info ${JSON.stringify(extraUserInfo)}`,
             SdkVerbosity.DEBUG
         );
+
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
-        const updatedUserInfo = { ...userInfo, ...extraUserInfo };
-        await DdSdk.setUser(updatedUserInfo);
+        const updatedUserInfo = {
+            ...userInfo,
+            extraInfo: {
+                ...userInfo.extraInfo,
+                ...extraUserInfo
+            }
+        };
+
+        await DdSdk.addUserExtraInfo(extraUserInfo);
         UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
     };
 

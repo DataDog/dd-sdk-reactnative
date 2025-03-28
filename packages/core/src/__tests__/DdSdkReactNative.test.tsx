@@ -1048,28 +1048,55 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
             expect(DdSdk.setUser).toHaveBeenCalledWith(user);
-            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(user);
+        });
+    });
+
+    describe('setUserInfo', () => {
+        it('calls SDK method when setUserInfo, and sets the user in UserProvider', async () => {
+            // GIVEN
+            const userInfo = {
                 id: 'id',
-                foo: 'bar'
-            });
+                name: 'name',
+                email: 'email',
+                extraInfo: {
+                    foo: 'bar'
+                }
+            };
+
+            // WHEN
+            await DdSdkReactNative.setUserInfo(userInfo);
+
+            // THEN
+            expect(DdSdk.setUserInfo).toHaveBeenCalledTimes(1);
+            expect(DdSdk.setUserInfo).toHaveBeenCalledWith(userInfo);
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
+                userInfo
+            );
         });
     });
 
     describe('addUserExtraInfo', () => {
         it('calls SDK method when addUserExtraInfo, and updates the user in UserProvider', async () => {
             // GIVEN
-            await DdSdkReactNative.setUser({ id: 'id' });
-            const extraInfo = { id: 'updatedId', foo: 'bar' };
+            await DdSdkReactNative.setUserInfo({
+                id: 'id',
+                extraInfo: { type: 'premium' }
+            });
+            const extraInfo = { foo: 'bar' };
 
             // WHEN
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(DdSdk.setUser).toHaveBeenCalledTimes(2);
-            expect(DdSdk.setUser).toHaveBeenCalledWith(extraInfo);
+            expect(DdSdk.addUserExtraInfo).toHaveBeenCalledTimes(1);
+            expect(DdSdk.addUserExtraInfo).toHaveBeenCalledWith(extraInfo);
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
-                id: 'updatedId',
-                foo: 'bar'
+                id: 'id',
+                extraInfo: {
+                    foo: 'bar',
+                    type: 'premium'
+                }
             });
         });
     });

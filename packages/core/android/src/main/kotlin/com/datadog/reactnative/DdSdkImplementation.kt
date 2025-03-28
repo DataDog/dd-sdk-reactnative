@@ -82,12 +82,49 @@ class DdSdkImplementation(
      * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom
      * attribute).
      */
+    @Deprecated("Use setUserInfo instead; the user ID is now required.")
     fun setUser(user: ReadableMap, promise: Promise) {
         val extraInfo = user.toHashMap().toMutableMap()
         val id = extraInfo.remove("id")?.toString()
         val name = extraInfo.remove("name")?.toString()
         val email = extraInfo.remove("email")?.toString()
-        datadog.setUserInfo(id, name, email, extraInfo)
+        datadog.setUser(id, name, email, extraInfo)
+        promise.resolve(null)
+    }
+
+    /**
+     * Set the user information.
+     * @param userInfo The user object  (use builtin attributes: 'id', 'email', 'name', and any custom
+     * attribute inside 'extraInfo').
+     */
+    fun setUserInfo(userInfo: ReadableMap, promise: Promise) {
+        val userInfoMap = userInfo.toHashMap().toMutableMap()
+        val id = userInfoMap["id"] as? String
+        val name = userInfoMap["name"] as? String
+        val email = userInfoMap["email"] as? String
+        val extraInfo = (userInfoMap["extraInfo"] as? Map<*, *>)?.filterKeys { it is String }
+            ?.mapKeys { it.key as String }
+            ?.mapValues { it.value } ?: emptyMap()
+
+        if (id != null) {
+            datadog.setUserInfo(id, name, email, extraInfo)
+        } else {
+            datadog.setUser(null, name, email, extraInfo)
+        }
+
+        promise.resolve(null)
+    }
+
+    /**
+     * Sets the user information.
+     * @param userExtraInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     */
+    fun addUserExtraInfo(
+        userExtraInfo: ReadableMap, promise: Promise
+    ) {
+        val extraInfoMap = userExtraInfo.toHashMap().toMutableMap()
+
+        datadog.addUserExtraInfo(extraInfoMap)
         promise.resolve(null)
     }
 

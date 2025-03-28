@@ -65,9 +65,28 @@ class DdSdk(
      * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom
      * attribute).
      */
+    @Deprecated("Use setUserInfo instead; the user ID is now required.")
     @ReactMethod
     fun setUser(user: ReadableMap, promise: Promise) {
         implementation.setUser(user, promise)
+    }
+
+    /**
+     * Set the user information.
+     * @param user The user object  (use builtin attributes: 'id', 'email', 'name', and any custom * attribute inside 'extraInfo').
+     */
+    @ReactMethod
+    fun setUserInfo(user: ReadableMap, promise: Promise) {
+        implementation.setUserInfo(user, promise)
+    }
+
+    /**
+     * Sets the user information.
+     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     */
+    @ReactMethod
+    fun addUserExtraInfo(extraInfo: ReadableMap, promise: Promise) {
+        implementation.addUserExtraInfo(extraInfo, promise)
     }
 
     /**
