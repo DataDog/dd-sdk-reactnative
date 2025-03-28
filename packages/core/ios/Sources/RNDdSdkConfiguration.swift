@@ -42,6 +42,7 @@ extension NSDictionary {
         let appHangThreshold = object(forKey: "appHangThreshold") as? Double
         let trackWatchdogTerminations = object(forKey: "trackWatchdogTerminations") as? Bool
         let batchProcessingLevel = object(forKey: "batchProcessingLevel") as? NSString
+        let initialResourceThreshold = object(forKey: "initialResourceThreshold") as? Double
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -73,7 +74,8 @@ extension NSDictionary {
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
-            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel()
+            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
+            initialResourceThreshold: initialResourceThreshold
         )
     }
 
@@ -241,7 +243,8 @@ extension Dictionary where Key == String, Value == AnyObject {
         let appHangThreshold = configuration["appHangThreshold"] as? Double
         let trackWatchdogTerminations = configuration["trackWatchdogTerminations"] as? Bool
         let batchProcessingLevel = configuration["batchProcessingLevel"] as? NSString
-
+        let initialResourceThreshold = configuration["initialResourceThreshold"] as? Double
+        
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
             env: env ?? String(),
@@ -275,7 +278,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
-            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel()
+            batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
+            initialResourceThreshold: initialResourceThreshold
         )
     }
 }

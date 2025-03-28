@@ -61,9 +61,10 @@ export class DdSdkConfiguration {
         readonly bundleLogsWithTraces: boolean,
         readonly trackNonFatalAnrs: boolean | undefined,
         readonly appHangThreshold: number | undefined,
-        readonly resourceTracingSamplingRate: number | undefined,
+        readonly resourceTracingSamplingRate: number,
         readonly trackWatchdogTerminations: boolean | undefined,
-        readonly batchProcessingLevel: BatchProcessingLevel // eslint-disable-next-line no-empty-function
+        readonly batchProcessingLevel: BatchProcessingLevel, // eslint-disable-next-line no-empty-function
+        readonly initialResourceThreshold: number | undefined
     ) {}
 }
 

@@ -315,6 +315,14 @@ export class DdSdkReactNativeConfiguration {
     public appHangThreshold?: number;
 
     /**
+     * The amount of time after a view starts where a Resource should be
+     * considered when calculating Time to Network-Settled (TNS). TNS will be
+     * calculated using all resources that start withing the specified threshold, in seconds.
+     * Defaults to 0.1 seconds.
+     */
+    public initialResourceThreshold?: number;
+
+    /**
      * Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`.
      */
     public trackWatchdogTerminations: boolean =
@@ -460,6 +468,7 @@ export type PartialInitializationConfiguration = {
     readonly bundleLogsWithRum?: boolean;
     readonly bundleLogsWithTraces?: boolean;
     readonly batchProcessingLevel?: BatchProcessingLevel;
+    readonly initialResourceThreshold?: number;
 };
 
 const setConfigurationAttribute = <

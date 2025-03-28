@@ -481,6 +481,29 @@ describe('DdSdkReactNative', () => {
                 ddSdkConfiguration.additionalConfiguration['_dd.version_suffix']
             ).toBeUndefined();
         });
+
+        it('initializes with initialResourceThreshold when it is specified', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.initialResourceThreshold = 0.123;
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    initialResourceThreshold: 0.123
+                })
+            );
+        });
     });
 
     describe('feature enablement', () => {

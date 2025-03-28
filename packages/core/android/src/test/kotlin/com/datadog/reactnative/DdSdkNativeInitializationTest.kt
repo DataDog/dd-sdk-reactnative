@@ -121,6 +121,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.firstPartyHosts?.get("example.com").toString()).isEqualTo(
             "[B3MULTI, TRACECONTEXT]"
         )
+        assertThat(configuration.initialResourceThreshold).isEqualTo(0.5)
     }
 
     @Test
@@ -161,6 +162,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.serviceName).isNull()
         assertThat(configuration.proxyConfig).isNull()
         assertThat(configuration.firstPartyHosts).isNull()
+        assertThat(configuration.initialResourceThreshold).isEqualTo(0.1)
     }
 
     @Test

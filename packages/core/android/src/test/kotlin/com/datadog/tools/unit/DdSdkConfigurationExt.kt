@@ -108,6 +108,12 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         map["batchProcessingLevel"] = BatchProcessingLevel.MEDIUM.toString()
     }
 
+    if (initialResourceThreshold != null) {
+        map.put("initialResourceThreshold", initialResourceThreshold)
+    } else {
+        map.put("initialResourceThreshold", 0.1f)
+    }
+
     return map.toReadableMap()
 }
 

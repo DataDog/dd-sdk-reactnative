@@ -22,6 +22,7 @@ import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
+import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
@@ -42,6 +43,7 @@ import com.facebook.react.bridge.ReadableMap
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.BoolForgery
+import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
 import fr.xgouchet.elmyr.annotation.LongForgery
@@ -52,6 +54,7 @@ import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.util.Locale
 import java.util.stream.Stream
+import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -1781,6 +1784,80 @@ internal class DdSdkTest {
                 frameDurationNs.toDouble()
             )
         }
+    }
+
+    // endregion
+
+    // region initial resource threshold TNS
+
+    @Test
+    fun `𝕄 initialize W initialize() { initialResourceThreshold is null }`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+        val defaultTimeBasedIdentifier = TimeBasedInitialResourceIdentifier(100)
+
+        // When
+        testedBridgeSdk.initialize(configuration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("initialResourceIdentifier", defaultTimeBasedIdentifier)
+            }
+    }
+
+    @Test
+    fun `𝕄 initialize W initialize() { initialResourceThreshold is not null}`(
+        @DoubleForgery(min = 0.1, max = 5.0) thresholdInSeconds: Double,
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val bridgeConfiguration = configuration.copy(
+            initialResourceThreshold = thresholdInSeconds
+        )
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+        val timeBasedIdentifier = TimeBasedInitialResourceIdentifier(
+            thresholdInSeconds.seconds.inWholeMilliseconds
+        )
+
+        // When
+        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+
+        assertThat(rumConfigCaptor.firstValue)
+            .hasField("featureConfiguration") {
+                it.hasFieldEqualTo("initialResourceIdentifier", timeBasedIdentifier)
+            }
     }
 
     // endregion
