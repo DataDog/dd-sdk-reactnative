@@ -1,149 +1,211 @@
+import React, {useEffect} from 'react';
 import {
-  DdSdkReactNativeConfiguration,
-  SdkVerbosity,
-  UploadFrequency,
-  BatchSize,
-  DdSdkReactNative,
-  DdRum,
-  RumActionType,
-  DdLogs,
-  DdTrace,
-} from '@datadog/mobile-react-native';
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  NavigationContainer,
+  NavigationContainerRef,
+} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import SplashScreen from 'react-native-splash-screen';
+import HomeScreen from './src/screens/HomeScreen'; // Your main screen
 
 import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-// @ts-ignore
-import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+  ImagePrivacyLevel,
+  SessionReplay,
+  TextAndInputPrivacyLevel,
+  TouchPrivacyLevel,
+} from '@datadog/mobile-react-native-session-replay';
+import {DatadogProvider, DdSdkReactNative} from '@datadog/mobile-react-native';
+import {DdRumReactNavigationTracking} from '@datadog/mobile-react-navigation';
+import {config} from './datadog';
+import Routes from './src/Routes';
+import {AccentButton} from './src/components/common/AccentButton';
+import {PrimaryButton} from './src/components/common/PrimaryButton';
+import SessionReplaySetupScreen from './src/screens/SetupScreen';
+import PlaygroundScreen from './src/screens/playground/PlaygroundScreen';
+import ButtonsScreen from './src/screens/playground/screens/ButtonsScreen';
+import ColorsScreen from './src/screens/playground/screens/ColorsScreen';
+import DrawerScreen from './src/screens/playground/screens/DrawerScreen';
+import FormsScreen from './src/screens/playground/screens/FormsScreen';
+import ImagesScreen from './src/screens/playground/screens/ImagesScreen';
+import {ShopistCartProductsScreen} from './src/screens/shopist/ShopistCartProductsScreen';
+import {ShopistCategoriesScreen} from './src/screens/shopist/ShopistCategoriesScreen';
+import ShopistLoginScreen from './src/screens/shopist/ShopistLoginScreen';
+import {ShopistProductsScreen} from './src/screens/shopist/ShopistProductsScreen';
+import WebviewScreen from './src/screens/webview/WebviewScreen';
+import BiometricsLoginScreen from './src/screens/BiometricLogin';
 
-(async () => {
-  const config = new DdSdkReactNativeConfiguration(
-    CLIENT_TOKEN,
-    ENVIRONMENT,
-    APPLICATION_ID,
-    true,
-    true,
-    true,
-  );
-  config.sessionSamplingRate = 100;
-  config.verbosity = SdkVerbosity.DEBUG;
-  config.telemetrySampleRate = 100;
-  config.uploadFrequency = UploadFrequency.FREQUENT;
-  config.batchSize = BatchSize.SMALL;
-  await DdSdkReactNative.initialize(config);
-  await DdRum.startView('main', 'Main');
-  setTimeout(async () => {
-    await DdRum.addTiming('one_second');
-  }, 1000);
-  await DdRum.addAction(RumActionType.CUSTOM, 'custom action');
-  await DdLogs.info('info log');
-  const spanId = await DdTrace.startSpan('test span');
-  await DdTrace.finishSpan(spanId);
-})();
+export const onSDKInitialized = async () => {
+  await DdSdkReactNative.setAttributes({
+    textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS, // Defines the way text and input (e.g text fields, checkboxes) should be masked (Default: `MASK_ALL`).
+    imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE, // Defines the way images should be masked (Default: `MASK_ALL`).
+    touchPrivacyLevel: TouchPrivacyLevel.SHOW, // Defines the way user touches (e.g tap) should be masked (Default: `HIDE`).
+  });
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  await SessionReplay.enable({
+    replaySampleRate: 100, // The percentage of sampled replays, in the range 0.0 - 100.0 (Default: 100.0).
+    textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS, // Defines the way text and input (e.g text fields, checkboxes) should be masked (Default: `MASK_ALL`).
+    imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE, // Defines the way images should be masked (Default: `MASK_ALL`).
+    touchPrivacyLevel: TouchPrivacyLevel.SHOW, // Defines the way user touches (e.g tap) should be masked (Default: `HIDE`).
+  });
+};
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+const Stack = createStackNavigator();
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const App = () => {
+  const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  useEffect(() => {
+    const init = async () => {
+      await DdSdkReactNative.initialize(config);
+      await onSDKInitialized();
+      DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+    };
+    init();
+    setTimeout(() => {
+      SplashScreen.hide();
+      console.log('Hiding splash screen');
+    }, 2_000);
+  }, []);
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+    <DatadogProvider configuration={config} onInitialization={onSDKInitialized}>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          DdRumReactNavigationTracking.startTrackingViews(
+            navigationRef.current,
+          );
+        }}>
+        <Stack.Navigator>
+          <Stack.Screen
+            name={Routes.SETUP.id}
+            component={SessionReplaySetupScreen}
+            options={{
+              title: Routes.SETUP.name,
+            }}
+          />
+          <Stack.Screen
+            name={Routes.HOME.id}
+            component={HomeScreen}
+            options={{
+              title: Routes.HOME.name,
+            }}
+          />
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+          <Stack.Screen
+            name={Routes.BIOMETRICS_LOGIN.id}
+            component={BiometricsLoginScreen}
+            options={{
+              title: Routes.BIOMETRICS_LOGIN.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.SHOPIST_LOGIN.id}
+            component={ShopistLoginScreen}
+            options={{
+              title: Routes.SHOPIST_LOGIN.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.SHOPIST_CATEGORIES.id}
+            component={ShopistCategoriesScreen}
+            options={{
+              title: Routes.SHOPIST_CATEGORIES.name,
+              headerRight: () => (
+                <AccentButton
+                  text="CRASH!"
+                  onPress={() => {
+                    // crashNativeMainThread('User forced a native crash');
+                  }}
+                />
+              ),
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.SHOPIST_PRODUCTS.id}
+            component={ShopistProductsScreen}
+            options={{
+              title: Routes.SHOPIST_PRODUCTS.name,
+              headerRight: () => (
+                <PrimaryButton
+                  text="My Cart"
+                  onPress={() => {
+                    navigationRef.current?.navigate(Routes.SHOPIST_CART.id);
+                  }}
+                />
+              ),
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.SHOPIST_CART.id}
+            component={ShopistCartProductsScreen}
+            options={{
+              title: Routes.SHOPIST_CART.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.WEBVIEW.id}
+            component={WebviewScreen}
+            options={{
+              title: Routes.WEBVIEW.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.PLAYGROUND.id}
+            component={PlaygroundScreen}
+            options={{
+              title: Routes.PLAYGROUND.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.PLAYGROUND_COLORS.id}
+            component={ColorsScreen}
+            options={{
+              title: Routes.PLAYGROUND_COLORS.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.PLAYGROUND_BUTTONS.id}
+            component={ButtonsScreen}
+            options={{
+              title: Routes.PLAYGROUND_BUTTONS.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.FORMS.id}
+            component={FormsScreen}
+            options={{
+              title: Routes.FORMS.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.IMAGES.id}
+            component={ImagesScreen}
+            options={{
+              title: Routes.IMAGES.name,
+            }}
+          />
+
+          <Stack.Screen
+            name={Routes.DRAWER.id}
+            component={DrawerScreen}
+            options={{
+              title: Routes.DRAWER.name,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </DatadogProvider>
+  );
+};
 
 export default App;

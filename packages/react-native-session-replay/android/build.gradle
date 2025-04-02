@@ -129,6 +129,7 @@ android {
 
   sourceSets {
     main {
+      java.srcDirs += ["generated/java", "generated/jni"]
       if (isNewArchitectureEnabled()) {
         java.srcDirs += ['src/newarch/kotlin']
       } else {

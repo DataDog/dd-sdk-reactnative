@@ -6,19 +6,25 @@
 
 package com.datadog.reactnative.sessionreplay
 
-import com.facebook.react.TurboReactPackage
+import com.datadog.reactnative.sessionreplay.views.DdViewManager
+import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
+import com.facebook.react.uimanager.ViewManager
 
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DdSDKReactNativeSessionReplayPackage : TurboReactPackage() {
+class DdSDKReactNativeSessionReplayPackage : BaseReactPackage() {
+    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
+        return listOf(DdViewManager(reactContext))
+    }
+
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return when (name) {
-            DdSessionReplayImplementation.NAME -> DdSessionReplay(reactContext)
+            DdSessionReplayImplementation.NAME -> DdSessionReplay(reactContext) as NativeModule
             else -> null
         }
     }
@@ -43,4 +49,5 @@ class DdSDKReactNativeSessionReplayPackage : TurboReactPackage() {
             moduleInfos
         }
     }
+
 }

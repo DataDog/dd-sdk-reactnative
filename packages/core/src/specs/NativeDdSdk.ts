@@ -62,6 +62,13 @@ export interface Spec extends TurboModule {
      * Clears all data that has not already been sent to Datadog servers
      */
     clearAllData(): Promise<void>;
+
+    /**
+     * Required definitions, because of:
+     * https://github.com/react-native-community/RNNewArchitectureLibraries/tree/feat/swift-event-emitter?tab=readme-ov-file#codegen-update-codegen-specs)
+     */
+    addListener: (eventType: string) => void;
+    removeListeners: (count: number) => void;
 }
 
 // eslint-disable-next-line import/no-default-export

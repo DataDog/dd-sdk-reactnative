@@ -42,7 +42,7 @@ import type {
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
-const nativeEventEmitter = new NativeEventEmitter(NativeModules.DdSdk);
+const nativeEventEmitter = new NativeEventEmitter(NativeModules.DdSdk || {});
 
 class DdRumWrapper implements DdRumType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
