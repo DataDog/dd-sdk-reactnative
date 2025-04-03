@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 import type { GestureResponderEvent } from 'react-native';
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -30,6 +29,10 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
+import {
+    getCachedRumSessionId,
+    setCachedRumSessionId
+} from './sessionId/sessionIdHelper';
 import type {
     ErrorSource,
     DdRumType,
@@ -41,11 +44,6 @@ import type {
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
-const nativeEventEmitter =
-    Platform.OS === 'android'
-        ? new NativeEventEmitter()
-        : new NativeEventEmitter(NativeModules.DdSdk);
-
 class DdRumWrapper implements DdRumType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
@@ -56,19 +54,10 @@ class DdRumWrapper implements DdRumType {
     private actionEventMapper = generateActionEventMapper(undefined);
     private timeProvider: TimeProvider = new DefaultTimeProvider();
 
-    private currentRumSessionId: string | null = null;
-
     constructor() {
-        // listen to future events
-        nativeEventEmitter.addListener('RumSessionStarted', (e: Event) => {
-            const field = 'sessionId';
-            const sessionId = e[field as keyof Event] as string | null;
-            this.currentRumSessionId = sessionId;
-        });
-
-        // fetch the current session if any (because we might have missed the first RumSessionStarted event)
+        // Fetch the current session if any (because we might have missed the first RumSessionStarted event)
         this.getCurrentSessionId().then(value => {
-            this.currentRumSessionId = value ?? null;
+            setCachedRumSessionId(value ?? null);
         });
     }
 
@@ -334,11 +323,14 @@ class DdRumWrapper implements DdRumType {
         if (!GlobalState.instance.isInitialized) {
             return undefined;
         }
-        return this.nativeRum.getCurrentSessionId();
+        const sessionId = await this.nativeRum.getCurrentSessionId();
+        setCachedRumSessionId(sessionId ?? null);
+
+        return sessionId;
     }
 
     getCachedSessionId(): string | null {
-        return this.currentRumSessionId;
+        return getCachedRumSessionId();
     }
 
     getTracingContext = (
@@ -350,7 +342,7 @@ class DdRumWrapper implements DdRumType {
             url,
             tracingSamplingRate,
             firstPartyHosts,
-            this.currentRumSessionId
+            getCachedRumSessionId()
         );
     };
 
@@ -361,7 +353,7 @@ class DdRumWrapper implements DdRumType {
         return getTracingContextForPropagators(
             propagators,
             tracingSamplingRate,
-            this.currentRumSessionId
+            getCachedRumSessionId()
         );
     };
 
