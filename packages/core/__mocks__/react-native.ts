@@ -44,7 +44,13 @@ actualRN.NativeModules.DdSdk = {
     ) as jest.MockedFunction<DdNativeSdkType['consumeWebviewEvent']>,
     clearAllData: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdNativeSdkType['clearAllData']>
+    ) as jest.MockedFunction<DdNativeSdkType['clearAllData']>,
+    addListener: jest.fn().mockImplementation((_: string) => {
+        /* empty */
+    }) as jest.MockedFunction<DdNativeSdkType['addListener']>,
+    removeListeners: jest.fn().mockImplementation((_: number) => {
+        /* empty */
+    }) as jest.MockedFunction<DdNativeSdkType['removeListeners']>
 };
 
 actualRN.NativeModules.DdLogs = {
