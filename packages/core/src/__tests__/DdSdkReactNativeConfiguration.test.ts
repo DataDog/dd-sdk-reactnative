@@ -121,7 +121,8 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trace: 'https://trace.example.com/'
                         },
                         bundleLogsWithRum: true,
-                        bundleLogsWithTraces: true
+                        bundleLogsWithTraces: true,
+                        initialResourceThreshold: 0.123
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -147,6 +148,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "firstPartyHosts": [
                     "api.com",
                   ],
+                  "initialResourceThreshold": 0.123,
                   "logEventMapper": [Function],
                   "longTaskThresholdMs": 567,
                   "nativeCrashReportEnabled": true,

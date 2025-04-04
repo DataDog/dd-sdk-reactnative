@@ -241,6 +241,10 @@
                 "trackNonFatalAnrs": {
                     "description": "Enables tracking of non-fatal ANRs on Android.",
                     "type": "boolean"
+                },
+                "initialResourceThreshold" : {
+                    "description": "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)",
+                    "type": "number"
                 }
             },
             "required": [

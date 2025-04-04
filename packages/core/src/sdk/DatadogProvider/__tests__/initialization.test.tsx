@@ -86,6 +86,7 @@ describe('DatadogProvider', () => {
                   "customEndpoints": {},
                   "env": "fakeEnv",
                   "firstPartyHosts": [],
+                  "initialResourceThreshold": undefined,
                   "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
                   "nativeInteractionTracking": false,

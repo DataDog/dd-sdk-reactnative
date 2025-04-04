@@ -58,6 +58,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.proxyConfig?[kCFProxyPasswordKey] as? String, "proxypassword")
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3multi, .tracecontext]]
         XCTAssertEqual(configuration?.firstPartyHosts, expectedFirstPartyHosts)
+        XCTAssertEqual(configuration?.initialResourceThreshold, 0.5)
     }
 
     func testReturnsConfigurationWithMinimalData() {
@@ -93,6 +94,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertNil(configuration?.proxyConfig)
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = [:]
         XCTAssertEqual(configuration?.firstPartyHosts, expectedFirstPartyHosts)
+        XCTAssertEqual(configuration?.initialResourceThreshold, nil)
     }
 
     func testPrintsMessageWithIncorrectFile() {

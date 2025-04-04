@@ -41,6 +41,7 @@ import DatadogRUM
      - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
      - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
      - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
+     - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -74,6 +75,7 @@ public class DdSdkConfiguration: NSObject {
     public var appHangThreshold: Double? = nil
     public var trackWatchdogTerminations: Bool
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
+    public var initialResourceThreshold: Double? = nil
 
     public init(
         clientToken: String,
@@ -105,7 +107,8 @@ public class DdSdkConfiguration: NSObject {
         bundleLogsWithTraces: Bool,
         appHangThreshold: Double?,
         trackWatchdogTerminations: Bool,
-        batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
+        batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
+        initialResourceThreshold: Double?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -137,6 +140,7 @@ public class DdSdkConfiguration: NSObject {
         self.appHangThreshold = appHangThreshold
         self.trackWatchdogTerminations = trackWatchdogTerminations
         self.batchProcessingLevel = batchProcessingLevel
+        self.initialResourceThreshold = initialResourceThreshold
     }
 }
 

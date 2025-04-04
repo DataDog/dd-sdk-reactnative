@@ -21,6 +21,7 @@ import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumSessionListener
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
+import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
@@ -31,6 +32,7 @@ import com.facebook.react.bridge.WritableNativeMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.google.gson.Gson
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Initializes the Android Datadog SDK.
@@ -214,6 +216,11 @@ class DdSdkNativeInitialization internal constructor(
                     }
                 }
         )
+
+        configuration.initialResourceThreshold?.let {
+            val milliseconds = it.seconds.inWholeMilliseconds
+            configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
+        }
 
         return configBuilder.build()
     }

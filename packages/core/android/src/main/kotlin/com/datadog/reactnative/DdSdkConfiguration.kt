@@ -42,6 +42,7 @@ import java.net.Proxy
  * @param bundleLogsWithTraces Enables Traces correlation with logs.
  * @param trackNonFatalAnrs Enables tracking of non-fatal ANRs on Android.
  * @param batchProcessingLevel The preferred number of batches of data that will be sent in a single upload (can be 'LOW', 'MEDIUM' (default), 'HIGH')
+ * @param initialResourceThreshold "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)"
  */
 data class DdSdkConfiguration(
     val clientToken: String,
@@ -71,7 +72,8 @@ data class DdSdkConfiguration(
     val bundleLogsWithRum: Boolean? = null,
     val bundleLogsWithTraces: Boolean? = null,
     val trackNonFatalAnrs: Boolean? = null,
-    val batchProcessingLevel: String? = null
+    val batchProcessingLevel: String? = null,
+    val initialResourceThreshold: Double? = null
 )
 
 internal data class JSONConfigurationFile(
@@ -104,7 +106,8 @@ internal data class JSONDdSdkConfiguration(
     val bundleLogsWithRum: Boolean? = null,
     val bundleLogsWithTraces: Boolean? = null,
     val trackNonFatalAnrs: Boolean? = null,
-    val batchProcessingLevel: String? = null
+    val batchProcessingLevel: String? = null,
+    val initialResourceThreshold: Double? = null
 )
 
 internal data class JSONProxyConfiguration(

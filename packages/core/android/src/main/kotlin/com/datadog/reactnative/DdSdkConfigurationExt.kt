@@ -48,7 +48,8 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
         bundleLogsWithTraces = getBoolean("bundleLogsWithTraces"),
         trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs"),
-        batchProcessingLevel = getString("batchProcessingLevel")
+        batchProcessingLevel = getString("batchProcessingLevel"),
+        initialResourceThreshold = getDouble("initialResourceThreshold")
     )
 }
 
@@ -138,6 +139,7 @@ internal object DefaultConfiguration {
     const val trackBackgroundEvents = false
     const val bundleLogsWithRum = true
     const val bundleLogsWithTraces = true
+    const val initialResourceThreshold = 0.1
 }
 
 @Suppress("ComplexMethod")
@@ -172,7 +174,9 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         this.firstPartyHosts?.asFirstPartyHosts(),
         this.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
         this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces,
-        this.trackNonFatalAnrs
+        this.trackNonFatalAnrs,
+        this.batchProcessingLevel,
+        this.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold
     )
 }
 
@@ -236,6 +240,7 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     trackBackgroundEvents?.let { map.putBoolean("trackBackgroundEvents", it) }
     trackNonFatalAnrs?.let { map.putBoolean("trackNonFatalAnrs", it) }
     additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
+    initialResourceThreshold?.let { map.putDouble("initialResourceThreshold", it)}
     return map
 }
 

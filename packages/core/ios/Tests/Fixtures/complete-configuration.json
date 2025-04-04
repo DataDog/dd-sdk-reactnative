@@ -47,6 +47,7 @@
         "trackFrustrations": false,
         "uploadFrequency": "FREQUENT",
         "version": "2.3.1",
-        "vitalsUpdateFrequency": "NEVER"
+        "vitalsUpdateFrequency": "NEVER",
+        "initialResourceThreshold": 0.5
     }
 }

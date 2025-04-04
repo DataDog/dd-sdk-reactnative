@@ -155,6 +155,11 @@ public class DdSdkNativeInitialization: NSObject {
             eventEmitter?.sendEvent(withName: "RumSessionStarted", body: body)
         }
         
+        var networkSettledResourcePredicate: TimeBasedTNSResourcePredicate? = nil
+        if let initialResourceThreshold = configuration.initialResourceThreshold as TimeInterval? {
+            networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(threshold: initialResourceThreshold)
+        }
+        
         return RUM.Configuration(
             applicationID: configuration.applicationId,
             sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.sessionSamplingRate),
@@ -167,6 +172,7 @@ public class DdSdkNativeInitialization: NSObject {
             appHangThreshold: configuration.appHangThreshold,
             trackWatchdogTerminations: configuration.trackWatchdogTerminations,
             vitalsUpdateFrequency: configuration.vitalsUpdateFrequency,
+            networkSettledResourcePredicate: networkSettledResourcePredicate ?? TimeBasedTNSResourcePredicate(),
             resourceEventMapper: { resourceEvent in
                 if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
                     return nil
