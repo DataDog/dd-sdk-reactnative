@@ -64,7 +64,7 @@ internal class LegacyTextViewUtils(
         }
         val resolvedColor =
             shadowNodeWrapper
-                .getDeclaredShadowNodeField(COLOR_FIELD_NAME) as Int?
+                .getDeclaredShadowNodeField(COLOR_FIELD_NAME) as? Int
         if (resolvedColor != null) {
             return formatAsRgba(resolvedColor)
         }
@@ -115,4 +115,3 @@ internal class LegacyTextViewUtils(
         }
     }
 }
-
