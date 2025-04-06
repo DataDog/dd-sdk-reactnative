@@ -43,7 +43,7 @@ internal class ReactViewBackgroundDrawableUtils : DrawableUtils() {
     @OptIn(UnstableReactNativeAPI::class)
     override fun getReactBackgroundFromDrawable(drawable: Drawable?): Drawable? {
         return when(drawable) {
-            is ReactViewBackgroundDrawable -> drawable
+            is CSSBackgroundDrawable -> drawable
             is InsetDrawable -> getReactBackgroundFromDrawable(drawable.drawable)
             is LayerDrawable -> getDrawableFromLayerDrawable(drawable)
             else -> null
@@ -54,7 +54,7 @@ internal class ReactViewBackgroundDrawableUtils : DrawableUtils() {
     private fun getDrawableFromLayerDrawable(layerDrawable: LayerDrawable): Drawable? {
         for (layerNumber in 0 until layerDrawable.numberOfLayers) {
             val layer = layerDrawable.getDrawable(layerNumber)
-            if (layer is ReactViewBackgroundDrawable) {
+            if (layer is CSSBackgroundDrawable) {
                 return layer
             }
         }
