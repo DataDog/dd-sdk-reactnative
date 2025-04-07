@@ -77,7 +77,12 @@ export const generateTracingAttributesWithSampling = (
     }
 
     const traceId = TracingIdentifier.createTraceId();
-    const hash = Number(traceId.id.multiply(knuthFactor).remainder(twoPow64));
+    // for a UUID with value aaaaaaaa-bbbb-Mccc-Nddd-1234567890ab
+    // we use as the input id the last part : 0x1234567890ab
+    const baseId = rumSessionId
+        ? BigInt(rumSessionId.split('-')[4], 16)
+        : traceId.id;
+    const hash = Number(baseId.multiply(knuthFactor).remainder(twoPow64));
     const threshold = (tracingSamplingRate / 100) * Number(twoPow64);
     const isSampled = hash <= threshold;
 
