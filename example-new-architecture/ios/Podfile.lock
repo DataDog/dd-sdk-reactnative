@@ -1,28 +1,28 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (2.24.1):
-    - DatadogInternal (= 2.24.1)
-  - DatadogCrashReporting (2.24.1):
-    - DatadogInternal (= 2.24.1)
+  - DatadogCore (2.25.0):
+    - DatadogInternal (= 2.25.0)
+  - DatadogCrashReporting (2.25.0):
+    - DatadogInternal (= 2.25.0)
     - PLCrashReporter (~> 1.12.0)
-  - DatadogInternal (2.24.1)
-  - DatadogLogs (2.24.1):
-    - DatadogInternal (= 2.24.1)
-  - DatadogRUM (2.24.1):
-    - DatadogInternal (= 2.24.1)
+  - DatadogInternal (2.25.0)
+  - DatadogLogs (2.25.0):
+    - DatadogInternal (= 2.25.0)
+  - DatadogRUM (2.25.0):
+    - DatadogInternal (= 2.25.0)
   - DatadogSDKReactNative (2.6.4):
-    - DatadogCore (~> 2.24.1)
-    - DatadogCrashReporting (~> 2.24.1)
-    - DatadogLogs (~> 2.24.1)
-    - DatadogRUM (~> 2.24.1)
-    - DatadogTrace (~> 2.24.1)
-    - DatadogWebViewTracking (~> 2.24.1)
+    - DatadogCore (~> 2.25.0)
+    - DatadogCrashReporting (~> 2.25.0)
+    - DatadogLogs (~> 2.25.0)
+    - DatadogRUM (~> 2.25.0)
+    - DatadogTrace (~> 2.25.0)
+    - DatadogWebViewTracking (~> 2.25.0)
     - React-Core
-  - DatadogTrace (2.24.1):
-    - DatadogInternal (= 2.24.1)
+  - DatadogTrace (2.25.0):
+    - DatadogInternal (= 2.25.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (2.24.1):
-    - DatadogInternal (= 2.24.1)
+  - DatadogWebViewTracking (2.25.0):
+    - DatadogInternal (= 2.25.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.75.4)
   - fmt (9.1.0)
@@ -1736,14 +1736,14 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 4cb898d0bf20404aab1850c656dcea009429d6c1
-  DatadogCore: 60c460662aff13e4030902fa43c5933c0774cdb2
-  DatadogCrashReporting: d9daa7d8a2577dc35d2e4247d6bd927b39cb5d39
-  DatadogInternal: a514ba01c9eb99dbe1ddd4452e218706bb0ddc2b
-  DatadogLogs: 9352c58e4ab4a88f0ed7c20f27dc8d24442acc5e
-  DatadogRUM: ab979c800d3fb7d7b2ff364a11d137b6a4be6831
-  DatadogSDKReactNative: 25d1ef8cf3b8a9d5f1d2ceb311460ba99515f881
-  DatadogTrace: 23df8545911d219d4c15446a4c6c04862ff76175
-  DatadogWebViewTracking: e88b8057eb5ff06a68baf232ae37637b8bb7518b
+  DatadogCore: a068d264191f687d00125aafa8042110cf886cd7
+  DatadogCrashReporting: b19d80a98b1eb51bdb3ec5b1a7f339769fb70b95
+  DatadogInternal: e9b6cef84448ee32f73bc9b37646708a65c1b8ae
+  DatadogLogs: 623d89158ef3a4a7545a8fbce9afa4cedc576324
+  DatadogRUM: ff0661b42124d90c9ff2538c3cc1b806ddf7620c
+  DatadogSDKReactNative: 3b735c9063678aa9d7775a8a0302e7ff04af1611
+  DatadogTrace: 4e1aac322eafd8568fd4a966b02e58fbb5af0612
+  DatadogWebViewTracking: 3b2465b5a5bf10f187807e490678a2e0a3c2daae
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: 430e10366de01d1e3d57374500b1b150fe482e6d
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
