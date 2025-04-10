@@ -85,6 +85,8 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProx
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts.map
+package/lib/typescript/core/src/rum/sessionId/sessionIdHelper.d.ts
+package/lib/typescript/core/src/rum/sessionId/sessionIdHelper.d.ts.map
 package/lib/typescript/core/src/rum/types.d.ts
 package/lib/typescript/core/src/rum/types.d.ts.map
 package/lib/typescript/core/src/sdk/AttributesSingleton/AttributesSingleton.d.ts
@@ -105,6 +107,8 @@ package/lib/typescript/core/src/sdk/DatadogProvider/DatadogProvider.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/DatadogProvider.d.ts.map
 package/lib/typescript/core/src/sdk/DdSdk.d.ts
 package/lib/typescript/core/src/sdk/DdSdk.d.ts.map
+package/lib/typescript/core/src/sdk/EventEmitter/EventEmitter.d.ts
+package/lib/typescript/core/src/sdk/EventEmitter/EventEmitter.d.ts.map
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts.map
 package/lib/typescript/core/src/sdk/EventMappers/utils/deepClone.d.ts

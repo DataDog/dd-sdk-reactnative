@@ -168,6 +168,8 @@ package/lib/commonjs/rum/instrumentation/resourceTracking/requestProxy/interface
 package/lib/commonjs/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.js.map
 package/lib/commonjs/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.js
 package/lib/commonjs/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.js.map
+package/lib/commonjs/rum/sessionId/sessionIdHelper.js
+package/lib/commonjs/rum/sessionId/sessionIdHelper.js.map
 package/lib/commonjs/rum/types.js
 package/lib/commonjs/rum/types.js.map
 package/lib/commonjs/sdk/AttributesSingleton/AttributesSingleton.js
@@ -188,6 +190,8 @@ package/lib/commonjs/sdk/DatadogProvider/DatadogProvider.js
 package/lib/commonjs/sdk/DatadogProvider/DatadogProvider.js.map
 package/lib/commonjs/sdk/DdSdk.js
 package/lib/commonjs/sdk/DdSdk.js.map
+package/lib/commonjs/sdk/EventEmitter/EventEmitter.js
+package/lib/commonjs/sdk/EventEmitter/EventEmitter.js.map
 package/lib/commonjs/sdk/EventMappers/EventMapper.js
 package/lib/commonjs/sdk/EventMappers/EventMapper.js.map
 package/lib/commonjs/sdk/EventMappers/utils/deepClone.js
@@ -306,6 +310,8 @@ package/lib/module/rum/instrumentation/resourceTracking/requestProxy/interfaces/
 package/lib/module/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.js.map
 package/lib/module/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.js
 package/lib/module/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.js.map
+package/lib/module/rum/sessionId/sessionIdHelper.js
+package/lib/module/rum/sessionId/sessionIdHelper.js.map
 package/lib/module/rum/types.js
 package/lib/module/rum/types.js.map
 package/lib/module/sdk/AttributesSingleton/AttributesSingleton.js
@@ -326,6 +332,8 @@ package/lib/module/sdk/DatadogProvider/DatadogProvider.js
 package/lib/module/sdk/DatadogProvider/DatadogProvider.js.map
 package/lib/module/sdk/DdSdk.js
 package/lib/module/sdk/DdSdk.js.map
+package/lib/module/sdk/EventEmitter/EventEmitter.js
+package/lib/module/sdk/EventEmitter/EventEmitter.js.map
 package/lib/module/sdk/EventMappers/EventMapper.js
 package/lib/module/sdk/EventMappers/EventMapper.js.map
 package/lib/module/sdk/EventMappers/utils/deepClone.js
@@ -444,6 +452,8 @@ package/lib/typescript/rum/instrumentation/resourceTracking/requestProxy/interfa
 package/lib/typescript/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.d.ts.map
 package/lib/typescript/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts
 package/lib/typescript/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts.map
+package/lib/typescript/rum/sessionId/sessionIdHelper.d.ts
+package/lib/typescript/rum/sessionId/sessionIdHelper.d.ts.map
 package/lib/typescript/rum/types.d.ts
 package/lib/typescript/rum/types.d.ts.map
 package/lib/typescript/sdk/AttributesSingleton/AttributesSingleton.d.ts
@@ -464,6 +474,8 @@ package/lib/typescript/sdk/DatadogProvider/DatadogProvider.d.ts
 package/lib/typescript/sdk/DatadogProvider/DatadogProvider.d.ts.map
 package/lib/typescript/sdk/DdSdk.d.ts
 package/lib/typescript/sdk/DdSdk.d.ts.map
+package/lib/typescript/sdk/EventEmitter/EventEmitter.d.ts
+package/lib/typescript/sdk/EventEmitter/EventEmitter.d.ts.map
 package/lib/typescript/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/sdk/EventMappers/EventMapper.d.ts.map
 package/lib/typescript/sdk/EventMappers/utils/deepClone.d.ts
@@ -571,6 +583,8 @@ package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/__tests__
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/responseSize.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.ts
+package/src/rum/sessionId/__tests__/sessionIdHelper.test.ts
+package/src/rum/sessionId/sessionIdHelper.ts
 package/src/rum/types.ts
 package/src/sdk/AttributesSingleton/AttributesSingleton.ts
 package/src/sdk/AttributesSingleton/__tests__/AttributesSingleton.test.ts
@@ -587,6 +601,8 @@ package/src/sdk/DatadogProvider/__tests__/__utils__/renderWithProvider.tsx
 package/src/sdk/DatadogProvider/__tests__/initialization.test.tsx
 package/src/sdk/DatadogProvider/__tests__/initializationModes.test.tsx
 package/src/sdk/DdSdk.ts
+package/src/sdk/EventEmitter/EventEmitter.ts
+package/src/sdk/EventEmitter/__tests__/EventEmitter.test.ts
 package/src/sdk/EventMappers/EventMapper.ts
 package/src/sdk/EventMappers/__tests__/EventMapper.test.ts
 package/src/sdk/EventMappers/utils/__tests__/deepClone.test.ts
