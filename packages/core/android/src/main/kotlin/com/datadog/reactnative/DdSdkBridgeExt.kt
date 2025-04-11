@@ -230,3 +230,15 @@ internal fun ReadableMap.getBooleanOrNull(key: String): Boolean? {
         null
     }
 }
+
+/**
+ * Returns the double for the given key, or null if the entry is
+ * not in the map.
+ */
+internal fun ReadableMap.getDoubleOrNull(key: String): Double? {
+    return if (hasKey(key)) {
+        getDouble(key)
+    } else {
+        null
+    }
+}

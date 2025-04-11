@@ -49,7 +49,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         bundleLogsWithTraces = getBoolean("bundleLogsWithTraces"),
         trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs"),
         batchProcessingLevel = getString("batchProcessingLevel"),
-        initialResourceThreshold = getDouble("initialResourceThreshold")
+        initialResourceThreshold = getDoubleOrNull("initialResourceThreshold")
     )
 }
 
