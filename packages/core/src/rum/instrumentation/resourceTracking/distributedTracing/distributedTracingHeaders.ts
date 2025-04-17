@@ -28,13 +28,14 @@ export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const TAGS_HEADER_KEY = 'x-datadog-tags';
 export const DD_TRACE_ID_TAG = '_dd.p.tid';
-export const DD_RUM_SESSION_ID_TAG = '_dd.p.rsid';
+export const DD_RUM_SESSION_ID_TAG = 'session.id';
 
 /**
  * OTel headers
  */
 export const TRACECONTEXT_HEADER_KEY = 'traceparent';
 export const TRACESTATE_HEADER_KEY = 'tracestate';
+export const BAGGAGE_HEADER_KEY = 'baggage';
 export const B3_HEADER_KEY = 'b3';
 export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
 export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
@@ -72,23 +73,12 @@ export const getTracingHeadersFromAttributes = (
                         )
                     }
                 );
-                if (tracingAttributes.rumSessionId) {
-                    headers.push({
-                        header: TAGS_HEADER_KEY,
-                        value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
-                            TracingIdFormat.paddedHighHex
-                        )},${DD_RUM_SESSION_ID_TAG}=${
-                            tracingAttributes.rumSessionId
-                        }`
-                    });
-                } else {
-                    headers.push({
-                        header: TAGS_HEADER_KEY,
-                        value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
-                            TracingIdFormat.paddedHighHex
-                        )}`
-                    });
-                }
+                headers.push({
+                    header: TAGS_HEADER_KEY,
+                    value: `${DD_TRACE_ID_TAG}=${tracingAttributes.traceId.toString(
+                        TracingIdFormat.paddedHighHex
+                    )}`
+                });
                 break;
             }
             case PropagatorType.TRACECONTEXT: {
@@ -108,8 +98,7 @@ export const getTracingHeadersFromAttributes = (
                         header: TRACESTATE_HEADER_KEY,
                         value: generateTraceStateHeader({
                             parentId: tracingAttributes.spanId,
-                            isSampled,
-                            rumSessionId: tracingAttributes.rumSessionId
+                            isSampled
                         })
                     }
                 );
@@ -147,6 +136,12 @@ export const getTracingHeadersFromAttributes = (
                     }
                 );
             }
+        }
+        if (tracingAttributes.rumSessionId) {
+            headers.push({
+                header: BAGGAGE_HEADER_KEY,
+                value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
+            });
         }
     });
 
@@ -241,23 +236,15 @@ const generateTraceContextHeader = ({
 
 const generateTraceStateHeader = ({
     parentId,
-    isSampled,
-    rumSessionId
+    isSampled
 }: {
     parentId: SpanId;
     isSampled: boolean;
-    rumSessionId: string | null;
 }) => {
     const sampled = `s:${isSampled ? '1' : '0'}`;
     const origin = 'o:rum';
     const parent = `p:${parentId.toString(TracingIdFormat.paddedHex)}`;
-    const baseHeaderValue = `dd=${sampled};${origin};${parent}`;
-    if (rumSessionId) {
-        const session = `t.rsid:${rumSessionId}`;
-        return `${baseHeaderValue};${session}`;
-    } else {
-        return baseHeaderValue;
-    }
+    return `dd=${sampled};${origin};${parent}`;
 };
 
 const generateB3Header = ({
