@@ -12,7 +12,7 @@ import {
     TouchPrivacyLevel,
     TextAndInputPrivacyLevel
 } from './SessionReplay';
-import View from './specs/DdViewNativeComponent';
+import View from './components/DdView';
 
 export {
     SessionReplay,

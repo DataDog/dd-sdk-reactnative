@@ -18,6 +18,13 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
   s.dependency "React-Core"
 
+
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.dependency "React-RCTText"
+    test_spec.source_files = 'ios/Tests/*.swift'
+    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+  end
+
   s.source_files = [
     "ios/Sources/**/*.{h,m,mm,swift}",
     "cpp/**/*.{cpp,mm}"

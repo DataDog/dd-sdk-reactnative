@@ -18,6 +18,9 @@ using namespace facebook::react;
 @interface DdViewFabric : RCTViewComponentView <RCTDdViewViewProtocol>
 @end
 
+@implementation DdViewWrapper
+@end
+
 @implementation DdViewFabric {
     UIView * _view;
 }

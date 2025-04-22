@@ -1,6 +1,5 @@
 package com.datadog.reactnative.sessionreplay.views
 
-import com.datadog.reactnative.sessionreplay.R
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
@@ -27,7 +26,7 @@ class DdViewManager(context: ReactApplicationContext): ViewGroupManager<DdView>(
         view?.let { view.hide = value }
     }
 
-    @ReactProp(name = "textPrivacy")
+    @ReactProp(name = "textAndInputPrivacy")
     override fun setTextAndInputPrivacy(view: DdView?, value: String?) {
         view?.let { view.textAndInputPrivacy = value }
     }

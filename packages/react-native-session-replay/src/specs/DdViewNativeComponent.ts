@@ -1,13 +1,13 @@
-import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
-import type { HostComponent, ViewProps } from 'react-native';
+/* eslint-disable @typescript-eslint/no-var-requires */
+import { UIManager } from 'react-native';
 
-interface DdViewProps extends ViewProps {
-    textAndInputPrivacy: string;
-    imagePrivacy: string;
-    touchPrivacy: string;
-    hide: boolean;
-}
+const isNewArch = UIManager.getViewManagerConfig?.('DdView') === undefined;
 
-export default codegenNativeComponent<DdViewProps>(
-    'DdView'
-) as HostComponent<DdViewProps>;
+console.log('Is new arch enabled ? ', isNewArch);
+console.log('Old arch view: ', UIManager.getViewManagerConfig?.('DdView'));
+
+const NativeComponent = isNewArch
+    ? require('./DdViewFabric').default
+    : require('./DdViewPaper').default;
+
+export default NativeComponent;
