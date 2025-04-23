@@ -91,4 +91,4 @@ export type DatadogDebugIdModule = Module<MetroVirtualModuleOutput> & {
     setSource: (code: string) => void;
 };
 
-export type { MixedOutput, MetroConfig, Module };
+export type { MixedOutput, MetroConfig, Module, ReadOnlyGraph };

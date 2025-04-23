@@ -3,6 +3,12 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-import { withDatadogMetroConfig } from './metro/plugin/metroConfig';
+import {
+    withDatadogMetroConfig,
+    getDatadogExpoConfig
+} from './metro/plugin/metroConfig';
+import type { DatadogMetroConfigOptions } from './metro/plugin/metroConfig';
+import type { DatadogExpoConfigOptions } from './metro/plugin/types/expoTypes';
 
-export { withDatadogMetroConfig };
+export { withDatadogMetroConfig, getDatadogExpoConfig };
+export type { DatadogMetroConfigOptions, DatadogExpoConfigOptions };

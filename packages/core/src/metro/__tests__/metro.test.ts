@@ -12,7 +12,7 @@ import {
     _isDebugIdInBundle
 } from '../plugin/debugIdHelper';
 import { createDatadogMetroSerializer } from '../plugin/metroSerializer';
-import type { MetroSerializerOutput } from '../plugin/metroTypes';
+import type { MetroSerializerOutput } from '../plugin/types/metroTypes';
 import { convertSerializerOutput } from '../plugin/utils';
 
 import {
@@ -49,7 +49,7 @@ describe('Datadog Metro Plugin', () => {
                 `${expectedCode}\n//# debugId=${expectedDebugId}`
             );
 
-            const expectedMap = `{"version":3,"sources":["__datadog_debugid__"],"sourcesContent":["var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]=\\"${expectedDebugId}\\",_datadogDebugIdMeta=\\"datadog-debug-id-${expectedDebugId}\\")}catch(e){}"],"names":[],"mappings":"","debug_id":"${expectedDebugId}","debugId":"${expectedDebugId}"}`;
+            const expectedMap = `{"version":3,"sources":["__datadog_debugid__"],"sourcesContent":["var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]=\\"${expectedDebugId}\\",_datadogDebugIdMeta=\\"datadog-debug-id-${expectedDebugId}\\")}catch(e){}"],"names":[],"mappings":"","debugId":"${expectedDebugId}"}`;
             expect(bundle.map).toEqual(expectedMap);
         });
 
@@ -83,7 +83,7 @@ describe('Datadog Metro Plugin', () => {
 
             expect(bundle.code).toEqual(expectedCode);
 
-            const expectedMap = `{"version":3,"sources":["__datadog_debugid__","index.js"],"sourcesContent":["var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]=\\"${expectedDebugId}\\",_datadogDebugIdMeta=\\"datadog-debug-id-${expectedDebugId}\\")}catch(e){}","//# sourceMappingURL=index.android.bundle.map"],"names":[],"mappings":"","debug_id":"${expectedDebugId}","debugId":"${expectedDebugId}"}`;
+            const expectedMap = `{"version":3,"sources":["__datadog_debugid__","index.js"],"sourcesContent":["var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]=\\"${expectedDebugId}\\",_datadogDebugIdMeta=\\"datadog-debug-id-${expectedDebugId}\\")}catch(e){}","//# sourceMappingURL=index.android.bundle.map"],"names":[],"mappings":"","debugId":"${expectedDebugId}"}`;
             expect(bundle.map).toEqual(expectedMap);
         });
     });
@@ -260,7 +260,9 @@ describe('Datadog Metro Plugin', () => {
         test('M _isDebugIdInBundle returns true if the debug ID is different from provided and prints warning', () => {
             const warnSpy = jest
                 .spyOn(console, 'warn')
-                .mockImplementation(() => {});
+                .mockImplementation(() => {
+                    /* empty */
+                });
 
             // GIVEN
             const mockCode = [

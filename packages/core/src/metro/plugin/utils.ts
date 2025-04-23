@@ -10,11 +10,12 @@ import sourceMapString from 'metro/src/DeltaBundler/Serializers/sourceMapString'
 import type CountingSet from 'metro/src/lib/CountingSet';
 import type { ReadOnlyGraph, Module, MixedOutput } from 'metro';
 
+import type { DefaultConfigOptions } from './types/expoTypes';
 import type {
     MetroSerializerOutput,
     MetroBundleWithMap,
     SourceMapString
-} from './metroTypes';
+} from './types/metroTypes';
 
 /**
  * Lazy-init reference for {@link createCountingSet} resolved function.
@@ -25,6 +26,16 @@ let createCountingSetFunc: (() => CountingSet<string>) | undefined;
  * Lazy-init reference for {@link metroSourceMapString} resolved function.
  */
 let sourceMapStringFunc: SourceMapString | undefined;
+
+/**
+ * Lazy-init reference for {@link getDefaultExpoConfig} resolved function.
+ */
+let getDefaultExpoConfigFunc:
+    | ((
+          projectRoot: string,
+          options: DefaultConfigOptions
+      ) => DefaultConfigOptions)
+    | undefined;
 
 /**
  * This function ensures that modules in source maps are sorted in the same
@@ -139,5 +150,28 @@ export const convertSerializerOutput = async (
         return parse(await output) ?? { code: '', map: '{}' };
     } else {
         return value;
+    }
+};
+
+/**
+ * Gets the default Expo configuration options.
+ */
+export const getDefaultExpoConfig = (
+    projectRoot: string,
+    options: DefaultConfigOptions
+): DefaultConfigOptions => {
+    if (!getDefaultExpoConfigFunc) {
+        try {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const metroConfig = require('expo/metro-config');
+            getDefaultExpoConfigFunc = metroConfig.getDefaultConfig;
+            return metroConfig.getDefaultConfig(projectRoot, options);
+        } catch (e) {
+            throw new Error(
+                'Cannot load `expo/metro-config`. Make sure Expo is properly set up in your project.'
+            );
+        }
+    } else {
+        return getDefaultExpoConfigFunc(projectRoot, options);
     }
 };

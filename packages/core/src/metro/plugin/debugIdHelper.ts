@@ -3,7 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  *
- * Aligned with the architecture of Sentry’s Metro config:
+ * Portions of this code are adapted from Sentry's Metro configuration:
  * https://github.com/getsentry/sentry-react-native/blob/17c0c2e8913030e4826d055284a735efad637312/packages/core/src/js/tools/sentryMetroSerializer.ts
  */
 
@@ -17,7 +17,7 @@ import type {
     Module,
     MetroBundleWithMap,
     DatadogDebugIdModule
-} from './metroTypes';
+} from './types/metroTypes';
 import { createCountingSet } from './utils';
 
 /**
@@ -213,7 +213,6 @@ export const injectDebugIdInCodeAndSourceMap = (
 
     // Insert the Debug ID as a top-level property of the sourcemap
     const bundleMap: Record<string, unknown> = JSON.parse(sourcemap);
-    bundleMap['debug_id'] = debugId;
     bundleMap['debugId'] = debugId;
     return { code: codeWithDebugId, map: JSON.stringify(bundleMap) };
 };
@@ -238,6 +237,16 @@ export const _isDebugIdInBundle = (
 
     return true;
 };
+
+/**
+ * Checks if the virtual Debug ID module exists in the given modules.
+ * @param modules - The list of modules in which to look for the Debug ID.
+ * @returns `true` if the Debug ID module exists, `false` otherwise.
+ */
+export const checkIfDebugIdModuleExists = (
+    modules: readonly Module[]
+): boolean =>
+    modules.findIndex(module => module.path === DEBUG_ID_MODULE_PATH) !== -1;
 
 /**
  * [INTERNAL] Replaces the existing Debug ID comment in the bundle with a new one, containing the given Debug ID.

@@ -5,8 +5,16 @@
  */
 import type { MetroConfig } from 'metro';
 
-import { createDatadogMetroSerializer } from './metroSerializer';
-import type { DatadogMetroSerializer } from './metroTypes';
+import {
+    createDatadogMetroSerializer,
+    unstable_beforeAssetSerializationPlugin
+} from './metroSerializer';
+import type {
+    DatadogExpoConfigOptions,
+    DefaultConfigOptions
+} from './types/expoTypes';
+import type { DatadogMetroSerializer } from './types/metroTypes';
+import { getDefaultExpoConfig } from './utils';
 
 /**
  * Custom Datadog Metro Configuration.
@@ -44,6 +52,30 @@ export function withDatadogMetroConfig(
             ...newConfig.transformer
         }
     };
+}
+
+/**
+ * Extends the Expo configuration to integrate with Datadog.
+ * @param config
+ * @returns
+ */
+export function getDatadogExpoConfig(
+    projectRoot: string,
+    options: DefaultConfigOptions & DatadogExpoConfigOptions = {}
+): DefaultConfigOptions {
+    const plugins = options.unstable_beforeAssetSerializationPlugins ?? [];
+    const datadogOptions: DefaultConfigOptions = {
+        ...options,
+        unstable_beforeAssetSerializationPlugins: [
+            ...plugins,
+            unstable_beforeAssetSerializationPlugin
+        ]
+    };
+
+    return (options.getDefaultConfig ?? getDefaultExpoConfig)(
+        projectRoot,
+        datadogOptions
+    );
 }
 
 /**

@@ -12,7 +12,7 @@ import type {
     MixedOutput,
     Module,
     MetroVirtualModuleOutput
-} from '../../plugin/metroTypes';
+} from '../../plugin/types/metroTypes';
 import { createCountingSet } from '../../plugin/utils';
 
 export const mockSerializerArgsForEmptyModule = (): Parameters<MetroSerializer> => {

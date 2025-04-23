@@ -3,7 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  *
- * Aligned with the architecture of Sentry’s Metro config:
+ * Portions of this code are adapted from Sentry's Metro configuration:
  * https://github.com/getsentry/sentry-react-native/blob/17c0c2e8913030e4826d055284a735efad637312/packages/core/src/js/tools/sentryMetroSerializer.ts
  */
 
@@ -13,9 +13,9 @@ import baseJSBundle from 'metro/src/DeltaBundler/Serializers/baseJSBundle';
 import bundleToString from 'metro/src/lib/bundleToString';
 
 import {
-    DEBUG_ID_MODULE_PATH,
     DEBUG_ID_PLACEHOLDER,
     addDebugIdModule,
+    checkIfDebugIdModuleExists,
     createDebugIdFromBundle,
     createDebugIdModule,
     getDebugIdFromBundleSource,
@@ -26,8 +26,11 @@ import type {
     Bundle,
     DatadogDebugIdModule,
     DatadogMetroSerializer,
-    MetroSerializer
-} from './metroTypes';
+    MetroSerializer,
+    MixedOutput,
+    Module,
+    ReadOnlyGraph
+} from './types/metroTypes';
 import {
     convertSerializerOutput as getMetroBundleWithMap,
     getSortedModules,
@@ -52,11 +55,7 @@ export const createDatadogMetroSerializer = (
         }
 
         // Make sure we don't add the Debug ID module twice
-        const debugIdModuleExists =
-            preModules.findIndex(
-                module => module.path === DEBUG_ID_MODULE_PATH
-            ) !== -1;
-        if (debugIdModuleExists) {
+        if (checkIfDebugIdModuleExists(preModules)) {
             return serializer(entryPoint, preModules, graph, options);
         }
 
@@ -155,3 +154,20 @@ export const createDatadogBundleCallback = (
         return bundle;
     };
 };
+
+/**
+ * Adds Debug ID module for runtime injection, used for Expo.
+ */
+export function unstable_beforeAssetSerializationPlugin({
+    premodules,
+    debugId
+}: {
+    graph: ReadOnlyGraph<MixedOutput>;
+    premodules: Module[];
+    debugId?: string;
+}): Module[] {
+    if (!debugId || checkIfDebugIdModuleExists(premodules)) {
+        return premodules;
+    }
+    return [...addDebugIdModule(premodules, createDebugIdModule(debugId))];
+}
