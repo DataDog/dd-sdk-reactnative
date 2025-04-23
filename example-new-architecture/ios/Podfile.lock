@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.25.0)
   - DatadogRUM (2.25.0):
     - DatadogInternal (= 2.25.0)
-  - DatadogSDKReactNative (2.6.6):
+  - DatadogSDKReactNative (2.6.7):
     - DatadogCore (~> 2.25.0)
     - DatadogCrashReporting (~> 2.25.0)
     - DatadogLogs (~> 2.25.0)
@@ -1760,7 +1760,7 @@ SPEC CHECKSUMS:
   DatadogInternal: e9b6cef84448ee32f73bc9b37646708a65c1b8ae
   DatadogLogs: 623d89158ef3a4a7545a8fbce9afa4cedc576324
   DatadogRUM: ff0661b42124d90c9ff2538c3cc1b806ddf7620c
-  DatadogSDKReactNative: 62527e877834b7ba2f429bb35c98a601f319cc84
+  DatadogSDKReactNative: 97ba946dc09cc87c12d7277a2877cd3d0166187f
   DatadogTrace: 4e1aac322eafd8568fd4a966b02e58fbb5af0612
   DatadogWebViewTracking: 3b2465b5a5bf10f187807e490678a2e0a3c2daae
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
