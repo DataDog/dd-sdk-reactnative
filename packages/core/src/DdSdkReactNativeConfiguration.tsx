@@ -109,7 +109,7 @@ export const formatFirstPartyHosts = (
 export const DEFAULTS = {
     nativeCrashReportEnabled: false,
     sessionSamplingRate: 100.0,
-    resourceTracingSamplingRate: 20.0,
+    resourceTracingSamplingRate: 100.0,
     site: 'US1',
     longTaskThresholdMs: 0,
     nativeLongTaskThresholdMs: 200,
