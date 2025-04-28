@@ -194,7 +194,7 @@ extension NSArray {
 internal struct DefaultConfiguration {
     static let nativeCrashReportEnabled = false
     static let sessionSamplingRate = 100.0
-    static let resourceTracingSamplingRate = 20.0
+    static let resourceTracingSamplingRate = 100.0
     static let longTaskThresholdMs = 0.0
     static let nativeLongTaskThresholdMs = 200.0
     static let nativeViewTracking = false
