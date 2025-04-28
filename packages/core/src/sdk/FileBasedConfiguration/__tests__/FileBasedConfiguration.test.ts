@@ -134,7 +134,7 @@ describe('FileBasedConfiguration', () => {
                   "nativeViewTracking": false,
                   "proxyConfig": undefined,
                   "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 20,
+                  "resourceTracingSamplingRate": 100,
                   "serviceName": undefined,
                   "sessionSamplingRate": 100,
                   "site": "US1",
