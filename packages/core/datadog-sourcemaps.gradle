@@ -49,15 +49,15 @@ afterEvaluate {
         logger.info("Service name used for the upload of variant=${targetName} is ${serviceName}.")
 
         def bundleAssetName = reactConfig.bundleAssetName
-
         def jsSourceMapsDir = file("$buildDir/generated/sourcemaps/react/${targetPath}")
         def jsOutputSourceMapFile = file("$jsSourceMapsDir/${bundleAssetName}.map")
+        def packagerOutputSourceMapFile = file("$buildDir/intermediates/sourcemaps/react/${targetPath}/${bundleAssetName}.packager.map")
 
         def uploadTask = tasks.create("upload${targetName}Sourcemaps") {
             group = "datadog"
             description = "Uploads sourcemaps to Datadog."
 
-            def execCommand = { jsBundleFile ->
+            def uploadSourcemap = { jsBundleFile ->
                 return [
                         "${getDatadogCiExecPath(reactConfig)}",
                         "react-native",
@@ -87,14 +87,42 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
-                runShellCommand(execCommand(jsBundleFile), reactRoot)
+                // Copy Debug ID from packager sourcemap to composed sourcemap (Hermes)
+                if (packagerOutputSourceMapFile.exists()) {
+                    logger.info("Copying Debug ID from ${packagerOutputSourceMapFile.absolutePath} to ${jsOutputSourceMapFile.absolutePath}")
+                    copyDebugId(packagerOutputSourceMapFile.absolutePath, jsOutputSourceMapFile.absolutePath, reactRoot)
+                }
+
+                runShellCommand(uploadSourcemap(jsBundleFile), reactRoot)
             }
         }
 
         uploadTask.dependsOn bundleTask
         bundleTask.finalizedBy uploadTask
-
     }
+}
+
+/**
+ * Copies the Debug ID from the packager sourcemap to the composed sourcemap (Hermes).
+ */
+private def copyDebugId(String packagerSourceMapPath, String jsSourceMapPath, File workingDirectory) {
+    def ddReactNativePath = getDatadogReactNativePath(workingDirectory)
+    def copyDebugIdScript = new File("$ddReactNativePath/scripts/copy-debug-id.js")
+    if (!copyDebugIdScript.exists()) {
+        println("ERROR: copy Debug ID script does not exist at ${copyDebugIdScript.absolutePath}")
+        return
+    }
+    
+    def nodeExecutable = Os.isFamily(Os.FAMILY_WINDOWS) ? 'node.exe' : 'node'
+
+    def copyDebugIdCommand = [
+        nodeExecutable,
+        copyDebugIdScript,
+        packagerSourceMapPath,
+        jsSourceMapPath
+    ]
+
+    runShellCommand(copyDebugIdCommand, workingDirectory)
 }
 
 /**
@@ -147,6 +175,76 @@ private def getDatadogCiExecPath(reactConfig) {
 
     return defaultPath
 }
+
+/**
+ * We use a function here to resolve the Datadog React Native package path.
+ * If DATADOG_REACT_NATIVE_PATH env variable is defined, it will be returned (if valid).
+ */
+private def getDatadogReactNativePath(File workingDirectory) {
+    def defaultPath = "${workingDirectory.absolutePath}/node_modules/@datadog/mobile-react-native"
+
+    // Try to retrieve the path from ENV variable
+    def envPath = System.getenv('DATADOG_REACT_NATIVE_PATH')
+    if (envPath != null) {
+        if (isValidDatadogPackagePath(envPath)) {
+            return envPath
+        } else {
+            println("WARNING: Ignoring DATADOG_REACT_NATIVE_PATH as it does not point to a valid @datadog/mobile-react-native package (${envPath})")
+        }
+    }
+
+    def nodeExecutable = Os.isFamily(Os.FAMILY_WINDOWS) ? 'node.exe' : 'node'
+    def nodeScript = '''
+    const path = require('path');
+    const libModulePath = require.resolve('@datadog/mobile-react-native');
+    const packagePath = path.resolve(path.dirname(libModulePath), '../..')
+    console.log(packagePath);
+    '''
+
+    def stdout = new ByteArrayOutputStream()
+    def process = new ProcessBuilder(nodeExecutable)
+            .redirectErrorStream(true)
+            .start()
+
+    process.outputStream.withWriter { writer ->
+        writer << nodeScript
+    }
+
+    process.inputStream.eachLine { line ->
+        stdout << line << '\n'
+    }
+    
+    process.waitFor()
+
+    def resolvedPath = stdout.toString().trim()
+    if (isValidDatadogPackagePath(resolvedPath)) {
+        return resolvedPath
+    } else {
+        println("WARNING: Could not resolve @datadog/mobile-react-native path, falling back to default: ${defaultPath}")
+    }
+
+    return defaultPath
+}
+
+/**
+ * Function to validate @datadog/mobile-react-native path
+ */
+ private def isValidDatadogPackagePath(String path) {
+    def packageJsonFile = new File(path, "package.json")
+
+    // Check package.json exists
+    if (!packageJsonFile.exists()) {
+        return false;
+    }
+
+    // Check if it is @datadog/mobile-react-native
+    def packageContent = packageJsonFile.text
+    if (!packageContent.contains('"name": "@datadog/mobile-react-native"')) {
+        return false;
+    }
+
+    return true;
+ }
 
 /**
  * Function to validate datadog-ci executable path.
