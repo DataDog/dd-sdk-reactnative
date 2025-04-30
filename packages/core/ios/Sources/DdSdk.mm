@@ -14,7 +14,12 @@
 
 @implementation DdSdk
 
-@synthesize bridge = _bridge;
+static __weak RCTBridge *s_latestBridge = nil;
+
++ (RCTBridge *)latestBridgeReference {
+    return s_latestBridge;
+}
+
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(initialize, withConfiguration:(NSDictionary*)configuration
@@ -105,7 +110,8 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
-        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:_bridge];
+        s_latestBridge = self.bridge;
+        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:self.bridge];
     }
     return _ddSdkImplementation;
 }
