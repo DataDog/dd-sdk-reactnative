@@ -67,6 +67,7 @@ export class DdSdkReactNative {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
         });
+
         DdSdkReactNative.enableFeatures(configuration);
     };
 
@@ -77,6 +78,7 @@ export class DdSdkReactNative {
         }
     ): Promise<void> => {
         registerRumSessionIdListener();
+
         if (GlobalState.instance.isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
