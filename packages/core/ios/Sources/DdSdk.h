@@ -24,5 +24,6 @@
 @property(nonatomic, strong) DdSdkImplementation *ddSdkImplementation;
 
 + (void)initFromNative;
++ (RCTBridge * _Nullable)latestBridgeReference;
 
 @end

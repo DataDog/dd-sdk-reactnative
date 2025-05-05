@@ -151,7 +151,18 @@ public class DdSdkNativeInitialization: NSObject {
             }
         }
         let onSessionStart: RUM.SessionListener = { sessionId, isDiscarded in
-            let body: [String: Any?] = ["sessionId": sessionId, "isDiscarded": isDiscarded]
+            guard
+                let emitter = eventEmitter,
+                let bridge = emitter.bridge,
+                let latestBridge = DdSdk.latestBridgeReference(),
+                bridge === latestBridge
+            else {
+                return
+            }
+            
+            let body: [String: Any?] = [
+                "sessionId": sessionId, "isDiscarded": isDiscarded,
+            ]
             eventEmitter?.sendEvent(withName: "RumSessionStarted", body: body)
         }
         
