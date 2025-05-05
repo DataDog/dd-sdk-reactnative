@@ -27,6 +27,10 @@ RCT_CUSTOM_VIEW_PROPERTY(allowedHosts, NSArray, RCTDatadogWebView)
     [self setupDatadogWebView:allowedHosts view:view];
 }
 
++ (BOOL)requiresMainQueueSetup {
+    return YES;
+}
+
 // MARK: - Initialization
 - (instancetype)init
 {
