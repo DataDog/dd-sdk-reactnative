@@ -19,7 +19,8 @@
         "packages": [
             "packages/*",
             "example",
-            "example-new-architecture"
+            "example-new-architecture",
+            "benchmarks"
         ]
     },
     "scripts": {
