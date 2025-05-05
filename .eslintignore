@@ -1,6 +1,7 @@
 node_modules
 example
 example-new-architecture
+benchmarks
 dist
 lib
 packages/core/android/build/reports/tests
