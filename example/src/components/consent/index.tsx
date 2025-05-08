@@ -1,3 +1,3 @@
 import ConsentModal from './ConsentModal';
 
-export { ConsentModal }
+export { ConsentModal };

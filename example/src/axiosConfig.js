@@ -4,10 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-const axios = require('axios');
+import Axios from 'axios';
 
-const axiosInstance = axios.default.create({
+export const axios = Axios.create({
     baseURL: 'https://random-data-api.com'
 });
-
-module.exports = axiosInstance;

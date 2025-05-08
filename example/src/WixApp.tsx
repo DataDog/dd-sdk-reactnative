@@ -1,22 +1,24 @@
-import React from 'react';
-import { View, Text, Button } from 'react-native';
-import MainScreen from './screens/MainScreen';
-import ErrorScreen from './screens/ErrorScreen';
-import AboutScreen from './screens/AboutScreen';
+import type {
+    ViewNamePredicate,
+    ComponentDidAppearEvent
+} from '@datadog/mobile-react-native-navigation';
 import {
     DdRumReactNativeNavigationTracking,
-    ViewNamePredicate,
-    ComponentDidAppearEvent,
     Navigation
 } from '@datadog/mobile-react-native-navigation';
+import { View, Text, Button } from 'react-native';
+import React from 'react';
 
+import AboutScreen from './screens/AboutScreen';
+import ErrorScreen from './screens/ErrorScreen';
+import MainScreen from './screens/MainScreen';
 import styles from './screens/styles';
 
 const viewPredicate: ViewNamePredicate = (
     _event: ComponentDidAppearEvent,
     trackedName: string
 ) => {
-    return 'Custom RNN ' + trackedName;
+    return `Custom RNN ${trackedName}`;
 };
 
 function startReactNativeNavigation() {

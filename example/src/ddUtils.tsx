@@ -1,13 +1,13 @@
+import type { TrackingConsent } from '@datadog/mobile-react-native';
 import {
     DatadogProviderConfiguration,
     DdLogs,
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
-    SdkVerbosity,
-    TrackingConsent
+    SdkVerbosity
 } from '@datadog/mobile-react-native';
 
-import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+import { APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT } from './ddCredentials';
 
 // New SDK Setup - not available for react-native-navigation
 export function getDatadogConfig(trackingConsent: TrackingConsent) {
@@ -19,24 +19,28 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
         true,
         true,
         trackingConsent
-    )
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
+    );
+    config.nativeCrashReportEnabled = true;
+    config.sessionSamplingRate = 100;
+    config.serviceName = 'com.datadoghq.reactnative.sample';
     config.verbosity = SdkVerbosity.DEBUG;
 
-    return config
+    return config;
 }
 
- export function onDatadogInitialization() {
-    DdLogs.info('The RN Sdk was properly initialized')
-    DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
-    DdSdkReactNative.setAttributes({campaign: "ad-network"})
+export function onDatadogInitialization() {
+    DdLogs.info('The RN Sdk was properly initialized');
+    DdSdkReactNative.setUserInfo({
+        id: '1337',
+        name: 'Xavier',
+        email: 'xg@example.com',
+        extraInfo: { type: 'premium' }
+    });
+    DdSdkReactNative.setAttributes({ campaign: 'ad-network' });
 }
 
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
-
     const config = new DdSdkReactNativeConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
@@ -45,15 +49,20 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         true,
         true,
         trackingConsent
-    )
-    config.nativeCrashReportEnabled = true
-    config.sampleRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
+    );
+    config.nativeCrashReportEnabled = true;
+    config.sampleRate = 100;
+    config.serviceName = 'com.datadoghq.reactnative.sample';
     config.verbosity = SdkVerbosity.DEBUG;
 
     DdSdkReactNative.initialize(config).then(() => {
-        DdLogs.info('The RN Sdk was properly initialized')
-        DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
-        DdSdkReactNative.setAttributes({campaign: "ad-network"})
+        DdLogs.info('The RN Sdk was properly initialized');
+        DdSdkReactNative.setUserInfo({
+            id: '1337',
+            name: 'Xavier',
+            email: 'xg@example.com',
+            extraInfo: { type: 'premium' }
+        });
+        DdSdkReactNative.setAttributes({ campaign: 'ad-network' });
     });
 }
