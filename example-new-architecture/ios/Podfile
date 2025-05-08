@@ -15,6 +15,10 @@ if linkage != nil
 end
 
 target 'DdSdkReactNativeExample' do
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeWebView', :path => '../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec', :testspecs => ['Tests']
+
   config = use_native_modules!
 
   use_react_native!(
@@ -23,32 +27,25 @@ target 'DdSdkReactNativeExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'DdSdkReactNativeExampleTests' do
-    inherit! :complete
-    # Pods for testing
-  end
-
-  ios11Targets = [
-    'DatadogSDK',
-    'DatadogSDKCrashReporting',
-    'DatadogSDKReactNative'
-  ]
-  
-    post_install do |installer|
-      installer.pods_project.targets.each do |target|
-        # Bump minimum deployment version
-        if ios11Targets.include?(target.name)
-          target.build_configurations.each do |config|
-            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
-          end
-        end
+  post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
       end
-      
-      # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    end
+            
+    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # Enable `DD_SDK_COMPILED_FOR_TESTING` condition when compiling `DatadogSDK` dependency:
+    datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
+    datadog_sdk_target.build_configurations.each do |config|
+      config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+    end     
   end
 end

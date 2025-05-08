@@ -32,10 +32,30 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "DdSdkReactNativeExampleTests.xctest"
-               BlueprintName = "DdSdkReactNativeExampleTests"
-               ReferencedContainer = "container:DdSdkReactNativeExample.xcodeproj">
+               BlueprintIdentifier = "2A33BB144CDB0164109965D17F0CF8F0"
+               BuildableName = "DatadogSDKReactNative-Unit-Tests.xctest"
+               BlueprintName = "DatadogSDKReactNative-Unit-Tests"
+               ReferencedContainer = "container:Pods/Pods.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2312344E8E106B03F5D8124589E7D8C3"
+               BuildableName = "DatadogSDKReactNativeSessionReplay-Unit-Tests.xctest"
+               BlueprintName = "DatadogSDKReactNativeSessionReplay-Unit-Tests"
+               ReferencedContainer = "container:Pods/Pods.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "78809F2595CEAB87DE2759AB2D8ACC1A"
+               BuildableName = "DatadogSDKReactNativeWebView-Unit-Tests.xctest"
+               BlueprintName = "DatadogSDKReactNativeWebView-Unit-Tests"
+               ReferencedContainer = "container:Pods/Pods.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>

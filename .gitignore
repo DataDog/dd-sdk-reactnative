@@ -48,6 +48,7 @@ buck-out/
 
 # Config 
 .env
+.env_vars.sh
 
 # bob build files
 lib/
