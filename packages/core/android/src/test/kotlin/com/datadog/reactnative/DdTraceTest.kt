@@ -47,9 +47,6 @@ import org.mockito.quality.Strictness
 )
 @MockitoSettings(strictness = Strictness.LENIENT)
 internal class DdTraceTest {
-
-    lateinit var testedTrace: DdTraceImplementation
-
     @Mock
     lateinit var mockTracer: Tracer
 
@@ -92,12 +89,14 @@ internal class DdTraceTest {
     )
     lateinit var fakeGlobalState: Map<String, String>
 
-    var lastResolvedValue: Any? = null
+    private var lastResolvedValue: Any? = null
     private var mockPromise = mock<Promise>().apply {
         whenever(resolve(any())) doAnswer {
             lastResolvedValue = it.arguments[0]
         }
     }
+
+    private lateinit var testedTrace: DdTraceImplementation
 
     @BeforeEach
     fun `set up`() {

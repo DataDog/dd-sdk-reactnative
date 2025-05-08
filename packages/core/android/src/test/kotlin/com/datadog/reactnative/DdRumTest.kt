@@ -48,8 +48,6 @@ internal class DdRumTest {
 
     // TODO: 14/12/2020 RUMM-925 Add the relevant unit tests after merging the feature/bridge branch
 
-    lateinit var testedDdRum: DdRumImplementation
-
     @Mock
     lateinit var mockRumMonitor: RumMonitor
 
@@ -59,7 +57,8 @@ internal class DdRumTest {
     @Mock
     lateinit var mockPromise: Promise
 
-    lateinit var fakeContext: Map<String, Any?>
+    private lateinit var fakeContext: Map<String, Any?>
+    private lateinit var testedDdRum: DdRumImplementation
 
     @DoubleForgery(1000000000000.0, 2000000000000.0)
     var fakeTimestamp: Double = 0.0
@@ -81,10 +80,6 @@ internal class DdRumTest {
         }
 
         testedDdRum = DdRumImplementation(mockDatadog)
-    }
-
-    @AfterEach
-    fun `tear down`() {
     }
 
     @Test

@@ -213,6 +213,12 @@ internal fun ReadableArray.toList(): List<*> {
                 "toList(): Could not convert object at index: $i.",
                 err
             )
+        } catch (err: IllegalStateException) {
+            Log.e(
+                javaClass.simpleName,
+                "toList() - illegal state: could not convert object at index: $i.",
+                err
+            )
         }
     }
 

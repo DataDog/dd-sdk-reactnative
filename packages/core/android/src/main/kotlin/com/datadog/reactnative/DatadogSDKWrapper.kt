@@ -70,8 +70,8 @@ object DatadogSDKWrapperStorage {
 }
 
 internal class DatadogSDKWrapper : DatadogWrapper {
-    override var bundleLogsWithRum = DefaultConfiguration.bundleLogsWithRum
-    override var bundleLogsWithTraces = DefaultConfiguration.bundleLogsWithTraces
+    override var bundleLogsWithRum = DefaultConfiguration.BUNDLE_LOGS_WITH_RUM
+    override var bundleLogsWithTraces = DefaultConfiguration.BUNDLE_LOGS_WITH_TRACES
 
     // We use Kotlin backing field here to initialize once the telemetry proxy
     // and make sure it is only after SDK is initialized.
@@ -121,7 +121,11 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         Trace.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
-    @Deprecated("Use setUserInfo instead; the user ID is now required.")
+    @Deprecated("Use setUserInfo instead; the user ID is now required.", ReplaceWith(
+        "Datadog.setUserInfo(id, name, email, extraInfo)",
+        "com.datadog.android.DatadogSDKWrapper"
+    )
+    )
     override fun setUser(
         id: String?,
         name: String?,

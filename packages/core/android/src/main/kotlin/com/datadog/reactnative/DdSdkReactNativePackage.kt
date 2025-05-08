@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.facebook.react.TurboReactPackage
+import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
@@ -15,7 +15,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DdSdkReactNativePackage : TurboReactPackage() {
+class DdSdkReactNativePackage : BaseReactPackage() {
     private val sdkWrapper = DatadogSDKWrapper()
 
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
@@ -38,13 +38,12 @@ class DdSdkReactNativePackage : TurboReactPackage() {
                 DdLogsImplementation.NAME
             ).associateWith {
                 ReactModuleInfo(
-                    it,
-                    it,
-                    false,  // canOverrideExistingModule
-                    false,  // needsEagerInit
-                    true,  // hasConstants
-                    false,  // isCxxModule
-                    isTurboModule // isTurboModule
+                    name = it,
+                    className = it,
+                    canOverrideExistingModule = false,
+                    needsEagerInit = false,
+                    isCxxModule = false,
+                    isTurboModule = isTurboModule
                 )
             }
 

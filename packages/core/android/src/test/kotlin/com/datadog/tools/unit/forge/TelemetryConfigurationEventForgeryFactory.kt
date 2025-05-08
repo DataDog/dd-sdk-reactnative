@@ -6,7 +6,6 @@
 
 package com.datadog.tools.unit.forge
 
-import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory

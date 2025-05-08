@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("NonAsciiCharacters")
+
 package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
@@ -13,21 +15,21 @@ import com.facebook.react.bridge.ReactApplicationContext
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import java.net.InetSocketAddress
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.api.fail
 import org.mockito.Answers
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
+import java.net.InetSocketAddress
 
 @Extensions(
     ExtendWith(MockitoExtension::class),
@@ -36,9 +38,6 @@ import org.mockito.quality.Strictness
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ForgeConfiguration(value = BaseConfigurator::class)
 internal class DdSdkNativeInitializationTest {
-
-    lateinit var testedNativeInitialization: DdSdkNativeInitialization
-
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockContext: ReactApplicationContext
 
@@ -50,6 +49,8 @@ internal class DdSdkNativeInitializationTest {
 
     @Mock
     lateinit var mockJSONFileReader: JSONFileReader
+
+    private lateinit var testedNativeInitialization: DdSdkNativeInitialization
 
     @BeforeEach
     fun `set up`() {
@@ -63,7 +64,6 @@ internal class DdSdkNativeInitializationTest {
 
         testedNativeInitialization = DdSdkNativeInitialization(
             mockContext,
-            mockContext,
             mockDatadog,
             mockJSONFileReader
         )
@@ -76,9 +76,9 @@ internal class DdSdkNativeInitializationTest {
         // Given
         whenever(
             mockJSONFileReader.parseAssetsJSONFile(mockContext, "datadog-configuration.json")
-        ) doReturn javaClass.getResource(
+        ) doReturn (javaClass.getResource(
             "/input/complete-configuration.json"
-        ).readText()
+        )?.readText() ?: fail("Cannot resolve mock configuration"))
 
         // When
         val configuration = testedNativeInitialization.getConfigurationFromJSONFile()

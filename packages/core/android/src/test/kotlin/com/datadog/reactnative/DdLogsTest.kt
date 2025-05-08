@@ -40,13 +40,13 @@ import org.mockito.quality.Strictness
 @MockitoSettings(strictness = Strictness.LENIENT)
 internal class DdLogsTest {
 
-    lateinit var testedLogs: DdLogsImplementation
-
     @Mock
     lateinit var mockLogger: Logger
 
     @StringForgery
     lateinit var fakeMessage: String
+
+    private lateinit var testedLogs: DdLogsImplementation
 
     private var fakeErrorKind: String? = null
 
@@ -275,7 +275,7 @@ internal class DdLogsTest {
     fun `M not forward logs W SDK is not initialized`() {
         // When
         whenever(mockDatadog.isInitialized()) doReturn false
-        var newTestedLogs = DdLogsImplementation(mockLogger, mockDatadog)
+        val newTestedLogs = DdLogsImplementation(mockLogger, mockDatadog)
         newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
         newTestedLogs.info(fakeMessage, mockContext, mockPromise)
         newTestedLogs.warn(fakeMessage, mockContext, mockPromise)

@@ -1,3 +1,5 @@
+@file:Suppress("NonAsciiCharacters")
+
 package com.datadog.reactnative
 
 import fr.xgouchet.elmyr.annotation.IntForgery

@@ -17,6 +17,7 @@ import com.datadog.android.rum._RumInternalProxy
 class MockRumMonitor : RumMonitor {
     override var debug = false
 
+    @Suppress("TestFunctionName")
     override fun _getInternal(): _RumInternalProxy? {
         return null
     }

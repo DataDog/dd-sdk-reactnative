@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("NonAsciiCharacters")
+
 package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
@@ -35,8 +37,8 @@ import com.datadog.tools.unit.TestUiThreadExecutor
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableArray
-import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
+import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -52,9 +54,6 @@ import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import java.util.Locale
-import java.util.stream.Stream
-import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -75,7 +74,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
-import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -84,6 +82,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
+import java.util.Locale
+import java.util.stream.Stream
+import kotlin.time.Duration.Companion.seconds
 
 fun mockChoreographerInstance(mock: Choreographer = mock()) {
     Choreographer::class.java.setStaticValue(
@@ -103,8 +104,6 @@ fun mockChoreographerInstance(mock: Choreographer = mock()) {
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ForgeConfiguration(value = BaseConfigurator::class)
 internal class DdSdkTest {
-    lateinit var testedBridgeSdk: DdSdkImplementation
-
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockReactContext: ReactApplicationContext
 
@@ -131,6 +130,8 @@ internal class DdSdkTest {
 
     @Mock
     lateinit var mockChoreographer: Choreographer
+
+    private lateinit var testedBridgeSdk: DdSdkImplementation
 
     @BeforeEach
     fun `set up`() {
@@ -1659,7 +1660,7 @@ internal class DdSdkTest {
     fun `𝕄 initialize native SDK 𝕎 initialize() {malformed frequency update, long task 0}`(
         @StringForgery fakeFrequency: String,
         @LongForgery(min = 0L) timestampNs: Long,
-        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISECONDS_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
         @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
@@ -1715,7 +1716,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 send long tasks 𝕎 frame time is over threshold() {}`(
         @LongForgery(min = 0L) timestampNs: Long,
-        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISECONDS_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
         @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
@@ -1752,7 +1753,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 send long tasks 𝕎 frame time is over threshold() { never vitals frequency update }`(
         @LongForgery(min = 0L) timestampNs: Long,
-        @LongForgery(min = ONE_HUNDRED_MILLISSECOND_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
+        @LongForgery(min = ONE_HUNDRED_MILLISECONDS_NS, max = 5 * ONE_SECOND_NS) threshold: Long,
         @LongForgery(min = 1, max = ONE_SECOND_NS) frameDurationOverThreshold: Long,
         @Forgery configuration: DdSdkConfiguration
     ) {
@@ -2556,7 +2557,7 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 initialize native SDK 𝕎 initialize() {synthethics attributes}`() {
+    fun `𝕄 initialize native SDK 𝕎 initialize() {synthetics attributes}`() {
         // Given
         fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
         DdSdkSynthetics.testId = "unit-test-test-id"
@@ -2600,7 +2601,7 @@ internal class DdSdkTest {
     // endregion
 
     companion object {
-        const val ONE_HUNDRED_MILLISSECOND_NS: Long = 100 * 1000L * 1000L
+        const val ONE_HUNDRED_MILLISECONDS_NS: Long = 100 * 1000L * 1000L
         const val ONE_SECOND_NS: Long = 1000L * 1000L * 1000L
 
         @JvmStatic

@@ -123,23 +123,23 @@ internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderTyp
 }
 
 internal object DefaultConfiguration {
-    const val nativeCrashReportEnabled = false
-    const val sessionSamplingRate = 100.0
-    const val site = "US1"
-    const val longTaskThresholdMs = 0.0
-    const val nativeLongTaskThresholdMs = 200.0
-    const val nativeViewTracking = false
-    const val nativeInteractionTracking = false
-    const val trackingConsent = "GRANTED"
-    const val telemetrySampleRate = 20.0
-    const val vitalsUpdateFrequency = "AVERAGE"
-    const val trackFrustrations = true
-    const val uploadFrequency = "AVERAGE"
-    const val batchSize = "MEDIUM"
-    const val trackBackgroundEvents = false
-    const val bundleLogsWithRum = true
-    const val bundleLogsWithTraces = true
-    const val initialResourceThreshold = 0.1
+    const val NATIVE_CRASH_REPORT_ENABLED = false
+    const val SESSION_SAMPLING_RATE = 100.0
+    const val SITE = "US1"
+    const val LONG_TASK_THRESHOLD_MS = 0.0
+    const val NATIVE_LONG_TASK_THRESHOLD_MS = 200.0
+    const val NATIVE_VIEW_TRACKING = false
+    const val NATIVE_INTERACTION_TRACKING = false
+    const val TRACKING_CONSENT = "GRANTED"
+    const val TELEMETRY_SAMPLE_RATE = 20.0
+    const val VITALS_UPDATE_FREQUENCY = "AVERAGE"
+    const val TRACK_FRUSTRATIONS = true
+    const val UPLOAD_FREQUENCY = "AVERAGE"
+    const val BATCH_SIZE = "MEDIUM"
+    const val TRACK_BACKGROUND_EVENTS = false
+    const val BUNDLE_LOGS_WITH_RUM = true
+    const val BUNDLE_LOGS_WITH_TRACES = true
+    const val INITIAL_RESOURCE_THRESHOLD = 0.1
 }
 
 @Suppress("ComplexMethod")
@@ -148,35 +148,35 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         this.clientToken,
         this.env,
         this.applicationId,
-        this.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
-        this.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
-        this.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,
-        this.sessionSamplingRate ?: DefaultConfiguration.sessionSamplingRate,
-        this.site ?: DefaultConfiguration.site,
-        this.trackingConsent ?: DefaultConfiguration.trackingConsent,
-        this.telemetrySampleRate ?: DefaultConfiguration.telemetrySampleRate,
-        this.vitalsUpdateFrequency ?: DefaultConfiguration.vitalsUpdateFrequency,
-        this.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
-        this.uploadFrequency ?: DefaultConfiguration.uploadFrequency,
-        this.batchSize ?: DefaultConfiguration.batchSize,
-        this.trackBackgroundEvents ?: DefaultConfiguration.trackBackgroundEvents,
+        this.nativeCrashReportEnabled ?: DefaultConfiguration.NATIVE_CRASH_REPORT_ENABLED,
+        this.nativeLongTaskThresholdMs ?: DefaultConfiguration.NATIVE_LONG_TASK_THRESHOLD_MS,
+        this.longTaskThresholdMs ?: DefaultConfiguration.LONG_TASK_THRESHOLD_MS,
+        this.sessionSamplingRate ?: DefaultConfiguration.SESSION_SAMPLING_RATE,
+        this.site ?: DefaultConfiguration.SITE,
+        this.trackingConsent ?: DefaultConfiguration.TRACKING_CONSENT,
+        this.telemetrySampleRate ?: DefaultConfiguration.TELEMETRY_SAMPLE_RATE,
+        this.vitalsUpdateFrequency ?: DefaultConfiguration.VITALS_UPDATE_FREQUENCY,
+        this.trackFrustrations ?: DefaultConfiguration.TRACK_FRUSTRATIONS,
+        this.uploadFrequency ?: DefaultConfiguration.UPLOAD_FREQUENCY,
+        this.batchSize ?: DefaultConfiguration.BATCH_SIZE,
+        this.trackBackgroundEvents ?: DefaultConfiguration.TRACK_BACKGROUND_EVENTS,
         this.customEndpoints,
         mapOf(
             "_dd.source" to "react-native",
             "_dd.sdk_version" to SDK_VERSION
         ),
         null,
-        this.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
-        this.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
+        this.nativeViewTracking ?: DefaultConfiguration.NATIVE_VIEW_TRACKING,
+        this.nativeInteractionTracking ?: DefaultConfiguration.NATIVE_INTERACTION_TRACKING,
         this.verbosity,
         this.proxy?.asProxyConfig(),
         this.serviceName,
         this.firstPartyHosts?.asFirstPartyHosts(),
-        this.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
-        this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces,
+        this.bundleLogsWithRum ?: DefaultConfiguration.BUNDLE_LOGS_WITH_RUM,
+        this.bundleLogsWithTraces ?: DefaultConfiguration.BUNDLE_LOGS_WITH_TRACES,
         this.trackNonFatalAnrs,
         this.batchProcessingLevel,
-        this.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold
+        this.initialResourceThreshold ?: DefaultConfiguration.INITIAL_RESOURCE_THRESHOLD
     )
 }
 

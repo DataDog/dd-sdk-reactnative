@@ -25,8 +25,8 @@ class DdSdkImplementation(
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
     private val uiThreadExecutor: UiThreadExecutor = ReactUiThreadExecutor()
 ) {
-    internal val appContext: Context = reactContext.applicationContext
-    internal val initialized = AtomicBoolean(false)
+    private val appContext: Context = reactContext.applicationContext
+    private val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
 
     // region DdSdk

@@ -40,12 +40,12 @@ internal class DdSdkBridgeExtTest {
 
         val nestedMap = writableArray.getMap(array.size - 2)
         assertThat(nestedMap).isInstanceOf(WritableMap::class.java)
-        assertThat(nestedMap.keys()).hasSameSizeAs(nestedTestMap.keys)
+        assertThat(nestedMap?.keys()).hasSameSizeAs(nestedTestMap.keys)
         testWritableMap(nestedMap as WritableMap)
 
         val nestedArray = writableArray.getArray(array.size - 1)
         assertThat(nestedArray).isInstanceOf(WritableArray::class.java)
-        assertThat(nestedArray.size()).isEqualTo(nestedTestArray.size)
+        assertThat(nestedArray?.size()).isEqualTo(nestedTestArray.size)
         testWritableArray(nestedArray as WritableArray)
     }
 

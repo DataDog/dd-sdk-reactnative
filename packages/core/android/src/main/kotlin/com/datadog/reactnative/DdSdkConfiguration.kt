@@ -6,10 +6,8 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.trace.TracingHeaderType
 import java.net.Proxy
-
 
 
 /**

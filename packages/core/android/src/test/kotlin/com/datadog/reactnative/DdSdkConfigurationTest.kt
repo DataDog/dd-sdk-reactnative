@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("NonAsciiCharacters")
+
 package com.datadog.reactnative
 
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat

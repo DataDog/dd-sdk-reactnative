@@ -7,8 +7,6 @@
 package com.datadog.reactnative
 
 import com.datadog.android.trace.AndroidTracer
-import com.datadog.android.trace.Trace
-import com.datadog.android.trace.TraceConfiguration
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import io.opentracing.Scope

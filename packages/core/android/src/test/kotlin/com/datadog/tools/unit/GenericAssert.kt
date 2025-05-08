@@ -7,7 +7,6 @@
 package com.datadog.tools.unit
 
 import org.assertj.core.api.AbstractAssert
-import org.assertj.core.api.Assertions.assertThat
 
 class GenericAssert(actual: Any?) :
     AbstractAssert<GenericAssert, Any>(actual, GenericAssert::class.java) {

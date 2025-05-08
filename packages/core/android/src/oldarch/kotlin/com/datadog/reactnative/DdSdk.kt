@@ -82,7 +82,7 @@ class DdSdk(
 
     /**
      * Sets the user information.
-     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     * @param extraInfo The additional information. (To set the id, name or email please use setUserInfo).
      */
     @ReactMethod
     fun addUserExtraInfo(extraInfo: ReadableMap, promise: Promise) {
@@ -137,11 +137,13 @@ class DdSdk(
     }
 
     // Required for rn built in EventEmitter Calls.
+    @Suppress("EmptyMethod")
     @ReactMethod
     fun addListener(eventName: String) {
         // No-op
     }
 
+    @Suppress("EmptyMethod")
     @ReactMethod
     fun removeListeners(count: Int) {
         // No-op
