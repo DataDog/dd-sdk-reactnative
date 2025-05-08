@@ -146,6 +146,14 @@ android {
       } else {
         java.srcDirs += ['src/rnlegacy/kotlin']
       }
+
+
+      if (reactNativeMinorVersion >= 74) {
+        java.srcDirs += ['src/rnpost74/kotlin']
+      } else {
+        java.srcDirs += ['src/rnpre74/kotlin']
+      }
+
     }
     test {
       java.srcDir("src/test/kotlin")

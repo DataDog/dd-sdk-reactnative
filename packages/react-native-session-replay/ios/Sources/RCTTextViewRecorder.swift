@@ -10,8 +10,8 @@ import DatadogSessionReplay
 import React
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
-    internal var textObfuscator: (SessionReplayViewTreeRecordingContext) -> SessionReplayTextObfuscating = { context in
-        return context.recorder.textAndInputPrivacy.staticTextObfuscator
+    internal var textObfuscator: (SessionReplayViewTreeRecordingContext, SessionReplayViewAttributes) -> SessionReplayTextObfuscating = { context, viewAttributes in
+        return viewAttributes.resolveTextAndInputPrivacyLevel(in: context).staticTextObfuscator
     }
 
     internal var identifier = UUID()
@@ -41,7 +41,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
             text: textProperties.text,
             textAlignment: textProperties.alignment,
             textColor: textProperties.foregroundColor,
-            textObfuscator: textObfuscator(context),
+            textObfuscator: textObfuscator(context, attributes),
             fontSize: textProperties.fontSize,
             contentRect: textProperties.contentRect
         )

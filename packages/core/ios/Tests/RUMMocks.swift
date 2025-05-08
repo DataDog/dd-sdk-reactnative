@@ -5,6 +5,8 @@
  */
 
 @testable import DatadogRUM
+@testable import DatadogCore
+@testable import DatadogInternal
 
 // MARK: - Foundation Mocks
 protocol RandomMockable {
