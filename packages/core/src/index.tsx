@@ -3,8 +3,6 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-/* eslint-disable arca/import-ordering */
-
 import {
     DatadogProviderConfiguration,
     DdSdkReactNativeConfiguration,
@@ -15,34 +13,36 @@ import {
     BatchProcessingLevel
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
-import { DdSdk } from './sdk/DdSdk';
 import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
+import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
+import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
+import {
+    TracingIdType,
+    TracingIdFormat
+} from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
+import type { FirstPartyHost } from './rum/types';
+import { DdSdkInternalNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
+import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkNativeBridge';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
+import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { DdTrace } from './trace/DdTrace';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
-import {
-    TracingIdType,
-    TracingIdFormat
-} from './rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
-import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
-import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
-import type { FirstPartyHost } from './rum/types';
 
-/* eslint-enable arca/import-ordering */
+registerNativeBridge(new DdSdkInternalNativeBridge());
 
 export {
     DatadogProvider,

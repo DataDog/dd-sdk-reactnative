@@ -10,19 +10,15 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
 #endif
 #import "DdSdk.h"
-#import <React/RCTBridge.h>
 
 @implementation DdSdk
 
 static __weak RCTBridge *_bridge = nil;
 
-- (void)setBridge:(RCTBridge *)bridge {
-    [super setBridge:bridge];
-    _bridge = bridge;
-}
-
-+ (RCTBridge *)latestBridgeReference {
-    return _bridge;
+/// This method can be called from AppDelegate to initialize the SDK from the native layer, to be able to catch startup errors and logs.
++ (void)initFromNative {
+    DdSdkNativeInitialization *nativeInitialization = [[DdSdkNativeInitialization alloc] init];
+    [nativeInitialization initializeFromNative];
 }
 
 RCT_EXPORT_MODULE()
@@ -98,35 +94,25 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     [self clearAllData:resolve reject:reject];
 }
 
-// Thanks to this guard, we won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeDdSdkSpecJSI>(params);
-}
-#endif
-
-
-- (NSArray<NSString *> *)supportedEvents {
-    return @[@"RumSessionStarted"];
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+      RCTExecuteOnMainQueue(^{
+          RCTRegisterReloadCommandListener(self);
+      });
+  }
+  return self;
 }
 
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
-        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge: _bridge ];
+        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:_bridge];
+#ifdef RCT_NEW_ARCH_ENABLED
+        [self registerSessionIdListener];
+#endif
     }
     return _ddSdkImplementation;
-}
-
-+ (BOOL)requiresMainQueueSetup {
-    return NO;
-}
-
-+ (void)initFromNative {
-    DdSdkNativeInitialization *nativeInitialization = [[DdSdkNativeInitialization alloc] init];
-    [nativeInitialization initializeFromNative];
 }
 
 - (dispatch_queue_t)methodQueue {
@@ -138,7 +124,7 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 }
 
 - (void)initialize:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation initializeWithConfiguration:configuration eventEmitter:self resolve:resolve reject:reject];
+    [self.ddSdkImplementation initializeWithConfiguration:configuration resolve:resolve reject:reject];
 }
 
 - (void)setAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
@@ -172,5 +158,54 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 - (void)clearAllData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation clearAllDataWithResolve:resolve reject:reject];
 }
+
+- (void)addListener:(NSString *)eventType {
+    // No-OP
+}
+
+- (void)removeListeners:(double)count {
+    // No-OP
+}
+
++ (BOOL)requiresMainQueueSetup {
+    return NO;
+}
+
+- (void)didReceiveReloadCommand {
+    [DdSdkSessionStartedListener invalidate];
+}
+
++ (RCTBridge *)latestBridgeReference {
+    return _bridge;
+}
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+    return std::make_shared<facebook::react::NativeDdSdkSpecJSI>(params);
+}
+
+- (void)registerSessionIdListener {
+    __weak DdSdk* weakSelf = self;
+    [DdSdkSessionStartedListener.instance setListener:^(NSString * _Nonnull sessionId) {
+        DdSdk* strongSelf = weakSelf;
+        if (!strongSelf) {
+            return;
+        }
+        [strongSelf emitOnRUMSessionStarted: sessionId];
+    }];
+}
+#else
+- (void)registerNativeBridge {
+    [DdSdkSessionStartedListener.instance setRCTBridge: _bridge];
+}
+
+- (void)setBridge:(RCTBridge *)bridge {
+    [super setBridge:bridge];
+    _bridge = bridge;
+    [self registerNativeBridge];
+}
+#endif
 
 @end

@@ -29,7 +29,7 @@ public class DdSdkNativeInitialization: NSObject {
         self.jsonFileReader = jsonFileReader
     }
     
-    internal func initialize(sdkConfiguration: DdSdkConfiguration, eventEmitter: RCTEventEmitter?) {
+    internal func initialize(sdkConfiguration: DdSdkConfiguration) {
         // TODO: see if this `if` is still needed
         if DatadogSDKWrapper.shared.isInitialized() {
             // Initializing the SDK twice results in Global.rum and
@@ -47,7 +47,7 @@ public class DdSdkNativeInitialization: NSObject {
             trackingConsent: sdkConfiguration.trackingConsent
         )
 
-        self.enableFeatures(sdkConfiguration: sdkConfiguration, eventEmitter: eventEmitter)
+        self.enableFeatures(sdkConfiguration: sdkConfiguration)
     }
     
     internal func getConfigurationFromJSONFile() -> DdSdkConfiguration? {
@@ -66,12 +66,12 @@ public class DdSdkNativeInitialization: NSObject {
     @objc
     public func initializeFromNative() -> Void {
         if let configuration = getConfigurationFromJSONFile() {
-            self.initialize(sdkConfiguration: configuration, eventEmitter: nil)
+            self.initialize(sdkConfiguration: configuration)
         }
     }
 
-    func enableFeatures(sdkConfiguration: DdSdkConfiguration, eventEmitter: RCTEventEmitter?) {
-        let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration, eventEmitter: eventEmitter)
+    func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
+        let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
         DatadogSDKWrapper.shared.enableRUM(with: rumConfig)
         
         let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
@@ -113,7 +113,7 @@ public class DdSdkNativeInitialization: NSObject {
         return config
     }
     
-    func buildRUMConfiguration(configuration: DdSdkConfiguration, eventEmitter: RCTEventEmitter?) -> RUM.Configuration {
+    func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
         var longTaskThreshold: TimeInterval? = nil
         if let threshold = configuration.nativeLongTaskThresholdMs {
             if (threshold != 0) {
@@ -150,22 +150,7 @@ public class DdSdkNativeInitialization: NSObject {
                 customRUMEndpointURL = URL(string: "\(customRUMEndpoint)/api/v2/rum" as String)
             }
         }
-        let onSessionStart: RUM.SessionListener = { sessionId, isDiscarded in
-            guard
-                let emitter = eventEmitter,
-                let bridge = emitter.bridge,
-                let latestBridge = DdSdk.latestBridgeReference(),
-                bridge === latestBridge
-            else {
-                return
-            }
-            
-            let body: [String: Any?] = [
-                "sessionId": sessionId, "isDiscarded": isDiscarded,
-            ]
-            eventEmitter?.sendEvent(withName: "RumSessionStarted", body: body)
-        }
-        
+
         var networkSettledResourcePredicate: TimeBasedTNSResourcePredicate? = nil
         if let initialResourceThreshold = configuration.initialResourceThreshold as TimeInterval? {
             networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(threshold: initialResourceThreshold)
@@ -196,7 +181,7 @@ public class DdSdkNativeInitialization: NSObject {
                 }
                 return actionEvent
             },
-            onSessionStart: onSessionStart,
+            onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
             telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.telemetrySampleRate)
         )

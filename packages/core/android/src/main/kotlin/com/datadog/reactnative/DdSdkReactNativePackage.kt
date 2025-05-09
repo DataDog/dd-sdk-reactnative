@@ -6,7 +6,8 @@
 
 package com.datadog.reactnative
 
-import com.facebook.react.TurboReactPackage
+import com.facebook.react.BaseReactPackage
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
@@ -15,10 +16,11 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DdSdkReactNativePackage : TurboReactPackage() {
+class DdSdkReactNativePackage : BaseReactPackage() {
     private val sdkWrapper = DatadogSDKWrapper()
-
+    private var lifecycleEventListener: LifecycleEventListener? = null
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
+        registerLifecycleEventListener(reactContext)
         return when (name) {
             DdSdkImplementation.NAME -> DdSdk(reactContext, sdkWrapper)
             DdRumImplementation.NAME -> DdRum(reactContext, sdkWrapper)
@@ -26,6 +28,25 @@ class DdSdkReactNativePackage : TurboReactPackage() {
             DdLogsImplementation.NAME -> DdLogs(reactContext, sdkWrapper)
             else -> null
         }
+    }
+
+    private fun registerLifecycleEventListener(reactContext: ReactApplicationContext) {
+        if (lifecycleEventListener != null) {
+            return
+        }
+
+        lifecycleEventListener = object: LifecycleEventListener{
+            override fun onHostDestroy() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+            override fun onHostPause() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+            override fun onHostResume() {
+                DdSdkSessionStartedListener.getInstance().setReactContext(reactContext)
+            }
+        }
+        reactContext.addLifecycleEventListener(lifecycleEventListener)
     }
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {

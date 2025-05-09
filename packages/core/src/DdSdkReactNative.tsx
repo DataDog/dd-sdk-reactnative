@@ -29,9 +29,13 @@ import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { registerRumSessionIdListener } from './rum/sessionId/sessionIdHelper';
+import {
+    pollForSessionId,
+    verifySessionId
+} from './rum/sessionId/sessionIdHelper';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
+import { hasNativeBridge } from './sdk/DatadogInternalBridge/DdSdkNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
@@ -77,8 +81,6 @@ export class DdSdkReactNative {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): Promise<void> => {
-        registerRumSessionIdListener();
-
         if (GlobalState.instance.isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
@@ -97,6 +99,13 @@ export class DdSdkReactNative {
         await DdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
+
+        if (!hasNativeBridge()) {
+            pollForSessionId();
+        } else {
+            verifySessionId();
+        }
+
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
         GlobalState.instance.isInitialized = true;
         BufferSingleton.onInitialization();

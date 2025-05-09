@@ -24,20 +24,10 @@ class DdSdk(
     override fun getName(): String = DdSdkImplementation.NAME
 
     init {
-        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
-            override fun onHostResume() {
-                val currentActivity: Activity? = currentActivity
-                if (currentActivity != null) {
-                    val intent = currentActivity.intent
-                    val extras = intent.extras
-                    DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
-                    DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
-                }
-            }
-
-            override fun onHostPause() {}
-            override fun onHostDestroy() {}
-        })
+        registerLifecycleEvents(reactContext)
+        DdSdkSessionStartedListener.getInstance().setListener { sessionId ->
+            emitOnRUMSessionStarted(sessionId)
+        }
     }
 
     /**
@@ -142,5 +132,22 @@ class DdSdk(
 
     override fun removeListeners(count: Double) {
         // No-op
+    }
+
+    private fun registerLifecycleEvents(reactContext: ReactApplicationContext) {
+        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
+            override fun onHostResume() {
+                val currentActivity: Activity? = currentActivity
+                if (currentActivity != null) {
+                    val intent = currentActivity.intent
+                    val extras = intent.extras
+                    DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
+                    DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
+                }
+            }
+
+            override fun onHostPause() {}
+            override fun onHostDestroy() {}
+        })
     }
 }

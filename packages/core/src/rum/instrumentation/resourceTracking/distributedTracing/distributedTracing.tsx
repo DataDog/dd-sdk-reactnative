@@ -25,7 +25,7 @@ export type DdRumResourceTracingAttributes =
           samplingPriorityHeader: '1' | '0';
           rulePsr: number;
           propagatorTypes: PropagatorType[];
-          rumSessionId: string | null;
+          rumSessionId?: string;
       }
     | {
           tracingStrategy: 'DISCARD';
@@ -48,7 +48,7 @@ export const getTracingAttributes = ({
     hostname: Hostname | null;
     firstPartyHostsRegexMap: RegexMap;
     tracingSamplingRate: number;
-    rumSessionId: string | null;
+    rumSessionId?: string;
 }): DdRumResourceTracingAttributes => {
     if (hostname === null) {
         return DISCARDED_TRACE_ATTRIBUTES;
@@ -70,7 +70,7 @@ export const getTracingAttributes = ({
 export const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number,
     propagatorTypes: PropagatorType[],
-    rumSessionId: string | null
+    rumSessionId?: string
 ): DdRumResourceTracingAttributes => {
     if (!propagatorTypes || propagatorTypes.length === 0) {
         return DISCARDED_TRACE_ATTRIBUTES;

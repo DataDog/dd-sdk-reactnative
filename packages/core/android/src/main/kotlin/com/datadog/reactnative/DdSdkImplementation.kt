@@ -38,7 +38,7 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
-        val nativeInitialization = DdSdkNativeInitialization(appContext, reactContext, datadog)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
 
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)

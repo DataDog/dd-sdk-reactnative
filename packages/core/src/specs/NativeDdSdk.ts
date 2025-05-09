@@ -5,6 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/ban-types */
+import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
@@ -86,8 +87,12 @@ export interface Spec extends TurboModule {
      * https://github.com/react-native-community/RNNewArchitectureLibraries/tree/feat/swift-event-emitter?tab=readme-ov-file#codegen-update-codegen-specs)
      */
     addListener: (eventType: string) => void;
-
     removeListeners: (count: number) => void;
+
+    /**
+     * Internal method to send the Session ID over to the React Native layer.
+     */
+    readonly onRUMSessionStarted: EventEmitter<string>;
 }
 
 // eslint-disable-next-line import/no-default-export
