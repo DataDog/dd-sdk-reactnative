@@ -14,10 +14,15 @@
 
 @implementation DdSdk
 
-static __weak RCTBridge *s_latestBridge = nil;
+static __weak RCTBridge *_bridge = nil;
+
+- (void)setBridge:(RCTBridge *)bridge {
+    [super setBridge:bridge];
+    _bridge = bridge;
+}
 
 + (RCTBridge *)latestBridgeReference {
-    return s_latestBridge;
+    return _bridge;
 }
 
 RCT_EXPORT_MODULE()
@@ -110,8 +115,7 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
-        s_latestBridge = self.bridge;
-        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:self.bridge];
+        _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge: _bridge ];
     }
     return _ddSdkImplementation;
 }
