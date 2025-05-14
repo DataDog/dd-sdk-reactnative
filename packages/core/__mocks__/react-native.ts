@@ -50,7 +50,10 @@ actualRN.NativeModules.DdSdk = {
     }) as jest.MockedFunction<DdNativeSdkType['addListener']>,
     removeListeners: jest.fn().mockImplementation((_: number) => {
         /* empty */
-    }) as jest.MockedFunction<DdNativeSdkType['removeListeners']>
+    }) as jest.MockedFunction<DdNativeSdkType['removeListeners']>,
+    onRUMSessionStarted: jest.fn().mockImplementation((_: string) => {
+        /* empty */
+    }) as jest.MockedFunction<DdNativeSdkType['onRUMSessionStarted']>
 };
 
 actualRN.NativeModules.DdLogs = {

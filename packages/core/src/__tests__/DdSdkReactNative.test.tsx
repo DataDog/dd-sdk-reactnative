@@ -64,6 +64,7 @@ beforeEach(async () => {
     NativeModules.DdSdk.setAttributes.mockClear();
     NativeModules.DdSdk.setUser.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
+    NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
     (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
         typeof DdRumUserInteractionTracking.startTracking
