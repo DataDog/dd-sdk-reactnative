@@ -268,8 +268,8 @@ private def runShellCommand(
 }
 
 private def getServiceName(variant) {
-    if (project.hasProperty("datadog") && project.datadog.serviceName) {
-        return project.datadog.serviceName
+    if (project.ext.has("datadog") && project.ext.datadog.serviceName) {
+        return project.ext.datadog.serviceName
     }
     return variant.applicationId
 }

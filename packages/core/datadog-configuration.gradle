@@ -5,10 +5,8 @@
  */
 
 def getConfigurationFilePath() {
-    if (project.hasProperty("datadog")) {
-        if (project.datadog.configurationFilePath) {
-            return project.datadog.configurationFilePath
-        }
+    if (project.ext.has("datadog") && project.ext.datadog.configurationFilePath) {
+        return project.ext.datadog.configurationFilePath
     }
     return '../../datadog-configuration.json'
 }
