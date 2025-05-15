@@ -5,12 +5,13 @@
  */
 package com.datadog.reactnative
 
-import android.util.Log
 import com.datadog.android.rum.RumSessionListener
+import com.facebook.react.bridge.NativeArray
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.WritableNativeArray
+import org.jetbrains.annotations.TestOnly
 
-class DdSdkSessionStartedListener private constructor(): RumSessionListener {
+internal class DdSdkSessionStartedListener private constructor(): RumSessionListener {
     companion object {
         private const val BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
         private const val BRIDGE_MODULE_METHOD = "__datadogRumSessionStarted"
@@ -32,6 +33,8 @@ class DdSdkSessionStartedListener private constructor(): RumSessionListener {
     private var reactContext: ReactContext? = null
     private var lastSessionId: String? = null
     private var listener: ((sessionId: String) -> Unit)? = null
+    private var convertToNativeArray: ((array: Array<String>) -> NativeArray?)? = null
+    private var exceptionHandler: ((error: Exception) -> Unit)? = null
 
     override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
         sendSessionStartedToJS(sessionId)
@@ -47,6 +50,16 @@ class DdSdkSessionStartedListener private constructor(): RumSessionListener {
         if (hasValidBridge()) {
             this.lastSessionId?.let { sendSessionStartedToJS(it) }
         }
+    }
+
+    @TestOnly
+    fun setConvertToNativeArray(convertToNativeArray: (array: Array<String>) -> NativeArray?) {
+        this.convertToNativeArray = convertToNativeArray
+    }
+
+    @TestOnly
+    fun setExceptionHandler(exceptionHandler: (error: Exception) -> Unit) {
+        this.exceptionHandler = exceptionHandler
     }
 
     private fun hasValidBridge(): Boolean {
@@ -68,14 +81,23 @@ class DdSdkSessionStartedListener private constructor(): RumSessionListener {
     private fun sendSessionIdWithBridge(sessionId: String) {
         @Suppress("TooGenericExceptionCaught")
         try {
-            val args = WritableNativeArray()
-            args.pushString(sessionId)
+            val args = arrayOf(sessionId)
+            val nativeArray = if (convertToNativeArray != null) {
+                convertToNativeArray?.invoke(args)
+            } else {
+                WritableNativeArray().apply {
+                    pushString(sessionId)
+                }
+            }
+
             reactContext?.catalystInstance?.callFunction(
                 BRIDGE_MODULE_NAME,
                 BRIDGE_MODULE_METHOD,
-                args
+                nativeArray
             )
-        } catch(_: Exception) { /* empty */ }
+        } catch(err: Exception) {
+            exceptionHandler?.invoke(err)
+        }
     }
 
     private fun sendSessionIdWithListener(sessionId: String) {
