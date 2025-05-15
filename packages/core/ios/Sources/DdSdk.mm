@@ -188,7 +188,7 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 
 - (void)registerSessionIdListener {
     __weak DdSdk* weakSelf = self;
-    [DdSdkSessionStartedListener.instance setListener:^(NSString * _Nonnull sessionId) {
+    [DdSdkSessionStartedListener.instance setListenerCallback:^(NSString * _Nonnull sessionId) {
         DdSdk* strongSelf = weakSelf;
         if (!strongSelf) {
             return;
