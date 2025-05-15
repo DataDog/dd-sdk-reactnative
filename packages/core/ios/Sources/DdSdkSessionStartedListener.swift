@@ -21,13 +21,13 @@ public class DdSdkSessionStartedListener: NSObject {
         _instance?.invalidate()
     }
 
-    public private(set) var rumSessionListener: RUM.SessionListener?
+    @objc public private(set) var rumSessionListener: RUM.SessionListener?
+    @objc public private(set) var listener: ((String) -> Void)?
 
     private static let BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
     private static let BRIDGE_MODULE_METHOD = "__datadogRumSessionStarted"
     private static var _instance: DdSdkSessionStartedListener?
 
-    private var listener: ((String) -> Void)?
     private var rctBridge: RCTBridge?
     private var lastSessionId: String?
 
@@ -39,8 +39,12 @@ public class DdSdkSessionStartedListener: NSObject {
         }
     }
 
-    @objc public func setListener(_ listener: ((String) -> Void)?) {
+    @objc public func setListenerCallback(_ listener: ((String) -> Void)?) {
         self.listener = listener
+        guard let sessionId = lastSessionId else {
+            return
+        }
+        sendToJsWithListener(sessionId: sessionId)
     }
 
     @objc public func setRCTBridge(_ rctBridge: RCTBridge) {
@@ -48,7 +52,7 @@ public class DdSdkSessionStartedListener: NSObject {
         guard let sessionId = lastSessionId else {
             return
         }
-        sendSessionStartedToJS(sessionId: sessionId)
+        sendToJsWithBridge(sessionId: sessionId)
     }
 
     func invalidate() {
