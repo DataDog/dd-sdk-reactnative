@@ -92,7 +92,7 @@ test:native-ios:
   timeout: 1h
   script:
     - yarn
-    - (cd example/ios && pod install --repo-update)
+    - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
     - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
@@ -101,5 +101,5 @@ test:native-ios-sr:
   timeout: 1h
   script:
     - yarn
-    - (cd example/ios && pod install --repo-update)
+    - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
     - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
