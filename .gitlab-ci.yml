@@ -82,9 +82,9 @@ test:native-android:
     - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
     - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/internal-testing-tools/android/gradle.properties
     - yarn
-    - (cd packages/core/android && ./gradlew build)
-    - (cd packages/react-native-session-replay/android && ./gradlew build)
-    - (cd packages/internal-testing-tools/android && ./gradlew build)
+    - (cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)
+    - (cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)
+    - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
   tags: [ "macos:sonoma", "specific:true" ]
