@@ -6,7 +6,7 @@
 
 package com.datadog.reactnative
 
-import com.facebook.react.BaseReactPackage
+import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
@@ -16,7 +16,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DdSdkReactNativePackage : BaseReactPackage() {
+class DdSdkReactNativePackage : TurboReactPackage() {
     private val sdkWrapper = DatadogSDKWrapper()
     private var lifecycleEventListener: LifecycleEventListener? = null
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
