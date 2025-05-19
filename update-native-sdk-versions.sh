@@ -18,6 +18,7 @@ podspec_files=(
 build_gradle_files=(
     "packages/core/android/build.gradle"
     "packages/react-native-session-replay/android/build.gradle"
+    "packages/react-native-webview/android/build.gradle"
 )
 
 extract_and_validate_version() {
