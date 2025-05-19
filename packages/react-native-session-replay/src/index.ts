@@ -12,6 +12,7 @@ import {
     TouchPrivacyLevel,
     TextAndInputPrivacyLevel
 } from './SessionReplay';
+import { SessionReplayView } from './components/SessionReplayView';
 
 export {
     SessionReplay,
@@ -20,5 +21,7 @@ export {
     TouchPrivacyLevel,
     TextAndInputPrivacyLevel
 };
+
+export { SessionReplayView };
 
 export type { SessionReplayConfiguration };

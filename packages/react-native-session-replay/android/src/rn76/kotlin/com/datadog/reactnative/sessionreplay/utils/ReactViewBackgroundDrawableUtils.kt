@@ -42,7 +42,7 @@ internal class ReactViewBackgroundDrawableUtils : DrawableUtils() {
 
     @OptIn(UnstableReactNativeAPI::class)
     override fun getReactBackgroundFromDrawable(drawable: Drawable?): Drawable? {
-        return when(drawable) {
+        return when (drawable) {
             is CSSBackgroundDrawable -> drawable
             is InsetDrawable -> getReactBackgroundFromDrawable(drawable.drawable)
             is LayerDrawable -> getDrawableFromLayerDrawable(drawable)
