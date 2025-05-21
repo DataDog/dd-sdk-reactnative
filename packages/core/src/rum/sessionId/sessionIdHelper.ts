@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdRum } from '../DdRum';
 
 const SESSION_ID_POLL_INTERVAL = 500;
@@ -29,6 +31,10 @@ export const pollForSessionId = (
             const id = await DdRum.getCurrentSessionId();
             if (id) {
                 _cachedSessionId = id;
+                InternalLog.log(
+                    `Retrieved RUM Session ID after ${attempts} attempts: ${id}`,
+                    SdkVerbosity.DEBUG
+                );
                 return;
             }
         } catch (e) {
@@ -37,6 +43,11 @@ export const pollForSessionId = (
 
         if (attempts < maxAttempts) {
             _pollForSessionIdTimeout = setTimeout(poll, intervalMs);
+        } else {
+            InternalLog.log(
+                `Cannot retrieve RUM Session ID after ${attempts} attempts.`,
+                SdkVerbosity.DEBUG
+            );
         }
     };
 

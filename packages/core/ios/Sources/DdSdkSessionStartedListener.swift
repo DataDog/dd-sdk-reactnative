@@ -25,48 +25,54 @@ public class DdSdkSessionStartedListener: NSObject {
     @objc public private(set) var listener: ((String) -> Void)?
 
     private static let BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
-    private static let BRIDGE_MODULE_METHOD = "__datadogRumSessionStarted"
+    private static let BRIDGE_MODULE_METHOD = "__datadogOnMessageReceived"
+    private static let BRIDGE_EVENT_NAME = "RUMSessionStarted"
     private static var _instance: DdSdkSessionStartedListener?
 
     private var rctBridge: RCTBridge?
+    private var rctEventEmitter: RCTEventEmitter?
     private var lastSessionId: String?
+    private var hasListeners: Bool = false
 
     @objc private override init() {
         super.init()
         self.rumSessionListener = { [weak self] sessionId, isDiscarded in
             self?.lastSessionId = sessionId
-            self?.sendSessionStartedToJS(sessionId: sessionId)
+            self?.tryToSendSessionId()
         }
+    }
+    
+    @objc public func setHasListeners(_ hasListeners: Bool) {
+        self.hasListeners = hasListeners
+        tryToSendSessionId()
     }
 
     @objc public func setListenerCallback(_ listener: ((String) -> Void)?) {
         self.listener = listener
-        guard let sessionId = lastSessionId else {
-            return
-        }
-        sendToJsWithListener(sessionId: sessionId)
+        tryToSendSessionId()
     }
-
+    
     @objc public func setRCTBridge(_ rctBridge: RCTBridge) {
         self.rctBridge = rctBridge
-        guard let sessionId = lastSessionId else {
-            return
-        }
-        sendToJsWithBridge(sessionId: sessionId)
+        tryToSendSessionId()
     }
 
     func invalidate() {
         self.rctBridge = nil
         self.listener = nil
+        self.hasListeners = false
+        self.lastSessionId = nil
     }
 
-    private func sendSessionStartedToJS(sessionId: String) {
-        self.lastSessionId = sessionId
+    private func tryToSendSessionId() {
+        guard let sessionId = self.lastSessionId else {
+            return
+        }
 
-        if self.rctBridge != nil {
-            sendToJsWithBridge(sessionId: sessionId)
-        } else {
+        if isBridgeless() {
             sendToJsWithListener(sessionId: sessionId)
+        } else {
+            sendToJsWithBridge(sessionId: sessionId)
         }
     }
 
@@ -81,16 +87,19 @@ public class DdSdkSessionStartedListener: NSObject {
         rctBridge.enqueueJSCall(
             DdSdkSessionStartedListener.BRIDGE_MODULE_NAME,
             method: DdSdkSessionStartedListener.BRIDGE_MODULE_METHOD,
-            args: [sessionId],
+            args: [DdSdkSessionStartedListener.BRIDGE_EVENT_NAME, sessionId],
             completion: {}
         )
     }
 
     private func sendToJsWithListener(sessionId: String) {
-        guard let listener = self.listener else {
+        guard let listener = self.listener, hasListeners else {
             return
         }
-
         listener(sessionId)
+    }
+
+    private func isBridgeless() -> Bool {
+        return self.rctBridge == nil
     }
 }

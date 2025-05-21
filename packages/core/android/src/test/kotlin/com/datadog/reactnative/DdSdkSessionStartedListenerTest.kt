@@ -78,50 +78,6 @@ internal class DdSdkSessionStartedListenerTest {
     }
 
     @Test
-    fun `𝕄 onSessionStarted calls listener callback when set and bridge is invalid`() {
-        // GIVEN
-        val instance = DdSdkSessionStartedListener.getInstance()
-        instance.setListener(mockListenerCallback)
-
-        // WHEN
-        instance.onSessionStarted("TEST-SESSION-ID", false)
-
-        // THEN
-        verify(mockListenerCallback).invoke("TEST-SESSION-ID")
-    }
-
-    @Test
-    fun `𝕄 onSessionStarted calls react bridge when bridge is valid`() {
-        // GIVEN
-        whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
-        whenever(mockReactContext.catalystInstance).thenReturn(mockCatalystInstance)
-        whenever(mockCatalystInstance.isDestroyed).thenReturn(false)
-        whenever(mockReactContext.fabricUIManager).thenReturn(null)
-
-        val instance = DdSdkSessionStartedListener.getInstance()
-        instance.setReactContext(mockReactContext)
-
-        val passedArgs = mutableListOf<String>()
-        instance.setConvertToNativeArray {
-            passedArgs.addAll(it)
-            // We cannot mock or test NativeArray as it relies on native runtime SO library
-            return@setConvertToNativeArray null
-        }
-        // WHEN
-        instance.onSessionStarted("TEST-SESSION-ID", false)
-
-        // THEN
-        verify(mockCatalystInstance).callFunction(
-            module = "DatadogInternalReactBridge",
-            method = "__datadogRumSessionStarted",
-            arguments = null
-        )
-
-        assertThat(passedArgs.count()).isEqualTo(1)
-        assertThat(passedArgs.first()).isEqualTo("TEST-SESSION-ID")
-    }
-
-    @Test
     fun `𝕄 onSessionStarted internally catches exception if catalyst instance throws`() {
         // GIVEN
         whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
@@ -180,25 +136,5 @@ internal class DdSdkSessionStartedListenerTest {
 
         // THEN
         verify(mockConvertToNativeArray).invoke(argWhere { it.first() == "TEST-SESSION-ID" })
-    }
-
-    @Test
-    fun `𝕄 session ID event is delayed until context is available W { listener }`() {
-        // GIVEN
-        whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
-        whenever(mockReactContext.catalystInstance).thenReturn(mockCatalystInstance)
-        whenever(mockCatalystInstance.isDestroyed).thenReturn(false)
-        whenever(mockReactContext.fabricUIManager).thenReturn(null)
-        whenever(mockCatalystInstance.callFunction(any(), any(), anyOrNull()))
-            .thenThrow(RuntimeException("TEST"))
-
-        val instance = DdSdkSessionStartedListener.getInstance()
-
-        // WHEN
-        instance.onSessionStarted("TEST-SESSION-ID", false)
-        instance.setListener(mockListenerCallback)
-
-        // THEN
-        verify(mockListenerCallback).invoke("TEST-SESSION-ID")
     }
 }

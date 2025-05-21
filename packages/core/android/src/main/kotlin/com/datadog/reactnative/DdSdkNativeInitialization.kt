@@ -49,6 +49,14 @@ class DdSdkNativeInitialization internal constructor(
         configureSdkVerbosity(ddSdkConfiguration)
         configureRumAndTracesForLogs(ddSdkConfiguration)
 
+        if (datadog.isInitialized()) {
+            datadog.getRumMonitor().getCurrentSessionId {
+                it?.let { sessionId ->
+                    DdSdkSessionStartedListener.getInstance().onSessionStarted(sessionId, false)
+                }
+            }
+        }
+
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
         datadog.enableRum(rumConfiguration)

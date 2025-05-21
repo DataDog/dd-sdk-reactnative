@@ -5,16 +5,19 @@
  */
 package com.datadog.reactnative
 
+import androidx.annotation.MainThread
 import com.datadog.android.rum.RumSessionListener
 import com.facebook.react.bridge.NativeArray
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.WritableNativeArray
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.jetbrains.annotations.TestOnly
+
 
 internal class DdSdkSessionStartedListener private constructor(): RumSessionListener {
     companion object {
         private const val BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
-        private const val BRIDGE_MODULE_METHOD = "__datadogRumSessionStarted"
+        private const val BRIDGE_MODULE_METHOD = "__datadogOnMessageReceived"
 
         private var instance: DdSdkSessionStartedListener? = null
 
@@ -32,18 +35,12 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
 
     private var reactContext: ReactContext? = null
     private var lastSessionId: String? = null
-    private var listener: ((sessionId: String) -> Unit)? = null
     private var convertToNativeArray: ((array: Array<String>) -> NativeArray?)? = null
-    private var exceptionHandler: ((error: Exception) -> Unit)? = null
+    private var exceptionHandler: ((error:Exception)->Unit)? = null
     private var isNewArchitecture: Boolean? = null
 
     override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
         sendSessionStartedToJS(sessionId)
-    }
-
-    fun setListener(listener: (sessionId: String) -> Unit) {
-        this.listener = listener
-        this.lastSessionId?.let { sendSessionStartedToJS(it) }
     }
 
     fun setReactContext(reactContext: ReactContext) {
@@ -66,7 +63,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     private fun hasValidBridge(): Boolean {
         val context = reactContext ?: return false
         val instance = context.catalystInstance ?: return false
-        return isNewArchitecture(context) &&
+        return !isNewArchitecture(context) &&
                 !instance.isDestroyed &&
                 context.hasActiveReactInstance()
     }
@@ -74,6 +71,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     private fun isNewArchitecture(context: ReactContext): Boolean {
         isNewArchitecture?.let { return it }
 
+        @Suppress("SwallowedException")
         val method = try {
             context.javaClass.getMethod("getFabricUIManager")
         } catch (e: NoSuchMethodException) {
@@ -91,10 +89,11 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         if (hasValidBridge()) {
             sendSessionIdWithBridge(sessionId)
         } else {
-            sendSessionIdWithListener(sessionId)
+            sendSessionIdWithEventEmitter(sessionId)
         }
     }
 
+    @MainThread
     private fun sendSessionIdWithBridge(sessionId: String) {
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -103,6 +102,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
                 convertToNativeArray?.invoke(args)
             } else {
                 WritableNativeArray().apply {
+                    pushString("RUMSessionStarted")
                     pushString(sessionId)
                 }
             }
@@ -117,7 +117,16 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         }
     }
 
-    private fun sendSessionIdWithListener(sessionId: String) {
-        listener?.invoke(sessionId)
+    @MainThread
+    private fun sendSessionIdWithEventEmitter(sessionId: String) {
+        val context = reactContext ?: return
+        @Suppress("TooGenericExceptionCaught", "SwallowedException")
+        try {
+            context
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("RUMSessionStarted", sessionId)
+        } catch (err: Exception) {
+            /* empty */
+        }
     }
 }

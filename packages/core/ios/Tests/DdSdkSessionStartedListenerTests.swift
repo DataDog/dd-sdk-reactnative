@@ -43,36 +43,6 @@ class DdSdkSessionStartedListenerTests: XCTestCase {
         XCTAssertNil(instance.listener)
     }
 
-    func testListenerIsCalledWithSessionIdAfterListenerIsSet() {
-        // GIVEN
-        let instance = DdSdkSessionStartedListener.instance
-        instance.rumSessionListener?("test-session-id", false)
-
-        // WHEN
-        var outSessionId: String?
-        instance.setListenerCallback { sessionId in
-            outSessionId = sessionId
-        }
-
-        // THEN
-        XCTAssertEqual(outSessionId, "test-session-id")
-    }
-
-    func testListenerIsCalledWithSessionIdWhenListenerIsAlreadySet() {
-        // GIVEN
-        let instance = DdSdkSessionStartedListener.instance
-        var outSessionId: String?
-        instance.setListenerCallback { sessionId in
-            outSessionId = sessionId
-        }
-
-        // WHEN
-        instance.rumSessionListener?("test-session-id", false)
-
-        // THEN
-        XCTAssertEqual(outSessionId, "test-session-id")
-    }
-
     func testRumSessionListenerIsRegisteredOnInit() {
         // GIVEN
         let instance = DdSdkSessionStartedListener.instance

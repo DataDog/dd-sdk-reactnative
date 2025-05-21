@@ -32,8 +32,6 @@ import {
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import type { FirstPartyHost } from './rum/types';
-import { DdSdkInternalNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
-import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkNativeBridge';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
@@ -41,8 +39,6 @@ import { DdTrace } from './trace/DdTrace';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
-
-registerNativeBridge(new DdSdkInternalNativeBridge());
 
 export {
     DatadogProvider,

@@ -15,7 +15,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import <DdSdkReactNative/DdSdkReactNative.h>
-@interface DdSdk : NativeDdSdkSpecBase <NativeDdSdkSpec, RCTBridgeModule, RCTReloadListener>
+@interface DdSdk : RCTEventEmitter <NativeDdSdkSpec, RCTBridgeModule, RCTReloadListener>
 
 #else
 

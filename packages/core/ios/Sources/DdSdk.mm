@@ -160,11 +160,25 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 }
 
 - (void)addListener:(NSString *)eventType {
-    // No-OP
+    [DdSdkSessionStartedListener.instance setHasListeners: true];
+    [super addListener:eventType];
 }
 
 - (void)removeListeners:(double)count {
-    // No-OP
+    [DdSdkSessionStartedListener.instance setHasListeners: false];
+    [super removeListeners:count];
+}
+
+- (NSArray<NSString *> *)supportedEvents {
+    return [[NSArray alloc] initWithObjects:@"RUMSessionStarted", nil];
+}
+
+- (void)startObserving {
+    [DdSdkSessionStartedListener.instance setHasListeners: true];
+}
+
+- (void)stopObserving {
+    [DdSdkSessionStartedListener.instance setHasListeners: false];
 }
 
 + (BOOL)requiresMainQueueSetup {
@@ -193,7 +207,8 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
         if (!strongSelf) {
             return;
         }
-        [strongSelf emitOnRUMSessionStarted: sessionId];
+
+        [strongSelf sendEventWithName:@"RUMSessionStarted" body: sessionId];
     }];
 }
 #else

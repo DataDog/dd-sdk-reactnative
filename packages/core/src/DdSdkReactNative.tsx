@@ -35,7 +35,10 @@ import {
 } from './rum/sessionId/sessionIdHelper';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
-import { hasNativeBridge } from './sdk/DatadogInternalBridge/DdSdkNativeBridge';
+import {
+    hasNativeBridge,
+    registerNativeBridge
+} from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
@@ -95,6 +98,8 @@ export class DdSdkReactNative {
         }
 
         InternalLog.verbosity = configuration.verbosity;
+
+        registerNativeBridge();
 
         await DdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)

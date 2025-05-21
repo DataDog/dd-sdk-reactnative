@@ -36,6 +36,12 @@ public class DdSdkNativeInitialization: NSObject {
             // Global.sharedTracer to be set to no-op instances
             consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
             DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+
+            RUMMonitor.shared().currentSessionID { sessionId in
+                guard let id = sessionId else { return }
+                DdSdkSessionStartedListener.instance.rumSessionListener?(id, false)
+            }
+
             return
         }
         self.setVerbosityLevel(configuration: sdkConfiguration)

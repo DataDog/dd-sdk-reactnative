@@ -10,7 +10,6 @@
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNativeConfiguration } from '../../../DdSdkReactNativeConfiguration';
-import type { DdSdkNativeBridgeSpec } from '../DdSdkNativeBridgeSpec';
 
 const mockBatchedBridge = {
     registerCallableModule: jest.fn()
@@ -25,10 +24,24 @@ const mockNativeDdSdkSpec = {
     onRUMSessionStarted: jest.fn()
 };
 
+const mockEventEmitter = {
+    initialize: jest.fn(),
+    addListener: jest.fn(),
+    removeAllListeners: jest.fn()
+};
+
 const mockErrorHandler = jest.fn();
 
-const mockInternalBridge: DdSdkNativeBridgeSpec = {
-    __datadogRumSessionStarted: jest.fn()
+const mockNativeEventEmitter = {
+    initialize: jest.fn().mockReturnValue(true),
+    addListener: jest.fn(),
+    removeAllListeners: jest.fn()
+};
+
+const mockBatchedBridgeEventEmitter = {
+    initialize: jest.fn().mockReturnValue(true),
+    addListener: jest.fn(),
+    removeAllListeners: jest.fn()
 };
 
 describe('DdSdkNativeBridge', () => {
@@ -49,6 +62,24 @@ describe('DdSdkNativeBridge', () => {
             () => mockSessionIdHelper
         );
 
+        jest.mock(
+            '../../DatadogEventEmitter/DatadogNativeEventEmitter',
+            () => ({
+                DatadogNativeEventEmitter: jest
+                    .fn()
+                    .mockImplementation(() => mockNativeEventEmitter)
+            })
+        );
+
+        jest.mock(
+            '../../DatadogEventEmitter/DatadogBatchedBridgeEventEmitter',
+            () => ({
+                DatadogBatchedBridgeEventEmitter: jest
+                    .fn()
+                    .mockImplementation(() => mockBatchedBridgeEventEmitter)
+            })
+        );
+
         jest.mock('../../../specs/NativeDdSdk', () => mockNativeDdSdkSpec);
     });
 
@@ -64,44 +95,41 @@ describe('DdSdkNativeBridge', () => {
         });
 
         it('does not try to register the batched bridge when index is imported', () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            mockNativeEventEmitter.initialize.mockReturnValueOnce(true);
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                )
+            );
             expect(
                 mockBatchedBridge.registerCallableModule
-            ).toHaveBeenCalledTimes(0);
+            ).not.toHaveBeenCalled();
+            expect(mockErrorHandler).not.toHaveBeenCalled();
             expect(ddBridge.hasNativeBridge()).toBe(true);
         });
 
-        it('registers onRUMSessionStarted event listener callback', () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
-            expect(
-                mockNativeDdSdkSpec.onRUMSessionStarted
-            ).toHaveBeenCalledWith(
-                mockInternalBridge.__datadogRumSessionStarted
-            );
-        });
-
-        it('catches errors when native spec import fails', () => {
+        it('catches errors when native event emitter init fails', () => {
             jest.mock('../../../specs/NativeDdSdk', () => undefined);
 
-            const ddBridge = require('../DdSdkNativeBridge');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            mockNativeEventEmitter.initialize.mockReturnValueOnce(false);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
 
             expect(mockErrorHandler).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    message:
-                        'registerNativeBridge() ERROR: NativeDdSdk is undefined'
-                })
+                'ERROR: Native Bridge initialization failed.'
             );
-            expect(
-                mockNativeDdSdkSpec.onRUMSessionStarted
-            ).toHaveBeenCalledTimes(0);
         });
 
         it('session ID is polled when event listener setup failed', async () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            const ddSdkRn = require('../../../DdSdkReactNative');
             jest.mock(
                 'react-native/Libraries/BatchedBridge/BatchedBridge',
                 () => {
@@ -110,7 +138,18 @@ describe('DdSdkNativeBridge', () => {
             );
             jest.mock('../../../specs/NativeDdSdk', () => undefined);
 
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            const ddSdkRn = require('../../../DdSdkReactNative');
+
+            mockNativeEventEmitter.initialize.mockReturnValueOnce(false);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
 
             // GIVEN
             const fakeAppId = '1';
@@ -130,16 +169,23 @@ describe('DdSdkNativeBridge', () => {
             // THEN
             expect(ddBridge.hasNativeBridge()).toBe(false);
             expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalledTimes(
-                0
-            );
+            expect(mockSessionIdHelper.verifySessionId).not.toHaveBeenCalled();
             expect(mockErrorHandler).toHaveBeenCalled();
         });
 
         it('session ID is verified when event listener setup succeeds', async () => {
-            const ddBridge = require('../DdSdkNativeBridge');
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
             const ddSdkRn = require('../../../DdSdkReactNative');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+
+            mockNativeEventEmitter.initialize.mockReturnValueOnce(true);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
 
             // GIVEN
             const fakeAppId = '1';
@@ -159,10 +205,8 @@ describe('DdSdkNativeBridge', () => {
             // THEN
             expect(ddBridge.hasNativeBridge()).toBe(true);
             expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalledTimes(
-                0
-            );
-            expect(mockErrorHandler).toHaveBeenCalledTimes(0);
+            expect(mockSessionIdHelper.pollForSessionId).not.toHaveBeenCalled();
+            expect(mockErrorHandler).not.toHaveBeenCalled();
         });
     });
 
@@ -172,45 +216,61 @@ describe('DdSdkNativeBridge', () => {
         });
 
         it('does not try to register the event listener when index is imported', () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
-            expect(
-                mockNativeDdSdkSpec.onRUMSessionStarted
-            ).toHaveBeenCalledTimes(0);
-            expect(ddBridge.hasNativeBridge()).toBe(true);
-        });
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(true);
 
-        it('registers the bridge when index is imported', () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
-            expect(mockBatchedBridge.registerCallableModule).toHaveBeenCalled();
-            expect(ddBridge.hasNativeBridge()).toBe(true);
-            expect(mockErrorHandler).toHaveBeenCalledTimes(0);
-        });
-
-        it('hasBatchedBridge is false when batched bridge import fails', () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            jest.mock(
-                'react-native/Libraries/BatchedBridge/BatchedBridge',
-                () => {
-                    throw new Error('TEST IMPORT FAILED');
-                }
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                )
             );
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+
+            expect(mockNativeEventEmitter.initialize).not.toHaveBeenCalled();
+            expect(mockBatchedBridgeEventEmitter.initialize).toHaveBeenCalled();
+            expect(mockErrorHandler).not.toHaveBeenCalled();
+            expect(ddBridge.hasNativeBridge()).toBe(true);
+        });
+
+        it('hasBatchedBridge is false when batched bridge init fails', () => {
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(false);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
+            ddBridge.registerNativeBridge(mockEventEmitter);
             expect(ddBridge.hasNativeBridge()).toBe(false);
-            expect(mockErrorHandler).toHaveBeenCalled();
+            expect(mockErrorHandler).toHaveBeenCalledWith(
+                'ERROR: Native Bridge initialization failed.'
+            );
         });
 
         it('session ID is polled when batched bridge setup failed', async () => {
-            const ddBridge = require('../DdSdkNativeBridge');
-            const ddSdkRn = require('../../../DdSdkReactNative');
             jest.mock(
                 'react-native/Libraries/BatchedBridge/BatchedBridge',
                 () => {
                     throw new Error('Import failed');
                 }
             );
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+            jest.mock('../../../specs/NativeDdSdk', () => undefined);
+
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+            const ddSdkRn = require('../../../DdSdkReactNative');
+
+            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(false);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
 
             // GIVEN
             const fakeAppId = '1';
@@ -230,16 +290,23 @@ describe('DdSdkNativeBridge', () => {
             // THEN
             expect(ddBridge.hasNativeBridge()).toBe(false);
             expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalledTimes(
-                0
-            );
+            expect(mockSessionIdHelper.verifySessionId).not.toHaveBeenCalled();
             expect(mockErrorHandler).toHaveBeenCalled();
         });
 
         it('session ID is verified when batched bridge setup succeeds', async () => {
-            const ddBridge = require('../DdSdkNativeBridge');
+            const ddBridge = require('../DdSdkInternalNativeBridge');
+            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
             const ddSdkRn = require('../../../DdSdkReactNative');
-            ddBridge.registerNativeBridge(mockInternalBridge, mockErrorHandler);
+
+            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(true);
+
+            ddBridge.registerNativeBridge(
+                new defaultEventEmitter.DatadogDefaultEventEmitter(
+                    mockErrorHandler
+                ),
+                mockErrorHandler
+            );
 
             // GIVEN
             const fakeAppId = '1';
@@ -259,10 +326,8 @@ describe('DdSdkNativeBridge', () => {
             // THEN
             expect(ddBridge.hasNativeBridge()).toBe(true);
             expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalledTimes(
-                0
-            );
-            expect(mockErrorHandler).toHaveBeenCalledTimes(0);
+            expect(mockSessionIdHelper.pollForSessionId).not.toHaveBeenCalled();
+            expect(mockErrorHandler).not.toHaveBeenCalled();
         });
     });
 });
