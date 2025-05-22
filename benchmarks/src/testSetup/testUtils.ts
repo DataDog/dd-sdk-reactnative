@@ -24,7 +24,7 @@ export const DEFAULT_ENV_TEST_CONFIG: TestConfig = {
     runType: Config.BENCH_RUN_TYPE,
 };
 
-export const getDatadogConfig =(): DatadogConfig => {
+export const getDatadogConfig = (): DatadogConfig => {
     return {
         clientToken: Config.DD_CLIENT_TOKEN,
         applicationID: Config.DD_APP_ID,
@@ -90,7 +90,7 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
         TrackingConsent.GRANTED
     );
     config.nativeCrashReportEnabled = true
-    config.sampleRate = 100
+    config.sessionSamplingRate = 100;
     config.serviceName = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
 
