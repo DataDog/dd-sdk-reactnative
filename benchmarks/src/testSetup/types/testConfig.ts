@@ -11,7 +11,9 @@ export enum Command {
 
 export enum Scenario {
     Default = 'default',
-    NavigationExample = 'navigation'
+    NavigationExample = 'navigation',
+    LogsCustom = 'logsCustom',
+    LogsHeavyTraffic = 'logsHeavyTraffic'
     // Add new scenarios here
 }
 

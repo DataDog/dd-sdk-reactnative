@@ -15,6 +15,8 @@ import { Command, Scenario } from './testSetup/types/testConfig';
 import type { TestConfig } from './testSetup/types/testConfig';
 import DefaultScenario from './scenario/Default/defaultScenario';
 import NavigationExampleScenario from './scenario/NavigationExample/navigationExampleScenario';
+import LogsCustomScenario from './scenario/Logs/logsCustomScenario';
+import LogsHeavyTrafficScenario from './scenario/Logs/logsHeavyTraffic';
 
 function App(): React.JSX.Element {
   const [testConfig, setTestConfig] = useState<TestConfig | undefined>();
@@ -67,6 +69,10 @@ function App(): React.JSX.Element {
       return <DefaultScenario testConfig={testConfig}/>;
     case Scenario.NavigationExample:
       return <NavigationExampleScenario testConfig={testConfig}/>;
+    case Scenario.LogsCustom:
+      return <LogsCustomScenario testConfig={testConfig}/>;
+    case Scenario.LogsHeavyTraffic:
+      return <LogsHeavyTrafficScenario testConfig={testConfig}/>;
     // Add new scenarios here
     default:
       return (
