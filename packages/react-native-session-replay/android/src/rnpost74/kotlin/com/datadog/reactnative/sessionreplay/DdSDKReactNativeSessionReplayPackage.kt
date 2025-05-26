@@ -18,7 +18,9 @@ import com.facebook.react.uimanager.ViewManager
  * Package of native dd-sdk-reactnative native modules.
  */
 class DdSDKReactNativeSessionReplayPackage : BaseReactPackage() {
-    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
+    override fun createViewManagers(
+        reactContext: ReactApplicationContext
+    ): List<ViewManager<*, *>> {
         return listOf(DdPrivacyViewManager(reactContext))
     }
 
@@ -38,10 +40,10 @@ class DdSDKReactNativeSessionReplayPackage : BaseReactPackage() {
                 ReactModuleInfo(
                     it,
                     it,
-                    false,  // canOverrideExistingModule
-                    false,  // needsEagerInit
-                    true,  // hasConstants
-                    false,  // isCxxModule
+                    false, // canOverrideExistingModule
+                    false, // needsEagerInit
+                    true, // hasConstants
+                    false, // isCxxModule
                     isTurboModule // isTurboModule
                 )
             }
@@ -49,5 +51,4 @@ class DdSDKReactNativeSessionReplayPackage : BaseReactPackage() {
             moduleInfos
         }
     }
-
 }
