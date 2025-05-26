@@ -7,17 +7,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable global-require */
 
-import { NativeModules } from 'react-native';
-
-import { DdSdkReactNativeConfiguration } from '../../../DdSdkReactNativeConfiguration';
-
 const mockBatchedBridge = {
     registerCallableModule: jest.fn()
-};
-
-const mockSessionIdHelper = {
-    pollForSessionId: jest.fn(),
-    verifySessionId: jest.fn()
 };
 
 const mockNativeDdSdkSpec = {
@@ -55,11 +46,6 @@ describe('DdSdkNativeBridge', () => {
         jest.mock(
             'react-native/Libraries/BatchedBridge/BatchedBridge',
             () => mockBatchedBridge
-        );
-
-        jest.mock(
-            '../../../rum/sessionId/sessionIdHelper.ts',
-            () => mockSessionIdHelper
         );
 
         jest.mock(
@@ -128,86 +114,6 @@ describe('DdSdkNativeBridge', () => {
                 'ERROR: Native Bridge initialization failed.'
             );
         });
-
-        it('session ID is polled when event listener setup failed', async () => {
-            jest.mock(
-                'react-native/Libraries/BatchedBridge/BatchedBridge',
-                () => {
-                    throw new Error('Import failed');
-                }
-            );
-            jest.mock('../../../specs/NativeDdSdk', () => undefined);
-
-            const ddBridge = require('../DdSdkInternalNativeBridge');
-            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
-            const ddSdkRn = require('../../../DdSdkReactNative');
-
-            mockNativeEventEmitter.initialize.mockReturnValueOnce(false);
-
-            ddBridge.registerNativeBridge(
-                new defaultEventEmitter.DatadogDefaultEventEmitter(
-                    mockErrorHandler
-                ),
-                mockErrorHandler
-            );
-
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await ddSdkRn.DdSdkReactNative.initialize(configuration);
-
-            // THEN
-            expect(ddBridge.hasNativeBridge()).toBe(false);
-            expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.verifySessionId).not.toHaveBeenCalled();
-            expect(mockErrorHandler).toHaveBeenCalled();
-        });
-
-        it('session ID is verified when event listener setup succeeds', async () => {
-            const ddBridge = require('../DdSdkInternalNativeBridge');
-            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
-            const ddSdkRn = require('../../../DdSdkReactNative');
-
-            mockNativeEventEmitter.initialize.mockReturnValueOnce(true);
-
-            ddBridge.registerNativeBridge(
-                new defaultEventEmitter.DatadogDefaultEventEmitter(
-                    mockErrorHandler
-                ),
-                mockErrorHandler
-            );
-
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await ddSdkRn.DdSdkReactNative.initialize(configuration);
-
-            // THEN
-            expect(ddBridge.hasNativeBridge()).toBe(true);
-            expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.pollForSessionId).not.toHaveBeenCalled();
-            expect(mockErrorHandler).not.toHaveBeenCalled();
-        });
     });
 
     describe('old architecture implementation', () => {
@@ -248,86 +154,6 @@ describe('DdSdkNativeBridge', () => {
             expect(mockErrorHandler).toHaveBeenCalledWith(
                 'ERROR: Native Bridge initialization failed.'
             );
-        });
-
-        it('session ID is polled when batched bridge setup failed', async () => {
-            jest.mock(
-                'react-native/Libraries/BatchedBridge/BatchedBridge',
-                () => {
-                    throw new Error('Import failed');
-                }
-            );
-            jest.mock('../../../specs/NativeDdSdk', () => undefined);
-
-            const ddBridge = require('../DdSdkInternalNativeBridge');
-            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
-            const ddSdkRn = require('../../../DdSdkReactNative');
-
-            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(false);
-
-            ddBridge.registerNativeBridge(
-                new defaultEventEmitter.DatadogDefaultEventEmitter(
-                    mockErrorHandler
-                ),
-                mockErrorHandler
-            );
-
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await ddSdkRn.DdSdkReactNative.initialize(configuration);
-
-            // THEN
-            expect(ddBridge.hasNativeBridge()).toBe(false);
-            expect(mockSessionIdHelper.pollForSessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.verifySessionId).not.toHaveBeenCalled();
-            expect(mockErrorHandler).toHaveBeenCalled();
-        });
-
-        it('session ID is verified when batched bridge setup succeeds', async () => {
-            const ddBridge = require('../DdSdkInternalNativeBridge');
-            const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
-            const ddSdkRn = require('../../../DdSdkReactNative');
-
-            mockBatchedBridgeEventEmitter.initialize.mockReturnValueOnce(true);
-
-            ddBridge.registerNativeBridge(
-                new defaultEventEmitter.DatadogDefaultEventEmitter(
-                    mockErrorHandler
-                ),
-                mockErrorHandler
-            );
-
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await ddSdkRn.DdSdkReactNative.initialize(configuration);
-
-            // THEN
-            expect(ddBridge.hasNativeBridge()).toBe(true);
-            expect(mockSessionIdHelper.verifySessionId).toHaveBeenCalled();
-            expect(mockSessionIdHelper.pollForSessionId).not.toHaveBeenCalled();
-            expect(mockErrorHandler).not.toHaveBeenCalled();
         });
     });
 });

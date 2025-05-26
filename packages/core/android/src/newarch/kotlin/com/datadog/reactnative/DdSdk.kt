@@ -155,15 +155,4 @@ class DdSdk(
             }
         })
     }
-
-    @MainThread
-    private fun emitSessionId(reactContext: ReactApplicationContext, sessionId: String) {
-        try {
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("RUMSessionStarted", sessionId)
-        } catch(err: Exception) {
-            return
-        }
-    }
 }
