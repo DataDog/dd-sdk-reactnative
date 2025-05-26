@@ -8,7 +8,12 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-umbrella.h>
 #import "RCTDatadogWebViewManager.h"
 #import "RCTDatadogWebView.h"
-#import "DatadogSDKReactNativeWebView-Swift.h"
+
+#if __has_include("DatadogSDKReactNativeWebView-Swift.h")
+#import <DatadogSDKReactNativeWebView-Swift.h>
+#else
+#import <DatadogSDKReactNativeWebView/DatadogSDKReactNativeWebView-Swift.h>
+#endif
 
 @interface RCTDatadogWebViewManager () <RNCWebViewDelegate, RCTDatadogWebViewDelegate>
     @property (nonatomic, strong) NSMutableSet *allowedHosts;

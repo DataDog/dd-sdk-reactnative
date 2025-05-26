@@ -28,14 +28,21 @@ Pod::Spec.new do |s|
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 
+
+  xcconfig = {
+    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/React-RCTFabric/**",
+  }
+
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
     s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
     
-    s.pod_target_xcconfig = {
+    xcconfig.merge!({
       "DEFINES_MODULE" => "YES",
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
-    }
+    })
   end
+
+  s.pod_target_xcconfig = xcconfig
 
   if respond_to?(:install_modules_dependencies, true)
     install_modules_dependencies(s)
