@@ -20,7 +20,7 @@ import { DatadogTracingContext } from '../instrumentation/resourceTracking/distr
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
-import { setCachedRumSessionId } from '../sessionId/sessionIdHelper';
+import { setCachedSessionId } from '../sessionId/sessionIdHelper';
 import type { FirstPartyHost } from '../types';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
@@ -47,7 +47,7 @@ describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
-        setCachedRumSessionId(null);
+        setCachedSessionId(undefined as any);
     });
 
     describe('Context validation', () => {
@@ -985,8 +985,8 @@ describe('DdRum', () => {
                 it('tracing context contains RUM session ID in baggage when RUM Session ID is cached', () => {
                     for (let i = 0; i < 100; i++) {
                         const randomSessionId = `test-${Math.random()}`;
-                        setCachedRumSessionId(randomSessionId);
 
+                        setCachedSessionId(randomSessionId);
                         const tracingContext = DdRum.getTracingContextForPropagators(
                             [
                                 PropagatorType.DATADOG,

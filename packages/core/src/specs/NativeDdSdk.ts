@@ -86,7 +86,6 @@ export interface Spec extends TurboModule {
      * https://github.com/react-native-community/RNNewArchitectureLibraries/tree/feat/swift-event-emitter?tab=readme-ov-file#codegen-update-codegen-specs)
      */
     addListener: (eventType: string) => void;
-
     removeListeners: (count: number) => void;
 }
 

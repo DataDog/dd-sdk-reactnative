@@ -30,7 +30,7 @@ target 'ddSdkReactnativeExample' do
   # pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
   post_install do |installer|
-      # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,
       config[:reactNativePath],
@@ -40,6 +40,35 @@ target 'ddSdkReactnativeExample' do
     datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
     datadog_sdk_target.build_configurations.each do |config|
       config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
-    end      
+    end
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+      end
+    end
+
+    # Modify RCT-Folly Portability.h to disable coroutines
+    Dir.glob(installer.sandbox.root + "RCT-Folly/folly/Portability.h") do |file|
+      begin
+        # First try to make the file writable
+        system "chmod +w #{file}"
+
+        contents = File.read(file)
+        modified_contents = contents.gsub(/#define FOLLY_HAS_COROUTINES 1/, '#define FOLLY_HAS_COROUTINES 0')
+
+        # Try writing with elevated privileges if needed
+        if !File.writable?(file)
+          system "sudo chmod +w #{file}"
+        end
+
+        File.write(file, modified_contents)
+
+        # Optionally restore original permissions
+        system "chmod -w #{file}"
+      rescue => e
+        Pod::UI.warn "Failed to modify Portability.h: #{e.message}"
+      end
+    end
   end
 end

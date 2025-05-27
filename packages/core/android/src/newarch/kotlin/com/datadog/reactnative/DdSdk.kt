@@ -7,11 +7,13 @@
 package com.datadog.reactnative
 
 import android.app.Activity
+import androidx.annotation.MainThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
@@ -24,20 +26,7 @@ class DdSdk(
     override fun getName(): String = DdSdkImplementation.NAME
 
     init {
-        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
-            override fun onHostResume() {
-                val currentActivity: Activity? = currentActivity
-                if (currentActivity != null) {
-                    val intent = currentActivity.intent
-                    val extras = intent.extras
-                    DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
-                    DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
-                }
-            }
-
-            override fun onHostPause() {}
-            override fun onHostDestroy() {}
-        })
+        registerLifecycleEvents(reactContext)
     }
 
     /**
@@ -142,5 +131,28 @@ class DdSdk(
 
     override fun removeListeners(count: Double) {
         // No-op
+    }
+
+    private fun registerLifecycleEvents(reactContext: ReactApplicationContext) {
+        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
+            override fun onHostResume() {
+                val currentActivity: Activity? = currentActivity
+                if (currentActivity != null) {
+                    val intent = currentActivity.intent
+                    val extras = intent.extras
+                    DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
+                    DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
+                }
+
+                DdSdkSessionStartedListener.getInstance().setReactContext(reactContext)
+            }
+
+            override fun onHostPause() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+            override fun onHostDestroy() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+        })
     }
 }

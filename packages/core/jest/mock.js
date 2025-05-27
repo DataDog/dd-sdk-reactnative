@@ -128,6 +128,10 @@ module.exports = {
         generateTraceId: jest.fn().mockReturnValue('mock-trace-id'),
         generateSpanId: jest.fn().mockReturnValue('mock-span-id')
     },
-
-    DatadogProvider: DatadogProviderMock
+    DatadogProvider: DatadogProviderMock,
+    DdSdk: {
+        initialize: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve()))
+    }
 };

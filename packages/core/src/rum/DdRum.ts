@@ -30,8 +30,8 @@ import {
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import {
-    getCachedRumSessionId,
-    setCachedRumSessionId
+    getCachedSessionId,
+    setCachedSessionId
 } from './sessionId/sessionIdHelper';
 import type {
     ErrorSource,
@@ -53,13 +53,6 @@ class DdRumWrapper implements DdRumType {
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
     private timeProvider: TimeProvider = new DefaultTimeProvider();
-
-    constructor() {
-        // Fetch the current session if any (because we might have missed the first RumSessionStarted event)
-        this.getCurrentSessionId().then(value => {
-            setCachedRumSessionId(value ?? null);
-        });
-    }
 
     startView = (
         key: string,
@@ -324,13 +317,10 @@ class DdRumWrapper implements DdRumType {
             return undefined;
         }
         const sessionId = await this.nativeRum.getCurrentSessionId();
-        setCachedRumSessionId(sessionId ?? null);
-
+        if (sessionId) {
+            setCachedSessionId(sessionId);
+        }
         return sessionId;
-    }
-
-    getCachedSessionId(): string | null {
-        return getCachedRumSessionId();
     }
 
     getTracingContext = (
@@ -342,7 +332,7 @@ class DdRumWrapper implements DdRumType {
             url,
             tracingSamplingRate,
             firstPartyHosts,
-            getCachedRumSessionId()
+            getCachedSessionId()
         );
     };
 
@@ -353,7 +343,7 @@ class DdRumWrapper implements DdRumType {
         return getTracingContextForPropagators(
             propagators,
             tracingSamplingRate,
-            getCachedRumSessionId()
+            getCachedSessionId()
         );
     };
 

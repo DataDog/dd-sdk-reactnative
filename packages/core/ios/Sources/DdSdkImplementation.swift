@@ -59,11 +59,11 @@ public class DdSdkImplementation: NSObject {
     
     // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func initialize(configuration: NSDictionary, eventEmitter: RCTEventEmitter?, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
+    public func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
         let sdkConfiguration = configuration.asDdSdkConfiguration()
         let nativeInitialization = DdSdkNativeInitialization()
 
-        nativeInitialization.initialize(sdkConfiguration: sdkConfiguration, eventEmitter: eventEmitter)
+        nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
         self.overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
 

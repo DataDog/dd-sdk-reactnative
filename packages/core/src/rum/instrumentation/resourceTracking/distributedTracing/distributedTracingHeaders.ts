@@ -152,7 +152,7 @@ export const getTracingContext = (
     url: string,
     tracingSamplingRate: number,
     firstPartyHosts: FirstPartyHost[],
-    rumSessionId: string | null
+    rumSessionId?: string
 ): DatadogTracingContext => {
     const hostname = URLHostParser(url);
     const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
@@ -174,7 +174,7 @@ export const getTracingContext = (
 export const getTracingContextForPropagators = (
     propagators: PropagatorType[],
     tracingSamplingRate: number,
-    rumSessionId: string | null
+    rumSessionId?: string
 ): DatadogTracingContext => {
     return getTracingContextForAttributes(
         generateTracingAttributesWithSampling(

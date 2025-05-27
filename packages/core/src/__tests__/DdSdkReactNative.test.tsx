@@ -17,7 +17,6 @@ import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { registerRumSessionIdListener } from '../rum/sessionId/sessionIdHelper';
 import { ErrorSource, PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { DdSdk } from '../sdk/DdSdk';
@@ -58,15 +57,6 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
     };
 });
 
-jest.mock('../rum/sessionId/sessionIdHelper', () => {
-    return {
-        registerRumSessionIdListener: jest.fn(),
-        removeRumSessionIdListeners: jest.fn(),
-        getCachedRumSessionId: jest.fn(),
-        setCachedRumSessionId: jest.fn()
-    };
-});
-
 beforeEach(async () => {
     GlobalState.instance.isInitialized = false;
     DdSdkReactNative['wasAutoInstrumented'] = false;
@@ -74,6 +64,7 @@ beforeEach(async () => {
     NativeModules.DdSdk.setAttributes.mockClear();
     NativeModules.DdSdk.setUser.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
+    NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
     (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
         typeof DdRumUserInteractionTracking.startTracking
@@ -88,10 +79,6 @@ beforeEach(async () => {
 
     UserInfoSingleton.reset();
     AttributesSingleton.reset();
-
-    (registerRumSessionIdListener as jest.MockedFunction<
-        () => void
-    >).mockClear();
 });
 
 describe('DdSdkReactNative', () => {
@@ -1055,29 +1042,6 @@ describe('DdSdkReactNative', () => {
                 trace: 'https://trace.example.com/',
                 logs: 'https://logs.example.com/'
             });
-        });
-
-        it('registers RUM Session ID listener when initialize', async () => {
-            // GIVEN
-            const fakeAppId = '1';
-            const fakeClientToken = '2';
-            const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
-                fakeClientToken,
-                fakeEnvName,
-                fakeAppId,
-                false,
-                false,
-                true
-            );
-
-            NativeModules.DdSdk.initialize.mockResolvedValue(null);
-
-            // WHEN
-            await DdSdkReactNative.initialize(configuration);
-
-            // THEN
-            expect(registerRumSessionIdListener).toHaveBeenCalledTimes(1);
         });
     });
 

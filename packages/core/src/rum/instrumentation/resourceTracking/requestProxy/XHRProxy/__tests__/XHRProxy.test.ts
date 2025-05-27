@@ -11,6 +11,7 @@ import { InternalLog } from '../../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../../DdRum';
+import { setCachedSessionId } from '../../../../../sessionId/sessionIdHelper';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
@@ -26,7 +27,8 @@ import {
     ORIGIN_RUM,
     ORIGIN_HEADER_KEY,
     TRACESTATE_HEADER_KEY,
-    TAGS_HEADER_KEY
+    TAGS_HEADER_KEY,
+    BAGGAGE_HEADER_KEY
 } from '../../../distributedTracing/distributedTracingHeaders';
 import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
 import {
@@ -757,6 +759,85 @@ describe('XHRProxy', () => {
             ).not.toBeUndefined();
             expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
             expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+        });
+
+        it('adds rum session id to baggage headers when available', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId('TEST-SESSION-ID');
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBe(
+                'session.id=TEST-SESSION-ID'
+            );
+        });
+
+        it('does not add rum session id to baggage headers when session id not cached', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId(undefined as any);
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
         });
     });
 

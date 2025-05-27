@@ -82,9 +82,9 @@ test:native-android:
     - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
     - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/internal-testing-tools/android/gradle.properties
     - yarn
-    - (cd packages/core/android && ./gradlew build)
-    - (cd packages/react-native-session-replay/android && ./gradlew build)
-    - (cd packages/internal-testing-tools/android && ./gradlew build)
+    - (cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)
+    - (cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)
+    - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
   tags: [ "macos:sonoma", "specific:true" ]
@@ -92,7 +92,7 @@ test:native-ios:
   timeout: 1h
   script:
     - yarn
-    - (cd example/ios && pod install --repo-update)
+    - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
     - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
@@ -101,5 +101,5 @@ test:native-ios-sr:
   timeout: 1h
   script:
     - yarn
-    - (cd example/ios && pod install --repo-update)
+    - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
     - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
