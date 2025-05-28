@@ -14,13 +14,12 @@ export enum Colors {
     DatadogPurple = '#BC72E4',
     Background = '#F2F2F7',
     Title = '#AFAFA0',
-    Separator = '#F2F2F7',
 }
 
 export const CommonStyles = StyleSheet.create({
     safeAreaContainer: {
         flex: 1,
-        backgroundColor: Colors.Background,
+        backgroundColor: Colors.Grey,
     },
     container: {
         flex: 1,
@@ -42,7 +41,7 @@ export const CommonStyles = StyleSheet.create({
     separator: {
         height: 1,
         width: '100%',
-        backgroundColor: Colors.Separator,
+        backgroundColor: Colors.Background,
     },
     input: {
         flex: 1,
@@ -81,5 +80,13 @@ export const CommonStyles = StyleSheet.create({
         borderBottomColor: Colors.Grey,
         borderBottomWidth: 1,
         fontSize: 12,
+    },
+    imageContainer: {
+    },
+    image: {
+        height: 150,
+        padding: 10,
+        borderRadius: 10,
+        backgroundColor: Colors.White,
     }
 })

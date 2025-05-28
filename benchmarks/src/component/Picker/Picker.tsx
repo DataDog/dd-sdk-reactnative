@@ -5,7 +5,7 @@
  */
 
 import React, {useState} from 'react';
-import {Platform, Pressable, Text, View} from 'react-native';
+import {Platform, Pressable, Text } from 'react-native';
 import {Picker as RNPicker} from '@react-native-picker/picker';
 import type {PickerProps} from './types';
 import styles from './styles';
