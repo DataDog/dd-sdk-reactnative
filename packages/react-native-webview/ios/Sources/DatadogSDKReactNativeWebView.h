@@ -9,4 +9,4 @@
 
 #import "RCTDatadogWebView.h"
 #import "RCTDatadogWebViewManager.h"
-#import <react-native-webview/RNCWebViewImpl.h>
+#import "RNCWebViewImpl.h"

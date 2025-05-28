@@ -11,7 +11,13 @@
 #import <react/renderer/components/DdSDKReactNativeSessionReplay/Props.h>
 #import <react/renderer/components/DdSDKReactNativeSessionReplay/RCTComponentViewHelpers.h>
 #import <React/RCTFabricComponentsPlugins.h>
-#import "DatadogSDKReactNativeSessionReplay-Swift.h"
+
+
+#if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
+#import <DatadogSDKReactNativeSessionReplay-Swift.h>
+#else
+#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
+#endif
 
 using namespace facebook::react;
 
