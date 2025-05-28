@@ -27,6 +27,17 @@ export type LogsHeavyTrafficScenarioProps = {
     testConfig?: TestConfig,
 }
 
+export type ImageListProps = {
+    testConfig?: TestConfig,
+}
+
+export type LogsHeavyTrafficConfigParams = {
+    logMessage?: string;
+    logLevel?: LogLevel;
+    payloadSize?: PayloadSize;
+    logsPerBatch?: number;
+}
+
 export const PAYLOADS_BY_SIZE = {
     Small: {
         log_type: "simple",

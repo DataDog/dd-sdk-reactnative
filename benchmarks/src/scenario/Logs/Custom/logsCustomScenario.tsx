@@ -15,28 +15,16 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {LogLevel, PAYLOADS_BY_SIZE, PayloadSize} from './types';
-import type {LogsCustomScenarioProps} from './types';
-import {RunType} from '../../testSetup/types/testConfig';
-import {instrument} from '../../testSetup/testUtils';
-import { CommonStyles as styles } from '../../common/styles';
-import Stepper from '../../component/Stepper/Stepper';
-import {Colors} from '../../common/styles';
+import {LogLevel, PAYLOADS_BY_SIZE, PayloadSize} from '../types';
+import type {LogsCustomScenarioProps} from '../types';
+import {RunType} from '../../../testSetup/types/testConfig';
+import {instrument} from '../../../testSetup/testUtils';
+import { Colors, CommonStyles as styles } from '../../../common/styles';
+import Stepper from '../../../component/Stepper/Stepper';
 import {DdLogs} from '@datadog/mobile-react-native';
-import {Logger} from '../../testSetup/logger';
-import Picker from '../../component/Picker/Picker';
-
-const DEFAULT_LOG_MESSAGE: string = `Hello from the RN ${Platform.OS} Benchmark app`;
-const DEFAULT_LOGS_PER_SECOND: number = 10;
-const DEFAULT_LOG_INTERVAL: number = 1; // In seconds
-const LOG_LEVELS = Object.entries(LogLevel).map(([key, value]) => ({
-  label: key,
-  value,
-}));
-const PAYLOAD_SIZES = Object.entries(PayloadSize).map(([key, value]) => ({
-  label: key,
-  value,
-}));
+import {Logger} from '../../../testSetup/logger';
+import Picker from '../../../component/Picker/Picker';
+import { DEFAULT_LOGS_PER_SECOND, DEFAULT_LOG_INTERVAL, DEFAULT_LOG_MESSAGE, LOG_LEVELS, PAYLOAD_SIZES } from '../constants';
 
 function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
   const logger = useRef(Logger);
@@ -57,38 +45,20 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
   const [logOutput, setLogOutput] = useState<string[]>(logOutputBuffer.current);
   const logOutPutScrollViewRef = useRef<ScrollView>(null);
 
-  const [isLogLevelPickerOpen, setIsLogLevelPickerOpen] =
-    useState<boolean>(false);
-  const [isPayloadSizePickerOpen, setIsPayloadSizePickerOpen] =
-    useState<boolean>(false);
-
   useEffect(() => {
     if (props.testConfig?.runType !== RunType.BASELINE) {
-      instrument(props.testConfig);
+      instrument();
       logger.current = DdLogs;
     }
   }, []);
 
   // UI Management
-
-  const openLogLevelPicker = () => {
-    setIsLogLevelPickerOpen(true);
-    setIsPayloadSizePickerOpen(false);
-  };
-
   const onLogLevelChanged = (newLogLevel: LogLevel | unknown) => {
     setLogLevel(newLogLevel as LogLevel);
-    setIsLogLevelPickerOpen(false);
-  };
-
-  const openPayloadSizePicker = () => {
-    setIsPayloadSizePickerOpen(true);
-    setIsLogLevelPickerOpen(false);
   };
 
   const onPayloadSizeChanged = (newPayloadSize: PayloadSize | unknown) => {
     setPayloadSize(newPayloadSize as PayloadSize);
-    setIsPayloadSizePickerOpen(false);
   };
 
   const onLogsPerSecondChanged = (newLogsPerSecond: string) => {
