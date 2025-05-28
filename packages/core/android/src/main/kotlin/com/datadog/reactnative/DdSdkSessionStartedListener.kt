@@ -63,25 +63,17 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     private fun hasValidBridge(): Boolean {
         val context = reactContext ?: return false
         val instance = context.catalystInstance ?: return false
-        return !isNewArchitecture(context) &&
+        return !isNewArchitecture() &&
                 !instance.isDestroyed &&
                 context.hasActiveReactInstance()
     }
 
-    private fun isNewArchitecture(context: ReactContext): Boolean {
+    private fun isNewArchitecture(): Boolean {
         isNewArchitecture?.let { return it }
-
-        @Suppress("SwallowedException")
-        val method = try {
-            context.javaClass.getMethod("getFabricUIManager")
-        } catch (e: NoSuchMethodException) {
-            return false
+        BuildConfig.IS_NEW_ARCHITECTURE_ENABLED.let {
+            isNewArchitecture = it
+            return it
         }
-
-        val hasFabricUIManager = method.invoke(reactContext) != null
-        this.isNewArchitecture = hasFabricUIManager
-
-        return hasFabricUIManager
     }
 
     private fun sendSessionStartedToJS(sessionId: String) {
