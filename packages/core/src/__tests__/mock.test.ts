@@ -50,6 +50,9 @@ const privateProperties = {
         'wasAutoInstrumented',
         'initializeNativeSDK',
         '_initializeFromDatadogProviderWithConfigurationAsync',
+        '_enableFeaturesFromDatadogProvider',
+        '_enableFeaturesFromDatadogProviderAsync',
+        '_initializeFromDatadogProvider',
         'buildConfiguration'
     ]
 };

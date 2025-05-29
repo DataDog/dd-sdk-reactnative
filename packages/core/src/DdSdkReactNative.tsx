@@ -106,9 +106,9 @@ export class DdSdkReactNative {
     /**
      * FOR INTERNAL USE ONLY.
      */
-    static async _initializeFromDatadogProvider(
+    static _initializeFromDatadogProvider = async (
         configuration: DatadogProviderConfiguration
-    ): Promise<void> {
+    ): Promise<void> => {
         DdSdkReactNative.enableFeatures(configuration);
         if (configuration instanceof FileBasedConfiguration) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
@@ -133,20 +133,25 @@ export class DdSdkReactNative {
                 initializationModeForTelemetry: 'SYNC'
             });
         }
-    }
+    };
 
     /**
      * FOR INTERNAL USE ONLY.
      */
-    static async _enableFeaturesFromDatadogProvider(
+    static _enableFeaturesFromDatadogProvider = (
         features: AutoInstrumentationConfiguration
-    ): Promise<void> {
+    ): void => {
+        DdSdkReactNative._enableFeaturesFromDatadogProviderAsync(features);
+    };
+
+    static _enableFeaturesFromDatadogProviderAsync = async (
+        features: AutoInstrumentationConfiguration
+    ): Promise<void> => {
         DdSdkReactNative.features = features;
         DdSdkReactNative.enableFeatures(
             addDefaultValuesToAutoInstrumentationConfiguration(features)
         );
-    }
-
+    };
     /**
      * FOR INTERNAL USE ONLY.
      */
