@@ -31,12 +31,14 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
             configuration.trackInteractions,
             configuration.trackResources,
             configuration.trackErrors,
-            configuration.trackingConsent
+            configuration.trackingConsent,
+            configuration.useAccessibilityLabel
         );
         this.longTaskThresholdMs =
             configuration.longTaskThresholdMs || DEFAULTS.longTaskThresholdMs;
         this.verbosity = configuration.verbosity;
         this.actionNameAttribute = configuration.actionNameAttribute;
+        this.site = configuration.site || DEFAULTS.site;
         this.resourceTracingSamplingRate =
             configuration.resourceTracingSamplingRate ||
             DEFAULTS.resourceTracingSamplingRate;
@@ -123,6 +125,8 @@ export const getJSONConfiguration = (
     actionNameAttribute: string | undefined;
     resourceTracingSamplingRate: number | undefined;
     firstPartyHosts: FirstPartyHostsConfiguration | undefined;
+    site: string | undefined;
+    useAccessibilityLabel: boolean | undefined;
 } => {
     const configuration = resolveJSONConfiguration(userSpecifiedConfiguration);
 
@@ -138,7 +142,9 @@ export const getJSONConfiguration = (
         verbosity: buildSdkVerbosity(configuration.verbosity),
         actionNameAttribute: configuration.actionNameAttribute,
         resourceTracingSamplingRate: configuration.resourceTracingSamplingRate,
-        firstPartyHosts: buildFirstPartyHosts(configuration.firstPartyHosts)
+        firstPartyHosts: buildFirstPartyHosts(configuration.firstPartyHosts),
+        site: configuration.site,
+        useAccessibilityLabel: configuration.useAccessibilityLabel
     };
 };
 
