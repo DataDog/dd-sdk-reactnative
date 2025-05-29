@@ -2381,7 +2381,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-code-push@workspace:packages/codepush"
   dependencies:
-    "@datadog/mobile-react-native": ^2.8.0
+    "@datadog/mobile-react-native": "workspace:packages/core"
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
     react-native-code-push: 7.1.0

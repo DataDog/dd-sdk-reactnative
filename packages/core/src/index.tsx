@@ -12,6 +12,7 @@ import {
     BatchSize,
     BatchProcessingLevel
 } from './DdSdkReactNativeConfiguration';
+import type { AutoInstrumentationConfiguration } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
@@ -74,4 +75,4 @@ export {
     DatadogTracingContext
 };
 
-export type { Timestamp, FirstPartyHost };
+export type { Timestamp, FirstPartyHost, AutoInstrumentationConfiguration };
