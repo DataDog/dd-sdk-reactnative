@@ -37,6 +37,33 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - DatadogSDKReactNative/Tests (2.8.0):
+    - DatadogCore (~> 2.27.0)
+    - DatadogCrashReporting (~> 2.27.0)
+    - DatadogLogs (~> 2.27.0)
+    - DatadogRUM (~> 2.27.0)
+    - DatadogTrace (~> 2.27.0)
+    - DatadogWebViewTracking (~> 2.27.0)
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - DatadogTrace (2.27.0):
     - DatadogInternal (= 2.27.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
@@ -1607,7 +1634,8 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - "DatadogSDKReactNative (from `../node_modules/@datadog/mobile-react-native`)"
+  - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1691,7 +1719,7 @@ EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
-    :path: "../node_modules/@datadog/mobile-react-native"
+    :path: "../../packages/core/DatadogSDKReactNative.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   fast_float:
@@ -1897,6 +1925,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: 177d543ee3f68b9c6bac1ab35280134bf5d24a20
+PODFILE CHECKSUM: f7035bf6c731beaedc18e482a664b7d0a2056b09
 
 COCOAPODS: 1.16.2
