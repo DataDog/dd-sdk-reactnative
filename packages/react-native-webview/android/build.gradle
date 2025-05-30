@@ -189,7 +189,7 @@ dependencies {
     implementation "com.facebook.react:react-android:$reactNativeVersion"
   }
 
-  implementation "com.datadoghq:dd-sdk-android-webview:2.14.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:2.19.2"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
   implementation project(path: ':datadog_mobile-react-native')
