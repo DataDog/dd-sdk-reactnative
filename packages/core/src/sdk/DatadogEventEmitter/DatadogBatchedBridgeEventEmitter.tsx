@@ -21,7 +21,8 @@ export class DatadogBatchedBridgeEventEmitter implements DatadogEventEmitter {
     initialize(): boolean {
         try {
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            const batchedBridge = require('react-native/Libraries/BatchedBridge/BatchedBridge');
+            const BatchedBridge = require('react-native/Libraries/BatchedBridge/BatchedBridge');
+            const batchedBridge = BatchedBridge.default ?? BatchedBridge;
             batchedBridge.registerCallableModule(
                 'DatadogInternalReactBridge',
                 this
