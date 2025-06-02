@@ -92,6 +92,18 @@ package/lib/typescript/core/src/sdk/AttributesSingleton/AttributesSingleton.d.ts
 package/lib/typescript/core/src/sdk/AttributesSingleton/AttributesSingleton.d.ts.map
 package/lib/typescript/core/src/sdk/AttributesSingleton/types.d.ts
 package/lib/typescript/core/src/sdk/AttributesSingleton/types.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogBatchedBridgeEventEmitter.d.ts
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogBatchedBridgeEventEmitter.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogDefaultEventEmitter.d.ts
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogDefaultEventEmitter.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogEventEmitter.d.ts
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogEventEmitter.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogNativeEventEmitter.d.ts
+package/lib/typescript/core/src/sdk/DatadogEventEmitter/DatadogNativeEventEmitter.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogInternalBridge/DdSdkInternalNativeBridge.d.ts
+package/lib/typescript/core/src/sdk/DatadogInternalBridge/DdSdkInternalNativeBridge.d.ts.map
+package/lib/typescript/core/src/sdk/DatadogInternalBridge/DdSdkInternalNativeBridgeEvent.d.ts
+package/lib/typescript/core/src/sdk/DatadogInternalBridge/DdSdkInternalNativeBridgeEvent.d.ts.map
 package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/BoundedBuffer.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/BoundedBuffer.d.ts.map
 package/lib/typescript/core/src/sdk/DatadogProvider/Buffer/bufferNativeCall.d.ts
@@ -106,8 +118,6 @@ package/lib/typescript/core/src/sdk/DatadogProvider/DatadogProvider.d.ts
 package/lib/typescript/core/src/sdk/DatadogProvider/DatadogProvider.d.ts.map
 package/lib/typescript/core/src/sdk/DdSdk.d.ts
 package/lib/typescript/core/src/sdk/DdSdk.d.ts.map
-package/lib/typescript/core/src/sdk/EventEmitter/EventEmitter.d.ts
-package/lib/typescript/core/src/sdk/EventEmitter/EventEmitter.d.ts.map
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts
 package/lib/typescript/core/src/sdk/EventMappers/EventMapper.d.ts.map
 package/lib/typescript/core/src/sdk/EventMappers/utils/deepClone.d.ts
