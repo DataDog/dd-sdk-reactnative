@@ -211,16 +211,19 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
         [strongSelf sendEventWithName:@"RUMSessionStarted" body: sessionId];
     }];
 }
+
 #else
 - (void)registerNativeBridge {
     [DdSdkSessionStartedListener.instance setRCTBridge: _bridge];
 }
+#endif
 
 - (void)setBridge:(RCTBridge *)bridge {
     [super setBridge:bridge];
     _bridge = bridge;
+    #ifndef RCT_NEW_ARCH_ENABLED
     [self registerNativeBridge];
+    #endif
 }
-#endif
 
 @end
