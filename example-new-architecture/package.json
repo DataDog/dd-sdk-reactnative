@@ -37,5 +37,8 @@
   },
   "installConfig": {
     "hoistingLimits": "dependencies"
+  },
+  "resolutions": {
+    "rexml": "3.3.6"
   }
 }
