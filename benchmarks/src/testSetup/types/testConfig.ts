@@ -13,7 +13,8 @@ export enum Scenario {
     Default = 'default',
     NavigationExample = 'navigation',
     LogsCustom = 'logsCustom',
-    LogsHeavyTraffic = 'logsHeavyTraffic'
+    LogsHeavyTraffic = 'logsHeavyTraffic',
+    Traces = 'traces',
     // Add new scenarios here
 }
 
