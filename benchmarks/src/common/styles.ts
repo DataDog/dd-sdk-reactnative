@@ -88,5 +88,11 @@ export const CommonStyles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         backgroundColor: Colors.White,
+    },
+    resultTitle: {
+        fontSize: 16,
+        color: Colors.Black,
+        marginTop: 15,
+        textAlign: 'center',
     }
 })
