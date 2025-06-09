@@ -7939,7 +7939,7 @@ __metadata:
     react-native-navigation: 8.0.0-snapshot.1658
     react-native-safe-area-context: 5.1.0
     react-native-screens: 4.5.0
-    react-native-webview: ^13.13.4
+    react-native-webview: 13.14.2
   languageName: unknown
   linkType: soft
 
@@ -15210,7 +15210,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-webview@npm:^13.12.2, react-native-webview@npm:^13.13.4":
+"react-native-webview@npm:13.14.2":
+  version: 13.14.2
+  resolution: "react-native-webview@npm:13.14.2"
+  dependencies:
+    escape-string-regexp: ^4.0.0
+    invariant: 2.2.4
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 7c945702a9d44e71a50bfc7ee5a5eca61aae3e80409e102bf88e3524be4329f3f7784be10fc71541a19e35630be027f348c05c72b99ac2dd50f7122faaee79c0
+  languageName: node
+  linkType: hard
+
+"react-native-webview@npm:^13.12.2":
   version: 13.13.5
   resolution: "react-native-webview@npm:13.13.5"
   dependencies:
