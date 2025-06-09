@@ -30,7 +30,7 @@
         "react-native-navigation": "8.0.0-snapshot.1658",
         "react-native-safe-area-context": "5.1.0",
         "react-native-screens": "4.5.0",
-        "react-native-webview": "^13.13.4"
+        "react-native-webview": "13.14.2"
     },
     "devDependencies": {
         "@babel/core": "^7.25.2",
