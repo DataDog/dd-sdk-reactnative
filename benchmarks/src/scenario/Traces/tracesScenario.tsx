@@ -18,7 +18,7 @@ import {
 import { DdLogs, DdTrace } from '@datadog/mobile-react-native';
 import type { TracesScenarioProps } from './types';
 import { RunType } from '../../testSetup/types/testConfig';
-import { instrument } from '../../testSetup/testUtils';
+import { instrument, sleep } from '../../testSetup/testUtils';
 import Stepper from '../../component/Stepper/Stepper';
 import { Colors, CommonStyles as styles } from '../../common/styles';
 import { Tracer } from '../../testSetup/tracer';
@@ -47,9 +47,10 @@ function TracesScenario(props: TracesScenarioProps): React.JSX.Element {
 
     useEffect(() => {
         if (props.testConfig?.runType !== RunType.BASELINE) {
-            instrument();
-            tracer.current = DdTrace;
-            logger.current = DdLogs;
+            instrument().then (() => {
+                tracer.current = DdTrace;
+                logger.current = DdLogs;
+            });
         }
     }, []);
 
@@ -93,10 +94,6 @@ function TracesScenario(props: TracesScenarioProps): React.JSX.Element {
             await sendSpanTree(childSpan, currentLevel + 1, maxDepth);
             tracer.current.finishSpan(childSpan);
         }
-    }
-
-    const sleep = (ms: number) => {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     const onToggleIsError = () => {

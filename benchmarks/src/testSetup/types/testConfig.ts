@@ -15,6 +15,7 @@ export enum Scenario {
     LogsCustom = 'logsCustom',
     LogsHeavyTraffic = 'logsHeavyTraffic',
     Traces = 'traces',
+    RUMManual = 'rumManual',
     // Add new scenarios here
 }
 

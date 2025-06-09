@@ -28,12 +28,11 @@ function ImageListScreen(props: ImageListProps): React.JSX.Element {
     const logsPerBatch = params?.logsPerBatch || DEFAULT_LOGS_PER_BATCH;
 
     useEffect(() => {
-        console.log("Loaded Logs Heavy Traffic Scenario")
-
         if (props.testConfig?.runType !== RunType.BASELINE) {
-            instrument();
-            logger.current = DdLogs;
-            setReadyToRun(true);
+            instrument().then(() => {
+                logger.current = DdLogs;
+                setReadyToRun(true);
+            });
         }
 
     }, []);
