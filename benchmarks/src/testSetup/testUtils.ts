@@ -6,7 +6,6 @@
 
 import queryString from 'query-string';
 import {
-    DdLogs,
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     SdkVerbosity,
@@ -69,16 +68,16 @@ export const stopCollectingVitals = async () => {
     await BenchmarkVitals?.stopCollectingVitals();
 };
 
-export const instrument = () => {
+export const instrument = async (): Promise<void> => {
     const datadogConfig = getDatadogConfig();
-    initializeDatadog(datadogConfig.clientToken, datadogConfig.env, datadogConfig.applicationID);
+    return initializeDatadog(datadogConfig.clientToken, datadogConfig.env, datadogConfig.applicationID);
 };
 
 export const isValidScenario = (scenario?: string): boolean => {
     return Object.values(Scenario).includes(scenario as Scenario);
 };
 
-export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string) => {
+export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string): Promise<void> =>  {
     const platform = Platform.OS;
     const config = new DdSdkReactNativeConfiguration(
         clientToken ?? '',
@@ -94,7 +93,9 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
     config.serviceName = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
 
-    DdSdkReactNative.initialize(config).then(() => {
-        DdLogs.info('Datadog RN SDK initialized')
-    });
+    return DdSdkReactNative.initialize(config);
+};
+
+export const sleep = (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 };

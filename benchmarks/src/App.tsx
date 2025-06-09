@@ -18,6 +18,7 @@ import NavigationExampleScenario from './scenario/NavigationExample/navigationEx
 import LogsCustomScenario from './scenario/Logs/Custom/logsCustomScenario';
 import LogsHeavyTrafficScenario from './scenario/Logs/HeavyTraffic/logsHeavyTraffic';
 import TracesScenario from './scenario/Traces/tracesScenario';
+import RUMManualScenario from './scenario/RUM/Manual/rumManualScenario';
 
 function App(): React.JSX.Element {
   const [testConfig, setTestConfig] = useState<TestConfig | undefined>();
@@ -75,7 +76,9 @@ function App(): React.JSX.Element {
     case Scenario.LogsHeavyTraffic:
       return <LogsHeavyTrafficScenario testConfig={testConfig}/>;
     case Scenario.Traces:
-      return <TracesScenario testConfig={testConfig}/>
+      return <TracesScenario testConfig={testConfig}/>;
+    case Scenario.RUMManual:
+      return <RUMManualScenario testConfig={testConfig}/>;
     // Add new scenarios here
     default:
       return (
