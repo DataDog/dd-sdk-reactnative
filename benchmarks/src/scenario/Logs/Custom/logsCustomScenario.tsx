@@ -15,14 +15,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {LogLevel, PAYLOADS_BY_SIZE, PayloadSize} from '../types';
+import { LogLevel, PAYLOADS_BY_SIZE, PayloadSize } from '../types';
 import type {LogsCustomScenarioProps} from '../types';
-import {RunType} from '../../../testSetup/types/testConfig';
-import {instrument} from '../../../testSetup/testUtils';
+import { RunType } from '../../../testSetup/types/testConfig';
+import { instrument } from '../../../testSetup/testUtils';
 import { Colors, CommonStyles as styles } from '../../../common/styles';
 import Stepper from '../../../component/Stepper/Stepper';
-import {DdLogs} from '@datadog/mobile-react-native';
-import {Logger} from '../../../testSetup/logger';
+import { DdLogs } from '@datadog/mobile-react-native';
+import { Logger } from '../../../testSetup/logger';
 import Picker from '../../../component/Picker/Picker';
 import { DEFAULT_LOGS_PER_SECOND, DEFAULT_LOG_INTERVAL, DEFAULT_LOG_MESSAGE, LOG_LEVELS, PAYLOAD_SIZES } from '../constants';
 
@@ -47,8 +47,9 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
 
   useEffect(() => {
     if (props.testConfig?.runType !== RunType.BASELINE) {
-      instrument();
-      logger.current = DdLogs;
+      instrument().then(() => {
+        logger.current = DdLogs;
+      });
     }
   }, []);
 
