@@ -7384,6 +7384,8 @@ __metadata:
     "@babel/preset-env": 7.25.3
     "@babel/runtime": 7.25.0
     "@datadog/mobile-react-native": "workspace:packages/core"
+    "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview"
+    "@datadog/mobile-react-navigation": "workspace:packages/react-navigation"
     "@react-native-community/cli": 15.0.1
     "@react-native-community/cli-platform-android": 15.0.1
     "@react-native-community/cli-platform-ios": 15.0.1
@@ -7407,6 +7409,7 @@ __metadata:
     react-native-config: 1.5.5
     react-native-safe-area-context: 5.4.0
     react-native-screens: 4.10.0
+    react-native-webview: 13.15.0
     react-test-renderer: 19.0.0
     typescript: 5.0.4
   languageName: unknown
@@ -16287,7 +16290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-webview@npm:^13.12.2":
+"react-native-webview@npm:13.15.0, react-native-webview@npm:^13.12.2":
   version: 13.15.0
   resolution: "react-native-webview@npm:13.15.0"
   dependencies:

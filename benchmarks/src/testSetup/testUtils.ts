@@ -6,6 +6,7 @@
 
 import queryString from 'query-string';
 import {
+    DatadogProviderConfiguration,
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     SdkVerbosity,
@@ -19,8 +20,8 @@ import { Platform } from 'react-native';
 
 export const DEFAULT_ENV_TEST_CONFIG: TestConfig = {
     command: Command.Start,
-    scenario: Config.BENCH_SCENARIO,
-    runType: Config.BENCH_RUN_TYPE,
+    scenario: Config.BENCH_SCENARIO || undefined,
+    runType: Config.BENCH_RUN_TYPE || RunType.BASELINE,
 };
 
 export const getDatadogConfig = (): DatadogConfig => {
@@ -30,8 +31,49 @@ export const getDatadogConfig = (): DatadogConfig => {
         apiKey: Config.DD_API_KEY,
         site: Config.DD_SITE,
         env: Config.DD_ENV,
-    }
+    };
 };
+
+export const getDatadogProviderConfig = () => {
+    const platform = Platform.OS;
+    let baseConfig = getDatadogConfig();
+    let config = new DatadogProviderConfiguration(
+        baseConfig.clientToken ?? '',
+        baseConfig.env ?? '',
+        baseConfig.applicationID ?? '',
+        true,
+        true,
+        true,
+        TrackingConsent.GRANTED
+    );
+
+    config.nativeCrashReportEnabled = true
+    config.sessionSamplingRate = 100;
+    config.serviceName = `com.rn.${platform}.benchmark`
+    config.verbosity = SdkVerbosity.DEBUG;
+
+    return config;
+};
+
+export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string): Promise<void> =>  {
+    const platform = Platform.OS;
+    const config = new DdSdkReactNativeConfiguration(
+        clientToken ?? '',
+        environment ?? '',
+        appId ?? '',
+        true,
+        true,
+        true,
+        TrackingConsent.GRANTED
+    );
+    config.nativeCrashReportEnabled = true
+    config.sessionSamplingRate = 100;
+    config.serviceName = `com.rn.${platform}.benchmark`
+    config.verbosity = SdkVerbosity.DEBUG;
+
+    return DdSdkReactNative.initialize(config);
+};
+
 
 export const getTestConfigFromDeeplink = (url: string): TestConfig | undefined => {
     try {
@@ -49,7 +91,7 @@ export const getTestConfigFromDeeplink = (url: string): TestConfig | undefined =
         return testConfig;
     } catch( _error) {
         return undefined;
-    }
+    };
 };
 
 export const startCollectingVitals = async (testConfig: TestConfig, datadogConfig: DatadogConfig) => {
@@ -75,25 +117,6 @@ export const instrument = async (): Promise<void> => {
 
 export const isValidScenario = (scenario?: string): boolean => {
     return Object.values(Scenario).includes(scenario as Scenario);
-};
-
-export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string): Promise<void> =>  {
-    const platform = Platform.OS;
-    const config = new DdSdkReactNativeConfiguration(
-        clientToken ?? '',
-        environment ?? '',
-        appId ?? '',
-        true,
-        true,
-        true,
-        TrackingConsent.GRANTED
-    );
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100;
-    config.serviceName = `com.rn.${platform}.benchmark`
-    config.verbosity = SdkVerbosity.DEBUG;
-
-    return DdSdkReactNative.initialize(config);
 };
 
 export const sleep = (ms: number) => {

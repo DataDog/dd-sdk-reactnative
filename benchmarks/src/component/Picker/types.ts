@@ -7,5 +7,5 @@
 export interface PickerProps {
     onValueChange: (newValue: unknown) => void,
     label: string;
-    values: {label: string, value: unknown}[];
+    values: {label: string, value: string}[];
 };

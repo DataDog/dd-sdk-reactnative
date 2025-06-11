@@ -26,6 +26,12 @@ export const CommonStyles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 20,
     },
+    lightContainer: {
+        flex: 1,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        backgroundColor: Colors.White,
+    },
     title: {
         paddingLeft: 20,
         fontSize: 13,
@@ -81,8 +87,6 @@ export const CommonStyles = StyleSheet.create({
         borderBottomWidth: 1,
         fontSize: 12,
     },
-    imageContainer: {
-    },
     image: {
         height: 150,
         padding: 10,
@@ -94,5 +98,77 @@ export const CommonStyles = StyleSheet.create({
         color: Colors.Black,
         marginTop: 15,
         textAlign: 'center',
+    },
+    listContainer: {
+        flex: 1,
+        paddingHorizontal: 10,
+    },
+    resultList: {
+        borderRadius: 10,
+    },
+    resultCell: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: Colors.White,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+    },
+    cellImage: {
+        height: 60,
+        width: 60,
+        borderRadius: 5,
+        marginRight: 10,
+    },
+    cellTitle: {
+        fontSize: 18,
+        fontWeight: 500,
+    },
+    cellContent: {
+        flex: 1,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.Background,
+        paddingBottom: 10,
+    },
+    cellArrow: {
+        color: Colors.DarkGrey,
+        lineHeight: 60,
+        fontSize: 20,
+        paddingHorizontal: 10,
+    },
+    detailImage: {
+        height: 120,
+        width: 120,
+    },
+    detailTitle: {
+        marginVertical: 10,
+        fontSize: 18,
+        fontWeight: 500,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    detailLabel: {
+        color: Colors.DarkGrey,
+    },
+    detailField: {
+
+    },
+    expandedContentEntry: {
+        paddingVertical: 10,
+    },
+    gridItem: {
+        padding: 10,
+    },
+    gridItemLabel: {
+        width: 100,
+        marginVertical: 10,
+        fontSize: 16,
+        fontWeight: 500,
+        textAlign: 'center',
+    },
+    gridImage: {
+        height: 100,
+        width: 100,
     }
 })

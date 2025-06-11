@@ -1,4 +1,10 @@
   
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 import {
   View,
   Image,
@@ -33,8 +39,9 @@ function ImageListScreen(props: ImageListProps): React.JSX.Element {
                 logger.current = DdLogs;
                 setReadyToRun(true);
             });
-        }
-
+        } else {
+            setReadyToRun(true);
+        };
     }, []);
 
     const log = () => {
@@ -82,7 +89,6 @@ function ImageListScreen(props: ImageListProps): React.JSX.Element {
                     showsVerticalScrollIndicator={true}
                     renderItem={renderImage}
                     keyExtractor={(item) => item.key}
-                    contentContainerStyle={styles.imageContainer}
                 />
             )}
         </View>

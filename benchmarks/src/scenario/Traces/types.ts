@@ -8,4 +8,4 @@ import type { TestConfig } from "../../testSetup/types/testConfig"
 
 export type TracesScenarioProps = {
     testConfig?: TestConfig,
-}
+};
