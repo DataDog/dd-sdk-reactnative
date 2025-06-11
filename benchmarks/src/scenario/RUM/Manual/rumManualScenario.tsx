@@ -8,6 +8,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {
   Button,
   Platform,
+  Pressable,
   SafeAreaView,
   Switch,
   Text,
@@ -277,7 +278,9 @@ function RUMManualScenario(props: RUMManualScenarioProps): React.JSX.Element {
                             />
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>{'Repeat sending events'}</Text>
+                        <Pressable onPress={onToggleIsRepeatSendingEvents}>
+                            <Text style={styles.label}>{'Repeat sending events'}</Text>
+                        </Pressable>
                         <Switch
                             trackColor={{false: Colors.Grey, true: Colors.DatadogPurple}}
                             thumbColor={Colors.White}
@@ -296,7 +299,7 @@ function RUMManualScenario(props: RUMManualScenarioProps): React.JSX.Element {
             <Text style={styles.resultTitle}>{`Events sent: ${eventsSentCount}`}</Text>
             </View>
         </SafeAreaView>
-    )
+    );
 };
 
 export default RUMManualScenario;

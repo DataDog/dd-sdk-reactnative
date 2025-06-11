@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Button,
     Platform,
+    Pressable,
     SafeAreaView,
     Switch,
     Text,
@@ -23,7 +24,6 @@ import Stepper from '../../component/Stepper/Stepper';
 import { Colors, CommonStyles as styles } from '../../common/styles';
 import { Tracer } from '../../testSetup/tracer';
 import { Logger } from '../../testSetup/logger';
-
 
 const DEFAULT_CHILDREN_COUNT = 0;
 const DEFAULT_DEPTH = 1;
@@ -93,8 +93,8 @@ function TracesScenario(props: TracesScenarioProps): React.JSX.Element {
             await sleep(childDelay);
             await sendSpanTree(childSpan, currentLevel + 1, maxDepth);
             tracer.current.finishSpan(childSpan);
-        }
-    }
+        };
+    };
 
     const onToggleIsError = () => {
         setIsError(!isError);
@@ -178,7 +178,9 @@ function TracesScenario(props: TracesScenarioProps): React.JSX.Element {
                     </View>
                     <View style={styles.separator} />
                     <View style={styles.row}>
-                        <Text style={styles.label}>{'isError'}</Text>
+                        <Pressable onPress={onToggleIsError}>
+                            <Text style={styles.label}>{'isError'}</Text>
+                        </Pressable>
                         <Switch
                             trackColor={{false: Colors.Grey, true: Colors.DatadogPurple}}
                             thumbColor={Colors.White}
@@ -242,6 +244,6 @@ function TracesScenario(props: TracesScenarioProps): React.JSX.Element {
             </View>
         </SafeAreaView>
     );
-}
+};
 
 export default TracesScenario;

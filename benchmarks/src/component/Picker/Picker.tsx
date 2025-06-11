@@ -6,7 +6,7 @@
 
 import React, {useState} from 'react';
 import {Platform, Pressable, Text } from 'react-native';
-import {Picker as RNPicker} from '@react-native-picker/picker';
+import {Picker as RNPicker, PickerIOS as RNPickerIOS} from '@react-native-picker/picker';
 import type {PickerProps} from './types';
 import styles from './styles';
 
@@ -24,27 +24,41 @@ function Picker(props: PickerProps): React.JSX.Element {
     props?.onValueChange(newValue);
   };
 
-  return (
-    <>
-      {isIOS && (
-        <Pressable style={styles.pickerButton} onPress={openPicker}>
-          <Text style={styles.pickerLabel}>{props.label.toUpperCase()}</Text>
-        </Pressable>
-      )}
-
-      {(isOpen || !isIOS) &&
-          <RNPicker
+   if (isIOS) {
+    if (isOpen) {
+      return (
+          <RNPickerIOS  
+              style={styles.picker}
+              selectedValue={props.label}
+              onValueChange={onValueChange}
+              numberOfLines={1}
+          >
+              {props.values.map(({label, value}, index) => (
+                <RNPickerIOS.Item key={`${props.label}_picker_${index}`} label={label} value={value} />
+              ))}
+          </RNPickerIOS>
+      )
+    } else {
+        return (
+          <Pressable style={styles.pickerButton} onPress={openPicker}>
+            <Text style={styles.pickerLabel}>{props.label.toUpperCase()}</Text>
+          </Pressable>
+        )
+    }
+  } else {
+    return (
+        <RNPicker
             mode="dropdown"
             style={styles.picker}
             selectedValue={props.label}
-            onValueChange={onValueChange}>
+            onValueChange={onValueChange}
+          >
             {props.values.map(({label, value}, index) => (
               <RNPicker.Item key={`${props.label}_picker_${index}`} label={label} value={value} />
             ))}
-          </RNPicker>
-        }
-    </>
-  );
+        </RNPicker>
+    )
+  };
 }
 
 export default Picker;

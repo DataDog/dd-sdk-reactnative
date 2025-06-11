@@ -8,6 +8,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {
   Button,
   Platform,
+  Pressable,
   SafeAreaView,
   ScrollView,
   Switch,
@@ -24,7 +25,7 @@ import Stepper from '../../../component/Stepper/Stepper';
 import { DdLogs } from '@datadog/mobile-react-native';
 import { Logger } from '../../../testSetup/logger';
 import Picker from '../../../component/Picker/Picker';
-import { DEFAULT_LOGS_PER_SECOND, DEFAULT_LOG_INTERVAL, DEFAULT_LOG_MESSAGE, LOG_LEVELS, PAYLOAD_SIZES } from '../constants';
+import { DEFAULT_LOGS_PER_SECOND, DEFAULT_LOG_INTERVAL, DEFAULT_LOG_MESSAGE, LOG_LEVELS, MAX_LOG_OUTPUT_ENTRIES, PAYLOAD_SIZES } from '../constants';
 
 function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
   const logger = useRef(Logger);
@@ -102,9 +103,7 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
   const startLogging = () => {
     isLogging.current = true;
     setIsLoggingState(true);
-
-    logOutputBuffer.current = [];
-    setLogOutput(logOutputBuffer.current);
+    clearLogOutput();
 
     if (isRepeatLogging) {
       const interval = setInterval(() => {
@@ -125,6 +124,11 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
     setIsLoggingState(false);
   };
 
+  const clearLogOutput = () => {
+    logOutputBuffer.current = [];
+    setLogOutput(logOutputBuffer.current);
+  }
+
   const logBatch = (
     amount: number,
     message: string,
@@ -136,6 +140,11 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
         ...logOutputBuffer.current,
         `${new Date().toISOString()} - ${level} - ${size}: ${message}`,
       ];
+
+      if (logOutputBuffer.current.length > MAX_LOG_OUTPUT_ENTRIES) {
+        logOutputBuffer.current.shift();
+      };
+
       setLogOutput(logOutputBuffer.current);
 
       switch (level) {
@@ -215,7 +224,9 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
           </View>
           <View style={styles.separator} />
           <View style={styles.row}>
-            <Text style={styles.label}>{'Repeat logging'}</Text>
+            <Pressable onPress={onToggleIsRepeatLogging}>
+              <Text style={styles.label}>{'Repeat logging'}</Text>
+            </Pressable>
             <Switch
               trackColor={{false: Colors.Grey, true: Colors.DatadogPurple}}
               thumbColor={Colors.White}
@@ -247,6 +258,7 @@ function LogsCustomScenario(props: LogsCustomScenarioProps): React.JSX.Element {
             </Text>
           ))}
         </ScrollView>
+        <Pressable onPress={clearLogOutput}><Text style={styles.resultTitle}>Clear log</Text></Pressable>
       </View>
     </SafeAreaView>
   );
