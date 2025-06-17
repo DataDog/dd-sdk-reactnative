@@ -52,5 +52,8 @@
     "installConfig": {
         "hoistingLimits": "dependencies"
     },
-    "packageManager": "yarn@3.4.1"
+    "packageManager": "yarn@3.4.1",
+    "resolutions": {
+        "rexml": "3.3.6"
+    }
 }
