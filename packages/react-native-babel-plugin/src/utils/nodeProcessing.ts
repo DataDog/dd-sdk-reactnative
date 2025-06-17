@@ -6,13 +6,24 @@
 
 import type * as Babel from '@babel/core';
 
-import type { AssignmentNode, BabelTypes } from '../types';
+import type { AssignmentNode, PluginPassState } from '../types';
 
 export function insertAtProgramTop(
     path: Babel.NodePath<Babel.types.Program>,
     node: Babel.types.Statement | Babel.types.ModuleDeclaration
 ) {
     path.unshiftContainer('body', node);
+}
+
+export function getImportDeclaration(
+    t: typeof Babel.types,
+    data: string,
+    module: string
+) {
+    return t.importDeclaration(
+        [t.importSpecifier(t.identifier(data), t.identifier(data))],
+        t.stringLiteral(module)
+    );
 }
 
 export function getFileInfo(data: Babel.PluginPass) {
@@ -32,8 +43,31 @@ export function getFileInfo(data: Babel.PluginPass) {
     return result;
 }
 
+export function getNodeName(
+    t: typeof Babel.types,
+    node: Babel.types.Node | string
+): string | null {
+    if (typeof node === 'string') {
+        return node;
+    }
+
+    if (!('name' in node)) {
+        return null;
+    }
+
+    if (typeof node.name === 'string') {
+        return node.name;
+    }
+
+    if (t.isIdentifier(node.name) || t.isJSXIdentifier(node.name)) {
+        return getNodeName(t, node.name);
+    }
+
+    return null;
+}
+
 export function getAssignmentNode(
-    t: BabelTypes,
+    t: typeof Babel.types,
     objectKey: string,
     propertyKey: string,
     value: AssignmentNode
@@ -50,4 +84,56 @@ export function getAssignmentNode(
     );
 
     return node;
+}
+
+export function getArgumentsFromParams(
+    t: typeof Babel.types,
+    state: PluginPassState,
+    params: (
+        | Babel.types.Identifier
+        | Babel.types.Pattern
+        | Babel.types.RestElement
+    )[]
+) {
+    const callArgs: (Babel.types.Expression | Babel.types.SpreadElement)[] = [];
+    const preCallStatements: Babel.types.Statement[] = [];
+    const wrapperParams: typeof params = [];
+
+    for (const [index, param] of params.entries()) {
+        // If it's a regular function param (ex:. handler(event){})
+        if (t.isIdentifier(param)) {
+            callArgs.push(param);
+            wrapperParams.push(param);
+        } else if (t.isAssignmentPattern(param) && t.isIdentifier(param.left)) {
+            // If it's a function param with default value (ex:. handler(num = 1){})
+            callArgs.push(param.left);
+            wrapperParams.push(param);
+        } else if (t.isRestElement(param) && t.isIdentifier(param.argument)) {
+            // If it's a function 'rest' param  (ex:. handler(event, ...rest){})
+            callArgs.push(t.spreadElement(param.argument));
+            wrapperParams.push(param);
+        } else if (t.isObjectPattern(param) || t.isArrayPattern(param)) {
+            // If it's function 'destructured' param  (ex:. handler({ eventData }){})
+            const synthetic = t.identifier(`_dd_arg${index}`);
+
+            callArgs.push(synthetic);
+            wrapperParams.push(synthetic);
+
+            preCallStatements.push(
+                t.variableDeclaration('const', [
+                    t.variableDeclarator(param, synthetic)
+                ])
+            );
+        } else {
+            throw new Error(
+                `Unsupported parameter type: ${param.type} on file: ${state.fileInfo?.path}/${state.fileInfo?.name}.`
+            );
+        }
+    }
+
+    return {
+        callArgs,
+        preCallStatements,
+        wrapperParams
+    };
 }

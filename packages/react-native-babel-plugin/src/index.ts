@@ -3,27 +3,51 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type * as Babel from '@babel/core';
 import { declare } from '@babel/helper-plugin-utils';
 
-import { insertSetupFlag } from './actions/global';
-import type { PluginOptions } from './types';
+import { insertSetupFlag, loadImportMap } from './actions/global';
+import { handleRumActions, insertRumActionImport } from './actions/rum';
+import type {
+    PluginAPI,
+    PluginOptions,
+    PluginPassState,
+    PluginResult
+} from './types';
 import { getFileInfo } from './utils/index';
 
 export default declare(
     (
-        api: typeof Babel & Babel.ConfigAPI,
+        api: PluginAPI,
         _options: PluginOptions,
         _dirname: string
-    ): Babel.PluginObj<Babel.PluginPass> => {
+    ): PluginResult => {
         api.assertVersion(7);
 
         return {
             visitor: {
-                Program(path, _state) {
-                    const { path: _p, name: _name } = getFileInfo(this);
-                    insertSetupFlag(path, api.types);
+                Program: {
+                    enter(path, state) {
+                        const pluginState: PluginPassState = state;
+                        const { path: p, name } = getFileInfo(this);
+
+                        pluginState.fileInfo = { path: p, name };
+                        insertSetupFlag(path, api.types);
+                        loadImportMap(path, api.types, pluginState);
+                    },
+                    exit(path, state) {
+                        const pluginState: PluginPassState = state;
+                        const t = api.types;
+
+                        if (pluginState.hasValidTapAction) {
+                            insertRumActionImport(t, path);
+                        }
+                    }
+                },
+                JSXAttribute(path, state) {
+                    const pluginState: PluginPassState = state;
+                    handleRumActions(api.types, path, pluginState);
                 }
             }
         };
