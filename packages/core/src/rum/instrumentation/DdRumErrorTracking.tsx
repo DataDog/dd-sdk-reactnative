@@ -9,13 +9,13 @@ import type { ErrorHandlerCallback } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdLogs } from '../../logs/DdLogs';
-import { debugId } from '../../metro/debugIdResolver';
 import {
     getErrorMessage,
     getErrorStackTrace,
     EMPTY_STACK_TRACE,
     getErrorName,
-    DEFAULT_ERROR_NAME
+    DEFAULT_ERROR_NAME,
+    getErrorContext
 } from '../../utils/errorUtils';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
@@ -150,7 +150,7 @@ export class DdRumErrorTracking {
                 message,
                 source,
                 stacktrace,
-                DdRumErrorTracking.getErrorContext(context)
+                getErrorContext(context)
             ),
             DdLogs.error(
                 message,
@@ -165,18 +165,5 @@ export class DdRumErrorTracking {
                 source
             )
         ]);
-    };
-
-    private static getErrorContext = (
-        originalContext: any
-    ): Record<string, any> => {
-        const _debugId = debugId;
-        if (!_debugId) {
-            return originalContext;
-        }
-        return {
-            ...originalContext,
-            '_dd.debug_id': _debugId
-        };
     };
 }
