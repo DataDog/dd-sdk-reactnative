@@ -5,3 +5,4 @@
  */
 
 export * from './global';
+export * from './rum';
