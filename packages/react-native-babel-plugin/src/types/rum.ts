@@ -4,6 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export * from './general';
-export * from './nodes';
-export * from './rum';
+import type * as Babel from '@babel/core';
+
+export type RumActionResult = {
+    parentNode: Babel.types.JSXAttribute;
+    parentName: string;
+    propertyNode: Babel.types.JSXAttribute;
+    propertyName: string;
+    expression: any;
+};

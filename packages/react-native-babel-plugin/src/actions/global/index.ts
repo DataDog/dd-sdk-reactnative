@@ -6,12 +6,13 @@
 
 import type * as Babel from '@babel/core';
 
-import { PluginConstants } from '../../constants';
-import type { BabelTypes } from '../../types';
+import { PluginConstants, tapElementsMap } from '../../constants';
+import type { BabelTypes, PluginPassState } from '../../types';
 import {
+    PluginState,
     getAssignmentNode,
-    insertAtProgramTop,
-    PluginState
+    getNodeName,
+    insertAtProgramTop
 } from '../../utils';
 
 export function insertSetupFlag(
@@ -19,6 +20,7 @@ export function insertSetupFlag(
     t: BabelTypes
 ) {
     const pluginState = PluginState.getInstance();
+
     // Only set the flag on the entry file of the project
     if (pluginState.isInitialized) {
         return;
@@ -34,4 +36,44 @@ export function insertSetupFlag(
     );
 
     insertAtProgramTop(path, flagNode);
+}
+
+export function loadImportMap(
+    path: Babel.NodePath<Babel.types.Program>,
+    t: BabelTypes,
+    pluginState: PluginPassState
+) {
+    path.traverse({
+        ImportDeclaration(p) {
+            const specifiers = p.node.specifiers;
+            const literal = p.node.source;
+
+            if (literal.value !== 'react-native') {
+                return;
+            }
+
+            const tapElementsImportMap: Record<string, string[]> = {};
+
+            for (const specifier of specifiers) {
+                if (!t.isImportSpecifier(specifier)) {
+                    continue;
+                }
+
+                const importName = getNodeName(t, specifier.imported);
+                const elementEvents = importName
+                    ? tapElementsMap[importName]
+                    : null;
+
+                if (elementEvents) {
+                    const importLocalName = getNodeName(t, specifier.local);
+
+                    if (importLocalName) {
+                        tapElementsImportMap[importLocalName] = elementEvents;
+                    }
+                }
+            }
+
+            pluginState.tapMappings = tapElementsImportMap;
+        }
+    });
 }
