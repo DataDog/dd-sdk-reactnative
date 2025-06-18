@@ -48,7 +48,8 @@
             "import": "./lib/module/metro.js",
             "require": "./lib/commonjs/metro.js",
             "types": "./lib/typescript/metro.d.ts"
-        }
+        },
+        "./package.json": "./package.json"
     },
     "publishConfig": {
         "access": "public"
