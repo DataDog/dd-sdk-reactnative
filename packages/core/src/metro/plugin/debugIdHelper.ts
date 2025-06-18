@@ -127,7 +127,7 @@ export const getDebugIdFromBundleSource = (
 ): string | undefined => {
     const match = code.match(
         new RegExp(
-            `${DEBUG_ID_METADATA_PREFIX}([0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12})`
+            `${DEBUG_ID_METADATA_PREFIX}([0-9a-fA-F]{8}\\b-(?:[0-9a-fA-F]{4}\\b-){3}[0-9a-fA-F]{12})`
         )
     );
 

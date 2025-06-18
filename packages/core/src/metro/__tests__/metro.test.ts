@@ -9,7 +9,8 @@ import {
     createDebugIdFromString,
     _replaceDebugIdInBundle,
     _insertDebugIdCommentInBundle,
-    _isDebugIdInBundle
+    _isDebugIdInBundle,
+    getDebugIdFromBundleSource
 } from '../plugin/debugIdHelper';
 import { createDatadogMetroSerializer } from '../plugin/metroSerializer';
 import type { MetroSerializerOutput } from '../plugin/types/metroTypes';
@@ -292,6 +293,30 @@ describe('Datadog Metro Plugin', () => {
 
             // THEN
             expect(check).toBe(false);
+        });
+
+        test('M getDebugIdFromBundleSource finds the debug ID in bundle code if present', () => {
+            // GIVEN
+            const debugId = 'a422b269-0dba-4341-93c2-73e1bcf71fbb';
+            const mockCode = `var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]="${debugId}",_datadogDebugIdMeta="datadog-debug-id-${debugId}")}catch(e){}`;
+
+            // WHEN
+            const debugIdMatch = getDebugIdFromBundleSource(mockCode);
+
+            // THEN
+            expect(debugIdMatch).toBe('a422b269-0dba-4341-93c2-73e1bcf71fbb');
+        });
+
+        test('M getDebugIdFromBundleSource returns undefined if the debug ID in bundle code is not present', () => {
+            // GIVEN
+            const mockCode =
+                'var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds';
+
+            // WHEN
+            const debugIdMatch = getDebugIdFromBundleSource(mockCode);
+
+            // THEN
+            expect(debugIdMatch).toBeUndefined();
         });
     });
 
