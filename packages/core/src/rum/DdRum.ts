@@ -12,6 +12,7 @@ import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNative
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { validateContext } from '../utils/argsUtils';
+import { getErrorContext } from '../utils/errorUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
@@ -249,7 +250,7 @@ class DdRumWrapper implements DdRumType {
             message,
             source,
             stacktrace,
-            context: validateContext(context),
+            context: getErrorContext(validateContext(context)),
             timestampMs,
             fingerprint: fingerprint ?? ''
         });
