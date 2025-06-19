@@ -30,7 +30,16 @@ Pod::Spec.new do |s|
 
 
   xcconfig = {
-    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/React-RCTFabric/**",
+    "HEADER_SEARCH_PATHS" => "$(inherited) " +
+      "$(PODS_ROOT)/React-RCTFabric/** " +
+      "$(PODS_ROOT)/React-FabricComponents/** " +
+      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
+      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**",
+    "USER_HEADER_SEARCH_PATHS" => "$(inherited) " +
+      "$(PODS_ROOT)/React-RCTFabric/** " +
+      "$(PODS_ROOT)/React-FabricComponents/** " +
+      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
+      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**"
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
