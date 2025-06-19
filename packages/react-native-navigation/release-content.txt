@@ -20,6 +20,8 @@ package/lib/typescript/core/src/logs/eventMapper.d.ts
 package/lib/typescript/core/src/logs/eventMapper.d.ts.map
 package/lib/typescript/core/src/logs/types.d.ts
 package/lib/typescript/core/src/logs/types.d.ts.map
+package/lib/typescript/core/src/metro/debugIdResolver.d.ts
+package/lib/typescript/core/src/metro/debugIdResolver.d.ts.map
 package/lib/typescript/core/src/nativeModulesTypes.d.ts
 package/lib/typescript/core/src/nativeModulesTypes.d.ts.map
 package/lib/typescript/core/src/ProxyConfiguration.d.ts
