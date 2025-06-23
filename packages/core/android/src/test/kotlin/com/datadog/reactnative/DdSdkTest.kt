@@ -764,6 +764,49 @@ internal class DdSdkTest {
             .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
     }
 
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {site=ap2}`(
+        forge: Forge
+    ) {
+        // Given
+        val site = forge.randomizeCase("ap2")
+        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+
+        // When
+        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+        // Then
+        inOrder(mockDatadog) {
+            verify(mockDatadog).initialize(
+                same(mockContext),
+                sdkConfigCaptor.capture(),
+                any()
+            )
+            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
+            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
+            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        }
+        assertThat(sdkConfigCaptor.firstValue)
+            .hasField("coreConfig") {
+                it.hasFieldEqualTo("needsClearTextHttp", false)
+                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                it.hasFieldEqualTo("site", DatadogSite.AP2)
+            }
+            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+            .hasFieldEqualTo("env", fakeConfiguration.env)
+            .hasFieldEqualTo("variant", "")
+            .hasFieldEqualTo(
+                "additionalConfig",
+                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+            )
+        assertThat(rumConfigCaptor.firstValue)
+            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+    }
+
     // endregion
 
     // region initialize / additionalConfig

@@ -410,6 +410,16 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.site, .ap1)
     }
 
+    func testBuildConfigurationAP2Endpoint() {
+        let configuration: DdSdkConfiguration = .mockAny(site: "AP2")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.site, .ap2)
+    }
+
     func testBuildConfigurationAdditionalConfig() {
         let configuration: DdSdkConfiguration = .mockAny(additionalConfig: [
             "foo": "test", "bar": 42,

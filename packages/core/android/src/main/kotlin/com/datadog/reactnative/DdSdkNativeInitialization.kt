@@ -309,6 +309,7 @@ class DdSdkNativeInitialization internal constructor(
             "us5" -> DatadogSite.US5
             "us1_fed", "gov" -> DatadogSite.US1_FED
             "ap1" -> DatadogSite.AP1
+            "ap2" -> DatadogSite.AP2
             else -> DatadogSite.US1
         }
     }

@@ -38,7 +38,7 @@
                     "type": "integer"
                 },
                 "site": {
-                    "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1' or 'EU1', default is 'US1').",
+                    "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1', 'AP2', or 'EU1', default is 'US1').",
                     "type": "string",
                     "enum": [
                         "US1",
@@ -46,7 +46,8 @@
                         "US3",
                         "US5",
                         "EU1",
-                        "AP1"
+                        "AP1",
+                        "AP2"
                     ]
                 },
                 "trackingConsent": {
@@ -242,7 +243,7 @@
                     "description": "Enables tracking of non-fatal ANRs on Android.",
                     "type": "boolean"
                 },
-                "initialResourceThreshold" : {
+                "initialResourceThreshold": {
                     "description": "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)",
                     "type": "number"
                 }
