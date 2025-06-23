@@ -135,7 +135,9 @@ android {
         java.srcDirs += ['src/oldarch/kotlin']
       }
 
-      if (reactNativeMinorVersion >= 79) {
+      if (reactNativeMinorVersion >= 80) {
+        java.srcDirs += ['src/rn80/kotlin']
+      } else if (reactNativeMinorVersion >= 79) {
         java.srcDirs += ['src/rn79/kotlin']
       } else if (reactNativeMinorVersion >= 76) {
         java.srcDirs += ['src/rn76/kotlin']
