@@ -49,6 +49,10 @@
             "require": "./lib/commonjs/metro.js",
             "types": "./lib/typescript/metro.d.ts"
         },
+        "./jest": {
+            "import": "./jest/mock.js",
+            "require": "./jest/mock.js"
+        },
         "./package.json": "./package.json"
     },
     "publishConfig": {
