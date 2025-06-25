@@ -17,17 +17,21 @@ function loadDebugId() {
     try {
         const debugIds = (globalThis as any)._datadogDebugIds;
         if (!debugIds || Object.keys(debugIds).length === 0) {
-            console.warn(
-                '[Datadog SDK] Debug ID not found. Are you using @datadog/mobile-react-native/metro config?'
-            );
+            if (process.env.NODE_ENV !== 'test') {
+                console.warn(
+                    '[Datadog SDK] Debug ID not found. Are you using @datadog/mobile-react-native/metro config?'
+                );
+            }
             return;
         }
 
         debugId = debugIds[Object.keys(debugIds)[0]];
     } catch (error) {
-        console.warn(
-            '[Datadog SDK] Error while retrieving Debug ID. Are you using @datadog/mobile-react-native/metro config?'
-        );
+        if (process.env.NODE_ENV !== 'test') {
+            console.warn(
+                '[Datadog SDK] Error while retrieving Debug ID. Are you using @datadog/mobile-react-native/metro config?'
+            );
+        }
     }
 }
 
