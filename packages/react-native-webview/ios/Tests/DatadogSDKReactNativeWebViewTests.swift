@@ -271,5 +271,5 @@ private class MockDatadogCore: DatadogCoreProtocol {
 
     func register<T>(feature: T) throws where T : DatadogInternal.DatadogFeature {}
     func send(message: DatadogInternal.FeatureMessage, else fallback: @escaping () -> Void) {}
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {}
+    func set<Context>(context: @escaping () -> Context?) where Context : DatadogInternal.AdditionalContext {}
 }
