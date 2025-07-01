@@ -39,8 +39,8 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
         )
     }
 
-    func set(baggage: @escaping () -> FeatureBaggage?, forKey key: String) {
-        core.set(baggage: baggage, forKey: key)
+    func set<Context>(context: @escaping () -> Context?) where Context : DatadogInternal.AdditionalContext {
+        core.set(context: context)
     }
 
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
@@ -79,16 +79,16 @@ private struct FeatureScopeProxy: FeatureScope {
         proxy.send(message: message, else: fallback)
     }
 
-    func set(baggage: @escaping () -> FeatureBaggage?, forKey key: String) {
-        proxy.set(baggage: baggage, forKey: key)
+    func set<Context>(context: @escaping () -> Context?) where Context : DatadogInternal.AdditionalContext {
+        proxy.set(context: context)
     }
     
     func set(anonymousId: String?) {
-           proxy.set(anonymousId: anonymousId)
+        proxy.set(anonymousId: anonymousId)
     }
 }
 
-private class FeatureScopeInterceptor {
+private final class FeatureScopeInterceptor: @unchecked Sendable {
     struct InterceptingWriter: Writer {
         static let jsonEncoder = JSONEncoder.dd.default()
 
@@ -127,7 +127,7 @@ private class FeatureScopeInterceptor {
         return events
     }
     
-    func waitAndDeleteEvents() -> Void {
+    func waitAndDeleteEvents() {
         _ = group.wait(timeout: .distantFuture)
         events = []
     }
@@ -139,7 +139,7 @@ extension DatadogCoreProxy {
     ///   - name: The Feature to retrieve events from
     ///   - type: The type of events to filter out
     /// - Returns: A list of events.
-    func waitAndReturnEvents<T>(ofFeature name: String, ofType type: T.Type, timeout: DispatchTime = .distantFuture) -> [T] where T: Encodable {
+    public func waitAndReturnEvents<T>(ofFeature name: String, ofType type: T.Type, timeout: DispatchTime = .distantFuture) -> [T] where T: Encodable {
         guard let interceptor = self.featureScopeInterceptors[name] else {
             return [] // feature scope was not requested, so there's no interception
         }
@@ -150,11 +150,10 @@ extension DatadogCoreProxy {
     ///
     /// - Parameter feature: The Feature to retrieve events from
     /// - Returns: A list of serialized events.
-    func waitAndReturnEventsData(ofFeature name: String, timeout: DispatchTime = .distantFuture) -> [String] {
+    public func waitAndReturnEventsData(ofFeature name: String, timeout: DispatchTime = .distantFuture) -> [String] {
         guard let interceptor = self.featureScopeInterceptors[name] else {
             return [] // feature scope was not requested, so there's no interception
         }
-        
         return interceptor
             .waitAndReturnEvents(timeout: timeout)
             .compactMap { $0.data.base64EncodedString() }
