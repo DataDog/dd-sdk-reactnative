@@ -16542,15 +16542,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snyk@npm:^1.192.3":
-  version: 1.1297.2
-  resolution: "snyk@npm:1.1297.2"
+"snyk@npm:^1.1297.3":
+  version: 1.1297.3
+  resolution: "snyk@npm:1.1297.3"
   dependencies:
     "@sentry/node": ^7.36.0
     global-agent: ^3.0.0
   bin:
     snyk: bin/snyk
-  checksum: 2f086a349d85cfa4cc03da2a9d45d5678e2bf5139e011231e565e5a133fbb7ff8444df0600c96a22525defd3d3b82a5cf991c633e974400ec0ec6d8cc45db1a5
+  checksum: e9e81146e6bdf92f8ccff4b5a3a4ade7dd99464c01b39bc82665cd88eacfa50c633f3309e239e227685b227e6136caf6a0dfd13907556442651713911c5b7b92
   languageName: node
   linkType: hard
 
