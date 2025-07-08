@@ -6,6 +6,11 @@
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
 
+declare global {
+    // eslint-disable-next-line no-var, vars-on-top
+    var __DD_RN_BABEL_PLUGIN_ENABLED__: boolean;
+}
+
 /**
  * A configuration object to initialize Datadog's features.
  */
