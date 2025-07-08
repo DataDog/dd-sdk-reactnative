@@ -7,19 +7,19 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { InteractionManager } from 'react-native';
 
-import {
-    DdSdkReactNativeConfiguration,
-    buildConfigurationFromPartialConfiguration,
-    addDefaultValuesToAutoInstrumentationConfiguration,
-    InitializationMode,
-    formatFirstPartyHosts
-} from './DdSdkReactNativeConfiguration';
 import type {
+    AutoInstrumentationConfiguration,
     AutoInstrumentationParameters,
     DatadogProviderConfiguration,
-    PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration,
-    InitializationModeForTelemetry
+    InitializationModeForTelemetry,
+    PartialInitializationConfiguration
+} from './DdSdkReactNativeConfiguration';
+import {
+    DdSdkReactNativeConfiguration,
+    InitializationMode,
+    addDefaultValuesToAutoInstrumentationConfiguration,
+    buildConfigurationFromPartialConfiguration,
+    formatFirstPartyHosts
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -27,6 +27,7 @@ import type { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
+import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
@@ -361,6 +362,9 @@ export class DdSdkReactNative {
     private static enableFeatures(
         configuration: AutoInstrumentationParameters
     ) {
+        DdBabelInteractionTracking.trackInteractions =
+            configuration.trackInteractions;
+
         if (DdSdkReactNative.wasAutoInstrumented) {
             InternalLog.log(
                 "Can't auto instrument Datadog, SDK was already instrumented",
@@ -369,7 +373,10 @@ export class DdSdkReactNative {
             return;
         }
 
-        if (configuration.trackInteractions) {
+        if (
+            configuration.trackInteractions &&
+            !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__
+        ) {
             DdRumUserInteractionTracking.startTracking({
                 actionNameAttribute: configuration.actionNameAttribute,
                 useAccessibilityLabel: configuration.useAccessibilityLabel
