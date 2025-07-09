@@ -37,6 +37,29 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - DatadogSDKReactNativeSessionReplay (2.10.0):
+    - DatadogSDKReactNative
+    - DatadogSessionReplay (= 2.29.0)
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - DatadogSDKReactNativeWebView (2.10.0):
     - DatadogInternal (= 2.29.0)
     - DatadogSDKReactNative
@@ -61,6 +84,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - DatadogSessionReplay (2.29.0):
+    - DatadogInternal (= 2.29.0)
   - DatadogTrace (2.29.0):
     - DatadogInternal (= 2.29.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
@@ -1376,6 +1401,49 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-slider (4.5.7):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - react-native-slider/common (= 4.5.7)
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - react-native-slider/common (4.5.7):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-webview (13.15.0):
     - DoubleConversion
     - glog
@@ -1756,6 +1824,7 @@ PODS:
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - "DatadogSDKReactNative (from `../node_modules/@datadog/mobile-react-native`)"
+  - "DatadogSDKReactNativeSessionReplay (from `../node_modules/@datadog/mobile-react-native-session-replay`)"
   - "DatadogSDKReactNativeWebView (from `../node_modules/@datadog/mobile-react-native-webview`)"
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
@@ -1797,6 +1866,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-config (from `../../node_modules/react-native-config`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../../node_modules/@react-native-community/slider`)"
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1837,6 +1907,7 @@ SPEC REPOS:
     - DatadogInternal
     - DatadogLogs
     - DatadogRUM
+    - DatadogSessionReplay
     - DatadogTrace
     - DatadogWebViewTracking
     - OpenTelemetrySwiftApi
@@ -1848,6 +1919,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
     :path: "../node_modules/@datadog/mobile-react-native"
+  DatadogSDKReactNativeSessionReplay:
+    :path: "../node_modules/@datadog/mobile-react-native-session-replay"
   DatadogSDKReactNativeWebView:
     :path: "../node_modules/@datadog/mobile-react-native-webview"
   DoubleConversion:
@@ -1927,6 +2000,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/react-native-config"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../../node_modules/@react-native-community/slider"
   react-native-webview:
     :path: "../node_modules/react-native-webview"
   React-NativeModulesApple:
@@ -2000,7 +2075,9 @@ SPEC CHECKSUMS:
   DatadogLogs: c314b15a97bfc7e0728ea253d3638b0513032d88
   DatadogRUM: 6ec371f477a1022fd5aad6ccb5407b85a04db399
   DatadogSDKReactNative: 55f0825b1f2777fd5bfab17bf513c6b83d62c819
+  DatadogSDKReactNativeSessionReplay: eaaf879fa35c4cdc19e5ea1376e9e117e6fca451
   DatadogSDKReactNativeWebView: 23f2c289119fb275994a3a184f4286f25520c79c
+  DatadogSessionReplay: 1f2f70afa2fc5870ce7304a02749f73529d3e6cb
   DatadogTrace: f0de55334db1630938ef980b5e054964652c4606
   DatadogWebViewTracking: f637f0e36cf62b713cd6673690d94072e6223570
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
@@ -2043,6 +2120,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 6a39463c32ce831c4c2aa8469273114d894b6be9
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-safe-area-context: afcc2e2b3e78ae8ef90d81e658aacee34ebc27ea
+  react-native-slider: 310d3f89edd6ca8344a974bfe83a29a3fbb60e5a
   react-native-webview: 80ef603d1df42e24fdde765686fbb9b8a6ecd554
   React-NativeModulesApple: fd0545efbb7f936f78edd15a6564a72d2c34bb32
   React-perflogger: 5f8fa36a8e168fb355efe72099efe77213bc2ac6

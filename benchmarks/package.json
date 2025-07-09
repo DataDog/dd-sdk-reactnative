@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "@datadog/mobile-react-native": "workspace:packages/core",
+    "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
     "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",
+    "@react-native-community/slider": "4.5.7",
     "@react-native-picker/picker": "2.11.0",
     "@react-navigation/bottom-tabs": "7.3.12",
     "@react-navigation/native": "7.1.8",
@@ -47,7 +49,6 @@
     "@react-native/metro-config": "0.78.2",
     "@react-native/typescript-config": "0.78.2",
     "@types/jest": "29.5.13",
-    "@types/react": "19.0.0",
     "@types/react-test-renderer": "19.0.0",
     "eslint": "8.19.0",
     "jest": "29.6.3",

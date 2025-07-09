@@ -94,3 +94,89 @@ xcrun simctl openurl booted "benchmark://stop"
 ```
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://stop' com.benchmarkrunner
 ```
+
+## Adding a New Scenario to Benchmarks
+
+### Define the New Scenario
+
+In `benchmarks/src/testSetup/types/testConfig.ts`, add a new entry to the `Scenario` enum:
+
+```ts
+export enum Scenario {
+  Default = 'default',
+  NavigationExample = 'navigation',
+  (...)
+  NewScenario = 'newScenario'
+}
+```
+
+The string value (`'newScenario'`) is what must be passed via deeplink as the `scenario` parameter.
+
+Alternatively, if you're using a `.env` file to set the scenario, add:
+
+```env
+BENCH_SCENARIO="newScenario"
+```
+
+### Create the Scenario Component
+
+Create a new folder under `benchmarks/src/scenario/` named after your scenario (e.g., `NewScenario`). Inside this folder, define your scenario’s main component and its props.
+
+Create a `types.ts` file:
+
+```ts
+import type { TestConfig } from "benchmarks/src/testSetup/types/testConfig";
+
+export type NewScenarioProps = {
+  testConfig?: TestConfig;
+};
+```
+
+Then, define the main component:
+
+```ts
+import { NewScenarioProps } from "./types";
+
+function NewScenario(props: NewScenarioProps): React.JSX.Element {
+  (...)
+}
+
+export default NewScenario;
+```
+
+### Register the Scenario in the App
+
+In `benchmarks/src/App.tsx`, add a new case to the scenario switch using the enum identifier you just created:
+
+```tsx
+case Scenario.NewScenario:
+  return <NewScenario testConfig={testConfig} />;
+```
+
+You can now trigger this scenario either through a deeplink or by setting `BENCH_SCENARIO` in the `.env` file.
+
+## Instrumenting a Scenario
+
+Depending on the scenario’s structure and flow, the Datadog SDK initialization may vary. Each scenario is responsible for managing its own initialization logic.
+
+To simplify this, use the `instrument()` helper from `benchmarks/src/testSetup/testUtils`. It initializes the SDK with a default configuration.
+
+Since your scenario component receives `testConfig` as a prop, you can use it to determine whether or not instrumentation should occur:
+
+```ts
+useEffect(() => {
+  if (props.testConfig?.runType !== RunType.BASELINE) {
+    instrument().then(() => {
+      // Datadog is initialized
+    });
+  }
+}, []);
+```
+
+## Using the Datadog Provider
+
+If your scenario uses the `DatadogProvider`, you can retrieve the necessary configuration via `getDatadogProviderConfig()` from the same `testUtils` module:
+
+```ts
+return <DatadogProvider config={getDatadogProviderConfig()} onInitialization={onDatadogInitialization}>...</DatadogProvider>
+```

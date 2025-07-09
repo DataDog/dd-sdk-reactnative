@@ -4,7 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const SCR_WIDTH = Dimensions.get('screen').width;
+const SCR_HEIGHT = Dimensions.get('screen').height;
 
 export enum Colors {
     White = '#FFFFFF',
@@ -26,6 +29,11 @@ export const CommonStyles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 20,
     },
+    uiItemsContainer: {
+        flex: 1,
+        backgroundColor: Colors.White,
+        paddingHorizontal: 10,
+    },
     lightContainer: {
         flex: 1,
         paddingHorizontal: 10,
@@ -43,6 +51,12 @@ export const CommonStyles = StyleSheet.create({
         padding: 15,
         marginTop: 5,
         marginBottom: 20,
+    },
+    fullScreenHolder: {
+        flex: 1,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        backgroundColor: Colors.White,
     },
     separator: {
         height: 1,
@@ -170,5 +184,132 @@ export const CommonStyles = StyleSheet.create({
     gridImage: {
         height: 100,
         width: 100,
-    }
+    },
+    uiElementCell: {
+        padding: 15,
+        flex: 1,
+        backgroundColor: Colors.White,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignContent: 'space-around',
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.Grey,
+    },
+    uiElementTitle: {
+        flex: 0.9,
+        fontSize: 25,
+    },
+    uiElementArrow: {
+        flex: 0.1,
+        color: Colors.DatadogPurple,
+        fontSize: 25,
+    },
+    sessionReplayView: {
+        height: 250,
+        width: 250,
+        backgroundColor: 'green',
+        marginVertical: 30,
+    },
+    sessionReplayRotatedView: {
+        backgroundColor: 'blue',
+        transform: [{ rotate: '30deg' }],
+    },
+    sessionReplayOpacityView:{
+        backgroundColor: 'yellow',
+    },
+    sessionReplayOpacityViewChild:{
+        backgroundColor: 'blue',
+        opacity: 0.2,
+        height: 100,
+        width: 100,
+    },
+    sessionReplayContainerView:{
+        backgroundColor: 'purple',
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sessionReplayContainerViewText:{
+        color: Colors.White,
+        fontSize: 20,
+    },
+    sessionReplayImage: {
+        width: 350,
+        height: 350,
+    },
+    sessionReplayText: {
+        color: Colors.DatadogPurple,
+        fontSize: 16,
+        textAlign: 'left',
+        marginVertical: 10,
+    },
+    sessionReplayTextCursive: {
+        color: Colors.Black,
+        fontStyle: 'italic',
+        textAlign: 'center',
+    },
+    sessionReplayTextBold: {
+        color: Colors.DarkGrey,
+        fontWeight: '900',
+        textAlign: 'right',
+    },
+    sessionReplayTextSpaced: {
+        color: Colors.DatadogPurple,
+        letterSpacing: 10,
+        lineHeight: 25,
+    },
+    sessionReplayTextInput: {
+        marginVertical: 15,
+        backgroundColor: Colors.Grey,
+        width: '80%',
+        fontSize: 20,
+        padding: 10,
+        borderRadius: 10,
+    },
+    sessionReplaySwitch: {
+        marginVertical: 30,
+    },
+    sessionReplayButton: {
+        marginVertical: 20,
+        backgroundColor: Colors.DatadogPurple,
+        width: '80%',
+        padding: 20,
+        borderRadius: 15,
+        color: Colors.White,
+    },
+    sessionReplayButtonLabel: {
+        color: Colors.White,
+        textAlign: 'center',
+        fontSize: 20,
+    },
+    sessionReplayActivityIndicator : {
+        marginVertical: 50,
+    },
+    sessionReplayPicker: {
+
+    },
+    sessionReplaySlider: {
+        width: 200,
+        height: 40,
+        marginVertical: 40,
+    },
+    sessionReplayWebView: {
+        height: SCR_HEIGHT, 
+        width: SCR_WIDTH,
+    },
+    sessionReplaySectionList: {
+        width: SCR_WIDTH,
+    },
+    sessionReplaySectionListItem: {
+        backgroundColor: Colors.DatadogPurple,
+        padding: 20,
+        marginVertical: 8,
+    },
+    sessionReplaySectionListItemTitle: {
+        color: Colors.White,
+    },
+    sessionReplaySectionListHeader: {
+        fontSize: 32,
+        backgroundColor: Colors.White,
+    },
 })
