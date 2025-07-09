@@ -8,8 +8,10 @@
  */
 
 import { createHash } from 'crypto';
+import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import countLines from 'metro/src/lib/countLines';
+import path from 'path';
 
 import type {
     Bundle,
@@ -214,7 +216,40 @@ export const injectDebugIdInCodeAndSourceMap = (
     // Insert the Debug ID as a top-level property of the sourcemap
     const bundleMap: Record<string, unknown> = JSON.parse(sourcemap);
     bundleMap['debugId'] = debugId;
+
+    // Write the Debug ID in a temporary file
+    writeDebugIdToFile(debugId);
+
     return { code: codeWithDebugId, map: JSON.stringify(bundleMap) };
+};
+
+const writeDebugIdToFile = (debugId: string): void => {
+    try {
+        const datadogPackageJsonPath = require.resolve(
+            '@datadog/mobile-react-native/package.json'
+        );
+        const datadogTmpDir = path.join(
+            path.dirname(datadogPackageJsonPath),
+            '.tmp'
+        );
+        const debugIdFilePath = path.join(datadogTmpDir, 'debug_id');
+
+        // Remove the existing Debug ID file if it exists
+        if (existsSync(debugIdFilePath)) {
+            unlinkSync(debugIdFilePath);
+        }
+
+        if (!existsSync(datadogTmpDir)) {
+            mkdirSync(datadogTmpDir);
+        }
+
+        writeFileSync(debugIdFilePath, debugId, 'utf8');
+    } catch (error) {
+        console.warn(
+            '[DATADOG METRO PLUGIN] Failed to write Debug ID to file:',
+            error
+        );
+    }
 };
 
 /**

@@ -90,3 +90,13 @@ coverage
 
 # Auto-generated iOS Header
 packages/react-native-session-replay/ios/Sources/RCTVersion.h
+
+# Datadog temporary files
+.tmp
+*.tgz
+
+# Generated bundle and sourcemap files
+example/android/app/src/main/assets/index.android*
+
+# Credentials for example app
+datadog-ci.json
