@@ -2411,7 +2411,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-navigation@workspace:packages/react-native-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.9.1
+    "@datadog/mobile-react-native": ^2.10.0
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
@@ -2452,7 +2452,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native@^2.9.1, @datadog/mobile-react-native@workspace:packages/core":
+"@datadog/mobile-react-native@^2.10.0, @datadog/mobile-react-native@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
@@ -2469,7 +2469,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-navigation@workspace:packages/react-navigation"
   dependencies:
-    "@datadog/mobile-react-native": ^2.9.1
+    "@datadog/mobile-react-native": ^2.10.0
     "@react-navigation/native-v5": "npm:@react-navigation/native@5.9.8"
     "@react-navigation/native-v6": "npm:@react-navigation/native@6.1.2"
     "@react-navigation/stack-v5": "npm:@react-navigation/stack@5.14.2"
@@ -7952,7 +7952,7 @@ __metadata:
     react: 18.3.1
     react-native: 0.76.9
     react-native-crash-tester: 0.2.3
-    react-native-gesture-handler: ^2.24.0
+    react-native-gesture-handler: 2.24.0
     react-native-navigation: 8.0.0-snapshot.1658
     react-native-safe-area-context: 5.1.0
     react-native-screens: 4.5.0
@@ -15362,9 +15362,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:^2.24.0":
-  version: 2.26.0
-  resolution: "react-native-gesture-handler@npm:2.26.0"
+"react-native-gesture-handler@npm:2.24.0":
+  version: 2.24.0
+  resolution: "react-native-gesture-handler@npm:2.24.0"
   dependencies:
     "@egjs/hammerjs": ^2.0.17
     hoist-non-react-statics: ^3.3.0
@@ -15372,7 +15372,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: e01cc57598b1cd2b4bf2886906e0d3a03ef09a57ce7a8ab530ec7779853919bb8265dd9afc0f023a0418cf60f6762eb27d1d71f8e3e9416a78ab0ddd55c22bb9
+  checksum: 65abaeef68180fee2811d01d88ff50c231a91faca05279222fcaaa55349e758b68a7d6a9ac3eddfb1887f6b4c4790ac195b99989f1ad8a2a1f3f3bdff3ba0a76
   languageName: node
   linkType: hard
 
