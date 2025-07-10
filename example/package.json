@@ -26,7 +26,7 @@
         "react": "18.3.1",
         "react-native": "0.76.9",
         "react-native-crash-tester": "0.2.3",
-        "react-native-gesture-handler": "^2.24.0",
+        "react-native-gesture-handler": "2.24.0",
         "react-native-navigation": "8.0.0-snapshot.1658",
         "react-native-safe-area-context": "5.1.0",
         "react-native-screens": "4.5.0",
