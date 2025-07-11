@@ -196,7 +196,7 @@ dependencies {
   // From 2.21.0, it uses 1.0.0-beta02, which requires Gradle 8.6.0.
   // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0. 
   // To avoid this, we enforce 1.0.0-beta01 on RN < 0.76.0
-  if (reactNativeMinorVersion < 76) {
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 76) {
       implementation("com.datadoghq:dd-sdk-android-rum:2.25.0") {
           exclude group: "androidx.metrics", module: "metrics-performance"
       }
@@ -285,5 +285,18 @@ project.afterEvaluate {
 
   project.android.unitTestVariants.all { variant ->
     variant.registerPreJavacGeneratedBytecode(outputJarDependency)
+  }
+
+  // dd-sdk-android-rum requires androidx.metrics:metrics-performance. 
+  // From 2.21.0, it uses 1.0.0-beta02, which requires Gradle 8.6.0.
+  // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0. 
+  // To avoid this, we enforce 1.0.0-beta01 on RN < 0.76.0
+  // This resolution ensures that version 1.0.0-beta01 will be used even if another dependency also includes androidx.metrics:metrics-performance
+  if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 76) {
+    configurations.all {
+      resolutionStrategy {
+        force 'androidx.metrics:metrics-performance:1.0.0-beta01'
+      }
+    }
   }
 }
