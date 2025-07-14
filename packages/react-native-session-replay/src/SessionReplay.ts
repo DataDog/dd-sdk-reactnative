@@ -5,6 +5,7 @@
  */
 
 import type { NativeSessionReplayType } from './nativeModulesTypes';
+import json from '../test.json';
 
 export enum SessionReplayPrivacy {
     MASK = 'MASK',
@@ -104,12 +105,25 @@ export interface SessionReplayConfiguration {
      * Note: setting this property (`defaultPrivacyLevel`) will override the individual privacy levels.
      */
     defaultPrivacyLevel?: SessionReplayPrivacy;
+
+    srData?: {
+        svgs?: {
+            [key: string]: { file: string; width?: string; height?: string };
+        };
+        styles?: { [key: string]: string };
+    };
 }
 
 type InternalBaseSessionReplayConfiguration = {
     replaySampleRate: number;
     customEndpoint: string;
     startRecordingImmediately: boolean;
+    srData?: {
+        svgs?: {
+            [key: string]: { file: string; width?: string; height?: string };
+        };
+        styles?: { [key: string]: string };
+    };
 };
 
 type InternalPrivacySessionReplayConfiguration = {
@@ -130,7 +144,8 @@ const DEFAULTS: InternalSessionReplayConfiguration & {
     imagePrivacyLevel: ImagePrivacyLevel.MASK_ALL,
     touchPrivacyLevel: TouchPrivacyLevel.HIDE,
     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_ALL,
-    startRecordingImmediately: true
+    startRecordingImmediately: true,
+    srData: {}
 };
 
 export class SessionReplayWrapper {
@@ -202,6 +217,24 @@ export class SessionReplayWrapper {
             }
         }
 
+        // const safeRequire = (path: string) => {
+        //     try {
+        //         // @ts-ignore
+        //         // return require(path);
+        //         return require('./test.json');
+        //     } catch (error) {
+        //         console.log('Error loadign svg assets file: ', error);
+        //         return null;
+        //     }
+        // };
+
+        baseConfig.srData = {};
+        // const json = safeRequire('./test');
+        console.log('JSON: ', json);
+        if (json) {
+            baseConfig.srData.svgs = json as any;
+        }
+
         return { ...baseConfig, ...privacyConfig };
     };
 
@@ -216,7 +249,8 @@ export class SessionReplayWrapper {
             imagePrivacyLevel,
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
-            startRecordingImmediately
+            startRecordingImmediately,
+            srData
         } = this.buildConfiguration(configuration);
 
         return this.nativeSessionReplay.enable(
@@ -225,7 +259,8 @@ export class SessionReplayWrapper {
             imagePrivacyLevel,
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
-            startRecordingImmediately
+            startRecordingImmediately,
+            srData
         );
     };
 

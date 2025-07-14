@@ -31,7 +31,17 @@ export interface Spec extends TurboModule {
         imagePrivacyLevel: string,
         touchPrivacyLevel: string,
         textAndInputPrivacyLevel: string,
-        startRecordingImmediately: boolean
+        startRecordingImmediately: boolean,
+        srData: {
+            svgs?: {
+                [key: string]: {
+                    file: string;
+                    width?: string;
+                    height?: string;
+                };
+            };
+            styles?: { [key: string]: string };
+        }
     ): Promise<void>;
 
     /**

@@ -8,6 +8,7 @@ package com.datadog.reactnative.sessionreplay
 
 import android.app.Activity
 import com.datadog.android.sessionreplay.SessionReplayInternalCallback
+import com.datadog.android.sessionreplay.SessionReplayInternalResourceQueue
 import com.facebook.react.bridge.ReactContext
 
 /**
@@ -16,8 +17,17 @@ import com.facebook.react.bridge.ReactContext
  */
 class ReactNativeInternalCallback(
     private val reactContext: ReactContext,
+    private var resourceQueue: SessionReplayInternalResourceQueue? = null
 ) : SessionReplayInternalCallback {
+    override fun addResourceItem(identifier: String, resourceData: ByteArray) {
+        this.resourceQueue?.addResourceItem(identifier, resourceData)
+    }
+
     override fun getCurrentActivity(): Activity? {
         return reactContext.currentActivity
+    }
+
+    override fun setResourceQueue(resourceQueue: SessionReplayInternalResourceQueue) {
+        this.resourceQueue = resourceQueue
     }
 }

@@ -11,9 +11,11 @@ import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay._SessionReplayInternalProxy
 import com.datadog.reactnative.DatadogSDKWrapperStorage
+import com.datadog.reactnative.sessionreplay.utils.SRCache
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReadableMap
 
 /**
  * The entry point to use Datadog's Session Replay feature.
@@ -38,8 +40,10 @@ class DdSessionReplayImplementation(
         customEndpoint: String,
         privacySettings: SessionReplayPrivacySettings,
         startRecordingImmediately: Boolean,
+        srData: ReadableMap,
         promise: Promise
     ) {
+        println("**Enable**")
         val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val textViewUtils = TextViewUtils.create(reactContext, logger)
@@ -49,7 +53,7 @@ class DdSessionReplayImplementation(
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
-            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils))
+            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils, internalCallback))
             .let {
                 _SessionReplayInternalProxy(it).setInternalCallback(internalCallback)
             }
@@ -59,6 +63,9 @@ class DdSessionReplayImplementation(
             configuration.useCustomEndpoint(customEndpoint)
         }
 
+        println("SR Data: $srData")
+
+        srData.getMap("svgs")?.let { SRCache.put("svgs", it) };
         sessionReplayProvider().enable(configuration.build(), sdkCore)
         promise.resolve(null)
     }

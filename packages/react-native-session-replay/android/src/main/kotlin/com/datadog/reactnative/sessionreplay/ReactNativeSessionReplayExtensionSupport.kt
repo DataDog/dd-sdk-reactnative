@@ -24,7 +24,8 @@ import com.facebook.react.views.view.ReactViewGroup
 
 
 internal class ReactNativeSessionReplayExtensionSupport(
-    private val textViewUtils: TextViewUtils
+    private val textViewUtils: TextViewUtils,
+    private val internalCallback: ReactNativeInternalCallback
 ) : ExtensionSupport {
     override fun name(): String {
         return ReactNativeSessionReplayExtensionSupport::class.java.simpleName
@@ -33,10 +34,10 @@ internal class ReactNativeSessionReplayExtensionSupport(
     override fun getCustomViewMappers(): List<MapperTypeWrapper<*>> {
         return listOf(
             MapperTypeWrapper(ReactImageView::class.java, ReactNativeImageViewMapper()),
-            MapperTypeWrapper(ReactViewGroup::class.java, ReactViewGroupMapper()),
+            MapperTypeWrapper(ReactViewGroup::class.java, ReactViewGroupMapper(internalCallback)),
             MapperTypeWrapper(ReactTextView::class.java, ReactTextMapper(textViewUtils)),
             MapperTypeWrapper(ReactEditText::class.java, ReactEditTextMapper(textViewUtils)),
-            MapperTypeWrapper(ReactModalHostView::class.java, ReactViewModalMapper()),
+            MapperTypeWrapper(ReactModalHostView::class.java, ReactViewModalMapper(internalCallback)),
         )
     }
 

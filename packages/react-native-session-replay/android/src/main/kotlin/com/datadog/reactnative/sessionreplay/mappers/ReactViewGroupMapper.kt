@@ -8,10 +8,12 @@ package com.datadog.reactnative.sessionreplay.mappers
 
 import ReactViewBackgroundDrawableUtils
 import com.datadog.android.sessionreplay.recorder.mapper.TraverseAllChildrenMapper
+import com.datadog.reactnative.sessionreplay.ReactNativeInternalCallback
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.facebook.react.views.view.ReactViewGroup
 
 internal class ReactViewGroupMapper(
+    private val internalCallback: ReactNativeInternalCallback,
     private val drawableUtils: DrawableUtils =
         ReactViewBackgroundDrawableUtils()
-) : DefaultMapper<ReactViewGroup>(drawableUtils), TraverseAllChildrenMapper<ReactViewGroup>
+) : DefaultMapper<ReactViewGroup>(drawableUtils, internalCallback), TraverseAllChildrenMapper<ReactViewGroup>

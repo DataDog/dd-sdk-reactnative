@@ -20,6 +20,7 @@ export type PluginOptions = {
 };
 
 export type PluginPassState = Babel.PluginPass & {
+    pluginInitialiazed?: boolean;
     fileInfo?: { path: string | null; name: string | null };
     tapMappings?: Record<string, string[]>;
     memoization?: Record<string, string>;
