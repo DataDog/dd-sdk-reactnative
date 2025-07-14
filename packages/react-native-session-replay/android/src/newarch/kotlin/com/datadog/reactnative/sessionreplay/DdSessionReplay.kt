@@ -9,6 +9,7 @@ package com.datadog.reactnative.sessionreplay
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 
 /**
  * The entry point to use Datadog's Session Replay feature.
@@ -38,8 +39,10 @@ class DdSessionReplay(
         touchPrivacyLevel: String,
         textAndInputPrivacyLevel: String,
         startRecordingImmediately: Boolean,
+        srData: ReadableMap,
         promise: Promise
     ) {
+        println("SR Data*1: $srData")
         implementation.enable(
             replaySampleRate,
             customEndpoint,
@@ -49,6 +52,7 @@ class DdSessionReplay(
                 textAndInputPrivacyLevel = textAndInputPrivacyLevel
             ),
             startRecordingImmediately,
+            srData,
             promise
         )
     }

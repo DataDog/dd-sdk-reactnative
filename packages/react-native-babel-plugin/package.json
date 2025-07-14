@@ -39,10 +39,12 @@
     },
     "dependencies": {
         "@babel/core": "^7.27.1",
-        "@babel/helper-plugin-utils": "^7.27.1"
+        "@babel/helper-plugin-utils": "^7.27.1",
+        "uuid": "^11.1.0"
     },
     "devDependencies": {
         "@babel/cli": "^7.27.2",
+        "@babel/generator": "^7.28.0",
         "@babel/preset-env": "^7.27.2",
         "@babel/preset-react": "^7.27.1",
         "@babel/preset-typescript": "^7.27.1",
