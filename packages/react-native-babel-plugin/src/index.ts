@@ -162,14 +162,34 @@ export default declare(
                     const transformElement = (el: Babel.types.JSXElement) => {
                         const tagNameNode = el.openingElement.name;
                         if (t.isJSXIdentifier(tagNameNode)) {
-                            tagNameNode.name = tagNameNode.name.toLowerCase();
+                            if (['LinearGradient'].includes(tagNameNode.name)) {
+                                tagNameNode.name = `${tagNameNode.name
+                                    .slice(0, 1)
+                                    .toLowerCase()}${tagNameNode.name.slice(
+                                    1
+                                )}`;
+                            } else {
+                                tagNameNode.name = tagNameNode.name.toLowerCase();
+                            }
                         }
 
                         if (
                             el.closingElement?.name &&
                             t.isJSXIdentifier(el.closingElement.name)
                         ) {
-                            el.closingElement.name.name = el.closingElement?.name.name.toLowerCase();
+                            if (
+                                ['LinearGradient'].includes(
+                                    el.closingElement.name.name
+                                )
+                            ) {
+                                el.closingElement.name.name = `${el.closingElement.name.name
+                                    .slice(0, 1)
+                                    .toLowerCase()}${el.closingElement.name.name.slice(
+                                    1
+                                )}`;
+                            } else {
+                                el.closingElement.name.name = el.closingElement?.name.name.toLowerCase();
+                            }
                         }
 
                         for (const [
@@ -254,15 +274,25 @@ export default declare(
     }
 );
 
-function encodeSvgToBase64(svgString: string) {
+function shouldEncodeSvg(svg: string): boolean {
+    const pathCount = (svg.match(/<path[\s>]/g) || []).length;
+    const totalLength = svg.length;
+
+    return totalLength > 5000 || pathCount > 20;
+}
+
+function encodeSvgToBase64(svgString: string): string {
     const cleanedSvg = svgString
         .replace(/\n+/g, '')
         .replace(/\t+/g, '')
         .replace(/\s{2,}/g, ' ')
         .trim();
 
-    const base64 = Buffer.from(cleanedSvg, 'utf8').toString('base64');
+    if (!shouldEncodeSvg(cleanedSvg)) {
+        return cleanedSvg;
+    }
 
-    // return `data:image/svg+xml;base64,${base64}`;
+    const base64 = Buffer.from(cleanedSvg, 'utf8').toString('base64');
     return base64;
+    // return `data:image/svg+xml;base64,${base64}`;
 }

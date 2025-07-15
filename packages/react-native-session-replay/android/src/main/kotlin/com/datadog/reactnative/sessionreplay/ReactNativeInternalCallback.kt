@@ -19,8 +19,8 @@ class ReactNativeInternalCallback(
     private val reactContext: ReactContext,
     private var resourceQueue: SessionReplayInternalResourceQueue? = null
 ) : SessionReplayInternalCallback {
-    override fun addResourceItem(identifier: String, resourceData: ByteArray) {
-        this.resourceQueue?.addResourceItem(identifier, resourceData)
+    override fun addResourceItem(identifier: String, resourceData: ByteArray, mimeType: String?) {
+        this.resourceQueue?.addResourceItem(identifier, resourceData, mimeType)
     }
 
     override fun getCurrentActivity(): Activity? {

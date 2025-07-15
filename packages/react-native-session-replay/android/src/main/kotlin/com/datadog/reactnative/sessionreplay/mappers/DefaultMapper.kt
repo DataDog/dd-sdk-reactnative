@@ -7,9 +7,7 @@
 package com.datadog.reactnative.sessionreplay.mappers
 
 import ReactViewBackgroundDrawableUtils
-import android.graphics.Color
 import android.graphics.Rect
-import android.graphics.drawable.ColorDrawable
 import android.view.View
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.internal.utils.ImageViewUtils
@@ -24,13 +22,9 @@ import com.datadog.android.sessionreplay.utils.DefaultViewBoundsResolver.resolve
 import com.datadog.android.sessionreplay.utils.DefaultViewIdentifierResolver
 import com.datadog.android.sessionreplay.utils.DrawableToColorMapper
 import com.datadog.reactnative.sessionreplay.ReactNativeInternalCallback
-import com.datadog.reactnative.sessionreplay.extensions.getScaleTypeDrawable
-import com.datadog.reactnative.sessionreplay.extensions.imageViewScaleType
-import com.datadog.reactnative.sessionreplay.resources.ReactDrawableCopier
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.SRCache
-import com.facebook.drawee.drawable.FadeDrawable
-import com.facebook.react.views.image.ReactImageView
+import kotlin.math.min
 
 
 data class SvgData(
@@ -96,6 +90,7 @@ internal open class DefaultMapper<T: View>(
                     null
                 }
                 println("*** svgData: $svgData ***")
+                val base64 = if (svgData?.file?.startsWith("<svg") == false) svgData.file else null
                 val imgWireframe = MobileSegment.Wireframe.ImageWireframe(
                     resolveViewId(view),
                     contentXPosInDp,
@@ -105,7 +100,8 @@ internal open class DefaultMapper<T: View>(
                     null,
                     null,
                     null,
-                    svgData?.file,
+//                    svgData?.file,
+                    base64,
                     nativeID.toString(),
 //                    "image/svg+xml",
                     "svg+xml",
@@ -113,8 +109,13 @@ internal open class DefaultMapper<T: View>(
                 )
                 wireframes.add(imgWireframe)
                 println("wireframes: $wireframes")
-                if (svgData?.file != null)  {
-                    internalCallback.addResourceItem(nativeID.toString(), svgData.file.toByteArray())
+                if (svgData?.file != null && base64 == null)  {
+                    logLargeString(svgData.file)
+                    internalCallback.addResourceItem(
+                        nativeID.toString(),
+                        svgData.file.toByteArray(),
+                        "image/svg+xml"
+                    )
                 }
                 return wireframes
 
@@ -142,5 +143,14 @@ internal open class DefaultMapper<T: View>(
                 border = border
             )
         )
+    }
+}
+
+fun logLargeString(content: String) {
+    val maxLogSize = 1000
+    for (i in 0..content.length / maxLogSize) {
+        val start = i * maxLogSize
+        val end = min(((i + 1) * maxLogSize).toDouble(), content.length.toDouble()).toInt()
+        println(content.substring(start, end))
     }
 }
