@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>provisioningProfiles</key>
+        <dict>
+            <key>com.datadog.react.native.BenchmarkRunner</key>
+            <string>React Native Benchmark App</string>
+        </dict>
+        <key>uploadBitcode</key>
+        <false/>
+        <key>uploadSymbols</key>
+        <true/>
+    </dict>
+</plist>
