@@ -33,7 +33,9 @@ export type ViewNamePredicate = (
 export class DdRumReactNavigationTracking {
     private static registeredContainer: NavigationContainerRef | null;
 
-    private static navigationStateChangeListener: NavigationListener;
+    private static navigationStateChangeListener: NavigationListener | null = null;
+
+    private static previousRoute: string | object | undefined = undefined;
 
     private static viewNamePredicate: ViewNamePredicate;
 
@@ -104,13 +106,11 @@ export class DdRumReactNavigationTracking {
             );
         } else if (DdRumReactNavigationTracking.registeredContainer == null) {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
-            const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
-            DdRumReactNavigationTracking.handleRouteNavigation(
-                navigationRef.getCurrentRoute(),
-                AppState.currentState
-            );
-            navigationRef.addListener('state', listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
+
+            const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
+            navigationRef.addListener('state', listener);
+
             DdRumReactNavigationTracking.backHandler = BackHandler.addEventListener(
                 'hardwareBackPress',
                 DdRumReactNavigationTracking.onBackPress
@@ -130,13 +130,16 @@ export class DdRumReactNavigationTracking {
         navigationRef: NavigationContainerRef | null
     ): void {
         if (navigationRef != null) {
-            navigationRef.removeListener(
-                'state',
-                DdRumReactNavigationTracking.navigationStateChangeListener
-            );
+            if (DdRumReactNavigationTracking.navigationStateChangeListener) {
+                navigationRef.removeListener(
+                    'state',
+                    DdRumReactNavigationTracking.navigationStateChangeListener
+                );
+            }
             DdRumReactNavigationTracking.backHandler?.remove();
             DdRumReactNavigationTracking.backHandler = null;
             DdRumReactNavigationTracking.registeredContainer = null;
+            DdRumReactNavigationTracking.navigationStateChangeListener = null;
 
             // eslint-disable-next-line func-names
             DdRumReactNavigationTracking.viewNamePredicate = function (
@@ -187,6 +190,7 @@ export class DdRumReactNavigationTracking {
         if (key != null && screenName != null) {
             // On iOS, the app can start in either "active", "background" or "unknown" state
             if (appStateStatus !== 'background') {
+                this.previousRoute = route;
                 DdRumReactNavigationTracking.trackingState = 'TRACKING';
                 DdRum.startView(key, screenName);
             }
@@ -207,14 +211,17 @@ export class DdRumReactNavigationTracking {
             if (appStateStatus === 'background') {
                 DdRumReactNavigationTracking.trackingState = 'NOT_TRACKING';
                 DdRum.stopView(key);
+                this.previousRoute = undefined;
             } else if (
                 appStateStatus === 'active' &&
                 DdRumReactNavigationTracking.trackingState === 'NOT_TRACKING'
             ) {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
-                DdRumReactNavigationTracking.trackingState = 'TRACKING';
-                DdRum.startView(key, screenName);
+                DdRumReactNavigationTracking.handleRouteNavigation(
+                    route,
+                    AppState.currentState
+                );
             }
         }
     }
@@ -234,11 +241,18 @@ export class DdRumReactNavigationTracking {
                     return;
                 }
 
+                // Route already tracked
+                if (this.previousRoute === route) {
+                    return;
+                }
+
                 DdRumReactNavigationTracking.handleRouteNavigation(
                     route,
                     AppState.currentState
                 );
             };
+
+            DdRumReactNavigationTracking.navigationStateChangeListener({});
         }
         return DdRumReactNavigationTracking.navigationStateChangeListener;
     }
