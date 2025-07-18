@@ -17,6 +17,7 @@ export function handleTapAction(
     actionResult: RumActionResult
 ) {
     const { parentName, propertyName, propertyNode, expression } = actionResult;
+
     // The value of a JSXAttribute we want to target is always jsxExpressionContainer
     const isExpressionContainer = t.isJSXExpressionContainer(
         propertyNode.value
@@ -32,7 +33,10 @@ export function handleTapAction(
     }
 
     const isArrowFunc = t.isArrowFunctionExpression(expression);
-    const isNamedFunc = t.isIdentifier(expression);
+    const isNamedFunc =
+        t.isIdentifier(expression) ||
+        (t.isMemberExpression(expression) &&
+            t.isThisExpression(expression.object));
 
     if (!isArrowFunc && !isNamedFunc) {
         return;
@@ -45,17 +49,20 @@ export function handleTapAction(
 
     // Used only for function references
     // Wraps our custom logic at the level of the memoization call insead of on the property level (default behaviour)
-    const isMemoized = !isNamedFunc
-        ? false
-        : handleMemoization(
-              path,
-              t,
-              state,
-              expression,
-              fName,
-              fNode,
-              parentName
-          );
+    const isMemoized =
+        !isNamedFunc ||
+        t.isClassDeclaration(fNode) ||
+        t.isMemberExpression(expression)
+            ? false
+            : handleMemoization(
+                  path,
+                  t,
+                  state,
+                  expression,
+                  fName,
+                  fNode,
+                  parentName
+              );
 
     // This is the fallback expression, only used if there is something wrong with the setup on the SDK side
     // Even though the function is still wrapped, it will not call any custom logic from our side
@@ -93,6 +100,7 @@ function getNamedFunctionNode(
     fNode:
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
+        | babel.types.ClassDeclaration
         | null;
     fParams: (
         | Babel.types.Identifier
@@ -104,7 +112,9 @@ function getNamedFunctionNode(
     const predicate = (p: Babel.NodePath<Babel.types.Node>) =>
         type === 'Program'
             ? p.isProgram()
-            : p.isFunctionDeclaration() || p.isFunctionExpression();
+            : p.isFunctionDeclaration() ||
+              p.isFunctionExpression() ||
+              p.isClassDeclaration();
 
     const cPath = path.findParent(p => predicate(p)) || null;
 
@@ -118,6 +128,7 @@ function getNamedFunctionNode(
     let fNode:
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
+        | babel.types.ClassDeclaration
         | null = null;
 
     if (!cPath) {

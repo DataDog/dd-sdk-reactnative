@@ -375,6 +375,164 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             }"
         `);
     });
+
+    it('should wrap arrow function when given function reference as prop', () => {
+        const input = `
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+
+            function MyComponent({item, onPress}) { 
+                return(
+                    <View>
+                        <Pressable color="red" onPress={onPress} />
+                    </View>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+            function MyComponent({
+              item,
+              onPress
+            }) {
+              return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
+                color: "red",
+                onPress: (...args) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(onPress, "TAP", "Pressable")(...args);else return onPress(...args);
+                }
+              }));
+            }"
+        `);
+    });
+
+    it('should wrap arrow function when given function reference as prop with arguments', () => {
+        const input = `
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+
+            function MyComponent({item, onPress}) { 
+                return(
+                    <View>
+                        <Pressable color="red" onPress={() => onPress(item.id)} />
+                    </View>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+            function MyComponent({
+              item,
+              onPress
+            }) {
+              return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
+                color: "red",
+                onPress: () => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => onPress(item.id), "TAP", "Pressable")();else return (() => onPress(item.id))();
+                }
+              }));
+            }"
+        `);
+    });
+
+    it('should wrap arrow function on Button with arrow function handler inside class component', () => {
+        const input = `
+            import React from 'react';
+            import { View, Button } from 'react-native';
+
+            class MyClassComponent2 extends Component {
+              handlePress = () => {
+                Alert.alert('Button Pressed', 'You pressed the button!');
+              };
+
+              render() {
+                return (
+                  <View style={{borderWidth: 1, padding: 5}}>
+                    <Button title="Press Me" onPress={() => this.handlePress()} />
+                  </View>
+                );
+              }
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import React from 'react';
+            import { View, Button } from 'react-native';
+            class MyClassComponent2 extends Component {
+              handlePress = () => {
+                Alert.alert('Button Pressed', 'You pressed the button!');
+              };
+              render() {
+                return /*#__PURE__*/React.createElement(View, {
+                  style: {
+                    borderWidth: 1,
+                    padding: 5
+                  }
+                }, /*#__PURE__*/React.createElement(Button, {
+                  title: "Press Me",
+                  onPress: () => {
+                    if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => this.handlePress(), "TAP", "Button")();else return (() => this.handlePress())();
+                  }
+                }));
+              }
+            }"
+        `);
+    });
+
+    it('should wrap arrow function on Button with function reference handler inside class component', () => {
+        const input = `
+            import React from 'react';
+            import { View, Button } from 'react-native';
+
+            class MyClassComponent extends Component {
+              handlePress = () => {
+                Alert.alert('Button Pressed', 'You pressed the button!');
+              };
+
+              render() {
+                return (
+                  <View style={{borderWidth: 1, padding: 5}}>
+                    <Button title="Press Me" onPress={this.handlePress} />
+                  </View>
+                );
+              }
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import React from 'react';
+            import { View, Button } from 'react-native';
+            class MyClassComponent extends Component {
+              handlePress = () => {
+                Alert.alert('Button Pressed', 'You pressed the button!');
+              };
+              render() {
+                return /*#__PURE__*/React.createElement(View, {
+                  style: {
+                    borderWidth: 1,
+                    padding: 5
+                  }
+                }, /*#__PURE__*/React.createElement(Button, {
+                  title: "Press Me",
+                  onPress: (...args) => {
+                    if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(this.handlePress, "TAP", "Button")(...args);else return this.handlePress(...args);
+                  }
+                }));
+              }
+            }"
+        `);
+    });
 });
 
 describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )', () => {
