@@ -60,6 +60,11 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         this.exceptionHandler = exceptionHandler
     }
 
+    @TestOnly
+    fun setIsNewArchitecture(isNewArch: Boolean) {
+        this.isNewArchitecture = isNewArch
+    }
+
     private fun hasValidBridge(): Boolean {
         val context = reactContext ?: return false
         val instance = context.catalystInstance ?: return false

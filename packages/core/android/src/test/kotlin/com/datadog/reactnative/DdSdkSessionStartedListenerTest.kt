@@ -90,6 +90,7 @@ internal class DdSdkSessionStartedListenerTest {
         val instance = DdSdkSessionStartedListener.getInstance()
         instance.setReactContext(mockReactContext)
         instance.setExceptionHandler(mockExceptionHandler)
+        instance.setIsNewArchitecture(false)
 
         val passedArgs = mutableListOf<String>()
         instance.setConvertToNativeArray {
@@ -124,6 +125,7 @@ internal class DdSdkSessionStartedListenerTest {
 
         val mockConvertToNativeArray = mock<(array: Array<String>) -> NativeArray?>()
         instance.setConvertToNativeArray(mockConvertToNativeArray)
+        instance.setIsNewArchitecture(false)
 
         // WHEN
         instance.onSessionStarted("TEST-SESSION-ID", false)
