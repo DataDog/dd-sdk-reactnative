@@ -129,6 +129,7 @@ export class DdRumReactNavigationTracking {
     static stopTrackingViews(
         navigationRef: NavigationContainerRef | null
     ): void {
+        this.previousRoute = undefined;
         if (navigationRef != null) {
             if (DdRumReactNavigationTracking.navigationStateChangeListener) {
                 navigationRef.removeListener(
