@@ -362,8 +362,10 @@ export class DdSdkReactNative {
     private static enableFeatures(
         configuration: AutoInstrumentationParameters
     ) {
-        DdBabelInteractionTracking.trackInteractions =
-            configuration.trackInteractions;
+        if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
+            DdBabelInteractionTracking.trackInteractions =
+                configuration.trackInteractions;
+        }
 
         if (DdSdkReactNative.wasAutoInstrumented) {
             InternalLog.log(
