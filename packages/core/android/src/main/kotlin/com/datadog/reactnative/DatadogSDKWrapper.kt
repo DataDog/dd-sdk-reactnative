@@ -10,7 +10,9 @@ import android.content.Context
 import android.util.Log
 import com.datadog.android.Datadog
 import com.datadog.android._InternalProxy
+import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.SdkCore
+import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.log.Logs
@@ -23,6 +25,7 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.webview.WebViewTracking
+import com.facebook.react.bridge.ReadableMap
 
 /**
  * Internal object used to add internal testing.
@@ -155,6 +158,22 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun setTrackingConsent(trackingConsent: TrackingConsent) {
         Datadog.setTrackingConsent(trackingConsent)
+    }
+
+    override fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap) {
+        val core = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore?
+        val logger = core?.internalLogger;
+
+        val additionalProperties = attributes.toMap()
+        val telemetryConfig = config.toMap()
+
+        logger?.log(
+            level = InternalLogger.Level.INFO,
+            target = InternalLogger.Target.TELEMETRY,
+            messageBuilder = { message },
+            onlyOnce = (telemetryConfig["onlyOnce"] as? Boolean) ?: true,
+            additionalProperties = additionalProperties
+        )
     }
 
     override fun telemetryDebug(message: String) {

@@ -57,6 +57,17 @@ export interface Spec extends TurboModule {
     setTrackingConsent(trackingConsent: string): Promise<void>;
 
     /**
+     * Sends internal telemetry message with attributes
+     * @param message message
+     * @param attributes attributes
+     */
+    sendTelemetryLog(
+        message: string,
+        attributes: Object,
+        config: Object
+    ): Promise<void>;
+
+    /**
      * Sends internal telemetry debug message
      * @param message debug message
      */

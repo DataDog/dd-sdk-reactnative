@@ -111,8 +111,17 @@ public class DatadogSDKWrapper {
 
         return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
     }
-
+    
     // Telemetry
+    internal func sendTelemetryLog(message: String, attributes: [String: any Encodable], config: [String: any Encodable]) {
+        if let core = coreInstance {
+            let id = (config["onlyOnce"] as? Bool) == true ? message : UUID().uuidString
+            core.telemetry.debug(id: id, message: message, attributes: attributes)
+        } else {
+            consolePrint("Core instance was not found when calling sendTelemetryLog.", .warn)
+        }
+    }
+
     internal func telemetryDebug(id: String, message: String) {
         return Datadog._internal.telemetry.debug(id: id, message: message)
     }

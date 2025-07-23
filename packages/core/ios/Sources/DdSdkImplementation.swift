@@ -128,6 +128,15 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
+    
+    @objc
+    public func sendTelemetryLog(message: NSString, attributes: NSDictionary, config: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let castedAttributes = castAttributesToSwift(attributes)
+        let castedConfig = castAttributesToSwift(config)
+        DatadogSDKWrapper.shared.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
+        resolve(nil)
+    }
+
     @objc
     public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)

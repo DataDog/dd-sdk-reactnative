@@ -13,6 +13,8 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.TraceConfiguration
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableMap
 import java.lang.IllegalArgumentException
 
 /**
@@ -141,6 +143,12 @@ interface DatadogWrapper {
      * Sets tracking consent.
      */
     fun setTrackingConsent(trackingConsent: TrackingConsent)
+
+
+    /**
+     * Sends telemetry event with attributes.
+     */
+    fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap)
 
     /**
      * Sends telemetry debug event.
