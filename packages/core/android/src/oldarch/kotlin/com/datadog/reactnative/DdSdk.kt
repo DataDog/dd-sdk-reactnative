@@ -110,6 +110,22 @@ class DdSdk(
     }
 
     /**
+     * Sends a telemetry event with attributes.
+     * @param message message.
+     * @param attributes telemetry attributes.
+     * @param config telemetry configuration.
+     */
+    @ReactMethod
+    fun sendTelemetryLog(
+        message: String,
+        attributes: ReadableMap,
+        config: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.sendTelemetryLog(message, attributes, config, promise)
+    }
+
+    /**
      * Sends a telemetry debug event.
      * @param message Debug message.
      */

@@ -147,6 +147,10 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     [self.ddSdkImplementation addUserExtraInfoWithExtraInfo:extraInfo resolve:resolve reject:reject];
 }
 
+- (void)sendTelemetryLog:(NSString *)message attributes:(NSDictionary *)attributes config:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation sendTelemetryLogWithMessage:message attributes:attributes config:config resolve:resolve reject:reject];
+}
+
 - (void)telemetryDebug:(NSString *)message resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation telemetryDebugWithMessage:message resolve:resolve reject:reject];
 }
