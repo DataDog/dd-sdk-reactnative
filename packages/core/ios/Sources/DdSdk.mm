@@ -94,6 +94,15 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     [self clearAllData:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
+                 withAttributes: (NSDictionary *)attributes
+                 withConfig:(NSDictionary *)config
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self sendTelemetryLog:message attributes:attributes config:config resolve:resolve reject:reject];
+}
+
 - (instancetype)init {
   self = [super init];
   if (self) {
