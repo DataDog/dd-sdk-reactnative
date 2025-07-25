@@ -8,19 +8,22 @@
 import { declare } from '@babel/helper-plugin-utils';
 
 import { insertSetupFlag, loadImportMap } from './actions/global';
-import { handleRumActions, insertRumActionImport } from './actions/rum';
+import {
+    handleJSXElementActionPaths,
+    insertRumActionImport
+} from './actions/rum';
 import type {
     PluginAPI,
     PluginOptions,
     PluginPassState,
     PluginResult
 } from './types';
-import { getFileInfo } from './utils/index';
+import { getFileInfo, getNodeName } from './utils/index';
 
 export default declare(
     (
         api: PluginAPI,
-        _options: PluginOptions,
+        options: PluginOptions,
         _dirname: string
     ): PluginResult => {
         api.assertVersion(7);
@@ -33,6 +36,7 @@ export default declare(
                         const { path: p, name } = getFileInfo(this);
 
                         pluginState.fileInfo = { path: p, name };
+
                         insertSetupFlag(path, api.types);
                         loadImportMap(path, api.types, pluginState);
                     },
@@ -45,9 +49,22 @@ export default declare(
                         }
                     }
                 },
-                JSXAttribute(path, state) {
+                JSXElement(path, state) {
+                    const t = api.types;
                     const pluginState: PluginPassState = state;
-                    handleRumActions(api.types, path, pluginState);
+                    const name = getNodeName(t, path.node.openingElement);
+
+                    if (!name) {
+                        return;
+                    }
+
+                    handleJSXElementActionPaths(
+                        name,
+                        t,
+                        path,
+                        pluginState,
+                        options
+                    );
                 }
             }
         };

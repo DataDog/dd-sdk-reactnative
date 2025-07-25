@@ -30,8 +30,22 @@ module.exports = {
   plugins: ['@datadog/mobile-react-native-babel-plugin'] // <-- Add here
 };
 ```
-For more recent React Native versions this should be all that is needed. However, if you're on an older version and using Typescript in your project, you may need to install the preset `@babel/preset-typescript`.
 
+If you are currently using `actionNameAttribute` in your datadog SDK configuration, you'll need to also specify it here:
+
+```js
+module.exports = {
+  presets: ['module:@react-native/babel-preset'],
+  plugins: [
+    [
+      '@datadog/mobile-react-native-babel-plugin',
+      {actionNameAttribute: 'custom-prop-value'},
+    ],
+  ],
+};
+```
+
+For more recent React Native versions this should be all that is needed. However, if you're on an older version and using Typescript in your project, you may need to install the preset `@babel/preset-typescript`.
 
 To install with NPM, run:
 

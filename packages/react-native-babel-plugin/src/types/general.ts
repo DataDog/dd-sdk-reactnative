@@ -16,7 +16,7 @@ export type MemoType = typeof MemoTypes[keyof typeof MemoTypes];
 export type PluginAPI = typeof Babel & Babel.ConfigAPI;
 
 export type PluginOptions = {
-    /* empty */
+    actionNameAttribute: string;
 };
 
 export type PluginPassState = Babel.PluginPass & {

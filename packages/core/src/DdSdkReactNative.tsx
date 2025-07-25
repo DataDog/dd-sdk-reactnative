@@ -363,8 +363,10 @@ export class DdSdkReactNative {
         configuration: AutoInstrumentationParameters
     ) {
         if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
-            DdBabelInteractionTracking.trackInteractions =
-                configuration.trackInteractions;
+            DdBabelInteractionTracking.config = {
+                trackInteractions: configuration.trackInteractions,
+                useAccessibilityLabel: configuration.useAccessibilityLabel
+            };
         }
 
         if (DdSdkReactNative.wasAutoInstrumented) {

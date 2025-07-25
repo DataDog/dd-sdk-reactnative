@@ -34,3 +34,8 @@ export const tapElementsMap: Record<string, string[]> = {
     Switch: ['onValueChange'],
     TextInput: ['onFocus']
 };
+
+export const rumComponentAttributes = [
+    'dd-action-name',
+    'accessibilityLabel'
+] as const;

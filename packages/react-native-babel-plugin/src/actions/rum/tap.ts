@@ -47,6 +47,21 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
+    const argsObject = t.objectExpression([
+        ...Object.entries(path.node?.extra?.ddValues || {}).map(
+            ([key, value]) => {
+                return t.objectProperty(
+                    t.stringLiteral(key),
+                    t.stringLiteral(value)
+                );
+            }
+        ),
+        t.objectProperty(
+            t.stringLiteral('componentName'),
+            t.stringLiteral(parentName)
+        )
+    ]);
+
     // Used only for function references
     // Wraps our custom logic at the level of the memoization call insead of on the property level (default behaviour)
     const isMemoized =
@@ -61,7 +76,7 @@ export function handleTapAction(
                   expression,
                   fName,
                   fNode,
-                  parentName
+                  argsObject
               );
 
     // This is the fallback expression, only used if there is something wrong with the setup on the SDK side
@@ -85,7 +100,7 @@ export function handleTapAction(
               expression,
               expressionParams,
               returnExpression,
-              parentName
+              argsObject
           )
         : null;
 }
@@ -179,7 +194,7 @@ function handleMemoization(
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
         | null,
-    parentName: string
+    argsObject: babel.types.ObjectExpression
 ) {
     if (!fName || !fNode || t.isFunctionDeclaration(fNode)) {
         return !!state.memoization?.[fName || ''];
@@ -225,7 +240,7 @@ function handleMemoization(
             callback,
             params,
             returnExpression,
-            parentName
+            argsObject
         );
         varInit.arguments.fill(actionWrapper, 0, 1);
         fNode.init = varInit;
@@ -301,7 +316,7 @@ function getActionWrapperNode(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    componentName: string
+    argsObject: Babel.types.ObjectExpression
 ) {
     const actionWrapperFunction = getActionWrapperFunction(
         t,
@@ -309,7 +324,7 @@ function getActionWrapperNode(
         expression,
         expressionParams,
         returnExpression,
-        componentName
+        argsObject
     );
     return t.jsxExpressionContainer(actionWrapperFunction);
 }
@@ -326,7 +341,7 @@ function getActionWrapperFunction(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    componentName: string
+    argsObject: Babel.types.ObjectExpression
 ) {
     const params = expressionParams || [t.restElement(t.identifier('args'))];
 
@@ -370,7 +385,7 @@ function getActionWrapperFunction(
                             [
                                 expression,
                                 t.stringLiteral(RumAction.TAP),
-                                t.stringLiteral(componentName)
+                                argsObject
                             ]
                         ),
                         callArgs
