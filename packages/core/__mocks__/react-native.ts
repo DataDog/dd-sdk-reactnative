@@ -33,6 +33,9 @@ actualRN.NativeModules.DdSdk = {
     setTrackingConsent: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['setTrackingConsent']>,
+    sendTelemetryLog: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['sendTelemetryLog']>,
     telemetryDebug: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['telemetryDebug']>,
