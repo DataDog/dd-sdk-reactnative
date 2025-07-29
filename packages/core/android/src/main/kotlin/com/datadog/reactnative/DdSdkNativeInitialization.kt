@@ -42,7 +42,6 @@ class DdSdkNativeInitialization internal constructor(
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
         val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
         val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
 
@@ -63,7 +62,8 @@ class DdSdkNativeInitialization internal constructor(
 
         datadog.enableTrace(traceConfiguration)
 
-        datadog.enableLogs(logsConfiguration)
+        // REMOVED FOR TEST
+        // datadog.enableLogs(logsConfiguration)
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
@@ -223,15 +223,6 @@ class DdSdkNativeInitialization internal constructor(
         return configBuilder.build()
     }
 
-    private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
-        val configBuilder = LogsConfiguration.Builder()
-        configuration.customEndpoints?.logs?.let {
-            configBuilder.useCustomEndpoint(it)
-        }
-
-        return configBuilder.build()
-    }
-
     private fun buildTraceConfiguration(configuration: DdSdkConfiguration): TraceConfiguration {
         val configBuilder = TraceConfiguration.Builder()
         configuration.customEndpoints?.trace?.let {
@@ -241,7 +232,7 @@ class DdSdkNativeInitialization internal constructor(
         return configBuilder.build()
     }
 
-    private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
+    fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
         val configBuilder = Configuration.Builder(
             clientToken = configuration.clientToken,
             env = configuration.env,

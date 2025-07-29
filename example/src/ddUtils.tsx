@@ -28,11 +28,14 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     return config
 }
 
- export function onDatadogInitialization() {
-    DdLogs.info('The RN Sdk was properly initialized')
-    DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
-    DdSdkReactNative.setAttributes({campaign: "ad-network"})
-}
+ export async function onDatadogInitialization() {
+
+    console.log("Datadog SDK was initialized, initializing Logs...");
+    await DdLogs.enable({});
+    DdLogs.debug('DDLogs was initialized');
+    DdSdkReactNative.setUserInfo({id: "w00t", name: "Sergio", email: "modular@sdk.com", extraInfo: { type: "premium" } })
+    await DdLogs.enable({});
+    DdLogs.debug('DDLogs was initialized again');}
 
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {

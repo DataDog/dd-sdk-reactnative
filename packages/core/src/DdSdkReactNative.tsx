@@ -24,7 +24,6 @@ import type {
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
-import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
@@ -388,10 +387,10 @@ export class DdSdkReactNative {
         if (configuration.trackErrors) {
             DdRumErrorTracking.startTracking();
         }
-
-        if (configuration.logEventMapper) {
-            DdLogs.registerLogEventMapper(configuration.logEventMapper);
-        }
+        // REMOVED FOR TEST
+        // if (configuration.logEventMapper) {
+        //     DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        // }
 
         if (configuration.errorEventMapper) {
             DdRum.registerErrorEventMapper(configuration.errorEventMapper);

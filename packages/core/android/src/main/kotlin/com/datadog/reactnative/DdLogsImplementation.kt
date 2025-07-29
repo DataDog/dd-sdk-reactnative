@@ -8,6 +8,8 @@ package com.datadog.reactnative
 
 import android.util.Log as AndroidLog
 import com.datadog.android.log.Logger
+import com.datadog.android.log.Logs
+import com.datadog.android.log.LogsConfiguration
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
@@ -28,6 +30,17 @@ class DdLogsImplementation(
             .setBundleWithTraceEnabled(bundleLogsWithTraces)
             .setName("DdLogs")
             .build()
+    }
+
+    /**
+     * Enables DdLogs
+     * @param configuration The logs configuration.
+     */
+    fun enable(configuration: ReadableMap, promise: Promise) {
+        val ddSdkConfiguration = configuration.asDdSdkConfiguration()
+        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+
+        Logs.enable(logsConfiguration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
     /**
@@ -224,6 +237,15 @@ class DdLogsImplementation(
             attributes = context.toHashMap() + GlobalState.globalAttributes
         )
         promise.resolve(null)
+    }
+
+    private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
+        val configBuilder = LogsConfiguration.Builder()
+        configuration.customEndpoints?.logs?.let {
+            configBuilder.useCustomEndpoint(it)
+        }
+
+        return configBuilder.build()
     }
 
     companion object {

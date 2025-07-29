@@ -15,6 +15,12 @@ export interface Spec extends TurboModule {
     readonly getConstants: () => {};
 
     /**
+     * Enables Logs
+     * @param configuration: Logs configuration
+     */
+    readonly enable: (configuration: Object) => Promise<void>;
+
+    /**
      * Send a log with DEBUG level.
      * @param message: The message to send.
      * @param context: The additional context to send.

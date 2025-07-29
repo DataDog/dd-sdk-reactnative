@@ -23,7 +23,7 @@ public class DatadogSDKWrapper {
 
     // Initialization callbacks
     internal var onCoreInitializedListeners: [OnCoreInitializedListener] = []
-    internal var loggerConfiguration = DatadogLogs.Logger.Configuration()
+
     // Core instance
     private var coreInstance: DatadogCoreProtocol? = nil
 
@@ -42,11 +42,15 @@ public class DatadogSDKWrapper {
     public func getCoreInstance() -> DatadogCoreProtocol? {
         return coreInstance
     }
+    
+    public func getCoreInstanceOrDefault() -> DatadogCoreProtocol {
+        return getCoreInstance() ?? CoreRegistry.default
+    }
 
     // SDK Wrapper
     internal func initialize(
         coreConfiguration: Datadog.Configuration,
-        loggerConfiguration: DatadogLogs.Logger.Configuration,
+//        loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
         let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
@@ -55,7 +59,7 @@ public class DatadogSDKWrapper {
             listener(core)
         }
 
-        self.loggerConfiguration = loggerConfiguration
+//        self.loggerConfiguration = loggerConfiguration
     }
 
     internal func isInitialized() -> Bool {
@@ -101,15 +105,6 @@ public class DatadogSDKWrapper {
         } else {
             consolePrint("Core instance was not found when initializing CrashReporting.", .critical)
         }
-    }
-
-    internal func createLogger() -> LoggerProtocol {
-        let core = coreInstance ?? {
-            consolePrint("Core instance was not found when creating Logger.", .critical)
-            return CoreRegistry.default
-        }()
-
-        return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
     }
     
     // Telemetry

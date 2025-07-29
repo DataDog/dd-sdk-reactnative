@@ -116,10 +116,6 @@ internal class DatadogSDKWrapper : DatadogWrapper {
         Rum.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }
 
-    override fun enableLogs(configuration: LogsConfiguration) {
-        Logs.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
-    }
-
     override fun enableTrace(configuration: TraceConfiguration) {
         Trace.enable(configuration, DatadogSDKWrapperStorage.getSdkCore())
     }

@@ -16,6 +16,13 @@
 
 RCT_EXPORT_MODULE()
 
+RCT_REMAP_METHOD(enable, withConfiguration:(NSDictionary*)configuration
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self enable:configuration resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(debug, withDebugMessage:(NSString*)message
                  withContext:(NSDictionary*)context
                  withResolver:(RCTPromiseResolveBlock)resolve
@@ -117,6 +124,9 @@ RCT_REMAP_METHOD(errorWithError, withMessage:(NSString*)message
     return [RNQueue getSharedQueue];
 }
 
+- (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddLogsImplementation enableWithConfiguration:configuration resolve:resolve reject:reject];
+}
 
 - (void)debug:(NSString *)message context:(NSDictionary *)context resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddLogsImplementation debugWithMessage:message context:context resolve:resolve reject:reject];

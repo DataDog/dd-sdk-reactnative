@@ -10,17 +10,16 @@ import DatadogLogs
 @objc
 public class DdLogsImplementation: NSObject {
     private lazy var logger: LoggerProtocol = loggerProvider()
-    private let loggerProvider: () -> LoggerProtocol
-    private let isSDKInitialized: () -> Bool
+    private lazy var loggerProvider: () -> LoggerProtocol = { self.createLogger() };
+    private lazy var isSDKInitialized: () -> Bool = { DatadogSDKWrapper.shared.isInitialized() };
+    private lazy var loggerConfiguration = DatadogLogs.Logger.Configuration()
     
-    internal init(_ loggerProvider: @escaping () -> LoggerProtocol, _ isSDKInitialized: @escaping () -> Bool) {
-        self.loggerProvider = loggerProvider
-        self.isSDKInitialized = isSDKInitialized
-    }
-
     @objc
-    public override convenience init() {
-        self.init({ DatadogSDKWrapper.shared.createLogger() }, { DatadogSDKWrapper.shared.isInitialized() })
+    public func enable(configuration: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let logsConfiguration = configuration.asDdSdkConfiguration()
+        let logsConfig = buildLogsConfiguration(configuration: logsConfiguration)
+        DatadogSDKWrapper.shared.enableLogs(with: logsConfig)
+        resolve(nil)
     }
 
     @objc
@@ -110,6 +109,23 @@ public class DdLogsImplementation: NSObject {
         logger._internal.log(level: .error, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
     }
+    
+    internal func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
+        var customLogsEndpointURL: URL? = nil
+        if let customLogsEndpoint = configuration.customEndpoints?.logs as? NSString {
+            if (customLogsEndpoint != "") {
+                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
+            }
+        }
+        
+        return Logs.Configuration(customEndpoint: customLogsEndpointURL)
+    }
+    
+    internal func createLogger() -> LoggerProtocol {
+        let core = DatadogSDKWrapper.shared.getCoreInstanceOrDefault()
+        return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
+    }
+    
 }
 
 internal extension DatadogLogs.Logger.Configuration {

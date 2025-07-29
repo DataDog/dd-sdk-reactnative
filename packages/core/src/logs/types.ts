@@ -12,6 +12,12 @@ import type { UserInfo } from '../sdk/UserInfoSingleton/types';
  */
 export type DdLogsType = {
     /**
+     * Enables Logs
+     * @param configuration: Logs configuration
+     */
+    enable(configuration: object): Promise<void>;
+
+    /**
      * Send a log with debug level.
      * @param message: The message to send.
      * @param context: The additional context to send.

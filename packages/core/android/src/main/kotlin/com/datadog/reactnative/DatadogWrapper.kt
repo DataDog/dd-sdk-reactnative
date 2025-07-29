@@ -74,15 +74,6 @@ interface DatadogWrapper {
     )
 
     /**
-     * Enables the Logs feature of the SDK.
-     *
-     * @param configuration the configuration for the Logs feature
-     */
-    fun enableLogs(
-        configuration: LogsConfiguration
-    )
-
-    /**
      * Enables the Trace feature of the SDK.
      *
      * @param configuration the configuration for the Trace feature

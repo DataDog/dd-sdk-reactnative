@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { AutoInstrumentationParameters } from '../DdSdkReactNativeConfiguration';
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
@@ -46,8 +47,25 @@ class DdLogsWrapper implements DdLogsType {
     private nativeLogs: DdNativeLogsType = require('../specs/NativeDdLogs')
         .default;
     private logEventMapper = generateEventMapper(undefined);
+    private isEnabled = false;
+
+    enable = (configuration: AutoInstrumentationParameters): Promise<void> => {
+        console.log('DDLOGS ENABLE', configuration);
+        if (configuration.logEventMapper) {
+            DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        }
+
+        this.isEnabled = true;
+        return this.nativeLogs.enable(configuration);
+    };
 
     debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
+        if (!this.isEnabled) {
+            console.log(
+                'DdLogs is not enabled yet. Please call enable() before sending any logs.'
+            );
+            return Promise.resolve(undefined);
+        }
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -63,6 +81,12 @@ class DdLogsWrapper implements DdLogsType {
     };
 
     info = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
+        if (!this.isEnabled) {
+            console.log(
+                'DdLogs is not enabled yet. Please call enable() before sending any logs.'
+            );
+            return Promise.resolve(undefined);
+        }
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -78,6 +102,12 @@ class DdLogsWrapper implements DdLogsType {
     };
 
     warn = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
+        if (!this.isEnabled) {
+            console.log(
+                'DdLogs is not enabled yet. Please call enable() before sending any logs.'
+            );
+            return Promise.resolve(undefined);
+        }
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],
@@ -93,6 +123,12 @@ class DdLogsWrapper implements DdLogsType {
     };
 
     error = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
+        if (!this.isEnabled) {
+            console.log(
+                'DdLogs is not enabled yet. Please call enable() before sending any logs.'
+            );
+            return Promise.resolve(undefined);
+        }
         if (isLogWithError(args)) {
             return this.logWithError(
                 args[0],

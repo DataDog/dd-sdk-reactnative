@@ -7,7 +7,8 @@
 import Foundation
 import DatadogCore
 import DatadogRUM
-import DatadogLogs
+// REMOVED FOR TEST
+//import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
 import DatadogWebViewTracking
@@ -49,7 +50,7 @@ public class DdSdkNativeInitialization: NSObject {
         let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
         DatadogSDKWrapper.shared.initialize(
             coreConfiguration: coreConfiguration,
-            loggerConfiguration: DatadogLogs.Logger.Configuration(sdkConfiguration),
+//            loggerConfiguration: DatadogLogs.Logger.Configuration(sdkConfiguration),
             trackingConsent: sdkConfiguration.trackingConsent
         )
 
@@ -80,8 +81,9 @@ public class DdSdkNativeInitialization: NSObject {
         let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
         DatadogSDKWrapper.shared.enableRUM(with: rumConfig)
         
-        let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
-        DatadogSDKWrapper.shared.enableLogs(with: logsConfig)
+// REMOVED FOR TEST
+//        let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
+//        DatadogSDKWrapper.shared.enableLogs(with: logsConfig)
         
         let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
         DatadogSDKWrapper.shared.enableTrace(with: traceConfig)
@@ -192,17 +194,17 @@ public class DdSdkNativeInitialization: NSObject {
             telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.telemetrySampleRate)
         )
     }
-    
-    func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
-        var customLogsEndpointURL: URL? = nil
-        if let customLogsEndpoint = configuration.customEndpoints?.logs as? NSString {
-            if (customLogsEndpoint != "") {
-                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
-            }
-        }
-        
-        return Logs.Configuration(customEndpoint: customLogsEndpointURL)
-    }
+// REMOVED FOR TEST
+//    func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
+//        var customLogsEndpointURL: URL? = nil
+//        if let customLogsEndpoint = configuration.customEndpoints?.logs as? NSString {
+//            if (customLogsEndpoint != "") {
+//                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
+//            }
+//        }
+//        
+//        return Logs.Configuration(customEndpoint: customLogsEndpointURL)
+//    }
     
     
     func buildTraceConfiguration(configuration: DdSdkConfiguration) -> Trace.Configuration {

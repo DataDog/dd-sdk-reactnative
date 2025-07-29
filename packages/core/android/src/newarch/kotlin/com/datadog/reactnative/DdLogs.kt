@@ -24,6 +24,15 @@ class DdLogs(
     override fun getName(): String = DdLogsImplementation.NAME
 
     /**
+     * Enables DdLogs
+     * @param configuration The logs configuration.
+     */
+    @ReactMethod
+    override fun enable(configuration: ReadableMap, promise: Promise) {
+        implementation.enable(configuration, promise)
+    }
+
+    /**
      * Send a log with Debug level.
      * @param message The message to send.
      * @param context The additional context to send.
