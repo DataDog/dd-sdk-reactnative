@@ -6,6 +6,8 @@
 
 import Foundation
 import DatadogLogs
+import DatadogCore
+import DatadogInternal
 
 @objc
 public class DdLogsImplementation: NSObject {
@@ -122,7 +124,8 @@ public class DdLogsImplementation: NSObject {
     }
     
     internal func createLogger() -> LoggerProtocol {
-        let core = DatadogSDKWrapper.shared.getCoreInstanceOrDefault()
+//        let core = DatadogSDKWrapper.shared.getCoreInstanceOrDefault()
+        let core = Datadog.sdkInstance(named: CoreRegistry.defaultInstanceName)
         return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
     }
     

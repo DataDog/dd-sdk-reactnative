@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.Datadog
 import android.util.Log as AndroidLog
 import com.datadog.android.log.Logger
 import com.datadog.android.log.Logs
@@ -24,7 +25,7 @@ class DdLogsImplementation(
         val bundleLogsWithRum = datadog.bundleLogsWithRum
         val bundleLogsWithTraces = datadog.bundleLogsWithTraces
 
-        logger ?: Logger.Builder(DatadogSDKWrapperStorage.getSdkCore())
+        logger ?: Logger.Builder(Datadog.getInstance())
             .setLogcatLogsEnabled(true)
             .setBundleWithRumEnabled(bundleLogsWithRum)
             .setBundleWithTraceEnabled(bundleLogsWithTraces)
@@ -37,10 +38,11 @@ class DdLogsImplementation(
      * @param configuration The logs configuration.
      */
     fun enable(configuration: ReadableMap, promise: Promise) {
-        val ddSdkConfiguration = configuration.asDdSdkConfiguration()
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+        val logsConfiguration = buildLogsConfiguration(configuration)
 
         Logs.enable(logsConfiguration, DatadogSDKWrapperStorage.getSdkCore())
+
+        promise.resolve(null)
     }
 
     /**
@@ -239,9 +241,10 @@ class DdLogsImplementation(
         promise.resolve(null)
     }
 
-    private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
+    private fun buildLogsConfiguration(configuration: ReadableMap): LogsConfiguration {
         val configBuilder = LogsConfiguration.Builder()
-        configuration.customEndpoints?.logs?.let {
+        val customEndpoints = configuration.getMap("customEndpoints")?.asCustomEndpoints()
+        customEndpoints?.logs?.let {
             configBuilder.useCustomEndpoint(it)
         }
 

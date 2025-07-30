@@ -94,7 +94,6 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   componentDidMount() {
     this.updateTrackingConsent()
-    DdLogs.debug("[DATADOG SDK] Test React Native Debug Log");
   }
 
   updateTrackingConsent() {

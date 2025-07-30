@@ -9,6 +9,7 @@
 package com.datadog.reactnative
 
 import android.util.Log
+import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap

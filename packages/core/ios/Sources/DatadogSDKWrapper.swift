@@ -42,10 +42,6 @@ public class DatadogSDKWrapper {
     public func getCoreInstance() -> DatadogCoreProtocol? {
         return coreInstance
     }
-    
-    public func getCoreInstanceOrDefault() -> DatadogCoreProtocol {
-        return getCoreInstance() ?? CoreRegistry.default
-    }
 
     // SDK Wrapper
     internal func initialize(
