@@ -33,4 +33,4 @@ jobs:
                   # Run the stale workflow as dry-run.
                   # No GitHub API calls that can alter the issues and pull requests will happen.
                   # Useful to debug or when you want to configure the stale workflow safely.
-                  debug-only: true
+                  debug-only: false
