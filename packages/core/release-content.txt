@@ -128,6 +128,8 @@ package/lib/commonjs/nativeModulesTypes.js
 package/lib/commonjs/nativeModulesTypes.js.map
 package/lib/commonjs/ProxyConfiguration.js
 package/lib/commonjs/ProxyConfiguration.js.map
+package/lib/commonjs/rum/constants.js
+package/lib/commonjs/rum/constants.js.map
 package/lib/commonjs/rum/DdAttributes.js
 package/lib/commonjs/rum/DdAttributes.js.map
 package/lib/commonjs/rum/DdRum.js
@@ -140,6 +142,8 @@ package/lib/commonjs/rum/eventMappers/resourceEventMapper.js
 package/lib/commonjs/rum/eventMappers/resourceEventMapper.js.map
 package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js
 package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js.map
+package/lib/commonjs/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js
+package/lib/commonjs/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js.map
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdEventsInterceptor.js
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdEventsInterceptor.js.map
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.js
@@ -254,6 +258,8 @@ package/lib/commonjs/utils/jsUtils.js
 package/lib/commonjs/utils/jsUtils.js.map
 package/lib/commonjs/utils/longTasksUtils.js
 package/lib/commonjs/utils/longTasksUtils.js.map
+package/lib/commonjs/utils/telemetry.js
+package/lib/commonjs/utils/telemetry.js.map
 package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js
 package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js.map
 package/lib/commonjs/utils/time-provider/TimeProvider.js
@@ -298,6 +304,8 @@ package/lib/module/nativeModulesTypes.js
 package/lib/module/nativeModulesTypes.js.map
 package/lib/module/ProxyConfiguration.js
 package/lib/module/ProxyConfiguration.js.map
+package/lib/module/rum/constants.js
+package/lib/module/rum/constants.js.map
 package/lib/module/rum/DdAttributes.js
 package/lib/module/rum/DdAttributes.js.map
 package/lib/module/rum/DdRum.js
@@ -310,6 +318,8 @@ package/lib/module/rum/eventMappers/resourceEventMapper.js
 package/lib/module/rum/eventMappers/resourceEventMapper.js.map
 package/lib/module/rum/instrumentation/DdRumErrorTracking.js
 package/lib/module/rum/instrumentation/DdRumErrorTracking.js.map
+package/lib/module/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js
+package/lib/module/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js.map
 package/lib/module/rum/instrumentation/interactionTracking/DdEventsInterceptor.js
 package/lib/module/rum/instrumentation/interactionTracking/DdEventsInterceptor.js.map
 package/lib/module/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.js
@@ -424,6 +434,8 @@ package/lib/module/utils/jsUtils.js
 package/lib/module/utils/jsUtils.js.map
 package/lib/module/utils/longTasksUtils.js
 package/lib/module/utils/longTasksUtils.js.map
+package/lib/module/utils/telemetry.js
+package/lib/module/utils/telemetry.js.map
 package/lib/module/utils/time-provider/DefaultTimeProvider.js
 package/lib/module/utils/time-provider/DefaultTimeProvider.js.map
 package/lib/module/utils/time-provider/TimeProvider.js
@@ -466,6 +478,8 @@ package/lib/typescript/nativeModulesTypes.d.ts
 package/lib/typescript/nativeModulesTypes.d.ts.map
 package/lib/typescript/ProxyConfiguration.d.ts
 package/lib/typescript/ProxyConfiguration.d.ts.map
+package/lib/typescript/rum/constants.d.ts
+package/lib/typescript/rum/constants.d.ts.map
 package/lib/typescript/rum/DdAttributes.d.ts
 package/lib/typescript/rum/DdAttributes.d.ts.map
 package/lib/typescript/rum/DdRum.d.ts
@@ -478,6 +492,8 @@ package/lib/typescript/rum/eventMappers/resourceEventMapper.d.ts
 package/lib/typescript/rum/eventMappers/resourceEventMapper.d.ts.map
 package/lib/typescript/rum/instrumentation/DdRumErrorTracking.d.ts
 package/lib/typescript/rum/instrumentation/DdRumErrorTracking.d.ts.map
+package/lib/typescript/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts
+package/lib/typescript/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts.map
 package/lib/typescript/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts.map
 package/lib/typescript/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.d.ts
@@ -592,6 +608,8 @@ package/lib/typescript/utils/jsUtils.d.ts
 package/lib/typescript/utils/jsUtils.d.ts.map
 package/lib/typescript/utils/longTasksUtils.d.ts
 package/lib/typescript/utils/longTasksUtils.d.ts.map
+package/lib/typescript/utils/telemetry.d.ts
+package/lib/typescript/utils/telemetry.d.ts.map
 package/lib/typescript/utils/time-provider/DefaultTimeProvider.d.ts
 package/lib/typescript/utils/time-provider/DefaultTimeProvider.d.ts.map
 package/lib/typescript/utils/time-provider/TimeProvider.d.ts
@@ -640,12 +658,14 @@ package/src/rum/__mocks__/MockTimeProvider.ts
 package/src/rum/__tests__/__utils__/TracingHeadersUtils.ts
 package/src/rum/__tests__/DdRum.test.ts
 package/src/rum/__tests__/DdRumTimeProvider.test.ts
+package/src/rum/constants.ts
 package/src/rum/DdAttributes.ts
 package/src/rum/DdRum.ts
 package/src/rum/eventMappers/actionEventMapper.ts
 package/src/rum/eventMappers/errorEventMapper.ts
 package/src/rum/eventMappers/resourceEventMapper.ts
 package/src/rum/instrumentation/DdRumErrorTracking.tsx
+package/src/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.ts
 package/src/rum/instrumentation/interactionTracking/DdEventsInterceptor.tsx
 package/src/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.tsx
 package/src/rum/instrumentation/interactionTracking/EventsInterceptor.tsx
@@ -734,6 +754,7 @@ package/src/utils/argsUtils.ts
 package/src/utils/errorUtils.ts
 package/src/utils/jsUtils.ts
 package/src/utils/longTasksUtils.ts
+package/src/utils/telemetry.ts
 package/src/utils/time-provider/DefaultTimeProvider.tsx
 package/src/utils/time-provider/TimeProvider.tsx
 package/src/utils/Timer.ts
