@@ -14,7 +14,9 @@
         "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
     },
     "license": "Apache-2.0",
-    "private": true,
+    "publishConfig": {
+        "access": "public"
+    },
     "workspaces": {
         "packages": [
             "packages/*",

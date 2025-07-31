@@ -42,6 +42,9 @@ module.exports = {
         setTrackingConsent: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        sendTelemetryLog: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         telemetryDebug: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),

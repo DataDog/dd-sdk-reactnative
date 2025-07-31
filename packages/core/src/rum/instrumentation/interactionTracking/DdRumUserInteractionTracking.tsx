@@ -10,9 +10,11 @@ import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import { DdSdk } from '../../../sdk/DdSdk';
 import { getErrorMessage } from '../../../utils/errorUtils';
+import { getBabelTelemetryConfig } from '../../../utils/telemetry';
+import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 
-import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type { DdEventsInterceptorOptions } from './DdEventsInterceptor';
+import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type { EventsInterceptor } from './EventsInterceptor';
 import { NoOpEventsInterceptor } from './NoOpEventsInterceptor';
 import { areObjectShallowEqual } from './ShallowObjectEqualityChecker';
@@ -69,6 +71,12 @@ export class DdRumUserInteractionTracking {
             );
             return;
         }
+
+        DdSdk?.sendTelemetryLog(
+            BABEL_PLUGIN_TELEMETRY,
+            getBabelTelemetryConfig(),
+            { onlyOnce: true }
+        );
 
         DdRumUserInteractionTracking.eventsInterceptor = new DdEventsInterceptor(
             options
