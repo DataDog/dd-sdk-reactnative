@@ -131,7 +131,7 @@ benchmark:
     rules:
         - if: '$BUILD_BENCHMARK == "true"'
           allow_failure: true
-        - if: '$CI_COMMIT_BRANCH == "$DEVELOP_BRANCH"'
+        - if: '$CI_COMMIT_BRANCH == $DEVELOP_BRANCH'
           allow_failure: true
     trigger:
         include: 'benchmarks/.benchmarks-ci.yml'

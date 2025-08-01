@@ -95,6 +95,8 @@
         "send": "0.19.0",
         "serve-static": "1.16.0",
         "formidable": "3.5.3",
-        "snyk": "^1.1297.3"
+        "snyk": "^1.1297.3",
+        "form-data": "4.0.4",
+        "on-headers": "1.1.0"
     }
 }
