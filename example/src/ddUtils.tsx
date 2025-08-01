@@ -34,8 +34,20 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     await DdLogs.enable({});
     DdLogs.debug('DDLogs was initialized');
     DdSdkReactNative.setUserInfo({id: "w00t", name: "Sergio", email: "modular@sdk.com", extraInfo: { type: "premium" } })
-    await DdLogs.enable({});
-    DdLogs.debug('DDLogs was initialized again');}
+    setTimeout(async () => {
+        await DdLogs.enable({
+            customEndpoints: {
+                logs: "custom.endpoint"
+            }
+        });
+        DdLogs.debug('DDLogs was initialized again with a custom endpoint');
+
+        setTimeout(async () => {
+            await DdLogs.enable({});
+            DdLogs.debug('DDLogs was initialized for the third time');
+        }, 20000);
+    }, 20000);
+}
 
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
