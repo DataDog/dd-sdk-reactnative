@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-logs",
-    "version": "2.10.1",
+    "version": "2.11.0",
     "description": "A client-side React Native module to enable Log tracking with Datadog",
     "keywords": [
         "datadog",
@@ -44,15 +44,15 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "dependencies": {
-        "@datadog/mobile-react-native": "2.11.0"
+        "@datadog/mobile-react-native": "workspace:packages/core"
     },
     "peerDependencies": {
-        "@datadog/mobile-react-native": "2.11.0",
+        "@datadog/mobile-react-native": "workspace:packages/core",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0"
     },
     "devDependencies": {
-        "@datadog/mobile-react-native": "2.11.0",
+        "@datadog/mobile-react-native": "workspace:packages/core",
         "@testing-library/react-native": "7.0.2",
         "react-native-builder-bob": "0.26.0"
     },

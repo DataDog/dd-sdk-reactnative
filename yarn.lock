@@ -2411,11 +2411,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-logs@workspace:packages/logs"
   dependencies:
-    "@datadog/mobile-react-native": 2.11.0
+    "@datadog/mobile-react-native": "workspace:packages/core"
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
   peerDependencies:
-    "@datadog/mobile-react-native": 2.11.0
+    "@datadog/mobile-react-native": "workspace:packages/core"
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
@@ -2478,18 +2478,6 @@ __metadata:
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
   linkType: soft
-
-"@datadog/mobile-react-native@npm:2.11.0":
-  version: 2.11.0
-  resolution: "@datadog/mobile-react-native@npm:2.11.0"
-  dependencies:
-    big-integer: ^1.6.52
-  peerDependencies:
-    react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
-  checksum: e17f57fb142e8055a8b6eb7003d57e636cec3d403ab5a7e67214ac31aebad9289786446bc3fc4d16fd7d3dcdfb8d4e4ec493ef71f17b83d13482ce43ad63cdf6
-  languageName: node
-  linkType: hard
 
 "@datadog/mobile-react-navigation@workspace:packages/react-navigation":
   version: 0.0.0-use.local

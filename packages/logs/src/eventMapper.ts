@@ -5,8 +5,7 @@
  */
 
 import type { AdditionalEventDataForMapper } from '@datadog/mobile-react-native';
-
-import { EventMapper } from '../../core/src/sdk/EventMappers/EventMapper';
+import { EventMapper } from '@datadog/mobile-react-native';
 
 import type {
     LogEvent,

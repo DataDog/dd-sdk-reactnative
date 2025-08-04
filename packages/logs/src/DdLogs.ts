@@ -12,10 +12,9 @@ import {
     SdkVerbosity,
     DATADOG_MESSAGE_PREFIX,
     InternalLog,
-    DdAttributes
+    DdAttributes,
+    validateContext
 } from '@datadog/mobile-react-native';
-
-import { validateContext } from '../../core/src/utils/argsUtils';
 
 import { generateEventMapper } from './eventMapper';
 import type { Spec as DdNativeLogsType } from './specs/NativeDdLogs';
