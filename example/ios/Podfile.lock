@@ -26,7 +26,7 @@ PODS:
     - DatadogTrace (= 2.29.0)
     - DatadogWebViewTracking (= 2.29.0)
     - React-Core
-  - DatadogSDKReactNativeLogs (2.10.1):
+  - DatadogSDKReactNativeLogs (2.11.0):
     - DatadogCore (= 2.29.0)
     - DatadogInternal (= 2.29.0)
     - DatadogLogs (= 2.29.0)
@@ -2022,7 +2022,7 @@ SPEC CHECKSUMS:
   DatadogLogs: c314b15a97bfc7e0728ea253d3638b0513032d88
   DatadogRUM: 6ec371f477a1022fd5aad6ccb5407b85a04db399
   DatadogSDKReactNative: 81f50b5238dcf7732ebca0151d4e6d5555121b1b
-  DatadogSDKReactNativeLogs: dc93be518d29cfa125a02f6308457ca464ca77f5
+  DatadogSDKReactNativeLogs: 5c653dbc15a5c3f0357ffb1f952ae53cfa494bab
   DatadogSDKReactNativeSessionReplay: 207aba83107a37ed08162790aa27a449a486addd
   DatadogSDKReactNativeWebView: ac2d200b50ce67146a86ed84883667a4ab270d15
   DatadogSessionReplay: 1f2f70afa2fc5870ce7304a02749f73529d3e6cb

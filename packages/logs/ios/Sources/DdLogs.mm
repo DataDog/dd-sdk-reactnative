@@ -10,6 +10,7 @@
 #import <DatadogSDKReactNativeLogs/DatadogSDKReactNativeLogs-Swift.h>
 #endif
 #import "DdLogs.h"
+#import <DatadogSDKReactNative/RNQueueHolderProxy.h>
 
 @implementation DdLogs
 
@@ -118,10 +119,10 @@ RCT_REMAP_METHOD(errorWithError, withMessage:(NSString*)message
 + (BOOL)requiresMainQueueSetup {
     return NO;
 }
-//
-//- (dispatch_queue_t)methodQueue {
-//    return [RNQueue getSharedQueue];
-//}
+
+- (dispatch_queue_t)methodQueue {
+    return [RNQueueHolderProxy getSharedQueue];
+}
 
 - (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddLogsImplementation enableWithConfiguration:configuration resolve:resolve reject:reject];
