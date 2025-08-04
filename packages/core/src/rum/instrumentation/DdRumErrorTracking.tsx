@@ -8,7 +8,6 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdLogs } from '../../logs/DdLogs';
 import {
     getErrorMessage,
     getErrorStackTrace,
@@ -142,28 +141,36 @@ export class DdRumErrorTracking {
         message: string,
         source: ErrorSource,
         stacktrace: string,
-        errorName: string,
+        // removed
+        _errorName: string,
         context: object = {}
-    ): Promise<[void, void]> => {
-        return Promise.all([
-            DdRum.addError(
-                message,
-                source,
-                stacktrace,
-                getErrorContext(context)
-            ),
-            DdLogs.error(
-                message,
-                errorName,
-                message,
-                stacktrace,
-                {
-                    ...context,
-                    '_dd.error_log.is_crash': true
-                },
-                undefined,
-                source
-            )
-        ]);
+    ): Promise<void> => {
+        return DdRum.addError(
+            message,
+            source,
+            stacktrace,
+            getErrorContext(context)
+        );
+        // Direct use of DdLogs from RUM
+        // return Promise.all([
+        //     DdRum.addError(
+        //         message,
+        //         source,
+        //         stacktrace,
+        //         getErrorContext(context)
+        //     ),
+        //     DdLogs.error(
+        //         message,
+        //         errorName,
+        //         message,
+        //         stacktrace,
+        //         {
+        //             ...context,
+        //             '_dd.error_log.is_crash': true
+        //         },
+        //         undefined,
+        //         source
+        //     )
+        // ]);
     };
 }

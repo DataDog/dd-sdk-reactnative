@@ -6,11 +6,11 @@
 
 import Foundation
 
-internal func castAttributesToSwift(_ attributes: NSDictionary) -> [String: Encodable] {
+public func castAttributesToSwift(_ attributes: NSDictionary) -> [String: Encodable] {
     return castAttributesToSwift(attributes as? [String: Any] ?? [:])
 }
 
-internal func castAttributesToSwift(_ attributes: [String: Any]) -> [String: Encodable] {
+public func castAttributesToSwift(_ attributes: [String: Any]) -> [String: Encodable] {
     var casted: [String: Encodable] = [:]
 
     attributes.forEach { key, value in

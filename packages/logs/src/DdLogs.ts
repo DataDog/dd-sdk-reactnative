@@ -4,15 +4,21 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { AutoInstrumentationParameters } from '../DdSdkReactNativeConfiguration';
-import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
-import type { DdNativeLogsType } from '../nativeModulesTypes';
-import { DdAttributes } from '../rum/DdAttributes';
-import type { ErrorSource } from '../rum/types';
-import { validateContext } from '../utils/argsUtils';
+import type {
+    ErrorSource,
+    AutoInstrumentationParameters
+} from '@datadog/mobile-react-native';
+import {
+    SdkVerbosity,
+    DATADOG_MESSAGE_PREFIX,
+    InternalLog,
+    DdAttributes
+} from '@datadog/mobile-react-native';
+
+import { validateContext } from '../../core/src/utils/argsUtils';
 
 import { generateEventMapper } from './eventMapper';
+import type { Spec as DdNativeLogsType } from './specs/NativeDdLogs';
 import type {
     DdLogsType,
     LogArguments,
@@ -44,7 +50,7 @@ const isLogWithError = (
 
 class DdLogsWrapper implements DdLogsType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeLogs: DdNativeLogsType = require('../specs/NativeDdLogs')
+    private nativeLogs: DdNativeLogsType = require('./specs/NativeDdLogs')
         .default;
     private logEventMapper = generateEventMapper(undefined);
     private isEnabled = false;

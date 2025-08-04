@@ -14,14 +14,16 @@ import {
 } from './DdSdkReactNativeConfiguration';
 import type {
     AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration
+    PartialInitializationConfiguration,
+    AutoInstrumentationParameters
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
-import { InternalLog } from './InternalLog';
+import { InternalLog, DATADOG_MESSAGE_PREFIX } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import { DdLogs } from './logs/DdLogs';
+import { DdAttributes } from './rum/DdAttributes';
+// import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
@@ -36,20 +38,26 @@ import {
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import { RumActionType, ErrorSource, PropagatorType } from './rum/types';
 import type { FirstPartyHost } from './rum/types';
+import type { Attributes } from './sdk/AttributesSingleton/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { DdSdk } from './sdk/DdSdk';
+import { EventMapper } from './sdk/EventMappers/EventMapper';
+import type { AdditionalEventDataForMapper } from './sdk/EventMappers/EventMapper';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { DdTrace } from './trace/DdTrace';
+import type { UserInfo } from './types';
+import { validateContext } from './utils/argsUtils';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
 
 export {
+    EventMapper,
     DatadogProvider,
     DatadogProviderConfiguration,
     FileBasedConfiguration,
     InitializationMode,
-    DdLogs,
+    // DdLogs,
     DdTrace,
     DdRum,
     RumActionType,
@@ -75,12 +83,19 @@ export {
     TracingIdType,
     TracingIdFormat,
     DatadogTracingIdentifier,
-    DatadogTracingContext
+    DatadogTracingContext,
+    DdAttributes,
+    validateContext,
+    DATADOG_MESSAGE_PREFIX
 };
 
 export type {
+    AdditionalEventDataForMapper,
+    Attributes,
+    UserInfo,
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration
+    PartialInitializationConfiguration,
+    AutoInstrumentationParameters
 };

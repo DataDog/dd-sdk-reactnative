@@ -7,7 +7,6 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import type { LogEventMapper } from './logs/types';
 import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
@@ -341,7 +340,9 @@ export class DdSdkReactNativeConfiguration {
      */
     public actionNameAttribute?: string;
 
-    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+    // THIS TYPE NEEDS TO COME FROM CORE
+    // public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+    public logEventMapper: any | null = DEFAULTS.logEventMapper;
 
     public errorEventMapper: ErrorEventMapper | null =
         DEFAULTS.errorEventMapper;
@@ -380,7 +381,9 @@ export type AutoInstrumentationConfiguration = {
     readonly firstPartyHosts?: FirstPartyHostsConfiguration;
     readonly resourceTracingSamplingRate?: number;
     readonly trackErrors: boolean;
-    readonly logEventMapper?: LogEventMapper | null;
+    // THIS TYPE NEEDS TO COME FROM CORE
+    // readonly logEventMapper?: LogEventMapper | null;
+    readonly logEventMapper?: any | null;
     readonly errorEventMapper?: ErrorEventMapper | null;
     readonly resourceEventMapper?: ResourceEventMapper | null;
     readonly actionEventMapper?: ActionEventMapper | null;
@@ -397,7 +400,9 @@ export type AutoInstrumentationParameters = {
     readonly firstPartyHosts: FirstPartyHostsConfiguration;
     readonly resourceTracingSamplingRate: number;
     readonly trackErrors: boolean;
-    readonly logEventMapper: LogEventMapper | null;
+    // THIS TYPE NEEDS TO COME FROM CORE
+    // readonly logEventMapper: LogEventMapper | null;
+    readonly logEventMapper: any | null;
     readonly errorEventMapper: ErrorEventMapper | null;
     readonly resourceEventMapper: ResourceEventMapper | null;
     readonly actionEventMapper: ActionEventMapper | null;

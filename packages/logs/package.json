@@ -1,0 +1,97 @@
+{
+    "name": "@datadog/mobile-react-native-logs",
+    "version": "2.10.1",
+    "description": "A client-side React Native module to enable Log tracking with Datadog",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "ios",
+        "android"
+    ],
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+    "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src/**",
+        "lib/**",
+        "scripts/**",
+        "android/build.gradle",
+        "android/detekt.yml",
+        "android/gradle.properties",
+        "android/consumer-proguard-rules.pro",
+        "android/src/**",
+        "ios/Sources/**",
+        "ios/DatadogSDKReactNativeLogs.xcodeproj/project.xcworkspace/xcsharedata",
+        "ios/DatadogSDKReactNativeLogs.xcodeproj/project.xcworkspace/*.xcworkspacedata",
+        "ios/DatadogSDKReactNativeLogs.xcodeproj/*.pbxproj",
+        "DatadogSDKReactNativeLogs.podspec"
+    ],
+    "types": "lib/typescript/index.d.ts",
+    "react-native": "src/index",
+    "source": "src",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint .",
+        "prepare": "rm -rf lib && yarn bob build"
+    },
+    "dependencies": {
+        "@datadog/mobile-react-native": "2.11.0"
+    },
+    "peerDependencies": {
+        "@datadog/mobile-react-native": "2.11.0",
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0"
+    },
+    "devDependencies": {
+        "@datadog/mobile-react-native": "2.11.0",
+        "@testing-library/react-native": "7.0.2",
+        "react-native-builder-bob": "0.26.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "moduleNameMapper": {
+            "@datadog/mobile-react-native": "<rootDir>../core/src"
+        },
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "setupFiles": [
+            "./../../node_modules/react-native-gesture-handler/jestSetup.js",
+            "./../../jest.setup.js"
+        ],
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc"
+                }
+            ]
+        ]
+    },
+    "codegenConfig": {
+        "name": "DdSDKReactNativeLogs",
+        "type": "all",
+        "jsSrcsDir": "./src/specs",
+        "android": {
+            "javaPackageName": "com.datadog.reactnative.logs"
+        }
+    }
+}

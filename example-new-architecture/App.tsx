@@ -6,9 +6,12 @@ import {
   DdSdkReactNative,
   DdRum,
   RumActionType,
-  DdLogs,
   DdTrace,
 } from '@datadog/mobile-react-native';
+
+import {
+  DdLogs
+} from '@datadog/mobile-react-native-logs';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {

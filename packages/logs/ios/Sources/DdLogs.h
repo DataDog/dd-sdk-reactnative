@@ -9,7 +9,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#import <DdSdkReactNative/DdSdkReactNative.h>
+#import <DdSdkReactNativeLogs/DdSdkReactNativeLogs.h>
 @interface DdLogs: NSObject <NativeDdLogsSpec>
 
 #else

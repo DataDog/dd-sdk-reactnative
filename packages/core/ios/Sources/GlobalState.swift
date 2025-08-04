@@ -19,7 +19,7 @@ internal struct GlobalState {
     }
 }
 
-internal extension Dictionary where Key == String, Value == Encodable {
+public extension Dictionary where Key == String, Value == Encodable {
     func mergeWithGlobalAttributes() -> [String: Encodable] {
         // values of current attributes are more important than values of global attributes,
         // because they are coming with a current call

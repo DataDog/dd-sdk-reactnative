@@ -4,13 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 // Import this first to prevent require cycles
-#if __has_include("DatadogSDKReactNative-Swift.h")
-#import <DatadogSDKReactNative-Swift.h>
+#if __has_include("DatadogSDKReactNativeLogs-Swift.h")
+#import <DatadogSDKReactNativeLogs-Swift.h>
 #else
-#import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
+#import <DatadogSDKReactNativeLogs/DatadogSDKReactNativeLogs-Swift.h>
 #endif
 #import "DdLogs.h"
-
 
 @implementation DdLogs
 
@@ -119,10 +118,10 @@ RCT_REMAP_METHOD(errorWithError, withMessage:(NSString*)message
 + (BOOL)requiresMainQueueSetup {
     return NO;
 }
-
-- (dispatch_queue_t)methodQueue {
-    return [RNQueue getSharedQueue];
-}
+//
+//- (dispatch_queue_t)methodQueue {
+//    return [RNQueue getSharedQueue];
+//}
 
 - (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddLogsImplementation enableWithConfiguration:configuration resolve:resolve reject:reject];

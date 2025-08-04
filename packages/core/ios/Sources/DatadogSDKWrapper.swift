@@ -44,7 +44,7 @@ public class DatadogSDKWrapper {
     }
 
     // SDK Wrapper
-    internal func initialize(
+    func initialize(
         coreConfiguration: Datadog.Configuration,
 //        loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
@@ -58,7 +58,7 @@ public class DatadogSDKWrapper {
 //        self.loggerConfiguration = loggerConfiguration
     }
 
-    internal func isInitialized() -> Bool {
+    public func isInitialized() -> Bool {
         return Datadog.isInitialized()
     }
 
@@ -79,7 +79,7 @@ public class DatadogSDKWrapper {
         }
     }
 
-    internal func enableLogs(with configuration: Logs.Configuration) {
+    public func enableLogs(with configuration: Logs.Configuration) {
         if let core = coreInstance {
             Logs.enable(with: configuration, in: core)
         } else {

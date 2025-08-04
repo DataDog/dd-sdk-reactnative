@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { Attributes } from '../sdk/AttributesSingleton/types';
-import { EventMapper } from '../sdk/EventMappers/EventMapper';
-import type { UserInfo } from '../sdk/UserInfoSingleton/types';
+import type { AdditionalEventDataForMapper } from '@datadog/mobile-react-native';
+
+import { EventMapper } from '../../core/src/sdk/EventMappers/EventMapper';
 
 import type {
     LogEvent,
@@ -31,24 +31,28 @@ export const formatRawLogToNativeEvent = (
 
 export const formatRawLogToLogEvent = (
     rawLog: RawLog | RawLogWithError,
-    additionalInformation: {
-        userInfo: UserInfo;
-        attributes: Attributes;
-    }
+    additionalInformation: AdditionalEventDataForMapper
 ): LogEvent => {
+    const userInfo = {
+        ...additionalInformation.userInfo,
+        id: additionalInformation.userInfo.id ?? ''
+    };
+
     return {
         ...rawLog,
-        userInfo: additionalInformation.userInfo,
+        userInfo,
         attributes: additionalInformation.attributes
     };
 };
 
 export const generateEventMapper = (
     logEventMapper: LogEventMapper | undefined
-) =>
-    new EventMapper(
+) => {
+    console.log('generateEventMapper', EventMapper);
+    return new EventMapper(
         logEventMapper,
         formatRawLogToLogEvent,
         formatLogEventToNativeLog,
         formatRawLogToNativeEvent
     );
+};

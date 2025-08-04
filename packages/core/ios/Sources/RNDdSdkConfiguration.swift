@@ -11,7 +11,7 @@ import Foundation
 
 extension NSDictionary {
 
-    func asDdSdkConfiguration() -> DdSdkConfiguration {
+    public func asDdSdkConfiguration() -> DdSdkConfiguration {
         let clientToken = object(forKey: "clientToken") as? String
         let env = object(forKey: "env") as? String
         let applicationId = object(forKey: "applicationId") as? String

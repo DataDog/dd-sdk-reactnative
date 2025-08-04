@@ -8,6 +8,7 @@ import Foundation
 import DatadogLogs
 import DatadogCore
 import DatadogInternal
+import DatadogSDKReactNative
 
 @objc
 public class DdLogsImplementation: NSObject {

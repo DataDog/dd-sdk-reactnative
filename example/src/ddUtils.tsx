@@ -1,11 +1,14 @@
 import {
     DatadogProviderConfiguration,
-    DdLogs,
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
+
+import {
+    DdLogs,
+} from '@datadog/mobile-react-native-logs';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
@@ -30,23 +33,32 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
 
  export async function onDatadogInitialization() {
 
-    console.log("Datadog SDK was initialized, initializing Logs...");
-    await DdLogs.enable({});
-    DdLogs.debug('DDLogs was initialized');
-    DdSdkReactNative.setUserInfo({id: "w00t", name: "Sergio", email: "modular@sdk.com", extraInfo: { type: "premium" } })
-    setTimeout(async () => {
-        await DdLogs.enable({
-            customEndpoints: {
-                logs: "custom.endpoint"
-            }
-        });
-        DdLogs.debug('DDLogs was initialized again with a custom endpoint');
-
+    try {
+        console.log("Datadog SDK was initialized, initializing Logs...");
+        await DdLogs.enable({});
+        console.log('DDLogs was initialized');
+        DdLogs.debug('DDLogs was initialized');
+        DdSdkReactNative.setUserInfo({id: "w00t", name: "Sergio", email: "modular@sdk.com", extraInfo: { type: "premium" } })
         setTimeout(async () => {
-            await DdLogs.enable({});
-            DdLogs.debug('DDLogs was initialized for the third time');
-        }, 20000);
-    }, 20000);
+            console.log("Initialize ddlogs again");
+            await DdLogs.enable({
+                customEndpoints: {
+                    logs: "custom.endpoint"
+                }
+            });
+            console.log('DDLogs was initialized again with a custom endpoint');
+            DdLogs.debug('DDLogs was initialized again with a custom endpoint');
+
+            setTimeout(async () => {
+                console.log("Initialize ddlogs for a third time");
+                await DdLogs.enable({});
+                console.log('DDLogs was initialized for the third time');
+                DdLogs.debug('DDLogs was initialized for the third time');
+            }, 5000);
+        }, 5000);
+    } catch (error) {
+        console.log("ERROR during init", error);
+    }
 }
 
 // Legacy SDK Setup

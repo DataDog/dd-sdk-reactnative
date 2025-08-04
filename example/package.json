@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@datadog/mobile-react-native": "workspace:packages/core",
+        "@datadog/mobile-react-native-logs": "workspace:packages/logs",
         "@datadog/mobile-react-native-navigation": "workspace:packages/react-native-navigation",
         "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
         "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",

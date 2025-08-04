@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@datadog/mobile-react-native": "workspace:packages/core",
+    "@datadog/mobile-react-native-logs": "workspace:packages/logs",
     "react": "18.3.1",
     "react-native": "0.76.9"
   },

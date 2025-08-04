@@ -4,8 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { ErrorSource } from '../rum/types';
-import type { UserInfo } from '../sdk/UserInfoSingleton/types';
+import type { ErrorSource, UserInfo } from '@datadog/mobile-react-native';
 
 /**
  * The entry point to use Datadog's Logs feature.
