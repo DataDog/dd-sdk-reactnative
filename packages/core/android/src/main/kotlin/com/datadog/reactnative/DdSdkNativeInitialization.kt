@@ -232,7 +232,7 @@ class DdSdkNativeInitialization internal constructor(
         return configBuilder.build()
     }
 
-    fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
+    private fun buildSdkConfiguration(configuration: DdSdkConfiguration): Configuration {
         val configBuilder = Configuration.Builder(
             clientToken = configuration.clientToken,
             env = configuration.env,

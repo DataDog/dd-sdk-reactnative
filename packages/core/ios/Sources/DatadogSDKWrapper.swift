@@ -44,7 +44,7 @@ public class DatadogSDKWrapper {
     }
 
     // SDK Wrapper
-    func initialize(
+    internal func initialize(
         coreConfiguration: Datadog.Configuration,
 //        loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
