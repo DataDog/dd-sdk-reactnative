@@ -283,4 +283,10 @@ class DdLogsWrapper implements DdLogsType {
     }
 }
 
-export const DdLogs = new DdLogsWrapper();
+const LOGS_SYMBOL = Symbol.for('com.datadog.reactnative.logs');
+
+if (!Object.getOwnPropertySymbols(globalThis).includes(LOGS_SYMBOL)) {
+    globalThis[LOGS_SYMBOL] = new DdLogsWrapper();
+}
+
+export const DdLogs = globalThis[LOGS_SYMBOL] as DdLogsWrapper;
