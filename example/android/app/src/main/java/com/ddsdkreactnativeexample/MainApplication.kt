@@ -15,7 +15,7 @@ import com.reactnativenavigation.NavigationApplication
 import com.reactnativenavigation.react.NavigationReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
-
+import com.datadog.reactnative.logs.DdSdkReactNativeLogsPackage;
 
 class MainApplication : NavigationApplication() {
 
@@ -36,6 +36,7 @@ class MainApplication : NavigationApplication() {
                     val packages = PackageList(this).packages
                     // Packages that cannot be autolinked yet can be added manually here, for example:
                     // packages.add(new MyReactNativePackage())
+                    packages.add(DdSdkReactNativeLogsPackage())
                     return packages
                 }
 

@@ -4,13 +4,18 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative
+package com.datadog.reactnative.logs
 
 import com.datadog.android.Datadog
 import android.util.Log as AndroidLog
 import com.datadog.android.log.Logger
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
+import com.datadog.reactnative.DatadogWrapper
+import com.datadog.reactnative.DatadogSDKWrapper
+import com.datadog.reactnative.DatadogSDKWrapperStorage
+import com.datadog.reactnative.GlobalState
+import com.datadog.reactnative.asCustomEndpoints
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 

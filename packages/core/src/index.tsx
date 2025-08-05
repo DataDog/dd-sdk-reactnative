@@ -14,8 +14,7 @@ import {
 } from './DdSdkReactNativeConfiguration';
 import type {
     AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration,
-    AutoInstrumentationParameters
+    PartialInitializationConfiguration
 } from './DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from './DdSdkReactNative';
 import { InternalLog, DATADOG_MESSAGE_PREFIX } from './InternalLog';
@@ -96,6 +95,5 @@ export type {
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration,
-    AutoInstrumentationParameters
+    PartialInitializationConfiguration
 };

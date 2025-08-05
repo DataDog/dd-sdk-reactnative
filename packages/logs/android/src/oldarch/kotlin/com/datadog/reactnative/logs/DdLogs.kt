@@ -4,10 +4,13 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative
+package com.datadog.reactnative.logs
 
+import com.datadog.reactnative.DatadogSDKWrapper
+import com.datadog.reactnative.DatadogWrapper
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 
@@ -17,7 +20,7 @@ import com.facebook.react.bridge.ReadableMap
 class DdLogs(
     reactContext: ReactApplicationContext,
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
-) : NativeDdLogsSpec(reactContext) {
+) : ReactContextBaseJavaModule(reactContext) {
 
     private val implementation = DdLogsImplementation(datadog = datadogWrapper)
 
@@ -28,7 +31,7 @@ class DdLogs(
      * @param configuration The logs configuration.
      */
     @ReactMethod
-    override fun enable(configuration: ReadableMap, promise: Promise) {
+    fun enable(configuration: ReadableMap, promise: Promise) {
         implementation.enable(configuration, promise)
     }
 
@@ -38,7 +41,7 @@ class DdLogs(
      * @param context The additional context to send.
      */
     @ReactMethod
-    override fun debug(message: String, context: ReadableMap, promise: Promise) {
+    fun debug(message: String, context: ReadableMap, promise: Promise) {
         implementation.debug(message, context, promise)
     }
 
@@ -48,7 +51,7 @@ class DdLogs(
      * @param context The additional context to send.
      */
     @ReactMethod
-    override fun info(message: String, context: ReadableMap, promise: Promise) {
+    fun info(message: String, context: ReadableMap, promise: Promise) {
         implementation.info(message, context, promise)
     }
 
@@ -58,7 +61,7 @@ class DdLogs(
      * @param context The additional context to send.
      */
     @ReactMethod
-    override fun warn(message: String, context: ReadableMap, promise: Promise) {
+    fun warn(message: String, context: ReadableMap, promise: Promise) {
         implementation.warn(message, context, promise)
     }
 
@@ -68,7 +71,7 @@ class DdLogs(
      * @param context The additional context to send.
      */
     @ReactMethod
-    override fun error(message: String, context: ReadableMap, promise: Promise) {
+    fun error(message: String, context: ReadableMap, promise: Promise) {
         implementation.error(message, context, promise)
     }
 
@@ -82,7 +85,7 @@ class DdLogs(
      */
     @Suppress("LongParameterList")
     @ReactMethod
-    override fun debugWithError(
+    fun debugWithError(
         message: String,
         errorKind: String?,
         errorMessage: String?,
@@ -90,7 +93,14 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        implementation.debugWithError(message, errorKind, errorMessage, stacktrace, context, promise)
+        implementation.debugWithError(
+            message,
+            errorKind,
+            errorMessage,
+            stacktrace,
+            context,
+            promise
+        )
     }
 
     /**
@@ -103,7 +113,7 @@ class DdLogs(
      */
     @Suppress("LongParameterList")
     @ReactMethod
-    override fun infoWithError(
+    fun infoWithError(
         message: String,
         errorKind: String?,
         errorMessage: String?,
@@ -124,7 +134,7 @@ class DdLogs(
      */
     @Suppress("LongParameterList")
     @ReactMethod
-    override fun warnWithError(
+    fun warnWithError(
         message: String,
         errorKind: String?,
         errorMessage: String?,
@@ -145,7 +155,7 @@ class DdLogs(
      */
     @Suppress("LongParameterList")
     @ReactMethod
-    override fun errorWithError(
+    fun errorWithError(
         message: String,
         errorKind: String?,
         errorMessage: String?,
@@ -153,6 +163,13 @@ class DdLogs(
         context: ReadableMap,
         promise: Promise
     ) {
-        implementation.errorWithError(message, errorKind, errorMessage, stacktrace, context, promise)
+        implementation.errorWithError(
+            message,
+            errorKind,
+            errorMessage,
+            stacktrace,
+            context,
+            promise
+        )
     }
 }

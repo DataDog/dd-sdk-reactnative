@@ -4,8 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative
+package com.datadog.reactnative.logs
 
+import com.datadog.reactnative.DatadogSDKWrapper
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.NativeModule
@@ -16,13 +17,11 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 /**
  * Package of native dd-sdk-reactnative native modules.
  */
-class DdSdkReactNativePackage : TurboReactPackage() {
+class DdSdkReactNativeLogsPackage : TurboReactPackage() {
     private val sdkWrapper = DatadogSDKWrapper()
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return when (name) {
-            DdSdkImplementation.NAME -> DdSdk(reactContext, sdkWrapper)
-            DdRumImplementation.NAME -> DdRum(reactContext, sdkWrapper)
-            DdTraceImplementation.NAME -> DdTrace(reactContext)
+            DdLogsImplementation.NAME -> DdLogs(reactContext, sdkWrapper)
             else -> null
         }
     }
@@ -31,9 +30,7 @@ class DdSdkReactNativePackage : TurboReactPackage() {
         return ReactModuleInfoProvider {
             val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
             val moduleInfos = listOf(
-                DdSdkImplementation.NAME,
-                DdRumImplementation.NAME,
-                DdTraceImplementation.NAME,
+                DdLogsImplementation.NAME,
             ).associateWith {
                 ReactModuleInfo(
                     it,

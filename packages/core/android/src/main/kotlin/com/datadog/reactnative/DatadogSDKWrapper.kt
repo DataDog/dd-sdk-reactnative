@@ -72,7 +72,7 @@ object DatadogSDKWrapperStorage {
     }
 }
 
-internal class DatadogSDKWrapper : DatadogWrapper {
+class DatadogSDKWrapper : DatadogWrapper {
     override var bundleLogsWithRum = DefaultConfiguration.bundleLogsWithRum
     override var bundleLogsWithTraces = DefaultConfiguration.bundleLogsWithTraces
 

@@ -4,5 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 import { DdLogs } from './DdLogs';
+import type { DdLogsType } from './types';
 
 export { DdLogs };
+export type { DdLogsType };

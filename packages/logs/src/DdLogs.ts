@@ -5,8 +5,8 @@
  */
 
 import type {
-    ErrorSource,
-    AutoInstrumentationParameters
+    DdSdkReactNativeConfiguration,
+    ErrorSource
 } from '@datadog/mobile-react-native';
 import {
     SdkVerbosity,
@@ -54,7 +54,9 @@ class DdLogsWrapper implements DdLogsType {
     private logEventMapper = generateEventMapper(undefined);
     private isEnabled = false;
 
-    enable = (configuration: AutoInstrumentationParameters): Promise<void> => {
+    enable = (
+        configuration: Partial<DdSdkReactNativeConfiguration>
+    ): Promise<void> => {
         console.log('DDLOGS ENABLE', configuration);
         if (configuration.logEventMapper) {
             DdLogs.registerLogEventMapper(configuration.logEventMapper);

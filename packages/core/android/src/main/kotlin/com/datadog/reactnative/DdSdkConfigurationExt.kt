@@ -65,7 +65,7 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
     )
 }
 
-internal fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
+fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
     return CustomEndpoints(
         rum = getString("rum"),
         logs = getString("logs"),

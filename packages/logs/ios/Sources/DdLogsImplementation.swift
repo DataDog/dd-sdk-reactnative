@@ -21,7 +21,8 @@ public class DdLogsImplementation: NSObject {
     public func enable(configuration: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let logsConfiguration = configuration.asDdSdkConfiguration()
         let logsConfig = buildLogsConfiguration(configuration: logsConfiguration)
-        DatadogSDKWrapper.shared.enableLogs(with: logsConfig)
+        let core = Datadog.sdkInstance(named: CoreRegistry.defaultInstanceName)
+        Logs.enable(with: logsConfig, in: core)
         resolve(nil)
     }
 

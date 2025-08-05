@@ -23,7 +23,6 @@
         "android/build.gradle",
         "android/detekt.yml",
         "android/gradle.properties",
-        "android/consumer-proguard-rules.pro",
         "android/src/**",
         "ios/Sources/**",
         "ios/DatadogSDKReactNativeLogs.xcodeproj/project.xcworkspace/xcsharedata",
@@ -87,7 +86,7 @@
         ]
     },
     "codegenConfig": {
-        "name": "DdSDKReactNativeLogs",
+        "name": "DdLogs",
         "type": "all",
         "jsSrcsDir": "./src/specs",
         "android": {

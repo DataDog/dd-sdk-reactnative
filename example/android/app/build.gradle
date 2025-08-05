@@ -107,6 +107,8 @@ dependencies {
         implementation jscFlavor
     }
 
+    implementation project(":datadog_mobile-react-native-logs")
+
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")

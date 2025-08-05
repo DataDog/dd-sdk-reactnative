@@ -5,6 +5,9 @@ rootProject.name = 'DdSdkReactNativeExample'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 
+include(":datadog_mobile-react-native-logs")
+project(":datadog_mobile-react-native-logs").projectDir = new File(rootProject.projectDir, "../../packages/logs/android")
+
 
 
 

@@ -79,13 +79,13 @@ public class DatadogSDKWrapper {
         }
     }
 
-    public func enableLogs(with configuration: Logs.Configuration) {
-        if let core = coreInstance {
-            Logs.enable(with: configuration, in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing Logs.", .critical)
-        }
-    }
+//    public func enableLogs(with configuration: Logs.Configuration) {
+//        if let core = coreInstance {
+//            Logs.enable(with: configuration, in: core)
+//        } else {
+//            consolePrint("Core instance was not found when initializing Logs.", .critical)
+//        }
+//    }
 
     internal func enableTrace(with configuration: Trace.Configuration) {
         if let core = coreInstance {
