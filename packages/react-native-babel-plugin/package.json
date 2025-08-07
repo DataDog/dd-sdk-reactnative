@@ -39,16 +39,16 @@
     },
     "dependencies": {
         "@babel/core": "^7.27.1",
+        "@babel/generator": "^7.28.0",
         "@babel/helper-plugin-utils": "^7.27.1",
+        "@babel/types": "^7.27.1",
         "uuid": "^11.1.0"
     },
     "devDependencies": {
         "@babel/cli": "^7.27.2",
-        "@babel/generator": "^7.28.0",
         "@babel/preset-env": "^7.27.2",
         "@babel/preset-react": "^7.27.1",
         "@babel/preset-typescript": "^7.27.1",
-        "@babel/types": "^7.27.1",
         "@swc/core": "^1.11.31",
         "@swc/jest": "^0.2.38",
         "@types/jest": "^29.5.14",

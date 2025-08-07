@@ -5,19 +5,25 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// import * as Babel from '@babel/core';
+import * as Babel from '@babel/core';
 import generate from '@babel/generator';
 import { declare } from '@babel/helper-plugin-utils';
+// import {
+//     jSXAttribute,
+//     jSXIdentifier,
+//     jsxAttribute,
+//     stringLiteral
+// } from '@babel/types';
+import fs from 'fs';
+import pathFS from 'path';
+import { v4 as uuidv4 } from 'uuid';
+
 import {
     jSXAttribute,
     jSXIdentifier,
     jsxAttribute,
     stringLiteral
 } from '@babel/types';
-import fs from 'fs';
-import pathFS from 'path';
-import { v4 as uuidv4 } from 'uuid';
-
 import { insertSetupFlag, loadImportMap } from './actions/global';
 import {
     handleJSXElementActionPaths,
@@ -30,6 +36,23 @@ import type {
     PluginResult
 } from './types';
 import { getFileInfo, getNodeName } from './utils/index';
+
+function kebabCase(str: string) {
+    const KEBAB_REGEX = /\p{Lu}/gu;
+    const result = str.replace(KEBAB_REGEX, match => `-${match.toLowerCase()}`);
+
+    return result.startsWith('-') ? result.slice(1) : result;
+}
+
+const svgMap: Record<string, { file: string; [key: string]: string }> = {};
+
+const getPath = () =>
+    !process.env.pluginDev
+        ? pathFS.resolve(
+              // 'node_modules/@datadog/mobile-react-native-babel-plugin'
+              'node_modules/@datadog/mobile-react-native-session-replay'
+          )
+        : pathFS.resolve('.');
 
 export default declare(
     (

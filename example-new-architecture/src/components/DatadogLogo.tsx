@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, {G, Path} from 'react-native-svg';
+import Svg, {G, Path, Rect} from 'react-native-svg';
 
 export default function DatadogLogo(props: {width?: number; height?: number}) {
   const {width = 256, height = 256} = props;
@@ -12,3 +12,73 @@ export default function DatadogLogo(props: {width?: number; height?: number}) {
     </Svg>
   );
 }
+
+// transform example
+
+// import { Svg, Rect } from 'react-native-svg';
+//
+// export default function TransformedBox() {
+//   return (
+//     <Svg width={200} height={200}>
+//       <Rect
+//         x="20"
+//         y="20"
+//         width="100"
+//         height="100"
+//         fill="purple"
+//         transform={[
+//           { translateX: 10, translateY: 15 },
+//           { scaleX: 1.2, scaleY: 0.8 },
+//           { rotate: '45deg' },
+//           { skewX: '10deg' },
+//           { matrix: [1, 0.2, 0.3, 1, 0, 0] }
+//         ]}
+//       />
+//     </Svg>
+//   );
+// }
+//
+
+// transform properties example
+// import { Svg, Polyline, Rect } from 'react-native-svg';
+//
+// export default function MyGraphic() {
+//   return (
+//     <Svg width={200} height={200}>
+//       <Rect
+//         x="10"
+//         y="10"
+//         width="100"
+//         height="100"
+//         fill="blue"
+//         translateX={10}
+//         translateY={20}
+//         scaleX={1.5}
+//         rotation={30}
+//       />
+//     </Svg>
+//   );
+// }
+//
+//
+
+//Array propertier example
+// import { Svg, Polyline, Rect } from 'react-native-svg';
+//
+// export default function MyGraphic() {
+//   return (
+//     <Svg width={200} height={200}>
+//       <Polyline
+//         points={[
+//           [10, 10],
+//           [50, 60],
+//           [90, 10],
+//         ]}
+//         stroke="red"
+//         strokeWidth={2}
+//         fill="none"
+//         strokeDasharray={[5, 5]}
+//       />
+//     </Svg>
+//   );
+// }
