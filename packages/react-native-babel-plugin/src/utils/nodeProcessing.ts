@@ -43,6 +43,66 @@ export function getFileInfo(data: Babel.PluginPass) {
     return result;
 }
 
+export function getJSXAttributeData(
+    t: typeof Babel.types,
+    attr: Babel.types.JSXAttribute
+) {
+    const name = getNodeName(t, attr.name);
+    const result: { name: string | null; value: string | number | null } = {
+        name: null,
+        value: null
+    };
+
+    if (!name || !attr.value) {
+        return result;
+    }
+
+    if (t.isStringLiteral(attr.value)) {
+        result.name = name;
+        result.value = attr.value.value;
+        return result;
+    }
+
+    if (t.isJSXExpressionContainer(attr.value)) {
+        const expr = attr.value.expression;
+
+        if (t.isNumericLiteral(expr)) {
+            result.name = name;
+            result.value = expr.value;
+            return result;
+        }
+
+        if (t.isStringLiteral(expr)) {
+            result.name = name;
+            result.value = expr.value;
+            return result;
+        }
+
+        if (
+            t.isUnaryExpression(expr) &&
+            expr.operator === '-' &&
+            t.isNumericLiteral(expr.argument)
+        ) {
+            result.name = name;
+            result.value = -expr.argument.value;
+            return result;
+        }
+
+        if (
+            t.isTemplateLiteral(expr) &&
+            expr.quasis.length === 1 &&
+            expr.expressions.length === 0 &&
+            expr.quasis[0].value.cooked
+        ) {
+            result.name = name;
+            result.value = expr.quasis[0].value.cooked;
+            return result;
+        }
+    }
+
+    return result;
+}
+
 export function getNodeName(
     t: typeof Babel.types,
     node: Babel.types.Node | string

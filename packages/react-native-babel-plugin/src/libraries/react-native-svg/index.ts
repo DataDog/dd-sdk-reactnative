@@ -4,7 +4,7 @@ import fs from 'fs';
 import pathFS from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { getNodeName } from '../../utils';
+import { getJSXAttributeData, getNodeName } from '../../utils';
 
 import {
     rnAttributeNames,
@@ -114,6 +114,7 @@ class ReactNativeSVG {
     ) {
         const el = jsxElement.openingElement;
         const name = getNodeName(t, el);
+        let transformAttrString = null;
 
         for (const [index, attr] of el.attributes.entries()) {
             if (!t.isJSXAttribute(attr)) {
@@ -128,6 +129,8 @@ class ReactNativeSVG {
 
             if (rnAttributeNames.includes(attrName)) {
                 el.attributes.splice(index, 1);
+
+                // TODO: Handle style attributes (1)
                 continue;
             }
 
@@ -141,18 +144,34 @@ class ReactNativeSVG {
                 }
             }
 
-            // If we reach this point we know we have a valid attribute name
+            /* If we reach this point we know we have a valid attribute name */
+
             if (name === 'svg') {
                 this.handleSvgDimensions(attr, attrName, dimensions, t);
             }
 
-            // Handle array properties
+            // Handle array attributes
             if (
                 rnSvgArrayAttributeValues.includes(attrName) &&
-                t.isJSXExpressionContainer(attr.value)
+                t.isJSXExpressionContainer(attr.value) &&
+                t.isArrayExpression(attr.value.expression)
             ) {
+                this.convertAttributeArrayValue(
+                    attrName,
+                    attr.value.expression,
+                    t
+                );
+
+                el.attributes.splice(index, 1);
+                continue;
             }
+
+            // TODO: Handle separate transform attributes
+
+            // TODO: Handle joined transform attributes
         }
+
+        // TODO: Handle style attributes (2)
 
         for (const child of jsxElement.children) {
             if (t.isJSXElement(child)) {
@@ -281,6 +300,69 @@ class ReactNativeSVG {
         }
 
         return data;
+    }
+
+    convertAttributeTransformArray(
+        t: typeof Babel.types,
+        attr: Babel.types.JSXAttribute,
+        transformsArray: { name: string; value: string | number }[]
+    ) {
+        const data = getJSXAttributeData(t, attr);
+        if (data.name && data.value) {
+            transformsArray.push(data as typeof transformsArray[0]);
+        }
+    }
+
+    convertTransformArrayToString(
+        transformsArray: { name: string; value: string | number }[]
+    ): string | undefined {
+        const transforms: string[] = [];
+
+        const get = (key: string) =>
+            transformsArray.find(t => t.name === key)?.value;
+
+        const tx = get('translateX');
+        const ty = get('translateY');
+        if (tx !== undefined && ty !== undefined) {
+            transforms.push(`translate(${tx}, ${ty})`);
+        } else if (tx !== undefined) {
+            transforms.push(`translate(${tx})`);
+        } else if (ty !== undefined) {
+            transforms.push(`translate(0, ${ty})`);
+        }
+
+        const sx = get('scaleX');
+        const sy = get('scaleY');
+        if (sx !== undefined && sy !== undefined) {
+            transforms.push(`scale(${sx}, ${sy})`);
+        } else if (sx !== undefined) {
+            transforms.push(`scale(${sx})`);
+        } else if (sy !== undefined) {
+            transforms.push(`scale(1, ${sy})`);
+        }
+
+        const rot = get('rotation');
+        if (rot !== undefined) {
+            const value =
+                typeof rot === 'string' ? rot.replace(/deg$/, '') : rot;
+            transforms.push(`rotate(${value})`);
+        }
+
+        const skewX = get('skewX');
+        if (skewX !== undefined) {
+            const value =
+                typeof skewX === 'string' ? skewX.replace(/deg$/, '') : skewX;
+            transforms.push(`skewX(${value})`);
+        }
+
+        const skewY = get('skewY');
+        if (skewY !== undefined) {
+            const value =
+                typeof skewY === 'string' ? skewY.replace(/deg$/, '') : skewY;
+            transforms.push(`skewY(${value})`);
+        }
+
+        return transforms.length ? transforms.join(' ') : undefined;
     }
 
     // TODO: move to utils
