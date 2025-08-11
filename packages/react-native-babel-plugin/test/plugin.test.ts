@@ -62,6 +62,67 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `);
     });
 
+    it('should wrap supported property (onFocus) on supported element (TextInput)', () => {
+        const input = `
+            import { TextInput } from 'react-native';
+            <TextInput
+                placeholder="Enter username"
+                value={username}
+                onChangeText={setUsername}
+                style={styles.input}
+                onFocus={() => { console.log('test'); }}
+            />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import { TextInput } from 'react-native';
+            /*#__PURE__*/React.createElement(TextInput, {
+              placeholder: "Enter username",
+              value: username,
+              onChangeText: setUsername,
+              style: styles.input,
+              onFocus: () => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
+                  console.log('test');
+                }, "TAP", {
+                  "componentName": "TextInput"
+                })();else return (() => {
+                  console.log('test');
+                })();
+              }
+            });"
+        `);
+    });
+
+    it('should add mandatory property (onFocus) on supported element (TextInput) when not present', () => {
+        const input = `
+            import { TextInput } from 'react-native';
+            <TextInput
+                placeholder="Enter username"
+                value={username}
+                onChangeText={setUsername}
+                style={styles.input}
+            />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            import { TextInput } from 'react-native';
+            /*#__PURE__*/React.createElement(TextInput, {
+              placeholder: "Enter username",
+              value: username,
+              onChangeText: setUsername,
+              style: styles.input,
+              onFocus: () => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
+                  "componentName": "TextInput"
+                })();else return (() => {})();
+              }
+            });"
+        `);
+    });
+
     it('should wrap arrow function with one argument', () => {
         const input = `
             import { Pressable } from 'react-native';

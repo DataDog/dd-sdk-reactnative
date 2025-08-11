@@ -35,6 +35,10 @@ export const tapElementsMap: Record<string, string[]> = {
     TextInput: ['onFocus']
 };
 
+export const tapElementsRequiredAttributesMap: Record<string, string[]> = {
+    TextInput: ['onFocus']
+};
+
 export const rumComponentAttributes = [
     'dd-action-name',
     'accessibilityLabel'

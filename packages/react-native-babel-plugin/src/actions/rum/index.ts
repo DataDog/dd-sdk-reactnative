@@ -5,8 +5,19 @@
  */
 
 import type * as Babel from '@babel/core';
+import {
+    arrowFunctionExpression,
+    blockStatement,
+    jsxAttribute,
+    jsxExpressionContainer,
+    jsxIdentifier
+} from '@babel/types';
 
-import { RumActionConstants, rumComponentAttributes } from '../../constants';
+import {
+    RumActionConstants,
+    rumComponentAttributes,
+    tapElementsRequiredAttributesMap
+} from '../../constants';
 import type {
     PluginPassState,
     PluginOptions,
@@ -39,12 +50,17 @@ export function handleJSXElementActionPaths(
     state: PluginPassState,
     options: PluginOptions
 ) {
-    const { actionPathList, ddValues } = getJSXElementActionPaths(
-        componentName,
-        t,
+    const {
+        actionPathList,
+        actionPathNames,
+        ddValues
+    } = getJSXElementActionPaths(componentName, t, path, state, options);
+
+    ensureMandatoryAttributes(
         path,
-        state,
-        options
+        componentName,
+        actionPathList,
+        actionPathNames
     );
 
     for (const attrPath of actionPathList) {
@@ -52,7 +68,41 @@ export function handleJSXElementActionPaths(
             ...attrPath.node.extra,
             ddValues
         };
+
         handleRumActions(t, attrPath, state);
+    }
+}
+
+export function ensureMandatoryAttributes(
+    path: Babel.NodePath<Babel.types.JSXElement>,
+    componentName: string,
+    actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[],
+    actionPathNames: string[]
+) {
+    // Check if we're missing some required attributes
+    const requiredAttributes = tapElementsRequiredAttributesMap[componentName];
+    if (requiredAttributes) {
+        const attrToAdd = requiredAttributes.filter(
+            x => !actionPathNames.includes(x)
+        );
+
+        for (const attr of attrToAdd) {
+            const attribute = jsxAttribute(
+                jsxIdentifier(attr),
+                jsxExpressionContainer(
+                    arrowFunctionExpression([], blockStatement([]))
+                )
+            );
+            path.node.openingElement.attributes.push(attribute);
+
+            const attrPaths = path.get(
+                'openingElement.attributes'
+            ) as Babel.NodePath<Babel.types.JSXAttribute>[];
+
+            const lastPath = attrPaths[attrPaths.length - 1];
+
+            actionPathList.push(lastPath);
+        }
     }
 }
 
@@ -71,6 +121,7 @@ export function getJSXElementActionPaths(
     const ddValues: Record<string, string> = {};
     const actionMapList = state.tapMappings?.[componentName] || [];
     const actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[] = [];
+    const actionPathNames: string[] = [];
 
     path.traverse({
         JSXAttribute(subpath) {
@@ -98,13 +149,14 @@ export function getJSXElementActionPaths(
             const isValidMapping = actionMapList.includes(attrName);
 
             if (isValidMapping) {
+                actionPathNames.push(attrName);
                 actionPathList.push(subpath);
                 return;
             }
         }
     });
 
-    return { actionPathList, ddValues };
+    return { actionPathList, actionPathNames, ddValues };
 }
 
 export function handleRumActions(
