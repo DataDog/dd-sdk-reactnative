@@ -24,9 +24,10 @@ export function handleTapAction(
     );
 
     // Check if the property and element is valid by checking our tap mappings list
-    const mapEntry = state.tapMappings?.[parentName];
+    const mapEntry = state.trackedComponents?.[parentName];
     const isValidElement = !!mapEntry;
-    const isValidEvent = mapEntry?.includes(propertyName) || false;
+    const isValidEvent =
+        mapEntry?.handlers.map(x => x.event).includes(propertyName) || false;
 
     if (!isExpressionContainer || !isValidEvent || !isValidElement) {
         return;

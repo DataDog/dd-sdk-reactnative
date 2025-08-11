@@ -6,7 +6,7 @@
 
 import type * as Babel from '@babel/core';
 
-import { PluginConstants, tapElementsMap } from '../../constants';
+import { RumAction, PluginConstants, tapElementsMap } from '../../constants';
 import type { BabelTypes, PluginPassState } from '../../types';
 import {
     PluginState,
@@ -52,7 +52,9 @@ export function loadImportMap(
                 return;
             }
 
-            const tapElementsImportMap: Record<string, string[]> = {};
+            if (!pluginState.trackedComponents) {
+                pluginState.trackedComponents = {};
+            }
 
             for (const specifier of specifiers) {
                 if (!t.isImportSpecifier(specifier)) {
@@ -60,20 +62,22 @@ export function loadImportMap(
                 }
 
                 const importName = getNodeName(t, specifier.imported);
+                const localName = getNodeName(t, specifier.local);
+
                 const elementEvents = importName
                     ? tapElementsMap[importName]
                     : null;
 
-                if (elementEvents) {
-                    const importLocalName = getNodeName(t, specifier.local);
-
-                    if (importLocalName) {
-                        tapElementsImportMap[importLocalName] = elementEvents;
-                    }
+                if (elementEvents && localName) {
+                    pluginState.trackedComponents[localName] = {
+                        handlers: elementEvents.map(event => ({
+                            event,
+                            action: RumAction.TAP // TODO: change once we support more actions
+                        })),
+                        importSource: 'react-native'
+                    };
                 }
             }
-
-            pluginState.tapMappings = tapElementsImportMap;
         }
     });
 }

@@ -119,7 +119,16 @@ export function getJSXElementActionPaths(
     ].filter(Boolean);
 
     const ddValues: Record<string, string> = {};
-    const actionMapList = state.tapMappings?.[componentName] || [];
+    console.log(
+        'State.trackedComponents: ',
+        state.trackedComponents,
+        componentName,
+        state.trackedComponents?.[componentName]
+    );
+    const actionMapList =
+        state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
+        [];
+
     const actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[] = [];
     const actionPathNames: string[] = [];
 

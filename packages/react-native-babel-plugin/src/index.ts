@@ -33,6 +33,24 @@ export default declare(
                 Program: {
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
+
+                        if (!pluginState.trackedComponents) {
+                            pluginState.trackedComponents = {};
+                        }
+
+                        for (const entry of options.components?.tracked ?? []) {
+                            const importSource = entry.importSource ?? 'local';
+                            pluginState.trackedComponents[entry.name] = {
+                                handlers: entry.handlers,
+                                importSource
+                            };
+                        }
+
+                        console.log(
+                            'PluginState.trackedComponents: ',
+                            pluginState.trackedComponents
+                        );
+
                         const { path: p, name } = getFileInfo(this);
 
                         pluginState.fileInfo = { path: p, name };
