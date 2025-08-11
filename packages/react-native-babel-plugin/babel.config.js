@@ -1,5 +1,5 @@
 module.exports = {
-    presets: ['module:@react-native/babel-preset'],
+    presets: ['@babel/preset-typescript', '@babel/preset-react'],
     plugins: [
         [
             '@datadog/mobile-react-native-babel-plugin',
@@ -11,8 +11,16 @@ module.exports = {
                             name: 'GestureButton',
                             importSource: 'local',
                             handlers: [
-                                { event: 'singleHandler', action: 'TAP' },
-                                { event: 'multiHandler', action: 'TAP' }
+                                {
+                                    event: 'singleHandler',
+                                    action: 'TAP',
+                                    mode: 'reanimated'
+                                },
+                                {
+                                    event: 'multiHandler',
+                                    action: 'TAP',
+                                    mode: 'reanimated'
+                                }
                             ]
                         }
                     ],

@@ -20,7 +20,11 @@ export type PluginAPI = typeof Babel & Babel.ConfigAPI;
 export type TrackedComponent = {
     name: string;
     importSource: 'local' | string;
-    handlers: { event: string; action: keyof typeof RumAction }[];
+    handlers: {
+        event: string;
+        action: keyof typeof RumAction;
+        mode?: 'default' | 'reanimated';
+    }[];
 };
 
 export type IgnoredComponent = {
@@ -38,7 +42,6 @@ export type PluginOptions = {
 
 export type PluginPassState = Babel.PluginPass & {
     fileInfo?: { path: string | null; name: string | null };
-    // tapMappings?: Record<string, string[]>;
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
     trackedComponents?: Record<

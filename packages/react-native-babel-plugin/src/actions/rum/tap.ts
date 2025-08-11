@@ -29,6 +29,12 @@ export function handleTapAction(
     const isValidEvent =
         mapEntry?.handlers.map(x => x.event).includes(propertyName) || false;
 
+    const handler = state.trackedComponents?.[parentName].handlers.find(
+        x => x.event === propertyName
+    );
+
+    console.log('Handler: ', handler, propertyName);
+
     if (!isExpressionContainer || !isValidEvent || !isValidElement) {
         return;
     }
@@ -77,18 +83,35 @@ export function handleTapAction(
                   expression,
                   fName,
                   fNode,
-                  argsObject
+                  argsObject,
+                  handler?.mode
               );
 
     // This is the fallback expression, only used if there is something wrong with the setup on the SDK side
     // Even though the function is still wrapped, it will not call any custom logic from our side
     // It will simply call the user's function
-    const returnExpression = isArrowFunc
-        ? t.callExpression(
-              expression,
-              getArgumentsFromParams(t, state, expression.params).callArgs
-          )
-        : t.callExpression(expression, [t.spreadElement(t.identifier('args'))]);
+
+    // const returnExpression = isArrowFunc
+    //     ? t.callExpression(
+    //           expression,
+    //           getArgumentsFromParams(t, state, expression.params).callArgs
+    //       )
+    //     : t.callExpression(expression, [t.spreadElement(t.identifier('args'))]);
+
+    let returnExpression: Babel.types.Expression | null = null;
+
+    if (handler && handler?.mode === 'reanimated') {
+        returnExpression = expression;
+    } else {
+        returnExpression = isArrowFunc
+            ? t.callExpression(
+                  expression,
+                  getArgumentsFromParams(t, state, expression.params).callArgs
+              )
+            : t.callExpression(expression, [
+                  t.spreadElement(t.identifier('args'))
+              ]);
+    }
 
     state.hasValidTapAction = true;
 
@@ -101,7 +124,8 @@ export function handleTapAction(
               expression,
               expressionParams,
               returnExpression,
-              argsObject
+              argsObject,
+              handler?.mode
           )
         : null;
 }
@@ -195,7 +219,8 @@ function handleMemoization(
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
         | null,
-    argsObject: babel.types.ObjectExpression
+    argsObject: babel.types.ObjectExpression,
+    mode?: string
 ) {
     if (!fName || !fNode || t.isFunctionDeclaration(fNode)) {
         return !!state.memoization?.[fName || ''];
@@ -234,14 +259,19 @@ function handleMemoization(
         )[]
     ) => {
         const { callArgs } = getArgumentsFromParams(t, state, params);
-        const returnExpression = t.callExpression(callback, callArgs);
+        const returnExpression =
+            mode === 'reanimated'
+                ? callback
+                : t.callExpression(callback, callArgs);
+
         const actionWrapper = getActionWrapperFunction(
             t,
             state,
             callback,
             params,
             returnExpression,
-            argsObject
+            argsObject,
+            mode
         );
         varInit.arguments.fill(actionWrapper, 0, 1);
         fNode.init = varInit;
@@ -317,7 +347,8 @@ function getActionWrapperNode(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    argsObject: Babel.types.ObjectExpression
+    argsObject: Babel.types.ObjectExpression,
+    mode?: string
 ) {
     const actionWrapperFunction = getActionWrapperFunction(
         t,
@@ -325,7 +356,8 @@ function getActionWrapperNode(
         expression,
         expressionParams,
         returnExpression,
-        argsObject
+        argsObject,
+        mode
     );
     return t.jsxExpressionContainer(actionWrapperFunction);
 }
@@ -342,7 +374,8 @@ function getActionWrapperFunction(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    argsObject: Babel.types.ObjectExpression
+    argsObject: Babel.types.ObjectExpression,
+    mode?: string
 ) {
     const params = expressionParams || [t.restElement(t.identifier('args'))];
 
@@ -351,6 +384,29 @@ function getActionWrapperFunction(
         preCallStatements,
         callArgs
     } = getArgumentsFromParams(t, state, params);
+
+    const wrapperExpression = t.callExpression(
+        t.memberExpression(
+            t.callExpression(
+                t.memberExpression(
+                    t.identifier(RumActionConstants.ACTION_CLASS),
+                    t.identifier(RumActionConstants.ACTION_CLASS_INSTANCE)
+                ),
+                []
+            ),
+            t.identifier(RumActionConstants.ACTION_FUNCTION_WRAPPER)
+        ),
+        [expression, t.stringLiteral(RumAction.TAP), argsObject]
+    );
+
+    const wrapperExpressionImmediate = t.callExpression(
+        wrapperExpression,
+        callArgs
+        // [t.spreadElement(t.identifier('args'))]
+    );
+
+    const outputExpression =
+        mode === 'reanimated' ? wrapperExpression : wrapperExpressionImmediate;
 
     return t.arrowFunctionExpression(
         wrapperParams,
@@ -364,35 +420,7 @@ function getActionWrapperFunction(
                     ),
                     []
                 ),
-                t.returnStatement(
-                    t.callExpression(
-                        t.callExpression(
-                            t.memberExpression(
-                                t.callExpression(
-                                    t.memberExpression(
-                                        t.identifier(
-                                            RumActionConstants.ACTION_CLASS
-                                        ),
-                                        t.identifier(
-                                            RumActionConstants.ACTION_CLASS_INSTANCE
-                                        )
-                                    ),
-                                    []
-                                ),
-                                t.identifier(
-                                    RumActionConstants.ACTION_FUNCTION_WRAPPER
-                                )
-                            ),
-                            [
-                                expression,
-                                t.stringLiteral(RumAction.TAP),
-                                argsObject
-                            ]
-                        ),
-                        callArgs
-                        // [t.spreadElement(t.identifier('args'))]
-                    )
-                ),
+                t.returnStatement(outputExpression),
                 t.returnStatement(returnExpression)
             )
         ])
