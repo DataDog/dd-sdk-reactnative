@@ -34,7 +34,7 @@
         "@babel/core": "^7.25.2",
         "@babel/plugin-transform-runtime": "^7.25.0",
         "@babel/preset-env": "^7.25.3",
-        "@babel/runtime": "^7.25.0",
+        "@babel/runtime": "7.26.10",
         "@react-native-community/cli": "15.0.1",
         "@react-native-community/cli-platform-android": "15.0.1",
         "@react-native-community/cli-platform-ios": "15.0.1",
@@ -89,7 +89,7 @@
         "ejs": "3.1.10",
         "shell-quote": "^1.7.3",
         "cross-spawn": "7.0.5",
-        "ft-xml-parser": "4.4.1",
+        "fast-xml-parser": "4.4.1",
         "axios": "1.8.2",
         "nanoid": "3.3.8",
         "send": "0.19.0",
@@ -97,6 +97,7 @@
         "formidable": "3.5.3",
         "snyk": "^1.1297.3",
         "form-data": "4.0.4",
-        "on-headers": "1.1.0"
+        "on-headers": "1.1.0",
+        "tmp": "0.2.4"
     }
 }
