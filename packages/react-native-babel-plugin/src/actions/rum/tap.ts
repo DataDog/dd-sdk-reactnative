@@ -29,11 +29,9 @@ export function handleTapAction(
     const isValidEvent =
         mapEntry?.handlers.map(x => x.event).includes(propertyName) || false;
 
-    const handler = state.trackedComponents?.[parentName].handlers.find(
+    const handler = state.trackedComponents?.[parentName]?.handlers.find(
         x => x.event === propertyName
     );
-
-    console.log('Handler: ', handler, propertyName);
 
     if (!isExpressionContainer || !isValidEvent || !isValidElement) {
         return;

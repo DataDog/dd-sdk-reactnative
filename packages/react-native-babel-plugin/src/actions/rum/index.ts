@@ -119,12 +119,6 @@ export function getJSXElementActionPaths(
     ].filter(Boolean);
 
     const ddValues: Record<string, string> = {};
-    console.log(
-        'State.trackedComponents: ',
-        state.trackedComponents,
-        componentName,
-        state.trackedComponents?.[componentName]
-    );
     const actionMapList =
         state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
         [];

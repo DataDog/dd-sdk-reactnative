@@ -46,11 +46,6 @@ export default declare(
                             };
                         }
 
-                        console.log(
-                            'PluginState.trackedComponents: ',
-                            pluginState.trackedComponents
-                        );
-
                         const { path: p, name } = getFileInfo(this);
 
                         pluginState.fileInfo = { path: p, name };

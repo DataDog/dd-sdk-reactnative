@@ -9,19 +9,20 @@ module.exports = {
                     tracked: [
                         {
                             name: 'GestureButton',
-                            importSource: 'local',
                             handlers: [
                                 {
                                     event: 'singleHandler',
-                                    action: 'TAP',
-                                    mode: 'reanimated'
+                                    action: 'TAP'
                                 },
                                 {
                                     event: 'multiHandler',
-                                    action: 'TAP',
-                                    mode: 'reanimated'
+                                    action: 'TAP'
                                 }
                             ]
+                        },
+                        {
+                            name: 'Tab',
+                            handlers: [{ event: 'onChange', action: 'TAP' }]
                         }
                     ],
                     ignored: [

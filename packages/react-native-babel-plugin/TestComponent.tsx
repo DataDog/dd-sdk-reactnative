@@ -56,6 +56,64 @@ function MyComponent() {
                 singleHandler={() => console.log('single TAP')}
                 multiHandler={() => console.log('multi TAP')}
             />
+
+            <Tab
+                value={index}
+                onChange={e => setIndex(e)}
+                indicatorStyle={{
+                    backgroundColor: 'white',
+                    height: 3
+                }}
+                variant="primary"
+            >
+                <Tab.Item
+                    dd-action-name="RecentAccessibilityL1"
+                    title="Recent"
+                    titleStyle={{ fontSize: 12 }}
+                    icon={{ name: 'timer', type: 'ionicon', color: 'white' }}
+                />
+                <Tab.Item
+                    dd-action-name="RecentAccessibilityL2"
+                    title="favorite"
+                    titleStyle={{ fontSize: 12 }}
+                    icon={{ name: 'heart', type: 'ionicon', color: 'white' }}
+                />
+                <Tab.Item
+                    dd-action-name="RecentAccessibilityL3"
+                    title="cart"
+                    titleStyle={{ fontSize: 12 }}
+                    icon={{ name: 'cart', type: 'ionicon', color: 'white' }}
+                />
+            </Tab>
+            <TabView value={index} onChange={setIndex} animationType="spring">
+                <TabView.Item
+                    style={{
+                        backgroundColor: 'red',
+                        width: '100%',
+                        height: '100%'
+                    }}
+                >
+                    <Text>Recent</Text>
+                </TabView.Item>
+                <TabView.Item
+                    style={{
+                        backgroundColor: 'blue',
+                        width: '100%',
+                        height: '100%'
+                    }}
+                >
+                    <Text>Favorite</Text>
+                </TabView.Item>
+                <TabView.Item
+                    style={{
+                        backgroundColor: 'green',
+                        width: '100%',
+                        height: '100%'
+                    }}
+                >
+                    <Text>Cart</Text>
+                </TabView.Item>
+            </TabView>
         </View>
     );
 }
