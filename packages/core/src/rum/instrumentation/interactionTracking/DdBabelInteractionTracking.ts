@@ -26,10 +26,11 @@ type BabelConfig = {
 };
 
 type TargetObject = {
+    getContent: (() => string | null) | undefined;
     compoenentName: string;
     'dd-action-name': string;
     accessibilityLabel: string;
-    [key: string]: string;
+    [key: string]: any;
 };
 
 export class DdBabelInteractionTracking {
@@ -64,6 +65,7 @@ export class DdBabelInteractionTracking {
 
     private getTargetName(targetObject: TargetObject) {
         const {
+            getContent,
             componentName,
             'dd-action-name': actionName,
             accessibilityLabel,
@@ -71,6 +73,10 @@ export class DdBabelInteractionTracking {
         } = targetObject;
 
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
+
+        const content = getContent?.();
+
+        console.log('Content: ', content);
 
         if (actionName) {
             return actionName;

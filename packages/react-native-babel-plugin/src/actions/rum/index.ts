@@ -54,11 +54,16 @@ export function handleJSXElementActionPaths(
     state: PluginPassState,
     options: PluginOptions
 ) {
+    if (path.node?.extra?.__wrappedForRum) {
+        return;
+    }
     const {
         actionPathList,
         actionPathNames,
         ddValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
+
+    console.log('path.node.extra: ', path.node.extra);
 
     const componentNameList = state.trackedComponents
         ? Object.keys(state.trackedComponents)
@@ -71,11 +76,29 @@ export function handleJSXElementActionPaths(
         actionPathNames
     );
 
+    const clone = t.cloneNode(path.node, true);
+    clone.extra = {
+        __wrappedForRum: true
+    };
+
+    const getContentNode = t.arrowFunctionExpression(
+        [],
+        t.blockStatement([
+            t.returnStatement(
+                t.callExpression(t.identifier('__ddExtractText'), [clone])
+            )
+        ])
+    );
+
+    ddValues.getContent = getContentNode;
+
     for (const attrPath of actionPathList) {
         attrPath.node.extra = {
             ...attrPath.node.extra,
             ddValues
         };
+
+        console.log('attrPath.node.extra: ', attrPath.node.extra);
 
         handleRumActions(t, attrPath, state, componentNameList);
     }
@@ -126,7 +149,10 @@ export function getJSXElementActionPaths(
         options.actionNameAttribute ?? null
     ].filter(Boolean);
 
-    const ddValues: Record<string, string> = {};
+    const ddValues: Record<
+        string,
+        string | Babel.types.ArrowFunctionExpression
+    > = {};
     const actionMapList =
         state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
         [];
@@ -179,6 +205,7 @@ export function handleRumActions(
     // If the node was already processed skip the processing step
     // When using `path.traverse` inside the `JSXElement` hook and injecting new nodes
     // We can get into a situation where the same attribute is set to be processed twice due to parent lookup operations
+    // TODO: is this needed here or is the upper level one enough ?
     if (path.node?.extra?.__wrappedForRum) {
         return;
     }

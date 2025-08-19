@@ -52,12 +52,15 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
+    // TODO: this will need to be changed, to account for the node that is passed
     const argsObject = t.objectExpression([
         ...Object.entries(path.node?.extra?.ddValues || {}).map(
             ([key, value]) => {
                 return t.objectProperty(
                     t.stringLiteral(key),
-                    t.stringLiteral(value)
+                    t.isArrowFunctionExpression(value)
+                        ? value
+                        : t.stringLiteral(value)
                 );
             }
         ),
