@@ -17,13 +17,13 @@ export function insertAtProgramTop(
 
 export function getImportDeclaration(
     t: typeof Babel.types,
-    data: string,
+    data: string[],
     module: string
 ) {
-    return t.importDeclaration(
-        [t.importSpecifier(t.identifier(data), t.identifier(data))],
-        t.stringLiteral(module)
+    const nodeData = data.map(x =>
+        t.importSpecifier(t.identifier(x), t.identifier(x))
     );
+    return t.importDeclaration(nodeData, t.stringLiteral(module));
 }
 
 export function getFileInfo(data: Babel.PluginPass) {

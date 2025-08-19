@@ -33,7 +33,8 @@ export type IgnoredComponent = {
 };
 
 export type PluginOptions = {
-    actionNameAttribute: string;
+    useComponentContent?: boolean;
+    actionNameAttribute?: string;
     components?: {
         tracked: TrackedComponent[];
         ignored: IgnoredComponent[];

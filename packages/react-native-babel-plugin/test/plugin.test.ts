@@ -466,6 +466,37 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             import React from 'react';
             import { View, Pressable } from 'react-native';
 
+            function MyComponent(props) { 
+                return(
+                    <View>
+                        <Pressable color="red" onPress={props.onPress} />
+                    </View>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import React from 'react';
+            import { View, Pressable } from 'react-native';
+            function MyComponent(props) {
+              return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
+                color: "red",
+                onPress: (...args) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(props.onPress, "TAP", {
+                    "componentName": "Pressable"
+                  })(...args);else return prosp.onPress(...args);
+                }
+              }));
+            }"
+        `);
+    });
+
+    it('should wrap arrow function when given function reference as prop destructure', () => {
+        const input = `
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+
             function MyComponent({item, onPress}) { 
                 return(
                     <View>

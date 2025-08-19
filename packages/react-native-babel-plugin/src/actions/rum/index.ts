@@ -35,9 +35,13 @@ export function insertRumActionImport(
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.Program>
 ) {
+    // TODO: make sure this is only included if the configuration object is set
     const importNode = getImportDeclaration(
         t,
-        RumActionConstants.ACTION_CLASS,
+        [
+            RumActionConstants.ACTION_CLASS,
+            RumActionConstants.UTILS_FUNCTION_EXTRACT_TEXT
+        ],
         RumActionConstants.IMPORT_PACKAGE
     );
     insertAtProgramTop(path, importNode);
@@ -56,6 +60,10 @@ export function handleJSXElementActionPaths(
         ddValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
+    const componentNameList = state.trackedComponents
+        ? Object.keys(state.trackedComponents)
+        : [];
+
     ensureMandatoryAttributes(
         path,
         componentName,
@@ -69,7 +77,7 @@ export function handleJSXElementActionPaths(
             ddValues
         };
 
-        handleRumActions(t, attrPath, state);
+        handleRumActions(t, attrPath, state, componentNameList);
     }
 }
 
@@ -165,12 +173,18 @@ export function getJSXElementActionPaths(
 export function handleRumActions(
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.JSXAttribute>,
-    state: PluginPassState
+    state: PluginPassState,
+    componentNameList: string[]
 ) {
     // If the node was already processed skip the processing step
     // When using `path.traverse` inside the `JSXElement` hook and injecting new nodes
     // We can get into a situation where the same attribute is set to be processed twice due to parent lookup operations
     if (path.node?.extra?.__wrappedForRum) {
+        return;
+    }
+
+    const validParent = checkValidParent(t, path, componentNameList);
+    if (!validParent) {
         return;
     }
 
@@ -190,6 +204,46 @@ export function handleRumActions(
         ...path.node.extra,
         __wrappedForRum: true
     };
+}
+
+/*
+ * Checks if the element in question is inside a custom element tracked from plugin configuration
+ * If so, skip wrapping DD logic to prevent duplicate actions
+ */
+function checkValidParent(
+    t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXAttribute>,
+    componentNameList: string[]
+) {
+    const predicate = (p: Babel.NodePath<Babel.types.Node>) =>
+        p.isFunctionDeclaration() ||
+        p.isVariableDeclaration() ||
+        p.isClassDeclaration();
+
+    const cPath = path.findParent(p => predicate(p)) || null;
+
+    if (cPath) {
+        const node = cPath.node;
+        let parentName: string | null = null;
+
+        if (t.isVariableDeclaration(node)) {
+            const cNode = node.declarations[0].id;
+            parentName = getNodeName(t, cNode);
+            return true;
+        } else if (
+            t.isFunctionDeclaration(node) ||
+            t.isClassDeclaration(node)
+        ) {
+            const cNode = node.id;
+            parentName = cNode ? getNodeName(t, cNode) : null;
+        }
+
+        if (parentName && componentNameList.includes(parentName)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function checkValidAction(

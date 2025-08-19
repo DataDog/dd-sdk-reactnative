@@ -21,6 +21,19 @@ module.exports = {
                             ]
                         },
                         {
+                            name: 'GestureButton2',
+                            handlers: [
+                                {
+                                    event: 'singleHandler',
+                                    action: 'TAP'
+                                },
+                                {
+                                    event: 'multiHandler',
+                                    action: 'TAP'
+                                }
+                            ]
+                        },
+                        {
                             name: 'Tab',
                             handlers: [{ event: 'onChange', action: 'TAP' }]
                         }
