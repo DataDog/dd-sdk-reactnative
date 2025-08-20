@@ -29,7 +29,7 @@ class DdSdk(
         lifecycleEventListener?.let { reactContext.removeLifecycleEventListener(it) }
         lifecycleEventListener = object : LifecycleEventListener {
             override fun onHostResume() {
-                val currentActivity: Activity? = currentActivity
+                val currentActivity: Activity? = reactContext.currentActivity
                 if (currentActivity != null) {
                     val intent = currentActivity.intent
                     val extras = intent.extras
