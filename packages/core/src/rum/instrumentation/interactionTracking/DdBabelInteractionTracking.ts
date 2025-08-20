@@ -78,6 +78,11 @@ export class DdBabelInteractionTracking {
 
         console.log('Content: ', content);
 
+        if (content) {
+            // return `${componentName}(${content})`;
+            return content;
+        }
+
         if (actionName) {
             return actionName;
         }

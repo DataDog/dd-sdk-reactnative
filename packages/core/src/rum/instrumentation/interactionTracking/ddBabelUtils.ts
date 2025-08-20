@@ -9,7 +9,16 @@ const CANDIDATE_LABEL_PROPS = [
     'accessibilityLabel'
 ];
 
-export function __ddExtractText(node: any): string {
+export function __ddExtractText(node: any, prefer?: any[]): string {
+    if (Array.isArray(prefer)) {
+        for (const v of prefer) {
+            const s = __ddExtractText(v);
+            if (s) {
+                return s;
+            }
+        }
+    }
+
     if (node == null || typeof node === 'boolean') {
         return '';
     }
@@ -19,7 +28,7 @@ export function __ddExtractText(node: any): string {
 
     // Arrays/fragments
     if (Array.isArray(node)) {
-        return node.map(__ddExtractText).join('');
+        return node.map(x => __ddExtractText(x)).join('');
     }
 
     // React element (works for compound pieces like <Tab.Item/>)
@@ -54,7 +63,7 @@ export function __ddExtractText(node: any): string {
     // Iterables
     if (typeof node === 'object' && Symbol.iterator in node) {
         return Array.from(node as Iterable<any>)
-            .map(__ddExtractText)
+            .map(x => __ddExtractText(x))
             .join('');
     }
 

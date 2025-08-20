@@ -76,8 +76,43 @@ export function handleJSXElementActionPaths(
         actionPathNames
     );
 
-    const clone = t.cloneNode(path.node, true);
-    clone.extra = {
+    // const clone = t.cloneNode(path.node, true);
+    // clone.extra = {
+    //     __wrappedForRum: true
+    // };
+    //
+
+    const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
+
+    const candidates: Babel.types.Expression[] = [];
+    for (const name of LABEL_PROPS) {
+        const attr = (path.node.openingElement.attributes as (
+            | Babel.types.JSXAttribute
+            | Babel.types.JSXSpreadAttribute
+        )[]).find(
+            a => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name })
+        ) as Babel.types.JSXAttribute | undefined;
+
+        if (!attr) {
+            continue;
+        }
+        if (!attr.value) {
+            continue; // if boolean shorthand - skip
+        }
+        if (t.isStringLiteral(attr.value)) {
+            candidates.push(attr.value);
+        } else if (t.isJSXExpressionContainer(attr.value)) {
+            candidates.push(attr.value.expression as Babel.types.Expression);
+        }
+    }
+
+    const fragment = t.jsxFragment(
+        t.jSXOpeningFragment(),
+        t.jSXClosingFragment(),
+        [...path.node.children.map(x => t.cloneNode(x, true))]
+    );
+
+    fragment.extra = {
         __wrappedForRum: true
     };
 
@@ -85,7 +120,10 @@ export function handleJSXElementActionPaths(
         [],
         t.blockStatement([
             t.returnStatement(
-                t.callExpression(t.identifier('__ddExtractText'), [clone])
+                t.callExpression(t.identifier('__ddExtractText'), [
+                    fragment,
+                    t.arrayExpression(candidates.map(e => t.cloneNode(e, true)))
+                ])
             )
         ])
     );
