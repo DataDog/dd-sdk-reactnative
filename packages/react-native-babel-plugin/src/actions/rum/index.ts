@@ -63,7 +63,10 @@ export function handleJSXElementActionPaths(
         ddValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
-    console.log('path.node.extra: ', path.node.extra);
+    console.log(
+        '*** ComponentData ***: ',
+        state.trackedComponents?.[componentName]
+    );
 
     const componentNameList = state.trackedComponents
         ? Object.keys(state.trackedComponents)
@@ -82,6 +85,7 @@ export function handleJSXElementActionPaths(
     // };
     //
 
+    // TODO: only do this part if `PLuginOptions.uesContent`
     const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
 
     const candidates: Babel.types.Expression[] = [];
@@ -136,7 +140,7 @@ export function handleJSXElementActionPaths(
             ddValues
         };
 
-        console.log('attrPath.node.extra: ', attrPath.node.extra);
+        console.log('ddValues: ', ddValues);
 
         handleRumActions(t, attrPath, state, componentNameList);
     }
@@ -189,7 +193,8 @@ export function getJSXElementActionPaths(
 
     const ddValues: Record<
         string,
-        string | Babel.types.ArrowFunctionExpression
+        // string | Babel.types.ArrowFunctionExpression
+        Babel.types.ArrayExpression | Babel.types.ArrowFunctionExpression
     > = {};
     const actionMapList =
         state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
@@ -215,7 +220,14 @@ export function getJSXElementActionPaths(
                 const data = subpath.node.value;
 
                 if (t.isStringLiteral(data)) {
-                    ddValues[attrName] = data.value;
+                    if (!ddValues[attrName]) {
+                        ddValues[attrName] = t.arrayExpression([]);
+                    }
+
+                    const valuesArray = ddValues[attrName];
+                    if (t.isArrayExpression(valuesArray)) {
+                        valuesArray.elements.push(data);
+                    }
                 }
 
                 return;

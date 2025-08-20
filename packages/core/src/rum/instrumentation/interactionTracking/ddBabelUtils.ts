@@ -1,13 +1,7 @@
 // dd-content-helpers.ts
 import * as React from 'react';
 
-const CANDIDATE_LABEL_PROPS = [
-    'children',
-    'label',
-    'title',
-    'text',
-    'accessibilityLabel'
-];
+const CANDIDATE_LABEL_PROPS = ['children', 'label', 'title', 'text'];
 
 export function __ddExtractText(node: any, prefer?: any[]): string {
     if (Array.isArray(prefer)) {
@@ -51,7 +45,8 @@ export function __ddExtractText(node: any, prefer?: any[]): string {
         return __ddExtractText(from);
     }
 
-    // Render-prop child (rare for buttons). Safe attempt only if no args are required.
+    // TODO: Double check this
+    // Render-prop child. Attempt only if no args are required.
     if (typeof node === 'function' && node.length === 0) {
         try {
             return __ddExtractText(node());

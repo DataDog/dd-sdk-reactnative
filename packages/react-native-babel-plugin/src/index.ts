@@ -41,6 +41,7 @@ export default declare(
                         for (const entry of options.components?.tracked ?? []) {
                             const importSource = entry.importSource ?? 'local';
                             pluginState.trackedComponents[entry.name] = {
+                                ...(entry.type ? { type: entry.type } : {}),
                                 handlers: entry.handlers,
                                 importSource
                             };

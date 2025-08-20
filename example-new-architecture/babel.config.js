@@ -5,8 +5,9 @@ module.exports = {
       '@datadog/mobile-react-native-babel-plugin',
       {
         actionNameAttribute: 'custom-prop-value',
-        prefixComponentName: true,
         components: {
+          prefixName: true,
+          uesContent: true,
           tracked: [
             {
               name: 'GestureButton',
@@ -23,6 +24,7 @@ module.exports = {
             },
             {
               name: 'Button',
+              uesContent: false,
               handlers: [{event: 'onPress', action: 'TAP'}],
             },
             {
@@ -31,6 +33,7 @@ module.exports = {
             },
             {
               name: 'Tab',
+              // contentProp: 'subtitle',
               handlers: [{event: 'onChange', action: 'TAP'}],
             },
             {

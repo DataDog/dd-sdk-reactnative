@@ -19,6 +19,7 @@ export type PluginAPI = typeof Babel & Babel.ConfigAPI;
 
 export type TrackedComponent = {
     name: string;
+    type?: 'regular' | 'compound';
     importSource: 'local' | string;
     handlers: {
         event: string;
@@ -45,10 +46,7 @@ export type PluginPassState = Babel.PluginPass & {
     fileInfo?: { path: string | null; name: string | null };
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
-    trackedComponents?: Record<
-        string,
-        Pick<TrackedComponent, 'importSource' | 'handlers'>
-    >;
+    trackedComponents?: Record<string, Omit<TrackedComponent, 'name'>>;
 };
 
 export type PluginResult = Babel.PluginObj<Babel.PluginPass>;

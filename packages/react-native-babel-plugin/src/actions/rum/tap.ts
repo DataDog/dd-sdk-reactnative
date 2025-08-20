@@ -8,7 +8,7 @@ import type * as Babel from '@babel/core';
 
 import { RumAction, RumActionConstants } from '../../constants';
 import type { PluginPassState, RumActionResult } from '../../types';
-import { getArgumentsFromParams, getNodeName } from '../../utils';
+import { getArgumentsFromParams, getNodeName, toExpression } from '../../utils';
 
 export function handleTapAction(
     path: Babel.NodePath<Babel.types.JSXAttribute>,
@@ -52,15 +52,23 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
-    // TODO: this will need to be changed, to account for the node that is passed
+    const handlerParams =
+        isArrowFunc && expression?.params
+            ? t.arrayExpression(
+                  getArgumentsFromParams(t, state, expression.params).callArgs
+              )
+            : t.arrayExpression([t.spreadElement(t.identifier('args'))]);
+
+    if (path.node?.extra?.ddValues) {
+        (path.node.extra.ddValues as any)['handlerParams'] = handlerParams;
+    }
+
     const argsObject = t.objectExpression([
         ...Object.entries(path.node?.extra?.ddValues || {}).map(
             ([key, value]) => {
                 return t.objectProperty(
                     t.stringLiteral(key),
-                    t.isArrowFunctionExpression(value)
-                        ? value
-                        : t.stringLiteral(value)
+                    toExpression(t, value)
                 );
             }
         ),

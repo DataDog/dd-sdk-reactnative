@@ -27,9 +27,10 @@ type BabelConfig = {
 
 type TargetObject = {
     getContent: (() => string | null) | undefined;
+    handlerParams: any[];
     compoenentName: string;
-    'dd-action-name': string;
-    accessibilityLabel: string;
+    'dd-action-name': string[];
+    accessibilityLabel: string[];
     [key: string]: any;
 };
 
@@ -66,6 +67,7 @@ export class DdBabelInteractionTracking {
     private getTargetName(targetObject: TargetObject) {
         const {
             getContent,
+            handlerParams,
             componentName,
             'dd-action-name': actionName,
             accessibilityLabel,
@@ -74,26 +76,42 @@ export class DdBabelInteractionTracking {
 
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
 
+        // TODO: This now needs to return an array, but should also account for nested Text Elements
+        // TODO: Account for: return `${componentName}(${content})`; given plugin option
+        // TODO: only check for handlerParams if component type is 'compound'
+        // TODO: Rename handlerParams
+        // TODO: Test with internationalization libraries
+        // TODO: Add new plugin options: components.useContent, components.prefixName
+        // TODO: Add new plugin options: components.tracked[0].contentProp, components.tracked[0].useContent
+        // TODO: Fix unit test
+        // TODO: Test with different types of CompoundComponents
+
         const content = getContent?.();
 
         console.log('Content: ', content);
 
-        if (content) {
-            // return `${componentName}(${content})`;
-            return content;
-        }
+        console.log('HandlerParams: ', handlerParams);
+        const index = handlerParams
+            ? handlerParams.find(x => typeof x === 'number') || 0
+            : 0;
+
+        // if (content) {
+        //     // return `${componentName}(${content})`;
+        //     return content;
+        // }
 
         if (actionName) {
-            return actionName;
+            return actionName[index];
         }
 
         const keys = Object.keys(attrs);
         if (keys.length) {
-            return attrs[keys[0]];
+            // return attrs[keys[0]];
+            return attrs[keys[0]][index]; // TODO: this may be wrong
         }
 
         if (useAccessibilityLabel && accessibilityLabel) {
-            return accessibilityLabel;
+            return accessibilityLabel[index];
         }
 
         return componentName;

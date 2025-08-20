@@ -168,3 +168,43 @@ export function getArgumentsFromParams(
         wrapperParams
     };
 }
+
+export function toExpression(
+    t: typeof Babel.types,
+    v: unknown
+): Babel.types.Expression {
+    if (typeof v === 'string') {
+        return t.stringLiteral(v);
+    }
+
+    if (t.isExpression(v as any)) {
+        return v as Babel.types.Expression;
+    }
+
+    if (t.isSpreadElement?.(v as any)) {
+        // Spreads can’t be used as a property value; wrap them in an array
+        return t.arrayExpression([v as Babel.types.SpreadElement]);
+    }
+
+    if (Array.isArray(v)) {
+        const nodes = v as Babel.types.Node[];
+        const elements: Babel.types.Expression[] = [];
+
+        for (const n of nodes) {
+            if (t.isExpression(n as any)) {
+                elements.push(n as Babel.types.Expression);
+            } else if (t.isSpreadElement?.(n as any)) {
+                elements.push(
+                    t.arrayExpression([n as Babel.types.SpreadElement])
+                );
+            } else {
+                // Unexpected entries we may try to push
+                elements.push(t.identifier('undefined'));
+            }
+        }
+
+        return t.arrayExpression(elements);
+    }
+
+    return t.nullLiteral();
+}
