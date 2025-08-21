@@ -75,54 +75,59 @@ export function handleJSXElementActionPaths(
         actionPathNames
     );
 
-    // TODO: only do this part if `PLuginOptions.uesContent`
-    const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
+    if (state.trackedComponents?.[componentName]?.useContent) {
+        const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
 
-    const candidates: Babel.types.Expression[] = [];
-    for (const name of LABEL_PROPS) {
-        const attr = (path.node.openingElement.attributes as (
-            | Babel.types.JSXAttribute
-            | Babel.types.JSXSpreadAttribute
-        )[]).find(
-            a => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name })
-        ) as Babel.types.JSXAttribute | undefined;
+        const candidates: Babel.types.Expression[] = [];
+        for (const name of LABEL_PROPS) {
+            const attr = (path.node.openingElement.attributes as (
+                | Babel.types.JSXAttribute
+                | Babel.types.JSXSpreadAttribute
+            )[]).find(
+                a => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name })
+            ) as Babel.types.JSXAttribute | undefined;
 
-        if (!attr) {
-            continue;
+            if (!attr) {
+                continue;
+            }
+            if (!attr.value) {
+                continue; // if boolean shorthand - skip
+            }
+            if (t.isStringLiteral(attr.value)) {
+                candidates.push(attr.value);
+            } else if (t.isJSXExpressionContainer(attr.value)) {
+                candidates.push(
+                    attr.value.expression as Babel.types.Expression
+                );
+            }
         }
-        if (!attr.value) {
-            continue; // if boolean shorthand - skip
-        }
-        if (t.isStringLiteral(attr.value)) {
-            candidates.push(attr.value);
-        } else if (t.isJSXExpressionContainer(attr.value)) {
-            candidates.push(attr.value.expression as Babel.types.Expression);
-        }
+
+        const fragment = t.jsxFragment(
+            t.jSXOpeningFragment(),
+            t.jSXClosingFragment(),
+            [...path.node.children.map(x => t.cloneNode(x, true))]
+        );
+
+        fragment.extra = {
+            __wrappedForRum: true
+        };
+
+        const getContentNode = t.arrowFunctionExpression(
+            [],
+            t.blockStatement([
+                t.returnStatement(
+                    t.callExpression(t.identifier('__ddExtractText'), [
+                        fragment,
+                        t.arrayExpression(
+                            candidates.map(e => t.cloneNode(e, true))
+                        )
+                    ])
+                )
+            ])
+        );
+
+        ddValues.getContent = getContentNode;
     }
-
-    const fragment = t.jsxFragment(
-        t.jSXOpeningFragment(),
-        t.jSXClosingFragment(),
-        [...path.node.children.map(x => t.cloneNode(x, true))]
-    );
-
-    fragment.extra = {
-        __wrappedForRum: true
-    };
-
-    const getContentNode = t.arrowFunctionExpression(
-        [],
-        t.blockStatement([
-            t.returnStatement(
-                t.callExpression(t.identifier('__ddExtractText'), [
-                    fragment,
-                    t.arrayExpression(candidates.map(e => t.cloneNode(e, true)))
-                ])
-            )
-        ])
-    );
-
-    ddValues.getContent = getContentNode;
 
     for (const attrPath of actionPathList) {
         attrPath.node.extra = {

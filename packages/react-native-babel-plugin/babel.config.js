@@ -35,6 +35,8 @@ module.exports = {
                         },
                         {
                             name: 'Tab',
+                            useContent: false,
+                            useNamePrefix: false,
                             type: 'compound',
                             handlers: [{ event: 'onChange', action: 'TAP' }]
                         }

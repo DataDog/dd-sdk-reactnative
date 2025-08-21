@@ -80,7 +80,6 @@ export class DdBabelInteractionTracking {
         let selectedContent: string[] | null = null;
 
         // TODO: add contentProp
-        // TODO: only set getContent if options.useContent is true
         // TODO: only check for handlerParams if component type is 'compound'
         // TODO: Rename handlerParams
         // TODO: Test with internationalization libraries
@@ -90,8 +89,6 @@ export class DdBabelInteractionTracking {
         // TODO: Test ActionNameAttribute
 
         const content = getContent?.();
-
-        console.log('Options:', options);
 
         const index = handlerParams
             ? handlerParams.find(x => typeof x === 'number') || 0

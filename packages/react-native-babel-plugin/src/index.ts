@@ -47,11 +47,13 @@ export default declare(
                         for (const entry of options.components.tracked) {
                             pluginState.trackedComponents[entry.name] = {
                                 useContent:
-                                    entry.useContent ||
-                                    options.components.useContent,
+                                    entry.useContent !== undefined
+                                        ? entry.useContent
+                                        : options.components.useContent,
                                 useNamePrefix:
-                                    entry.useNamePrefix ||
-                                    options.components.useNamePrefix,
+                                    entry.useNamePrefix !== undefined
+                                        ? entry.useNamePrefix
+                                        : options.components.useNamePrefix,
                                 handlers: entry.handlers
                             };
                         }
