@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-code-push",
-    "version": "2.11.0",
+    "version": "2.11.1",
     "description": "A client-side React Native module to interact with Appcenter Codepush and Datadog",
     "keywords": [
         "datadog",
