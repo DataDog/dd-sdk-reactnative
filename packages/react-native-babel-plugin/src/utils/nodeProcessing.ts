@@ -177,6 +177,14 @@ export function toExpression(
         return t.stringLiteral(v);
     }
 
+    if (typeof v === 'boolean') {
+        return t.booleanLiteral(v);
+    }
+
+    if (typeof v === 'number') {
+        return t.numericLiteral(v);
+    }
+
     if (t.isExpression(v as any)) {
         return v as Babel.types.Expression;
     }

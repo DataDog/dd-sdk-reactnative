@@ -12,6 +12,7 @@ import {
     handleJSXElementActionPaths,
     insertRumActionImport
 } from './actions/rum';
+import { defaultPluginOptions } from './constants';
 import type {
     PluginAPI,
     PluginOptions,
@@ -21,12 +22,17 @@ import type {
 import { getFileInfo, getNodeName } from './utils/index';
 
 export default declare(
-    (
-        api: PluginAPI,
-        options: PluginOptions,
-        _dirname: string
-    ): PluginResult => {
+    (api: PluginAPI, opt: PluginOptions, _dirname: string): PluginResult => {
         api.assertVersion(7);
+
+        // TODO: find a better way to merge objects
+        const options = {
+            ...opt,
+            components: {
+                ...defaultPluginOptions.components,
+                ...opt.components
+            }
+        };
 
         return {
             visitor: {
@@ -38,12 +44,15 @@ export default declare(
                             pluginState.trackedComponents = {};
                         }
 
-                        for (const entry of options.components?.tracked ?? []) {
-                            const importSource = entry.importSource ?? 'local';
+                        for (const entry of options.components.tracked) {
                             pluginState.trackedComponents[entry.name] = {
-                                ...(entry.type ? { type: entry.type } : {}),
-                                handlers: entry.handlers,
-                                importSource
+                                useContent:
+                                    entry.useContent ||
+                                    options.components.useContent,
+                                useNamePrefix:
+                                    entry.useNamePrefix ||
+                                    options.components.useNamePrefix,
+                                handlers: entry.handlers
                             };
                         }
 
@@ -52,7 +61,7 @@ export default declare(
                         pluginState.fileInfo = { path: p, name };
 
                         insertSetupFlag(path, api.types);
-                        loadImportMap(path, api.types, pluginState);
+                        loadImportMap(path, api.types, pluginState, options);
                     },
                     exit(path, state) {
                         const pluginState: PluginPassState = state;

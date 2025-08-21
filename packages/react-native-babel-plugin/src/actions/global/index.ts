@@ -7,7 +7,7 @@
 import type * as Babel from '@babel/core';
 
 import { RumAction, PluginConstants, tapElementsMap } from '../../constants';
-import type { BabelTypes, PluginPassState } from '../../types';
+import type { BabelTypes, PluginPassState, PluginOptions } from '../../types';
 import {
     PluginState,
     getAssignmentNode,
@@ -41,7 +41,8 @@ export function insertSetupFlag(
 export function loadImportMap(
     path: Babel.NodePath<Babel.types.Program>,
     t: BabelTypes,
-    pluginState: PluginPassState
+    pluginState: PluginPassState,
+    options: PluginOptions
 ) {
     path.traverse({
         ImportDeclaration(p) {
@@ -70,11 +71,12 @@ export function loadImportMap(
 
                 if (elementEvents && localName) {
                     pluginState.trackedComponents[localName] = {
+                        useContent: options.components.useContent,
+                        useNamePrefix: options.components.useNamePrefix,
                         handlers: elementEvents.map(event => ({
                             event,
                             action: RumAction.TAP // TODO: change once we support more actions
-                        })),
-                        importSource: 'react-native'
+                        }))
                     };
                 }
             }

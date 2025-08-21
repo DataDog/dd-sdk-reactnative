@@ -26,7 +26,8 @@ import type {
 import {
     getImportDeclaration,
     getNodeName,
-    insertAtProgramTop
+    insertAtProgramTop,
+    toExpression
 } from '../../utils';
 
 import { handleTapAction } from './tap';
@@ -63,11 +64,6 @@ export function handleJSXElementActionPaths(
         ddValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
-    console.log(
-        '*** ComponentData ***: ',
-        state.trackedComponents?.[componentName]
-    );
-
     const componentNameList = state.trackedComponents
         ? Object.keys(state.trackedComponents)
         : [];
@@ -78,12 +74,6 @@ export function handleJSXElementActionPaths(
         actionPathList,
         actionPathNames
     );
-
-    // const clone = t.cloneNode(path.node, true);
-    // clone.extra = {
-    //     __wrappedForRum: true
-    // };
-    //
 
     // TODO: only do this part if `PLuginOptions.uesContent`
     const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
@@ -139,9 +129,6 @@ export function handleJSXElementActionPaths(
             ...attrPath.node.extra,
             ddValues
         };
-
-        console.log('ddValues: ', ddValues);
-
         handleRumActions(t, attrPath, state, componentNameList);
     }
 }
@@ -193,8 +180,9 @@ export function getJSXElementActionPaths(
 
     const ddValues: Record<
         string,
-        // string | Babel.types.ArrowFunctionExpression
-        Babel.types.ArrayExpression | Babel.types.ArrowFunctionExpression
+        | Babel.types.ArrayExpression
+        | Babel.types.ArrowFunctionExpression
+        | Babel.types.ObjectExpression
     > = {};
     const actionMapList =
         state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
@@ -202,6 +190,30 @@ export function getJSXElementActionPaths(
 
     const actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[] = [];
     const actionPathNames: string[] = [];
+
+    if (state.trackedComponents?.[componentName]) {
+        console.log(
+            'state.trackedComponents?.[componentName].useContent: ',
+            state.trackedComponents?.[componentName].useContent
+        );
+        ddValues['options'] = t.objectExpression([
+            t.objectProperty(
+                t.stringLiteral('useContent'),
+                toExpression(
+                    t,
+                    state.trackedComponents?.[componentName].useContent
+                )
+            ),
+
+            t.objectProperty(
+                t.stringLiteral('useNamePrefix'),
+                toExpression(
+                    t,
+                    state.trackedComponents?.[componentName].useNamePrefix
+                )
+            )
+        ]);
+    }
 
     path.traverse({
         JSXAttribute(subpath) {

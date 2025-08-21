@@ -26,7 +26,8 @@ type BabelConfig = {
 };
 
 type TargetObject = {
-    getContent: (() => string | null) | undefined;
+    getContent: (() => string[]) | undefined;
+    options: { useContent: boolean; useNamePrefix: boolean };
     handlerParams: any[];
     compoenentName: string;
     'dd-action-name': string[];
@@ -67,6 +68,7 @@ export class DdBabelInteractionTracking {
     private getTargetName(targetObject: TargetObject) {
         const {
             getContent,
+            options,
             handlerParams,
             componentName,
             'dd-action-name': actionName,
@@ -75,46 +77,56 @@ export class DdBabelInteractionTracking {
         } = targetObject;
 
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
+        let selectedContent: string[] | null = null;
 
-        // TODO: This now needs to return an array, but should also account for nested Text Elements
-        // TODO: Account for: return `${componentName}(${content})`; given plugin option
+        // TODO: add contentProp
+        // TODO: only set getContent if options.useContent is true
         // TODO: only check for handlerParams if component type is 'compound'
         // TODO: Rename handlerParams
         // TODO: Test with internationalization libraries
-        // TODO: Add new plugin options: components.useContent, components.prefixName
-        // TODO: Add new plugin options: components.tracked[0].contentProp, components.tracked[0].useContent
         // TODO: Fix unit test
         // TODO: Test with different types of CompoundComponents
+        // TODO: Only set HandlerParams if it is a compound component ?? We could only send arguments that are numbers and this way prevent the use of type === 'compound'
+        // TODO: Test ActionNameAttribute
 
         const content = getContent?.();
 
-        console.log('Content: ', content);
+        console.log('Options:', options);
 
-        console.log('HandlerParams: ', handlerParams);
         const index = handlerParams
             ? handlerParams.find(x => typeof x === 'number') || 0
             : 0;
 
-        // if (content) {
-        //     // return `${componentName}(${content})`;
-        //     return content;
-        // }
+        if (content && content.length) {
+            selectedContent = content;
+        }
 
         if (actionName) {
-            return actionName[index];
+            selectedContent = actionName;
         }
 
         const keys = Object.keys(attrs);
         if (keys.length) {
-            // return attrs[keys[0]];
-            return attrs[keys[0]][index]; // TODO: this may be wrong
+            const actionNameAttr = attrs[keys[0]];
+            selectedContent = actionNameAttr;
         }
 
         if (useAccessibilityLabel && accessibilityLabel) {
-            return accessibilityLabel[index];
+            selectedContent = accessibilityLabel;
         }
 
-        return componentName;
+        if (!selectedContent) {
+            return componentName;
+        }
+
+        const output =
+            index + 1 > selectedContent.length
+                ? selectedContent[0]
+                : selectedContent[index];
+
+        return options.useNamePrefix
+            ? `${componentName} ("${output}")`
+            : output;
     }
 
     wrapRumAction(

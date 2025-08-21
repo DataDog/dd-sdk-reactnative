@@ -19,8 +19,8 @@ export type PluginAPI = typeof Babel & Babel.ConfigAPI;
 
 export type TrackedComponent = {
     name: string;
-    type?: 'regular' | 'compound';
-    importSource: 'local' | string;
+    useContent?: boolean;
+    useNamePrefix?: boolean;
     handlers: {
         event: string;
         action: keyof typeof RumAction;
@@ -28,17 +28,12 @@ export type TrackedComponent = {
     }[];
 };
 
-export type IgnoredComponent = {
-    name: string;
-    importSource: string;
-};
-
 export type PluginOptions = {
-    useComponentContent?: boolean;
     actionNameAttribute?: string;
-    components?: {
+    components: {
+        useContent: boolean;
+        useNamePrefix: boolean;
         tracked: TrackedComponent[];
-        ignored: IgnoredComponent[];
     };
 };
 
