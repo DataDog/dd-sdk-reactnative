@@ -79,14 +79,15 @@ export class DdBabelInteractionTracking {
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
         let selectedContent: string[] | null = null;
 
+        // Test with rendered ternary operations - OK
+        // Test with internationalization libraries - OK
+        // Only set HandlerParams if it is a compound component ?? We could only send arguments that are numbers and this way prevent the use of type === 'compound'
+
+        // TODO: test with black plugin configuration to ensure defaults work
         // TODO: add contentProp
-        // TODO: only check for handlerParams if component type is 'compound'
         // TODO: Rename handlerParams
-        // TODO: Test with internationalization libraries
         // TODO: Fix unit test
         // TODO: Test with different types of CompoundComponents
-        // TODO: Only set HandlerParams if it is a compound component ?? We could only send arguments that are numbers and this way prevent the use of type === 'compound'
-        // TODO: Test ActionNameAttribute
 
         const content = getContent?.();
 
@@ -116,8 +117,9 @@ export class DdBabelInteractionTracking {
             return componentName;
         }
 
+        // Failsafe in case the our 'index' value turns out to not be a real index
         const output =
-            index + 1 > selectedContent.length
+            index + 1 > selectedContent.length || index < 0
                 ? selectedContent[0]
                 : selectedContent[index];
 

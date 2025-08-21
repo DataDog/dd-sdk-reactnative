@@ -12,6 +12,7 @@ import {
 import React, {useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  Pressable,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -39,6 +40,9 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 import {runOnJS} from 'react-native-reanimated';
 import {Tab, TabView, Button as ButtonRNUI} from '@rneui/themed';
+import i18n from 'i18next';
+import {initReactI18next, useTranslation} from 'react-i18next';
+import {getLocales} from 'react-native-localize';
 
 (async () => {
   const config = new DdSdkReactNativeConfiguration(
@@ -78,6 +82,72 @@ type Props = {
   multiHandler: () => void;
 };
 
+// Translations
+const resources = {
+  en: {translation: {hello: 'Hello', bye: 'Good Bye'}},
+  pt: {translation: {hello: 'Olá', bye: 'Adeus'}},
+};
+
+// Detect user language
+const language = getLocales()[0].languageCode;
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'pt',
+  fallbackLng: 'en',
+  interpolation: {escapeValue: false},
+});
+
+// 1) START: compound component (parent owned state)
+
+function TabsControlled({
+  children,
+  value,
+  onChange,
+}: {
+  children: React.ReactNode;
+  value: number;
+  onChange: (i: number) => void;
+}) {
+  return (
+    <View style={{flexDirection: 'row', gap: 8}}>
+      {React.Children.map(children, (child, i) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child, {
+              isActive: i === value,
+              onSelect: () => onChange(i),
+            } as any)
+          : child,
+      )}
+    </View>
+  );
+}
+
+function TabChild({
+  isActive,
+  onSelect,
+  children,
+}: {
+  isActive?: boolean;
+  onSelect?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Pressable
+      onPress={onSelect}
+      style={{
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        backgroundColor: isActive ? '#333' : '#eee',
+      }}>
+      <Text style={{color: isActive ? '#fff' : '#333'}}>{children}</Text>
+    </Pressable>
+  );
+}
+
+// 1) END: compound component (parent owned state)
+
 function GestureButton2({singleHandler, multiHandler}: Props) {
   return (
     <TouchableOpacity style={styles.button} onPress={() => {}}>
@@ -99,10 +169,7 @@ function GestureButton({title, singleHandler, multiHandler}: Props) {
   return (
     <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
       <View style={[styles.box, {backgroundColor: '#3949ab'}]}>
-        <Text style={styles.touchableHighlightText}>
-          {title}
-          <Text style={styles.touchableHighlightText}>1</Text>
-        </Text>
+        <Text style={styles.touchableHighlightText}>{title}</Text>
       </View>
     </GestureDetector>
   );
@@ -118,6 +185,9 @@ function App(): React.JSX.Element {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [index, setIndex] = useState(0);
+  const [index2, setIndex2] = React.useState(0);
+  const [btState, setBtState] = useState(false);
+  const {t} = useTranslation();
 
   const singleTap = Gesture.Tap()
     .maxDuration(250)
@@ -144,6 +214,9 @@ function App(): React.JSX.Element {
     blockNativeMainThread(6000);
   };
 
+  // const namebt = btState ? 'Hello' : 'Good Bye';
+  const namebt = btState ? t('hello') : t('bye');
+
   return (
     <GestureHandlerRootView style={styles.flex1}>
       <PaperProvider>
@@ -152,110 +225,137 @@ function App(): React.JSX.Element {
           backgroundColor={backgroundStyle.backgroundColor}
         />
         <SafeAreaView style={[styles.safeArea, backgroundStyle]}>
-          <View style={styles.sectionWrapper}>
-            <>
-              <View style={styles.rowBetween}>
-                <GestureDetector
-                  gesture={Gesture.Exclusive(doubleTap, singleTap)}>
-                  <View style={styles.box}>
-                    <Text style={styles.touchableHighlightText}>Gesture 1</Text>
-                  </View>
-                </GestureDetector>
-                <GestureButton
-                  title="Gesture 2"
-                  singleHandler={() => console.log('single TAP')}
-                  multiHandler={() => console.log('multi TAP')}
+          <ScrollView>
+            <View style={styles.sectionWrapper}>
+              <>
+                <View style={styles.rowBetween}>
+                  <GestureDetector
+                    gesture={Gesture.Exclusive(doubleTap, singleTap)}>
+                    <View style={styles.box}>
+                      <Text style={styles.touchableHighlightText}>
+                        Gesture 1
+                      </Text>
+                    </View>
+                  </GestureDetector>
+                  <GestureButton
+                    title="Gesture 2"
+                    singleHandler={() => console.log('single TAP')}
+                    multiHandler={() => console.log('multi TAP')}
+                  />
+
+                  <TouchableOpacity
+                    style={[styles.box, {backgroundColor: 'teal'}]}
+                    onPress={() => {}}>
+                    <Text>
+                      {'Click Me'}
+                      <Text>{'2'}</Text>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+              <Divider />
+              <TextInput
+                dd-action-name="Name Input"
+                label="Name"
+                value={name}
+                onChangeText={setName}
+              />
+              <TextInput
+                label="Address"
+                value={address}
+                onChangeText={setAddress}
+              />
+              <Divider />
+              <Button
+                accessibilityLabel="JS_long_task"
+                mode="contained"
+                onPress={jsLongTask}>
+                JS Long Task
+              </Button>
+              <Divider />
+              <ButtonRNUI
+                custom-title="custom title - native long task"
+                // dd-action-name="Native Long Task"
+                onPress={nativeLongTask}>
+                <Text>Native Long Task</Text>
+              </ButtonRNUI>
+              <Divider />
+              <TouchableOpacity
+                style={styles.touchableOpacity}
+                onPress={simulateAppFreeze}>
+                <Text>App Hang</Text>
+              </TouchableOpacity>
+              <TouchableHighlight
+                style={styles.touchableHighlight}
+                onPress={() => console.log('Pressed')}>
+                <Text style={styles.touchableHighlightText}>
+                  Touchable Highlight
+                </Text>
+              </TouchableHighlight>
+
+              <TouchableOpacity
+                style={[styles.box, {backgroundColor: 'teal'}]}
+                onPress={() => setBtState(prev => !prev)}>
+                <Text>{namebt}</Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <TabsControlled value={index2} onChange={setIndex2}>
+                <TabChild>
+                  <Text>Home</Text>
+                </TabChild>
+                <TabChild>
+                  <Text>Profile</Text>
+                </TabChild>
+                <TabChild>
+                  <Text>Settings</Text>
+                </TabChild>
+              </TabsControlled>
+              );
+            </View>
+            <View>
+              <Tab
+                value={index}
+                // onChange={e => {
+                //   console.log('onChange: ', e);
+                //   setIndex(e);
+                // }}
+                onChange={setIndex}
+                indicatorStyle={styles.tabIndicator}
+                variant="primary">
+                <Tab.Item
+                  title="Recent"
+                  titleStyle={styles.tabTitle}
+                  accessibilityLabel="Recent"
                 />
+                <Tab.Item
+                  title="favorite"
+                  titleStyle={styles.tabTitle}
+                  accessibilityLabel="Favorite"
+                />
+                <Tab.Item
+                  title="cart"
+                  titleStyle={styles.tabTitle}
+                  accessibilityLabel="Cart"
+                />
+              </Tab>
 
-                <TouchableOpacity
-                  style={[styles.box, {backgroundColor: 'teal'}]}
-                  onPress={() => {}}>
-                  <Text>
-                    {'Click Me'}
-                    <Text>{'2'}</Text>
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
-            <Divider />
-            <TextInput
-              dd-action-name="Name Input"
-              label="Name"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              label="Address"
-              value={address}
-              onChangeText={setAddress}
-            />
-            <Divider />
-            <Button
-              accessibilityLabel="JS_long_task"
-              mode="contained"
-              onPress={jsLongTask}>
-              JS Long Task
-            </Button>
-            <Divider />
-            <ButtonRNUI
-              dd-action-name="Native Long Task"
-              onPress={nativeLongTask}>
-              <Text>Native Long Task</Text>
-            </ButtonRNUI>
-            <Divider />
-            <TouchableOpacity
-              style={styles.touchableOpacity}
-              onPress={simulateAppFreeze}>
-              <Text>App Hang</Text>
-            </TouchableOpacity>
-            <TouchableHighlight
-              style={styles.touchableHighlight}
-              onPress={() => console.log('Pressed')}>
-              <Text style={styles.touchableHighlightText}>
-                Touchable Highlight
-              </Text>
-            </TouchableHighlight>
-          </View>
-
-          <View>
-            <Tab
-              value={index}
-              onChange={e => {
-                console.log('onChange: ', e);
-                setIndex(e);
-              }}
-              indicatorStyle={styles.tabIndicator}
-              variant="primary">
-              <Tab.Item
-                title="Recent"
-                titleStyle={styles.tabTitle}
-                accessibilityLabel="Recent"
-              />
-              <Tab.Item
-                title="favorite"
-                titleStyle={styles.tabTitle}
-                accessibilityLabel="Favorite"
-              />
-              <Tab.Item
-                title="cart"
-                titleStyle={styles.tabTitle}
-                accessibilityLabel="Cart"
-              />
-            </Tab>
-
-            <TabView value={index} onChange={setIndex} animationType="spring">
-              <TabView.Item style={[styles.tabView, {backgroundColor: 'red'}]}>
-                <Text>Recent</Text>
-              </TabView.Item>
-              <TabView.Item style={[styles.tabView, {backgroundColor: 'blue'}]}>
-                <Text>Favorite</Text>
-              </TabView.Item>
-              <TabView.Item
-                style={[styles.tabView, {backgroundColor: 'green'}]}>
-                <Text>Cart</Text>
-              </TabView.Item>
-            </TabView>
-          </View>
+              <TabView value={index} onChange={setIndex} animationType="spring">
+                <TabView.Item
+                  style={[styles.tabView, {backgroundColor: 'red'}]}>
+                  <Text>Recent</Text>
+                </TabView.Item>
+                <TabView.Item
+                  style={[styles.tabView, {backgroundColor: 'blue'}]}>
+                  <Text>Favorite</Text>
+                </TabView.Item>
+                <TabView.Item
+                  style={[styles.tabView, {backgroundColor: 'green'}]}>
+                  <Text>Cart</Text>
+                </TabView.Item>
+              </TabView>
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </PaperProvider>
     </GestureHandlerRootView>

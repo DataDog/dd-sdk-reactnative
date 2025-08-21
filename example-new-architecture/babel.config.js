@@ -4,13 +4,15 @@ module.exports = {
     [
       '@datadog/mobile-react-native-babel-plugin',
       {
-        actionNameAttribute: 'custom-prop-value',
+        actionNameAttribute: 'custom-title',
         components: {
-          prefixName: true,
-          uesContent: true,
+          useContent: true,
+          useNamePrefix: true,
           tracked: [
             {
               name: 'GestureButton',
+              useContent: false,
+              useNamePrefix: false,
               handlers: [
                 {
                   event: 'singleHandler',
@@ -24,7 +26,6 @@ module.exports = {
             },
             {
               name: 'Button',
-              uesContent: false,
               handlers: [{event: 'onPress', action: 'TAP'}],
             },
             {
@@ -38,7 +39,17 @@ module.exports = {
             },
             {
               name: 'ButtonRNUI',
+              useContent: false,
               handlers: [{event: 'onPress', action: 'TAP'}],
+            },
+            {
+              name: 'TabsControlled',
+              handlers: [{event: 'onChange', action: 'TAP'}],
+            },
+
+            {
+              name: 'TabChild',
+              handlers: [],
             },
           ],
         },
