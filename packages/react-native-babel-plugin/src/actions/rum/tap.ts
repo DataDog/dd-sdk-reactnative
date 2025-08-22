@@ -39,9 +39,7 @@ export function handleTapAction(
 
     const isArrowFunc = t.isArrowFunctionExpression(expression);
     const isNamedFunc =
-        t.isIdentifier(expression) ||
-        (t.isMemberExpression(expression) &&
-            t.isThisExpression(expression.object));
+        t.isIdentifier(expression) || t.isMemberExpression(expression); // && t.isThisExpression(expression.object));
 
     if (!isArrowFunc && !isNamedFunc) {
         return;
@@ -52,7 +50,7 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
-    const handlerParams =
+    const handlerArgs =
         isArrowFunc && expression?.params
             ? t.arrayExpression(
                   getArgumentsFromParams(t, state, expression.params).callArgs
@@ -60,7 +58,7 @@ export function handleTapAction(
             : t.arrayExpression([t.spreadElement(t.identifier('args'))]);
 
     if (path.node?.extra?.ddValues) {
-        (path.node.extra.ddValues as any)['handlerParams'] = handlerParams;
+        (path.node.extra.ddValues as any)['handlerArgs'] = handlerArgs;
     }
 
     const argsObject = t.objectExpression([

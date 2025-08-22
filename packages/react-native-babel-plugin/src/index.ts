@@ -54,6 +54,9 @@ export default declare(
                                     entry.useNamePrefix !== undefined
                                         ? entry.useNamePrefix
                                         : options.components.useNamePrefix,
+                                ...(entry.contentProp
+                                    ? { contentProp: entry.contentProp }
+                                    : {}),
                                 handlers: entry.handlers
                             };
                         }

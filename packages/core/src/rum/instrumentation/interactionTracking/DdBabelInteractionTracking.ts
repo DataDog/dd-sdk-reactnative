@@ -28,7 +28,7 @@ type BabelConfig = {
 type TargetObject = {
     getContent: (() => string[]) | undefined;
     options: { useContent: boolean; useNamePrefix: boolean };
-    handlerParams: any[];
+    handlerArgs: any[];
     compoenentName: string;
     'dd-action-name': string[];
     accessibilityLabel: string[];
@@ -69,7 +69,7 @@ export class DdBabelInteractionTracking {
         const {
             getContent,
             options,
-            handlerParams,
+            handlerArgs,
             componentName,
             'dd-action-name': actionName,
             accessibilityLabel,
@@ -79,20 +79,10 @@ export class DdBabelInteractionTracking {
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
         let selectedContent: string[] | null = null;
 
-        // Test with rendered ternary operations - OK
-        // Test with internationalization libraries - OK
-        // Only set HandlerParams if it is a compound component ?? We could only send arguments that are numbers and this way prevent the use of type === 'compound'
-
-        // TODO: test with black plugin configuration to ensure defaults work
-        // TODO: add contentProp
-        // TODO: Rename handlerParams
-        // TODO: Fix unit test
-        // TODO: Test with different types of CompoundComponents
-
         const content = getContent?.();
 
-        const index = handlerParams
-            ? handlerParams.find(x => typeof x === 'number') || 0
+        const index = handlerArgs
+            ? handlerArgs.find(x => typeof x === 'number') || 0
             : 0;
 
         if (content && content.length) {

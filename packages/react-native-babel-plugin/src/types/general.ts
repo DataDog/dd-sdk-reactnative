@@ -21,6 +21,7 @@ export type TrackedComponent = {
     name: string;
     useContent?: boolean;
     useNamePrefix?: boolean;
+    contentProp?: string;
     handlers: {
         event: string;
         action: keyof typeof RumAction;

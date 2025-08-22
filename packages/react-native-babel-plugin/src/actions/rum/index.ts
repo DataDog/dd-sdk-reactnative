@@ -75,8 +75,13 @@ export function handleJSXElementActionPaths(
         actionPathNames
     );
 
-    if (state.trackedComponents?.[componentName]?.useContent) {
+    const componentData = state.trackedComponents?.[componentName];
+    if (componentData?.useContent) {
         const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
+
+        if (componentData?.contentProp) {
+            LABEL_PROPS.push(componentData.contentProp);
+        }
 
         const candidates: Babel.types.Expression[] = [];
         for (const name of LABEL_PROPS) {
@@ -90,9 +95,11 @@ export function handleJSXElementActionPaths(
             if (!attr) {
                 continue;
             }
+
             if (!attr.value) {
                 continue; // if boolean shorthand - skip
             }
+
             if (t.isStringLiteral(attr.value)) {
                 candidates.push(attr.value);
             } else if (t.isJSXExpressionContainer(attr.value)) {
@@ -197,10 +204,6 @@ export function getJSXElementActionPaths(
     const actionPathNames: string[] = [];
 
     if (state.trackedComponents?.[componentName]) {
-        console.log(
-            'state.trackedComponents?.[componentName].useContent: ',
-            state.trackedComponents?.[componentName].useContent
-        );
         ddValues['options'] = t.objectExpression([
             t.objectProperty(
                 t.stringLiteral('useContent'),
