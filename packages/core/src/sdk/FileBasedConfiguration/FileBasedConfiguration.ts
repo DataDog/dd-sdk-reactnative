@@ -56,44 +56,7 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
 const resolveJSONConfiguration = (
     userSpecifiedConfiguration: unknown
 ): Record<string, any> => {
-    if (
-        userSpecifiedConfiguration === undefined ||
-        userSpecifiedConfiguration === null
-    ) {
-        try {
-            // This corresponds to a file located at the root of a RN project.
-            // /!\ We have to write the require this way as dynamic requires are not supported by Hermes.
-            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            const jsonContent = require('../../../../../../datadog-configuration.json');
-
-            if (
-                typeof jsonContent !== 'object' ||
-                !jsonContent['configuration']
-            ) {
-                console.error(`Failed to parse the Datadog configuration file located at the root of the project.
-Your configuration must validate the node_modules/@datadog/mobile-react-native/datadog-configuration.schema.json JSON schema.
-You can use VSCode to check your configuration by adding the following line to your JSON file:
-{
-    "$schema": "./node_modules/@datadog/mobile-react-native/datadog-configuration.schema.json",
-}`);
-
-                return {};
-            }
-
-            return jsonContent.configuration as Record<string, any>;
-        } catch (error) {
-            console.error(`Failed to read Datadog configuration file at the root of the project.
-If you don't have a datadog-configuration.json file at the same level as your node_modules directory,\
-please use the following syntax:\n
-new FileBasedConfiguration({configuration: require('./file/to/configuration-file.json')})
-`);
-            return {};
-        }
-    }
-    if (
-        typeof userSpecifiedConfiguration !== 'object' ||
-        !(userSpecifiedConfiguration as any)['configuration']
-    ) {
+    if (typeof userSpecifiedConfiguration !== 'object') {
         console.error(`Failed to parse the Datadog configuration file you provided.
 Your configuration must validate the node_modules/@datadog/mobile-react-native/datadog-configuration.schema.json JSON schema.
 You can use VSCode to check your configuration by adding the following line to your JSON file:
@@ -104,10 +67,7 @@ You can use VSCode to check your configuration by adding the following line to y
         return {};
     }
 
-    return (userSpecifiedConfiguration as any)['configuration'] as Record<
-        string,
-        any
-    >;
+    return (userSpecifiedConfiguration as any) as Record<string, any>;
 };
 
 export const getJSONConfiguration = (
@@ -129,6 +89,16 @@ export const getJSONConfiguration = (
     useAccessibilityLabel: boolean | undefined;
 } => {
     const configuration = resolveJSONConfiguration(userSpecifiedConfiguration);
+
+    if (
+        configuration.clientToken === undefined ||
+        configuration.env === undefined ||
+        configuration.applicationId === undefined
+    ) {
+        console.warn(
+            'DATADOG: Warning: Malformed json configuration file - clientToken, applicationId and env are mandatory properties.'
+        );
+    }
 
     return {
         clientToken: configuration.clientToken,
