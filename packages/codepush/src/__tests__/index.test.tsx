@@ -279,7 +279,7 @@ describe('AppCenter Codepush integration', () => {
             };
 
             const configuration = new FileBasedConfiguration({
-                configuration: { configuration: autoInstrumentationConfig }
+                configuration: autoInstrumentationConfig
             });
 
             render(<DatadogCodepushProvider configuration={configuration} />);
@@ -346,7 +346,7 @@ describe('AppCenter Codepush integration', () => {
             };
 
             const configuration = new FileBasedConfiguration({
-                configuration: { configuration: autoInstrumentationConfig }
+                configuration: autoInstrumentationConfig
             });
 
             render(<DatadogCodepushProvider configuration={configuration} />);
