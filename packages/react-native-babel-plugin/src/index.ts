@@ -40,6 +40,17 @@ export default declare(
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
 
+                        const { path: p, name } = getFileInfo(this);
+
+                        if (p?.includes('node_modules')) {
+                            return;
+                        }
+
+                        pluginState.fileInfo = { path: p, name };
+
+                        insertSetupFlag(path, api.types);
+                        loadImportMap(path, api.types, pluginState, options);
+
                         if (!pluginState.trackedComponents) {
                             pluginState.trackedComponents = {};
                         }
@@ -60,13 +71,6 @@ export default declare(
                                 handlers: entry.handlers
                             };
                         }
-
-                        const { path: p, name } = getFileInfo(this);
-
-                        pluginState.fileInfo = { path: p, name };
-
-                        insertSetupFlag(path, api.types);
-                        loadImportMap(path, api.types, pluginState, options);
                     },
                     exit(path, state) {
                         const pluginState: PluginPassState = state;
@@ -81,6 +85,12 @@ export default declare(
                     const t = api.types;
                     const pluginState: PluginPassState = state;
                     const name = getNodeName(t, path.node.openingElement);
+
+                    const { path: p } = getFileInfo(this);
+
+                    if (p?.includes('node_modules')) {
+                        return;
+                    }
 
                     if (!name) {
                         return;

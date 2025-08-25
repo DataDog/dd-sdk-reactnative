@@ -23,7 +23,7 @@ export function handleTapAction(
         propertyNode.value
     );
 
-    // Check if the property and element is valid by checking our tap mappings list
+    // Check if the property and element is valid by checking our tap mappings list interaction handlers for RUM should wrap arrow
     const mapEntry = state.trackedComponents?.[parentName];
     const isValidElement = !!mapEntry;
     const isValidEvent =
