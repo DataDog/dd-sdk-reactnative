@@ -48,7 +48,7 @@ export default declare(
 
                         pluginState.fileInfo = { path: p, name };
 
-                        insertSetupFlag(path, api.types);
+                        insertSetupFlag(path, state, api.types);
                         loadImportMap(path, api.types, pluginState, options);
 
                         if (!pluginState.trackedComponents) {
