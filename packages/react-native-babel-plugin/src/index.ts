@@ -35,6 +35,10 @@ export default declare(
                         const pluginState: PluginPassState = state;
                         const { path: p, name } = getFileInfo(this);
 
+                        if (p?.includes('node_modules')) {
+                            return;
+                        }
+
                         pluginState.fileInfo = { path: p, name };
 
                         insertSetupFlag(path, api.types);
@@ -53,6 +57,12 @@ export default declare(
                     const t = api.types;
                     const pluginState: PluginPassState = state;
                     const name = getNodeName(t, path.node.openingElement);
+
+                    const { path: p } = getFileInfo(this);
+
+                    if (p?.includes('node_modules')) {
+                        return;
+                    }
 
                     if (!name) {
                         return;
