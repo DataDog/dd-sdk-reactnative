@@ -7,3 +7,11 @@
 export const PluginConstants = {
     PLUGIN_ENABLED: '__DD_RN_BABEL_PLUGIN_ENABLED__'
 } as const;
+
+export const defaultPluginOptions = {
+    components: {
+        useContent: true,
+        useNamePrefix: true,
+        tracked: []
+    }
+};
