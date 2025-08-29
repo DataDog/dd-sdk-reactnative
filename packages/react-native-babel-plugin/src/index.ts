@@ -41,8 +41,8 @@ export default declare(
 
                         pluginState.fileInfo = { path: p, name };
 
-                        insertSetupFlag(path, api.types);
                         loadImportMap(path, api.types, pluginState);
+                        insertSetupFlag(path, state, api.types);
                     },
                     exit(path, state) {
                         const pluginState: PluginPassState = state;

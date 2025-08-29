@@ -17,16 +17,17 @@ import {
 
 export function insertSetupFlag(
     path: Babel.NodePath<Babel.types.Program>,
+    state: PluginPassState,
     t: BabelTypes
 ) {
-    const pluginState = PluginState.getInstance();
+    const pluginState = PluginState.getInstance(state);
 
     // Only set the flag on the entry file of the project
-    if (pluginState.isInitialized) {
+    if (pluginState.isInitialized()) {
         return;
     }
 
-    pluginState.isInitialized = true;
+    pluginState.initialize();
 
     const flagNode = getAssignmentNode(
         t,
