@@ -10,6 +10,7 @@ import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { DdAttributes } from '../rum/DdAttributes';
 import type { ErrorSource } from '../rum/types';
 import { validateContext } from '../utils/argsUtils';
+import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { generateEventMapper } from './eventMapper';
 import type {
@@ -21,6 +22,7 @@ import type {
     RawLogWithError
 } from './types';
 
+const LOGS_MODULE = 'com.datadog.reactnative.logs';
 const SDK_NOT_INITIALIZED_MESSAGE = 'DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
@@ -240,4 +242,4 @@ class DdLogsWrapper implements DdLogsType {
     }
 }
 
-export const DdLogs = new DdLogsWrapper();
+export const DdLogs = getGlobalInstance(LOGS_MODULE, () => new DdLogsWrapper());
