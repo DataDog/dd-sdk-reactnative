@@ -6,17 +6,13 @@
 
 import { NativeModules } from 'react-native';
 
-import type {
-    DdNativeLogsType,
-    DdNativeRumType
-} from '../../../nativeModulesTypes';
+import type { DdNativeRumType } from '../../../nativeModulesTypes';
 import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 
 jest.mock('../../../utils/jsUtils');
 
 const DdRum = NativeModules.DdRum as DdNativeRumType;
-const DdLogs = NativeModules.DdLogs as DdNativeLogsType;
 
 let baseErrorHandlerCalled = false;
 const baseErrorHandler = (error: any, isFatal?: boolean) => {
@@ -77,19 +73,6 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
         ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        '[object Object]',
-        'Error',
-        '[object Object]',
-        'doSomething() at ./path/to/file.js:67:3',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', async () => {
@@ -119,19 +102,6 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
         ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        '',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {Error object}', async () => {
@@ -162,19 +132,6 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        expect.stringContaining('Error: Something bad happened'),
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {CustomError object}', async () => {
@@ -209,19 +166,6 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'CustomError',
-        'Something bad happened',
-        expect.stringContaining('Error: Something bad happened'),
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {with source file info}', async () => {
@@ -254,19 +198,6 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
         ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        'at ./path/to/file.js:1038:57',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {with component stack}', async () => {
@@ -301,19 +232,6 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
         ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {with stack}', async () => {
@@ -348,19 +266,6 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
         ''
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async () => {
@@ -396,19 +301,6 @@ it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M not report error in console handler W onGlobalError() {with console reporting handler}', async () => {
@@ -450,19 +342,6 @@ it('M not report error in console handler W onGlobalError() {with console report
     expect(consoleReportingErrorHandler).toBeCalledTimes(1);
     expect(baseConsoleErrorCalled).toStrictEqual(false);
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onConsole() {Error with source file info}', async () => {
@@ -493,17 +372,6 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
         ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Oops I did it again! Something bad happened',
-        'Error',
-        'Oops I did it again! Something bad happened',
-        'at ./path/to/file.js:1038:57',
-        {
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onConsole() {Error with component stack}', async () => {
@@ -536,17 +404,6 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
         ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Oops I did it again! Something bad happened',
-        'Error',
-        'Oops I did it again! Something bad happened',
-        'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
-        {
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onConsole() {message only}', async () => {
@@ -571,17 +428,6 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
         ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        '',
-        {
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onConsole() {Error with source file and name}', async () => {
@@ -613,17 +459,6 @@ it('M intercept and send a RUM event W onConsole() {Error with source file and n
         ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Oops I did it again! Something bad happened',
-        'CustomConsoleError',
-        'Oops I did it again! Something bad happened',
-        'at ./path/to/file.js:1038:57',
-        {
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 describe.each([
@@ -661,17 +496,6 @@ describe.each([
             ''
         );
         expect(baseConsoleErrorCalled).toStrictEqual(true);
-        expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-        expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-            errorMessage,
-            'Error',
-            errorMessage,
-            '',
-            {
-                '_dd.error.source_type': 'react-native',
-                '_dd.error_log.is_crash': true
-            }
-        );
     });
 });
 
@@ -704,19 +528,6 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Something bad happened',
-        'Error',
-        'Something bad happened',
-        expect.stringContaining('Error: Something bad happened'),
-        {
-            '_dd.error.raw': error,
-            '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}', async () => {
@@ -742,17 +553,6 @@ it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}'
         ''
     );
     expect(baseConsoleErrorCalled).toStrictEqual(true);
-    expect(DdLogs.errorWithError).toHaveBeenCalledTimes(1);
-    expect(DdLogs.errorWithError).toHaveBeenCalledWith(
-        'Oops I did it again!',
-        'Error',
-        'Oops I did it again!',
-        '',
-        {
-            '_dd.error.source_type': 'react-native',
-            '_dd.error_log.is_crash': true
-        }
-    );
 });
 
 /**
