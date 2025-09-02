@@ -8,7 +8,6 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdLogs } from '../../logs/DdLogs';
 import {
     getErrorMessage,
     getErrorStackTrace,
@@ -70,8 +69,7 @@ export class DdRumErrorTracking {
     static onGlobalError = (error: any, isFatal?: boolean): void => {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
-        const errorName = getErrorName(error);
-        this.reportError(message, ErrorSource.SOURCE, stacktrace, errorName, {
+        this.reportError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
             '_dd.error.raw': error
         }).then(async () => {
@@ -130,34 +128,17 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        this.reportError(message, ErrorSource.CONSOLE, stack, errorName).then(
-            () => {
-                DdRumErrorTracking.defaultConsoleError.apply(console, params);
-            }
-        );
+        this.reportError(message, ErrorSource.CONSOLE, stack).then(() => {
+            DdRumErrorTracking.defaultConsoleError.apply(console, params);
+        });
     };
 
     private static reportError = (
         message: string,
         source: ErrorSource,
         stacktrace: string,
-        errorName: string,
         context: object = {}
-    ): Promise<[void, void]> => {
-        return Promise.all([
-            DdRum.addError(message, source, stacktrace, context),
-            DdLogs.error(
-                message,
-                errorName,
-                message,
-                stacktrace,
-                {
-                    ...context,
-                    '_dd.error_log.is_crash': true
-                },
-                undefined,
-                source
-            )
-        ]);
+    ): Promise<void> => {
+        return DdRum.addError(message, source, stacktrace, context);
     };
 }

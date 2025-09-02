@@ -225,7 +225,7 @@ describe('DdLogs', () => {
             console.error('console-error-message');
             expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenCalledWith(
-                'error log dropped by log mapper: "console-error-message"',
+                'Adding RUM Error “console-error-message”',
                 'debug'
             );
 
@@ -278,7 +278,7 @@ describe('DdLogs', () => {
             console.error('console-error-message');
             expect(NativeModules.DdLogs.error).not.toHaveBeenCalled();
             expect(InternalLog.log).toHaveBeenCalledWith(
-                'Tracking error log "console-error-message"',
+                'Adding RUM Error “console-error-message”',
                 'debug'
             );
         });
