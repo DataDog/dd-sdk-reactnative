@@ -207,8 +207,6 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
 
-        const validatedContext = validateContext(mappedEvent.context);
-
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
@@ -283,8 +281,6 @@ class DdRumWrapper implements DdRumType {
                 )
             );
         }
-
-        const validatedContext = validateContext(mappedEvent.context);
 
         InternalLog.log(
             `Stopping RUM Resource #${key} status:${statusCode}`,
