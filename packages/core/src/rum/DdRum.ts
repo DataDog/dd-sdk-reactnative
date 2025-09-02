@@ -13,6 +13,7 @@ import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNative
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { validateContext } from '../utils/argsUtils';
+import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
@@ -43,6 +44,8 @@ import type {
     FirstPartyHost,
     PropagatorType
 } from './types';
+
+const RUM_MODULE = 'com.datadog.reactnative.rum';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
@@ -518,4 +521,4 @@ const isOldStopActionAPI = (
     return typeof args[0] === 'object' || typeof args[0] === 'undefined';
 };
 
-export const DdRum = new DdRumWrapper();
+export const DdRum = getGlobalInstance(RUM_MODULE, () => new DdRumWrapper());
