@@ -26,23 +26,48 @@ import type {
 import {
     getImportDeclaration,
     getNodeName,
-    insertAtProgramTop
+    insertAtProgramTop,
+    toExpression
 } from '../../utils';
 
 import { handleTapAction } from './tap';
 
+/**
+ * Inserts RUM Action Tracking import at the top of the Program.
+ *
+ * Adds a single import declaration for:
+ *   - the action tracking class (e.g., `DdBabelInteractionTracking`)
+ *   - the text extraction helper (`__ddExtractText`)
+ *
+ * @param t      Babel types helper.
+ * @param path   Program path to mutate.
+ */
 export function insertRumActionImport(
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.Program>
 ) {
+    // Build the import declaration for the runtime + helper
     const importNode = getImportDeclaration(
         t,
-        RumActionConstants.ACTION_CLASS,
+        [
+            RumActionConstants.ACTION_CLASS,
+            RumActionConstants.UTILS_FUNCTION_EXTRACT_TEXT
+        ],
         RumActionConstants.IMPORT_PACKAGE
     );
     insertAtProgramTop(path, importNode);
 }
 
+/**
+ * Main entry point to wrap a JSX element's relevant attributes (handlers + DD props)
+ * with RUM action tracking.
+ *
+ * @param componentName         The host component name (e.g., "GestureButton").
+ * @param t                     Babel types helper.
+ * @param path                  JSXElement path to process.
+ * @param state                 Plugin state containing `trackedComponents` and config.
+ * @param options               Plugin options (e.g., custom action name attribute).
+ */
 export function handleJSXElementActionPaths(
     componentName: string,
     t: typeof Babel.types,
@@ -50,12 +75,24 @@ export function handleJSXElementActionPaths(
     state: PluginPassState,
     options: PluginOptions
 ) {
+    // Avoid double-processing the same element
+    if (path.node?.extra?.__wrappedForRum) {
+        return;
+    }
+
+    // Gather targets and construct ddValues/options
     const {
         actionPathList,
         actionPathNames,
         ddValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
+    // Create known custom components list tracked by the plugin
+    const componentNameList = state.trackedComponents
+        ? Object.keys(state.trackedComponents)
+        : [];
+
+    // Some components need specific handlers present (inject no-op handlers if missing)
     ensureMandatoryAttributes(
         path,
         componentName,
@@ -63,30 +100,49 @@ export function handleJSXElementActionPaths(
         actionPathNames
     );
 
+    // Optionally compute a content getter (children + label props)
+    setContentAttribute(componentName, t, path, state, ddValues);
+
+    // Wrap every actionable handler attribute with RUM
     for (const attrPath of actionPathList) {
         attrPath.node.extra = {
             ...attrPath.node.extra,
             ddValues
         };
-
-        handleRumActions(t, attrPath, state);
+        handleRumActions(t, attrPath, state, componentNameList);
     }
 }
 
+/**
+ * Ensures that all mandatory handler attributes exist on the element so that
+ * they can be wrapped by RUM even if the user didn’t specify them.
+ *
+ * Example:
+ *  Some inputs require `onFocus`/`onBlur` for reliable action boundaries.
+ *  If missing, we inject `() => {}` as a placeholder and mark those paths
+ *  as actionable so they get wrapped downstream.
+ *
+ * @param path               JSXElement path.
+ * @param componentName      Host component name for lookup in `tapElementsRequiredAttributesMap`.
+ * @param actionPathList     Collected actionable attribute paths (will be appended to).
+ * @param actionPathNames    Names of actionable attributes already present.
+ */
 export function ensureMandatoryAttributes(
     path: Babel.NodePath<Babel.types.JSXElement>,
     componentName: string,
     actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[],
     actionPathNames: string[]
 ) {
-    // Check if we're missing some required attributes
+    // Resolve any mandatory attributes for this component
     const requiredAttributes = tapElementsRequiredAttributesMap[componentName];
     if (requiredAttributes) {
+        // Determine missing ones
         const attrToAdd = requiredAttributes.filter(
             x => !actionPathNames.includes(x)
         );
 
         for (const attr of attrToAdd) {
+            // Inject a no-op handler: () => {}
             const attribute = jsxAttribute(
                 jsxIdentifier(attr),
                 jsxExpressionContainer(
@@ -95,6 +151,7 @@ export function ensureMandatoryAttributes(
             );
             path.node.openingElement.attributes.push(attribute);
 
+            // Grab attribute paths and append the new one to action list
             const attrPaths = path.get(
                 'openingElement.attributes'
             ) as Babel.NodePath<Babel.types.JSXAttribute>[];
@@ -106,6 +163,110 @@ export function ensureMandatoryAttributes(
     }
 }
 
+/**
+ * Optionally attaches a `getContent` resolver into `ddValues` that, at runtime,
+ * returns a string derived from:
+ *   - the element's children (rendered via a JSX Fragment clone)
+ *   - common label-like props (`trackingLabel`, `title`, `label`, `text`, plus an optional custom prop)
+ *
+ * @param componentName  Host component name (controls whether content is used).
+ * @param t              Babel types helper.
+ * @param path           JSXElement path.
+ * @param state          Plugin state with trackedComponents metadata.
+ * @param ddValues       Mutable map of computed values attached to attributes via `node.extra.ddValues`.
+ */
+export function setContentAttribute(
+    componentName: string,
+    t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXElement>,
+    state: PluginPassState,
+    ddValues: Record<
+        string,
+        | Babel.types.ArrayExpression
+        | Babel.types.ArrowFunctionExpression
+        | Babel.types.ObjectExpression
+    >
+) {
+    const componentData = state.trackedComponents?.[componentName];
+    if (componentData?.useContent) {
+        // Potential prop names to get text content from
+        const LABEL_PROPS = ['trackingLabel', 'title', 'label', 'text'];
+
+        if (componentData?.contentProp) {
+            LABEL_PROPS.push(componentData.contentProp);
+        }
+
+        // Retrieve literal/expr values from matching attributes
+        const candidates: Babel.types.Expression[] = [];
+        for (const name of LABEL_PROPS) {
+            const attr = (path.node.openingElement.attributes as (
+                | Babel.types.JSXAttribute
+                | Babel.types.JSXSpreadAttribute
+            )[]).find(
+                a => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name })
+            ) as Babel.types.JSXAttribute | undefined;
+
+            if (!attr) {
+                continue;
+            }
+
+            if (!attr.value) {
+                continue; // if boolean shorthand - skip
+            }
+
+            if (t.isStringLiteral(attr.value)) {
+                candidates.push(attr.value);
+            } else if (t.isJSXExpressionContainer(attr.value)) {
+                candidates.push(
+                    attr.value.expression as Babel.types.Expression
+                );
+            }
+        }
+
+        // Clone children into a fragment so the runtime can render/extract text
+        const fragment = t.jsxFragment(
+            t.jSXOpeningFragment(),
+            t.jSXClosingFragment(),
+            [...path.node.children.map(x => t.cloneNode(x, true))]
+        );
+
+        // Mark to avoid wrapping descendants during traversal
+        fragment.extra = {
+            __wrappedForRum: true
+        };
+
+        // () => __ddExtractText(<>{children}</>, [candidates...])
+        const getContentNode = t.arrowFunctionExpression(
+            [],
+            t.blockStatement([
+                t.returnStatement(
+                    t.callExpression(t.identifier('__ddExtractText'), [
+                        fragment,
+                        t.arrayExpression(
+                            candidates.map(e => t.cloneNode(e, true))
+                        )
+                    ])
+                )
+            ])
+        );
+
+        ddValues.getContent = getContentNode;
+    }
+}
+
+/**
+ * Scans a JSXElement and derives:
+ *   - `actionPathList`: attribute paths to wrap (based on configured handler names)
+ *   - `actionPathNames`: the corresponding attribute names
+ *   - `ddValues`: arrays of Datadog-specific attributes (e.g., data-dd-action-name),
+ *                and an `options` object based on the tracked component config
+ *
+ * @param componentName  Host component name to look up handlers/flags.
+ * @param t              Babel types helper.
+ * @param path           JSXElement path.
+ * @param state          Plugin state.
+ * @param options        Plugin options.
+ */
 export function getJSXElementActionPaths(
     componentName: string,
     t: typeof Babel.types,
@@ -113,16 +274,50 @@ export function getJSXElementActionPaths(
     state: PluginPassState,
     options: PluginOptions
 ) {
+    // DD attributes to collect (plus optional custom action name attribute)
     const ddAttrs = [
         ...rumComponentAttributes,
         options.actionNameAttribute ?? null
     ].filter(Boolean);
 
-    const ddValues: Record<string, string> = {};
-    const actionMapList = state.tapMappings?.[componentName] || [];
+    // Map for dd attributes and misc options
+    const ddValues: Record<
+        string,
+        | Babel.types.ArrayExpression
+        | Babel.types.ArrowFunctionExpression
+        | Babel.types.ObjectExpression
+    > = {};
+
+    // Handler names to consider actionable (e.g., onPress, onLongPress)
+    const actionMapList =
+        state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
+        [];
+
     const actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[] = [];
     const actionPathNames: string[] = [];
 
+    // Add options if this component is tracked
+    if (state.trackedComponents?.[componentName]) {
+        ddValues['options'] = t.objectExpression([
+            t.objectProperty(
+                t.stringLiteral('useContent'),
+                toExpression(
+                    t,
+                    state.trackedComponents?.[componentName].useContent
+                )
+            ),
+
+            t.objectProperty(
+                t.stringLiteral('useNamePrefix'),
+                toExpression(
+                    t,
+                    state.trackedComponents?.[componentName].useNamePrefix
+                )
+            )
+        ]);
+    }
+
+    // Traverse attributes to collect DD props and actionable handlers
     path.traverse({
         JSXAttribute(subpath) {
             if (!subpath.node.extra) {
@@ -134,20 +329,28 @@ export function getJSXElementActionPaths(
                 return;
             }
 
+            // Collect literal DD attributes into arrays inside ddValues
+            // Required for handling `CompoundComponents`
             const isValidAttr = ddAttrs.includes(attrName);
-
             if (isValidAttr) {
                 const data = subpath.node.value;
 
                 if (t.isStringLiteral(data)) {
-                    ddValues[attrName] = data.value;
+                    if (!ddValues[attrName]) {
+                        ddValues[attrName] = t.arrayExpression([]);
+                    }
+
+                    const valuesArray = ddValues[attrName];
+                    if (t.isArrayExpression(valuesArray)) {
+                        valuesArray.elements.push(data);
+                    }
                 }
 
                 return;
             }
 
+            // Accumulate handler attributes that we should wrap
             const isValidMapping = actionMapList.includes(attrName);
-
             if (isValidMapping) {
                 actionPathNames.push(attrName);
                 actionPathList.push(subpath);
@@ -159,29 +362,47 @@ export function getJSXElementActionPaths(
     return { actionPathList, actionPathNames, ddValues };
 }
 
+/**
+ * Wraps a specific JSXAttribute (e.g., onPress, onLongPress, onCustomAction) with the Datadog RUM handler.
+ *
+ * @param t                 Babel types helper.
+ * @param path              Attribute path to wrap.
+ * @param state             Plugin state.
+ * @param componentNameList Names of custom components already handled by the plugin.
+ */
 export function handleRumActions(
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.JSXAttribute>,
-    state: PluginPassState
+    state: PluginPassState,
+    componentNameList: string[]
 ) {
-    // If the node was already processed skip the processing step
-    // When using `path.traverse` inside the `JSXElement` hook and injecting new nodes
-    // We can get into a situation where the same attribute is set to be processed twice due to parent lookup operations
+    // Skip if already processed
     if (path.node?.extra?.__wrappedForRum) {
         return;
     }
 
+    // Skip if nested in a component we should not track OR
+    // Custom tracked component (that already wraps internally)
+    const validParent = checkValidParent(t, path, componentNameList);
+    if (!validParent) {
+        return;
+    }
+
+    // Confirm we have a proper actionable attribute and extract details
     const { success, result } = checkValidAction(t, path);
     if (!success || !result) {
         return;
     }
 
+    // Create a wrapping function to Handler RUM Actions
     const containerExpression = handleTapAction(path, t, state, result);
 
     if (!containerExpression) {
         return;
     }
 
+    // Replace attribute's value with the wrapping function
+    // Mark it as wrapped
     path.node.value = containerExpression;
     path.node.extra = {
         ...path.node.extra,
@@ -189,6 +410,58 @@ export function handleRumActions(
     };
 }
 
+/**
+ * Determines whether the attribute’s enclosing component should be wrapped here.
+ *
+ * @param t                   Babel types helper.
+ * @param path                Attribute path.
+ * @param componentNameList   Names of custom components tracked by this plugin.
+ * @returns                   `true` if safe to wrap; `false` to skip.
+ */
+function checkValidParent(
+    t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXAttribute>,
+    componentNameList: string[]
+) {
+    const predicate = (p: Babel.NodePath<Babel.types.Node>) =>
+        p.isFunctionDeclaration() ||
+        p.isVariableDeclaration() ||
+        p.isClassDeclaration();
+
+    const cPath = path.findParent(p => predicate(p)) || null;
+
+    if (cPath) {
+        const node = cPath.node;
+        let parentName: string | null = null;
+
+        if (t.isVariableDeclaration(node)) {
+            const cNode = node.declarations[0].id;
+            parentName = getNodeName(t, cNode);
+        } else if (
+            t.isFunctionDeclaration(node) ||
+            t.isClassDeclaration(node)
+        ) {
+            const cNode = node.id;
+            parentName = cNode ? getNodeName(t, cNode) : null;
+        }
+        // If the nearest declaration is a tracked component, we skip wrapping here.
+        if (parentName && componentNameList.includes(parentName)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Validates that a JSXAttribute is a proper action candidate and extracts the
+ * essential details needed to build the wrapper.
+ *
+ * @param t       Babel types helper.
+ * @param path    Attribute path under test.
+ * @returns       `{ success: boolean, result: RumActionResult | null }`
+ *                `success=false` when the attribute isn't suitable for wrapping.
+ */
 function checkValidAction(
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.JSXAttribute>
@@ -206,6 +479,7 @@ function checkValidAction(
             ? propertyValue.expression
             : null;
 
+    // If any required piece is missing, do not attempt to wrap
     if (
         !parentNode ||
         !parentName ||
@@ -216,6 +490,7 @@ function checkValidAction(
         return { success: false, result: null };
     }
 
+    // Provide the wrapper all the pieces it needs
     return {
         success: true,
         result: {

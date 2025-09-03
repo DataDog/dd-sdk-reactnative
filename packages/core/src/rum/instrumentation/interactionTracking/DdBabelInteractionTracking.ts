@@ -26,10 +26,13 @@ type BabelConfig = {
 };
 
 type TargetObject = {
-    compoenentName: string;
-    'dd-action-name': string;
-    accessibilityLabel: string;
-    [key: string]: string;
+    getContent: (() => string[]) | undefined;
+    options: { useContent: boolean; useNamePrefix: boolean };
+    handlerArgs: any[];
+    componentName: string;
+    'dd-action-name': string[];
+    accessibilityLabel: string[];
+    [key: string]: any;
 };
 
 export class DdBabelInteractionTracking {
@@ -64,6 +67,9 @@ export class DdBabelInteractionTracking {
 
     private getTargetName(targetObject: TargetObject) {
         const {
+            getContent,
+            options,
+            handlerArgs,
             componentName,
             'dd-action-name': actionName,
             accessibilityLabel,
@@ -72,20 +78,44 @@ export class DdBabelInteractionTracking {
 
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
 
-        if (actionName) {
-            return actionName;
+        const tryContent = () => {
+            const content = getContent?.();
+            if (content && content.length > 0) {
+                return content;
+            }
+
+            return null;
+        };
+
+        const getAccessibilityLabel = () =>
+            useAccessibilityLabel && accessibilityLabel
+                ? accessibilityLabel
+                : null;
+
+        const index = handlerArgs
+            ? handlerArgs.find(x => typeof x === 'number') || 0
+            : 0;
+
+        // Order: content → actionName → actionNameAttribute → accessibilityLabel
+        const selectedContent =
+            tryContent() ||
+            actionName ||
+            Object.values(attrs)[0] ||
+            getAccessibilityLabel();
+
+        if (!selectedContent) {
+            return componentName;
         }
 
-        const keys = Object.keys(attrs);
-        if (keys.length) {
-            return attrs[keys[0]];
-        }
+        // Fail-safe in case the our 'index' value turns out to not be a real index
+        const output =
+            index + 1 > selectedContent.length || index < 0
+                ? selectedContent[0]
+                : selectedContent[index];
 
-        if (useAccessibilityLabel && accessibilityLabel) {
-            return accessibilityLabel;
-        }
-
-        return componentName;
+        return options.useNamePrefix
+            ? `${componentName} ("${output}")`
+            : output;
     }
 
     wrapRumAction(

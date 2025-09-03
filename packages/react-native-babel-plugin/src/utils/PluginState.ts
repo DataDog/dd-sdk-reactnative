@@ -39,8 +39,8 @@ export class PluginState {
 
     private getPlatform() {
         return (
-            // @ts-ignore
-            (this.state?.file?.opts?.caller?.platform as string) || 'unknown'
+            ((this.state?.file?.opts?.caller as any)?.platform as string) ||
+            'unknown'
         );
     }
 

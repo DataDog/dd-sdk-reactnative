@@ -12,6 +12,7 @@ import {
     handleJSXElementActionPaths,
     insertRumActionImport
 } from './actions/rum';
+import { defaultPluginOptions } from './constants';
 import type {
     PluginAPI,
     PluginOptions,
@@ -21,18 +22,23 @@ import type {
 import { getFileInfo, getNodeName } from './utils/index';
 
 export default declare(
-    (
-        api: PluginAPI,
-        options: PluginOptions,
-        _dirname: string
-    ): PluginResult => {
+    (api: PluginAPI, opt: PluginOptions, _dirname: string): PluginResult => {
         api.assertVersion(7);
+
+        const options = {
+            ...opt,
+            components: {
+                ...defaultPluginOptions.components,
+                ...opt.components
+            }
+        };
 
         return {
             visitor: {
                 Program: {
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
+
                         const { path: p, name } = getFileInfo(this);
 
                         if (p?.includes('node_modules')) {
@@ -41,8 +47,29 @@ export default declare(
 
                         pluginState.fileInfo = { path: p, name };
 
-                        loadImportMap(path, api.types, pluginState);
                         insertSetupFlag(path, state, api.types);
+                        loadImportMap(path, api.types, pluginState, options);
+
+                        if (!pluginState.trackedComponents) {
+                            pluginState.trackedComponents = {};
+                        }
+
+                        for (const entry of options.components.tracked) {
+                            pluginState.trackedComponents[entry.name] = {
+                                useContent:
+                                    entry.useContent !== undefined
+                                        ? entry.useContent
+                                        : options.components.useContent,
+                                useNamePrefix:
+                                    entry.useNamePrefix !== undefined
+                                        ? entry.useNamePrefix
+                                        : options.components.useNamePrefix,
+                                ...(entry.contentProp
+                                    ? { contentProp: entry.contentProp }
+                                    : {}),
+                                handlers: entry.handlers
+                            };
+                        }
                     },
                     exit(path, state) {
                         const pluginState: PluginPassState = state;
