@@ -9,6 +9,7 @@ See the [dedicated troubleshooting guide](./docs/troubleshooting_no_data.md).
 Original issue: https://github.com/DataDog/dd-sdk-reactnative/issues/41
 
 If you have the following error message:
+
 ```
 Undefined symbols for architecture x86_64:
   "static Foundation.JSONEncoder.OutputFormatting.withoutEscapingSlashes.getter : Foundation.JSONEncoder.OutputFormatting", referenced from:
@@ -17,6 +18,7 @@ Undefined symbols for architecture x86_64:
 ```
 
 open Xcode and go to `Build Settings` of your project (_not your app target_) then make sure `Library Search Paths` is the following:
+
 ```
 LIBRARY_SEARCH_PATHS = (
   "\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
@@ -42,7 +44,7 @@ We made the change below to fix it:
 ### Infinite loop-like error messages
 
 Sometimes, almost randomly, my RN project gives error messages non-stop.
-CPU usage goes up to %+100 and you'll quickly notice a problem with your laptop fan goes crazy.
+CPU usage goes up to 100%+ and you'll quickly notice a problem when your laptop fan goes crazy.
 
 This is the issue: https://github.com/facebook/react-native/issues/28801
 
