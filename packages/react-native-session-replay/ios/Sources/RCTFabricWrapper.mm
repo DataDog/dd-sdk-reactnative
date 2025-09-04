@@ -8,16 +8,9 @@
 
 #if RCT_NEW_ARCH_ENABLED
 #import "RCTVersion.h"
-
-#import <React-RCTFabric/React/RCTParagraphComponentView.h>
-#import <React-RCTFabric/React/RCTConversions.h>
-
-#if RCT_VERSION_MINOR > 74
-#import <React-FabricComponents/react/renderer/components/text/ParagraphProps.h>
-#else
-#import <React-Fabric/react/renderer/components/text/ParagraphProps.h>
-#endif
-
+#import "RCTParagraphComponentView.h"
+#import "RCTConversions.h"
+#import "ParagraphProps.h"
 
 namespace rct = facebook::react;
 #endif

@@ -8,7 +8,12 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-umbrella.h>
 #import "RCTDatadogWebViewManager.h"
 #import "RCTDatadogWebView.h"
-#import "DatadogSDKReactNativeWebView-Swift.h"
+
+#if __has_include("DatadogSDKReactNativeWebView-Swift.h")
+#import <DatadogSDKReactNativeWebView-Swift.h>
+#else
+#import <DatadogSDKReactNativeWebView/DatadogSDKReactNativeWebView-Swift.h>
+#endif
 
 @interface RCTDatadogWebViewManager () <RNCWebViewDelegate, RCTDatadogWebViewDelegate>
     @property (nonatomic, strong) NSMutableSet *allowedHosts;
@@ -25,6 +30,10 @@ RCT_CUSTOM_VIEW_PROPERTY(allowedHosts, NSArray, RCTDatadogWebView)
 {
     NSArray* allowedHosts = [RCTConvert NSArray:json];
     [self setupDatadogWebView:allowedHosts view:view];
+}
+
++ (BOOL)requiresMainQueueSetup {
+    return YES;
 }
 
 // MARK: - Initialization

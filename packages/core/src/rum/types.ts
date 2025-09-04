@@ -255,6 +255,12 @@ export enum PropagatorType {
     B3MULTI = 'b3multi'
 }
 
+export enum ActionSource {
+    MANUAL = 'MANUAL',
+    LEGACY = 'LEGACY',
+    BABEL = 'BABEL'
+}
+
 export type FirstPartyHost = {
     match: string;
     propagatorTypes: PropagatorType[];

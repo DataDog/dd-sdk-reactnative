@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native",
-    "version": "2.6.4",
+    "version": "2.11.1",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",
@@ -38,6 +38,23 @@
     "react-native": "src/index",
     "source": "src",
     "module": "lib/module/index",
+    "exports": {
+        ".": {
+            "import": "./lib/module/index.js",
+            "require": "./lib/commonjs/index.js",
+            "types": "./lib/typescript/index.d.ts"
+        },
+        "./metro": {
+            "import": "./lib/module/metro.js",
+            "require": "./lib/commonjs/metro.js",
+            "types": "./lib/typescript/metro.d.ts"
+        },
+        "./jest": {
+            "import": "./jest/mock.js",
+            "require": "./jest/mock.js"
+        },
+        "./package.json": "./package.json"
+    },
     "publishConfig": {
         "access": "public"
     },
@@ -58,7 +75,8 @@
     "jest": {
         "preset": "react-native",
         "moduleNameMapper": {
-            "@datadog/mobile-react-native": "<rootDir>../core/src"
+            "@datadog/mobile-react-native": "<rootDir>../core/src",
+            "@datadog/mobile-react-native/metro": "<rootDir>../core/src/metro"
         },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"

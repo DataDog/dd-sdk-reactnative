@@ -21,24 +21,34 @@ class DdSdk(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
+    private var lifecycleEventListener: LifecycleEventListener? = null
 
     override fun getName(): String = DdSdkImplementation.NAME
 
     init {
-        reactContext.addLifecycleEventListener(object : LifecycleEventListener {
+        lifecycleEventListener?.let { reactContext.removeLifecycleEventListener(it) }
+        lifecycleEventListener = object : LifecycleEventListener {
             override fun onHostResume() {
-                val currentActivity: Activity? = currentActivity
+                val currentActivity: Activity? = reactContext.currentActivity
                 if (currentActivity != null) {
                     val intent = currentActivity.intent
                     val extras = intent.extras
                     DdSdkSynthetics.testId = extras?.getString("_dd.synthetics.test_id")
                     DdSdkSynthetics.resultId = extras?.getString("_dd.synthetics.result_id")
                 }
+
+                DdSdkSessionStartedListener.getInstance().setReactContext(reactContext)
             }
 
-            override fun onHostPause() {}
-            override fun onHostDestroy() {}
-        })
+            override fun onHostPause() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+
+            override fun onHostDestroy() {
+                DdSdkSessionStartedListener.invalidate()
+            }
+        }
+        reactContext.addLifecycleEventListener(lifecycleEventListener)
     }
 
     /**
@@ -97,6 +107,22 @@ class DdSdk(
     @ReactMethod
     fun setTrackingConsent(trackingConsent: String, promise: Promise) {
         implementation.setTrackingConsent(trackingConsent, promise)
+    }
+
+    /**
+     * Sends a telemetry event with attributes.
+     * @param message message.
+     * @param attributes telemetry attributes.
+     * @param config telemetry configuration.
+     */
+    @ReactMethod
+    fun sendTelemetryLog(
+        message: String,
+        attributes: ReadableMap,
+        config: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.sendTelemetryLog(message, attributes, config, promise)
     }
 
     /**

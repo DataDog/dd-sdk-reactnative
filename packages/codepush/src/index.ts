@@ -1,10 +1,21 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
 import {
     DatadogProvider,
     DatadogProviderConfiguration,
     DdSdkReactNative
 } from '@datadog/mobile-react-native';
-import type { DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+import type {
+    AutoInstrumentationConfiguration,
+    DdSdkReactNativeConfiguration
+} from '@datadog/mobile-react-native';
 import codePush from 'react-native-code-push';
+
+import { DISCARD_PROPERTY, removeDiscardProperties } from './utils';
+import type { RequiredOrDiscard } from './utils';
 
 /**
  * Use this class instead of DdSdkReactNative to initialize the Datadog SDK when using AppCenter CodePush.
@@ -31,6 +42,29 @@ const initializeWithCodepushVersion = async (
     DatadogProvider.initialize(configuration);
 };
 
+const buildPartialConfiguration = (
+    configuration: DatadogProviderConfiguration
+): AutoInstrumentationConfiguration => {
+    const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
+        trackErrors: configuration.trackErrors,
+        trackResources: configuration.trackResources,
+        trackInteractions: configuration.trackInteractions,
+        firstPartyHosts: configuration.firstPartyHosts,
+        logEventMapper: configuration.logEventMapper,
+        errorEventMapper: configuration.errorEventMapper,
+        resourceEventMapper: configuration.resourceEventMapper,
+        actionEventMapper: configuration.actionEventMapper,
+        useAccessibilityLabel: configuration.useAccessibilityLabel,
+        resourceTracingSamplingRate: configuration.resourceTracingSamplingRate,
+        actionNameAttribute:
+            configuration.actionNameAttribute ?? DISCARD_PROPERTY
+    };
+
+    return removeDiscardProperties(
+        partialConfiguration
+    ) as AutoInstrumentationConfiguration;
+};
+
 export const DatadogCodepushProvider: typeof DatadogProvider = ({
     configuration,
     ...rest
@@ -39,16 +73,8 @@ export const DatadogCodepushProvider: typeof DatadogProvider = ({
     // We turn it to partial initialization, while in parallel we get the CodePush version and initialize the SDK.
     if (configuration instanceof DatadogProviderConfiguration) {
         initializeWithCodepushVersion(configuration);
-        const partialConfiguration = {
-            trackErrors: configuration.trackErrors,
-            trackResources: configuration.trackResources,
-            trackInteractions: configuration.trackInteractions,
-            firstPartyHosts: configuration.firstPartyHosts,
-            resourceTracingSamplingRate:
-                configuration.resourceTracingSamplingRate
-        };
         return DatadogProvider({
-            configuration: partialConfiguration,
+            configuration: buildPartialConfiguration(configuration),
             ...rest
         });
     } else {

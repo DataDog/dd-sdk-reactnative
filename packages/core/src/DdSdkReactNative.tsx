@@ -7,19 +7,19 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { InteractionManager } from 'react-native';
 
-import {
-    DdSdkReactNativeConfiguration,
-    buildConfigurationFromPartialConfiguration,
-    addDefaultValuesToAutoInstrumentationConfiguration,
-    InitializationMode,
-    formatFirstPartyHosts
-} from './DdSdkReactNativeConfiguration';
 import type {
+    AutoInstrumentationConfiguration,
     AutoInstrumentationParameters,
     DatadogProviderConfiguration,
-    PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration,
-    InitializationModeForTelemetry
+    InitializationModeForTelemetry,
+    PartialInitializationConfiguration
+} from './DdSdkReactNativeConfiguration';
+import {
+    DdSdkReactNativeConfiguration,
+    InitializationMode,
+    addDefaultValuesToAutoInstrumentationConfiguration,
+    buildConfigurationFromPartialConfiguration,
+    formatFirstPartyHosts
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -27,11 +27,12 @@ import type { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
+import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { registerRumSessionIdListener } from './rum/sessionId/sessionIdHelper';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
+import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
@@ -67,6 +68,7 @@ export class DdSdkReactNative {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
         });
+
         DdSdkReactNative.enableFeatures(configuration);
     };
 
@@ -76,7 +78,6 @@ export class DdSdkReactNative {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): Promise<void> => {
-        registerRumSessionIdListener();
         if (GlobalState.instance.isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
@@ -92,9 +93,12 @@ export class DdSdkReactNative {
 
         InternalLog.verbosity = configuration.verbosity;
 
+        registerNativeBridge();
+
         await DdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
+
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
         GlobalState.instance.isInitialized = true;
         BufferSingleton.onInitialization();
@@ -103,9 +107,9 @@ export class DdSdkReactNative {
     /**
      * FOR INTERNAL USE ONLY.
      */
-    static async _initializeFromDatadogProvider(
+    static _initializeFromDatadogProvider = async (
         configuration: DatadogProviderConfiguration
-    ): Promise<void> {
+    ): Promise<void> => {
         DdSdkReactNative.enableFeatures(configuration);
         if (configuration instanceof FileBasedConfiguration) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
@@ -130,20 +134,25 @@ export class DdSdkReactNative {
                 initializationModeForTelemetry: 'SYNC'
             });
         }
-    }
+    };
 
     /**
      * FOR INTERNAL USE ONLY.
      */
-    static async _enableFeaturesFromDatadogProvider(
+    static _enableFeaturesFromDatadogProvider = (
         features: AutoInstrumentationConfiguration
-    ): Promise<void> {
+    ): void => {
+        DdSdkReactNative._enableFeaturesFromDatadogProviderAsync(features);
+    };
+
+    static _enableFeaturesFromDatadogProviderAsync = async (
+        features: AutoInstrumentationConfiguration
+    ): Promise<void> => {
         DdSdkReactNative.features = features;
         DdSdkReactNative.enableFeatures(
             addDefaultValuesToAutoInstrumentationConfiguration(features)
         );
-    }
-
+    };
     /**
      * FOR INTERNAL USE ONLY.
      */
@@ -353,6 +362,13 @@ export class DdSdkReactNative {
     private static enableFeatures(
         configuration: AutoInstrumentationParameters
     ) {
+        if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
+            DdBabelInteractionTracking.config = {
+                trackInteractions: configuration.trackInteractions,
+                useAccessibilityLabel: configuration.useAccessibilityLabel
+            };
+        }
+
         if (DdSdkReactNative.wasAutoInstrumented) {
             InternalLog.log(
                 "Can't auto instrument Datadog, SDK was already instrumented",
@@ -361,7 +377,10 @@ export class DdSdkReactNative {
             return;
         }
 
-        if (configuration.trackInteractions) {
+        if (
+            configuration.trackInteractions &&
+            !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__
+        ) {
             DdRumUserInteractionTracking.startTracking({
                 actionNameAttribute: configuration.actionNameAttribute,
                 useAccessibilityLabel: configuration.useAccessibilityLabel

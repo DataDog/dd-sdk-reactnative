@@ -10,8 +10,8 @@ import DatadogSessionReplay
 import React
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
-    internal var textObfuscator: (SessionReplayViewTreeRecordingContext) -> SessionReplayTextObfuscating = { context in
-        return context.recorder.textAndInputPrivacy.staticTextObfuscator
+    internal var textObfuscator: (SessionReplayViewTreeRecordingContext, SessionReplayViewAttributes) -> SessionReplayTextObfuscating = { context, viewAttributes in
+        return viewAttributes.resolveTextAndInputPrivacyLevel(in: context).staticTextObfuscator
     }
 
     internal var identifier = UUID()
@@ -41,7 +41,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
             text: textProperties.text,
             textAlignment: textProperties.alignment,
             textColor: textProperties.foregroundColor,
-            textObfuscator: textObfuscator(context),
+            textObfuscator: textObfuscator(context, attributes),
             fontSize: textProperties.fontSize,
             contentRect: textProperties.contentRect
         )
@@ -78,8 +78,23 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         var shadowView: RCTTextShadowView? = nil
         let tag = textView.reactTag
 
-        RCTGetUIManagerQueue().sync {
-            shadowView = uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
+        let timeout: TimeInterval = 0.2
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        // We need to access the shadow view from the UIManager queue, but we're currently on the main thread.
+        // Calling `.sync` from the main thread to the UIManager queue is unsafe, because the UIManager queue
+        // may already be executing a layout operation that in turn requires the main thread (e.g. measuring a native view).
+        // That would create a circular dependency and deadlock the app.
+        // To avoid this, we dispatch the work asynchronously to the UIManager queue and wait with a timeout.
+        // This ensures we block only if absolutely necessary, and can fail gracefully if the queue is busy.
+        RCTGetUIManagerQueue().async {
+            shadowView = self.uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
+            semaphore.signal()
+        }
+        
+        let waitResult = semaphore.wait(timeout: .now() + timeout)
+        if waitResult == .timedOut {
+            return nil
         }
 
         guard let shadow = shadowView else {

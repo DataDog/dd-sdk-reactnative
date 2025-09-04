@@ -120,7 +120,7 @@ android {
   }
 
   defaultConfig {
-    minSdkVersion 21
+    minSdkVersion getExtOrIntegerDefault('minSdkVersion')
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
@@ -135,7 +135,11 @@ android {
         java.srcDirs += ['src/oldarch/kotlin']
       }
 
-      if (reactNativeMinorVersion >= 76) {
+      if (reactNativeMinorVersion >= 80) {
+        java.srcDirs += ['src/rn80/kotlin']
+      } else if (reactNativeMinorVersion >= 79) {
+        java.srcDirs += ['src/rn79/kotlin']
+      } else if (reactNativeMinorVersion >= 76) {
         java.srcDirs += ['src/rn76/kotlin']
       } else if (reactNativeMinorVersion >= 75) {
         java.srcDirs += ['src/rn75/kotlin']
@@ -144,6 +148,14 @@ android {
       } else {
         java.srcDirs += ['src/rnlegacy/kotlin']
       }
+
+
+      if (reactNativeMinorVersion >= 74) {
+        java.srcDirs += ['src/rnpost74/kotlin']
+      } else {
+        java.srcDirs += ['src/rnpre74/kotlin']
+      }
+
     }
     test {
       java.srcDir("src/test/kotlin")
@@ -199,8 +211,8 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.datadoghq:dd-sdk-android-session-replay:2.19.2"
-  implementation "com.datadoghq:dd-sdk-android-internal:2.19.2"
+  implementation "com.datadoghq:dd-sdk-android-session-replay:2.25.0"
+  implementation "com.datadoghq:dd-sdk-android-internal:2.25.0"
   implementation project(path: ':datadog_mobile-react-native')
 
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"

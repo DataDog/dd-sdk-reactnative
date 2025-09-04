@@ -1,105 +1,138 @@
 include:
-  - 'https://gitlab-templates.ddbuild.io/slack-notifier/v1/template.yml'
+    - 'https://gitlab-templates.ddbuild.io/slack-notifier/v1/template.yml'
 
 # SETUP
 
 variables:
-  GIT_DEPTH: 5
-
-  ANDROID_SDK_VERSION: "commandlinetools-mac-11076708_latest"
-  EMULATOR_NAME: "android_emulator"
-  ANDROID_ARCH: "arm64-v8a"
-  ANDROID_API: "35"
-  ANDROID_EMULATOR_IMAGE: "system-images;android-$ANDROID_API;google_apis;${ANDROID_ARCH}"
-  ANDROID_PLATFORM: "platforms;android-$ANDROID_API"
-  ANDROID_BUILD_TOOLS: "build-tools;$ANDROID_API.0.0"
-  # KUBERNETES_MEMORY_REQUEST: "8Gi"
-  # KUBERNETES_MEMORY_LIMIT: "13Gi"
-
+    GIT_DEPTH: 5
+    DEVELOP_BRANCH: 'develop'
+    ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
+    EMULATOR_NAME: 'android_emulator'
+    ANDROID_ARCH: 'arm64-v8a'
+    ANDROID_API: '35'
+    ANDROID_EMULATOR_IMAGE: 'system-images;android-$ANDROID_API;google_apis;${ANDROID_ARCH}'
+    ANDROID_PLATFORM: 'platforms;android-$ANDROID_API'
+    ANDROID_BUILD_TOOLS: 'build-tools;$ANDROID_API.0.0'
+    # KUBERNETES_MEMORY_REQUEST: "8Gi"
+    # KUBERNETES_MEMORY_LIMIT: "13Gi"
 
 stages:
-  - test
-  - notify
-
+    - benchmark
+    - test
+    - notify
 
 .snippets:
-  install-jdk-17:
-    - brew install openjdk@17
-  install-android-sdk:
-    - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
-    - rm -rf ~/android_sdk
-    - rm -rf ~/cmdline-tools
-    - unzip -q commandlinetools -d ~/
-    - mkdir -p ~/android_sdk/cmdline-tools/latest
-    - mv ~/cmdline-tools/* ~/android_sdk/cmdline-tools/latest
-    - rm ./commandlinetools.zip
-    - export ANDROID_HOME="$HOME/android_sdk/"
-    - export ANDROID_SDK_ROOT="$HOME/android_sdk/"
-    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator"
-    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "platform-tools"
-    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_PLATFORM"
-    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_BUILD_TOOLS"
-    - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_EMULATOR_IMAGE"
-    - yes | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-    - echo "no" | ~/android_sdk/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "$EMULATOR_NAME" --package "$ANDROID_EMULATOR_IMAGE"
+    install-jdk-17:
+        - brew install openjdk@17
+    install-android-sdk:
+        - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
+        - rm -rf ~/android_sdk
+        - rm -rf ~/cmdline-tools
+        - unzip -q commandlinetools -d ~/
+        - mkdir -p ~/android_sdk/cmdline-tools/latest
+        - mv ~/cmdline-tools/* ~/android_sdk/cmdline-tools/latest
+        - rm ./commandlinetools.zip
+        - export ANDROID_HOME="$HOME/android_sdk/"
+        - export ANDROID_SDK_ROOT="$HOME/android_sdk/"
+        - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator"
+        - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "platform-tools"
+        - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_PLATFORM"
+        - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_BUILD_TOOLS"
+        - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_EMULATOR_IMAGE"
+        - yes | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        - echo "no" | ~/android_sdk/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "$EMULATOR_NAME" --package "$ANDROID_EMULATOR_IMAGE"
 
 # TESTS
 
 test:lint:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - yarn
-    - yarn run lint 
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - yarn run lint
 
 test:js:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - yarn
-    - cp jestSetup.js.override node_modules/react-native-gesture-handler/jestSetup.js
-    - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test 
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - cp jestSetup.js.override node_modules/react-native-gesture-handler/jestSetup.js
+        - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test
 
 test:build:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - yarn
-    - yarn prepare 
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - yarn prepare
 
 test:native-android:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - !reference [.snippets, install-android-sdk]
-    - !reference [.snippets, install-jdk-17]
-    - /opt/homebrew/opt/openjdk@17/bin/java --version 
-    - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/core/android/gradle.properties
-    - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
-    - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/internal-testing-tools/android/gradle.properties
-    - yarn
-    - (cd packages/core/android && ./gradlew build)
-    - (cd packages/react-native-session-replay/android && ./gradlew build)
-    - (cd packages/internal-testing-tools/android && ./gradlew build)
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - !reference [.snippets, install-android-sdk]
+        - !reference [.snippets, install-jdk-17]
+        - /opt/homebrew/opt/openjdk@17/bin/java --version
+        - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/core/android/gradle.properties
+        - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
+        - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/internal-testing-tools/android/gradle.properties
+        - yarn
+        - (cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)
+        - (cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)
+        - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - yarn
-    - (cd example/ios && pod install --repo-update)
-    - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
-  tags: [ "macos:sonoma", "specific:true" ]
-  stage: test
-  timeout: 1h
-  script:
-    - yarn
-    - (cd example/ios && pod install --repo-update)
-    - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+
+test:native-ios-newarch:
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - (cd example-new-architecture/ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
+        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+
+benchmark:
+    stage: benchmark
+    rules:
+        - if: '$BUILD_BENCHMARK == "true"'
+          allow_failure: true
+        - if: '$CI_COMMIT_BRANCH == $DEVELOP_BRANCH'
+          allow_failure: true
+    trigger:
+        include: 'benchmarks/.benchmarks-ci.yml'
+        strategy: depend

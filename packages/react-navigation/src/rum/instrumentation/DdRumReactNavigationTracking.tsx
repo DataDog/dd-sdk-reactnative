@@ -8,6 +8,8 @@ import { DdRum, SdkVerbosity, InternalLog } from '@datadog/mobile-react-native';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { AppState, BackHandler } from 'react-native';
 
+import { NavigationTimeline } from './NavigationTimeline';
+import type { StateEvent } from './NavigationTimeline';
 import type {
     NavigationContainerRef,
     Route,
@@ -31,15 +33,32 @@ export type ViewNamePredicate = (
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
  */
 export class DdRumReactNavigationTracking {
+    private static _navigationTimeline?: NavigationTimeline;
+    private static get navigationTimeline(): NavigationTimeline | undefined {
+        if (!this.__INTERNAL._enableNavigationTimeline) {
+            return undefined;
+        }
+        if (!this._navigationTimeline) {
+            this._navigationTimeline = new NavigationTimeline();
+        }
+        return this._navigationTimeline;
+    }
+
     private static registeredContainer: NavigationContainerRef | null;
 
-    private static navigationStateChangeListener: NavigationListener;
+    private static navigationStateChangeListener: NavigationListener | null = null;
+
+    private static previousRoute: string | object | undefined = undefined;
 
     private static viewNamePredicate: ViewNamePredicate;
 
     private static backHandler: NativeEventSubscription | null;
 
     private static appStateSubscription?: NativeEventSubscription;
+
+    private static previousAppState: AppStateStatus | undefined;
+
+    private static previousRouteKey: string | undefined;
 
     private static trackingState: 'TRACKING' | 'NOT_TRACKING' = 'NOT_TRACKING';
 
@@ -49,6 +68,25 @@ export class DdRumReactNavigationTracking {
         'Cannot track views with a null navigationRef.';
     static NAVIGATION_REF_IN_USE_ERROR_MESSAGE =
         'Cannot track new navigation container while another one is still tracked. Please call `DdRumReactNavigationTracking.stopTrackingViews` on the previous container reference.';
+
+    /**
+     * @internal
+     * DO NOT USE: This API is for internal testing only.
+     */
+    static __INTERNAL = {
+        /**
+         * @internal
+         * DO NOT USE: This API is for internal testing only.
+         */
+        _enableNavigationTimeline: false,
+        /**
+         * @internal
+         * DO NOT USE: This API is for internal testing only.
+         */
+        _getNavigationTimeline: () => {
+            return [...(this.navigationTimeline?.events ?? [])];
+        }
+    };
 
     static isAppExitingOnBackPress = (): boolean => {
         if (DdRumReactNavigationTracking.registeredContainer === null) {
@@ -86,6 +124,8 @@ export class DdRumReactNavigationTracking {
             return trackedName;
         }
     ): void {
+        this.navigationTimeline?.addStartTrackingEvent();
+
         if (navigationRef == null) {
             InternalLog.log(
                 DdRumReactNavigationTracking.NULL_NAVIGATION_REF_ERROR_MESSAGE,
@@ -104,13 +144,11 @@ export class DdRumReactNavigationTracking {
             );
         } else if (DdRumReactNavigationTracking.registeredContainer == null) {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
-            const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
-            DdRumReactNavigationTracking.handleRouteNavigation(
-                navigationRef.getCurrentRoute(),
-                AppState.currentState
-            );
-            navigationRef.addListener('state', listener);
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
+
+            const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
+            navigationRef.addListener('state', listener);
+
             DdRumReactNavigationTracking.backHandler = BackHandler.addEventListener(
                 'hardwareBackPress',
                 DdRumReactNavigationTracking.onBackPress
@@ -129,14 +167,19 @@ export class DdRumReactNavigationTracking {
     static stopTrackingViews(
         navigationRef: NavigationContainerRef | null
     ): void {
+        this.navigationTimeline?.addStopTrackingEvent();
+        this.previousRoute = undefined;
         if (navigationRef != null) {
-            navigationRef.removeListener(
-                'state',
-                DdRumReactNavigationTracking.navigationStateChangeListener
-            );
+            if (DdRumReactNavigationTracking.navigationStateChangeListener) {
+                navigationRef.removeListener(
+                    'state',
+                    DdRumReactNavigationTracking.navigationStateChangeListener
+                );
+            }
             DdRumReactNavigationTracking.backHandler?.remove();
             DdRumReactNavigationTracking.backHandler = null;
             DdRumReactNavigationTracking.registeredContainer = null;
+            DdRumReactNavigationTracking.navigationStateChangeListener = null;
 
             // eslint-disable-next-line func-names
             DdRumReactNavigationTracking.viewNamePredicate = function (
@@ -168,7 +211,8 @@ export class DdRumReactNavigationTracking {
 
     private static handleRouteNavigation(
         route: Route<string, any | undefined> | undefined,
-        appStateStatus: AppStateStatus
+        appStateStatus: AppStateStatus,
+        stateEvent: StateEvent | undefined
     ) {
         if (route === undefined || route === null) {
             InternalLog.log(
@@ -187,16 +231,32 @@ export class DdRumReactNavigationTracking {
         if (key != null && screenName != null) {
             // On iOS, the app can start in either "active", "background" or "unknown" state
             if (appStateStatus !== 'background') {
+                this.previousRoute = route;
                 DdRumReactNavigationTracking.trackingState = 'TRACKING';
+                this.navigationTimeline?.addNavigationStateEvent(
+                    'START_VIEW',
+                    key,
+                    stateEvent,
+                    {
+                        activeView: undefined,
+                        trackingState: this.trackingState
+                    }
+                );
                 DdRum.startView(key, screenName);
             }
         }
+
+        this.previousRouteKey = route.key;
     }
 
     private static handleAppStateChanged(
         route: Route<string, any | undefined>,
         appStateStatus: AppStateStatus
     ) {
+        const appStateChangeEvent = this.navigationTimeline?.addAppStateChangeEvent(
+            this.previousAppState,
+            appStateStatus
+        );
         const key = route.key;
         const screenName = DdRumReactNavigationTracking.viewNamePredicate(
             route,
@@ -206,17 +266,33 @@ export class DdRumReactNavigationTracking {
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
                 DdRumReactNavigationTracking.trackingState = 'NOT_TRACKING';
+                this.navigationTimeline?.addNavigationStateEvent(
+                    'STOP_VIEW',
+                    key,
+                    appStateChangeEvent,
+                    {
+                        activeView: undefined,
+                        trackingState: this.trackingState
+                    }
+                );
                 DdRum.stopView(key);
+                this.previousRoute = undefined;
             } else if (
                 appStateStatus === 'active' &&
                 DdRumReactNavigationTracking.trackingState === 'NOT_TRACKING'
             ) {
                 // case when app goes into foreground,
                 // in that case navigation listener won't be called
-                DdRumReactNavigationTracking.trackingState = 'TRACKING';
-                DdRum.startView(key, screenName);
+                DdRumReactNavigationTracking.handleRouteNavigation(
+                    route,
+                    AppState.currentState,
+                    appStateChangeEvent
+                );
             }
         }
+
+        this.previousRouteKey = key;
+        this.previousAppState = appStateStatus;
     }
 
     private static resolveNavigationStateChangeListener(): NavigationListener {
@@ -226,6 +302,11 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.navigationStateChangeListener = () => {
                 const route = DdRumReactNavigationTracking.registeredContainer?.getCurrentRoute();
 
+                const newRouteStateEvent = this.navigationTimeline?.addNewRouteEvent(
+                    this.previousRouteKey,
+                    route?.key
+                );
+
                 if (route === undefined) {
                     InternalLog.log(
                         DdRumReactNavigationTracking.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
@@ -234,11 +315,28 @@ export class DdRumReactNavigationTracking {
                     return;
                 }
 
+                // Route already tracked
+                if (this.previousRoute === route) {
+                    this.navigationTimeline?.addNavigationStateEvent(
+                        'DISCARDED',
+                        route.name,
+                        newRouteStateEvent,
+                        {
+                            activeView: route.name,
+                            trackingState: this.trackingState
+                        }
+                    );
+                    return;
+                }
+
                 DdRumReactNavigationTracking.handleRouteNavigation(
                     route,
-                    AppState.currentState
+                    AppState.currentState,
+                    newRouteStateEvent
                 );
             };
+
+            DdRumReactNavigationTracking.navigationStateChangeListener({});
         }
         return DdRumReactNavigationTracking.navigationStateChangeListener;
     }

@@ -33,6 +33,9 @@ actualRN.NativeModules.DdSdk = {
     setTrackingConsent: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['setTrackingConsent']>,
+    sendTelemetryLog: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['sendTelemetryLog']>,
     telemetryDebug: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['telemetryDebug']>,
@@ -50,7 +53,10 @@ actualRN.NativeModules.DdSdk = {
     }) as jest.MockedFunction<DdNativeSdkType['addListener']>,
     removeListeners: jest.fn().mockImplementation((_: number) => {
         /* empty */
-    }) as jest.MockedFunction<DdNativeSdkType['removeListeners']>
+    }) as jest.MockedFunction<DdNativeSdkType['removeListeners']>,
+    onRUMSessionStarted: jest.fn().mockImplementation((_: string) => {
+        /* empty */
+    }) as jest.MockedFunction<DdNativeSdkType['onRUMSessionStarted']>
 };
 
 actualRN.NativeModules.DdLogs = {

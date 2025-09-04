@@ -1,6 +1,7 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
+folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeSessionReplay"
@@ -13,13 +14,12 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "12.0", :tvos => "12.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
-  
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
-  
+
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogSessionReplay', '~> 2.24.1'
+  s.dependency 'DatadogSessionReplay', '2.30.0'
   s.dependency 'DatadogSDKReactNative'
 
   s.test_spec 'Tests' do |test_spec|
@@ -28,16 +28,35 @@ Pod::Spec.new do |s|
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 
-  
-  # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
-  # The `install_modules_dependencies` function is only available from RN 0.71, the new architecture is not
-  # supported on earlier RN versions.
-  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-    s.pod_target_xcconfig = {
-      "DEFINES_MODULE" => "YES",
-      "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1"
-    }
 
-    install_modules_dependencies(s)
+  xcconfig = {
+    "HEADER_SEARCH_PATHS" => "$(inherited) " +
+      "$(PODS_ROOT)/React-RCTFabric/** " +
+      "$(PODS_ROOT)/React-FabricComponents/** " +
+      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
+      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**",
+    "USER_HEADER_SEARCH_PATHS" => "$(inherited) " +
+      "$(PODS_ROOT)/React-RCTFabric/** " +
+      "$(PODS_ROOT)/React-FabricComponents/** " +
+      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
+      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**"
+  }
+
+  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
+    s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
+    
+    xcconfig.merge!({
+      "DEFINES_MODULE" => "YES",
+      "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+    })
   end
+
+  s.pod_target_xcconfig = xcconfig
+
+  if respond_to?(:install_modules_dependencies, true)
+    install_modules_dependencies(s)
+  # else
+  #   s.dependency "React-Core"
+  end
+  
 end

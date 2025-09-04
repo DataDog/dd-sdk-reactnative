@@ -15,10 +15,6 @@ internal class MockDatadogCore: DatadogCoreProtocol {
             self.configuration = configuration
         }
         
-        if case .baggage(let key, let baggage) = message {
-            self.baggages[key] = baggage
-        }
-        
         if case .webview(let webViewMessage) = message {
             self.baggages["browser-rum-event"] = webViewMessage
         }
@@ -43,9 +39,7 @@ internal class MockDatadogCore: DatadogCoreProtocol {
         return NOPFeatureScope()
     }
     
-    func set(baggage: @escaping () -> DatadogInternal.FeatureBaggage?, forKey key: String) {
-        baggages[key] = baggage
-    }
+    func set<Context>(context: @escaping () -> Context?) where Context: AdditionalContext {}
     
     func mostRecentModifiedFileAt(before: Date) throws -> Date? {
         return nil

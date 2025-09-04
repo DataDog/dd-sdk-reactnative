@@ -20,6 +20,7 @@ import { DatadogTracingContext } from '../instrumentation/resourceTracking/distr
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
+import { setCachedSessionId } from '../sessionId/sessionIdHelper';
 import type { FirstPartyHost } from '../types';
 import { ErrorSource, PropagatorType, RumActionType } from '../types';
 
@@ -46,6 +47,7 @@ describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
+        setCachedSessionId(undefined as any);
     });
 
     describe('Context validation', () => {
@@ -977,6 +979,32 @@ describe('DdRum', () => {
                             headers,
                             tracingSamplingRate === 100
                         );
+                    }
+                });
+
+                it('tracing context contains RUM session ID in baggage when RUM Session ID is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomSessionId = `test-${Math.random()}`;
+
+                        setCachedSessionId(randomSessionId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `session.id=${randomSessionId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
                     }
                 });
 

@@ -11,6 +11,11 @@ import { TurboModuleRegistry } from 'react-native';
 /**
  * Do not import this Spec directly, use DdNativeSdkType instead.
  */
+
+export type RumSessionStartedEvent = {
+    sessionId: string | null;
+};
+
 export interface Spec extends TurboModule {
     readonly getConstants: () => {};
 
@@ -50,6 +55,17 @@ export interface Spec extends TurboModule {
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */
     setTrackingConsent(trackingConsent: string): Promise<void>;
+
+    /**
+     * Sends internal telemetry message with attributes
+     * @param message message
+     * @param attributes attributes
+     */
+    sendTelemetryLog(
+        message: string,
+        attributes: Object,
+        config: Object
+    ): Promise<void>;
 
     /**
      * Sends internal telemetry debug message

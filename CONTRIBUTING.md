@@ -23,7 +23,9 @@ This repository contains 2 main projects:
     * `codepush`: an integration for the [react-native-code-push](https://github.com/microsoft/react-native-code-push) library.
     * `core`: the core React Native SDK allowing tracking of logs, spans and RUM events.
     * `react-native-apollo-client`: an integration for the [Apollo Client](https://www.apollographql.com/docs/react/integrations/react-native/) library.
+    * `react-native-babel-plugin`: a Babel plugin that enriches React Native components with contextual metadata.
     * `react-native-navigation`: an integration for the [react-native-navigation](https://github.com/wix/react-native-navigation) library.
+    * `react-native-session-replay`: client-side React Native module to enable session replay with Datadog.
     * `react-native-webview`: an integration for the [`react-native-webview`](https://github.com/react-native-webview/react-native-webview) library.
     * `react-navigation`: an integration for the [react-navigation](https://github.com/react-navigation/react-navigation) library.
 * Sample app project (in the `example` folder)

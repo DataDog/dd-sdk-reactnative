@@ -10,11 +10,17 @@
 #import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
 #endif
 #import "DdSdk.h"
-#import <React/RCTBridge.h>
 
 @implementation DdSdk
 
-@synthesize bridge = _bridge;
+static __weak RCTBridge *_bridge = nil;
+
+/// This method can be called from AppDelegate to initialize the SDK from the native layer, to be able to catch startup errors and logs.
++ (void)initFromNative {
+    DdSdkNativeInitialization *nativeInitialization = [[DdSdkNativeInitialization alloc] init];
+    [nativeInitialization initializeFromNative];
+}
+
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(initialize, withConfiguration:(NSDictionary*)configuration
@@ -88,35 +94,34 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     [self clearAllData:resolve reject:reject];
 }
 
-// Thanks to this guard, we won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
+RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
+                 withAttributes: (NSDictionary *)attributes
+                 withConfig:(NSDictionary *)config
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    return std::make_shared<facebook::react::NativeDdSdkSpecJSI>(params);
+    [self sendTelemetryLog:message attributes:attributes config:config resolve:resolve reject:reject];
 }
-#endif
 
-
-- (NSArray<NSString *> *)supportedEvents {
-    return @[@"RumSessionStarted"];
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+      RCTExecuteOnMainQueue(^{
+          RCTRegisterReloadCommandListener(self);
+      });
+  }
+  return self;
 }
 
 - (DdSdkImplementation*)ddSdkImplementation
 {
     if (_ddSdkImplementation == nil) {
         _ddSdkImplementation = [[DdSdkImplementation alloc] initWithBridge:_bridge];
+#ifdef RCT_NEW_ARCH_ENABLED
+        [self registerSessionIdListener];
+#endif
     }
     return _ddSdkImplementation;
-}
-
-+ (BOOL)requiresMainQueueSetup {
-    return NO;
-}
-
-+ (void)initFromNative {
-    DdSdkNativeInitialization *nativeInitialization = [[DdSdkNativeInitialization alloc] init];
-    [nativeInitialization initializeFromNative];
 }
 
 - (dispatch_queue_t)methodQueue {
@@ -128,7 +133,7 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 }
 
 - (void)initialize:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation initializeWithConfiguration:configuration eventEmitter:self resolve:resolve reject:reject];
+    [self.ddSdkImplementation initializeWithConfiguration:configuration resolve:resolve reject:reject];
 }
 
 - (void)setAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
@@ -151,6 +156,10 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
     [self.ddSdkImplementation addUserExtraInfoWithExtraInfo:extraInfo resolve:resolve reject:reject];
 }
 
+- (void)sendTelemetryLog:(NSString *)message attributes:(NSDictionary *)attributes config:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation sendTelemetryLogWithMessage:message attributes:attributes config:config resolve:resolve reject:reject];
+}
+
 - (void)telemetryDebug:(NSString *)message resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation telemetryDebugWithMessage:message resolve:resolve reject:reject];
 }
@@ -161,6 +170,73 @@ RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
 
 - (void)clearAllData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation clearAllDataWithResolve:resolve reject:reject];
+}
+
+- (void)addListener:(NSString *)eventType {
+    [DdSdkSessionStartedListener.instance setHasListeners: true];
+    [super addListener:eventType];
+}
+
+- (void)removeListeners:(double)count {
+    [DdSdkSessionStartedListener.instance setHasListeners: false];
+    [super removeListeners:count];
+}
+
+- (NSArray<NSString *> *)supportedEvents {
+    return [[NSArray alloc] initWithObjects:@"RUMSessionStarted", nil];
+}
+
+- (void)startObserving {
+    [DdSdkSessionStartedListener.instance setHasListeners: true];
+}
+
+- (void)stopObserving {
+    [DdSdkSessionStartedListener.instance setHasListeners: false];
+}
+
++ (BOOL)requiresMainQueueSetup {
+    return NO;
+}
+
+- (void)didReceiveReloadCommand {
+    [DdSdkSessionStartedListener invalidate];
+}
+
++ (RCTBridge *)latestBridgeReference {
+    return _bridge;
+}
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+    return std::make_shared<facebook::react::NativeDdSdkSpecJSI>(params);
+}
+
+- (void)registerSessionIdListener {
+    __weak DdSdk* weakSelf = self;
+    [DdSdkSessionStartedListener.instance setListenerCallback:^(NSString * _Nonnull sessionId) {
+        DdSdk* strongSelf = weakSelf;
+        if (!strongSelf) {
+            return;
+        }
+
+        [strongSelf sendEventWithName:@"RUMSessionStarted" body: sessionId];
+    }];
+}
+
+#else
+- (void)registerNativeBridge {
+    [DdSdkSessionStartedListener.instance setRCTBridge: _bridge];
+}
+#endif
+
+- (void)setBridge:(RCTBridge *)bridge {
+    [super setBridge:bridge];
+    _bridge = bridge;
+    #ifndef RCT_NEW_ARCH_ENABLED
+    [self registerNativeBridge];
+    #endif
 }
 
 @end

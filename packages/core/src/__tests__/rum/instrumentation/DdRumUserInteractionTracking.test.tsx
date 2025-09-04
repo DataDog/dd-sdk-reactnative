@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
 const DdRum = NativeModules.DdRum as DdNativeRumType;
 
 // Silence the warning https://github.com/facebook/react-native/issues/11094#issuecomment-263240420
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 beforeEach(() => {
     jest.setTimeout(20000);

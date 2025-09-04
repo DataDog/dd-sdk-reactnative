@@ -59,11 +59,11 @@ public class DdSdkImplementation: NSObject {
     
     // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func initialize(configuration: NSDictionary, eventEmitter: RCTEventEmitter?, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
+    public func initialize(configuration: NSDictionary, resolve:@escaping ((Any?) -> Void), reject:RCTPromiseRejectBlock) -> Void {
         let sdkConfiguration = configuration.asDdSdkConfiguration()
         let nativeInitialization = DdSdkNativeInitialization()
 
-        nativeInitialization.initialize(sdkConfiguration: sdkConfiguration, eventEmitter: eventEmitter)
+        nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
         self.overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
 
@@ -128,6 +128,15 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
+    
+    @objc
+    public func sendTelemetryLog(message: NSString, attributes: NSDictionary, config: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let castedAttributes = castAttributesToSwift(attributes)
+        let castedConfig = castAttributesToSwift(config)
+        DatadogSDKWrapper.shared.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
+        resolve(nil)
+    }
+
     @objc
     public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)

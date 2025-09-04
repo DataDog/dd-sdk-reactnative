@@ -28,9 +28,10 @@ describe('FileBasedConfiguration', () => {
                         trackErrors: true,
                         trackingConsent: 'NOT_GRANTED',
                         longTaskThresholdMs: 44,
+                        site: 'US5',
                         verbosity: 'WARN',
                         actionNameAttribute: 'action-name-attr',
-                        useAccessibilityLabel: true,
+                        useAccessibilityLabel: false,
                         resourceTracingSamplingRate: 33,
                         firstPartyHosts: [
                             {
@@ -83,7 +84,7 @@ describe('FileBasedConfiguration', () => {
                   "resourceTracingSamplingRate": 33,
                   "serviceName": undefined,
                   "sessionSamplingRate": 100,
-                  "site": "US1",
+                  "site": "US5",
                   "telemetrySampleRate": 20,
                   "trackBackgroundEvents": false,
                   "trackErrors": true,
@@ -93,7 +94,7 @@ describe('FileBasedConfiguration', () => {
                   "trackWatchdogTerminations": false,
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": true,
+                  "useAccessibilityLabel": false,
                   "verbosity": "warn",
                   "vitalsUpdateFrequency": "AVERAGE",
                 }
@@ -224,10 +225,12 @@ describe('FileBasedConfiguration', () => {
                   ],
                   "longTaskThresholdMs": 44,
                   "resourceTracingSamplingRate": 33,
+                  "site": "US5",
                   "trackErrors": true,
                   "trackInteractions": true,
                   "trackResources": true,
                   "trackingConsent": "not_granted",
+                  "useAccessibilityLabel": false,
                   "verbosity": "warn",
                 }
             `);

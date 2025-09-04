@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-#import <react-native-webview/RNCWebViewImpl.h>
+#import "RNCWebViewImpl.h"
 
 @class RCTDatadogWebView;
 

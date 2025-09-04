@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** The entry point to initialize Datadog's features. */
+@Suppress("TooManyFunctions")
 class DdSdkImplementation(
     private val reactContext: ReactApplicationContext,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
@@ -38,7 +39,7 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
-        val nativeInitialization = DdSdkNativeInitialization(appContext, reactContext, datadog)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
         nativeInitialization.initialize(ddSdkConfiguration)
 
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)
@@ -60,7 +61,6 @@ class DdSdkImplementation(
         configureSynthetics()
 
         initialized.set(true)
-
         promise.resolve(null)
     }
 
@@ -135,6 +135,17 @@ class DdSdkImplementation(
      */
     fun setTrackingConsent(trackingConsent: String, promise: Promise) {
         datadog.setTrackingConsent(buildTrackingConsent(trackingConsent))
+        promise.resolve(null)
+    }
+
+
+    /**
+     * Convert React Native's ReadableMap to Map.
+     * @param attributes Custom attributes we want to send along with the Telemetry Log
+     * @param config Configuration object, can take 'onlyOnce: Boolean'
+     */
+    fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap, promise: Promise) {
+        datadog.sendTelemetryLog(message, attributes, config)
         promise.resolve(null)
     }
 

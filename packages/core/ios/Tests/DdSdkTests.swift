@@ -57,7 +57,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(consoleMessage, "")
 
@@ -68,7 +71,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(
             consoleMessage, "Datadog SDK is already initialized, skipping initialization.")
@@ -93,8 +99,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockPromiseResolve,
-            reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockPromiseResolve,
+            reject: mockReject
+        )
 
         waitForExpectations(timeout: 0.5, handler: nil)
     }
@@ -103,7 +111,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNil(ddConfig.uiKitViewsPredicate)
     }
@@ -112,7 +121,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeViewTracking: false)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNil(ddConfig.uiKitViewsPredicate)
     }
@@ -121,7 +131,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeViewTracking: true)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNotNil(ddConfig.uiKitViewsPredicate)
     }
@@ -130,7 +141,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNil(ddConfig.uiKitActionsPredicate)
     }
@@ -139,7 +151,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeInteractionTracking: false)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNil(ddConfig.uiKitActionsPredicate)
     }
@@ -148,7 +161,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeInteractionTracking: true)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertNotNil(ddConfig.uiKitActionsPredicate)
     }
@@ -163,8 +177,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.debug)
     }
@@ -179,8 +195,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.debug)
     }
@@ -195,8 +213,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.warn)
     }
@@ -211,8 +231,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertEqual(Datadog.verbosityLevel, CoreLoggerLevel.error)
     }
@@ -227,8 +249,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertNil(Datadog.verbosityLevel)
     }
@@ -243,8 +267,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: validConfiguration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: validConfiguration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertNil(Datadog.verbosityLevel)
     }
@@ -262,7 +288,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertNotNil(coreFromCallback)
     }
@@ -273,7 +302,8 @@ class DdSdkTests: XCTestCase {
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration, eventEmitter: nil)
+            sdkConfiguration: configuration
+        )
 
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
@@ -284,7 +314,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us1)
     }
@@ -293,7 +324,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "US")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us1)
     }
@@ -302,7 +334,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "US1")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us1)
     }
@@ -311,7 +344,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "US3")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us3)
     }
@@ -320,7 +354,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "US5")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us5)
     }
@@ -329,7 +364,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "US1_FED")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us1_fed)
     }
@@ -338,7 +374,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "GOV")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .us1_fed)
     }
@@ -347,7 +384,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "EU")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .eu1)
     }
@@ -356,7 +394,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "EU1")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .eu1)
     }
@@ -365,9 +404,20 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(site: "AP1")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.site, .ap1)
+    }
+
+    func testBuildConfigurationAP2Endpoint() {
+        let configuration: DdSdkConfiguration = .mockAny(site: "AP2")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.site, .ap2)
     }
 
     func testBuildConfigurationAdditionalConfig() {
@@ -376,7 +426,8 @@ class DdSdkTests: XCTestCase {
         ])
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         // swiftlint:disable force_cast
         XCTAssertEqual(ddConfig.additionalConfiguration["foo"] as! String, "test")
@@ -388,7 +439,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertNil(ddConfig.service)
     }
@@ -397,7 +449,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(serviceName: "com.example.app")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.service, "com.example.app")
     }
@@ -407,7 +460,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
 
         DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration, eventEmitter: nil)
+            sdkConfiguration: configuration
+        )
 
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -417,7 +471,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
 
         DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration, eventEmitter: nil)
+            sdkConfiguration: configuration
+        )
 
         XCTAssertNil(core.features[CrashReportingFeature.name])
     }
@@ -428,7 +483,8 @@ class DdSdkTests: XCTestCase {
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration, eventEmitter: nil)
+            sdkConfiguration: configuration
+        )
 
         XCTAssertNotNil(core.features[CrashReportingFeature.name])
     }
@@ -439,7 +495,9 @@ class DdSdkTests: XCTestCase {
         ])
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration, defaultAppVersion: "1.2.3")
+            configuration: configuration,
+            defaultAppVersion: "1.2.3"
+        )
 
         XCTAssertEqual(
             ddConfig.additionalConfiguration["_dd.version"] as! String, "1.2.3:codepush-3")
@@ -449,7 +507,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackFrustrations, true)
     }
@@ -458,7 +517,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: true)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackFrustrations, true)
     }
@@ -467,7 +527,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(trackFrustrations: false)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackFrustrations, false)
     }
@@ -481,7 +542,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setUser(
             user: NSDictionary(
@@ -518,7 +582,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setUser(
             user: NSDictionary(
@@ -554,7 +621,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setUserInfo(
             userInfo: NSDictionary(
@@ -605,7 +675,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setUserInfo(
             userInfo: NSDictionary(
@@ -655,7 +728,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setUserInfo(
             userInfo: NSDictionary(
@@ -716,7 +792,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         bridge.setAttributes(
             attributes: NSDictionary(
@@ -745,7 +824,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2500)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.longTaskThreshold, 2.5)
     }
@@ -754,7 +834,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.longTaskThreshold, nil)
     }
@@ -767,7 +848,8 @@ class DdSdkTests: XCTestCase {
             ] as NSArray).asFirstPartyHosts(), resourceTracingSamplingRate: 66)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = [
             "example.com": [.datadog, .b3], "datadog.com": [.b3multi, .tracecontext],
@@ -793,7 +875,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(telemetrySampleRate: 42.0)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.telemetrySampleRate, 42.0)
     }
@@ -822,7 +905,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "average")
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.vitalsUpdateFrequency, .average)
     }
@@ -831,7 +915,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(vitalsUpdateFrequency: "never")
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.vitalsUpdateFrequency, nil)
     }
@@ -840,7 +925,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "AVERAGE")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.uploadFrequency, .average)
     }
@@ -849,7 +935,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "FREQUENT")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.uploadFrequency, .frequent)
     }
@@ -858,7 +945,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "RARE")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.uploadFrequency, .rare)
     }
@@ -867,7 +955,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchSize: "SMALL")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchSize, .small)
     }
@@ -876,7 +965,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchSize: "MEDIUM")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchSize, .medium)
     }
@@ -885,7 +975,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchSize: "LARGE")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchSize, .large)
     }
@@ -894,7 +985,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "LOW")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchProcessingLevel, .low)
     }
@@ -903,7 +995,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "MEDIUM")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchProcessingLevel, .medium)
     }
@@ -912,7 +1005,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(batchProcessingLevel: "HIGH")
 
         let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
-            configuration: configuration)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.batchProcessingLevel, .high)
     }
@@ -928,8 +1022,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
-            configuration: .mockAny(longTaskThresholdMs: 0.0), eventEmitter: nil,
-            resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(longTaskThresholdMs: 0.0),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
@@ -954,8 +1050,13 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
-            configuration: .mockAny(longTaskThresholdMs: 0.0, vitalsUpdateFrequency: "never"),
-            eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(
+                longTaskThresholdMs: 0.0,
+                vitalsUpdateFrequency: "never"
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertFalse(mockRefreshRateMonitor.isStarted)
 
@@ -977,8 +1078,13 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
-            configuration: .mockAny(longTaskThresholdMs: 0.2, vitalsUpdateFrequency: "never"),
-            eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(
+                longTaskThresholdMs: 0.2,
+                vitalsUpdateFrequency: "never"
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
@@ -1004,8 +1110,13 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
-            configuration: .mockAny(longTaskThresholdMs: 200, vitalsUpdateFrequency: "average"),
-            eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(
+                longTaskThresholdMs: 200,
+                vitalsUpdateFrequency: "average"
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
 
@@ -1040,7 +1151,6 @@ class DdSdkTests: XCTestCase {
                     "trace": "https://trace.example.com",
                 ]
             ),
-            eventEmitter: nil,
             resolve: mockResolve,
             reject: mockReject
         )
@@ -1082,8 +1192,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
-            configuration: configuration, eventEmitter: nil, resolve: mockResolve,
-            reject: mockReject)
+            configuration: configuration,
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithRumEnabled)
         XCTAssertFalse(DatadogSDKWrapper.shared.loggerConfiguration.bundleWithTraceEnabled)
@@ -1093,7 +1205,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: true)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackBackgroundEvents, true)
     }
@@ -1102,7 +1215,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: false)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackBackgroundEvents, false)
     }
@@ -1111,7 +1225,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(trackBackgroundEvents: nil)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         XCTAssertEqual(ddConfig.trackBackgroundEvents, false)
     }
@@ -1147,7 +1262,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         let resourceEventMapper = try XCTUnwrap(ddConfig.resourceEventMapper)
 
@@ -1164,7 +1280,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny()
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         let actionEventMapper = try XCTUnwrap(ddConfig.actionEventMapper)
 
@@ -1188,8 +1305,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(longTaskThresholdMs: 0.2), eventEmitter: nil,
-            resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(longTaskThresholdMs: 0.2),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertTrue(bridge.isSameQueue(queue: mockJSRefreshRateMonitor.jsQueue!))
     }
@@ -1207,7 +1326,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorProvider: { MockRUMMonitor() },
             RUMMonitorInternalProvider: { nil }
         ).initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         XCTAssertNotNil(mockListener.core)
     }
@@ -1218,7 +1340,8 @@ class DdSdkTests: XCTestCase {
 
         DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration, eventEmitter: nil)
+            sdkConfiguration: configuration
+        )
 
         DdSdkImplementation().consumeWebviewEvent(
             message: "{\"eventType\":\"rum\",\"event\":{\"blabla\":\"custom message\"}}",
@@ -1231,7 +1354,8 @@ class DdSdkTests: XCTestCase {
         let configuration: DdSdkConfiguration = .mockAny(initialResourceThreshold: 0.5)
 
         let ddConfig = DdSdkNativeInitialization().buildRUMConfiguration(
-            configuration: configuration, eventEmitter: nil)
+            configuration: configuration
+        )
 
         let predicate = ddConfig.networkSettledResourcePredicate
         let earlyResource = TNSResourceParams(
@@ -1271,7 +1395,10 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { nil }
         )
         sdk.initialize(
-            configuration: .mockAny(), eventEmitter: nil, resolve: mockResolve, reject: mockReject)
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
 
         let core = try XCTUnwrap(CoreRegistry.default as? DatadogCore)
         // On SDK init, underlying `ConsentAwareDataWriter` performs data migration for each feature, which includes

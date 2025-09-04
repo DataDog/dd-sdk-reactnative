@@ -213,7 +213,7 @@ public class DdRumImplementation: NSObject {
 
     private func attributes(from context: NSDictionary, with timestampMs: Double) -> [String: Encodable] {
         var context = context as? [String: Any] ?? [:]
-        context[Self.timestampKey] = timestampMs
+        context[Self.timestampKey] = Int64(timestampMs)
         return castAttributesToSwift(context)
     }
 

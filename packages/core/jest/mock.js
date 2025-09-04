@@ -42,6 +42,9 @@ module.exports = {
         setTrackingConsent: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        sendTelemetryLog: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         telemetryDebug: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
@@ -128,6 +131,10 @@ module.exports = {
         generateTraceId: jest.fn().mockReturnValue('mock-trace-id'),
         generateSpanId: jest.fn().mockReturnValue('mock-span-id')
     },
-
-    DatadogProvider: DatadogProviderMock
+    DatadogProvider: DatadogProviderMock,
+    DdSdk: {
+        initialize: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve()))
+    }
 };

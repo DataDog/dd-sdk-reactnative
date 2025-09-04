@@ -11,11 +11,16 @@
         "longTaskThresholdMs": 44,
         "verbosity": "WARN",
         "actionNameAttribute": "action-name-attr",
+        "useAccessibilityLabel": false,
         "resourceTracingSamplingRate": 33,
+        "site": "US5",
         "firstPartyHosts": [
             {
                 "match": "example.com",
-                "propagatorTypes": ["B3MULTI", "TRACECONTEXT"]
+                "propagatorTypes": [
+                    "B3MULTI",
+                    "TRACECONTEXT"
+                ]
             }
         ]
     }

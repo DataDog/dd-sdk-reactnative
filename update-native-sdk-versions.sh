@@ -18,6 +18,7 @@ podspec_files=(
 build_gradle_files=(
     "packages/core/android/build.gradle"
     "packages/react-native-session-replay/android/build.gradle"
+    "packages/react-native-webview/android/build.gradle"
 )
 
 extract_and_validate_version() {
@@ -82,7 +83,7 @@ else
 fi
 
 # Get iOS version
-extract_and_validate_version podspec_files[@] "Datadog.*~>" 's/.*~> \([0-9.]*\).*/\1/' "iOS" ios_version
+extract_and_validate_version podspec_files[@] "dependency 'Datadog.*' *, *'" "s/.*dependency *'Datadog.*, *'\([0-9.]*\).*/\1/" "iOS" ios_version
 
 # Get Android version
 extract_and_validate_version build_gradle_files[@] "com.datadoghq:dd-sdk-android" 's/.*:\([0-9.]*\).*/\1/' "Android" android_version
@@ -95,20 +96,36 @@ if [ ! -f "NATIVE_SDK_VERSIONS.md" ]; then
 fi
 
 # Add the new version triad to NATIVE_SDK_VERSIONS.md
-if [ ! -z "$core_version" ] && [ ! -z "$ios_version" ] && [ ! -z "$android_version" ]; then
-    new_row="| $core_version | $ios_version | $android_version |"
-    
-    first_version_row=$(sed -n '3p' NATIVE_SDK_VERSIONS.md)
-    
-    if [ "$first_version_row" = "$new_row" ]; then
-        echo "Entry for version $core_version already exists in NATIVE_SDK_VERSIONS.md"
-    else
-        sed -i '' "2a\\
+should_exit=0
+if [ -z "$core_version" ]; then
+    echo "Error: missing core version"
+    should_exit=1
+fi
+
+if [ -z "$ios_version" ]; then
+    echo "Error: missing iOS version"
+    should_exit=1
+fi
+
+if [ -z "$android_version" ]; then
+    echo "Error: missing Android version"
+    should_exit=1
+fi
+
+if [ $should_exit -eq 1 ]; then
+    echo "Exiting due to missing version information"
+    exit 1
+fi
+
+new_row="| $core_version | $ios_version | $android_version |"
+
+first_version_row=$(sed -n '3p' NATIVE_SDK_VERSIONS.md)
+
+if [ "$first_version_row" = "$new_row" ]; then
+    echo "Entry for version $core_version already exists in NATIVE_SDK_VERSIONS.md"
+else
+    sed -i '' "2a\\
 $new_row\\
 " NATIVE_SDK_VERSIONS.md
-        echo "Updated NATIVE_SDK_VERSIONS.md with entry for version $core_version"
-    fi
-else
-    echo "Error: Missing version information"
-    exit 1
+    echo "Updated NATIVE_SDK_VERSIONS.md with entry for version $core_version"
 fi

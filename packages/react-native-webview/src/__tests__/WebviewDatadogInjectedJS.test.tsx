@@ -9,6 +9,7 @@ import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
 
 import { WebView } from '../index';
+import { isNewArchitecture } from '../utils/env-utils';
 
 import { dedent } from './__utils__/string-utils';
 
@@ -166,19 +167,51 @@ describe('Webview', () => {
             mockedWebView.mock.calls[0][0]
                 .injectedJavaScriptBeforeContentLoaded ?? ''
         );
-        const expected = dedent(`
-            try{
-              testInjectedJavaScript()
-            }
-            catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                source: 'DATADOG',
-                type: 'ERROR',
-                message: errorMsg
-              }));
-              true;
-            }`);
+        let expected;
+
+        if (isNewArchitecture()) {
+            expected = dedent(`
+                window.DatadogEventBridge = {
+                  send(msg) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                      source: 'DATADOG',
+                      type: 'NATIVE_EVENT',
+                      message: msg
+                    }));
+                    true;
+                  },
+                  getAllowedWebViewHosts() {
+                    return '["localhost","example.com"]'
+                  }
+                };
+                try{      
+                  testInjectedJavaScript()
+                }
+                catch (error) {
+                  const errorMsg = error instanceof Error ? error.message : String(error);
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    source: 'DATADOG',
+                    type: 'ERROR',
+                    message: errorMsg
+                  }));
+                  true;
+                }
+  `);
+        } else {
+            expected = dedent(`
+                try{
+                  testInjectedJavaScript()
+                }
+                catch (error) {
+                  const errorMsg = error instanceof Error ? error.message : String(error);
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    source: 'DATADOG',
+                    type: 'ERROR',
+                    message: errorMsg
+                  }));
+                  true;
+                }`);
+        }
 
         expect(realInjectedJs).toBe(expected);
     });

@@ -353,6 +353,8 @@ extension NSString? {
             return .us1_fed
         case "ap1":
             return .ap1
+        case "ap2":
+            return .ap2
         default:
             return .us1
         }

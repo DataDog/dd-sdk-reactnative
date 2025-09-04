@@ -19,7 +19,8 @@
         "packages": [
             "packages/*",
             "example",
-            "example-new-architecture"
+            "example-new-architecture",
+            "benchmarks"
         ]
     },
     "scripts": {
@@ -30,11 +31,17 @@
         "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
     },
     "devDependencies": {
-        "@babel/plugin-transform-runtime": "7.12.15",
-        "@react-native/babel-preset": "0.73.21",
-        "@react-native/eslint-config": "0.73.2",
-        "@react-native/metro-config": "0.73.5",
-        "@react-native/typescript-config": "0.73.1",
+        "@babel/core": "^7.25.2",
+        "@babel/plugin-transform-runtime": "^7.25.0",
+        "@babel/preset-env": "^7.25.3",
+        "@babel/runtime": "^7.26.10",
+        "@react-native-community/cli": "15.0.1",
+        "@react-native-community/cli-platform-android": "15.0.1",
+        "@react-native-community/cli-platform-ios": "15.0.1",
+        "@react-native/babel-preset": "0.76.9",
+        "@react-native/eslint-config": "0.76.9",
+        "@react-native/metro-config": "0.76.9",
+        "@react-native/typescript-config": "0.76.9",
         "@testing-library/react-native": "7.0.2",
         "@types/jest": "^29.5.0",
         "@types/react": "^18.2.6",
@@ -54,15 +61,20 @@
         "genversion": "3.0.2",
         "jest": "^29.7.0",
         "lerna": "8.1.6",
+        "metro": "^0.82.0",
         "pod-install": "0.1.14",
         "prettier": "2.2.0",
-        "react": "18.2.0",
-        "react-native": "0.73.9",
+        "react": "18.3.1",
+        "react-native": "0.76.9",
         "react-native-builder-bob": "0.26.0",
         "react-native-gradle-plugin": "^0.71.19",
         "react-native-webview": "13.12.2",
-        "react-test-renderer": "18.1.0",
+        "react-test-renderer": "18.3.1",
         "typescript": "5.0.4"
+    },
+    "peerDependencies": {
+        "react": "*",
+        "react-native": "*"
     },
     "engines": {
         "node": ">=18"
@@ -77,10 +89,15 @@
         "ejs": "3.1.10",
         "shell-quote": "^1.7.3",
         "cross-spawn": "7.0.5",
-        "ft-xml-parser": "4.4.1",
+        "fast-xml-parser": "4.4.1",
         "axios": "1.8.2",
         "nanoid": "3.3.8",
         "send": "0.19.0",
-        "serve-static": "1.16.0"
+        "serve-static": "1.16.0",
+        "formidable": "3.5.3",
+        "snyk": "^1.1297.3",
+        "form-data": "4.0.4",
+        "on-headers": "1.1.0",
+        "tmp": "0.2.4"
     }
 }

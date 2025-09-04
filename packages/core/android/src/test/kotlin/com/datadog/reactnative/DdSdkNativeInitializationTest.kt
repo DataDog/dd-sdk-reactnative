@@ -63,7 +63,6 @@ internal class DdSdkNativeInitializationTest {
 
         testedNativeInitialization = DdSdkNativeInitialization(
             mockContext,
-            mockContext,
             mockDatadog,
             mockJSONFileReader
         )

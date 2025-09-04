@@ -24,12 +24,17 @@ yarn workspace @datadog/mobile-react-native-navigation pack
 # Update example repo
 (cd example &&
 yarn
-(cd ios && pod install --repo-update)
+(cd ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
 )
 
 (cd example-new-architecture &&
 yarn
 (cd ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
+)
+
+(cd benchmarks &&
+yarn
+(cd ios && pod install --repo-update)
 )
 
 # Update NATIVE_SDK_VERSIONS.md

@@ -12,6 +12,7 @@ import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNative
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { validateContext } from '../utils/argsUtils';
+import { getErrorContext } from '../utils/errorUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
@@ -30,8 +31,8 @@ import {
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import {
-    getCachedRumSessionId,
-    setCachedRumSessionId
+    getCachedSessionId,
+    setCachedSessionId
 } from './sessionId/sessionIdHelper';
 import type {
     ErrorSource,
@@ -53,13 +54,6 @@ class DdRumWrapper implements DdRumType {
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
     private timeProvider: TimeProvider = new DefaultTimeProvider();
-
-    constructor() {
-        // Fetch the current session if any (because we might have missed the first RumSessionStarted event)
-        this.getCurrentSessionId().then(value => {
-            setCachedRumSessionId(value ?? null);
-        });
-    }
 
     startView = (
         key: string,
@@ -256,7 +250,7 @@ class DdRumWrapper implements DdRumType {
             message,
             source,
             stacktrace,
-            context: validateContext(context),
+            context: getErrorContext(validateContext(context)),
             timestampMs,
             fingerprint: fingerprint ?? ''
         });
@@ -324,13 +318,10 @@ class DdRumWrapper implements DdRumType {
             return undefined;
         }
         const sessionId = await this.nativeRum.getCurrentSessionId();
-        setCachedRumSessionId(sessionId ?? null);
-
+        if (sessionId) {
+            setCachedSessionId(sessionId);
+        }
         return sessionId;
-    }
-
-    getCachedSessionId(): string | null {
-        return getCachedRumSessionId();
     }
 
     getTracingContext = (
@@ -342,7 +333,7 @@ class DdRumWrapper implements DdRumType {
             url,
             tracingSamplingRate,
             firstPartyHosts,
-            getCachedRumSessionId()
+            getCachedSessionId()
         );
     };
 
@@ -353,7 +344,7 @@ class DdRumWrapper implements DdRumType {
         return getTracingContextForPropagators(
             propagators,
             tracingSamplingRate,
-            getCachedRumSessionId()
+            getCachedSessionId()
         );
     };
 

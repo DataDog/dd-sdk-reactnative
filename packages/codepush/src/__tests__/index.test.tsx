@@ -1,13 +1,7 @@
-import {
-    DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
-    DatadogProviderConfiguration
-} from '@datadog/mobile-react-native';
-import { render } from '@testing-library/react-native';
-import codePush from 'react-native-code-push';
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable global-require */
+import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
-
-import { DatadogCodepush, DatadogCodepushProvider } from '..';
 
 jest.mock('react-native-code-push', () => ({
     getUpdateMetadata: jest.fn()
@@ -16,7 +10,10 @@ jest.mock('react-native-code-push', () => ({
 jest.mock('@datadog/mobile-react-native', () => {
     const actualPackage = jest.requireActual('@datadog/mobile-react-native');
     actualPackage.DdSdkReactNative.initialize = jest.fn();
+    actualPackage.DdSdkReactNative._enableFeaturesFromDatadogProvider = jest.fn();
+    actualPackage.DdSdkReactNative._enableFeaturesFromDatadogProviderAsync = jest.fn();
     actualPackage.DdSdkReactNative._initializeFromDatadogProviderWithConfigurationAsync = jest.fn();
+    actualPackage.DdSdkReactNative._initializeFromDatadogProvider = jest.fn();
     return actualPackage;
 });
 
@@ -41,8 +38,16 @@ describe('AppCenter Codepush integration', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
     describe('initialize', () => {
         it('initializes the SDK with the correct version when using a CodePush bundle', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepush } = require('..');
+            const {
+                DdSdkReactNativeConfiguration,
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock('v3'));
@@ -65,6 +70,13 @@ describe('AppCenter Codepush integration', () => {
         });
 
         it('initializes the SDK with the correct version when not using a CodePush bundle', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepush } = require('..');
+            const {
+                DdSdkReactNativeConfiguration,
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(null);
@@ -92,7 +104,19 @@ describe('AppCenter Codepush integration', () => {
     });
 
     describe('DatadogCodepushProvider', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            jest.resetModules();
+        });
+
         it('initializes the sdk with the right codepush version when using DatadogProviderConfiguration', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DatadogProviderConfiguration,
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock('v4'));
@@ -118,6 +142,12 @@ describe('AppCenter Codepush integration', () => {
             );
         });
         it('initializes the sdk with the right codepush version when using partial configuration', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock('v5'));
@@ -149,7 +179,15 @@ describe('AppCenter Codepush integration', () => {
                 expect.objectContaining({ versionSuffix: 'codepush.v5' })
             );
         });
+
         it('initializes the sdk with commercial version when using DatadogProviderConfiguration', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DatadogProviderConfiguration,
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock(null));
@@ -177,6 +215,12 @@ describe('AppCenter Codepush integration', () => {
             ).not.toContain('versionSuffix');
         });
         it('initializes the sdk with commercial version when using partial configuration', async () => {
+            const codePush = require('react-native-code-push');
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DdSdkReactNative
+            } = require('@datadog/mobile-react-native');
+
             (codePush.getUpdateMetadata as jest.MockedFunction<
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock(null));
@@ -209,6 +253,140 @@ describe('AppCenter Codepush integration', () => {
                     >).mock.calls[0]
                 )
             ).not.toContain('versionSuffix');
+        });
+
+        it('initializes the DatadogProvider with FileBasedConfiguration & all parameters', async () => {
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DdSdkReactNative,
+                PropagatorType,
+                FileBasedConfiguration
+            } = require('@datadog/mobile-react-native');
+
+            const autoInstrumentationConfig = {
+                trackErrors: true,
+                trackResources: true,
+                trackInteractions: true,
+                firstPartyHosts: [
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ],
+                useAccessibilityLabel: true,
+                actionNameAttribute: 'test-action-name-attr',
+                resourceTracingSamplingRate: 100
+            };
+
+            const configuration = new FileBasedConfiguration({
+                configuration: { configuration: autoInstrumentationConfig }
+            });
+
+            render(<DatadogCodepushProvider configuration={configuration} />);
+
+            await flushPromises();
+            await waitFor(() => {
+                expect(
+                    DdSdkReactNative._enableFeaturesFromDatadogProvider
+                ).toHaveBeenCalledTimes(1);
+            });
+            expect(
+                DdSdkReactNative._enableFeaturesFromDatadogProvider
+            ).toHaveBeenCalledWith({
+                actionEventMapper: null,
+                logEventMapper: null,
+                resourceEventMapper: null,
+                errorEventMapper: null,
+                trackErrors: true,
+                trackResources: true,
+                trackInteractions: true,
+                firstPartyHosts: [
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ],
+                useAccessibilityLabel: true,
+                actionNameAttribute: 'test-action-name-attr',
+                resourceTracingSamplingRate: 100
+            });
+
+            expect(
+                DdSdkReactNative._enableFeaturesFromDatadogProvider
+            ).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    clientToken: expect.anything(),
+                    env: expect.anything(),
+                    applicationId: expect.anything()
+                })
+            );
+        });
+
+        it('initializes the DatadogProvider with FileBasedConfiguration & undefined parameters', async () => {
+            const { DatadogCodepushProvider } = require('..');
+            const {
+                DdSdkReactNative,
+                PropagatorType,
+                FileBasedConfiguration
+            } = require('@datadog/mobile-react-native');
+
+            const autoInstrumentationConfig = {
+                trackErrors: true,
+                trackResources: true,
+                trackInteractions: true,
+                firstPartyHosts: [
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ],
+                // useAccessibilityLabel: true,
+                // actionNameAttribute: 'test-action-name-attr',
+                resourceTracingSamplingRate: 100
+            };
+
+            const configuration = new FileBasedConfiguration({
+                configuration: { configuration: autoInstrumentationConfig }
+            });
+
+            render(<DatadogCodepushProvider configuration={configuration} />);
+
+            await flushPromises();
+            await waitFor(() => {
+                expect(
+                    DdSdkReactNative._enableFeaturesFromDatadogProvider
+                ).toHaveBeenCalledTimes(1);
+            });
+            expect(
+                DdSdkReactNative._enableFeaturesFromDatadogProvider
+            ).toHaveBeenCalledWith({
+                actionEventMapper: null,
+                logEventMapper: null,
+                resourceEventMapper: null,
+                errorEventMapper: null,
+                trackErrors: true,
+                trackResources: true,
+                trackInteractions: true,
+                firstPartyHosts: [
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ],
+                resourceTracingSamplingRate: 100,
+                actionNameAttribute: undefined,
+                useAccessibilityLabel: true
+            });
+
+            expect(
+                DdSdkReactNative._enableFeaturesFromDatadogProvider
+            ).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    clientToken: expect.anything(),
+                    env: expect.anything(),
+                    applicationId: expect.anything()
+                })
+            );
         });
     });
 });
