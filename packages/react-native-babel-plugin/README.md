@@ -1,10 +1,10 @@
 # Babel Plugin for React Native
 
-The `@datadog/mobile-react-native-babel-plugin` enhances the Datadog React Native SDK by automatically enriching React components with contextual metadata. It helps improve the accuracy of features such as RUM event correlation, Session Replay, and UI tracking.
+The `@datadog/mobile-react-native-babel-plugin` enhances the Datadog React Native SDK by automatically enriching React components with contextual metadata. This helps improve the accuracy of features such as RUM Action tracking and Session Replay.
 
 ## Setup
 
-**Note**: Make sure you’ve already integrated the [Datadog React Native SDK][1].
+**Note**: Make sure you've already integrated the [Datadog React Native SDK][1].
 
 To install with NPM, run:
 
@@ -22,7 +22,7 @@ yarn add @datadog/mobile-react-native-babel-plugin
 
 Add the plugin to your Babel configuration. Depending on your setup, you might be using a `babel.config.js`, `.babelrc`, or similar.
 
-Example configuration:
+**Example configuration:**
 
 ```js
 module.exports = {
@@ -31,7 +31,53 @@ module.exports = {
 };
 ```
 
-If you are currently using `actionNameAttribute` in your datadog SDK configuration, you'll need to also specify it here:
+### Configuration Options
+
+You can configure the plugin to adjust how it processes your code, giving you control over its behavior and allowing you to tailor it to your project’s needs.
+
+#### Top-level options
+
+| Option               | Type   | Default | Description |
+|-----------------------|--------|---------|-------------|
+| `actionNameAttribute` | string | –       | The chosen attribute name to use for action names. |
+| `components`          | object | –       | Component tracking configuration. |
+
+---
+
+#### `components` options
+
+| Option          | Type    | Default | Description |
+|-----------------|---------|---------|-------------|
+| `useContent`    | boolean | true   | Whether to use component content (for example: children, props) as the action name. |
+| `useNamePrefix` | boolean | true   | Whether to prefix actions with the component name. |
+| `tracked`       | array   | –       | List of component-specific tracking configs. |
+
+---
+
+#### `components.tracked[]` (per component)
+
+Each entry in the `tracked` array is an object with the following shape:
+
+| Option          | Type    | Default              | Description |
+|-----------------|---------|----------------------|-------------|
+| `name`          | string  | –                    | The component name to track (e.g., `Button`). |
+| `useContent`    | boolean | inherits from global | Override `useContent` for this component. |
+| `useNamePrefix` | boolean | inherits from global | Override `useNamePrefix` for this component. |
+| `contentProp`   | string  | –                    | Property name to use for content instead of children (for example: `"subTitle"`). |
+| `handlers`      | array   | –                    | List of event/action pairs to track. |
+
+---
+
+#### `components.tracked[].handlers[]`
+
+| Field   | Type   | Description |
+|---------|--------|-------------|
+| `event` | string | The event name to intercept (such as `"onPress"`). |
+| `action`| string | The RUM action name to associate with this event. _(Only `"TAP"` actions are currently supported)_ |
+
+---
+
+**Example configuration (_using configuration options_):**
 
 ```js
 module.exports = {
@@ -40,12 +86,37 @@ module.exports = {
     [
       '@datadog/mobile-react-native-babel-plugin',
       {actionNameAttribute: 'custom-prop-value'},
+      {
+        components: {
+          useContent: true,
+          useNamePrefix: true,
+          tracked: [
+            {
+              name: 'CustomButton',
+              contentProp: 'text'
+              handlers: [{event: 'onPress', action: 'TAP'}],
+            },
+            {
+              name: 'CustomTextInput',
+              handlers: [{event: 'onFocus', action: 'TAP'}],
+            },
+            {
+              useNamePrefix: false,
+              useContent: false,
+              name: 'Tab',
+              handlers: [{event: 'onChange', action: 'TAP'}],
+            },
+          ],
+        },
+      },
     ],
   ],
 };
 ```
 
-For more recent React Native versions this should be all that is needed. However, if you're on an older version and using Typescript in your project, you may need to install the preset `@babel/preset-typescript`.
+## Troubleshooting
+
+**Note**: If you're on an older React Native version, and using Typescript in your project, you may need to install the preset `@babel/preset-typescript`.
 
 To install with NPM, run:
 

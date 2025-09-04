@@ -6,6 +6,8 @@
 
 import type * as Babel from '@babel/core';
 
+import type { RumAction } from '../constants';
+
 export const MemoTypes = {
     USE_CALLBACK: 'useCallback',
     USE_MEMO: 'useMemo'
@@ -15,15 +17,32 @@ export type MemoType = typeof MemoTypes[keyof typeof MemoTypes];
 
 export type PluginAPI = typeof Babel & Babel.ConfigAPI;
 
+export type TrackedComponent = {
+    name: string;
+    useContent?: boolean;
+    useNamePrefix?: boolean;
+    contentProp?: string;
+    handlers: {
+        event: string;
+        action: keyof typeof RumAction;
+        mode?: 'default' | 'delayed';
+    }[];
+};
+
 export type PluginOptions = {
-    actionNameAttribute: string;
+    actionNameAttribute?: string;
+    components: {
+        useContent: boolean;
+        useNamePrefix: boolean;
+        tracked: TrackedComponent[];
+    };
 };
 
 export type PluginPassState = Babel.PluginPass & {
     fileInfo?: { path: string | null; name: string | null };
-    tapMappings?: Record<string, string[]>;
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
+    trackedComponents?: Record<string, Omit<TrackedComponent, 'name'>>;
 };
 
 export type PluginResult = Babel.PluginObj<Babel.PluginPass>;
