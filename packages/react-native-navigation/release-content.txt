@@ -42,6 +42,8 @@ package/lib/typescript/core/src/rum/instrumentation/DdRumErrorTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/DdRumErrorTracking.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts.map
+package/lib/typescript/core/src/rum/instrumentation/interactionTracking/ddBabelUtils.d.ts
+package/lib/typescript/core/src/rum/instrumentation/interactionTracking/ddBabelUtils.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.d.ts
