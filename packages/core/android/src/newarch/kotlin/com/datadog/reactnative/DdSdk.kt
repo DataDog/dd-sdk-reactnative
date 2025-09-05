@@ -19,9 +19,10 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 class DdSdk(
     reactContext: ReactApplicationContext,
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
+    ddTelemetry: DdTelemetry = DdTelemetry()
 ) : NativeDdSdkSpec(reactContext) {
 
-    private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
+    private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper, ddTelemetry)
 
     override fun getName(): String = DdSdkImplementation.NAME
 

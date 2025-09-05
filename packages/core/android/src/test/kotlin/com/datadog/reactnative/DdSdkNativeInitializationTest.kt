@@ -49,6 +49,9 @@ internal class DdSdkNativeInitializationTest {
     lateinit var mockDatadog: DatadogWrapper
 
     @Mock
+    lateinit var mockDdTelemetry: DdTelemetry
+
+    @Mock
     lateinit var mockJSONFileReader: JSONFileReader
 
     @BeforeEach
@@ -64,6 +67,7 @@ internal class DdSdkNativeInitializationTest {
         testedNativeInitialization = DdSdkNativeInitialization(
             mockContext,
             mockDatadog,
+            mockDdTelemetry,
             mockJSONFileReader
         )
     }
