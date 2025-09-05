@@ -5,19 +5,20 @@
  */
 import type { GestureResponderEvent } from 'react-native';
 
+import { DdAttributes } from '../DdAttributes';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
+import type { ErrorSource } from '../types';
 import { validateContext } from '../utils/argsUtils';
 import { getErrorContext } from '../utils/errorUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
-import { DdAttributes } from './DdAttributes';
 import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
 import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
@@ -36,7 +37,6 @@ import {
     setCachedSessionId
 } from './sessionId/sessionIdHelper';
 import type {
-    ErrorSource,
     DdRumType,
     RumActionType,
     ResourceKind,
