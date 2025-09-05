@@ -6,7 +6,7 @@
 
 import type { AdditionalEventDataForMapper } from '../../sdk/EventMappers/EventMapper';
 import { EventMapper } from '../../sdk/EventMappers/EventMapper';
-import type { ErrorSource } from '../types';
+import type { ErrorSource } from '../../types';
 
 type RawError = {
     message: string;

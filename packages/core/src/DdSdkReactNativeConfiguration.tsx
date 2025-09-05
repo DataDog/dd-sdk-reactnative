@@ -7,12 +7,12 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import type { LogEventMapper } from './logs/types';
 import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from './rum/types';
 import { PropagatorType } from './rum/types';
+import type { LogEventMapper } from './types';
 
 export enum VitalsUpdateFrequency {
     FREQUENT = 'FREQUENT',
