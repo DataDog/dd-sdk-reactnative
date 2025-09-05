@@ -5,6 +5,7 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
+import type { UserInfo as UserInfoSingleton } from './sdk/UserInfoSingleton/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
@@ -118,13 +119,6 @@ export type DdSdkType = {
     setTrackingConsent(trackingConsent: string): Promise<void>;
 };
 
-export type UserInfo = {
-    id: string;
-    name?: string;
-    email?: string;
-    extraInfo?: object;
-};
-
 /**
  * The entry point to use Datadog's Trace feature.
  */
@@ -153,3 +147,44 @@ export type DdTraceType = {
         timestampMs?: number
     ): Promise<void>;
 };
+
+// Shared types across modules
+
+// Core
+
+export type UserInfo = {
+    id: string;
+    name?: string;
+    email?: string;
+    extraInfo?: object;
+};
+
+// DdLogs
+
+export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
+
+export type LogEvent = {
+    message: string;
+    context: object;
+    errorKind?: string;
+    errorMessage?: string;
+    stacktrace?: string;
+    fingerprint?: string;
+    readonly source?: ErrorSource;
+    // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
+    readonly status: LogStatus;
+    readonly userInfo: UserInfoSingleton;
+    readonly attributes?: object;
+};
+
+export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
+
+// DdRum
+
+export enum ErrorSource {
+    NETWORK = 'NETWORK',
+    SOURCE = 'SOURCE',
+    CONSOLE = 'CONSOLE',
+    WEBVIEW = 'WEBVIEW',
+    CUSTOM = 'CUSTOM'
+}
