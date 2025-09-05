@@ -7,6 +7,8 @@
 package com.datadog.reactnative.internaltesting
 
 import android.content.Context
+import com.datadog.android.Datadog
+import com.datadog.android.api.SdkCore
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
@@ -57,37 +60,47 @@ internal class DdInternalTestingImplementationTest {
 
     @Test
     fun `M return captured events W enable()`() {
-        // Given
-        val mockFeature = MockFeature("mockFeature")
-        val mockFeatureScope = MockFeatureScope(mockFeature)
-        whenever(mockCore.getFeature(mockFeature.name)).doReturn(
-            mockFeatureScope
-        )
-        whenever(mockCore.getDatadogContext()).doReturn(
-            mockContext
-        )
+        Mockito.mockStatic(Datadog::class.java).use { datadogStatic ->
+            // Given
+            datadogStatic.`when`<SdkCore> {
+                Datadog.getInstance()
+            }.thenReturn(mockCore)
 
-        // When
-        testedInternalTesting.enable(mockPromise)
-        // Simulating DdSdkImplementation initialization
-        DatadogSDKWrapperStorage.setSdkCore(mockCore)
-        DatadogSDKWrapperStorage.notifyOnInitializedListeners(mockCore)
+            val mockFeature = MockFeature("mockFeature")
+            val mockFeatureScope = MockFeatureScope(mockFeature)
+            whenever(mockCore.getFeature(mockFeature.name)).doReturn(
+                mockFeatureScope
+            )
+            whenever(mockCore.getDatadogContext()).doReturn(
+                mockContext
+            )
 
-        val wrappedCore = DatadogSDKWrapperStorage.getSdkCore() as StubSDKCore
-        wrappedCore.registerFeature(mockFeature)
-        requireNotNull(wrappedCore.getFeature(mockFeature.name))
-            .withWriteContext { _, eventBatchWriter ->
-                eventBatchWriter.write(
-                    RawBatchEvent(data = "mock event for test".toByteArray()),
-                    batchMetadata = null,
-                    eventType = EventType.DEFAULT
+            // When
+            testedInternalTesting.enable(mockPromise)
+            // Simulating DdSdkImplementation initialization
+            DatadogSDKWrapperStorage.notifyOnInitializedListeners(mockCore)
+
+            val wrappedCore = Datadog.getInstance() as StubSDKCore
+            wrappedCore.registerFeature(mockFeature)
+            requireNotNull(wrappedCore.getFeature(mockFeature.name))
+                .withWriteContext { _, eventBatchWriter ->
+                    eventBatchWriter.write(
+                        RawBatchEvent(data = "mock event for test".toByteArray()),
+                        batchMetadata = null,
+                        eventType = EventType.DEFAULT
+                    )
+                }
+
+            // Then
+            assertThat(
+                wrappedCore.featureScopes[mockFeature.name]
+                    ?.eventsWritten()
+                    ?.first()
+            )
+                .isEqualTo(
+                    "mock event for test"
                 )
-            }
-
-        // Then
-        assertThat(wrappedCore.featureScopes[mockFeature.name]?.eventsWritten()?.first()).isEqualTo(
-            "mock event for test"
-        )
+        }
     }
 }
 
@@ -96,6 +109,7 @@ internal class MockFeatureScope(private val feature: Feature) : FeatureScope {
 
     override fun sendEvent(event: Any) {}
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : Feature> unwrap(): T {
         return feature as T
     }

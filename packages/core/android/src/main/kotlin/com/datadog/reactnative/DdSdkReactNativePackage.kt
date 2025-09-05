@@ -18,9 +18,10 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
  */
 class DdSdkReactNativePackage : TurboReactPackage() {
     private val sdkWrapper = DatadogSDKWrapper()
+    private val ddTelemetry = DdTelemetry()
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return when (name) {
-            DdSdkImplementation.NAME -> DdSdk(reactContext, sdkWrapper)
+            DdSdkImplementation.NAME -> DdSdk(reactContext, sdkWrapper, ddTelemetry)
             DdRumImplementation.NAME -> DdRum(reactContext, sdkWrapper)
             DdTraceImplementation.NAME -> DdTrace(reactContext)
             DdLogsImplementation.NAME -> DdLogs(reactContext, sdkWrapper)
