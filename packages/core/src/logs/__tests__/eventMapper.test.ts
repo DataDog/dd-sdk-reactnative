@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { ErrorSource } from '../../rum/types';
+import { ErrorSource } from '../../types';
 import { formatRawLogToLogEvent } from '../eventMapper';
 
 describe('formatRawLogToLogEvent', () => {

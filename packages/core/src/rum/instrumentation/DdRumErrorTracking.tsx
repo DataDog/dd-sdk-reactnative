@@ -8,6 +8,7 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
+import { ErrorSource } from '../../types';
 import {
     getErrorMessage,
     getErrorStackTrace,
@@ -18,7 +19,6 @@ import {
 } from '../../utils/errorUtils';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
-import { ErrorSource } from '../types';
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
