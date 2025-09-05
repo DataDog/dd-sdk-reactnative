@@ -7,10 +7,9 @@
 import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { EventMapper } from '../sdk/EventMappers/EventMapper';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
+import type { LogEvent, LogEventMapper } from '../types';
 
 import type {
-    LogEvent,
-    LogEventMapper,
     NativeLog,
     NativeLogWithError,
     RawLog,

@@ -12,6 +12,7 @@ import { SdkVerbosity } from '../../SdkVerbosity';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdSdk } from '../../sdk/DdSdk';
 import { GlobalState } from '../../sdk/GlobalState/GlobalState';
+import { ErrorSource } from '../../types';
 import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
@@ -22,7 +23,7 @@ import { TracingIdFormat } from '../instrumentation/resourceTracking/distributed
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
 import { setCachedSessionId } from '../sessionId/sessionIdHelper';
 import type { FirstPartyHost } from '../types';
-import { ErrorSource, PropagatorType, RumActionType } from '../types';
+import { PropagatorType, RumActionType } from '../types';
 
 import * as TracingContextUtils from './__utils__/TracingHeadersUtils';
 

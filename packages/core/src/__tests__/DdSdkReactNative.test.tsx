@@ -17,11 +17,12 @@ import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
-import { ErrorSource, PropagatorType, RumActionType } from '../rum/types';
+import { PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
+import { ErrorSource } from '../types';
 import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
