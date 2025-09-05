@@ -120,6 +120,9 @@ internal class DdSdkTest {
     @Mock
     lateinit var mockDatadog: DatadogWrapper
 
+    @Mock
+    lateinit var mockDdTelemetry: DdTelemetry
+
     @Forgery
     lateinit var fakeConfiguration: DdSdkConfiguration
 
@@ -157,9 +160,8 @@ internal class DdSdkTest {
             answer.getArgument<Runnable>(0).run()
             true
         }
-        testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog, TestUiThreadExecutor())
+        testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog, mockDdTelemetry, TestUiThreadExecutor())
 
-        DatadogSDKWrapperStorage.setSdkCore(null)
         DatadogSDKWrapperStorage.onInitializedListeners.clear()
     }
 

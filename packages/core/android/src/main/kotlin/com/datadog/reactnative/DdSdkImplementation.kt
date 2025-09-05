@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class DdSdkImplementation(
     private val reactContext: ReactApplicationContext,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val ddTelemetry: DdTelemetry = DdTelemetry(),
     private val uiThreadExecutor: UiThreadExecutor = ReactUiThreadExecutor()
 ) {
     internal val appContext: Context = reactContext.applicationContext
@@ -39,7 +40,7 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
-        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog, ddTelemetry)
         nativeInitialization.initialize(ddSdkConfiguration)
 
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)
@@ -145,7 +146,7 @@ class DdSdkImplementation(
      * @param config Configuration object, can take 'onlyOnce: Boolean'
      */
     fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap, promise: Promise) {
-        datadog.sendTelemetryLog(message, attributes, config)
+        ddTelemetry.sendTelemetryLog(message, attributes, config)
         promise.resolve(null)
     }
 
@@ -154,7 +155,7 @@ class DdSdkImplementation(
      * @param message Debug message.
      */
     fun telemetryDebug(message: String, promise: Promise) {
-        datadog.telemetryDebug(message)
+        ddTelemetry.telemetryDebug(message)
         promise.resolve(null)
     }
 
@@ -165,7 +166,7 @@ class DdSdkImplementation(
      * @param kind Error kind.
      */
     fun telemetryError(message: String, stack: String, kind: String, promise: Promise) {
-        datadog.telemetryError(message, stack, kind)
+        ddTelemetry.telemetryError(message, stack, kind)
         promise.resolve(null)
     }
 

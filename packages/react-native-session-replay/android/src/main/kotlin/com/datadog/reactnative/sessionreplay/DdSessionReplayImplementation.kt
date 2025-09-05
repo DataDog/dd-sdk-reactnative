@@ -7,10 +7,10 @@
 package com.datadog.reactnative.sessionreplay
 
 import android.annotation.SuppressLint
+import com.datadog.android.Datadog
 import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay._SessionReplayInternalProxy
-import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
@@ -40,7 +40,7 @@ class DdSessionReplayImplementation(
         startRecordingImmediately: Boolean,
         promise: Promise
     ) {
-        val sdkCore = DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
+        val sdkCore = Datadog.getInstance() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val textViewUtils = TextViewUtils.create(reactContext, logger)
         val internalCallback = ReactNativeInternalCallback(reactContext)
@@ -68,7 +68,7 @@ class DdSessionReplayImplementation(
      */
     fun startRecording(promise: Promise) {
         sessionReplayProvider().startRecording(
-            DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
+            Datadog.getInstance() as FeatureSdkCore
         )
         promise.resolve(null)
     }
@@ -78,7 +78,7 @@ class DdSessionReplayImplementation(
      */
     fun stopRecording(promise: Promise) {
         sessionReplayProvider().stopRecording(
-            DatadogSDKWrapperStorage.getSdkCore() as FeatureSdkCore
+            Datadog.getInstance() as FeatureSdkCore
         )
         promise.resolve(null)
     }
