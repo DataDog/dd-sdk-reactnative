@@ -65,7 +65,9 @@ class DdSdkNativeInitialization internal constructor(
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
         Rum.enable(rumConfiguration, Datadog.getInstance())
+
         Logs.enable(logsConfiguration, Datadog.getInstance())
+
         Trace.enable(traceConfiguration, Datadog.getInstance())
     }
 
