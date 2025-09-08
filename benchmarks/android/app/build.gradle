@@ -129,5 +129,5 @@ dependencies {
 
     // Benchmark tools from dd-sdk-android are used for vitals recording
     // Remember to bump thid alongside the main dd-sdk-android dependencies
-    implementation("com.datadoghq:dd-sdk-android-benchmark-internal:3.2.0")
+    implementation("com.datadoghq:dd-sdk-android-benchmark-internal:3.0.0")
 }
