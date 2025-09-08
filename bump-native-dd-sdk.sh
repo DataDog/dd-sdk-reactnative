@@ -23,7 +23,7 @@ podspec_files=(
   "packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
 )
 
-ios_pattern="('Datadog[^']+', '~> )[0-9.]+'"
+ios_pattern="('Datadog[^']+', ')[0-9.]+'"
 android_pattern='(com\.datadoghq:dd-sdk-android-[^:"]+):[0-9.]+'
 
 if [[ "$sdk" == "ios" ]]; then
