@@ -8,7 +8,6 @@ import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import DdNativeRum from '../../../specs/NativeDdRum';
 import DdSdk from '../../../specs/NativeDdSdk';
-import { getBabelTelemetryConfig } from '../../../utils/telemetry';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
@@ -63,6 +62,16 @@ export class DdBabelInteractionTracking {
         }
 
         return DdBabelInteractionTracking.instance;
+    }
+
+    static getTelemetryConfig() {
+        return {
+            babel_plugin: {
+                enabled: !!globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__,
+                track_interactions: !!DdBabelInteractionTracking.config
+                    .trackInteractions
+            }
+        };
     }
 
     private getTargetName(targetObject: TargetObject) {
@@ -129,7 +138,7 @@ export class DdBabelInteractionTracking {
             if (!this.telemetrySent) {
                 DdSdk?.sendTelemetryLog(
                     BABEL_PLUGIN_TELEMETRY,
-                    getBabelTelemetryConfig(),
+                    DdBabelInteractionTracking.getTelemetryConfig(),
                     { onlyOnce: true }
                 );
 
