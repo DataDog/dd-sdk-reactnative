@@ -139,42 +139,47 @@ public class DdSdkImplementation: NSObject {
     public func sendTelemetryLog(message: NSString, attributes: NSDictionary, config: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         let castedConfig = castAttributesToSwift(config)
-        DatadogSDKWrapper.shared.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
+        DdTelemetry.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
         resolve(nil)
     }
 
     @objc
     public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
+        DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
     
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
+        DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
+<<<<<<< HEAD
     
 #if os(iOS)
+=======
+
+>>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
     @objc
     public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
             try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
         } catch {
-            DatadogSDKWrapper.shared.telemetryError(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
+            DdTelemetry.telemetryError(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
         }
+
         resolve(nil)
     }
 #endif
     
     @objc
     public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.clearAllData()
+        Datadog.clearAllData()
         resolve(nil)
     }
 
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
-        DatadogSDKWrapper.shared.overrideTelemetryConfiguration(
+        DdTelemetry.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
             reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
