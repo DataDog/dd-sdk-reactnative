@@ -13,11 +13,15 @@ import DatadogCrashReporting
 import DatadogInternal
 import Foundation
 
+<<<<<<< HEAD
 #if os(iOS)
 import DatadogWebViewTracking
 #endif
 
 public typealias OnCoreInitializedListener = (DatadogCoreProtocol) -> Void
+=======
+public typealias OnSdkInitializedListener = () -> Void
+>>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
 
 /// Wrapper around the Datadog SDK. Use DatadogSDKWrapper.shared to access the instance.
 public class DatadogSDKWrapper {
@@ -25,25 +29,14 @@ public class DatadogSDKWrapper {
     public static var shared = DatadogSDKWrapper()
 
     // Initialization callbacks
-    internal var onCoreInitializedListeners: [OnCoreInitializedListener] = []
-    internal var loggerConfiguration = DatadogLogs.Logger.Configuration()
-    // Core instance
-    private var coreInstance: DatadogCoreProtocol? = nil
+    internal var onSdkInitializedListeners: [OnSdkInitializedListener] = []
+
+    internal private(set) var loggerConfiguration = DatadogLogs.Logger.Configuration()
 
     private init() { }
 
-    public func addOnCoreInitializedListener(listener:@escaping OnCoreInitializedListener) {
-        onCoreInitializedListeners.append(listener)
-    }
-
-    /// This is intended for internal testing only.
-    public func setCoreInstance(core: DatadogCoreProtocol?) {
-        self.coreInstance = core
-    }
-
-    /// This is not supposed to be used in the SDK itself, rather by other SDKs like Session Replay. 
-    public func getCoreInstance() -> DatadogCoreProtocol? {
-        return coreInstance
+    public func addOnSdkInitializedListener(listener:@escaping OnSdkInitializedListener) {
+        onSdkInitializedListeners.append(listener)
     }
 
     // SDK Wrapper
@@ -52,15 +45,16 @@ public class DatadogSDKWrapper {
         loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
-        let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
-        setCoreInstance(core: core)
-        for listener in onCoreInitializedListeners {
-            listener(core)
+        Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
+
+        for listener in onSdkInitializedListeners {
+            listener()
         }
 
         self.loggerConfiguration = loggerConfiguration
     }
 
+<<<<<<< HEAD
     internal func isInitialized() -> Bool {
         return Datadog.isInitialized()
     }
@@ -161,17 +155,15 @@ public class DatadogSDKWrapper {
 
 
 #if os(iOS)
+=======
+>>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
     // Webview
     private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
     internal func enableWebviewTracking() {
-        if let core = coreInstance {
-            webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing Webview tracking.", .critical)
-        }
+        webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: CoreRegistry.default)
     }
-    
+
     internal func sendWebviewMessage(body: NSString) throws {
         try self.webviewMessageEmitter?.send(body: body)
     }

@@ -17,7 +17,11 @@ internal class DatadogSDKReactNativeWebViewTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let mockDatadogCore = MockDatadogCore()
-        DatadogSDKWrapper.shared.setCoreInstance(core: mockDatadogCore)
+        CoreRegistry.register(default: mockDatadogCore)
+    }
+
+    override func tearDown() {
+        CoreRegistry.unregisterDefault()
     }
     
     func testDatadogWebViewManagerReturnsDatadogWebView() {
@@ -41,9 +45,10 @@ internal class DatadogSDKReactNativeWebViewTests: XCTestCase {
         XCTAssertFalse(view.isTrackingEnabled)
     }
     
-    func testDatadogWebViewTrackingIsDisabledIfCoreIsNotReady() {
+    func testDatadogWebViewTrackingIsDisabledIfSdkIsNotInitialized() {
         // Given
-        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
+        CoreRegistry.unregisterDefault()
+
         let viewManager = RCTDatadogWebViewManager()
         let allowedHosts = NSArray(objects: "example1.com", "example2.com")
 
@@ -82,7 +87,7 @@ internal class DatadogSDKReactNativeWebViewTests: XCTestCase {
 
         view.addSubview(WKWebView())
 
-        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
+        CoreRegistry.unregisterDefault()
 
         // Given
         let selector = NSSelectorFromString("setupDatadogWebView:view:")
@@ -92,7 +97,6 @@ internal class DatadogSDKReactNativeWebViewTests: XCTestCase {
         XCTAssertFalse(view.isTrackingEnabled)
 
         // When
-        DatadogSDKWrapper.shared.setCoreInstance(core: MockDatadogCore())
         DatadogSDKWrapper.shared.callInitialize()
 
         let expectation = self.expectation(description: "WebView tracking is enabled through the listener.")
