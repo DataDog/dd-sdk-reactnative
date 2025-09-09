@@ -213,8 +213,7 @@ public class DdSdkImplementation: NSObject {
     ) {
         let castedAttributes = castAttributesToSwift(attributes)
         let castedConfig = castAttributesToSwift(config)
-        DdTelemetry.sendTelemetryLog(
-            message: message as String, attributes: castedAttributes, config: castedConfig)
+        DdTelemetry.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
         resolve(nil)
     }
 
@@ -224,7 +223,6 @@ public class DdSdkImplementation: NSObject {
         DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
-
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
@@ -252,17 +250,15 @@ public class DdSdkImplementation: NSObject {
 #endif
     
     @objc
-    public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog.clearAllData()
         resolve(nil)
     }
 
-    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
         DdTelemetry.overrideTelemetryConfiguration(
-            initializationType: rnConfiguration.configurationForTelemetry?.initializationType
-                as? String,
-            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion
-                as? String,
+            initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
+            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
             trackCrossPlatformLongTasks: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
