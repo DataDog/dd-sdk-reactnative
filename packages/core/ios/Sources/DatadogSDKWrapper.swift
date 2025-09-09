@@ -5,16 +5,15 @@
  */
 
 import DatadogCore
+import DatadogCrashReporting
+import DatadogInternal
 import DatadogLogs
 import DatadogRUM
 import DatadogTrace
-import DatadogCrashReporting
-import DatadogInternal
 import Foundation
 
-
 #if os(iOS)
-import DatadogWebViewTracking
+    import DatadogWebViewTracking
 #endif
 
 public typealias OnSdkInitializedListener = (DatadogCoreProtocol) -> Void
@@ -29,7 +28,7 @@ public class DatadogSDKWrapper {
 
     internal private(set) var loggerConfiguration = DatadogLogs.Logger.Configuration()
 
-    private init() { }
+    private init() {}
 
     public func addOnSdkInitializedListener(listener: @escaping OnSdkInitializedListener) {
         onSdkInitializedListeners.append(listener)
@@ -40,7 +39,7 @@ public class DatadogSDKWrapper {
         coreConfiguration: Datadog.Configuration,
         loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
-    ) -> Void {
+    ) {
         let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
 
         for listener in onSdkInitializedListeners {
@@ -50,16 +49,18 @@ public class DatadogSDKWrapper {
         self.loggerConfiguration = loggerConfiguration
     }
 
-#if os(iOS)
-    // Webview
-    private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+    #if os(iOS)
+        // Webview
+        private var webviewMessageEmitter:
+            InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
-    internal func enableWebviewTracking() {
-        webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: CoreRegistry.default)
-    }
+        internal func enableWebviewTracking() {
+            webviewMessageEmitter = WebViewTracking._internal.messageEmitter(
+                in: CoreRegistry.default)
+        }
 
-    internal func sendWebviewMessage(body: NSString) throws {
-        try self.webviewMessageEmitter?.send(body: body)
-    }
-#endif
+        internal func sendWebviewMessage(body: NSString) throws {
+            try self.webviewMessageEmitter?.send(body: body)
+        }
+    #endif
 }
