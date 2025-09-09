@@ -13,15 +13,12 @@ import DatadogCrashReporting
 import DatadogInternal
 import Foundation
 
-<<<<<<< HEAD
+
 #if os(iOS)
 import DatadogWebViewTracking
 #endif
 
-public typealias OnCoreInitializedListener = (DatadogCoreProtocol) -> Void
-=======
-public typealias OnSdkInitializedListener = () -> Void
->>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
+public typealias OnSdkInitializedListener = (DatadogCoreProtocol) -> Void
 
 /// Wrapper around the Datadog SDK. Use DatadogSDKWrapper.shared to access the instance.
 public class DatadogSDKWrapper {
@@ -45,118 +42,16 @@ public class DatadogSDKWrapper {
         loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
-        Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
+        let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
 
         for listener in onSdkInitializedListeners {
-            listener()
+            listener(core)
         }
 
         self.loggerConfiguration = loggerConfiguration
     }
 
-<<<<<<< HEAD
-    internal func isInitialized() -> Bool {
-        return Datadog.isInitialized()
-    }
-
-    internal func clearAllData() -> Void {
-        if let core = coreInstance {
-            Datadog.clearAllData(in: core)
-        } else {
-            Datadog.clearAllData()
-        }
-    }
-
-    // Features
-    internal func enableRUM(with configuration: RUM.Configuration) {
-        if let core = coreInstance {
-            RUM.enable(with: configuration, in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing RUM.", .critical)
-        }
-    }
-
-    internal func enableLogs(with configuration: Logs.Configuration) {
-        if let core = coreInstance {
-            Logs.enable(with: configuration, in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing Logs.", .critical)
-        }
-    }
-
-    internal func enableTrace(with configuration: Trace.Configuration) {
-        if let core = coreInstance {
-            Trace.enable(with: configuration, in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing Trace.", .critical)
-        }
-    }
-
-    internal func enableCrashReporting() {
-        if let core = coreInstance {
-            CrashReporting.enable(in: core)
-        } else {
-            consolePrint("Core instance was not found when initializing CrashReporting.", .critical)
-        }
-    }
-
-    internal func createLogger() -> LoggerProtocol {
-        let core = coreInstance ?? {
-            consolePrint("Core instance was not found when creating Logger.", .critical)
-            return CoreRegistry.default
-        }()
-
-        return DatadogLogs.Logger.create(with: loggerConfiguration, in: core)
-    }
-    
-    // Telemetry
-    internal func sendTelemetryLog(message: String, attributes: [String: any Encodable], config: [String: any Encodable]) {
-        if let core = coreInstance {
-            let id = (config["onlyOnce"] as? Bool) == true ? message : UUID().uuidString
-            core.telemetry.debug(id: id, message: message, attributes: attributes)
-        } else {
-            consolePrint("Core instance was not found when calling sendTelemetryLog.", .warn)
-        }
-    }
-
-    internal func telemetryDebug(id: String, message: String) {
-        return Datadog._internal.telemetry.debug(id: id, message: message)
-    }
-
-    internal func telemetryError(id: String, message: String, kind: String?, stack: String?) {
-        return Datadog._internal.telemetry.error(id: id, message: message, kind: kind, stack: stack)
-    }
-
-    internal func overrideTelemetryConfiguration(
-        initializationType: String? = nil,
-        reactNativeVersion: String? = nil,
-        reactVersion: String? = nil,
-        trackCrossPlatformLongTasks: Bool? = nil,
-        trackErrors: Bool? = nil,
-        trackInteractions: Bool? = nil,
-        trackLongTask: Bool? = nil,
-        trackNativeErrors: Bool? = nil,
-        trackNativeLongTasks: Bool? = nil,
-        trackNetworkRequests: Bool? = nil
-    ) {
-        coreInstance?.telemetry.configuration(
-            initializationType: initializationType,
-            reactNativeVersion: reactNativeVersion,
-            reactVersion: reactVersion,
-            trackCrossPlatformLongTasks: trackCrossPlatformLongTasks,
-            trackErrors: trackErrors,
-            trackLongTask: trackLongTask, 
-            trackNativeErrors: trackNativeErrors,
-            trackNativeLongTasks: trackNativeLongTasks,
-            trackNetworkRequests: trackNetworkRequests,
-            trackUserInteractions: trackInteractions
-        )
-    }
-
-
 #if os(iOS)
-=======
->>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
     // Webview
     private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 

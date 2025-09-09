@@ -175,33 +175,21 @@ public class DdSdkImplementation: NSObject {
     ) {
         let castedAttributes = castAttributesToSwift(attributes)
         let castedConfig = castAttributesToSwift(config)
-        DdTelemetry.sendTelemetryLog(
-            message: message as String, attributes: castedAttributes, config: castedConfig)
+        DdTelemetry.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
         resolve(nil)
     }
 
     @objc
-    public func telemetryDebug(
-        message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryDebug(
-            id: "datadog_react_native:\(message)", message: message as String)
+
+    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
-<<<<<<< HEAD
     
 #if os(iOS)
-=======
-
->>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
     @objc
-    public func telemetryError(
-        message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryError(
-            id: "datadog_react_native:\(String(describing: kind)):\(message)",
-            message: message as String, kind: kind as String, stack: stack as String)
+    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
 
@@ -221,24 +209,19 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
-<<<<<<< HEAD
 #endif
     
-=======
 
->>>>>>> 1f781a51 (Expose view Attributes API)
     @objc
-    public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog.clearAllData()
         resolve(nil)
     }
 
-    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
         DdTelemetry.overrideTelemetryConfiguration(
-            initializationType: rnConfiguration.configurationForTelemetry?.initializationType
-                as? String,
-            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion
-                as? String,
+            initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
+            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
             trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,

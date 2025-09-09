@@ -94,12 +94,15 @@ public class DdSdkNativeInitialization: NSObject {
             CrashReporting.enable()
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
         
 #if os(iOS)
         DatadogSDKWrapper.shared.enableWebviewTracking()
 #endif
 =======
 >>>>>>> 0443e0ff (iOS: Always use SDK default core instance)
+=======
+>>>>>>> 93aa6125 (iOS: Always use SDK default core instance)
     }
 
     func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
