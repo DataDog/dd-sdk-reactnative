@@ -33,9 +33,6 @@ actualRN.NativeModules.DdSdk = {
     telemetryError: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['telemetryError']>,
-    consumeWebviewEvent: jest.fn().mockImplementation(
-        () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdNativeSdkType['consumeWebviewEvent']>,
     clearAllData: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['clearAllData']>

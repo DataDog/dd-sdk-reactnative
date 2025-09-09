@@ -7,13 +7,11 @@
 package com.datadog.reactnative
 
 import android.app.Activity
-import androidx.annotation.MainThread
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.modules.core.DeviceEventManagerModule
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
@@ -117,15 +115,6 @@ class DdSdk(
     @ReactMethod
     override fun telemetryError(message: String, stack: String, kind: String, promise: Promise) {
         implementation.telemetryError(message, stack, kind, promise)
-    }
-
-    /**
-     * Sends WebView Events.
-     * @param message User action.
-     */
-    @ReactMethod
-    override fun consumeWebviewEvent(message: String, promise: Promise) {
-        implementation.consumeWebviewEvent(message, promise)
     }
 
     /**

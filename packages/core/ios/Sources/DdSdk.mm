@@ -81,13 +81,6 @@ RCT_REMAP_METHOD(telemetryError, withMessage:(NSString*)message
     [self telemetryError:message stack:stack kind:kind resolve:resolve reject:reject];
 }
                  
-RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-    [self consumeWebviewEvent:message resolve:resolve reject:reject];
-}
-
 RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -126,10 +119,6 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (dispatch_queue_t)methodQueue {
     return [RNQueue getSharedQueue];
-}
-
-- (void)consumeWebviewEvent:(NSString *)message resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation consumeWebviewEventWithMessage:message resolve:resolve reject:reject];
 }
 
 - (void)initialize:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

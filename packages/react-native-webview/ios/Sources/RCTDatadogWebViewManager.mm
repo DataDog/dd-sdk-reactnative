@@ -16,7 +16,7 @@
 #endif
 
 @interface RCTDatadogWebViewManager () <RNCWebViewDelegate, RCTDatadogWebViewDelegate>
-    @property (nonatomic, strong) NSMutableSet *allowedHosts;
+@property (nonatomic, strong) NSMutableSet *allowedHosts;
 @property (nonatomic, strong) RCTDatadogWebViewTracking* webViewTracking;
 @end
 

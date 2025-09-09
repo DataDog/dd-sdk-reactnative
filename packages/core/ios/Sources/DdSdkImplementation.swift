@@ -10,7 +10,6 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import React
 
@@ -27,7 +26,6 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
-    var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
 
@@ -146,17 +144,6 @@ public class DdSdkImplementation: NSObject {
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
-        resolve(nil)
-    }
-
-    @objc
-    public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        do{
-            try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
-        } catch {
-            DdTelemetry.telemetryError(id: "datadog_react_native:\(error.localizedDescription)", message: "The message being sent was:\(message)" as String, kind: "WebViewEventBridgeError" as String, stack: String(describing: error) as String)
-        }
-
         resolve(nil)
     }
     

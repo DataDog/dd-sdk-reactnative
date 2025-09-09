@@ -8,7 +8,7 @@ import { WebView as RNWebView } from 'react-native-webview';
 import React, { forwardRef, useCallback } from 'react';
 
 import NativeDdLogs from './ext-specs/NativeDdLogs';
-import { NativeDdSdk } from './ext-specs/NativeDdSdk';
+import { NativeDdWebViewLegacy } from './specs/NativeDdWebViewLegacy';
 import { NativeDdWebView } from './specs/NativeDdWebView';
 import { isNewArchitecture } from './utils/env-utils';
 import {
@@ -48,7 +48,9 @@ const WebViewComponent = (props: Props, ref: React.Ref<RNWebView<Props>>) => {
                     ddMessage.type === 'NATIVE_EVENT' &&
                     ddMessage.message != null
                 ) {
-                    NativeDdSdk?.consumeWebviewEvent(ddMessage.message);
+                    NativeDdWebViewLegacy?.consumeWebviewEvent(
+                        ddMessage.message
+                    );
                 }
             };
 

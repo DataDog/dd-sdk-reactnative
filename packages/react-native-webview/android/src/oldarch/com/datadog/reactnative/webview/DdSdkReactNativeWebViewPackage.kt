@@ -25,7 +25,10 @@ class DdSdkReactNativeWebViewPackage : TurboReactPackage() {
     }
 
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        return null
+        return when (name) {
+            DdSdkLegacyWebViewImplementation.NAME -> DdSdkLegacyWebViewModule(reactContext)
+            else -> null
+        }
     }
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {

@@ -82,12 +82,6 @@ export interface Spec extends TurboModule {
     telemetryError(message: string, stack: string, kind: string): Promise<void>;
 
     /**
-     * Send webview telemetry logs
-     * @param message event description
-     */
-    consumeWebviewEvent(message: string): Promise<void>;
-
-    /**
      * Clears all data that has not already been sent to Datadog servers
      */
     clearAllData(): Promise<void>;

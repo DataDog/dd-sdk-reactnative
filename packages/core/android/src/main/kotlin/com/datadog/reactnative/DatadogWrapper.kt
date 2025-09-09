@@ -166,11 +166,6 @@ interface DatadogWrapper {
     fun telemetryError(message: String, throwable: Throwable?)
 
     /**
-     * Sends Webview events.
-     */
-    fun consumeWebviewEvent(message: String)
-
-    /**
      * Returns whether the SDK is initialized.
      */
     fun isInitialized(): Boolean

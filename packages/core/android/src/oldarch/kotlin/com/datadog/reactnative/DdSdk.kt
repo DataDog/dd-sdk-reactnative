@@ -146,15 +146,6 @@ class DdSdk(
     }
 
     /**
-     * Sends WebView Events.
-     * @param message User action.
-     */
-    @ReactMethod
-    fun consumeWebviewEvent(message: String, promise: Promise) {
-        implementation.consumeWebviewEvent(message, promise)
-    }
-
-    /**
      * Clears all data that has not already been sent to Datadog servers.
      */
     @ReactMethod

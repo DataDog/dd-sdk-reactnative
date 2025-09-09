@@ -87,17 +87,6 @@ internal class DatadogSDKWrapper : DatadogWrapper {
             return field
         }
 
-    // We use Kotlin backing field here to initialize once the telemetry proxy
-    // and make sure it is only after SDK is initialized.
-    private var webViewProxy: WebViewTracking._InternalWebViewProxy? = null
-        get() {
-            if (field == null && isInitialized()) {
-                field = WebViewTracking._InternalWebViewProxy(DatadogSDKWrapperStorage.getSdkCore())
-            }
-
-            return field
-        }
-
     override fun setVerbosity(level: Int) {
         Datadog.setVerbosity(level)
     }
@@ -186,10 +175,6 @@ internal class DatadogSDKWrapper : DatadogWrapper {
 
     override fun telemetryError(message: String, throwable: Throwable?) {
         telemetryProxy?.error(message, throwable)
-    }
-
-    override fun consumeWebviewEvent(message: String) {
-        webViewProxy?.consumeWebviewEvent(message)
     }
 
     override fun isInitialized(): Boolean {

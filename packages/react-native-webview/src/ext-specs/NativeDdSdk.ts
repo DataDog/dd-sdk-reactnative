@@ -12,7 +12,6 @@ import { TurboModuleRegistry } from 'react-native';
  * We don't declare it in a spec file so we don't end up with a duplicate definition of the native module.
  */
 export interface PartialNativeDdSdkSpec extends TurboModule {
-    consumeWebviewEvent(message: string): Promise<void>;
     telemetryError(message: string, stack: string, kind: string): Promise<void>;
 }
 

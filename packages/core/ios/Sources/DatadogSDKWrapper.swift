@@ -10,7 +10,6 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import Foundation
 
@@ -45,17 +44,6 @@ public class DatadogSDKWrapper {
         }
 
         self.loggerConfiguration = loggerConfiguration
-    }
-
-    // Webview
-    private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
-
-    internal func enableWebviewTracking() {
-        webviewMessageEmitter = WebViewTracking._internal.messageEmitter(in: CoreRegistry.default)
-    }
-
-    internal func sendWebviewMessage(body: NSString) throws {
-        try self.webviewMessageEmitter?.send(body: body)
     }
 }
 

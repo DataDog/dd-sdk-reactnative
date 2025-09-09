@@ -12,10 +12,7 @@ const actualRN = require('react-native');
 actualRN.NativeModules.DdSdk = {
     telemetryError: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<PartialNativeDdSdkSpec['telemetryError']>,
-    consumeWebviewEvent: jest.fn().mockImplementation(
-        () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<PartialNativeDdSdkSpec['consumeWebviewEvent']>
+    ) as jest.MockedFunction<PartialNativeDdSdkSpec['telemetryError']>
 };
 
 module.exports = actualRN;
