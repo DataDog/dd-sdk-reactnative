@@ -30,12 +30,13 @@ public class DdSdkNativeInitialization: NSObject {
     }
     
     internal func initialize(sdkConfiguration: DdSdkConfiguration) {
-        // TODO: see if this `if` is still needed
-        if DatadogSDKWrapper.shared.isInitialized() {
-            // Initializing the SDK twice results in Global.rum and
-            // Global.sharedTracer to be set to no-op instances
+        if Datadog.isInitialized(instanceName: CoreRegistry.defaultInstanceName) {
+            // Initializing the SDK twice results in Global.rum and Global.sharedTracer to be set to no-op instances
             consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
-            DatadogSDKWrapper.shared.telemetryDebug(id: "datadog_react_native: RN  SDK was already initialized in native", message: "RN SDK was already initialized in native")
+            DdTelemetry.telemetryDebug(
+                id: "datadog_react_native: RN  SDK was already initialized in native",
+                message: "RN SDK was already initialized in native"
+            )
 
             RUMMonitor.shared().currentSessionID { sessionId in
                 guard let id = sessionId else { return }
@@ -78,19 +79,17 @@ public class DdSdkNativeInitialization: NSObject {
 
     func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
         let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
-        DatadogSDKWrapper.shared.enableRUM(with: rumConfig)
+        RUM.enable(with: rumConfig, in: CoreRegistry.default)
         
         let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
-        DatadogSDKWrapper.shared.enableLogs(with: logsConfig)
+        Logs.enable(with: logsConfig, in: CoreRegistry.default)
         
         let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
-        DatadogSDKWrapper.shared.enableTrace(with: traceConfig)
+        Trace.enable(with: traceConfig, in: CoreRegistry.default)
 
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
-            DatadogSDKWrapper.shared.enableCrashReporting()
+            CrashReporting.enable(in: CoreRegistry.default)
         }
-        
-        DatadogSDKWrapper.shared.enableWebviewTracking()
     }
 
     func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {

@@ -6,6 +6,7 @@
 
 import Foundation
 @_spi(Internal) import DatadogSessionReplay
+import DatadogCore
 import DatadogInternal
 import DatadogSDKReactNative
 import React
@@ -65,37 +66,20 @@ public class DdSessionReplayImplementation: NSObject {
             RCTTextViewRecorder(uiManager: uiManager, fabricWrapper: fabricWrapper)
         ])
 
-        if let core = DatadogSDKWrapper.shared.getCoreInstance() {
-            sessionReplay.enable(
-                with: sessionReplayConfiguration,
-                in: core
-            )
-        } else {
-            consolePrint("Core instance was not found when initializing Session Replay.", .critical)
-        }
+        sessionReplay.enable(with: sessionReplayConfiguration, in: CoreRegistry.default)
 
         resolve(nil)
     }
     
     @objc
     public func startRecording(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        if let core = DatadogSDKWrapper.shared.getCoreInstance() {
-            sessionReplay.startRecording(in: core)
-        } else {
-            consolePrint("Core instance was not found when calling startRecording in Session Replay.", .critical)
-        }
-        
+        sessionReplay.startRecording(in: CoreRegistry.default)
         resolve(nil)
     }
     
     @objc
     public func stopRecording(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        if let core = DatadogSDKWrapper.shared.getCoreInstance() {
-            sessionReplay.stopRecording(in: core)
-        } else {
-            consolePrint("Core instance was not found when calling stopRecording in Session Replay.", .critical)
-        }
-        
+        sessionReplay.stopRecording(in: CoreRegistry.default)
         resolve(nil)
     }
     
