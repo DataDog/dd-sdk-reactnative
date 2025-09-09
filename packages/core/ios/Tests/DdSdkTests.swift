@@ -34,8 +34,7 @@ class DdSdkTests: XCTestCase {
     private func mockReject(args _: String?, arg _: String?, err _: Error?) {}
 
     override func tearDown() {
-        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
-        DatadogSDKWrapper.shared.onCoreInitializedListeners = []
+        DatadogSDKWrapper.shared.onSdkInitializedListeners = []
         Datadog.internalFlushAndDeinitialize()
     }
 
@@ -84,11 +83,10 @@ class DdSdkTests: XCTestCase {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
         let mockListener = MockOnCoreInitializedListener()
-        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: mockListener.listener)
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
-        let expectation = self.expectation(description: "Core is set when promise resolves")
+        let expectation = self.expectation(description: "Listener is called when promise resolves")
         func mockPromiseResolve(_: Any?) {
-            XCTAssertNotNil(mockListener.core)
             expectation.fulfill()
         }
 
@@ -276,9 +274,9 @@ class DdSdkTests: XCTestCase {
     }
 
     func testSDKInitializationWithOnInitializedCallback() {
-        var coreFromCallback: DatadogCoreProtocol? = nil
-        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: { core in
-            coreFromCallback = core
+        var isInitialized = false
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {
+            isInitialized = Datadog.isInitialized()
         })
 
         DdSdkImplementation(
@@ -293,14 +291,16 @@ class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        XCTAssertNotNil(coreFromCallback)
+        XCTAssertTrue(isInitialized)
     }
 
     func testEnableAllFeatures() {
         let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        defer { CoreRegistry.unregisterDefault() }
+
         let configuration: DdSdkConfiguration = .mockAny()
 
-        DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(
             sdkConfiguration: configuration
         )
@@ -479,9 +479,11 @@ class DdSdkTests: XCTestCase {
 
     func testBuildConfigurationWithCrashReport() {
         let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        defer { CoreRegistry.unregisterDefault() }
+
         let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
 
-        DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkNativeInitialization().enableFeatures(
             sdkConfiguration: configuration
         )
@@ -1233,6 +1235,9 @@ class DdSdkTests: XCTestCase {
 
     func testConfigurationTelemetryOverride() throws {
         let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        defer { CoreRegistry.unregisterDefault() }
+
         let configuration: DdSdkConfiguration = .mockAny(
             nativeCrashReportEnabled: false,
             nativeLongTaskThresholdMs: 0.0,
@@ -1244,7 +1249,6 @@ class DdSdkTests: XCTestCase {
             ]
         )
 
-        DatadogSDKWrapper.shared.setCoreInstance(core: core)
         DdSdkImplementation().overrideReactNativeTelemetry(rnConfiguration: configuration)
 
         XCTAssertEqual(core.configuration?.initializationType, "LEGACY")
@@ -1313,11 +1317,12 @@ class DdSdkTests: XCTestCase {
         XCTAssertTrue(bridge.isSameQueue(queue: mockJSRefreshRateMonitor.jsQueue!))
     }
 
-    func testCallsOnCoreInitializedListeners() throws {
+    func testCallsOnSdkInitializedListeners() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
         let mockListener = MockOnCoreInitializedListener()
-        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: mockListener.listener)
+
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -1331,23 +1336,7 @@ class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        XCTAssertNotNil(mockListener.core)
-    }
-
-    func testConsumeWebviewEvent() throws {
-        let configuration: DdSdkConfiguration = .mockAny()
-        let core = MockDatadogCore()
-
-        DatadogSDKWrapper.shared.setCoreInstance(core: core)
-        DdSdkNativeInitialization().enableFeatures(
-            sdkConfiguration: configuration
-        )
-
-        DdSdkImplementation().consumeWebviewEvent(
-            message: "{\"eventType\":\"rum\",\"event\":{\"blabla\":\"custom message\"}}",
-            resolve: mockResolve, reject: mockReject)
-
-        XCTAssertNotNil(core.baggages["browser-rum-event"])
+        XCTAssertTrue(mockListener.called)
     }
 
     func testInitialResourceThreshold() {
@@ -1601,9 +1590,8 @@ extension DdSdkImplementation {
 }
 
 class MockOnCoreInitializedListener {
-    var core: DatadogCoreProtocol?
-
-    func listener(core: DatadogCoreProtocol) {
-        self.core = core
+    var called = false
+    func listener() {
+        self.called = true
     }
 }
