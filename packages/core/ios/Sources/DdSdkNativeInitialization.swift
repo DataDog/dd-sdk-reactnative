@@ -97,10 +97,10 @@ public class DdSdkNativeInitialization: NSObject {
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
             CrashReporting.enable()
         }
-  
-#if os(iOS)
-        DatadogSDKWrapper.shared.enableWebviewTracking()
-#endif
+
+        #if os(iOS)
+            DatadogSDKWrapper.shared.enableWebviewTracking()
+        #endif
     }
 
     func buildSDKConfiguration(

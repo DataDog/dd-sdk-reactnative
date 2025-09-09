@@ -28,7 +28,6 @@ import WebKit
             )
         }
     }
-
     /**
      Enables tracking on the given WebView.
     
