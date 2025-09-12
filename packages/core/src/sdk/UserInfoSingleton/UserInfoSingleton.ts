@@ -7,13 +7,13 @@
 import type { UserInfo } from './types';
 
 class UserInfoProvider {
-    private userInfo: UserInfo = {};
+    private userInfo: UserInfo | undefined = undefined;
 
     setUserInfo = (userInfo: UserInfo) => {
         this.userInfo = userInfo;
     };
 
-    getUserInfo = (): UserInfo => {
+    getUserInfo = (): UserInfo | undefined => {
         return this.userInfo;
     };
 }

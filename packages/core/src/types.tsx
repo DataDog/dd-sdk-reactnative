@@ -5,7 +5,6 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
-import type { UserInfo as UserInfoSingleton } from './sdk/UserInfoSingleton/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
@@ -92,13 +91,6 @@ export type DdSdkType = {
 
     /**
      * Sets the user information.
-     * @deprecated UserInfo id property is now mandatory (please user setUserInfo instead)
-     * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
-     */
-    setUser(user: object): Promise<void>;
-
-    /**
-     * Sets the user information.
      * @param id: A unique user identifier (relevant to your business domain)
      * @param name: The user name or alias.
      * @param email: The user email.
@@ -173,7 +165,7 @@ export type LogEvent = {
     readonly source?: ErrorSource;
     // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
     readonly status: LogStatus;
-    readonly userInfo: UserInfoSingleton;
+    readonly userInfo?: UserInfo;
     readonly attributes?: object;
 };
 
