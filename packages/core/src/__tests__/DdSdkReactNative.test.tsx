@@ -63,7 +63,6 @@ beforeEach(async () => {
     DdSdkReactNative['wasAutoInstrumented'] = false;
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.setAttributes.mockClear();
-    NativeModules.DdSdk.setUser.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
     NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
@@ -1061,21 +1060,6 @@ describe('DdSdkReactNative', () => {
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
                 foo: 'bar'
             });
-        });
-    });
-
-    describe('setUser', () => {
-        it('calls SDK method when setUser, and sets the user in UserProvider', async () => {
-            // GIVEN
-            const user = { id: 'id', foo: 'bar' };
-
-            // WHEN
-            await DdSdkReactNative.setUser(user);
-
-            // THEN
-            expect(DdSdk.setUser).toHaveBeenCalledTimes(1);
-            expect(DdSdk.setUser).toHaveBeenCalledWith(user);
-            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(user);
         });
     });
 

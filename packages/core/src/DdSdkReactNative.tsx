@@ -38,7 +38,6 @@ import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
-import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { DdSdkConfiguration } from './types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
@@ -193,22 +192,6 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Set the user information.
-     * @deprecated UserInfo id property is now mandatory (please user setUserInfo instead)
-     * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
-     * @returns a Promise.
-     */
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    static setUser = async (user: UserInfo): Promise<void> => {
-        InternalLog.log(
-            `Setting user ${JSON.stringify(user)}`,
-            SdkVerbosity.DEBUG
-        );
-        await DdSdk.setUser(user);
-        UserInfoSingleton.getInstance().setUserInfo(user);
-    };
-
-    /**
      * Sets the user information.
      * @param id: A mandatory unique user identifier (relevant to your business domain).
      * @param name: The user name or alias.
@@ -245,6 +228,14 @@ export class DdSdkReactNative {
         );
 
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        if (!userInfo) {
+            InternalLog.log(
+                'Skipped adding User Extra Info: User Info is currently undefined. A user ID must be set before adding extra info. Please call setUserInfo() first.',
+                SdkVerbosity.WARN
+            );
+
+            return;
+        }
         const updatedUserInfo = {
             ...userInfo,
             extraInfo: {
