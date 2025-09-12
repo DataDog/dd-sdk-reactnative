@@ -88,18 +88,6 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func setUser(user: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        var castedUser = castAttributesToSwift(user)
-        let id = castedUser.removeValue(forKey: "id") as? String
-        let name = castedUser.removeValue(forKey: "name") as? String
-        let email = castedUser.removeValue(forKey: "email") as? String
-        let extraInfo: [String: Encodable] = castedUser // everything what's left is an `extraInfo`
-
-        Datadog.setUserInfo(id: id, name: name, email: email, extraInfo: extraInfo)
-        resolve(nil)
-    }
-
-    @objc
     public func setUserInfo(userInfo: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedUserInfo = castAttributesToSwift(userInfo)
         let id = castedUserInfo["id"] as? String
@@ -115,8 +103,9 @@ public class DdSdkImplementation: NSObject {
         if let validId = id {
             Datadog.setUserInfo(id: validId, name: name, email: email, extraInfo: extraInfo)
         } else {
-            Datadog.setUserInfo(name: name, email: email, extraInfo: extraInfo)
+            // TO DO - log warning message?
         }
+
         resolve(nil)
     }
 
