@@ -65,23 +65,6 @@ interface DatadogWrapper {
     /**
      * Sets the user information.
      *
-     * @param id (nullable) a unique user identifier (relevant to your business domain)
-     * @param name (nullable) the user name or alias
-     * @param email (nullable) the user email
-     * @param extraInfo additional information. An extra information can be
-     * nested up to 8 levels deep. Keys using more than 8 levels will be sanitized by SDK.
-     */
-    @Deprecated("Use setUserInfo instead; the user ID is now required.")
-    fun setUser(
-        id: String?,
-        name: String?,
-        email: String?,
-        extraInfo: Map<String, Any?>
-    )
-
-    /**
-     * Sets the user information.
-     *
      * @param id a unique user identifier (relevant to your business domain)
      * @param name (nullable) the user name or alias
      * @param email (nullable) the user email

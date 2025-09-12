@@ -15,7 +15,7 @@ import type { UserInfo } from '../UserInfoSingleton/types';
 import { deepClone } from './utils/deepClone';
 
 export type AdditionalEventDataForMapper = {
-    userInfo: UserInfo;
+    userInfo?: UserInfo;
     attributes: Attributes;
 };
 

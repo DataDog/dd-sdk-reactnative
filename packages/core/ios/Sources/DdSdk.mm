@@ -37,13 +37,6 @@ RCT_REMAP_METHOD(setAttributes, withAttributes:(NSDictionary*)attributes
     [self setAttributes:attributes resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(setUser, withUser:(NSDictionary*)user
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-    [self setUser:user resolve:resolve reject:reject];
-}
-
 RCT_REMAP_METHOD(setUserInfo, withUserInfo:(NSDictionary*)userInfo
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -142,10 +135,6 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)setTrackingConsent:(NSString *)trackingConsent resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation setTrackingConsentWithTrackingConsent:trackingConsent resolve:resolve reject:reject];
-}
-
-- (void)setUser:(NSDictionary *)user resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation setUserWithUser:user resolve:resolve reject:reject];
 }
 
 - (void)setUserInfo:(NSDictionary *)userInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
