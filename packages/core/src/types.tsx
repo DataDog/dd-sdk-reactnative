@@ -5,7 +5,6 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
-import type { UserInfo as UserInfoSingleton } from './sdk/UserInfoSingleton/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
