@@ -8,6 +8,7 @@ import type * as Babel from '@babel/core';
 
 import type { RumAction } from '../constants';
 
+import type { ReactNativeSVG } from '../libraries/react-native-svg';
 export const MemoTypes = {
     USE_CALLBACK: 'useCallback',
     USE_MEMO: 'useMemo'
@@ -43,6 +44,7 @@ export type PluginPassState = Babel.PluginPass & {
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
     trackedComponents?: Record<string, Omit<TrackedComponent, 'name'>>;
+    reactNativeSVG?: ReactNativeSVG;
 };
 
 export type PluginResult = Babel.PluginObj<Babel.PluginPass>;
