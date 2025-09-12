@@ -13,6 +13,7 @@ import {
     insertRumActionImport
 } from './actions/rum';
 import { defaultPluginOptions } from './constants';
+import { ReactNativeSVG } from './libraries/react-native-svg';
 import type {
     PluginAPI,
     PluginOptions,
@@ -33,7 +34,12 @@ export default declare(
             }
         };
 
+        let reactNativeSVG: ReactNativeSVG;
+
         return {
+            pre() {
+                reactNativeSVG = new ReactNativeSVG();
+            },
             visitor: {
                 Program: {
                     enter(path, state) {
@@ -46,6 +52,7 @@ export default declare(
                         }
 
                         pluginState.fileInfo = { path: p, name };
+                        pluginState.reactNativeSVG = reactNativeSVG;
 
                         insertSetupFlag(path, state, api.types);
                         loadImportMap(path, api.types, pluginState, options);
@@ -102,6 +109,8 @@ export default declare(
                         pluginState,
                         options
                     );
+
+                    pluginState.reactNativeSVG?.processItem(name, path, t);
                 }
             }
         };
