@@ -288,3 +288,253 @@ export function toExpression(
 
     return t.nullLiteral();
 }
+
+/**
+ * Extracts the name and statically-evaluable value from a given JSX attribute.
+ *
+ * This function supports JSX attributes where the value is either:
+ * - A string literal (e.g., `fill="red"`)
+ * - An expression container that can be statically evaluated (e.g., `fill={"red"}`, or arrays like `transform={[{ rotate: "45deg" }]}`)
+ *
+ * If the value is dynamic, non-literal, or not supported (e.g., function calls, identifiers, complex objects),
+ * the function returns `{ name: null, value: null }`.
+ *
+ * @param t - Babel types helper for AST manipulation.
+ * @param attr - The JSXAttribute node to extract data from.
+ * @returns An object with the statically-evaluable attribute name and value:
+ *          - `name`: The attribute's name (e.g., "fill", "translateX") or `null` if not extractable.
+ *          - `value`: A string, number, or array of strings/numbers if statically evaluable, otherwise `null`.
+ */
+export function getJSXAttributeData(
+    t: typeof Babel.types,
+    attr: Babel.types.JSXAttribute
+): {
+    name: string | null;
+    value: string | number | (string | number)[] | null;
+} {
+    const name = getNodeName(t, attr.name);
+    const result: {
+        name: string | null;
+        value: string | number | (string | number)[] | null;
+    } = {
+        name: null,
+        value: null
+    };
+
+    if (!name || !attr.value) {
+        return result;
+    }
+
+    let expression: Babel.types.Node | null = null;
+
+    if (t.isJSXExpressionContainer(attr.value)) {
+        expression = attr.value.expression;
+    } else if (t.isStringLiteral(attr.value)) {
+        expression = attr.value;
+    } else {
+        return result; // Not supported
+    }
+
+    const staticValue = evaluateStaticNode(t, expression);
+
+    if (
+        typeof staticValue === 'string' ||
+        typeof staticValue === 'number' ||
+        (Array.isArray(staticValue) &&
+            staticValue.every(
+                v => typeof v === 'string' || typeof v === 'number'
+            ))
+    ) {
+        result.name = name;
+        result.value = staticValue;
+    }
+
+    return result;
+}
+
+/**
+ * Recursively evaluates a Babel AST node into a static JS value.
+ * Returns `null` if any non-static construct is encountered.
+ *
+ * Supported:
+ * - ObjectExpression (with simple keys and nested values)
+ * - ArrayExpression (e.g., style arrays, transform arrays)
+ * - NumericLiteral, StringLiteral, BooleanLiteral, NullLiteral
+ * - UnaryExpression (+/-) over NumericLiteral
+ * - TemplateLiteral without expressions
+ * - ConditionalExpression if both sides static
+ * - LogicalExpression (||, &&, ??) if both sides static
+ *
+ * NOT supported (returns null):
+ * - Identifier, MemberExpression, CallExpression, NewExpression, SpreadElement, Function nodes, etc.
+ */
+export function evaluateStaticNode(
+    t: typeof Babel.types,
+    node: Babel.types.Node | null | undefined
+): any {
+    if (!node) {
+        return null;
+    }
+
+    // --- Literals
+    if (t.isNullLiteral(node)) {
+        return null;
+    }
+    if (t.isNumericLiteral(node)) {
+        return node.value;
+    }
+    if (t.isBooleanLiteral(node)) {
+        return node.value;
+    }
+    if (t.isStringLiteral(node)) {
+        return node.value;
+    }
+    if (t.isTemplateLiteral(node)) {
+        if (node.expressions.length === 0 && node.quasis.length === 1) {
+            return node.quasis[0].value.cooked ?? '';
+        }
+        return null; // dynamic template
+    }
+
+    // --- Unary +/- on numeric literal
+    if (t.isUnaryExpression(node) && t.isNumericLiteral(node.argument)) {
+        if (node.operator === '-') {
+            return -node.argument.value;
+        }
+        if (node.operator === '+') {
+            return +node.argument.value;
+        }
+        return null;
+    }
+
+    // --- Arrays
+    if (t.isArrayExpression(node)) {
+        const out: any[] = [];
+        for (const el of node.elements) {
+            if (!el) {
+                out.push(null);
+                continue;
+            }
+            if (t.isSpreadElement(el)) {
+                return null; // dynamic spread in array
+            }
+            const v = evaluateStaticNode(t, el as any);
+            if (v === undefined) {
+                // keep undefined? RN style ignores undefined; we can drop it
+                continue;
+            }
+            out.push(v);
+        }
+        return out;
+    }
+
+    // --- Objects
+    if (t.isObjectExpression(node)) {
+        const obj: Record<string, any> = {};
+        for (const p of node.properties) {
+            if (t.isSpreadElement(p)) {
+                return null; // dynamic spread
+            }
+            if (!t.isObjectProperty(p)) {
+                return null; // methods/getters/setters not expected in style
+            }
+
+            // Key can be Identifier or StringLiteral (computed keys are not supported here)
+            let key: string | null = null;
+            if (t.isIdentifier(p.key) && !p.computed) {
+                key = p.key.name;
+            } else if (t.isStringLiteral(p.key) && !p.computed) {
+                key = p.key.value;
+            } else {
+                return null; // computed or unsupported key
+            }
+
+            const value = evaluateStaticNode(t, p.value as any);
+            // RN style ignores undefined; omit null/undefined keys
+            if (key && value !== undefined) {
+                obj[key] = value;
+            }
+        }
+        return obj;
+    }
+
+    // --- Conditional (ternary): only if both sides static
+    if (t.isConditionalExpression(node)) {
+        const c = evaluateStaticNode(t, node.consequent);
+        const a = evaluateStaticNode(t, node.alternate);
+        if (c === null && a === null) {
+            return null;
+        }
+        if (c !== null && a !== null) {
+            // We can't evaluate the test safely; choose neither → bail or pick one?
+            // Safer: bail to avoid wrong choice.
+            return null;
+        }
+        return null; // keep conservative; you can relax if you want to pick a branch
+    }
+
+    // --- Logical expressions (||, &&, ??) if both sides static (conservative)
+    if (t.isLogicalExpression(node)) {
+        const left = evaluateStaticNode(t, node.left);
+        const right = evaluateStaticNode(t, node.right);
+        if (left === null && right === null) {
+            return null;
+        }
+        // Still conservative: without evaluating truthiness rules exactly, bail
+        return null;
+    }
+
+    // Everything else considered dynamic for our purposes
+    // (Identifiers, MemberExpressions, CallExpressions, NewExpressions, etc.)
+    return null;
+}
+
+export function parseStyleNode(
+    t: typeof Babel.types,
+    attr: Babel.types.JSXAttribute
+): Record<string, any> | null {
+    if (!attr.value) {
+        return null;
+    }
+
+    // style="..." → not a valid RN style object
+    if (t.isStringLiteral(attr.value)) {
+        return null;
+    }
+
+    if (t.isJSXExpressionContainer(attr.value)) {
+        const v = attr.value.expression;
+
+        // style={{ ... }}  or  style={[ ... ]}
+        const evaluated = evaluateStaticNode(t, v);
+        if (evaluated == null) {
+            return null;
+        }
+
+        // If the top-level is an array, merge object entries (RN allows style arrays)
+        if (Array.isArray(evaluated)) {
+            const merged: Record<string, any> = {};
+            for (const item of evaluated) {
+                if (item && typeof item === 'object' && !Array.isArray(item)) {
+                    Object.assign(merged, item);
+                } else if (item == null) {
+                    // ignore null/undefined
+                } else {
+                    // Non-object entries in a style array are not expected; bail
+                    return null;
+                }
+            }
+            return merged;
+        }
+
+        // If it's already an object, return it
+        if (evaluated && typeof evaluated === 'object') {
+            return evaluated as Record<string, any>;
+        }
+
+        // Any other type at top-level is not a valid style object
+        return null;
+    }
+
+    return null;
+}
