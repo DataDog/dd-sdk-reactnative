@@ -19,7 +19,9 @@
     "files": [
         "src/**",
         "lib/**",
+        "assets/**",
         "scripts/**",
+        "metro.js",
         "android/build.gradle",
         "android/detekt.yml",
         "android/gradle.properties",
@@ -41,7 +43,8 @@
     "scripts": {
         "test": "jest",
         "lint": "eslint .",
-        "prepare": "rm -rf lib && yarn bob build",
+        "build:assets": "node scripts/build-assets.js",
+        "prepare": "rm -rf lib && yarn build:assets && yarn bob build",
         "postinstall": "node scripts/set-ios-rn-version.js"
     },
     "peerDependencies": {
@@ -89,5 +92,8 @@
         "android": {
             "javaPackageName": "com.datadog.reactnative.sessionreplay"
         }
+    },
+    "dependencies": {
+        "chokidar": "^4.0.3"
     }
 }

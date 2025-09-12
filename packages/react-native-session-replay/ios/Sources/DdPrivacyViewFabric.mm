@@ -18,14 +18,14 @@
 #else
 #import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
 #endif
+#import <objc/runtime.h>
+#import "DdPrivacyViewFabric.h"
 
 using namespace facebook::react;
 
-@interface DdPrivacyViewFabric : RCTViewComponentView <RCTDdPrivacyViewViewProtocol>
-@end
-
 @implementation DdPrivacyViewFabric {
     UIView * _view;
+    
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -40,15 +40,33 @@ using namespace facebook::react;
     return self;
 }
 
+
+- (void)setNativeID:(NSString *)nativeID {
+    objc_setAssociatedObject(self, @selector(nativeID), nativeID, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)nativeID {
+    return objc_getAssociatedObject(self, @selector(nativeID));
+}
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
     const auto &newProps = *std::static_pointer_cast<DdPrivacyViewProps const>(props);
     
     NSString *text = [NSString stringWithUTF8String:newProps.textAndInputPrivacy.c_str()];
     NSString *image = [NSString stringWithUTF8String:newProps.imagePrivacy.c_str()];
     NSString *touch = [NSString stringWithUTF8String:newProps.touchPrivacy.c_str()];
-
-    [DdPrivacyOverrider setOverridesFor:self textPrivacy:text imagePrivacy:image touchPrivacy:touch hide:newProps.hide];
+    NSString *nativeID = [NSString stringWithUTF8String:newProps.nativeID.c_str()];
+    NSMutableDictionary<NSString *, NSString *> *attributesDict = [NSMutableDictionary new];
     
+    attributesDict[@"type"] = [NSString stringWithUTF8String:newProps.attributes.type.c_str()];
+    attributesDict[@"width"] = [NSString stringWithUTF8String:newProps.attributes.width.c_str()];
+    attributesDict[@"height"] = [NSString stringWithUTF8String:newProps.attributes.height.c_str()];
+    attributesDict[@"hash"] = [NSString stringWithUTF8String:newProps.attributes.hash.c_str()];
+    
+    [DdPrivacyOverrider setOverridesFor:self textPrivacy:text imagePrivacy:image touchPrivacy:touch hide:newProps.hide];
+    self.nativeID = nativeID;
+    self.attributes = attributesDict;
+    
+    self.accessibilityIdentifier = nativeID;
     [super updateProps:props oldProps:oldProps];
 }
 

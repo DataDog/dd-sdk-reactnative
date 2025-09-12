@@ -11,6 +11,11 @@ import DatadogInternal
 import DatadogSDKReactNative
 import React
 
+internal struct SVGData: Codable {
+    let offset: Int
+    let length: Int
+}
+
 @objc
 public class DdSessionReplayImplementation: NSObject {
     private lazy var sessionReplay: SessionReplayProtocol = sessionReplayProvider()
@@ -27,7 +32,7 @@ public class DdSessionReplayImplementation: NSObject {
         self.uiManager = uiManager
         self.fabricWrapper = fabricWrapper
     }
-
+    
     @objc
     public convenience init(bridge: RCTBridge) {
         self.init(
@@ -36,7 +41,7 @@ public class DdSessionReplayImplementation: NSObject {
             fabricWrapper: RCTFabricWrapper()
         )
     }
-
+    
     @objc
     public func enable(
         replaySampleRate: Double,
@@ -52,7 +57,7 @@ public class DdSessionReplayImplementation: NSObject {
         if (customEndpoint != "") {
             customEndpointURL = URL(string: "\(customEndpoint)/api/v2/replay" as String)
         }
-
+        
         var sessionReplayConfiguration = SessionReplay.Configuration(
             replaySampleRate: Float(replaySampleRate),
             textAndInputPrivacyLevel: convertTextAndInputPrivacy(textAndInputPrivacyLevel),
@@ -61,9 +66,32 @@ public class DdSessionReplayImplementation: NSObject {
             startRecordingImmediately: startRecordingImmediately,
             customEndpoint: customEndpointURL
         )
-                    
+        
+//        let bundle = Bundle(for: DdSessionReplayImplementation.self)
+
+        var svgMap: [String: SVGData] = [:]
+        
+        if let bundle = Bundle.ddSessionReplayResources,
+           let url = bundle.url(forResource: "assets", withExtension: "json") {
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                svgMap = try decoder.decode([String: SVGData].self, from: data)
+            } catch {
+                consolePrint("Failed to load or decode assets.json: \(error)", .debug)
+            }
+        }
+        
         sessionReplayConfiguration.setAdditionalNodeRecorders([
-            RCTTextViewRecorder(uiManager: uiManager, fabricWrapper: fabricWrapper)
+            SvgViewRecorder(
+                uiManager: uiManager,
+                fabricWrapper: fabricWrapper,
+                svgMap: svgMap
+            ),
+            RCTTextViewRecorder(
+                uiManager: uiManager,
+                fabricWrapper: fabricWrapper
+            )
         ])
         
         sessionReplay.enable(with: sessionReplayConfiguration, in: CoreRegistry.default)

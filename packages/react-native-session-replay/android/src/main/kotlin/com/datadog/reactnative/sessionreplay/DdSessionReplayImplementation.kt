@@ -49,17 +49,17 @@ class DdSessionReplayImplementation(
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
-            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils))
+            .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils, internalCallback))
             .let {
                 _SessionReplayInternalProxy(it).setInternalCallback(internalCallback)
             }
-
 
         if (customEndpoint != "") {
             configuration.useCustomEndpoint(customEndpoint)
         }
 
         sessionReplayProvider().enable(configuration.build(), sdkCore)
+
         promise.resolve(null)
     }
 

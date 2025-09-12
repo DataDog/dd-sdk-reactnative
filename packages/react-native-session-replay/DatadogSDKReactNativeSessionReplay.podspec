@@ -14,7 +14,11 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "12.0", :tvos => "12.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/Sources/*.{h,m,mm,swift}"
+  s.source_files = "ios/Sources/**/*.{h,m,mm,swift}"
+
+  s.resource_bundles = {
+    'DDSessionReplay' => ['assets/assets.json', 'assets/assets.bin']
+  }
 
   s.dependency "React-Core"
 
