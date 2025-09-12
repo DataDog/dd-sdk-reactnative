@@ -27,9 +27,6 @@ module.exports = {
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         isInitialized: jest.fn().mockImplementation(() => true),
-        setUser: jest
-            .fn()
-            .mockImplementation(() => new Promise(resolve => resolve())),
         setUserInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
