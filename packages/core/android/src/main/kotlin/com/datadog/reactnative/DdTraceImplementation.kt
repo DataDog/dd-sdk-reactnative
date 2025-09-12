@@ -6,30 +6,28 @@
 
 package com.datadog.reactnative
 
-import com.datadog.android.trace.AndroidTracer
-import com.datadog.android.trace.Trace
-import com.datadog.android.trace.TraceConfiguration
+import com.datadog.android.Datadog
+import com.datadog.android.trace.DatadogTracing
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
-import io.opentracing.Scope
-import io.opentracing.Span
-import io.opentracing.Tracer
-import io.opentracing.util.GlobalTracer
+import com.datadog.android.trace.api.scope.DatadogScope
+import com.datadog.android.trace.api.span.DatadogSpan
+import com.datadog.android.trace.api.tracer.DatadogTracer
+import com.datadog.android.trace.GlobalDatadogTracer
 import java.util.concurrent.TimeUnit
 
 /**
  * The entry point to use Datadog's Trace feature.
  */
 class DdTraceImplementation(
-    private val tracerProvider: () -> Tracer = {
-        val tracer = AndroidTracer.Builder().build()
-        GlobalTracer.registerIfAbsent(tracer)
-
-        GlobalTracer.get()
+    private val tracerProvider: () -> DatadogTracer = {
+        val tracer = DatadogTracing.newTracerBuilder(Datadog.getInstance()).build()
+        GlobalDatadogTracer.registerIfAbsent(tracer)
+        GlobalDatadogTracer.get()
     }
 ) {
-    private val spanMap: MutableMap<String, Span> = mutableMapOf()
-    private val scopeMap: MutableMap<String, Scope> = mutableMapOf()
+    private val spanMap: MutableMap<String, DatadogSpan> = mutableMapOf()
+    private val scopeMap: MutableMap<String, DatadogScope> = mutableMapOf()
 
     // lazy here is on purpose. The thing is that this class will be instantiated even
     // before Sdk.initialize is called, but Tracer can be created only after SDK is initialized.
@@ -47,15 +45,18 @@ class DdTraceImplementation(
             .start()
         
         // This is required for traces to be able to be bundled with logs.
-        val scope = tracer.scopeManager().activate(span)
-
+        val scope = tracer.activateSpan(span)
         val spanContext = span.context()
 
         span.setTags(context.toHashMap())
         span.setTags(GlobalState.globalAttributes)
-        val spanId = spanContext.toSpanId()
+        val spanId = spanContext.spanId.toString()
+
         spanMap[spanId] = span
-        scopeMap[spanId] = scope
+        if (scope != null) {
+            scopeMap[spanId] = scope
+        }
+
 
         promise.resolve(spanId)
     }
@@ -82,7 +83,7 @@ class DdTraceImplementation(
         promise.resolve(null)
     }
 
-    private fun Span.setTags(tags: Map<String, Any?>) {
+    private fun DatadogSpan.setTags(tags: Map<String, Any?>) {
         for ((key, value) in tags) {
             when (value) {
                 is Boolean -> setTag(key, value)
