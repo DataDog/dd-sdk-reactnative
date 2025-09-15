@@ -20,7 +20,6 @@ export const rnSvgArrayAttributeValues = [
 ];
 
 // All these values are deprecated, but still allowed in react-native-svg
-// translate, scale, rotate ?
 export const rnSvgTransformAttributeValues = [
     'translateX',
     'translateY',

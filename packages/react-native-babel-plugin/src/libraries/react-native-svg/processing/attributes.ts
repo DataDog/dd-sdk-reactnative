@@ -107,9 +107,10 @@ export function handleSvgDimensions(
     attr: Babel.types.JSXAttribute,
     attrName: string,
     dimensions: Record<string, string> = {},
-    nodeName: string | null
+    nodeName: string | null,
+    expectedName: string
 ) {
-    if (nodeName !== 'svg') {
+    if (nodeName !== expectedName) {
         return false;
     }
 
@@ -117,7 +118,8 @@ export function handleSvgDimensions(
 
     if (dimensionAttributes.includes(attrName)) {
         const result = getJSXAttributeData(t, attr);
-        // IMPROVEMENT: if it's a variable try to find it in the closure
+
+        // IMPROVEMENT: If it's a variable try to find it in the closure
         if (result.value) {
             attr.value = t.stringLiteral(result.value.toString());
             dimensions[attrName] = attr.value.value;

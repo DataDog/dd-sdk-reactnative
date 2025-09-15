@@ -38,7 +38,8 @@ export default declare(
 
         return {
             pre() {
-                reactNativeSVG = new ReactNativeSVG();
+                // TODO: only initialize once
+                reactNativeSVG = new ReactNativeSVG(api.types, this.cwd);
             },
             visitor: {
                 Program: {
@@ -110,7 +111,7 @@ export default declare(
                         options
                     );
 
-                    pluginState.reactNativeSVG?.processItem(name, path, t);
+                    pluginState.reactNativeSVG?.processItem(path, name);
                 }
             }
         };
