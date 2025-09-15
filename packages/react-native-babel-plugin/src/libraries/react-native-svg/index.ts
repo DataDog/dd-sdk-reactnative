@@ -7,6 +7,7 @@
 import type * as Babel from '@babel/core';
 import generate from '@babel/generator';
 import { jsxAttribute, jSXIdentifier, stringLiteral } from '@babel/types';
+import { optimize } from 'svgo';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getNodeName } from '../../utils';
@@ -83,7 +84,12 @@ export class ReactNativeSVG {
 
         this.setNativeID(path.node, id);
 
-        return output;
+        const optimized = optimize(output, {
+            multipass: true,
+            plugins: ['preset-default']
+        });
+
+        return { original: output, optimized };
     }
 
     /**
@@ -295,6 +301,7 @@ export class ReactNativeSVG {
         buildTransformStringAttribute(el, transformsArray);
 
         // Goes through an elemnts children and transforms its properties
+        // Goes through an elements children and transforms its properties
         this.traverseAndTransformChildren(t, jsxElement, dimensions);
     }
 }
