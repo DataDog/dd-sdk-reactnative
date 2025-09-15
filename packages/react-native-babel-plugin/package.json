@@ -42,6 +42,7 @@
         "@babel/generator": "^7.28.0",
         "@babel/helper-plugin-utils": "^7.27.1",
         "@babel/types": "^7.27.1",
+        "svgo": "^4.0.0",
         "uuid": "^11.1.0"
     },
     "devDependencies": {
