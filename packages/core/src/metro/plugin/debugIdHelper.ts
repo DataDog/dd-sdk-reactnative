@@ -9,8 +9,6 @@
 
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import countLines from 'metro/src/lib/countLines';
 import path from 'path';
 
 import type {
@@ -20,7 +18,7 @@ import type {
     MetroBundleWithMap,
     DatadogDebugIdModule
 } from './types/metroTypes';
-import { createCountingSet } from './utils';
+import { getCreateCountingSetFunction, getCountLinesFunction } from './utils';
 
 /**
  * Regex to match the Debug ID comment in the bundle.
@@ -63,6 +61,8 @@ const DEBUG_ID_METADATA_PREFIX = 'datadog-debug-id-';
  */
 export const createDebugIdModule = (debugId: string): DatadogDebugIdModule => {
     let debugIdCode = createDebugIdSnippet(debugId);
+    const countLines = getCountLinesFunction();
+    const createCountingSet = getCreateCountingSetFunction();
 
     return {
         setSource: (code: string) => {
