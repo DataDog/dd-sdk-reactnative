@@ -4,12 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
-import DdNativeRum from '../../../specs/NativeDdRum';
 import DdSdk from '../../../specs/NativeDdSdk';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
+import type { DdRum } from '../../DdRum';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 import type { RumActionType } from '../../types';
 import { ActionSource } from '../../types';
@@ -46,19 +44,27 @@ export class DdBabelInteractionTracking {
 
     private telemetrySent: boolean = false;
 
+    private ddRum: typeof DdRum | null = null;
+
     isInitialized: boolean = false;
 
-    private constructor() {
+    private constructor(ddRum?: typeof DdRum) {
         if (DdBabelInteractionTracking.instance) {
             throw new Error(StateErrors.ALREADY_INITIALIZED);
+        }
+
+        if (ddRum) {
+            this.ddRum = ddRum;
         }
 
         DdBabelInteractionTracking.instance = this;
     }
 
-    static getInstance() {
+    static getInstance(ddRum?: typeof DdRum) {
         if (!DdBabelInteractionTracking.instance) {
-            DdBabelInteractionTracking.instance = new DdBabelInteractionTracking();
+            DdBabelInteractionTracking.instance = new DdBabelInteractionTracking(
+                ddRum
+            );
         }
 
         return DdBabelInteractionTracking.instance;
@@ -150,17 +156,22 @@ export class DdBabelInteractionTracking {
             const { trackInteractions } = DdBabelInteractionTracking.config;
 
             if (trackInteractions) {
-                InternalLog.log(
-                    `Adding RUM Action “${targetName}” (${action}, auto)`,
-                    SdkVerbosity.DEBUG
-                );
-
-                DdNativeRum?.addAction(
-                    action,
-                    targetName,
-                    { '__dd.action_source': ActionSource.BABEL },
-                    this.timeProvider.now()
-                );
+                this.ddRum
+                    ?.addAction(
+                        action,
+                        targetName,
+                        { '__dd.action_source': ActionSource.BABEL },
+                        this.timeProvider.now()
+                    )
+                    .catch(e => {
+                        if (e instanceof Error) {
+                            DdSdk?.telemetryError(
+                                e.message,
+                                e.stack || '',
+                                'BabelActionTrack'
+                            );
+                        }
+                    });
             }
 
             return result;
