@@ -27,6 +27,10 @@ const DEBUG_ID_CODE_SNIPPET =
     'var _datadogDebugIds,_datadogDebugIdMeta;void 0===_datadogDebugIds&&(_datadogDebugIds={});try{var stack=(new Error).stack;stack&&(_datadogDebugIds[stack]="__datadog_debug_id_placeholder__",_datadogDebugIdMeta="datadog-debug-id-__datadog_debug_id_placeholder__")}catch(e){}';
 
 describe('Datadog Metro Plugin', () => {
+    afterEach(() => {
+        jest.resetModules();
+    });
+
     describe('Datadog Metro Serializer', () => {
         test('generates bundle and source map with UUID v5 Debug ID', async () => {
             const codeSnippetHash = createHash('md5');
@@ -402,6 +406,256 @@ describe('Datadog Metro Plugin', () => {
             // THEN
             expect(result.code).toBe('test-code-from-promise');
             expect(result.map).toBe('{"testMap":"test"}');
+        });
+    });
+
+    describe('Import Utils', () => {
+        test('M getDefaultExport extracts the default export if it exists', () => {
+            // GIVEN
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const getDefaultExport = require('../plugin/utils')
+                .getDefaultExport;
+
+            const exampleModuleWithDefault = {
+                default: 'default export',
+                namedExport: 'named export'
+            };
+
+            // WHEN
+            const result = getDefaultExport(exampleModuleWithDefault);
+
+            // THEN
+            expect(result).toBe('default export');
+        });
+
+        test('M getDefaultExport returns the module as it is if default does not exist', () => {
+            // GIVEN
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const getDefaultExport = require('../plugin/utils')
+                .getDefaultExport;
+
+            const exampleModule1 = {
+                namedExport: 'named export'
+            };
+
+            const exampleModule2 = 'just a string';
+
+            // WHEN
+            const result1 = getDefaultExport(exampleModule1);
+            const result2 = getDefaultExport(exampleModule2);
+
+            // THEN
+            expect(result1).toEqual({ namedExport: 'named export' });
+            expect(result2).toBe('just a string');
+        });
+
+        test('M getDefaultExport returns undefined if the module is null or undefined', () => {
+            // GIVEN
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const getDefaultExport = require('../plugin/utils')
+                .getDefaultExport;
+
+            const exampleModule1 = null;
+            const exampleModule2 = undefined;
+
+            // WHEN
+            const result1 = getDefaultExport(exampleModule1);
+            const result2 = getDefaultExport(exampleModule2);
+
+            // THEN
+            expect(result1).toBeUndefined();
+            expect(result2).toBeUndefined();
+        });
+
+        test('M createCountingSet correctly imports function from metro/src when metro/private is not available', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock('metro/private/lib/CountingSet', () => {
+                    throw new Error('Module not found');
+                });
+
+                jest.doMock(
+                    'metro/src/lib/CountingSet',
+                    () => ({
+                        default: class CountingSetMock {
+                            test: string = 'constructor_not_called';
+                            constructor() {
+                                this.test = 'constructor_called';
+                            }
+                        }
+                    }),
+                    { virtual: true }
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const createCountingSet = utils.getCreateCountingSetFunction();
+                const result = createCountingSet();
+
+                // THEN
+                expect(result).toHaveProperty('test');
+                expect(result.test).toBe('constructor_called');
+            });
+        });
+
+        test('M sourcemapString correctly imports function from metro/src when metro/private is not available', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock(
+                    'metro/private/DeltaBundler/Serializers/sourceMapString',
+                    () => {
+                        throw new Error('Module not found');
+                    }
+                );
+
+                jest.doMock(
+                    'metro/src/DeltaBundler/Serializers/sourceMapString',
+                    () => ({
+                        default: (
+                            modules: unknown[],
+                            options: object
+                        ): string =>
+                            `test-modules_length:${
+                                modules.length
+                            },options_keys:${Object.keys(options).length}`
+                    }),
+                    { virtual: true }
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const metroSourceMapString = utils.getSourceMapStringFunction();
+                const result = metroSourceMapString([{}, {}, {}], {
+                    excludeSource: true,
+                    shouldAddToIgnoreList: () => true
+                });
+
+                // THEN
+                expect(result).toBe('test-modules_length:3,options_keys:2');
+            });
+        });
+
+        test('M sourcemapString returns the correct function when retrieved as named export', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock(
+                    'metro/private/DeltaBundler/Serializers/sourceMapString',
+                    () => ({
+                        sourceMapString: (
+                            modules: unknown[],
+                            options: object
+                        ): string =>
+                            `test-modules_length:${
+                                modules.length
+                            },options_keys:${Object.keys(options).length}`
+                    })
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const metroSourceMapString = utils.getSourceMapStringFunction();
+                const result = metroSourceMapString([{}, {}, {}], {
+                    excludeSource: true,
+                    shouldAddToIgnoreList: () => true
+                });
+                // THEN
+                expect(result).toBe('test-modules_length:3,options_keys:2');
+            });
+        });
+
+        test('M sourcemapString returns the correct function when retrieved as default export', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock(
+                    'metro/private/DeltaBundler/Serializers/sourceMapString',
+                    () => ({
+                        default: (
+                            modules: unknown[],
+                            options: object
+                        ): string =>
+                            `test-modules_length:${
+                                modules.length
+                            },options_keys:${Object.keys(options).length}`
+                    })
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const metroSourceMapString = utils.getSourceMapStringFunction();
+                const result = metroSourceMapString([{}, {}, {}], {
+                    excludeSource: true,
+                    shouldAddToIgnoreList: () => true
+                });
+                // THEN
+                expect(result).toBe('test-modules_length:3,options_keys:2');
+            });
+        });
+
+        test('M getBaseJSBundle correctly imports function from metro/src when metro/private is not available', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock(
+                    'metro/private/DeltaBundler/Serializers/baseJSBundle',
+                    () => {
+                        throw new Error('Module not found');
+                    }
+                );
+
+                jest.doMock(
+                    'metro/src/DeltaBundler/Serializers/baseJSBundle',
+                    () => () => ({
+                        test: 'ok'
+                    }),
+                    { virtual: true }
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const baseJSBundle = utils.getBaseJSBundleFunction();
+                const result = baseJSBundle();
+
+                // THEN
+                expect(result).toHaveProperty('test');
+                expect(result.test).toBe('ok');
+            });
+        });
+
+        test('M getCountLines correctly imports function from metro/src when metro/private is not available', () => {
+            // GIVEN
+            jest.isolateModules(() => {
+                // GIVEN
+                jest.doMock('metro/private/lib/countLines', () => {
+                    throw new Error('Module not found');
+                });
+
+                // Random int between 10 and 100 to ensure the mock is used
+                const randomInt = Math.floor(Math.random() * 90) + 10;
+
+                jest.doMock(
+                    'metro/src/lib/countLines',
+                    () => (str: string): number => str.length + randomInt,
+                    { virtual: true }
+                );
+
+                // WHEN
+                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                const utils = require('../plugin/utils');
+                const getCountLines = utils.getCountLinesFunction();
+                const result = getCountLines('test-string');
+
+                // THEN
+                expect(result).toBe('test-string'.length + randomInt);
+            });
         });
     });
 });

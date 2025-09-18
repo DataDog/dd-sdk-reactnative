@@ -260,8 +260,6 @@ package/lib/commonjs/utils/jsUtils.js
 package/lib/commonjs/utils/jsUtils.js.map
 package/lib/commonjs/utils/longTasksUtils.js
 package/lib/commonjs/utils/longTasksUtils.js.map
-package/lib/commonjs/utils/telemetry.js
-package/lib/commonjs/utils/telemetry.js.map
 package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js
 package/lib/commonjs/utils/time-provider/DefaultTimeProvider.js.map
 package/lib/commonjs/utils/time-provider/TimeProvider.js
@@ -438,8 +436,6 @@ package/lib/module/utils/jsUtils.js
 package/lib/module/utils/jsUtils.js.map
 package/lib/module/utils/longTasksUtils.js
 package/lib/module/utils/longTasksUtils.js.map
-package/lib/module/utils/telemetry.js
-package/lib/module/utils/telemetry.js.map
 package/lib/module/utils/time-provider/DefaultTimeProvider.js
 package/lib/module/utils/time-provider/DefaultTimeProvider.js.map
 package/lib/module/utils/time-provider/TimeProvider.js
@@ -614,8 +610,6 @@ package/lib/typescript/utils/jsUtils.d.ts
 package/lib/typescript/utils/jsUtils.d.ts.map
 package/lib/typescript/utils/longTasksUtils.d.ts
 package/lib/typescript/utils/longTasksUtils.d.ts.map
-package/lib/typescript/utils/telemetry.d.ts
-package/lib/typescript/utils/telemetry.d.ts.map
 package/lib/typescript/utils/time-provider/DefaultTimeProvider.d.ts
 package/lib/typescript/utils/time-provider/DefaultTimeProvider.d.ts.map
 package/lib/typescript/utils/time-provider/TimeProvider.d.ts
@@ -761,7 +755,6 @@ package/src/utils/argsUtils.ts
 package/src/utils/errorUtils.ts
 package/src/utils/jsUtils.ts
 package/src/utils/longTasksUtils.ts
-package/src/utils/telemetry.ts
 package/src/utils/time-provider/DefaultTimeProvider.tsx
 package/src/utils/time-provider/TimeProvider.tsx
 package/src/utils/Timer.ts
