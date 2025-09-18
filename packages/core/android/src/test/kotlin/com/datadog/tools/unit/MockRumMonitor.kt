@@ -29,6 +29,8 @@ class MockRumMonitor : RumMonitor {
 
     override fun addAttribute(key: String, value: Any?) {}
 
+    override fun addViewAttributes(attributes: Map<String, Any?>) {}
+
     override fun addError(
         message: String,
         source: RumErrorSource,
@@ -61,6 +63,7 @@ class MockRumMonitor : RumMonitor {
     override fun getCurrentSessionId(callback: (String?) -> Unit) {}
 
     override fun removeAttribute(key: String) {}
+    override fun removeViewAttributes(attributes: Collection<String>) {}
 
     override fun startAction(
         type: RumActionType,
@@ -71,13 +74,6 @@ class MockRumMonitor : RumMonitor {
     override fun startResource(
         key: String,
         method: RumResourceMethod,
-        url: String,
-        attributes: Map<String, Any?>
-    ) {}
-
-    override fun startResource(
-        key: String,
-        method: String,
         url: String,
         attributes: Map<String, Any?>
     ) {}
