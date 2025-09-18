@@ -6,8 +6,8 @@
 
 import type * as Babel from '@babel/core';
 
-import { PluginConstants, tapElementsMap } from '../../constants';
-import type { BabelTypes, PluginPassState } from '../../types';
+import { RumAction, PluginConstants, tapElementsMap } from '../../constants';
+import type { BabelTypes, PluginPassState, PluginOptions } from '../../types';
 import {
     PluginState,
     getAssignmentNode,
@@ -17,16 +17,17 @@ import {
 
 export function insertSetupFlag(
     path: Babel.NodePath<Babel.types.Program>,
+    state: PluginPassState,
     t: BabelTypes
 ) {
-    const pluginState = PluginState.getInstance();
+    const pluginState = PluginState.getInstance(state);
 
     // Only set the flag on the entry file of the project
-    if (pluginState.isInitialized) {
+    if (pluginState.isInitialized()) {
         return;
     }
 
-    pluginState.isInitialized = true;
+    pluginState.initialize();
 
     const flagNode = getAssignmentNode(
         t,
@@ -41,7 +42,8 @@ export function insertSetupFlag(
 export function loadImportMap(
     path: Babel.NodePath<Babel.types.Program>,
     t: BabelTypes,
-    pluginState: PluginPassState
+    pluginState: PluginPassState,
+    options: PluginOptions
 ) {
     path.traverse({
         ImportDeclaration(p) {
@@ -52,7 +54,9 @@ export function loadImportMap(
                 return;
             }
 
-            const tapElementsImportMap: Record<string, string[]> = {};
+            if (!pluginState.trackedComponents) {
+                pluginState.trackedComponents = {};
+            }
 
             for (const specifier of specifiers) {
                 if (!t.isImportSpecifier(specifier)) {
@@ -60,20 +64,23 @@ export function loadImportMap(
                 }
 
                 const importName = getNodeName(t, specifier.imported);
+                const localName = getNodeName(t, specifier.local);
+
                 const elementEvents = importName
                     ? tapElementsMap[importName]
                     : null;
 
-                if (elementEvents) {
-                    const importLocalName = getNodeName(t, specifier.local);
-
-                    if (importLocalName) {
-                        tapElementsImportMap[importLocalName] = elementEvents;
-                    }
+                if (elementEvents && localName) {
+                    pluginState.trackedComponents[localName] = {
+                        useContent: options.components.useContent,
+                        useNamePrefix: options.components.useNamePrefix,
+                        handlers: elementEvents.map(event => ({
+                            event,
+                            action: RumAction.TAP // TODO: RUM-11584 change once we support more actions
+                        }))
+                    };
                 }
             }
-
-            pluginState.tapMappings = tapElementsImportMap;
         }
     });
 }

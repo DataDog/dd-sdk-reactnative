@@ -10,9 +10,9 @@ import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
 import { DdSdk } from '../../../sdk/DdSdk';
 import { getErrorMessage } from '../../../utils/errorUtils';
-import { getBabelTelemetryConfig } from '../../../utils/telemetry';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 
+import { DdBabelInteractionTracking } from './DdBabelInteractionTracking';
 import type { DdEventsInterceptorOptions } from './DdEventsInterceptor';
 import { DdEventsInterceptor } from './DdEventsInterceptor';
 import type { EventsInterceptor } from './EventsInterceptor';
@@ -74,7 +74,7 @@ export class DdRumUserInteractionTracking {
 
         DdSdk?.sendTelemetryLog(
             BABEL_PLUGIN_TELEMETRY,
-            getBabelTelemetryConfig(),
+            DdBabelInteractionTracking.getTelemetryConfig(),
             { onlyOnce: true }
         );
 

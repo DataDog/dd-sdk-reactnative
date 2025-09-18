@@ -49,12 +49,20 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Button } from 'react-native';
             /*#__PURE__*/React.createElement(Button, {
               color: "red",
               onPress: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Button"
                 })(...args);else return func(...args);
               }
@@ -75,7 +83,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { TextInput } from 'react-native';
             /*#__PURE__*/React.createElement(TextInput, {
               placeholder: "Enter username",
@@ -86,6 +94,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('test');
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [],
                   "componentName": "TextInput"
                 })();else return (() => {
                   console.log('test');
@@ -107,7 +123,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { TextInput } from 'react-native';
             /*#__PURE__*/React.createElement(TextInput, {
               placeholder: "Enter username",
@@ -116,6 +132,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               style: styles.input,
               onFocus: () => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [],
                   "componentName": "TextInput"
                 })();else return (() => {})();
               }
@@ -132,13 +156,21 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: event => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(event => {
                   console.log('Testing: ', event);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [event],
                   "componentName": "Pressable"
                 })(event);else return (event => {
                   console.log('Testing: ', event);
@@ -158,7 +190,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: (test1, test2) => {
@@ -166,6 +198,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   console.log('Test1: ', test1);
                   console.log('Test2: ', test2);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [test1, test2],
                   "componentName": "Pressable"
                 })(test1, test2);else return ((test1, test2) => {
                   console.log('Test1: ', test1);
@@ -186,7 +226,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             const func = event => {
               console.log('Testing: ', event);
@@ -195,6 +235,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               color: "red",
               onPress: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(...args);else return func(...args);
               }
@@ -212,7 +260,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             function func3() {
               console.log('Testing 3');
@@ -221,6 +269,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               color: "red",
               onPress: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func3, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(...args);else return func3(...args);
               }
@@ -238,7 +294,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             function a(event, data = 1, ...rest) {
               console.log(event, data, rest);
@@ -246,6 +302,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(a, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(...args);else return a(...args);
               }
@@ -262,7 +326,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: _dd_arg0 => {
@@ -274,6 +338,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 }) => {
                   console.log(nativeEvent);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [_dd_arg0],
                   "componentName": "Pressable"
                 })(_dd_arg0);else return (({
                   nativeEvent
@@ -294,7 +366,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: (_dd_arg0, extra, _dd_arg2, ...rest) => {
@@ -307,6 +379,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 }, extra, [x, y], ...rest) => {
                   console.log(nativeEvent, extra, x, y, rest);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [_dd_arg0, extra, _dd_arg2, ...rest],
                   "componentName": "Pressable"
                 })(_dd_arg0, extra, _dd_arg2, ...rest);else return (({
                   nativeEvent
@@ -327,13 +407,21 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: (event, context = 'default') => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction((event, context = 'default') => {
                   console.log(event, context);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [event, context],
                   "componentName": "Pressable"
                 })(event, context);else return ((event, context = 'default') => {
                   console.log(event, context);
@@ -352,7 +440,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             /*#__PURE__*/React.createElement(Pressable, {
               onPress: _dd_arg0 => {
@@ -364,6 +452,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 }) => {
                   console.log(x);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [_dd_arg0],
                   "componentName": "Pressable"
                 })(_dd_arg0);else return (({
                   x = 1
@@ -392,7 +488,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             const handler = test => {
               console.log('Testing ', test);
@@ -402,6 +498,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 color: "red",
                 onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(handler, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
                   })(...args);else return handler(...args);
                 }
@@ -423,13 +527,21 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Pressable } from 'react-native';
             function MyComponent() {
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
                 onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(handler, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
                   })(...args);else return handler(...args);
                 }
@@ -451,17 +563,70 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { Pressable } from 'react-native';
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            import { Pressable } from 'react-native';
             function MyComponent() {
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: globalThis.handler
+                onPress: (...args) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(globalThis.handler, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [...args],
+                    "componentName": "Pressable"
+                  })(...args);else return globalThis.handler(...args);
+                }
               });
             }"
         `);
     });
 
     it('should wrap arrow function when given function reference as prop', () => {
+        const input = `
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+
+            function MyComponent(props) { 
+                return(
+                    <View>
+                        <Pressable color="red" onPress={props.onPress} />
+                    </View>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            import React from 'react';
+            import { View, Pressable } from 'react-native';
+            function MyComponent(props) {
+              return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
+                color: "red",
+                onPress: (...args) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(props.onPress, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [...args],
+                    "componentName": "Pressable"
+                  })(...args);else return props.onPress(...args);
+                }
+              }));
+            }"
+        `);
+    });
+
+    it('should wrap arrow function when given function reference as prop destructure', () => {
         const input = `
             import React from 'react';
             import { View, Pressable } from 'react-native';
@@ -477,7 +642,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent({
@@ -488,6 +653,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 color: "red",
                 onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(onPress, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
                   })(...args);else return onPress(...args);
                 }
@@ -512,7 +685,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent({
@@ -523,6 +696,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 color: "red",
                 onPress: () => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => onPress(item.id), "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [],
                     "componentName": "Pressable"
                   })();else return (() => onPress(item.id))();
                 }
@@ -553,7 +734,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Button } from 'react-native';
             class MyClassComponent2 extends Component {
@@ -570,6 +751,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   title: "Press Me",
                   onPress: () => {
                     if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => this.handlePress(), "TAP", {
+                      "options": {
+                        "useContent": true,
+                        "useNamePrefix": true
+                      },
+                      "getContent": () => {
+                        return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), ["Press Me"]);
+                      },
+                      "handlerArgs": [],
                       "componentName": "Button"
                     })();else return (() => this.handlePress())();
                   }
@@ -601,7 +790,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Button } from 'react-native';
             class MyClassComponent extends Component {
@@ -618,6 +807,14 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   title: "Press Me",
                   onPress: (...args) => {
                     if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(this.handlePress, "TAP", {
+                      "options": {
+                        "useContent": true,
+                        "useNamePrefix": true
+                      },
+                      "getContent": () => {
+                        return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), ["Press Me"]);
+                      },
+                      "handlerArgs": [...args],
                       "componentName": "Button"
                     })(...args);else return this.handlePress(...args);
                   }
@@ -639,7 +836,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { Button } from 'react-native';
             /*#__PURE__*/React.createElement(Button, {
               "dd-action-name": "test-action-button",
@@ -648,9 +845,17 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               color: "red",
               onPress: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
-                  "dd-action-name": "test-action-button",
-                  "example-button-prop": "action-name-attr-button",
-                  "accessibilityLabel": "accessibility-action-button",
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "dd-action-name": ["test-action-button"],
+                  "example-button-prop": ["action-name-attr-button"],
+                  "accessibilityLabel": ["accessibility-action-button"],
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Button"
                 })(...args);else return func(...args);
               }
@@ -680,7 +885,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { useCallback } from 'react';
             import { Pressable } from 'react-native';
             function MyComponent() {
@@ -690,6 +895,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   setA(x => x + 1);
                   setB(x => x + 1);
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(event);else return (event => {
                   console.log('Testing ', a, b, event);
@@ -725,7 +938,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { useCallback } from 'react';
             import { Pressable } from 'react-native';
             function MyComponent() {
@@ -738,6 +951,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                 color: "red",
                 onPress: () => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => handler('Test'), "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                    },
+                    "handlerArgs": [],
                     "componentName": "Pressable"
                   })();else return (() => handler('Test'))();
                 }
@@ -764,7 +985,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { useCallback } from 'react';
             import { Pressable } from 'react-native';
             function MyComponent() {
@@ -772,6 +993,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('Testing ');
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
@@ -805,7 +1034,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
         `;
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { useCallback } from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent() {
@@ -813,6 +1042,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('Testing ');
                 }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
@@ -853,7 +1090,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import { useCallback } from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent() {
@@ -864,6 +1101,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
               };
               const handler = useCallback(test => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(funcN, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -899,7 +1144,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent() {
@@ -910,6 +1155,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
               };
               const handler = React.useCallback(test => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(funcN, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -943,7 +1196,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             const funcN = test => {
@@ -952,6 +1205,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
             function MyComponent() {
               const handler = React.useCallback(test => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(funcN, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -982,7 +1243,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             import { funcN } from '../myFile';
@@ -1018,7 +1279,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
         const output = transformCode(input);
         expect(output).toMatchInlineSnapshot(`
-            "import { DdBabelInteractionTracking } from "@datadog/mobile-react-native";
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
             import React from 'react';
             import { View, Pressable } from 'react-native';
             const funcN = () => {
@@ -1027,6 +1288,14 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
             function MyComponent() {
               const handler = React.useMemo(() => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(funcN, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(<></>, []);
+                  },
+                  "handlerArgs": [...args],
                   "componentName": "Pressable"
                 })();else return funcN();
               }, []);

@@ -46,7 +46,7 @@ const datadogConfiguration = new DatadogProviderConfiguration(
     true, // track XHR Resources
     true // track Errors
 );
-// Optional: Select your Datadog website (one of "US1", "US3", "US5", EU1", "AP1", "AP2", or "US1_FED"). Default is "US1".
+// Optional: Select your Datadog website (one of "US1", "US3", "US5", "EU1", "AP1", "AP2", or "US1_FED"). Default is "US1".
 datadogConfiguration.site = 'US1';
 // Optional: enable or disable native crash reports
 datadogConfiguration.nativeCrashReportEnabled = true;
@@ -102,7 +102,7 @@ tempers with the linux kernel, the stored data might become readable.
 ### iOS
 
 Before data is uploaded to Datadog, it is stored in cleartext in the cache directory (`Library/Caches`)
-of your [application sandbox](4), which can't be read by any other app installed on the device.
+of your [application sandbox][4], which can't be read by any other app installed on the device.
 
 [1]: https://app.datadoghq.com/rum/application/create
 [2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png

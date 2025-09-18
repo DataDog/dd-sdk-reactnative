@@ -144,6 +144,8 @@ package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js
 package/lib/commonjs/rum/instrumentation/DdRumErrorTracking.js.map
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js.map
+package/lib/commonjs/rum/instrumentation/interactionTracking/ddBabelUtils.js
+package/lib/commonjs/rum/instrumentation/interactionTracking/ddBabelUtils.js.map
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdEventsInterceptor.js
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdEventsInterceptor.js.map
 package/lib/commonjs/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.js
@@ -320,6 +322,8 @@ package/lib/module/rum/instrumentation/DdRumErrorTracking.js
 package/lib/module/rum/instrumentation/DdRumErrorTracking.js.map
 package/lib/module/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js
 package/lib/module/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.js.map
+package/lib/module/rum/instrumentation/interactionTracking/ddBabelUtils.js
+package/lib/module/rum/instrumentation/interactionTracking/ddBabelUtils.js.map
 package/lib/module/rum/instrumentation/interactionTracking/DdEventsInterceptor.js
 package/lib/module/rum/instrumentation/interactionTracking/DdEventsInterceptor.js.map
 package/lib/module/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.js
@@ -494,6 +498,8 @@ package/lib/typescript/rum/instrumentation/DdRumErrorTracking.d.ts
 package/lib/typescript/rum/instrumentation/DdRumErrorTracking.d.ts.map
 package/lib/typescript/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts
 package/lib/typescript/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.d.ts.map
+package/lib/typescript/rum/instrumentation/interactionTracking/ddBabelUtils.d.ts
+package/lib/typescript/rum/instrumentation/interactionTracking/ddBabelUtils.d.ts.map
 package/lib/typescript/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts
 package/lib/typescript/rum/instrumentation/interactionTracking/DdEventsInterceptor.d.ts.map
 package/lib/typescript/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.d.ts
@@ -666,6 +672,7 @@ package/src/rum/eventMappers/errorEventMapper.ts
 package/src/rum/eventMappers/resourceEventMapper.ts
 package/src/rum/instrumentation/DdRumErrorTracking.tsx
 package/src/rum/instrumentation/interactionTracking/DdBabelInteractionTracking.ts
+package/src/rum/instrumentation/interactionTracking/ddBabelUtils.ts
 package/src/rum/instrumentation/interactionTracking/DdEventsInterceptor.tsx
 package/src/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking.tsx
 package/src/rum/instrumentation/interactionTracking/EventsInterceptor.tsx

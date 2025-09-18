@@ -8,8 +8,17 @@ import type * as Babel from '@babel/core';
 
 import { RumAction, RumActionConstants } from '../../constants';
 import type { PluginPassState, RumActionResult } from '../../types';
-import { getArgumentsFromParams, getNodeName } from '../../utils';
+import { getArgumentsFromParams, getNodeName, toExpression } from '../../utils';
 
+/**
+ * Wraps a tap handler attribute (e.g., onPress) with RUM Action Tracking wrapper call.
+ *
+ * @param path - The JSXAttribute path for the handler prop (e.g., `onPress={...}`).
+ * @param t - Babel types helper.
+ * @param state - Plugin state, including tracked components and memoization cache.
+ * @param actionResult - Extracted info about the attribute (parentName, propertyName, nodes, expression).
+ * @returns A JSXExpressionContainer with the wrapped handler, or `null/undefined` if skipped.
+ */
 export function handleTapAction(
     path: Babel.NodePath<Babel.types.JSXAttribute>,
     t: typeof Babel.types,
@@ -23,10 +32,15 @@ export function handleTapAction(
         propertyNode.value
     );
 
-    // Check if the property and element is valid by checking our tap mappings list
-    const mapEntry = state.tapMappings?.[parentName];
+    // Check if the property and element are valid by checking our trackedComponents list
+    const mapEntry = state.trackedComponents?.[parentName];
     const isValidElement = !!mapEntry;
-    const isValidEvent = mapEntry?.includes(propertyName) || false;
+    const isValidEvent =
+        mapEntry?.handlers.map(x => x.event).includes(propertyName) || false;
+
+    const handler = state.trackedComponents?.[parentName]?.handlers.find(
+        x => x.event === propertyName
+    );
 
     if (!isExpressionContainer || !isValidEvent || !isValidElement) {
         return;
@@ -34,9 +48,7 @@ export function handleTapAction(
 
     const isArrowFunc = t.isArrowFunctionExpression(expression);
     const isNamedFunc =
-        t.isIdentifier(expression) ||
-        (t.isMemberExpression(expression) &&
-            t.isThisExpression(expression.object));
+        t.isIdentifier(expression) || t.isMemberExpression(expression);
 
     if (!isArrowFunc && !isNamedFunc) {
         return;
@@ -47,12 +59,23 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
+    const handlerArgs =
+        isArrowFunc && expression?.params
+            ? t.arrayExpression(
+                  getArgumentsFromParams(t, state, expression.params).callArgs
+              )
+            : t.arrayExpression([t.spreadElement(t.identifier('args'))]);
+
+    if (path.node?.extra?.ddValues) {
+        (path.node.extra.ddValues as any)['handlerArgs'] = handlerArgs;
+    }
+
     const argsObject = t.objectExpression([
         ...Object.entries(path.node?.extra?.ddValues || {}).map(
             ([key, value]) => {
                 return t.objectProperty(
                     t.stringLiteral(key),
-                    t.stringLiteral(value)
+                    toExpression(t, value)
                 );
             }
         ),
@@ -76,18 +99,24 @@ export function handleTapAction(
                   expression,
                   fName,
                   fNode,
-                  argsObject
+                  argsObject,
+                  handler?.mode
               );
 
-    // This is the fallback expression, only used if there is something wrong with the setup on the SDK side
-    // Even though the function is still wrapped, it will not call any custom logic from our side
-    // It will simply call the user's function
-    const returnExpression = isArrowFunc
-        ? t.callExpression(
-              expression,
-              getArgumentsFromParams(t, state, expression.params).callArgs
-          )
-        : t.callExpression(expression, [t.spreadElement(t.identifier('args'))]);
+    let returnExpression: Babel.types.Expression | null = null;
+
+    if (handler && handler?.mode === 'delayed') {
+        returnExpression = expression;
+    } else {
+        returnExpression = isArrowFunc
+            ? t.callExpression(
+                  expression,
+                  getArgumentsFromParams(t, state, expression.params).callArgs
+              )
+            : t.callExpression(expression, [
+                  t.spreadElement(t.identifier('args'))
+              ]);
+    }
 
     state.hasValidTapAction = true;
 
@@ -100,11 +129,28 @@ export function handleTapAction(
               expression,
               expressionParams,
               returnExpression,
-              argsObject
+              argsObject,
+              handler?.mode
           )
         : null;
 }
 
+/**
+ * Attempts to resolve a named function reference within a component or the program scope.
+ *
+ * Search Types:
+ *  - 'Component': nearest function/class component body (FunctionDeclaration, FunctionExpression, ClassDeclaration).
+ *  - 'Program': the module/program scope.
+ *
+ * Returns the function name, the node (FunctionDeclaration or VariableDeclarator),
+ * and the function parameters (to support accurate argument forwarding).
+ *
+ * @param path - The JSXAttribute path.
+ * @param t - Babel types helper.
+ * @param expression - Identifier referencing the function.
+ * @param type - Search type: 'Component' or 'Program'.
+ * @returns Object with `{ fName, fNode, fParams }`.
+ */
 function getNamedFunctionNode(
     path: Babel.NodePath<Babel.types.JSXAttribute>,
     t: typeof Babel.types,
@@ -184,6 +230,19 @@ function getNamedFunctionNode(
     return { fName, fNode, fParams };
 }
 
+/**
+ * If a handler is memoized via `useCallback` or `useMemo`, wraps the memoized callback instead
+ * of the JSX prop directly, preserving memoization semantics.
+ *
+ * @param path - The JSXAttribute path where the memoized handler is referenced.
+ * @param t - Babel types helper.
+ * @param state - Plugin state, with `memoization` map.
+ * @param fName - The variable name bound to the memoized value.
+ * @param fNode - The variable declarator or function declaration of the memoized symbol.
+ * @param argsObject - Datadog-specific args object (ddValues/options).
+ * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
+ * @returns `true` if considered memoized (wrapped or intentionally skipped), else `false`.
+ */
 function handleMemoization(
     path: Babel.NodePath<Babel.types.JSXAttribute>,
     t: typeof Babel.types,
@@ -194,7 +253,8 @@ function handleMemoization(
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
         | null,
-    argsObject: babel.types.ObjectExpression
+    argsObject: babel.types.ObjectExpression,
+    mode?: string
 ) {
     if (!fName || !fNode || t.isFunctionDeclaration(fNode)) {
         return !!state.memoization?.[fName || ''];
@@ -233,14 +293,19 @@ function handleMemoization(
         )[]
     ) => {
         const { callArgs } = getArgumentsFromParams(t, state, params);
-        const returnExpression = t.callExpression(callback, callArgs);
+        const returnExpression =
+            mode === 'delayed'
+                ? callback
+                : t.callExpression(callback, callArgs);
+
         const actionWrapper = getActionWrapperFunction(
             t,
             state,
             callback,
             params,
             returnExpression,
-            argsObject
+            argsObject,
+            mode
         );
         varInit.arguments.fill(actionWrapper, 0, 1);
         fNode.init = varInit;
@@ -304,6 +369,21 @@ function handleMemoization(
     return !!state.memoization?.[fName];
 }
 
+/**
+ * Builds a JSXExpressionContainer containing an arrow function wrapper for the handler.
+ *
+ * This simply delegates to `getActionWrapperFunction` and then wraps the result
+ * as a JSX expression for use directly as a prop value.
+ *
+ * @param t - Babel types helper.
+ * @param state - Plugin state.
+ * @param expression - The original handler expression (arrow fn or identifier/member).
+ * @param expressionParams - Parameters of the original function, if known.
+ * @param returnExpression - Expression to execute when not using the RUM wrapper (fallback).
+ * @param argsObject - Datadog-specific args object (ddValues/options).
+ * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
+ * @returns A JSXExpressionContainer that evaluates to the wrapped handler arrow function.
+ */
 function getActionWrapperNode(
     t: typeof Babel.types,
     state: PluginPassState,
@@ -316,7 +396,8 @@ function getActionWrapperNode(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    argsObject: Babel.types.ObjectExpression
+    argsObject: Babel.types.ObjectExpression,
+    mode?: string
 ) {
     const actionWrapperFunction = getActionWrapperFunction(
         t,
@@ -324,11 +405,31 @@ function getActionWrapperNode(
         expression,
         expressionParams,
         returnExpression,
-        argsObject
+        argsObject,
+        mode
     );
     return t.jsxExpressionContainer(actionWrapperFunction);
 }
 
+/**
+ * Constructs the actual wrapper arrow function that:
+ *  - computes/normalizes parameters and pre-call statements,
+ *  - attempts to call the RUM wrapper if the runtime instance is available,
+ *  - otherwise falls back to calling the original handler directly.
+ *
+ * In 'delayed' mode, returns a function that defers invocation — the RUM wrapper
+ * returns a callable which is later called with `callArgs`. Otherwise, it invokes
+ * the wrapper immediately with `callArgs`.
+ *
+ * @param t - Babel types helper.
+ * @param state - Plugin state (used by argument computation utilities).
+ * @param expression - Original handler expression (arrow/name/member).
+ * @param expressionParams - Original handler parameters, if known. If null, uses `...args`.
+ * @param returnExpression - Fallback: direct call (or the function itself in delayed mode).
+ * @param argsObject - Datadog-specific args object (ddValues/options).
+ * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
+ * @returns An ArrowFunctionExpression that implements the described behavior.
+ */
 function getActionWrapperFunction(
     t: typeof Babel.types,
     state: PluginPassState,
@@ -341,7 +442,8 @@ function getActionWrapperFunction(
           )[]
         | null,
     returnExpression: Babel.types.Expression,
-    argsObject: Babel.types.ObjectExpression
+    argsObject: Babel.types.ObjectExpression,
+    mode?: string
 ) {
     const params = expressionParams || [t.restElement(t.identifier('args'))];
 
@@ -350,6 +452,28 @@ function getActionWrapperFunction(
         preCallStatements,
         callArgs
     } = getArgumentsFromParams(t, state, params);
+
+    const wrapperExpression = t.callExpression(
+        t.memberExpression(
+            t.callExpression(
+                t.memberExpression(
+                    t.identifier(RumActionConstants.ACTION_CLASS),
+                    t.identifier(RumActionConstants.ACTION_CLASS_INSTANCE)
+                ),
+                []
+            ),
+            t.identifier(RumActionConstants.ACTION_FUNCTION_WRAPPER)
+        ),
+        [expression, t.stringLiteral(RumAction.TAP), argsObject]
+    );
+
+    const wrapperExpressionImmediate = t.callExpression(
+        wrapperExpression,
+        callArgs
+    );
+
+    const outputExpression =
+        mode === 'delayed' ? wrapperExpression : wrapperExpressionImmediate;
 
     return t.arrowFunctionExpression(
         wrapperParams,
@@ -363,35 +487,7 @@ function getActionWrapperFunction(
                     ),
                     []
                 ),
-                t.returnStatement(
-                    t.callExpression(
-                        t.callExpression(
-                            t.memberExpression(
-                                t.callExpression(
-                                    t.memberExpression(
-                                        t.identifier(
-                                            RumActionConstants.ACTION_CLASS
-                                        ),
-                                        t.identifier(
-                                            RumActionConstants.ACTION_CLASS_INSTANCE
-                                        )
-                                    ),
-                                    []
-                                ),
-                                t.identifier(
-                                    RumActionConstants.ACTION_FUNCTION_WRAPPER
-                                )
-                            ),
-                            [
-                                expression,
-                                t.stringLiteral(RumAction.TAP),
-                                argsObject
-                            ]
-                        ),
-                        callArgs
-                        // [t.spreadElement(t.identifier('args'))]
-                    )
-                ),
+                t.returnStatement(outputExpression),
                 t.returnStatement(returnExpression)
             )
         ])
