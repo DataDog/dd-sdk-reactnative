@@ -738,7 +738,7 @@ class DdSdkTests: XCTestCase {
 
         XCTAssertEqual(actualFirstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(actualTracingSamplingRate, 66)
-        XCTAssertEqual(actualTraceContextInjection, .all)
+        XCTAssertEqual(actualTraceContextInjection, .sampled)
     }
 
     func testBuildTelemetrySampleRate() {
