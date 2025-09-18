@@ -166,8 +166,6 @@ package/lib/typescript/core/src/utils/jsUtils.d.ts
 package/lib/typescript/core/src/utils/jsUtils.d.ts.map
 package/lib/typescript/core/src/utils/longTasksUtils.d.ts
 package/lib/typescript/core/src/utils/longTasksUtils.d.ts.map
-package/lib/typescript/core/src/utils/telemetry.d.ts
-package/lib/typescript/core/src/utils/telemetry.d.ts.map
 package/lib/typescript/core/src/utils/time-provider/DefaultTimeProvider.d.ts
 package/lib/typescript/core/src/utils/time-provider/DefaultTimeProvider.d.ts.map
 package/lib/typescript/core/src/utils/time-provider/TimeProvider.d.ts
