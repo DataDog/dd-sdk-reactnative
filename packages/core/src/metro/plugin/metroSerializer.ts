@@ -6,12 +6,6 @@
  * Portions of this code are adapted from Sentry's Metro configuration:
  * https://github.com/getsentry/sentry-react-native/blob/17c0c2e8913030e4826d055284a735efad637312/packages/core/src/js/tools/sentryMetroSerializer.ts
  */
-
-// eslint-disable-next-line import/no-extraneous-dependencies
-import baseJSBundle from 'metro/src/DeltaBundler/Serializers/baseJSBundle';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import bundleToString from 'metro/src/lib/bundleToString';
-
 import {
     DEBUG_ID_PLACEHOLDER,
     addDebugIdModule,
@@ -32,9 +26,11 @@ import type {
     ReadOnlyGraph
 } from './types/metroTypes';
 import {
+    getBaseJSBundleFunction,
+    getBundleToStringFunction,
     convertSerializerOutput as getMetroBundleWithMap,
     getSortedModules,
-    metroSourceMapString
+    getSourceMapStringFunction
 } from './utils';
 
 /**
@@ -105,8 +101,9 @@ export const createDatadogMetroSerializer = (
  */
 export const createDefaultMetroSerializer = (): MetroSerializer => {
     return (entryPoint, preModules, graph, options) => {
-        // Default metro bundle
+        // Creates the default metro bundle
         // https://github.com/facebook/metro/blob/a3d021a0d021b5706372059f472715c63019e044/packages/metro/src/DeltaBundler/Serializers/baseJSBundle.js#L25
+        const baseJSBundle = getBaseJSBundleFunction();
         let bundle = baseJSBundle(entryPoint, preModules, graph, options);
 
         // Modify the bundle through the datadogBundleCallback, if we are not in hot-reload mode
@@ -118,6 +115,7 @@ export const createDefaultMetroSerializer = (): MetroSerializer => {
         }
 
         // Retrieves the processed code from the bundle
+        const bundleToString = getBundleToStringFunction();
         const { code } = bundleToString(bundle);
 
         // If we are in hot-reload mode, we skip sourcemaps generation, and only return the code.
@@ -126,7 +124,8 @@ export const createDefaultMetroSerializer = (): MetroSerializer => {
         }
 
         // Force generation of sourcemaps
-        const map = metroSourceMapString(
+        const sourceMapString = getSourceMapStringFunction();
+        const map = sourceMapString(
             [...preModules, ...getSortedModules(graph, options)],
             {
                 processModuleFilter: options.processModuleFilter,
