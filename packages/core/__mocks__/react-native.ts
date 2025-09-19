@@ -24,6 +24,9 @@ actualRN.NativeModules.DdSdk = {
     addUserExtraInfo: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['addUserExtraInfo']>,
+    clearUserInfo: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['clearUserInfo']>,
     setAttributes: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['setAttributes']>,

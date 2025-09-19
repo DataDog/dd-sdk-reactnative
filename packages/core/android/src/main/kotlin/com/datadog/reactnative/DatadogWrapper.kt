@@ -87,6 +87,11 @@ interface DatadogWrapper {
     )
 
     /**
+     * Clears the user information.
+     */
+    fun clearUserInfo()
+
+    /**
      * Adds global attributes.
      *
      * @param attributes Attributes to add
