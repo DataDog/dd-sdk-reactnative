@@ -51,6 +51,12 @@ RCT_REMAP_METHOD(addUserExtraInfo, withExtraInfo:(NSDictionary*)extraInfo
     [self addUserExtraInfo:extraInfo resolve:resolve reject:reject];
 }
 
+RCT_EXPORT_METHOD(clearUserInfo:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self clearUserInfo:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(setTrackingConsent, withTrackingConsent:(NSString*)trackingConsent
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -81,7 +87,7 @@ RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
     [self consumeWebviewEvent:message resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
+RCT_EXPORT_METHOD(clearAllData:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self clearAllData:resolve reject:reject];
@@ -141,6 +147,10 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)setUserInfo:(NSDictionary *)userInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation setUserInfoWithUserInfo:userInfo resolve:resolve reject:reject];
+}
+
+- (void)clearUserInfo:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation clearUserInfoWithResolve:resolve reject:reject];
 }
 
 -(void)addUserExtraInfo:(NSDictionary *)extraInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

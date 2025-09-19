@@ -102,7 +102,7 @@ class DdSdkImplementation(
     }
 
     /**
-     * Sets the user information.
+     * Sets the user extra information.
      * @param userExtraInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     fun addUserExtraInfo(
@@ -111,6 +111,14 @@ class DdSdkImplementation(
         val extraInfoMap = userExtraInfo.toHashMap().toMutableMap()
 
         datadog.addUserExtraInfo(extraInfoMap)
+        promise.resolve(null)
+    }
+
+    /**
+     * Clears the user information.
+     */
+    fun clearUserInfo(promise: Promise) {
+        datadog.clearUserInfo()
         promise.resolve(null)
     }
 

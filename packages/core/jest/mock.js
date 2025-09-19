@@ -33,6 +33,9 @@ module.exports = {
         addUserExtraInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        clearUserInfo: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         setAttributes: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
