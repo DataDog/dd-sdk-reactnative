@@ -10,9 +10,9 @@ import android.content.Context
 import com.datadog.android.Datadog
 import com.datadog.android.api.SdkCore
 import com.datadog.android.api.context.DatadogContext
+import com.datadog.android.api.feature.EventWriteScope
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
-import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.EventType
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.api.storage.datastore.DataStoreHandler
@@ -85,23 +85,27 @@ internal class DdInternalTestingImplementationTest {
 
             wrappedCore.registerFeature(mockFeature)
             requireNotNull(wrappedCore.getFeature(mockFeature.name))
-                .withWriteContext { _, eventBatchWriter ->
-                    eventBatchWriter.write(
-                        RawBatchEvent(data = "mock event for test".toByteArray()),
-                        batchMetadata = null,
-                        eventType = EventType.DEFAULT
-                    )
-                }
+                .withWriteContext { _, writeScope ->
+                    writeScope {
+                        val rawBatchEvent =
+                            RawBatchEvent(data = "mock event for test".toByteArray())
+                        it.write(
+                            rawBatchEvent,
+                            batchMetadata = null,
+                            eventType = EventType.DEFAULT
+                        )
+                    }
 
-            // Then
-            assertThat(
-                wrappedCore.featureScopes[mockFeature.name]
-                    ?.eventsWritten()
-                    ?.first()
-            )
-                .isEqualTo(
-                    "mock event for test"
-                )
+                    // Then
+                    assertThat(
+                        wrappedCore.featureScopes[mockFeature.name]
+                            ?.eventsWritten()
+                            ?.first()
+                    )
+                        .isEqualTo(
+                            "mock event for test"
+                        )
+                }
         }
     }
 }
@@ -116,10 +120,23 @@ internal class MockFeatureScope(private val feature: Feature) : FeatureScope {
         return feature as T
     }
 
+    override fun withContext(
+        withFeatureContexts: Set<String>,
+        callback: (datadogContext: DatadogContext) -> Unit
+    ) {
+    }
+
     override fun withWriteContext(
-        forceNewBatch: Boolean,
-        callback: (DatadogContext, EventBatchWriter) -> Unit
-    ) {}
+        withFeatureContexts: Set<String>,
+        callback: (datadogContext: DatadogContext, write: EventWriteScope) -> Unit
+    ) {
+    }
+
+    override fun getWriteContextSync(
+        withFeatureContexts: Set<String>
+    ): Pair<DatadogContext, EventWriteScope>? {
+        return TODO("Provide the return value")
+    }
 }
 
 internal class MockFeature(override val name: String) : Feature {
