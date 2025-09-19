@@ -1,9 +1,9 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.0.0):
-    - DatadogInternal (= 3.0.0)
-  - DatadogCrashReporting (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogCore (3.1.0):
+    - DatadogInternal (= 3.1.0)
+  - DatadogCrashReporting (3.1.0):
+    - DatadogInternal (= 3.1.0)
     - PLCrashReporter (~> 1.12.0)
   - DatadogInternal (3.1.0)
   - DatadogLogs (3.1.0):
@@ -64,11 +64,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogTrace (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogTrace (3.1.0):
+    - DatadogInternal (= 3.1.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogWebViewTracking (3.1.0):
+    - DatadogInternal (= 3.1.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
