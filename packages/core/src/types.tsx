@@ -99,6 +99,11 @@ export type DdSdkType = {
     setUserInfo(userInfo: UserInfo): Promise<void>;
 
     /**
+     * Clears the user information.
+     */
+    clearUserInfo(): Promise<void>;
+
+    /**
      * Add additional user information.
      * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */

@@ -102,12 +102,18 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
-
+    
     @objc
     public func addUserExtraInfo(extraInfo: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedExtraInfo = castAttributesToSwift(extraInfo)
 
         Datadog.addUserExtraInfo(castedExtraInfo)
+        resolve(nil)
+    }
+
+    @objc
+    public func clearUserInfo(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        Datadog.clearUserInfo()
         resolve(nil)
     }
 

@@ -2955,6 +2955,17 @@ internal class DdSdkTest {
     }
 
     @Test
+    fun `𝕄 clear user info 𝕎 clearUserInfo()`() {
+        // When
+        testedBridgeSdk.clearUserInfo(mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog).clearUserInfo()
+        }
+    }
+
+    @Test
     fun `𝕄 set RUM attributes 𝕎 setAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),

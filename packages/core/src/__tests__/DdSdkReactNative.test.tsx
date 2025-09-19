@@ -1112,6 +1112,32 @@ describe('DdSdkReactNative', () => {
         });
     });
 
+    describe('clearUserInfo', () => {
+        it('calls SDK method when clearUserInfo, and clears the user in UserProvider', async () => {
+            // GIVEN
+            const userInfo = {
+                id: 'id',
+                name: 'name',
+                email: 'email',
+                extraInfo: {
+                    foo: 'bar'
+                }
+            };
+
+            await DdSdkReactNative.setUserInfo(userInfo);
+
+            // WHEN
+            await DdSdkReactNative.clearUserInfo();
+
+            // THEN
+            expect(DdSdk.clearUserInfo).toHaveBeenCalledTimes(1);
+            expect(DdSdk.setUserInfo).toHaveBeenCalled();
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
+                undefined
+            );
+        });
+    });
+
     describe('setTrackingConsent', () => {
         it('calls SDK method when setTrackingConsent', async () => {
             // GIVEN
