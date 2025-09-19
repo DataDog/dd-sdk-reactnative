@@ -143,7 +143,7 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
-
+    
     @objc
     public func addUserExtraInfo(
         extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -155,7 +155,7 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func clearUserInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearUserInfo(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         Datadog.clearUserInfo()
         resolve(nil)
     }
