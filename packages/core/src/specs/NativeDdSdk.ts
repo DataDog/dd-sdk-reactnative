@@ -38,6 +38,11 @@ export interface Spec extends TurboModule {
     setUserInfo(user: Object): Promise<Object>;
 
     /**
+     * Clears the user information.
+     */
+    clearUserInfo(): Promise<void>;
+
+    /**
      * Add custom attributes  to the current user information
      * @param extraInfo: The extraInfo object containing additionall custom attributes
      */
