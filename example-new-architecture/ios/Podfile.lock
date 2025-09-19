@@ -1,10 +1,11 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.0.0):
-    - DatadogInternal (= 3.0.0)
-  - DatadogCrashReporting (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogCore (3.1.0):
+    - DatadogInternal (= 3.1.0)
+  - DatadogCrashReporting (3.1.0):
+    - DatadogInternal (= 3.1.0)
     - PLCrashReporter (~> 1.12.0)
+<<<<<<< HEAD
 <<<<<<< HEAD
   - DatadogInternal (2.30.2)
   - DatadogLogs (2.30.2):
@@ -32,6 +33,20 @@ PODS:
     - DatadogTrace (= 3.0.0)
     - DatadogWebViewTracking (= 3.0.0)
 >>>>>>> 51280318 (Bump native SDK dependencies to 3.0.0)
+=======
+  - DatadogInternal (3.1.0)
+  - DatadogLogs (3.1.0):
+    - DatadogInternal (= 3.1.0)
+  - DatadogRUM (3.1.0):
+    - DatadogInternal (= 3.1.0)
+  - DatadogSDKReactNative (2.12.1):
+    - DatadogCore (= 3.1.0)
+    - DatadogCrashReporting (= 3.1.0)
+    - DatadogLogs (= 3.1.0)
+    - DatadogRUM (= 3.1.0)
+    - DatadogTrace (= 3.1.0)
+    - DatadogWebViewTracking (= 3.1.0)
+>>>>>>> a19a7316 (Bump Native SDKs to 3.1.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -62,6 +77,7 @@ PODS:
     - DatadogWebViewTracking (= 2.30.2)
 =======
   - DatadogSDKReactNative/Tests (2.12.1):
+<<<<<<< HEAD
     - DatadogCore (= 3.0.0)
     - DatadogCrashReporting (= 3.0.0)
     - DatadogLogs (= 3.0.0)
@@ -69,6 +85,14 @@ PODS:
     - DatadogTrace (= 3.0.0)
     - DatadogWebViewTracking (= 3.0.0)
 >>>>>>> 51280318 (Bump native SDK dependencies to 3.0.0)
+=======
+    - DatadogCore (= 3.1.0)
+    - DatadogCrashReporting (= 3.1.0)
+    - DatadogLogs (= 3.1.0)
+    - DatadogRUM (= 3.1.0)
+    - DatadogTrace (= 3.1.0)
+    - DatadogWebViewTracking (= 3.1.0)
+>>>>>>> a19a7316 (Bump Native SDKs to 3.1.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -89,11 +113,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogTrace (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogTrace (3.1.0):
+    - DatadogInternal (= 3.1.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (3.0.0):
-    - DatadogInternal (= 3.0.0)
+  - DatadogWebViewTracking (3.1.0):
+    - DatadogInternal (= 3.1.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
@@ -1876,6 +1900,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
 <<<<<<< HEAD
+<<<<<<< HEAD
   DatadogCore: 8e50ad6cb68343f701707f7eeca16e0acb52ed8c
   DatadogCrashReporting: 34763d4276d4fce286c7e8729cfcd2ac04dca43b
   DatadogInternal: bd8672d506a7e67936ed5f7ca612169e49029b44
@@ -1894,6 +1919,16 @@ SPEC CHECKSUMS:
   DatadogTrace: d714e7c456e612b7f171483d08086a59aa1c4213
   DatadogWebViewTracking: fb9591c09fca82b143f3843a7164a7e782175c53
 >>>>>>> 51280318 (Bump native SDK dependencies to 3.0.0)
+=======
+  DatadogCore: d2f51c7fb4308cf3c25e55e2e7242e5d558ee71d
+  DatadogCrashReporting: f636f1d1c534572c0b0abcdc59df244c884d825d
+  DatadogInternal: 7837b2ce3d525d429682532eeda697b181299fdc
+  DatadogLogs: 250894b5a99da5b924a019049c0d0326823cdbd6
+  DatadogRUM: 0d2a60e1abb8aacfb8827ef84f6d5deb4d5026c8
+  DatadogSDKReactNative: 069ea9876220b2d09b0f4b180ce571b1b6ecbb35
+  DatadogTrace: f59e933074cd285ad7e9f5af991f8fe04b095991
+  DatadogWebViewTracking: 9bc92b4147aeed47eb1911451f651094aa6dd6c1
+>>>>>>> a19a7316 (Bump Native SDKs to 3.1.0)
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45

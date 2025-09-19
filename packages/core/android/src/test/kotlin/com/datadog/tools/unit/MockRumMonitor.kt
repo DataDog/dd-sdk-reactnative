@@ -13,6 +13,7 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.featureoperations.FailureReason
 
 class MockRumMonitor : RumMonitor {
     override var debug = false
@@ -121,6 +122,28 @@ class MockRumMonitor : RumMonitor {
 
     override fun stopView(
         key: Any,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun startFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun succeedFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun failFeatureOperation(
+        name: String,
+        operationKey: String?,
+        failureReason: FailureReason,
         attributes: Map<String, Any?>
     ) {}
 }
