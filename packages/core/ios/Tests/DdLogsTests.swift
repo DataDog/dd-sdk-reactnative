@@ -463,6 +463,8 @@ private class MockNativeLogger: LoggerProtocol {
 }
 
 extension MockNativeLogger: InternalLoggerProtocol {
+    func critical(message: String, error: (any Error)?, attributes: [String : any Encodable]?, completionHandler: @escaping DatadogInternal.CompletionHandler) {}
+    
     func log(level: DatadogLogs.LogLevel, message: String, errorKind: String?, errorMessage: String?, stackTrace: String?, attributes: [String : Encodable]?) {
         receivedMethodCalls.append(MethodCall(
             kind: MockNativeLogger.MethodCall.Kind(from: level),
