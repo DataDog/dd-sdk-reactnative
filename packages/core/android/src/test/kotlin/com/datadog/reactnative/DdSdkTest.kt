@@ -163,7 +163,12 @@ internal class DdSdkTest {
             answer.getArgument<Runnable>(0).run()
             true
         }
-        testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog, mockDdTelemetry, TestUiThreadExecutor())
+        testedBridgeSdk = DdSdkImplementation(
+            mockReactContext,
+            mockDatadog,
+            mockDdTelemetry,
+            TestUiThreadExecutor()
+        )
 
         DatadogSDKWrapperStorage.onInitializedListeners.clear()
     }
