@@ -80,7 +80,9 @@ internal class DdInternalTestingImplementationTest {
             // Simulating DdSdkImplementation initialization
             DatadogSDKWrapperStorage.notifyOnInitializedListeners(mockCore)
 
-            val wrappedCore = Datadog.getInstance() as StubSDKCore
+            val wrappedCore = testedInternalTesting.getWrappedCore()
+            requireNotNull(wrappedCore)
+
             wrappedCore.registerFeature(mockFeature)
             requireNotNull(wrappedCore.getFeature(mockFeature.name))
                 .withWriteContext { _, eventBatchWriter ->
