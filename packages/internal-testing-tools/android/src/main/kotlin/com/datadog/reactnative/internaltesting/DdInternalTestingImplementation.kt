@@ -58,6 +58,12 @@ class DdInternalTestingImplementation {
         promise.resolve(null)
     }
 
+    /**
+     * Get wrapped core instance.
+     */
+    internal fun getWrappedCore(): StubSDKCore? {
+        return wrappedCore
+    }
 
     companion object {
         internal const val NAME = "DdInternalTesting"
