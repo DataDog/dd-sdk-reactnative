@@ -4,13 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
-import DdNativeRum from '../../../specs/NativeDdRum';
 import DdSdk from '../../../specs/NativeDdSdk';
-import { getBabelTelemetryConfig } from '../../../utils/telemetry';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
+import type { DdRum } from '../../DdRum';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 import type { RumActionType } from '../../types';
 import { ActionSource } from '../../types';
@@ -26,10 +23,13 @@ type BabelConfig = {
 };
 
 type TargetObject = {
-    compoenentName: string;
-    'dd-action-name': string;
-    accessibilityLabel: string;
-    [key: string]: string;
+    getContent: (() => string[]) | undefined;
+    options: { useContent: boolean; useNamePrefix: boolean };
+    handlerArgs: any[];
+    componentName: string;
+    'dd-action-name': string[];
+    accessibilityLabel: string[];
+    [key: string]: any;
 };
 
 export class DdBabelInteractionTracking {
@@ -44,26 +44,47 @@ export class DdBabelInteractionTracking {
 
     private telemetrySent: boolean = false;
 
+    private ddRum: typeof DdRum | null = null;
+
     isInitialized: boolean = false;
 
-    private constructor() {
+    private constructor(ddRum?: typeof DdRum) {
         if (DdBabelInteractionTracking.instance) {
             throw new Error(StateErrors.ALREADY_INITIALIZED);
+        }
+
+        if (ddRum) {
+            this.ddRum = ddRum;
         }
 
         DdBabelInteractionTracking.instance = this;
     }
 
-    static getInstance() {
+    static getInstance(ddRum?: typeof DdRum) {
         if (!DdBabelInteractionTracking.instance) {
-            DdBabelInteractionTracking.instance = new DdBabelInteractionTracking();
+            DdBabelInteractionTracking.instance = new DdBabelInteractionTracking(
+                ddRum
+            );
         }
 
         return DdBabelInteractionTracking.instance;
     }
 
+    static getTelemetryConfig() {
+        return {
+            babel_plugin: {
+                enabled: !!globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__,
+                track_interactions: !!DdBabelInteractionTracking.config
+                    .trackInteractions
+            }
+        };
+    }
+
     private getTargetName(targetObject: TargetObject) {
         const {
+            getContent,
+            options,
+            handlerArgs,
             componentName,
             'dd-action-name': actionName,
             accessibilityLabel,
@@ -72,20 +93,44 @@ export class DdBabelInteractionTracking {
 
         const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
 
-        if (actionName) {
-            return actionName;
+        const tryContent = () => {
+            const content = getContent?.();
+            if (content && content.length > 0) {
+                return content;
+            }
+
+            return null;
+        };
+
+        const getAccessibilityLabel = () =>
+            useAccessibilityLabel && accessibilityLabel
+                ? accessibilityLabel
+                : null;
+
+        const index = handlerArgs
+            ? handlerArgs.find(x => typeof x === 'number') || 0
+            : 0;
+
+        // Order: content → actionName → actionNameAttribute → accessibilityLabel
+        const selectedContent =
+            tryContent() ||
+            actionName ||
+            Object.values(attrs)[0] ||
+            getAccessibilityLabel();
+
+        if (!selectedContent) {
+            return componentName;
         }
 
-        const keys = Object.keys(attrs);
-        if (keys.length) {
-            return attrs[keys[0]];
-        }
+        // Fail-safe in case the our 'index' value turns out to not be a real index
+        const output =
+            index + 1 > selectedContent.length || index < 0
+                ? selectedContent[0]
+                : selectedContent[index];
 
-        if (useAccessibilityLabel && accessibilityLabel) {
-            return accessibilityLabel;
-        }
-
-        return componentName;
+        return options.useNamePrefix
+            ? `${componentName} ("${output}")`
+            : output;
     }
 
     wrapRumAction(
@@ -99,7 +144,7 @@ export class DdBabelInteractionTracking {
             if (!this.telemetrySent) {
                 DdSdk?.sendTelemetryLog(
                     BABEL_PLUGIN_TELEMETRY,
-                    getBabelTelemetryConfig(),
+                    DdBabelInteractionTracking.getTelemetryConfig(),
                     { onlyOnce: true }
                 );
 
@@ -111,17 +156,22 @@ export class DdBabelInteractionTracking {
             const { trackInteractions } = DdBabelInteractionTracking.config;
 
             if (trackInteractions) {
-                InternalLog.log(
-                    `Adding RUM Action “${targetName}” (${action}, auto)`,
-                    SdkVerbosity.DEBUG
-                );
-
-                DdNativeRum?.addAction(
-                    action,
-                    targetName,
-                    { '__dd.action_source': ActionSource.BABEL },
-                    this.timeProvider.now()
-                );
+                this.ddRum
+                    ?.addAction(
+                        action,
+                        targetName,
+                        { '__dd.action_source': ActionSource.BABEL },
+                        this.timeProvider.now()
+                    )
+                    .catch(e => {
+                        if (e instanceof Error) {
+                            DdSdk?.telemetryError(
+                                e.message,
+                                e.stack || '',
+                                'BabelActionTrack'
+                            );
+                        }
+                    });
             }
 
             return result;

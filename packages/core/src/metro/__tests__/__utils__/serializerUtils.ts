@@ -4,16 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-import countLines from 'metro/src/lib/countLines';
-
 import type {
     MetroSerializer,
     MixedOutput,
     Module,
     MetroVirtualModuleOutput
 } from '../../plugin/types/metroTypes';
-import { createCountingSet } from '../../plugin/utils';
+import {
+    getCreateCountingSetFunction,
+    getCountLinesFunction
+} from '../../plugin/utils';
 
 export const mockSerializerArgsForEmptyModule = (): Parameters<MetroSerializer> => {
     return [
@@ -48,6 +48,8 @@ export const mockSerializerArgsForEmptyModule = (): Parameters<MetroSerializer> 
 };
 
 export const mockSerializerArgsForSourceMappingURLModule = (): Parameters<MetroSerializer> => {
+    const countLines = getCountLinesFunction();
+    const createCountingSet = getCreateCountingSetFunction();
     const mockedCode = '//# sourceMappingURL=index.android.bundle.map';
     return [
         'index.js',

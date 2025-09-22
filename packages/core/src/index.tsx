@@ -24,6 +24,7 @@ import { TrackingConsent } from './TrackingConsent';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
+import { __ddExtractText } from './rum/instrumentation/interactionTracking/ddBabelUtils';
 import { DatadogTracingContext } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './rum/instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import {
@@ -77,7 +78,8 @@ export {
     TracingIdFormat,
     DatadogTracingIdentifier,
     DatadogTracingContext,
-    DdBabelInteractionTracking
+    DdBabelInteractionTracking,
+    __ddExtractText
 };
 export type {
     Timestamp,

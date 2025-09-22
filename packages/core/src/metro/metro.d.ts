@@ -28,7 +28,7 @@ declare type Bundle = {
 };
 
 // https://github.com/facebook/metro/blob/a3d021a0d021b5706372059f472715c63019e044/packages/metro/src/DeltaBundler/Serializers/baseJSBundle.js#L25
-declare module 'metro/src/DeltaBundler/Serializers/baseJSBundle' {
+declare module 'metro/private/DeltaBundler/Serializers/baseJSBundle' {
     const baseJSBundle: (
         entryPoint: string,
         preModules: ReadonlyArray<Module>,
@@ -39,7 +39,7 @@ declare module 'metro/src/DeltaBundler/Serializers/baseJSBundle' {
 }
 
 // https://github.com/facebook/metro/blob/a3d021a0d021b5706372059f472715c63019e044/packages/metro/src/lib/bundleToString.js#L22
-declare module 'metro/src/lib/bundleToString' {
+declare module 'metro/private/lib/bundleToString' {
     const bundleToString: (
         bundle: Bundle
     ) => {
@@ -51,7 +51,7 @@ declare module 'metro/src/lib/bundleToString' {
 }
 
 // https://github.com/facebook/metro/blob/a3d021a0d021b5706372059f472715c63019e044/packages/metro/src/DeltaBundler/Serializers/sourceMapString.js#L22
-declare module 'metro/src/DeltaBundler/Serializers/sourceMapString' {
+declare module 'metro/private/DeltaBundler/Serializers/sourceMapString' {
     import type { MixedOutput, Module } from 'metro';
 
     const sourceMapString: (
@@ -67,7 +67,7 @@ declare module 'metro/src/DeltaBundler/Serializers/sourceMapString' {
 }
 
 // https://github.com/facebook/metro/blob/a3d021a0d021b5706372059f472715c63019e044/packages/metro/src/lib/countLines.js#L16
-declare module 'metro/src/lib/countLines' {
+declare module 'metro/private/lib/countLines' {
     const countLines: (code: string) => number;
     export = countLines;
 }

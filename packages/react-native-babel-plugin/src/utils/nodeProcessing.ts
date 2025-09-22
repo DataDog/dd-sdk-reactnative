@@ -8,6 +8,12 @@ import type * as Babel from '@babel/core';
 
 import type { AssignmentNode, PluginPassState } from '../types';
 
+/**
+ * Inserts a node at the very top of a Program body.
+ *
+ * @param path - Program path to mutate.
+ * @param node - Statement or module declaration to unshift into `body`.
+ */
 export function insertAtProgramTop(
     path: Babel.NodePath<Babel.types.Program>,
     node: Babel.types.Statement | Babel.types.ModuleDeclaration
@@ -15,17 +21,34 @@ export function insertAtProgramTop(
     path.unshiftContainer('body', node);
 }
 
+/**
+ * Creates a named import declaration for a given module.
+ *
+ * Given: `getImportDeclaration(t, ['foo', 'bar'], 'pkg')`
+ * Results: `import { foo, bar } from 'pkg';`
+ *
+ * @param t - Babel types helper.
+ * @param data - List of named specifiers to import.
+ * @param module - Module source string.
+ * @returns `ImportDeclaration` AST node.
+ */
 export function getImportDeclaration(
     t: typeof Babel.types,
-    data: string,
+    data: string[],
     module: string
 ) {
-    return t.importDeclaration(
-        [t.importSpecifier(t.identifier(data), t.identifier(data))],
-        t.stringLiteral(module)
+    const nodeData = data.map(x =>
+        t.importSpecifier(t.identifier(x), t.identifier(x))
     );
+    return t.importDeclaration(nodeData, t.stringLiteral(module));
 }
 
+/**
+ * Extracts filename and directory from Babel's PluginPass.
+ *
+ * @param data - Babel plugin pass object.
+ * @returns Object with the file `path` (directory) and `name` (basename). Nulls if unavailable.
+ */
 export function getFileInfo(data: Babel.PluginPass) {
     const result: { path: string | null; name: string | null } = {
         path: null,
@@ -43,6 +66,16 @@ export function getFileInfo(data: Babel.PluginPass) {
     return result;
 }
 
+/**
+ * Resolves a readable name for various identifier-like nodes.
+ *
+ * Supports: Identifier, JSXIdentifier, JSXNamespacedName, JSXMemberExpression,
+ * as well as a plain string.
+ *
+ * @param t - Babel types helper.
+ * @param node - Node or string to resolve.
+ * @returns The resolved name or `null` if not applicable.
+ */
 export function getNodeName(
     t: typeof Babel.types,
     node: Babel.types.Node | string
@@ -97,6 +130,15 @@ export function getNodeName(
     return null;
 }
 
+/**
+ * Builds an assignment expression statement: `objectKey.propertyKey = value`.
+ *
+ * @param t - Babel types helper.
+ * @param objectKey - Identifier name for the left-hand object.
+ * @param propertyKey - Identifier name for the left-hand property.
+ * @param value - Right-hand expression/value to assign.
+ * @returns `ExpressionStatement` with an `AssignmentExpression`.
+ */
 export function getAssignmentNode(
     t: typeof Babel.types,
     objectKey: string,
@@ -117,6 +159,22 @@ export function getAssignmentNode(
     return node;
 }
 
+/**
+ * Gets wrapper-call argument wiring from original function parameters.
+ *
+ * Returns:
+ *  - `callArgs`: expressions to pass when invoking the original function,
+ *  - `preCallStatements`: statements (e.g., destructuring temps) to run before invocation,
+ *  - `wrapperParams`: parameters for the wrapper arrow function.
+ *
+ * Supports identifiers, default params, rest elements, and destructured patterns.
+ *
+ * @param t - Babel types helper.
+ * @param state - Plugin state (used for error context).
+ * @param params - Original function parameters.
+ * @returns `{ callArgs, preCallStatements, wrapperParams }`.
+ * @throws If a parameter type is unsupported.
+ */
 export function getArgumentsFromParams(
     t: typeof Babel.types,
     state: PluginPassState,
@@ -167,4 +225,66 @@ export function getArgumentsFromParams(
         preCallStatements,
         wrapperParams
     };
+}
+
+/**
+ * Converts a variety of JS values or AST nodes to a valid `Expression`.
+ *
+ * Rules:
+ *  - primitives → literal expressions,
+ *  - existing `Expression` → returned as-is,
+ *  - `SpreadElement` → wrapped into a single-element array expression,
+ *  - arrays of nodes → array expression (non-expressions become `undefined` identifiers),
+ *  - fallback → `null`.
+ *
+ * @param t - Babel types helper.
+ * @param v - Value or node to convert.
+ * @returns `Expression` node.
+ */
+export function toExpression(
+    t: typeof Babel.types,
+    v: unknown
+): Babel.types.Expression {
+    if (typeof v === 'string') {
+        return t.stringLiteral(v);
+    }
+
+    if (typeof v === 'boolean') {
+        return t.booleanLiteral(v);
+    }
+
+    if (typeof v === 'number') {
+        return t.numericLiteral(v);
+    }
+
+    if (t.isExpression(v as any)) {
+        return v as Babel.types.Expression;
+    }
+
+    if (t.isSpreadElement?.(v as any)) {
+        // Spreads can’t be used as a property value; wrap them in an array
+        return t.arrayExpression([v as Babel.types.SpreadElement]);
+    }
+
+    if (Array.isArray(v)) {
+        const nodes = v as Babel.types.Node[];
+        const elements: Babel.types.Expression[] = [];
+
+        for (const n of nodes) {
+            if (t.isExpression(n as any)) {
+                elements.push(n as Babel.types.Expression);
+            } else if (t.isSpreadElement?.(n as any)) {
+                elements.push(
+                    t.arrayExpression([n as Babel.types.SpreadElement])
+                );
+            } else {
+                // Unexpected entries we may try to push
+                elements.push(t.identifier('undefined'));
+            }
+        }
+
+        return t.arrayExpression(elements);
+    }
+
+    return t.nullLiteral();
 }

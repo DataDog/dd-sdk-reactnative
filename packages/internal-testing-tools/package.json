@@ -1,6 +1,6 @@
 {
     "name": "@datadog/react-native-internal-testing-tools",
-    "version": "2.11.1",
+    "version": "2.12.1",
     "description": "Internal tools for testing the Datadog React Native SDK.",
     "keywords": [
         "datadog",

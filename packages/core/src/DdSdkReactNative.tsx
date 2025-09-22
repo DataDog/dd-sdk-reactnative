@@ -367,6 +367,8 @@ export class DdSdkReactNative {
                 trackInteractions: configuration.trackInteractions,
                 useAccessibilityLabel: configuration.useAccessibilityLabel
             };
+
+            DdBabelInteractionTracking.getInstance(DdRum);
         }
 
         if (DdSdkReactNative.wasAutoInstrumented) {
