@@ -18,7 +18,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.lang.IllegalArgumentException
 
 /**
- * Wrapper around [Datadog].
+ * Wrapper around [com.datadog.android.Datadog].
  */
 @Suppress("ComplexInterface", "TooManyFunctions")
 interface DatadogWrapper {
@@ -49,10 +49,8 @@ interface DatadogWrapper {
     /**
      * Initializes the Datadog SDK.
      * @param context your application context
-     * @param credentials your organization credentials
      * @param configuration the configuration for the SDK library
-     * @param trackingConsent as the initial state of the tracking consent flag.
-     * @see [Credentials]
+     * @param consent as the initial state of the tracking consent flag.
      * @see [Configuration]
      * @see [TrackingConsent]
      * @throws IllegalArgumentException if the env name is using illegal characters and your
@@ -99,7 +97,7 @@ interface DatadogWrapper {
 
     /**
      * Sets the user information.
-     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     * @param extraInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     fun addUserExtraInfo(
         extraInfo: Map<String, Any?>
