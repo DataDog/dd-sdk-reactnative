@@ -7,6 +7,7 @@
 package com.datadog.reactnative.internaltesting
 
 import com.datadog.android.api.InternalLogger
+import com.datadog.android.Datadog
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.context.NetworkInfo
 import com.datadog.android.api.context.TimeInfo
@@ -53,11 +54,16 @@ class DdInternalTestingImplementation {
     fun enable(promise: Promise) {
         DatadogSDKWrapperStorage.addOnInitializedListener { ddCore ->
             this.wrappedCore = StubSDKCore(ddCore)
-            DatadogSDKWrapperStorage.setSdkCore(this.wrappedCore)
         }
         promise.resolve(null)
     }
 
+    /**
+     * Get wrapped core instance.
+     */
+    internal fun getWrappedCore(): StubSDKCore? {
+        return wrappedCore
+    }
 
     companion object {
         internal const val NAME = "DdInternalTesting"

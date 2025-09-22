@@ -7,6 +7,7 @@
 package com.datadog.reactnative
 
 import android.util.Log as AndroidLog
+import com.datadog.android.Datadog
 import com.datadog.android.log.Logger
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
@@ -22,7 +23,7 @@ class DdLogsImplementation(
         val bundleLogsWithRum = datadog.bundleLogsWithRum
         val bundleLogsWithTraces = datadog.bundleLogsWithTraces
 
-        logger ?: Logger.Builder(DatadogSDKWrapperStorage.getSdkCore())
+        logger ?: Logger.Builder(Datadog.getInstance())
             .setLogcatLogsEnabled(true)
             .setBundleWithRumEnabled(bundleLogsWithRum)
             .setBundleWithTraceEnabled(bundleLogsWithTraces)

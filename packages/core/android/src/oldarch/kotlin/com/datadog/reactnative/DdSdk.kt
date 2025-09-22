@@ -17,10 +17,15 @@ import com.facebook.react.bridge.ReadableMap
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
     reactContext: ReactApplicationContext,
-    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper(),
+    ddTelemetry: DdTelemetry = DdTelemetry()
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
+    private val implementation = DdSdkImplementation(
+        reactContext,
+        datadog = datadogWrapper,
+        ddTelemetry
+    )
     private var lifecycleEventListener: LifecycleEventListener? = null
 
     override fun getName(): String = DdSdkImplementation.NAME

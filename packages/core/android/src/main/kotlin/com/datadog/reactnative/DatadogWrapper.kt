@@ -18,7 +18,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.lang.IllegalArgumentException
 
 /**
- * Wrapper around [Datadog].
+ * Wrapper around [com.datadog.android.Datadog].
  */
 @Suppress("ComplexInterface", "TooManyFunctions")
 interface DatadogWrapper {
@@ -49,10 +49,8 @@ interface DatadogWrapper {
     /**
      * Initializes the Datadog SDK.
      * @param context your application context
-     * @param credentials your organization credentials
      * @param configuration the configuration for the SDK library
-     * @param trackingConsent as the initial state of the tracking consent flag.
-     * @see [Credentials]
+     * @param consent as the initial state of the tracking consent flag.
      * @see [Configuration]
      * @see [TrackingConsent]
      * @throws IllegalArgumentException if the env name is using illegal characters and your
@@ -62,33 +60,6 @@ interface DatadogWrapper {
         context: Context,
         configuration: Configuration,
         consent: TrackingConsent
-    )
-
-    /**
-     * Enables the RUM feature of the SDK.
-     *
-     * @param configuration the configuration for the RUM feature
-     */
-    fun enableRum(
-        configuration: RumConfiguration
-    )
-
-    /**
-     * Enables the Logs feature of the SDK.
-     *
-     * @param configuration the configuration for the Logs feature
-     */
-    fun enableLogs(
-        configuration: LogsConfiguration
-    )
-
-    /**
-     * Enables the Trace feature of the SDK.
-     *
-     * @param configuration the configuration for the Trace feature
-     */
-    fun enableTrace(
-        configuration: TraceConfiguration
     )
 
     /**
@@ -126,7 +97,7 @@ interface DatadogWrapper {
 
     /**
      * Sets the user information.
-     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     * @param extraInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     fun addUserExtraInfo(
         extraInfo: Map<String, Any?>
@@ -143,27 +114,6 @@ interface DatadogWrapper {
      * Sets tracking consent.
      */
     fun setTrackingConsent(trackingConsent: TrackingConsent)
-
-
-    /**
-     * Sends telemetry event with attributes.
-     */
-    fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap)
-
-    /**
-     * Sends telemetry debug event.
-     */
-    fun telemetryDebug(message: String)
-
-    /**
-     * Sends telemetry error.
-     */
-    fun telemetryError(message: String, stack: String?, kind: String?)
-
-    /**
-     * Sends telemetry error.
-     */
-    fun telemetryError(message: String, throwable: Throwable?)
 
     /**
      * Sends Webview events.

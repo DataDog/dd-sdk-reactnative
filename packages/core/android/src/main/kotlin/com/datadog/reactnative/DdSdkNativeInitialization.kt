@@ -9,14 +9,17 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
+import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
@@ -25,6 +28,7 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
+import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.google.gson.Gson
 import java.util.Locale
@@ -37,6 +41,7 @@ import kotlin.time.Duration.Companion.seconds
 class DdSdkNativeInitialization internal constructor(
     private val appContext: Context,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val ddTelemetry: DdTelemetry = DdTelemetry(),
     private val jsonFileReader: JSONFileReader = JSONFileReader()
 ) {
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
@@ -59,11 +64,9 @@ class DdSdkNativeInitialization internal constructor(
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        datadog.enableRum(rumConfiguration)
-
-        datadog.enableTrace(traceConfiguration)
-
-        datadog.enableLogs(logsConfiguration)
+        Rum.enable(rumConfiguration, Datadog.getInstance())
+        Logs.enable(logsConfiguration, Datadog.getInstance())
+        Trace.enable(traceConfiguration, Datadog.getInstance())
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
@@ -95,7 +98,7 @@ class DdSdkNativeInitialization internal constructor(
             try {
                 appContext.packageManager.getPackageInfo(packageName, 0)
             } catch (e: PackageManager.NameNotFoundException) {
-                datadog.telemetryError(e.message ?: DdSdkImplementation.PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
+                ddTelemetry.telemetryError(e.message ?: DdSdkImplementation.PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
                 return DdSdkImplementation.DEFAULT_APP_VERSION
             }
 
