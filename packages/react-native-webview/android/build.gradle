@@ -94,6 +94,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  compileSdk getExtOrIntegerDefault('compileSdkVersion')
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
   def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION

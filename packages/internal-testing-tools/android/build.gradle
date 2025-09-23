@@ -91,6 +91,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  compileSdk getExtOrIntegerDefault('compileSdkVersion')
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
 
