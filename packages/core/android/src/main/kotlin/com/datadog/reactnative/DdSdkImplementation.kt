@@ -14,6 +14,7 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -66,14 +67,58 @@ class DdSdkImplementation(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
-     * events.
-     * @param attributes The global context attributes.
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM.
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
      */
-    fun setAttributes(attributes: ReadableMap, promise: Promise) {
+    fun addAttribute(key: String, value: ReadableMap, promise: Promise) {
+        val attributeValue = value.toMap()["value"]
+        datadog.addRumGlobalAttribute(key, attributeValue)
+        GlobalState.addAttribute(key, attributeValue)
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes an attribute from the global context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    fun removeAttribute(key: String, promise: Promise) {
+        datadog.removeRumGlobalAttribute(key)
+        GlobalState.removeAttribute(key)
+        promise.resolve(null)
+    }
+
+
+    /**
+     * Adds a set of attributes to the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param attributes: The global context attributes.
+     */
+    fun addAttributes(attributes: ReadableMap, promise: Promise) {
         datadog.addRumGlobalAttributes(attributes.toHashMap())
         for ((k,v) in attributes.toHashMap()) {
             GlobalState.addAttribute(k, v)
+        }
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes a set of attributes from the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    fun removeAttributes(keys: ReadableArray, promise: Promise) {
+        val keysArray = mutableListOf<String>()
+        for (i in 0 until keys.size()) {
+            val key: String = keys.getString(i)
+            keysArray.add(key)
+        }
+        val keysStringArray = keysArray.toTypedArray()
+
+        datadog.removeRumGlobalAttributes(keysStringArray)
+        for (key in keysStringArray) {
+            GlobalState.removeAttribute(key)
         }
         promise.resolve(null)
     }

@@ -40,6 +40,7 @@ import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -78,7 +79,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
-import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -2966,32 +2966,140 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 set RUM attributes 𝕎 setAttributes`(
+    fun `M set Rum attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        verify(mockDatadog).addRumGlobalAttribute(key, value)
+    }
+
+    @Test
+    fun `M set GlobalState attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+    }
+
+    @Test
+    fun `M remove Rum attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttribute(key)
+    }
+
+    @Test
+    fun `M remove GlobalState attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).doesNotContainEntry(key, value)
+    }
+
+    @Test
+    fun `𝕄 set RUM attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         verify(mockDatadog).addRumGlobalAttributes(customAttributes)
     }
 
     @Test
-    fun `𝕄 set GlobalState attributes 𝕎 setAttributes`(
+    fun `𝕄 set GlobalState attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         customAttributes.forEach { (k, v) ->
             assertThat(GlobalState.globalAttributes).containsEntry(k, v)
+        }
+    }
+
+    @Test
+    fun `𝕄 remove RUM attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttributes(customAttributes.keys.toTypedArray())
+    }
+
+    @Test
+    fun `𝕄 remve GlobalState attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        customAttributes.forEach { (k, v) ->
+            assertThat(GlobalState.globalAttributes).doesNotContainEntry(k, v)
         }
     }
 

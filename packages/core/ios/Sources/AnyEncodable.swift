@@ -14,15 +14,22 @@ internal func castAttributesToSwift(_ attributes: [String: Any]) -> [String: Enc
     var casted: [String: Encodable] = [:]
 
     attributes.forEach { key, value in
-        if let castedValue = castByPreservingTypeInformation(attributeValue: value) {
-            // If possible, cast attribute by preserving its type information
-            casted[key] = castedValue
-        } else {
-            // Otherwise, cast by preserving its encoded value (and loosing type information)
-            casted[key] = castByPreservingEncodedValue(attributeValue: value)
-        }
+        casted[key] = castValueToSwift(value)
     }
 
+    return casted
+}
+
+internal func castValueToSwift(_ value: Any) -> Encodable {
+    var casted: Encodable
+    if let castedValue = castByPreservingTypeInformation(attributeValue: value) {
+        // If possible, cast attribute by preserving its type information
+        casted = castedValue
+    } else {
+        // Otherwise, cast by preserving its encoded value (and loosing type information)
+        casted = castByPreservingEncodedValue(attributeValue: value)
+    }
+    
     return casted
 }
 

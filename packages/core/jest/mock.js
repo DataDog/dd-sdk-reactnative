@@ -36,7 +36,16 @@ module.exports = {
         clearUserInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
-        setAttributes: jest
+        addAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttributes: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         setTrackingConsent: jest

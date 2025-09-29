@@ -84,10 +84,29 @@ export type DdSdkType = {
     initialize(configuration: DdSdkConfiguration): Promise<void>;
 
     /**
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    addAttribute(key: string, value: object): Promise<void>;
+
+    /**
+     * Removes an attribute from the context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    removeAttribute(key: string): Promise<void>;
+
+    /**
      * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM events.
      * @param attributes: The global context attributes.
      */
-    setAttributes(attributes: object): Promise<void>;
+    addAttributes(attributes: object): Promise<void>;
+
+    /**
+     * Removes a set of attributes from the context attached with all future Logs, Spans and RUM events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    removeAttributes(keys: string[]): Promise<void>;
 
     /**
      * Sets the user information.
