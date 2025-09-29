@@ -285,7 +285,8 @@ class DdSdkTests: XCTestCase {
         var isInitialized = false
         var coreFromCallback: DatadogCoreProtocol? = nil
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {
-            core in coreFromCallback = core
+            core in
+            coreFromCallback = core
             isInitialized = Datadog.isInitialized()
         })
 
@@ -665,73 +666,6 @@ class DdSdkTests: XCTestCase {
             XCTFail("extra-info-4 is not of expected type or value")
         }
     }
-    
-    func testClearUserInfo() throws {
-        let bridge = DdSdkImplementation(
-            mainDispatchQueue: DispatchQueueMock(),
-            jsDispatchQueue: DispatchQueueMock(),
-            jsRefreshRateMonitor: JSRefreshRateMonitor(),
-            RUMMonitorProvider: { MockRUMMonitor() },
-            RUMMonitorInternalProvider: { nil }
-        )
-        bridge.initialize(
-            configuration: .mockAny(),
-            resolve: mockResolve,
-            reject: mockReject
-        )
-
-        bridge.setUserInfo(
-            userInfo: NSDictionary(
-                dictionary: [
-                    "id": "id_123",
-                    "name": "John Doe",
-                    "email": "john@doe.com",
-                    "extraInfo": [
-                        "extra-info-1": 123,
-                        "extra-info-2": "abc",
-                        "extra-info-3": true,
-                        "extra-info-4": [
-                            "nested-extra-info-1": 456
-                        ],
-                    ],
-                ]
-            ),
-            resolve: mockResolve,
-            reject: mockReject
-        )
-
-        var ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
-        var userInfo = try XCTUnwrap(ddContext.userInfo)
-
-        XCTAssertEqual(userInfo.id, "id_123")
-        XCTAssertEqual(userInfo.name, "John Doe")
-        XCTAssertEqual(userInfo.email, "john@doe.com")
-        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
-        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
-
-        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
-            as? DatadogSDKReactNative.AnyEncodable,
-            let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
-        {
-            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
-        } else {
-            XCTFail("extra-info-4 is not of expected type or value")
-        }
-        
-        bridge.clearUserInfo(resolve: mockResolve, reject: mockReject)
-        
-        ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
-        userInfo = try XCTUnwrap(ddContext.userInfo)
-        
-        XCTAssertEqual(userInfo.id, nil)
-        XCTAssertEqual(userInfo.name, nil)
-        XCTAssertEqual(userInfo.email, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
-    }
 
     func testClearUserInfo() throws {
         let bridge = DdSdkImplementation(
@@ -866,7 +800,74 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
         XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
     }
-    
+
+    func testClearUserInfo() throws {
+        let bridge = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorInternalProvider: { nil }
+        )
+        bridge.initialize(
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        bridge.setUserInfo(
+            userInfo: NSDictionary(
+                dictionary: [
+                    "id": "id_123",
+                    "name": "John Doe",
+                    "email": "john@doe.com",
+                    "extraInfo": [
+                        "extra-info-1": 123,
+                        "extra-info-2": "abc",
+                        "extra-info-3": true,
+                        "extra-info-4": [
+                            "nested-extra-info-1": 456
+                        ],
+                    ],
+                ]
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        var ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
+        var userInfo = try XCTUnwrap(ddContext.userInfo)
+
+        XCTAssertEqual(userInfo.id, "id_123")
+        XCTAssertEqual(userInfo.name, "John Doe")
+        XCTAssertEqual(userInfo.email, "john@doe.com")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
+        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
+
+        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
+            as? DatadogSDKReactNative.AnyEncodable,
+            let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
+        {
+            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
+        } else {
+            XCTFail("extra-info-4 is not of expected type or value")
+        }
+
+        bridge.clearUserInfo(resolve: mockResolve, reject: mockReject)
+
+        ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
+        userInfo = try XCTUnwrap(ddContext.userInfo)
+
+        XCTAssertEqual(userInfo.id, nil)
+        XCTAssertEqual(userInfo.name, nil)
+        XCTAssertEqual(userInfo.email, nil)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, nil)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, nil)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
+        XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
+    }
+
     func testAddingAttribute() {
         let rumMonitorMock = MockRUMMonitor()
         let bridge = DdSdkImplementation(
@@ -882,10 +883,16 @@ class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        bridge.addAttribute(key: "attribute-1", value: NSDictionary(dictionary: ["value": 123]), resolve: mockResolve, reject: mockReject)
-        bridge.addAttribute(key: "attribute-2", value: NSDictionary(dictionary: ["value": "abc"]), resolve: mockResolve, reject: mockReject)
-        bridge.addAttribute(key: "attribute-3", value: NSDictionary(dictionary: ["value": true]), resolve: mockResolve, reject: mockReject)
-        
+        bridge.addAttribute(
+            key: "attribute-1", value: NSDictionary(dictionary: ["value": 123]),
+            resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(
+            key: "attribute-2", value: NSDictionary(dictionary: ["value": "abc"]),
+            resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(
+            key: "attribute-3", value: NSDictionary(dictionary: ["value": true]),
+            resolve: mockResolve, reject: mockReject)
+
         XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-1"] as? Int64, 123)
         XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-2"] as? String, "abc")
         XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-3"] as? Bool, true)
@@ -1415,7 +1422,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
     }
-    
+
     func testFrameTimeNormalizationFromCallback() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
@@ -1434,93 +1441,113 @@ class DdSdkTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
-        
+
         XCTAssertTrue(mockRefreshRateMonitor.isStarted)
-        
+
         // 10 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.1)
         sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.1)
-        
+
         // 30 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.03)
         sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.03)
-        
+
         // 45 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.02)
         sharedQueue.sync {}
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.02)
-        
+
         // 60 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.016)
         sharedQueue.sync {}
-        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
-        
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
+            accuracy: 0.001)
+
         // 90 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.011)
         sharedQueue.sync {}
-        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
-        
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
+            accuracy: 0.001)
+
         // 120 fps
         mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.008)
         sharedQueue.sync {}
-        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
+            accuracy: 0.001)
     }
-    
+
     func testFrameTimeNormalizationUtilityFunction() {
 
         // 10 fps, 60fps capable device, 60 fps budget -> Normalized to 10fps
-        var frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.1, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        var frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.1, fpsBudget: 60.0, deviceDisplayFps: 60.0)
         XCTAssertEqual(frameTimeSeconds, 0.1, accuracy: 0.01)
-        
+
         // 30 fps, 60fps capable device, 60 fps budget -> Normalized to 30fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.03, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.03, fpsBudget: 60.0, deviceDisplayFps: 60.0)
         XCTAssertEqual(frameTimeSeconds, 0.03, accuracy: 0.01)
-        
+
         // 60 fps, 60fps capable device, 60 fps budget-> Normalized to 60fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.016, fpsBudget: 60.0, deviceDisplayFps: 60.0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.01)
-        
+
         // 60 fps, 120fps capable device, 60 fps budget -> Normalized to 30fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.016, fpsBudget: 60.0, deviceDisplayFps: 120.0)
         XCTAssertEqual(frameTimeSeconds, 0.03, accuracy: 0.01)
-        
+
         // 120 fps, 120fps capable device, 60 fps budget -> Normalized to 60fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0083, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.0083, fpsBudget: 60.0, deviceDisplayFps: 120.0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
-        
+
         // 90 fps, 120fps capable device, 60 fps budget -> Normalized to 45fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0111, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.0111, fpsBudget: 60.0, deviceDisplayFps: 120.0)
         XCTAssertEqual(frameTimeSeconds, 0.0222, accuracy: 0.001)
-        
+
         // 100 fps, 120fps capable device, 60 fps budget -> Normalized to 50fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.01, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.01, fpsBudget: 60.0, deviceDisplayFps: 120.0)
         XCTAssertEqual(frameTimeSeconds, 0.02, accuracy: 0.001)
-        
+
         // 120 fps, 120fps capable device, 120 fps budget -> Normalized to 120fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0083, fpsBudget: 120.0, deviceDisplayFps: 120.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.0083, fpsBudget: 120.0, deviceDisplayFps: 120.0)
         XCTAssertEqual(frameTimeSeconds, 0.0083, accuracy: 0.001)
-        
+
         // 80 fps, 160fps capable device, 60 fps budget -> Normalized to 30fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0125, fpsBudget: 60.0, deviceDisplayFps: 160.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.0125, fpsBudget: 60.0, deviceDisplayFps: 160.0)
         XCTAssertEqual(frameTimeSeconds, 0.033, accuracy: 0.001)
-        
+
         // 160 fps, 160fps capable device, 60 fps budget -> Normalized to 60fps
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.00625, fpsBudget: 60.0, deviceDisplayFps: 160.0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.00625, fpsBudget: 60.0, deviceDisplayFps: 160.0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
-        
+
         // Edge cases
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0, fpsBudget: 0, deviceDisplayFps: 0)
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0, fpsBudget: 0, deviceDisplayFps: 0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
-        
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 0, deviceDisplayFps: 0)
+
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.016, fpsBudget: 0, deviceDisplayFps: 0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
-        
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 0)
+
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.016, fpsBudget: 60.0, deviceDisplayFps: 0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
-        
-        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 0, deviceDisplayFps: 60.0)
+
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+            0.016, fpsBudget: 0, deviceDisplayFps: 60.0)
         XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
     }
 
@@ -2300,4 +2327,3 @@ class MockOnSdkInitializedListener {
         self.receivedCore = core
     }
 }
-
