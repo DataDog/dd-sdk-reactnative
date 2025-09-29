@@ -35,7 +35,11 @@ internal class DdSessionReplayTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let mockDatadogCore = MockDatadogCore()
-        DatadogSDKWrapper.shared.setCoreInstance(core: mockDatadogCore)
+        CoreRegistry.register(default: mockDatadogCore)
+    }
+
+    override func tearDown() {
+        CoreRegistry.unregisterDefault()
     }
  
     func testEnablesSessionReplayWithZeroReplaySampleRate() {
