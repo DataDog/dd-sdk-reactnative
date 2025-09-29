@@ -62,7 +62,7 @@ beforeEach(async () => {
     GlobalState.instance.isInitialized = false;
     DdSdkReactNative['wasAutoInstrumented'] = false;
     NativeModules.DdSdk.initialize.mockClear();
-    NativeModules.DdSdk.setAttributes.mockClear();
+    NativeModules.DdSdk.addAttributes.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
     NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
@@ -1045,21 +1045,77 @@ describe('DdSdkReactNative', () => {
         });
     });
 
-    describe('setAttributes', () => {
-        it('calls SDK method when setAttributes', async () => {
+    describe('addAttribute', () => {
+        it('calls SDK method when addAttribute', async () => {
+            // GIVEN
+            const key = 'foo';
+            const value = 'bar';
+
+            // WHEN
+
+            await DdSdkReactNative.addAttribute(key, value);
+
+            // THEN
+            expect(DdSdk.addAttribute).toHaveBeenCalledTimes(1);
+            expect(DdSdk.addAttribute).toHaveBeenCalledWith(key, { value });
+            expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
+                value
+            );
+        });
+    });
+
+    describe('removeAttribute', () => {
+        it('calls SDK method when removeAttribute', async () => {
+            // GIVEN
+            const key = 'foo';
+            const value = 'bar';
+            await DdSdkReactNative.addAttribute(key, value);
+
+            // WHEN
+            await DdSdkReactNative.removeAttribute(key);
+
+            // THEN
+            expect(DdSdk.removeAttribute).toHaveBeenCalledTimes(1);
+            expect(DdSdk.removeAttribute).toHaveBeenCalledWith(key);
+            expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
+                undefined
+            );
+        });
+    });
+
+    describe('addAttributes', () => {
+        it('calls SDK method when addAttributes', async () => {
             // GIVEN
             const attributes = { foo: 'bar' };
 
             // WHEN
 
-            await DdSdkReactNative.setAttributes(attributes);
+            await DdSdkReactNative.addAttributes(attributes);
 
             // THEN
-            expect(DdSdk.setAttributes).toHaveBeenCalledTimes(1);
-            expect(DdSdk.setAttributes).toHaveBeenCalledWith(attributes);
+            expect(DdSdk.addAttributes).toHaveBeenCalledTimes(1);
+            expect(DdSdk.addAttributes).toHaveBeenCalledWith(attributes);
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
                 foo: 'bar'
             });
+        });
+    });
+
+    describe('removeAttributes', () => {
+        it('calls SDK method when removeAttributes', async () => {
+            // GIVEN
+            const attributes = { foo: 'bar', baz: 'quux' };
+            await DdSdkReactNative.addAttributes(attributes);
+
+            // WHEN
+            await DdSdkReactNative.removeAttributes(['foo', 'baz']);
+
+            // THEN
+            expect(DdSdk.removeAttributes).toHaveBeenCalledTimes(1);
+            expect(DdSdk.removeAttributes).toHaveBeenCalledWith(['foo', 'baz']);
+            expect(AttributesSingleton.getInstance().getAttributes()).toEqual(
+                {}
+            );
         });
     });
 

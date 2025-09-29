@@ -89,11 +89,24 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun clearUserInfo() {
         Datadog.clearUserInfo()
     }
+    
+    override fun addRumGlobalAttribute(key: String, value: Any?) {
+        this.getRumMonitor().addAttribute(key, value)
+    }
+
+    override fun removeRumGlobalAttribute(key: String) {
+        this.getRumMonitor().removeAttribute(key)
+    }
 
     override fun addRumGlobalAttributes(attributes: Map<String, Any?>) {
-        val rumMonitor = this.getRumMonitor()
         for (attribute in attributes) {
-            rumMonitor.addAttribute(attribute.key, attribute.value)
+            this.addRumGlobalAttribute(attribute.key, attribute.value)
+        }
+    }
+
+    override fun removeRumGlobalAttributes(keys: Array<String>) {
+        for (key in keys) {
+            this.removeRumGlobalAttribute(key)
         }
     }
 
