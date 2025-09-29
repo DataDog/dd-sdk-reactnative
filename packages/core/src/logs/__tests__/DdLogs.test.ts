@@ -11,9 +11,9 @@ import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import type { DdNativeLogsType } from '../../nativeModulesTypes';
-import { ErrorSource } from '../../rum/types';
+import { ErrorSource } from '../../types';
+import type { LogEventMapper } from '../../types';
 import { DdLogs } from '../DdLogs';
-import type { LogEventMapper } from '../types';
 
 jest.mock('../../InternalLog', () => {
     return {

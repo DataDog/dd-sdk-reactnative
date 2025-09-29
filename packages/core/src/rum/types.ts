@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ErrorSource } from '../types';
+
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import type { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 
@@ -232,14 +234,6 @@ export type ResourceKind =
     | 'media'
     | 'other'
     | 'native';
-
-export enum ErrorSource {
-    NETWORK = 'NETWORK',
-    SOURCE = 'SOURCE',
-    CONSOLE = 'CONSOLE',
-    WEBVIEW = 'WEBVIEW',
-    CUSTOM = 'CUSTOM'
-}
 
 /**
  * Type of instrumentation on the host.

@@ -4,11 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { DdAttributes } from '../DdAttributes';
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
-import { DdAttributes } from '../rum/DdAttributes';
-import type { ErrorSource } from '../rum/types';
+import type { ErrorSource, LogEventMapper } from '../types';
 import { validateContext } from '../utils/argsUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
@@ -16,7 +16,6 @@ import { generateEventMapper } from './eventMapper';
 import type {
     DdLogsType,
     LogArguments,
-    LogEventMapper,
     LogWithErrorArguments,
     NativeLogWithError,
     RawLogWithError
