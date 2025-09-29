@@ -89,6 +89,14 @@ internal class DatadogSDKWrapper : DatadogWrapper {
     override fun clearUserInfo() {
         Datadog.clearUserInfo()
     }
+    
+    override fun addRumGlobalAttribute(key: String, value: Any?) {
+        this.getRumMonitor().addAttribute(key, value)
+    }
+
+    override fun removeRumGlobalAttribute(key: String) {
+        this.getRumMonitor().removeAttribute(key)
+    }
 
     override fun setAccountInfo(
         id: String,
