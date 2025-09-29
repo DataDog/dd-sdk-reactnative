@@ -4,8 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DefaultTimeProvider, RumActionType } from "@datadog/mobile-react-native";
-import { ErrorSource } from "@datadog/mobile-react-native/lib/typescript/rum/types";
+import { DefaultTimeProvider, ErrorSource, RumActionType } from "@datadog/mobile-react-native";
 import type { DdRumType, ResourceKind } from "@datadog/mobile-react-native/lib/typescript/rum/types";
 import type { GestureResponderEvent } from "react-native/types";
 

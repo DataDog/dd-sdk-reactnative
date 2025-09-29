@@ -15,7 +15,7 @@ internal struct GlobalState {
     }
 
     internal static func removeAttribute(key: String) {
-        GlobalState.globalAttributes.removeValue(forKey: key)
+        GlobalState.globalAttributes[key] = nil
     }
 }
 
