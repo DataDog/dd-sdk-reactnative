@@ -75,13 +75,42 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
+    
+    @objc
+    public func addAttribute(key: AttributeKey, value: NSDictionary,  resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if let attributeValue = value.object(forKey: "value") {
+            let castedValue = castValueToSwift(attributeValue)
+            RUMMonitorProvider().addAttribute(forKey: key, value: castedValue)
+            GlobalState.addAttribute(forKey: key, value: castedValue)
+        }
+        
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        RUMMonitorProvider().removeAttribute(forKey: key)
+        GlobalState.removeAttribute(key: key)
+        
+        resolve(nil)
+    }
 
     @objc
-    public func setAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
             RUMMonitorProvider().addAttribute(forKey: key, value: value)
             GlobalState.addAttribute(forKey: key, value: value)
+        }
+
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        RUMMonitorProvider().removeAttributes(forKeys: keys)
+        for (key) in keys {
+            GlobalState.removeAttribute(key: key)
         }
         
         resolve(nil)
