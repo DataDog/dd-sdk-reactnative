@@ -651,7 +651,7 @@ class DdSdkTests: XCTestCase {
             XCTFail("extra-info-4 is not of expected type or value")
         }
     }
-    
+
     func testClearUserInfo() throws {
         let bridge = DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -704,12 +704,12 @@ class DdSdkTests: XCTestCase {
         } else {
             XCTFail("extra-info-4 is not of expected type or value")
         }
-        
+
         bridge.clearUserInfo(resolve: mockResolve, reject: mockReject)
-        
+
         ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
         userInfo = try XCTUnwrap(ddContext.userInfo)
-        
+
         XCTAssertEqual(userInfo.id, nil)
         XCTAssertEqual(userInfo.name, nil)
         XCTAssertEqual(userInfo.email, nil)
