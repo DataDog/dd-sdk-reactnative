@@ -31,13 +31,15 @@ export const formatRawLogToNativeEvent = (
 export const formatRawLogToLogEvent = (
     rawLog: RawLog | RawLogWithError,
     additionalInformation: {
-        userInfo: UserInfo;
+        userInfo?: UserInfo;
         attributes: Attributes;
     }
 ): LogEvent => {
+    const userInfo = additionalInformation?.userInfo;
+
     return {
         ...rawLog,
-        userInfo: additionalInformation.userInfo,
+        ...(userInfo !== undefined ? { userInfo } : {}),
         attributes: additionalInformation.attributes
     };
 };

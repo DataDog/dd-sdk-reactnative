@@ -6,11 +6,13 @@
 
 package com.datadog.reactnative.internaltesting
 
+import androidx.annotation.WorkerThread
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.Datadog
 import com.datadog.android.api.context.DatadogContext
 import com.datadog.android.api.context.NetworkInfo
 import com.datadog.android.api.context.TimeInfo
+import com.datadog.android.api.feature.EventWriteScope
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
 import com.datadog.android.api.storage.EventBatchWriter
@@ -112,53 +114,54 @@ internal class FeatureScopeInterceptor(
     private val featureScope: FeatureScope,
     private val core: InternalSdkCore,
 ) : FeatureScope by featureScope {
-    private val eventsBatchInterceptor = EventBatchInterceptor()
+    private val eventWriteScopeInterceptor = EventWriteScopeInterceptor()
 
     fun eventsWritten(): List<String> {
-        return eventsBatchInterceptor.events
+        return eventWriteScopeInterceptor.events
     }
 
     fun clearData() {
-        eventsBatchInterceptor.clearData()
+        eventWriteScopeInterceptor.clearData()
     }
 
     // region FeatureScope
 
     override fun withWriteContext(
-        forceNewBatch: Boolean,
-        callback: (DatadogContext, EventBatchWriter) -> Unit
+        withFeatureContexts: Set<String>,
+        callback: (datadogContext: DatadogContext, write: EventWriteScope) -> Unit
     ) {
-        featureScope.withWriteContext(forceNewBatch, callback)
+        featureScope.withWriteContext(withFeatureContexts, callback)
 
         core.getDatadogContext()?.let {
-            callback(it, eventsBatchInterceptor)
+            callback(it, eventWriteScopeInterceptor)
         }
     }
 
     // endregion
 }
 
-
-internal class EventBatchInterceptor: EventBatchWriter {
+internal class EventWriteScopeInterceptor : EventWriteScope {
     internal val events = mutableListOf<String>()
-
-    override fun currentMetadata(): ByteArray? {
-        return null
-    }
 
     fun clearData() {
         events.clear()
     }
 
-    override fun write(
-        event: RawBatchEvent,
-        batchMetadata: ByteArray?,
-        eventType: EventType
-    ): Boolean {
-        val eventContent = String(event.data)
+    private val writer = object : EventBatchWriter {
+        override fun currentMetadata(): ByteArray? = null
 
-        events += eventContent
+        override fun write(
+            event: RawBatchEvent,
+            batchMetadata: ByteArray?,
+            eventType: EventType
+        ): Boolean {
+            events += String(event.data)
+            return true
+        }
+    }
 
-        return true
+    override fun invoke(p1: (EventBatchWriter) -> Unit) {
+        p1(writer)
     }
 }
+

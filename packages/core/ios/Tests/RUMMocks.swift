@@ -213,14 +213,14 @@ extension RUMActionID: RandomMockable {
     }
 }
 
-extension RUMDevice.RUMDeviceType: RandomMockable {
-    static func mockRandom() -> RUMDevice.RUMDeviceType {
+extension Device.DeviceType: RandomMockable {
+    static func mockRandom() -> Device.DeviceType {
         return [.mobile, .desktop, .tablet, .tv, .gamingConsole, .bot, .other].randomElement()!
     }
 }
 
-extension RUMDevice: RandomMockable {
-    static func mockRandom() -> RUMDevice {
+extension Device: RandomMockable {
+    static func mockRandom() -> Device {
         return .init(
             architecture: .mockRandom(),
             brand: .mockRandom(),
@@ -231,8 +231,8 @@ extension RUMDevice: RandomMockable {
     }
 }
 
-extension RUMOperatingSystem: RandomMockable {
-    static func mockRandom() -> RUMOperatingSystem {
+extension OperatingSystem: RandomMockable {
+    static func mockRandom() -> OperatingSystem {
         return .init(
             build: .mockRandom(length: 5),
             name: .mockRandom(length: 5),

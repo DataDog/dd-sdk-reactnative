@@ -9,6 +9,7 @@ import { UserInfoSingleton } from '../UserInfoSingleton';
 describe('UserInfoSingleton', () => {
     it('sets, returns and resets the user info', () => {
         UserInfoSingleton.getInstance().setUserInfo({
+            id: 'test',
             email: 'user@mail.com',
             extraInfo: {
                 loggedIn: true
@@ -16,6 +17,7 @@ describe('UserInfoSingleton', () => {
         });
 
         expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+            id: 'test',
             email: 'user@mail.com',
             extraInfo: {
                 loggedIn: true
@@ -24,6 +26,8 @@ describe('UserInfoSingleton', () => {
 
         UserInfoSingleton.reset();
 
-        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({});
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
+            undefined
+        );
     });
 });
