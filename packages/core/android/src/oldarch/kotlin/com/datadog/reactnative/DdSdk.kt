@@ -94,6 +94,14 @@ class DdSdk(
     }
 
     /**
+     * Clears the user information.
+     */
+    @ReactMethod
+    fun clearUserInfo(promise: Promise) {
+        implementation.clearUserInfo(promise)
+    }
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent Consent, which can take one of the following values: 'pending',
      * 'granted', 'not_granted'.

@@ -7,27 +7,60 @@
 import { UserInfoSingleton } from '../UserInfoSingleton';
 
 describe('UserInfoSingleton', () => {
-    it('sets, returns and resets the user info', () => {
+    beforeEach(() => {
+        UserInfoSingleton.reset();
+    });
+
+    it('returns undefined by default', () => {
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toBeUndefined();
+    });
+
+    it('stores and returns user info after setUserInfo', () => {
+        const info = {
+            id: 'test',
+            email: 'user@mail.com',
+            extraInfo: { loggedIn: true }
+        };
+
+        UserInfoSingleton.getInstance().setUserInfo(info);
+
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(info);
+    });
+
+    it('clears user info with clearUserInfo', () => {
         UserInfoSingleton.getInstance().setUserInfo({
             id: 'test',
             email: 'user@mail.com',
-            extraInfo: {
-                loggedIn: true
-            }
+            extraInfo: { loggedIn: true }
         });
 
-        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+        UserInfoSingleton.getInstance().clearUserInfo();
+
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toBeUndefined();
+    });
+
+    it('reset() replaces the provider and clears stored user info', () => {
+        const instanceBefore = UserInfoSingleton.getInstance();
+
+        UserInfoSingleton.getInstance().setUserInfo({
             id: 'test',
             email: 'user@mail.com',
-            extraInfo: {
-                loggedIn: true
-            }
+            extraInfo: { loggedIn: true }
         });
 
         UserInfoSingleton.reset();
 
-        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
-            undefined
-        );
+        const instanceAfter = UserInfoSingleton.getInstance();
+
+        expect(instanceAfter).not.toBe(instanceBefore);
+
+        expect(instanceAfter.getUserInfo()).toBeUndefined();
+    });
+
+    it('getInstance returns the same provider between calls (singleton behavior)', () => {
+        const a = UserInfoSingleton.getInstance();
+        const b = UserInfoSingleton.getInstance();
+
+        expect(a).toBe(b);
     });
 });

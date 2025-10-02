@@ -16,6 +16,10 @@ class UserInfoProvider {
     getUserInfo = (): UserInfo | undefined => {
         return this.userInfo;
     };
+
+    clearUserInfo = () => {
+        this.userInfo = undefined;
+    };
 }
 
 export class UserInfoSingleton {

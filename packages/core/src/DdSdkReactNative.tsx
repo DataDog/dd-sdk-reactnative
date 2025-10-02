@@ -215,6 +215,16 @@ export class DdSdkReactNative {
     };
 
     /**
+     * Clears the user information.
+     * @returns a Promise.
+     */
+    static clearUserInfo = async (): Promise<void> => {
+        InternalLog.log('Clearing user info', SdkVerbosity.DEBUG);
+        await DdSdk.clearUserInfo();
+        UserInfoSingleton.getInstance().clearUserInfo();
+    };
+
+    /**
      * Set the user information.
      * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
      * @returns a Promise.
