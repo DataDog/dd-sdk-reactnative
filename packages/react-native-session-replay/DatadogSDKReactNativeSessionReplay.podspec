@@ -16,6 +16,8 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
 
+  s.resources = ['assets/assets.json', 'assets/assets.bin']
+
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
