@@ -34,19 +34,17 @@ Pod::Spec.new do |s|
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 
-  if respond_to?(:install_modules_dependencies, true) then
-    install_modules_dependencies(s)
-  end
-
-  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-    # install_modules_dependencies is only available on RN >= 0.71
-    if !respond_to?(:install_modules_dependencies, true) then
-      Pod::UI.warn "Using Datadog React Native SDK with new architecture on RN < 0.71 is discouraged and not officially supported."
-    end
-
+  if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
     s.pod_target_xcconfig = {
       "DEFINES_MODULE" => "YES",
       "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1"
     }
+
+    # install_modules_dependencies is only available on RN >= 0.71
+    if respond_to?(:install_modules_dependencies, true)
+      install_modules_dependencies(s)
+    else
+      Pod::UI.warn "Using Datadog React Native SDK with new architecture on RN < 0.71 is discouraged and not officially supported."
+    end
   end
 end
