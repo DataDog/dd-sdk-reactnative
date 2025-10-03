@@ -9,6 +9,7 @@ import type * as Babel from '@babel/core';
 import { LocalSvgHandler } from './LocalSvgHandler';
 import { RNSvgHandler } from './RNSvgHandler';
 import type { SvgHandler } from './SvgHandler';
+import { UriSvgHandler } from './UriSvgHandler';
 
 type Resolver = () => SvgHandler;
 
@@ -37,6 +38,7 @@ export class HandlerResolver {
 
         HandlerResolver.registry = {
             RNSvgHandler: () => new RNSvgHandler(t, path, name),
+            UriSvgHandler: () => new UriSvgHandler(t, path, name),
             LocalSvgHandler: () =>
                 new LocalSvgHandler(t, path, name, localSvgMap)
         };
@@ -55,16 +57,20 @@ export class HandlerResolver {
 
         const { name, localSvgMap } = this.dependencies;
 
-        if (name === 'Svg') {
-            return HandlerResolver.registry.RNSvgHandler();
+        switch (name) {
+            case 'Svg': {
+                return HandlerResolver.registry.RNSvgHandler();
+            }
+
+            case 'SvgUri': {
+                return HandlerResolver.registry.UriSvgHandler();
+            }
+
+            default: {
+                return localSvgMap[name]
+                    ? HandlerResolver.registry.LocalSvgHandler()
+                    : null;
+            }
         }
-
-        // TODO: SvgUri
-
-        if (localSvgMap[name]) {
-            return HandlerResolver.registry.LocalSvgHandler();
-        }
-
-        return null;
     }
 }
