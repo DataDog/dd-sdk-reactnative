@@ -57,7 +57,6 @@ export default declare(
                 Program: {
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
-
                         const { path: p, name } = getFileInfo(this);
 
                         if (p?.includes('node_modules')) {

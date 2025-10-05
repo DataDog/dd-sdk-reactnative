@@ -21,8 +21,7 @@ export class UriSvgHandler implements SvgHandler {
     }
 
     /**
-     * Retrieves and returns the contents of a local SVG file corresponding to the JSXElement tag name.
-     * If the file hasn't been read yet, it reads the SVG content from disk and caches it in `localSvgMap`.
+     * Retrieves and returns the URI of an SVG corresponding.
      * Also extracts and stores width/height dimensions from the JSX attributes into the `dimensions` object.
      *
      * @param dimensions - Object to collect extracted width/height info.
@@ -35,15 +34,7 @@ export class UriSvgHandler implements SvgHandler {
             dimensions
         );
 
-        // const clone = this.types.cloneNode(this.path.node, true);
-        //
-        // this.transformElement(this.types, clone, dimensions);
-        // this.setNamespace(this.types, clone);
-        // const output = generate(clone).code;
-
         return uri;
-
-        // return this.localSvgMap[this.name].content;
     }
 
     /**
