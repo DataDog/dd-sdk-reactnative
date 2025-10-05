@@ -13,6 +13,7 @@ import {
     insertRumActionImport
 } from './actions/rum';
 import { defaultPluginOptions } from './constants';
+import { getAssetsPath } from './libraries/react-native-svg/processing/fs';
 import { ReactNativeSVG } from './libraries/react-native-svg';
 import type {
     PluginAPI,
@@ -34,12 +35,23 @@ export default declare(
             }
         };
 
-        let reactNativeSVG: ReactNativeSVG;
+        let reactNativeSVG: ReactNativeSVG | null = null;
+
+        let assetsPath: string | null = null;
 
         return {
             pre() {
-                // TODO: only initialize once
-                reactNativeSVG = new ReactNativeSVG(api.types, this.cwd);
+                if (!assetsPath) {
+                    assetsPath = getAssetsPath();
+                }
+
+                if (!reactNativeSVG && assetsPath) {
+                    reactNativeSVG = new ReactNativeSVG(
+                        api.types,
+                        process.cwd(),
+                        assetsPath
+                    );
+                }
             },
             visitor: {
                 Program: {

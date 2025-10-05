@@ -17,11 +17,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { getNodeName } from '../../utils';
 
 import { HandlerResolver } from './handlers/HandlerResolver';
-import {
-    clearAssetsDir,
-    ensureAssetsDir,
-    getAssetsPath
-} from './processing/fs';
 
 type SvgOffset = {
     start: number;
@@ -31,18 +26,16 @@ type SvgOffset = {
 export class ReactNativeSVG {
     svgMap: Record<string, { file: string; [key: string]: string }> = {};
 
-    assetsPath: string;
-
     svgOffset: Record<string, SvgOffset> = {};
 
     localSvgMap: Record<string, { path: string; content?: string }> = {};
 
-    constructor(private t: typeof Babel.types, private rootDir: string) {
-        this.assetsPath = getAssetsPath();
+    constructor(
+        private t: typeof Babel.types,
+        private rootDir: string,
+        private assetsPath: string
+    ) {
         this.buildSvgMap();
-
-        ensureAssetsDir(this.assetsPath);
-        clearAssetsDir(this.assetsPath);
     }
 
     /**
