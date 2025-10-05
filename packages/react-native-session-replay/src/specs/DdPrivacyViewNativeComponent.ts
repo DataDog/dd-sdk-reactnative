@@ -7,11 +7,20 @@
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 import type { HostComponent, ViewProps } from 'react-native';
 
+type Attributes = {
+    type?: string;
+    hash?: string;
+    width?: string;
+    height?: string;
+};
+
 interface DdPrivacyViewProps extends ViewProps {
     textAndInputPrivacy: string;
     imagePrivacy: string;
     touchPrivacy: string;
     hide: boolean;
+    nativeID: string;
+    attributes: Attributes;
 }
 
 export default codegenNativeComponent<DdPrivacyViewProps>('DdPrivacyView', {

@@ -50,6 +50,16 @@ class DdPrivacyView(context: Context) : ReactViewGroup(context) {
             this.setTag(R.id.datadog_hidden, value)
         }
 
+    /**
+     * Defines an ID value from JS side to uniquely identify a view on both sides.
+     */
+    var nativeID: String? = null
+
+    /**
+     * Defines a set of attributes used for transformations
+     */
+    var attributes: Map<String, String>? = null
+
     init {
         this.setTag(R.id.datadog_hidden, this.hide)
         this.setTag(R.id.datadog_image_privacy, this.imagePrivacy)
