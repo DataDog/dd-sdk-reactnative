@@ -29,6 +29,10 @@ export default declare(
 
         const options = {
             ...opt,
+            sessionReplay: {
+                ...defaultPluginOptions.sessionReplay,
+                ...opt.sessionReplay
+            },
             components: {
                 ...defaultPluginOptions.components,
                 ...opt.components
@@ -41,6 +45,10 @@ export default declare(
 
         return {
             pre() {
+                if (!options.sessionReplay.svgTracking) {
+                    return;
+                }
+
                 if (!assetsPath) {
                     assetsPath = getAssetsPath();
                 }
