@@ -30,8 +30,13 @@ export type TrackedComponent = {
     }[];
 };
 
+export type SessionReplayOptions = {
+    svgTracking: boolean;
+};
+
 export type PluginOptions = {
     actionNameAttribute?: string;
+    sessionReplay: SessionReplayOptions;
     components: {
         useContent: boolean;
         useNamePrefix: boolean;
