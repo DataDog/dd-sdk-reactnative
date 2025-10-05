@@ -6,9 +6,18 @@
 
 import type { ViewProps } from 'react-native';
 
+export type Attributes = {
+    type?: string;
+    hash?: string;
+    width?: string;
+    height?: string;
+};
+
 export interface DdPrivacyViewProps extends ViewProps {
     textAndInputPrivacy: string;
     imagePrivacy: string;
     touchPrivacy: string;
     hide: boolean;
+    nativeID: string;
+    attributes: Attributes;
 }

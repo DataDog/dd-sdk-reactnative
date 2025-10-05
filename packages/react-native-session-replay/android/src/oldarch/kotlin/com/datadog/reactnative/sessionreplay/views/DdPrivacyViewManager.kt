@@ -40,4 +40,16 @@ class DdPrivacyViewManager(context: ReactApplicationContext) : ViewGroupManager<
     fun setTouchPrivacy(view: DdPrivacyView?, value: String?) {
         view?.let { view.touchPrivacy = value }
     }
+
+    @ReactProp(name = "nativeID")
+    fun setNativeID(view: DdPrivacyView?, value: String?) {
+        view?.nativeID = value
+    }
+
+    @ReactProp(name = "attributes")
+    fun setAttributes(view: DdPrivacyView?, map: ReadableMap?) {
+        view?.attributes = map?.toHashMap()?.mapValues {
+            it.value.toString() ?: ""
+        }
+    }
 }
