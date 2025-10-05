@@ -171,7 +171,9 @@ export class RNSvgHandler implements SvgHandler {
                 );
 
                 if (rnAttributesHandled) {
-                    el.attributes.splice(index, 1);
+                    if (attr.name.name !== 'style') {
+                        el.attributes.splice(index, 1);
+                    }
                     continue;
                 }
 
@@ -252,7 +254,6 @@ export class RNSvgHandler implements SvgHandler {
         // Create & Set a new transform attribute based on the element's transform attributes
         buildTransformStringAttribute(el, transformsArray);
 
-        // Goes through an elemnts children and transforms its properties
         // Goes through an elements children and transforms its properties
         this.traverseAndTransformChildren(t, jsxElement, dimensions);
     }

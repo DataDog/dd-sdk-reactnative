@@ -83,7 +83,7 @@ export function validateAttribute(attrName: string) {
         result.attrName = kebabCase(attrName);
 
         // This means that the attribute name is not a valid SVG attribute and should be ignored
-        if (!svgAttributesKC.includes(attrName)) {
+        if (!svgAttributesKC.includes(result.attrName)) {
             result.isInvalidAttribute = true;
         }
     }

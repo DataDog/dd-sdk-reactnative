@@ -7,10 +7,11 @@
 import type * as Babel from '@babel/core';
 import * as parser from '@babel/parser';
 import traverse from '@babel/traverse';
-import { jsxAttribute, jSXIdentifier, stringLiteral } from '@babel/types';
+import { jsxIdentifier, stringLiteral } from '@babel/types';
+import { createHash } from 'crypto';
 import glob from 'fast-glob';
 import fs from 'fs';
-import { default as pathN } from 'path';
+import pathN from 'path';
 import { optimize } from 'svgo';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -155,7 +156,11 @@ export class ReactNativeSVG {
      *          or `undefined` if no transformation could be performed.
      */
     processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
-        const dimensions: Record<string, string> = {};
+        const dimensions: { width?: string; height?: string } = {};
+
+        if (path.node?.extra?.__wrappedForSR) {
+            return;
+        }
 
         HandlerResolver.configure({
             t: this.t,
@@ -172,33 +177,203 @@ export class ReactNativeSVG {
         }
 
         const id = uuidv4();
-        const originalNode = path.node;
+
+        const optimized = output.startsWith('http')
+            ? output
+            : optimize(output, {
+                  multipass: true,
+                  plugins: ['preset-default']
+              }).data;
+
+        const hash = createHash('md5').update(optimized, 'utf8').digest('hex');
+
+        const wrapper = this.wrapElementForSessionReplay(
+            this.t,
+            path,
+            id,
+            hash,
+            dimensions
+        );
+        path.replaceWith(wrapper);
+
+        path.node.extra = {
+            __wrappedForSR: true
+        };
 
         this.svgMap[id] = {
-            file: output,
+            file: optimized,
             ...dimensions
         };
 
-        this.setNativeID(originalNode, id);
-
-        const optimized = optimize(output, {
-            multipass: true,
-            plugins: ['preset-default']
-        });
 
         return { original: output, optimized };
     }
 
     /**
-     * Adds a `nativeID` attribute to the JSXElement using the provided UUID.
-     * This helps in referencing or tracking the SVG element in native environments.
+     * Wraps a JSX element with a `SessionReplayView.Privacy` component
+     * and injects metadata attributes used by Session Replay.
      *
-     * @param el - JSXElement to which the `nativeID` should be added.
-     * @param id - UUID string to assign as the `nativeID`.
+     * The resulting element is transformed into:
+     * ```tsx
+     * <SessionReplayView.Privacy
+     *   nativeID={id}
+     *   collapsable={false}
+     *   pointerEvents="box-none"
+     *   attributes={{
+     *     type: 'svg',
+     *     hash,
+     *     width,
+     *     height
+     *   }}
+     *   style={{ flexShrink: 1 }}
+     * >
+     *   {originalElement}
+     * </SessionReplayView.Privacy>
+     * ```
+     *
+     * This transformation ensures the element is identifiable on the native side
+     * while preserving its layout and interaction behavior.
+     *
+     * @param t - Babel types helper used to build and manipulate AST nodes.
+     * @param path - The current JSXElement node path being transformed.
+     * @param id - The unique native identifier assigned to the element.
+     * @param hash - A content hash used to reference the corresponding resource.
+     * @param dimensions - Optional width and height metadata to include in the attributes.
+     * @returns A new `JSXElement` AST node wrapped in `SessionReplayView.Privacy`.
      */
-    private setNativeID(el: Babel.types.JSXElement, id: string) {
-        el.openingElement.attributes.push(
-            jsxAttribute(jSXIdentifier('nativeID'), stringLiteral(id))
+    private wrapElementForSessionReplay(
+        t: typeof Babel.types,
+        path: Babel.NodePath<Babel.types.JSXElement>,
+        id: string,
+        hash: string,
+        dimensions: { width?: string; height?: string }
+    ) {
+        const el = path.node;
+        const { width, height } = dimensions;
+
+        el.extra = {
+            __wrappedForSR: true
+        };
+
+        const styleProp = t.jsxAttribute(
+            t.jsxIdentifier('style'),
+            t.jsxExpressionContainer(
+                t.objectExpression([
+                    t.objectProperty(
+                        t.identifier('flexShrink'),
+                        t.numericLiteral(1)
+                    )
+                ])
+            )
         );
+
+        const attributesProp = t.jsxAttribute(
+            t.jsxIdentifier('attributes'),
+            t.jsxExpressionContainer(
+                t.objectExpression([
+                    t.objectProperty(
+                        t.identifier('type'),
+                        t.stringLiteral('svg')
+                    ),
+                    t.objectProperty(
+                        t.identifier('hash'),
+                        t.stringLiteral(hash)
+                    ),
+                    t.objectProperty(
+                        t.identifier('width'),
+                        width ? t.stringLiteral(width) : t.nullLiteral()
+                    ),
+
+                    t.objectProperty(
+                        t.identifier('height'),
+                        height ? t.stringLiteral(height) : t.nullLiteral()
+                    )
+                ])
+            )
+        );
+
+        const attributesNode = [
+            t.jsxAttribute(jsxIdentifier('nativeID'), stringLiteral(id)),
+            // https://reactnative.dev/docs/view#collapsable
+            t.jsxAttribute(
+                t.jsxIdentifier('collapsable'),
+                t.jsxExpressionContainer(t.booleanLiteral(false))
+            ),
+            // https://reactnative.dev/docs/view#pointerevents
+            t.jsxAttribute(
+                t.jsxIdentifier('pointerEvents'),
+                t.stringLiteral('box-none')
+            ),
+            attributesProp,
+            styleProp
+        ];
+
+        const viewWrapper = t.jsxElement(
+            t.jsxOpeningElement(
+                t.jsxMemberExpression(
+                    t.jsxIdentifier('SessionReplayView'),
+                    t.jsxIdentifier('Privacy')
+                ),
+                attributesNode,
+                false
+            ),
+            t.jsxClosingElement(
+                t.jsxMemberExpression(
+                    t.jsxIdentifier('SessionReplayView'),
+                    t.jsxIdentifier('Privacy')
+                )
+            ),
+            [el],
+            false
+        );
+
+        this.ensureSessionReplayImport(t, path);
+        return viewWrapper;
+    }
+
+    /**
+     * Ensures that the `SessionReplayView` import from
+     * `@datadog/mobile-react-native-session-replay` exists in the file.
+     *
+     * If the import is not already present, this method injects a new
+     * `import { SessionReplayView } from '@datadog/mobile-react-native-session-replay'`
+     * declaration at the top of the program.
+     *
+     * @param t - Babel types helper used to create and check AST nodes.
+     * @param path - The current JSXElement node path from which to locate the program root.
+     */
+    private ensureSessionReplayImport(
+        t: typeof Babel.types,
+        path: Babel.NodePath<Babel.types.JSXElement>
+    ) {
+        const program = path.findParent(p =>
+            p.isProgram()
+        ) as Babel.NodePath<Babel.types.Program>;
+
+        const alreadyImported = program.node.body.some(node => {
+            return (
+                t.isImportDeclaration(node) &&
+                node.source.value ===
+                    '@datadog/mobile-react-native-session-replay' &&
+                node.specifiers.some(
+                    spec =>
+                        t.isImportSpecifier(spec) &&
+                        getNodeName(t, spec.imported) === 'SessionReplayView'
+                )
+            );
+        });
+
+        if (!alreadyImported) {
+            const importDecl = t.importDeclaration(
+                [
+                    t.importSpecifier(
+                        t.identifier('SessionReplayView'),
+                        t.identifier('SessionReplayView')
+                    )
+                ],
+                t.stringLiteral('@datadog/mobile-react-native-session-replay')
+            );
+            program.unshiftContainer('body', importDecl);
+        }
     }
 }
