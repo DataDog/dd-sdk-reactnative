@@ -156,6 +156,7 @@ android {
         java.srcDirs += ['src/rnpre74/kotlin']
       }
 
+      assets.srcDirs += ['../assets']
     }
     test {
       java.srcDir("src/test/kotlin")
