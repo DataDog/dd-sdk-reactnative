@@ -103,3 +103,48 @@ export function clearAssetsDir(assetsPath: string) {
     }
 }
 
+/**
+ * Writes a given SVG asset to disk using a hash-based filename.
+ *
+ * The asset is first written to a temporary file (`<nativeID>.svg`) to avoid race conditions
+ * when multiple workers attempt to write simultaneously. Once successfully written,
+ * the file is renamed to `<hash>.svg`. If a file with the same hash already exists,
+ * the temporary file is removed to prevent duplicates.
+ *
+ * @param assetsPath - Absolute path to the assets directory where the file should be stored.
+ * @param nativeID - Unique identifier of the source component or view.
+ * @param hash - Hash string used as the final filename to ensure uniqueness.
+ * @param svgCode - The SVG string content to be written to disk.
+ * @returns `true` if a new file was written, or `false` if the file already existed or an error occurred.
+ */
+export function writeAssetToDisk(
+    assetsPath: string,
+    nativeID: string,
+    hash: string,
+    svgCode: string
+): boolean {
+    try {
+        const tmpPath = path.join(assetsPath, `${nativeID}.svg`);
+        const outputPath = path.join(assetsPath, `${hash}.svg`);
+
+        if (!fs.existsSync(assetsPath)) {
+            fs.mkdirSync(assetsPath, { recursive: true });
+        }
+
+        // Write first to a tmp file to prevent multiple workers from trying to write to the same path
+        fs.writeFileSync(tmpPath, svgCode);
+
+        // Once finished, rename the file
+        // If multiple workers get the same hash, the last one wins, but the content should always be valid
+        if (!fs.existsSync(outputPath)) {
+            fs.renameSync(tmpPath, outputPath);
+            return true;
+        }
+
+        fs.unlinkSync(tmpPath);
+        return false;
+    } catch (error) {
+        console.error('[writeJSONToDisk]: ', error);
+        return false;
+    }
+}
