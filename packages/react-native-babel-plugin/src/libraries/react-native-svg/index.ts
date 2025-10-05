@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getNodeName } from '../../utils';
 
 import { HandlerResolver } from './handlers/HandlerResolver';
+import { writeAssetToDisk } from './processing/fs';
 
 type SvgOffset = {
     start: number;
@@ -205,6 +206,7 @@ export class ReactNativeSVG {
             ...dimensions
         };
 
+        writeAssetToDisk(this.assetsPath, id, hash, optimized);
 
         return { original: output, optimized };
     }
