@@ -8,6 +8,43 @@ import fs from 'fs';
 import path from 'path';
 
 /**
+ * Finds the module path by walking up the directory tree.
+ * It starts with the current directory and goes up the tree in case we're dealing with monorepos.
+ *
+ * @param moduleName - The name of the module to find.
+ * @param startPath - The directory to start searching from (defaults to cwd).
+ * @returns The absolute path to the module, or null if not found.
+ */
+function findModulePath(
+    moduleName: string,
+    startPath: string = process.cwd()
+): string | null {
+    const maxDepth = 5;
+    let depth = 0;
+    let currentPath = startPath;
+
+    while (depth < maxDepth) {
+        const modulePath = path.join(currentPath, 'node_modules', moduleName);
+
+        if (fs.existsSync(modulePath)) {
+            return modulePath;
+        }
+
+        const parentPath = path.dirname(currentPath);
+
+        // Reached the root without finding the module
+        if (parentPath === currentPath) {
+            break;
+        }
+
+        currentPath = parentPath;
+        depth++;
+    }
+
+    return null;
+}
+
+/**
  * Determines the output path for storing transformed SVG assets.
  * In production mode (no `pluginDev` env flag), it targets the Session Replay node module.
  * In development mode (`pluginDev=true`), it writes to a local `./assets` directory.
@@ -16,11 +53,16 @@ import path from 'path';
  */
 export function getAssetsPath() {
     const hasDevFlag = process.env.pluginDev;
-    const modulePath =
-        'node_modules/@datadog/mobile-react-native-session-replay';
+    const moduleName = '@datadog/mobile-react-native-session-replay';
 
     if (!hasDevFlag) {
-        return path.resolve(modulePath);
+        const modulePath = findModulePath(moduleName);
+
+        if (!modulePath) {
+            return null;
+        }
+
+        return path.join(modulePath, 'assets');
     }
 
     return path.resolve('./assets');
@@ -60,3 +102,4 @@ export function clearAssetsDir(assetsPath: string) {
         console.error('[clearAssetsDir]: ', error);
     }
 }
+

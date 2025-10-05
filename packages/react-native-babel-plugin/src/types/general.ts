@@ -44,7 +44,7 @@ export type PluginPassState = Babel.PluginPass & {
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
     trackedComponents?: Record<string, Omit<TrackedComponent, 'name'>>;
-    reactNativeSVG?: ReactNativeSVG;
+    reactNativeSVG?: ReactNativeSVG | null;
 };
 
 export type PluginResult = Babel.PluginObj<Babel.PluginPass>;
