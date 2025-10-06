@@ -10,6 +10,11 @@ import DatadogInternal
 import DatadogSDKReactNative
 import React
 
+struct SVGData: Codable {
+    let offset: Int
+    let length: Int
+}
+
 @objc
 public class DdSessionReplayImplementation: NSObject {
     private lazy var sessionReplay: SessionReplayProtocol = sessionReplayProvider()
@@ -60,9 +65,30 @@ public class DdSessionReplayImplementation: NSObject {
             startRecordingImmediately: startRecordingImmediately,
             customEndpoint: customEndpointURL
         )
-                    
+        
+        let bundle = Bundle(for: DdSessionReplayImplementation.self)
+        var svgMap: [String: SVGData] = [:]
+        
+        if let url = bundle.url(forResource: "assets", withExtension: "json") {
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                svgMap = try decoder.decode([String: SVGData].self, from: data)
+            } catch {
+                consolePrint("Failed to load or decode assets.json", .debug)
+            }
+        }
+        
         sessionReplayConfiguration.setAdditionalNodeRecorders([
-            RCTTextViewRecorder(uiManager: uiManager, fabricWrapper: fabricWrapper)
+            SvgViewRecorder(
+                uiManager: uiManager,
+                fabricWrapper: fabricWrapper,
+                svgMap: svgMap
+            ),
+            RCTTextViewRecorder(
+                uiManager: uiManager,
+                fabricWrapper: fabricWrapper
+            )
         ])
 
         if let core = DatadogSDKWrapper.shared.getCoreInstance() {
@@ -73,7 +99,7 @@ public class DdSessionReplayImplementation: NSObject {
         } else {
             consolePrint("Core instance was not found when initializing Session Replay.", .critical)
         }
-
+        
         resolve(nil)
     }
     
