@@ -8,6 +8,7 @@ package com.datadog.reactnative.sessionreplay.mappers
 
 import ReactViewBackgroundDrawableUtils
 import com.datadog.android.sessionreplay.recorder.mapper.TraverseAllChildrenMapper
+import com.datadog.reactnative.sessionreplay.ReactNativeInternalCallback
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.facebook.react.views.view.ReactViewGroup
 
