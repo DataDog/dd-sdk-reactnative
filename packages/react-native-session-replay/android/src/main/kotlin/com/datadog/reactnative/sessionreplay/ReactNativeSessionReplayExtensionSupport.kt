@@ -15,7 +15,9 @@ import com.datadog.reactnative.sessionreplay.mappers.ReactNativeImageViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewGroupMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactViewModalMapper
+import com.datadog.reactnative.sessionreplay.mappers.SvgViewMapper
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
+import com.datadog.reactnative.sessionreplay.views.DdPrivacyView
 import com.facebook.react.views.image.ReactImageView
 import com.facebook.react.views.modal.ReactModalHostView
 import com.facebook.react.views.text.ReactTextView
@@ -24,7 +26,8 @@ import com.facebook.react.views.view.ReactViewGroup
 
 
 internal class ReactNativeSessionReplayExtensionSupport(
-    private val textViewUtils: TextViewUtils
+    private val textViewUtils: TextViewUtils,
+    private val internalCallback: ReactNativeInternalCallback
 ) : ExtensionSupport {
     override fun name(): String {
         return ReactNativeSessionReplayExtensionSupport::class.java.simpleName
@@ -33,6 +36,7 @@ internal class ReactNativeSessionReplayExtensionSupport(
     override fun getCustomViewMappers(): List<MapperTypeWrapper<*>> {
         return listOf(
             MapperTypeWrapper(ReactImageView::class.java, ReactNativeImageViewMapper()),
+            MapperTypeWrapper(DdPrivacyView::class.java, SvgViewMapper(internalCallback)),
             MapperTypeWrapper(ReactViewGroup::class.java, ReactViewGroupMapper()),
             MapperTypeWrapper(ReactTextView::class.java, ReactTextMapper(textViewUtils)),
             MapperTypeWrapper(ReactEditText::class.java, ReactEditTextMapper(textViewUtils)),
