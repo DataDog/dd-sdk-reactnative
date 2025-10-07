@@ -3841,6 +3841,8 @@ __metadata:
   peerDependencies:
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
+  bin:
+    datadog-generate-sr-assets: ./lib/commonjs/cli/generate-sr-assets.js
   languageName: unknown
   linkType: soft
 
