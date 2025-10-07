@@ -17,6 +17,9 @@
     },
     "license": "Apache-2.0",
     "main": "lib/commonjs/index",
+    "bin": {
+        "datadog-generate-sr-assets": "./lib/commonjs/cli/generate-sr-assets.js"
+    },
     "files": [
         "src/**",
         "lib"
