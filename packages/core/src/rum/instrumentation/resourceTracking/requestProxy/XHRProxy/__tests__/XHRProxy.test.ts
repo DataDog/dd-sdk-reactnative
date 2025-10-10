@@ -1618,16 +1618,16 @@ describe('XHRProxy', () => {
                 firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
             DdRum.registerResourceEventMapper(event => {
-                if (event.context['_dd.graphql.variables']) {
+                if ((event.context as any)['_dd.graphql.variables']) {
                     const variables = JSON.parse(
-                        event.context['_dd.graphql.variables']
+                        (event.context as any)['_dd.graphql.variables']
                     );
                     if (variables.password) {
                         variables.password = '***';
                     }
-                    event.context['_dd.graphql.variables'] = JSON.stringify(
-                        variables
-                    );
+                    (event.context as any)[
+                        '_dd.graphql.variables'
+                    ] = JSON.stringify(variables);
                 }
 
                 return event;
