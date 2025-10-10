@@ -1091,6 +1091,98 @@ describe('DdRum', () => {
             });
         });
 
+        describe('DdRum.addTiming', () => {
+            it('calls the native SDK when setting a timing', async () => {
+                // GIVEN
+                const timingName = 'testTiming';
+
+                // WHEN
+                await DdRum.addTiming(timingName);
+
+                // THEN
+                expect(NativeModules.DdRum.addTiming).toHaveBeenCalledTimes(1);
+                expect(NativeModules.DdRum.addTiming).toHaveBeenCalledWith(
+                    timingName
+                );
+            });
+        });
+
+        describe('DdRum.addViewAttribute', () => {
+            it('calls the native SDK when setting a view attribute', async () => {
+                // GIVEN
+                const key = 'testAttribute';
+                const value = { test: 'attribute' };
+
+                // WHEN
+
+                await DdRum.addViewAttribute(key, value);
+
+                // THEN
+                expect(
+                    NativeModules.DdRum.addViewAttribute
+                ).toHaveBeenCalledTimes(1);
+                expect(
+                    NativeModules.DdRum.addViewAttribute
+                ).toHaveBeenCalledWith(key, { value });
+            });
+        });
+
+        describe('DdRum.removViewAttribute', () => {
+            it('calls the native SDK when removing a view attribute', async () => {
+                // GIVEN
+                const key = 'testAttribute';
+
+                // WHEN
+                await DdRum.removeViewAttribute(key);
+
+                // THEN
+                expect(
+                    NativeModules.DdRum.removeViewAttribute
+                ).toHaveBeenCalledTimes(1);
+                expect(
+                    NativeModules.DdRum.removeViewAttribute
+                ).toHaveBeenCalledWith(key);
+            });
+        });
+
+        describe('DdRum.addViewAttributes', () => {
+            it('calls the native SDK when setting view attributes', async () => {
+                // GIVEN
+                const attributes = {
+                    test: 'attribute'
+                };
+
+                // WHEN
+                await DdRum.addViewAttributes(attributes);
+
+                // THEN
+                expect(
+                    NativeModules.DdRum.addViewAttributes
+                ).toHaveBeenCalledTimes(1);
+                expect(
+                    NativeModules.DdRum.addViewAttributes
+                ).toHaveBeenCalledWith(attributes);
+            });
+        });
+
+        describe('DdRum.removViewAttributes', () => {
+            it('calls the native SDK when removing view attributes', async () => {
+                // GIVEN
+                const keysToDelete = ['test1', 'test2'];
+
+                // WHEN
+                await DdRum.removeViewAttributes(keysToDelete);
+
+                // THEN
+                expect(
+                    NativeModules.DdRum.removeViewAttributes
+                ).toHaveBeenCalledTimes(1);
+                expect(
+                    NativeModules.DdRum.removeViewAttributes
+                ).toHaveBeenCalledWith(keysToDelete);
+            });
+        });
+
         describe('DdRum.addAction', () => {
             test('uses given context when context is valid', async () => {
                 const context = {

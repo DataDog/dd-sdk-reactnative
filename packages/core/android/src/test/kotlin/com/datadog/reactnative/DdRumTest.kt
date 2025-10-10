@@ -13,13 +13,16 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.tools.unit.forge.BaseConfigurator
+import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import fr.xgouchet.elmyr.Forge
+import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.Forgery
 import fr.xgouchet.elmyr.annotation.IntForgery
+import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
@@ -454,6 +457,61 @@ internal class DdRumTest {
 
         // Then
         verify(mockRumMonitor).addTiming(timing)
+    }
+
+    @Test
+    fun `M call addViewAttribute W addViewAttribute()`(
+        @StringForgery key: String,
+        @StringForgery value: String
+    ) {
+        var attributeMap = mutableMapOf<String, Any?>()
+        attributeMap.put("value", value)
+
+        var attributes = mutableMapOf<String, Any?>()
+        attributes.put(key, value)
+
+        // When
+        testedDdRum.addViewAttribute(key, attributeMap.toReadableMap(), mockPromise)
+
+        // Then
+        verify(mockRumMonitor).addViewAttributes(attributes)
+    }
+
+    @Test
+    fun `M call removeViewAttribute W removeViewAttribute()`(@StringForgery key: String) {
+        // When
+        testedDdRum.removeViewAttribute(key, mockPromise)
+
+        // Then
+        verify(mockRumMonitor).removeViewAttributes(listOf(key))
+    }
+
+    @Test
+    fun `M call addViewAttributes W addViewAttributes()`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // When
+        testedDdRum.addViewAttributes(customAttributes.toReadableMap(), mockPromise)
+
+        // Then
+        verify(mockRumMonitor).addViewAttributes(customAttributes)
+    }
+
+    @Test
+    fun `𝕄 call removeViewAttributes 𝕎 removeViewAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // When
+        testedDdRum.removeViewAttributes(customAttributes.keys.toReadableArray(), mockPromise)
+
+        // Then
+        verify(mockRumMonitor).removeViewAttributes(customAttributes.keys.toList())
     }
 
     @Test

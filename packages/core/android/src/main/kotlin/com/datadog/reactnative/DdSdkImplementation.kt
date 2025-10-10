@@ -143,8 +143,6 @@ class DdSdkImplementation(
 
         if (id != null) {
             datadog.setUserInfo(id, name, email, extraInfo)
-        } else {
-            // TO DO - Log warning?
         }
 
         promise.resolve(null)
