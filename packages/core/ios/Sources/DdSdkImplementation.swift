@@ -143,7 +143,7 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
-    
+
     @objc
     public func addUserExtraInfo(
         extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -155,13 +155,15 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func clearUserInfo(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func clearUserInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.clearUserInfo()
         resolve(nil)
     }
 
     @objc
-    public func setTrackingConsent(trackingConsent: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func setTrackingConsent(
+        trackingConsent: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
         Datadog.set(trackingConsent: (trackingConsent as NSString?).asTrackingConsent())
         resolve(nil)
     }
@@ -173,7 +175,8 @@ public class DdSdkImplementation: NSObject {
     ) {
         let castedAttributes = castAttributesToSwift(attributes)
         let castedConfig = castAttributesToSwift(config)
-        DdTelemetry.sendTelemetryLog(message: message as String, attributes: castedAttributes, config: castedConfig)
+        DdTelemetry.sendTelemetryLog(
+            message: message as String, attributes: castedAttributes, config: castedConfig)
         resolve(nil)
     }
 
@@ -184,13 +187,13 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
-#if os(iOS)
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
 
+#if os(iOS)
     @objc
     public func consumeWebviewEvent(
         message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -207,19 +210,21 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
+
 #endif
     
-
     @objc
-    public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.clearAllData()
         resolve(nil)
     }
 
-    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) -> Void {
+    func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
         DdTelemetry.overrideTelemetryConfiguration(
-            initializationType: rnConfiguration.configurationForTelemetry?.initializationType as? String,
-            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion as? String,
+            initializationType: rnConfiguration.configurationForTelemetry?.initializationType
+                as? String,
+            reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion
+                as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
             trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
