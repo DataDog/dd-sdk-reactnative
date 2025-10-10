@@ -9,6 +9,7 @@ package com.datadog.reactnative
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 /**
@@ -199,6 +200,43 @@ class DdRum(
     @ReactMethod
     override fun addTiming(name: String, promise: Promise) {
         implementation.addTiming(name, promise)
+    }
+
+    /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    @ReactMethod
+    override fun addViewAttribute(key: String, value: ReadableMap, promise: Promise) {
+        implementation.addViewAttribute(key, value, promise)
+    }
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    @ReactMethod
+    override fun removeViewAttribute(key: String, promise: Promise) {
+        implementation.removeViewAttribute(key, promise)
+    }
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    @ReactMethod
+    override fun addViewAttributes(attributes: ReadableMap, promise: Promise) {
+        implementation.addViewAttributes(attributes, promise)
+    }
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    @ReactMethod
+    override fun removeViewAttributes(keys: ReadableArray, promise: Promise) {
+        implementation.removeViewAttributes(keys, promise)
     }
 
     /**

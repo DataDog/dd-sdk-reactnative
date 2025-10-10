@@ -253,6 +253,65 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
     
+    func testAddViewAttribute() throws {
+        let viewAttributeKey = "attributeKey"
+        let viewAttributes = NSDictionary(
+            dictionary: [
+                "value": 123,
+            ]
+        )
+        
+        rum.addViewAttribute(key: viewAttributeKey, value: viewAttributes, resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .addViewAttribute(key: viewAttributeKey))
+        XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 1)
+        let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
+        XCTAssertEqual(lastAttributes.count, 1)
+        XCTAssertEqual(lastAttributes["attributeKey"] as? Int64, 123)
+    }
+    
+    func testRemoveViewAttribute() throws {
+        let viewAttributeKey = "attributeKey"
+        
+        rum.removeViewAttribute(key: viewAttributeKey, resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .removeViewAttribute(key: viewAttributeKey))
+    }
+    
+    func testAddViewAttributes() throws {
+        let viewAttributes = NSDictionary(
+            dictionary: [
+                "attribute-1": 123,
+                "attribute-2": "abc",
+                "attribute-3": true,
+            ]
+        )
+        
+        rum.addViewAttributes(attributes: viewAttributes, resolve: mockResolve, reject: mockReject)
+        
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .addViewAttributes())
+        XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 1)
+        let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
+        XCTAssertEqual(lastAttributes.count, 3)
+        XCTAssertEqual(lastAttributes["attribute-1"] as? Int64, 123)
+        XCTAssertEqual(lastAttributes["attribute-2"] as? String, "abc")
+        XCTAssertEqual(lastAttributes["attribute-3"] as? Bool, true)
+    }
+
+    
+    func testRemoveViewAttributes() throws {
+        let viewAttributeKeys = ["attributeKey1", "attributeKey2", "attributeKey3"]
+        
+        rum.removeViewAttributes(keys: viewAttributeKeys, resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .removeViewAttributes(keys: viewAttributeKeys))
+    }
+    
     func testAddViewLoadingTime() throws {
         rum.addViewLoadingTime(overwrite: true, resolve: mockResolve, reject: mockReject)
         
