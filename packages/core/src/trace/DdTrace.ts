@@ -7,12 +7,12 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeTraceType } from '../nativeModulesTypes';
+import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import {
     bufferNativeCallReturningId,
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import type { DdTraceType } from '../types';
-import { validateContext } from '../utils/argsUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 
@@ -33,7 +33,7 @@ class DdTraceWrapper implements DdTraceType {
         const spanId = bufferNativeCallReturningId(() =>
             this.nativeTrace.startSpan(
                 operation,
-                validateContext(context),
+                encodeAttributes(context),
                 timestampMs
             )
         );
@@ -54,7 +54,7 @@ class DdTraceWrapper implements DdTraceType {
             id =>
                 this.nativeTrace.finishSpan(
                     id,
-                    validateContext(context),
+                    encodeAttributes(context),
                     timestampMs
                 ),
             spanId

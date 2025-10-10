@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { AttributeEncoder } from './sdk/AttributesEncoding/types';
 import type { Spec as NativeDdLogs } from './specs/NativeDdLogs';
 import type { Spec as NativeDdRum } from './specs/NativeDdRum';
 import type { Spec as NativeDdSdk } from './specs/NativeDdSdk';
@@ -36,7 +37,8 @@ export class DdNativeSdkConfiguration {
         readonly sampleRate: number,
         readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfiguration: object // eslint-disable-next-line no-empty-function
+        readonly additionalConfiguration: object,
+        readonly attributeEncoders: AttributeEncoder<any>[] // eslint-disable-next-line no-empty-function
     ) {}
 }
 
