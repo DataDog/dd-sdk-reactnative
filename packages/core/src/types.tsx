@@ -5,6 +5,7 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
+import type { AttributeEncoder } from './sdk/AttributesEncoding/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
@@ -70,7 +71,8 @@ export class DdSdkConfiguration {
         readonly trackWatchdogTerminations: boolean | undefined,
         readonly batchProcessingLevel: BatchProcessingLevel, // eslint-disable-next-line no-empty-function
         readonly initialResourceThreshold: number | undefined,
-        readonly trackMemoryWarnings: boolean
+        readonly trackMemoryWarnings: boolean,
+        readonly attributeEncoders: AttributeEncoder<any>[]
     ) {}
 }
 
@@ -224,7 +226,6 @@ export type LogEvent = {
 export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
 
 // DdRum
-
 export enum ErrorSource {
     NETWORK = 'NETWORK',
     SOURCE = 'SOURCE',

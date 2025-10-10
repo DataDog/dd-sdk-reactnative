@@ -12,6 +12,7 @@ import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from './rum/types';
 import { PropagatorType } from './rum/types';
+import type { AttributeEncoder } from './sdk/AttributesEncoding/types';
 import type { LogEventMapper } from './types';
 
 export enum VitalsUpdateFrequency {
@@ -322,6 +323,22 @@ export class DdSdkReactNativeConfiguration {
      * Defaults to 0.1 seconds.
      */
     public initialResourceThreshold?: number;
+
+    /**
+     * Optional list of custom encoders for attributes.
+     *
+     * Each encoder defines how to detect (`check`) and transform (`encode`)
+     * values of a specific type that is not handled by the built-in encoders
+     * (e.g., domain-specific objects, custom classes).
+     *
+     * These encoders are applied before the built-in ones. If an encoder
+     * successfully `check` a value, its `encode` result will be used.
+     *
+     * Example use cases:
+     * - Serializing a custom `UUID` class into a string
+     * - Handling third-party library objects that are not JSON-serializable
+     */
+    public attributeEncoders: AttributeEncoder<any>[] = [];
 
     /**
      * Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`.

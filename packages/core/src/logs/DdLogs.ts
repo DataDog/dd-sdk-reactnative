@@ -9,8 +9,8 @@ import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
+import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import type { ErrorSource, LogEventMapper } from '../types';
-import { validateContext } from '../utils/argsUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { generateEventMapper } from './eventMapper';
@@ -38,7 +38,7 @@ const isLogWithError = (
         typeof args[1] === 'string' ||
         typeof args[2] === 'string' ||
         typeof args[3] === 'string' ||
-        typeof args[4] === 'object' ||
+        (args[4] !== undefined && args[4] !== null) ||
         typeof args[5] === 'string'
     );
 };
@@ -160,13 +160,11 @@ class DdLogsWrapper implements DdLogsType {
             return generateEmptyPromise();
         }
 
-        const validatedContext = validateContext(event.context);
-
         this.printLogTracked(event.message, status);
         try {
             return await this.nativeLogs[status](
                 event.message,
-                validatedContext
+                encodeAttributes(event.context)
             );
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -210,9 +208,11 @@ class DdLogsWrapper implements DdLogsType {
 
         this.printLogTracked(mappedEvent.message, status);
         try {
-            const updatedContext = validateContext(mappedEvent.context);
-
-            updatedContext[DdAttributes.errorSourceType] = 'react-native';
+            const encodedContext = encodeAttributes(mappedEvent.context);
+            const updatedContext = {
+                ...encodedContext,
+                [DdAttributes.errorSourceType]: 'react-native'
+            };
 
             if (fingerprint && fingerprint !== '') {
                 updatedContext[DdAttributes.errorFingerprint] = fingerprint;
