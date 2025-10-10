@@ -119,6 +119,18 @@ module.exports = {
         addTiming: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         addViewLoadingTime: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),

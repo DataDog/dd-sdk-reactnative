@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { Attributes } from '../sdk/AttributesSingleton/types';
 import type { ErrorSource } from '../types';
 
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
@@ -147,6 +148,31 @@ export type DdRumType = {
      * @param name: The name of the new custom timing attribute. Timings can be nested up to 8 levels deep. Names using more than 8 levels will be sanitized by SDK.
      */
     addTiming(name: string): Promise<void>;
+
+    /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    addViewAttribute(key: string, value: unknown): Promise<void>;
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    removeViewAttribute(key: string): Promise<void>;
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    addViewAttributes(attributes: Attributes): Promise<void>;
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    removeViewAttributes(keys: string[]): Promise<void>;
 
     /**
      * Adds the loading time of the view to the active view.

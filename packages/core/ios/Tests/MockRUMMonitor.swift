@@ -10,22 +10,6 @@
 @testable import DatadogSDKReactNative
 
 internal class MockRUMMonitor: RUMMonitorProtocol {
-    func addViewAttribute(forKey key: DatadogInternal.AttributeKey, value: any DatadogInternal.AttributeValue) {
-        // not implemented
-    }
-    
-    func addViewAttributes(_ attributes: [DatadogInternal.AttributeKey : any DatadogInternal.AttributeValue]) {
-        // not implemented
-    }
-    
-    func removeViewAttribute(forKey key: DatadogInternal.AttributeKey) {
-        // not implemented
-    }
-    
-    func removeViewAttributes(forKeys keys: [DatadogInternal.AttributeKey]) {
-        // not implemented
-    }
-    
     func currentSessionID(completion: @escaping (String?) -> Void) {
         // not implemented
     }
@@ -71,6 +55,10 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
         case stopUserAction(type: RUMActionType, name: String?)
         case addUserAction(type: RUMActionType, name: String)
         case addTiming(name: String)
+        case addViewAttribute(key: String)
+        case removeViewAttribute(key: String)
+        case addViewAttributes(_: Int? = nil) // We need an attribute for the case to be Equatable
+        case removeViewAttributes(keys: [String])
         case addViewLoadingTime(overwrite: Bool)
         case stopSession(_: Int? = nil) // We need an attribute for the case to be Equatable
         case addResourceMetrics(resourceKey: String,
@@ -131,6 +119,24 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     func addTiming(name: String) {
         calledMethods.append(.addTiming(name: name))
     }
+    func addViewAttribute(forKey key: DatadogInternal.AttributeKey, value: any DatadogInternal.AttributeValue) {
+        calledMethods.append(.addViewAttribute(key: key))
+        receivedAttributes.append([key :value])
+    }
+        
+    func removeViewAttribute(forKey key: DatadogInternal.AttributeKey) {
+        calledMethods.append(.removeViewAttribute(key: key))
+    }
+    
+    func addViewAttributes(_ attributes: [DatadogInternal.AttributeKey : any DatadogInternal.AttributeValue]) {
+        calledMethods.append(.addViewAttributes())
+        receivedAttributes.append(attributes)
+    }
+    
+    func removeViewAttributes(forKeys keys: [DatadogInternal.AttributeKey]) {
+        calledMethods.append(.removeViewAttributes(keys: keys))
+    }
+    
     func addViewLoadingTime(overwrite: Bool) {
         calledMethods.append(.addViewLoadingTime(overwrite: overwrite))
     }
