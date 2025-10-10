@@ -132,6 +132,18 @@ actualRN.NativeModules.DdRum = {
     addTiming: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['addTiming']>,
+    addViewAttribute: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['addViewAttribute']>,
+    removeViewAttribute: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['removeViewAttribute']>,
+    addViewAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['addViewAttributes']>,
+    removeViewAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['removeViewAttributes']>,
     addViewLoadingTime: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['addViewLoadingTime']>,

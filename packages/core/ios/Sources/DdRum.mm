@@ -107,6 +107,35 @@ RCT_REMAP_METHOD(addTiming, withName:(NSString*)name
     [self addTiming:name resolve:resolve reject:reject];
 }
 
+RCT_EXPORT_METHOD(addViewAttribute:(NSString*) key
+                  withValue:(NSDictionary*) value
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self addViewAttribute:key value:value resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(removeViewAttribute:(NSString*) key
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self removeViewAttribute:key resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(addViewAttributes:(NSDictionary*) attributes
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self addViewAttributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(removeViewAttributes:(NSArray *)keys
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self removeViewAttributes:keys resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(addViewLoadingTime, withOverwrite:(BOOL)overwrite
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -138,7 +167,7 @@ RCT_REMAP_METHOD(getCurrentSessionId,
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
+(const facebook::react::ObjCTurboModule::InitParams &)params
 {
     return std::make_shared<facebook::react::NativeDdRumSpecJSI>(params);
 }
@@ -178,6 +207,22 @@ RCT_REMAP_METHOD(getCurrentSessionId,
 
 - (void)addTiming:(NSString *)name resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation addTimingWithName:name resolve:resolve reject:reject];
+}
+
+- (void)addViewAttribute:(NSString *)key value:(NSDictionary *)value resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation addViewAttributeWithKey:key value:value resolve:resolve reject:reject];
+}
+
+- (void)removeViewAttribute:(NSString *)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation removeViewAttributeWithKey:key resolve:resolve reject:reject];
+}
+
+- (void)addViewAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation addViewAttributesWithAttributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)removeViewAttributes:(NSArray *)keys resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation removeViewAttributesWithKeys:keys resolve:resolve reject:reject];
 }
 
 - (void)addViewLoadingTime:(BOOL)overwrite resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {\
