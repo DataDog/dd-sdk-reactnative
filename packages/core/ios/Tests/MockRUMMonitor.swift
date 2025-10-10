@@ -10,22 +10,6 @@
 @testable import DatadogSDKReactNative
 
 internal class MockRUMMonitor: RUMMonitorProtocol {
-    func addViewAttribute(forKey key: DatadogInternal.AttributeKey, value: any DatadogInternal.AttributeValue) {
-        // not implemented
-    }
-    
-    func addViewAttributes(_ attributes: [DatadogInternal.AttributeKey : any DatadogInternal.AttributeValue]) {
-        // not implemented
-    }
-    
-    func removeViewAttribute(forKey key: DatadogInternal.AttributeKey) {
-        // not implemented
-    }
-    
-    func removeViewAttributes(forKeys keys: [DatadogInternal.AttributeKey]) {
-        // not implemented
-    }
-    
     func currentSessionID(completion: @escaping (String?) -> Void) {
         // not implemented
     }
