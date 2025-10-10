@@ -137,7 +137,7 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
         expect.any(Number),
         ''
     );
-    expect(DdRum.addError.mock.calls[0][2]).toContain(
+    expect((DdRum.addError as any).mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -174,7 +174,7 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
         expect.any(Number),
         ''
     );
-    expect(DdRum.addError.mock.calls[0][2]).toContain(
+    expect((DdRum.addError as any).mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
@@ -624,7 +624,7 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
         expect.any(Number),
         ''
     );
-    expect(DdRum.addError.mock.calls[0][2]).toContain(
+    expect((DdRum.addError as any).mock.calls[0][2]).toContain(
         '/packages/core/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx'
     );
     expect(baseErrorHandlerCalled).toStrictEqual(true);
