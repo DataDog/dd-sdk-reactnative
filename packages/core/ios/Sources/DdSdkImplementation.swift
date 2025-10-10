@@ -143,7 +143,7 @@ public class DdSdkImplementation: NSObject {
 
         resolve(nil)
     }
-    
+
     @objc
     public func addUserExtraInfo(
         extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
