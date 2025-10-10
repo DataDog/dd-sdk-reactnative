@@ -10,7 +10,7 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { DdSdk } from '../../sdk/DdSdk';
+import { NativeDdSdk } from '../../sdk/DdSdkInternal';
 import { GlobalState } from '../../sdk/GlobalState/GlobalState';
 import { ErrorSource } from '../../types';
 import { DdRum } from '../DdRum';
@@ -69,13 +69,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.startView('key', 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startView).toHaveBeenCalledWith(
@@ -122,7 +122,7 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startView('key', 'name');
                 await DdRum.stopView('key', context);
@@ -130,7 +130,7 @@ describe('DdRum', () => {
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.stopView).toHaveBeenCalledWith(
@@ -177,13 +177,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.startAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startAction).toHaveBeenCalledWith(
@@ -236,7 +236,7 @@ describe('DdRum', () => {
                 });
 
                 test('uses empty context with error when context is invalid or null', async () => {
-                    const context: any = 123;
+                    const context: any = Symbol('invalid-context');
 
                     await DdRum.startAction(RumActionType.SCROLL, 'name');
                     await DdRum.stopAction(
@@ -248,7 +248,7 @@ describe('DdRum', () => {
                     expect(InternalLog.log).toHaveBeenNthCalledWith(
                         3,
                         expect.anything(),
-                        SdkVerbosity.ERROR
+                        SdkVerbosity.WARN
                     );
 
                     expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
@@ -353,14 +353,14 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startResource('key', 'method', 'url', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
@@ -414,15 +414,15 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startResource('key', 'method', 'url', {});
                 await DdRum.stopResource('key', 200, 'other', -1, context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
@@ -442,7 +442,7 @@ describe('DdRum', () => {
                 await DdRum.stopResource('key', 200, 'other', -1, context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -1200,13 +1200,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.addAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
@@ -1222,7 +1222,7 @@ describe('DdRum', () => {
                 await DdRum.addAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -1264,7 +1264,7 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.addError(
                     'error',
                     ErrorSource.CUSTOM,
@@ -1273,15 +1273,9 @@ describe('DdRum', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
-                    expect.stringContaining('Adding RUM Error'),
-                    SdkVerbosity.DEBUG
-                );
-
-                expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
-                    expect.stringContaining('Context will be empty'),
-                    SdkVerbosity.ERROR
+                    expect.anything(),
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
@@ -1306,16 +1300,8 @@ describe('DdRum', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
-                    expect.stringContaining('Adding RUM Error'),
-                    SdkVerbosity.DEBUG
-                );
-
-                expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
-                    expect.stringContaining(
-                        'The given context is an array, it will be nested'
-                    ),
+                    expect.anything(),
                     SdkVerbosity.WARN
                 );
 
@@ -1363,7 +1349,7 @@ describe('DdRum', () => {
         test('does not call the native SDK when startAction has not been called before and using old API', async () => {
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).not.toHaveBeenCalled();
-            expect(DdSdk.telemetryDebug).not.toHaveBeenCalled();
+            expect(NativeDdSdk.telemetryDebug).not.toHaveBeenCalled();
         });
 
         test('calls the native SDK when called with old API', async () => {
@@ -1375,7 +1361,7 @@ describe('DdRum', () => {
                 { user: 'me' },
                 789
             );
-            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });
@@ -1389,7 +1375,7 @@ describe('DdRum', () => {
                 {},
                 456
             );
-            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });

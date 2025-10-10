@@ -52,13 +52,13 @@ describe('DdTrace', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdTrace.startSpan('operation', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdTrace.startSpan).toHaveBeenCalledWith(
@@ -104,18 +104,17 @@ describe('DdTrace', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdTrace.startSpan('operation', context);
 
                 const spanId = await DdTrace.startSpan('operation', {});
                 await DdTrace.finishSpan(spanId, context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
-
                 expect(NativeModules.DdTrace.finishSpan).toHaveBeenCalledWith(
                     spanId,
                     {},

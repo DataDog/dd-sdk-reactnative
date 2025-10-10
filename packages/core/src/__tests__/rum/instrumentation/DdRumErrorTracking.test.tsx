@@ -18,13 +18,13 @@ let baseErrorHandlerCalled = false;
 const baseErrorHandler = (error: any, isFatal?: boolean) => {
     baseErrorHandlerCalled = true;
 };
-let originalErrorHandler;
+let originalErrorHandler: any;
 
 let baseConsoleErrorCalled = false;
-const baseConsoleError = (...params: unknown) => {
+const baseConsoleError = (...params: unknown[]) => {
     baseConsoleErrorCalled = true;
 };
-let originalConsoleError;
+let originalConsoleError: any;
 
 const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
@@ -61,11 +61,14 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
     // THEN
     expect(DdRum.addError).toHaveBeenCalledTimes(1);
     expect(DdRum.addError).toHaveBeenCalledWith(
-        '[object Object]',
+        'Unknown Error',
         'SOURCE',
         'doSomething() at ./path/to/file.js:67:3',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.message': 'Unknown Error',
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.raw.stack': 'doSomething() at ./path/to/file.js:67:3',
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -94,7 +97,10 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
         'SOURCE',
         '',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.raw.stack': '',
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -121,7 +127,10 @@ it('M intercept and send a RUM event W onGlobalError() {Error object}', async ()
         'SOURCE',
         expect.stringContaining('Error: Something bad happened'),
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': error.name,
+            '_dd.error.raw.message': error.message,
+            '_dd.error.raw.stack': error.stack,
+            '_dd.error.raw.cause': undefined,
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -155,7 +164,10 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
         'SOURCE',
         expect.stringContaining('Error: Something bad happened'),
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': error.name,
+            '_dd.error.raw.message': error.message,
+            '_dd.error.raw.stack': error.stack,
+            '_dd.error.raw.cause': undefined,
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -190,9 +202,15 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
         'SOURCE',
         'at ./path/to/file.js:1038:57',
         {
-            '_dd.error.raw': error,
             '_dd.error.is_crash': is_fatal,
-            '_dd.error.source_type': 'react-native'
+            '_dd.error.source_type': 'react-native',
+            '_dd.error.raw.sourceURL': './path/to/file.js',
+            '_dd.error.raw.line': 1038,
+            '_dd.error.raw.column': 57,
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.raw.stack': 'at ./path/to/file.js:1038:57'
         },
         expect.any(Number),
         ''
@@ -224,7 +242,63 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
         'SOURCE',
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.stack': [
+                'doSomething() at ./path/to/file.js:67:3',
+                'nestedCall() at ./path/to/file.js:1064:9',
+                'root() at ./path/to/index.js:10:1'
+            ].join(','),
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.is_crash': is_fatal,
+            '_dd.error.source_type': 'react-native'
+        },
+        expect.any(Number),
+        ''
+    );
+    expect(baseErrorHandlerCalled).toStrictEqual(true);
+});
+
+it('M intercept and send a RUM event W onGlobalError() {with stack and component stack}', async () => {
+    // GIVEN
+    DdRumErrorTracking.startTracking();
+    const is_fatal = Math.random() < 0.5;
+    const error = {
+        stack: [
+            'example() at ./path/to/file.js:77:2',
+            'test() at ./path/to/index.js:22:3'
+        ],
+        componentStack: [
+            'doSomething() at ./path/to/file.js:67:3',
+            'nestedCall() at ./path/to/file.js:1064:9',
+            'root() at ./path/to/index.js:10:1'
+        ],
+        message: 'Something bad happened'
+    };
+
+    // WHEN
+    DdRumErrorTracking.onGlobalError(error, is_fatal);
+    await flushPromises();
+
+    // THEN
+    expect(DdRum.addError).toHaveBeenCalledTimes(1);
+    expect(DdRum.addError).toHaveBeenCalledWith(
+        'Something bad happened',
+        'SOURCE',
+        'example() at ./path/to/file.js:77:2,test() at ./path/to/index.js:22:3',
+        {
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.stack': [
+                'example() at ./path/to/file.js:77:2',
+                'test() at ./path/to/index.js:22:3'
+            ].join(','),
+            '_dd.error.raw.componentStack': [
+                'doSomething() at ./path/to/file.js:67:3',
+                'nestedCall() at ./path/to/file.js:1064:9',
+                'root() at ./path/to/index.js:10:1'
+            ],
+            '_dd.error.raw.cause': undefined,
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -258,7 +332,14 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
         'SOURCE',
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.raw.stack': [
+                'doSomething() at ./path/to/file.js:67:3',
+                'nestedCall() at ./path/to/file.js:1064:9',
+                'root() at ./path/to/index.js:10:1'
+            ].join(','),
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -292,7 +373,14 @@ it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async
         'SOURCE',
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.stack': [
+                'doSomething() at ./path/to/file.js:67:3',
+                'nestedCall() at ./path/to/file.js:1064:9',
+                'root() at ./path/to/index.js:10:1'
+            ].join(','),
+            '_dd.error.raw.cause': undefined,
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -332,7 +420,14 @@ it('M not report error in console handler W onGlobalError() {with console report
         'SOURCE',
         'doSomething() at ./path/to/file.js:67:3,nestedCall() at ./path/to/file.js:1064:9,root() at ./path/to/index.js:10:1',
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': 'Error',
+            '_dd.error.raw.cause': undefined,
+            '_dd.error.raw.message': 'Something bad happened',
+            '_dd.error.raw.stack': [
+                'doSomething() at ./path/to/file.js:67:3',
+                'nestedCall() at ./path/to/file.js:1064:9',
+                'root() at ./path/to/index.js:10:1'
+            ].join(','),
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
@@ -483,7 +578,10 @@ describe.each([
         const errorMessage =
             message === undefined || message === null
                 ? 'Unknown Error'
-                : String(message);
+                : typeof message?.toString === 'function' &&
+                  message.toString !== Object.prototype.toString
+                ? String(message)
+                : 'Unknown Error';
         expect(DdRum.addError).toHaveBeenCalledTimes(1);
         expect(DdRum.addError).toHaveBeenCalledWith(
             errorMessage,
@@ -517,7 +615,9 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
         'SOURCE',
         expect.stringContaining('Error: Something bad happened'),
         {
-            '_dd.error.raw': error,
+            '_dd.error.raw.name': error.name,
+            '_dd.error.raw.message': error.message,
+            '_dd.error.raw.stack': error.stack,
             '_dd.error.is_crash': is_fatal,
             '_dd.error.source_type': 'react-native'
         },
