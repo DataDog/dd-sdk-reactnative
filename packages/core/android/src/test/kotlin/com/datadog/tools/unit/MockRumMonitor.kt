@@ -30,7 +30,13 @@ class MockRumMonitor : RumMonitor {
 
     override fun addAttribute(key: String, value: Any?) {}
 
-    override fun addViewAttributes(attributes: Map<String, Any?>) {}
+    override fun removeAttribute(key: String) {}
+
+    override fun clearAttributes() {}
+
+    override fun getAttributes(): Map<String, Any?> {
+        return mapOf()
+    }
 
     override fun addError(
         message: String,
@@ -55,15 +61,10 @@ class MockRumMonitor : RumMonitor {
     @ExperimentalRumApi
     override fun addViewLoadingTime(overwrite: Boolean) {}
 
-    override fun clearAttributes() {}
-
-    override fun getAttributes(): Map<String, Any?> {
-        return mapOf()
-    }
-
     override fun getCurrentSessionId(callback: (String?) -> Unit) {}
 
-    override fun removeAttribute(key: String) {}
+    override fun addViewAttributes(attributes: Map<String, Any?>) {}
+
     override fun removeViewAttributes(attributes: Collection<String>) {}
 
     override fun startAction(
