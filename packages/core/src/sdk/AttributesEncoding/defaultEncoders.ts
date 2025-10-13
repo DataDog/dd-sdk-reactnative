@@ -60,17 +60,7 @@ export const dateEncoder: AttributeEncoder<Date> = {
     check: (v: unknown): v is Date => v instanceof Date,
     encode: (d: Date) => String(d)
 };
-/*
-            } else if ('componentStack' in error) {
-                stack = String(error.componentStack);
-            } else if (
-                'sourceURL' in error &&
-                'line' in error &&
-                'column' in error
-            ) {
 
-
-*/
 /**
  * Extended Error Encoder.
  * Serializes name, message, stack, and cause (ES2022+) for Error objects.
