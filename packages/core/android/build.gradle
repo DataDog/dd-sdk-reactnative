@@ -1,6 +1,8 @@
 import java.nio.file.Paths
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+apply plugin: "io.gitlab.arturbosch.detekt"
+
 buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
   def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['DdSdkReactNative_kotlinVersion']
@@ -36,7 +38,7 @@ if (isNewArchitectureEnabled()) {
 }
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
-apply plugin: "io.gitlab.arturbosch.detekt"
+
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
@@ -224,6 +226,8 @@ dependencies {
   testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
   unmock 'org.robolectric:android-all:4.4_r1-robolectric-r2'
+  detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:1.23.8"
+  detektPlugins "io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.8"
 }
 
 unMock {

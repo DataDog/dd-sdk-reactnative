@@ -83,7 +83,7 @@ class DdSessionReplayImplementation(
         promise.resolve(null)
     }
 
-    companion object {
+    internal companion object {
         internal const val NAME = "DdSessionReplay"
     }
 }
