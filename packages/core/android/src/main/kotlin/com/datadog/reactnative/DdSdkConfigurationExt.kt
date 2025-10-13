@@ -210,7 +210,7 @@ internal fun List<JSONFirstPartyHost>.asFirstPartyHosts(): Map<String, Set<Traci
 
 internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     return this.mapNotNull {
-        when (it.lowercase()) {
+        when (it.lowercase(Locale.US)) {
             "datadog" -> TracingHeaderType.DATADOG
             "b3" -> TracingHeaderType.B3
             "b3multi" -> TracingHeaderType.B3MULTI
