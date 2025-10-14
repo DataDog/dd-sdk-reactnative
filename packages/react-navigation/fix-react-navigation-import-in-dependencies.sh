@@ -28,11 +28,21 @@ safe_replace() {
 
   if [ -d "$dir" ]; then
     echo "[@datadog/mobile-react-navigation] Processing $dir ..."
-    find "$dir" -name '*.js' -print0 2>/dev/null | \
-      xargs -0 sed "${SED_INPLACE[@]}" "$replace" 2>/dev/null || {
-        echo "[@datadog/mobile-react-navigation] WARNING: Replacement failed for $dir"
-        had_warnings=true
-      }
+    # Capture stderr from sed and print if non-empty
+    local sed_errors
+    sed_errors=$(find "$dir" -name '*.js' -print0 2>/dev/null | \
+      xargs -0 sed "${SED_INPLACE[@]}" "$replace" 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "[@datadog/mobile-react-navigation] WARNING: Replacement failed for $dir"
+      echo "[@datadog/mobile-react-navigation] Error details:"
+      echo "$sed_errors"
+      had_warnings=true
+    elif [ -n "$sed_errors" ]; then
+      # Sometimes sed emits warnings but exits successfully
+      echo "[@datadog/mobile-react-navigation] NOTE: sed produced warnings for $dir:"
+      echo "$sed_errors"
+      had_warnings=true
+    fi
   else
     echo "[@datadog/mobile-react-navigation] WARNING: Directory not found: $dir"
     had_warnings=true
@@ -45,9 +55,12 @@ safe_replace "../../node_modules/@react-navigation/elements/." 's/@react-navigat
 
 # Final summary
 if [ "$had_warnings" = true ]; then
-  echo "[@datadog/mobile-react-navigation] WARNING: Completed with warnings."
+  echo ""
+  echo "[@datadog/mobile-react-navigation] ⚠️  IMPORTANT: Script completed with warnings."
+  echo "[@datadog/mobile-react-navigation] React Navigation imports may not have been updated correctly."
+  echo "[@datadog/mobile-react-navigation] Please review the logs above — your project’s navigation might not work as expected."
 else
-  echo "[@datadog/mobile-react-navigation] Completed successfully with no warnings."
+  echo "[@datadog/mobile-react-navigation] ✅ Completed successfully with no warnings."
 fi
 
 exit 0
