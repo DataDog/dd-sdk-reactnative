@@ -270,8 +270,7 @@ class DdSdkImplementation(
     }
 
     // endregion
-
-    companion object {
+    internal companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"

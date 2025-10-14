@@ -28,23 +28,25 @@ Pod::Spec.new do |s|
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 
+  header_paths = %W[
+    $(inherited)
+    $(PODS_ROOT)/React-RCTFabric/**
+    $(PODS_ROOT)/React-FabricComponents/**
+    $(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**
+    $(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/react/renderer/components/text/platform/cxx/**
+    ${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/**
+    ${PODS_CONFIGURATION_BUILD_DIR}/React-FabricComponents/**
+    $(PODS_CONFIGURATION_BUILD_DIR)/React-timing/React_timing.framework/Headers/**
+  ].join(' ')
 
   xcconfig = {
-    "HEADER_SEARCH_PATHS" => "$(inherited) " +
-      "$(PODS_ROOT)/React-RCTFabric/** " +
-      "$(PODS_ROOT)/React-FabricComponents/** " +
-      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
-      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**",
-    "USER_HEADER_SEARCH_PATHS" => "$(inherited) " +
-      "$(PODS_ROOT)/React-RCTFabric/** " +
-      "$(PODS_ROOT)/React-FabricComponents/** " +
-      "${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_RCTFabric.framework/Headers/** " +
-      "$(PODS_CONFIGURATION_BUILD_DIR)/React-FabricComponents/React_FabricComponents.framework/Headers/**"
+    'HEADER_SEARCH_PATHS' => header_paths,
+    'USER_HEADER_SEARCH_PATHS' => header_paths,
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
     s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
-    
+
     xcconfig.merge!({
       "DEFINES_MODULE" => "YES",
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
@@ -55,8 +57,5 @@ Pod::Spec.new do |s|
 
   if respond_to?(:install_modules_dependencies, true)
     install_modules_dependencies(s)
-  # else
-  #   s.dependency "React-Core"
   end
-  
 end

@@ -93,7 +93,7 @@ class DdTraceImplementation(
         }
     }
 
-    companion object {
+    internal companion object {
         internal const val NAME = "DdTrace"
     }
 }
