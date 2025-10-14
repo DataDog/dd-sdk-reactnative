@@ -11,6 +11,13 @@ import { handleSvgDimensions } from '../processing/attributes';
 
 import type { SvgHandler } from './SvgHandler';
 
+/**
+ * Handles extraction and transformation of SVG data from JSX elements that reference SVGs by URI.
+ *
+ * The `UriSvgHandler` inspects a JSXElement, extracts its `uri` attribute to locate the SVG source,
+ * and captures its dimensional attributes (e.g., `width`, `height`) for further processing.
+ *
+ */
 export class UriSvgHandler implements SvgHandler {
     constructor(
         private types: typeof Babel.types,
@@ -30,6 +37,7 @@ export class UriSvgHandler implements SvgHandler {
     transformSvgNode(dimensions: Record<string, string>) {
         const uri = this.processAttributes(
             this.types,
+            this.path,
             this.path.node,
             dimensions
         );
@@ -43,11 +51,15 @@ export class UriSvgHandler implements SvgHandler {
      * storing them into the provided `dimensions` object. Ignores spread attributes.
      *
      * @param t - Babel types helper.
+     * @param rootElementPath - The path of the root JSX element containing the SVG.
+     *   Used to locate lexical scopes (component or program) for resolving variable references.
+     *   May be `null` if no traversal context is available.
      * @param jsxElement - The JSXElement whose attributes will be processed.
      * @param dimensions - Object to collect extracted width/height info.
      */
     private processAttributes(
         t: typeof Babel.types,
+        rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string>
     ) {
@@ -68,6 +80,7 @@ export class UriSvgHandler implements SvgHandler {
             // Handle SVG dimensions
             handleSvgDimensions(
                 t,
+                rootElementPath,
                 attr,
                 attrName,
                 dimensions,
@@ -79,7 +92,6 @@ export class UriSvgHandler implements SvgHandler {
                 if (t.isStringLiteral(attr.value)) {
                     uri = attr.value.value;
                 }
-                console.log('attr: ', JSON.stringify(attr, null, 2));
             }
         }
 

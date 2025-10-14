@@ -12,6 +12,14 @@ import { handleSvgDimensions } from '../processing/attributes';
 
 import type { SvgHandler } from './SvgHandler';
 
+/**
+ * Internal handler that inlines locally imported SVG components into
+ * JSX output during Babel transformation.
+ *
+ * The `LocalSvgHandler` resolves SVG imports from disk, caches their raw
+ * contents, and extracts relevant dimension attributes (e.g., width, height)
+ * from the JSX element for use in the generated SVG markup.
+ */
 export class LocalSvgHandler implements SvgHandler {
     constructor(
         private types: typeof Babel.types,
@@ -41,7 +49,12 @@ export class LocalSvgHandler implements SvgHandler {
             this.localSvgMap[this.name].content = fs.readFileSync(path, 'utf8');
         }
 
-        this.processAttributes(this.types, this.path.node, dimensions);
+        this.processAttributes(
+            this.types,
+            this.path,
+            this.path.node,
+            dimensions
+        );
 
         return this.localSvgMap[this.name].content;
     }
@@ -52,11 +65,16 @@ export class LocalSvgHandler implements SvgHandler {
      * storing them into the provided `dimensions` object. Ignores spread attributes.
      *
      * @param t - Babel types helper.
+     *
+     * @param rootElementPath - The path of the root JSX element containing the SVG.
+     *   Used to locate lexical scopes (component or program) for resolving variable references.
+     *   May be `null` if no traversal context is available.
      * @param jsxElement - The JSXElement whose attributes will be processed.
      * @param dimensions - Object to collect extracted width/height info.
      */
     private processAttributes(
         t: typeof Babel.types,
+        rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string>
     ) {
@@ -75,6 +93,7 @@ export class LocalSvgHandler implements SvgHandler {
             // Handle SVG dimensions
             handleSvgDimensions(
                 t,
+                rootElementPath,
                 attr,
                 attrName,
                 dimensions,

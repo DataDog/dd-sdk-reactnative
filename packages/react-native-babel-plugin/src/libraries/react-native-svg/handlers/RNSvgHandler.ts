@@ -13,7 +13,7 @@ import { svgSupportedNames, xmlNamespace } from '../constants';
 import {
     buildTransformStringAttribute,
     handleArrayAttributes,
-    handleJoinedTranformAttributes,
+    handleJoinedTransformAttributes,
     handleRegularAttributes,
     handleRNSpecificAttributes,
     handleSeparateTransformAttributes,
@@ -24,6 +24,14 @@ import { convertAttributeCasing } from '../utils';
 
 import type { SvgHandler } from './SvgHandler';
 
+/**
+ * Internal handler that transforms React Native–style SVG JSXElements into
+ * web-compatible SVG output during Babel processing.
+ *
+ * The `RNSvgHandler` normalizes tag names and attributes, extracts
+ * width/height dimensions, consolidates transform attributes, and ensures
+ * correct SVG namespace declarations.
+ */
 export class RNSvgHandler implements SvgHandler {
     constructor(
         private types: typeof Babel.types,
@@ -48,7 +56,7 @@ export class RNSvgHandler implements SvgHandler {
 
         const clone = this.types.cloneNode(this.path.node, true);
 
-        this.transformElement(this.types, clone, dimensions);
+        this.transformElement(this.types, this.path, clone, dimensions);
         this.setNamespace(this.types, clone);
 
         const output = generate(clone).code;
@@ -87,6 +95,7 @@ export class RNSvgHandler implements SvgHandler {
      */
     private transformElement(
         t: typeof Babel.types,
+        rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         el: Babel.types.JSXElement,
         dimensions: Record<string, string>
     ) {
@@ -106,7 +115,7 @@ export class RNSvgHandler implements SvgHandler {
             closingNode.name = convertAttributeCasing(closingNode.name);
         }
 
-        this.processAttributes(t, el, dimensions);
+        this.processAttributes(t, rootElementPath, el, dimensions);
     }
 
     /**
@@ -114,17 +123,21 @@ export class RNSvgHandler implements SvgHandler {
      * to each child that is itself a JSXElement.
      *
      * @param t - Babel types helper.
+     * @param rootElementPath - The path of the root JSX element containing the SVG.
+     *   Used to locate lexical scopes (component or program) for resolving variable references.
+     *   May be `null` if no traversal context is available.
      * @param jsxElement - Parent JSXElement whose children will be transformed.
      * @param dimensions - Optional object to propagate width/height info through child elements.
      */
     private traverseAndTransformChildren(
         t: typeof Babel.types,
+        rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string> = {}
     ) {
         for (const child of jsxElement.children) {
             if (t.isJSXElement(child)) {
-                this.transformElement(t, child, dimensions);
+                this.transformElement(t, rootElementPath, child, dimensions);
             }
         }
     }
@@ -138,11 +151,15 @@ export class RNSvgHandler implements SvgHandler {
      * - Recursively applies transformations to child elements.
      *
      * @param t - Babel types helper.
+     * @param rootElementPath - The path of the root JSX element containing the SVG.
+     *   Used to locate lexical scopes (component or program) for resolving variable references.
+     *   May be `null` if no traversal context is available.
      * @param jsxElement - JSXElement whose attributes are to be processed.
      * @param dimensions - Optional object to collect extracted width/height info.
      */
     private processAttributes(
         t: typeof Babel.types,
+        rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string> = {}
     ) {
@@ -190,8 +207,13 @@ export class RNSvgHandler implements SvgHandler {
                 /* If we reach this point we know we have a valid attribute name */
 
                 // Handle SVG dimensions
-                const dimensionsHandled = handleSvgDimensions(
+
+                const {
+                    resolved: dimensionsHandled,
+                    remove: removeDimension
+                } = handleSvgDimensions(
                     t,
+                    rootElementPath,
                     attr,
                     attrName,
                     dimensions,
@@ -200,7 +222,11 @@ export class RNSvgHandler implements SvgHandler {
                 );
 
                 if (dimensionsHandled) {
-                    el.attributes.splice(index, 1);
+                    // If dimension is invalid or if it's a variable that was not initialized in the file
+                    // We remove the attribute and assign a value in the native layer where we have access to wireframe's dimensions
+                    if (removeDimension) {
+                        el.attributes.splice(index, 1);
+                    }
                     continue;
                 }
 
@@ -233,7 +259,7 @@ export class RNSvgHandler implements SvgHandler {
                 }
 
                 // Handle joined transform attributes
-                const joinedTransformAttributesHandled = handleJoinedTranformAttributes(
+                const joinedTransformAttributesHandled = handleJoinedTransformAttributes(
                     t,
                     attr,
                     attrName,
@@ -255,6 +281,6 @@ export class RNSvgHandler implements SvgHandler {
         buildTransformStringAttribute(el, transformsArray);
 
         // Goes through an elements children and transforms its properties
-        this.traverseAndTransformChildren(t, jsxElement, dimensions);
+        this.traverseAndTransformChildren(t, null, jsxElement, dimensions);
     }
 }

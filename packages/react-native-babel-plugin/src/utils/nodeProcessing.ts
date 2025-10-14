@@ -538,3 +538,47 @@ export function parseStyleNode(
 
     return null;
 }
+
+/**
+ * Searches for a variable declaration in the given scope and returns its static value.
+ *
+ * @param t - Babel types helper.
+ * @param scopePath - The scope path to search in (e.g., function, class, or program).
+ * @param variableName - The name of the variable to find.
+ * @returns The static value of the variable (string or number), or null if not found or not static.
+ */
+export function findIdentifierInScope(
+    t: typeof Babel.types,
+    scopePath: Babel.NodePath<Babel.types.Node>,
+    variableName: string
+): string | number | null {
+    let foundValue: string | number | null = null;
+
+    scopePath.traverse({
+        VariableDeclarator(path) {
+            // Here we check for `parentPath` twice because nodes like variables are usually inside `BlockStatement` nodes
+            // So we need to get past those to get the right parentPath
+            if (path.parentPath?.parentPath !== scopePath) {
+                return;
+            }
+
+            const nodeName = getNodeName(t, path.node.id);
+            if (
+                t.isIdentifier(path.node.id) &&
+                nodeName === variableName &&
+                path.node.init
+            ) {
+                const staticValue = evaluateStaticNode(t, path.node.init);
+                if (
+                    typeof staticValue === 'string' ||
+                    typeof staticValue === 'number'
+                ) {
+                    foundValue = staticValue;
+                    path.stop();
+                }
+            }
+        }
+    });
+
+    return foundValue;
+}

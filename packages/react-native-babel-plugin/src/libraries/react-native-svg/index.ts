@@ -25,6 +25,16 @@ type SvgOffset = {
     length: number;
 };
 
+/**
+ * Internal processor responsible for detecting, transforming, and wrapping
+ * React Native SVG components for use with Session Replay.
+ *
+ * This class scans the project for `.svg` imports, builds a mapping between
+ * JSX identifiers and SVG files, and transforms JSX SVG nodes into
+ * optimized, web-compatible SVG markup. Each transformed element is then
+ * wrapped in a `SessionReplayView.Privacy` component with metadata used by
+ * the native Session Replay layer.
+ */
 export class ReactNativeSVG {
     svgMap: Record<string, { file: string; [key: string]: string }> = {};
 
@@ -157,58 +167,64 @@ export class ReactNativeSVG {
      *          or `undefined` if no transformation could be performed.
      */
     processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
-        const dimensions: { width?: string; height?: string } = {};
+        try {
+            const dimensions: { width?: string; height?: string } = {};
 
-        if (path.node?.extra?.__wrappedForSR) {
-            return;
+            if (path.node?.extra?.__wrappedForSR) {
+                return;
+            }
+
+            HandlerResolver.configure({
+                t: this.t,
+                path,
+                name,
+                localSvgMap: this.localSvgMap
+            });
+
+            const handler = HandlerResolver.create();
+            const output = handler?.transformSvgNode(dimensions);
+
+            if (!output) {
+                return;
+            }
+
+            const id = uuidv4();
+
+            const optimized = output.startsWith('http')
+                ? output
+                : optimize(output, {
+                      multipass: true,
+                      plugins: ['preset-default']
+                  }).data;
+
+            const hash = createHash('md5')
+                .update(optimized, 'utf8')
+                .digest('hex');
+
+            const wrapper = this.wrapElementForSessionReplay(
+                this.t,
+                path,
+                id,
+                hash,
+                dimensions
+            );
+            path.replaceWith(wrapper);
+
+            path.node.extra = {
+                __wrappedForSR: true
+            };
+
+            this.svgMap[id] = {
+                file: optimized,
+                ...dimensions
+            };
+
+            writeAssetToDisk(this.assetsPath, id, hash, optimized);
+
+            return { original: output, optimized };
+        } catch (err) {
+            return { original: null, optimized: null };
         }
-
-        HandlerResolver.configure({
-            t: this.t,
-            path,
-            name,
-            localSvgMap: this.localSvgMap
-        });
-
-        const handler = HandlerResolver.create();
-        const output = handler?.transformSvgNode(dimensions);
-
-        if (!output) {
-            return;
-        }
-
-        const id = uuidv4();
-
-        const optimized = output.startsWith('http')
-            ? output
-            : optimize(output, {
-                  multipass: true,
-                  plugins: ['preset-default']
-              }).data;
-
-        const hash = createHash('md5').update(optimized, 'utf8').digest('hex');
-
-        const wrapper = this.wrapElementForSessionReplay(
-            this.t,
-            path,
-            id,
-            hash,
-            dimensions
-        );
-        path.replaceWith(wrapper);
-
-        path.node.extra = {
-            __wrappedForSR: true
-        };
-
-        this.svgMap[id] = {
-            file: optimized,
-            ...dimensions
-        };
-
-        writeAssetToDisk(this.assetsPath, id, hash, optimized);
-
-        return { original: output, optimized };
     }
 
     /**
@@ -269,29 +285,29 @@ export class ReactNativeSVG {
             )
         );
 
-        const attributesProp = t.jsxAttribute(
-            t.jsxIdentifier('attributes'),
-            t.jsxExpressionContainer(
-                t.objectExpression([
-                    t.objectProperty(
-                        t.identifier('type'),
-                        t.stringLiteral('svg')
-                    ),
-                    t.objectProperty(
-                        t.identifier('hash'),
-                        t.stringLiteral(hash)
-                    ),
-                    t.objectProperty(
-                        t.identifier('width'),
-                        width ? t.stringLiteral(width) : t.nullLiteral()
-                    ),
+        const props = [
+            t.objectProperty(t.identifier('type'), t.stringLiteral('svg')),
+            t.objectProperty(t.identifier('hash'), t.stringLiteral(hash))
+        ];
 
-                    t.objectProperty(
-                        t.identifier('height'),
-                        height ? t.stringLiteral(height) : t.nullLiteral()
-                    )
-                ])
-            )
+        if (width) {
+            props.push(
+                t.objectProperty(t.identifier('width'), t.stringLiteral(width))
+            );
+        }
+
+        if (height) {
+            props.push(
+                t.objectProperty(
+                    t.identifier('height'),
+                    t.stringLiteral(height)
+                )
+            );
+        }
+
+        const attributeProp = t.jsxAttribute(
+            t.jsxIdentifier('attributes'),
+            t.jsxExpressionContainer(t.objectExpression(props))
         );
 
         const attributesNode = [
@@ -306,7 +322,7 @@ export class ReactNativeSVG {
                 t.jsxIdentifier('pointerEvents'),
                 t.stringLiteral('box-none')
             ),
-            attributesProp,
+            attributeProp,
             styleProp
         ];
 
