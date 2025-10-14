@@ -10,6 +10,14 @@ cd "$(dirname "$0")" || {
   echo "[@datadog/mobile-react-navigation] WARNING: Failed to change directory."
 }
 
+# Detect OS for sed compatibility
+# macOS uses BSD sed (requires -i ''), Linux uses GNU sed (just -i)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SED_INPLACE=(-i '')
+else
+  SED_INPLACE=(-i)
+fi
+
 # Track whether any warnings occurred
 had_warnings=false
 
@@ -21,7 +29,7 @@ safe_replace() {
   if [ -d "$dir" ]; then
     echo "[@datadog/mobile-react-navigation] Processing $dir ..."
     find "$dir" -name '*.js' -print0 2>/dev/null | \
-      xargs -0 sed -i '' "$replace" 2>/dev/null || {
+      xargs -0 sed "${SED_INPLACE[@]}" "$replace" 2>/dev/null || {
         echo "[@datadog/mobile-react-navigation] WARNING: Replacement failed for $dir"
         had_warnings=true
       }
