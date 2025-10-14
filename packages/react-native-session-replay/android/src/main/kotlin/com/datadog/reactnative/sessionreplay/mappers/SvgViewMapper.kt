@@ -53,12 +53,30 @@ internal open class SvgViewMapper<T: View>(
 
         if (view is DdPrivacyView) {
             val hash = view.attributes?.get("hash") ?: return wireframes
+            val width = view.attributes?.get("width")
+            val height = view.attributes?.get("height")
 
-            val entryData = internalCallback.getEntryData(hash)
+            var entryData = internalCallback.getEntryData(hash)
                 ?: return wireframes
 
             // This is always guaranteed to be true due to how the babel plugin transformed the data
             val subView = view.getChildAt(0) ?: return wireframes
+            val imageBounds = resolveViewGlobalBounds(subView, pixelDensity)
+            var entryStr: String? = null
+
+            if (width == null) {
+                entryStr = injectSvgDimensions(entryData.toString(Charsets.UTF_8), imageBounds.width.toInt(), null)
+            }
+
+            if (height == null) {
+                entryStr = injectSvgDimensions(entryStr ?: entryData.toString(Charsets.UTF_8), null, imageBounds.height.toInt())
+            }
+
+            if (entryStr != null) {
+                // Here we update the svg content but keep the original hash without these values
+                // The goal is to save some time, as it won't matter since the hash is used as an identifier
+                entryData = entryStr.toByteArray(Charsets.UTF_8);
+            }
 
             wireframes.add(MobileSegment.Wireframe.ShapeWireframe(
                     resolveViewId(view),
@@ -70,7 +88,6 @@ internal open class SvgViewMapper<T: View>(
                     border = border
                 ))
 
-            val imageBounds = resolveViewGlobalBounds(subView, pixelDensity)
             val imgWireframe = MobileSegment.Wireframe.ImageWireframe(
                 resolveViewId(subView),
                 imageBounds.x,
@@ -98,5 +115,30 @@ internal open class SvgViewMapper<T: View>(
         }
 
         return wireframes
+    }
+
+    fun injectSvgDimensions(
+        svgData: String,
+        width: Int? = null,
+        height: Int? = null
+    ): String? {
+        val attrs = mutableListOf<String>()
+        width?.let { attrs.add("""width="$it"""") }
+        height?.let { attrs.add("""height="$it"""") }
+
+        if (attrs.isEmpty()) return svgData
+
+        val insertIndex = svgData.indexOf("<svg")
+        if (insertIndex == -1) return svgData
+
+        val tagEndIndex = svgData.indexOf(">", startIndex = insertIndex)
+        if (tagEndIndex == -1) return svgData
+
+        val dimensions = " " + attrs.joinToString(" ")
+
+        val builder = StringBuilder(svgData)
+        builder.insert(tagEndIndex, dimensions)
+
+        return builder.toString()
     }
 }
