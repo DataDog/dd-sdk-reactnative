@@ -10,7 +10,9 @@ import { jsxAttribute, jSXIdentifier, stringLiteral } from '@babel/types';
 import {
     evaluateStaticNode,
     getJSXAttributeData,
-    parseStyleNode
+    parseStyleNode,
+    findIdentifierInScope,
+    getNodeName
 } from '../../../utils/nodeProcessing';
 import {
     rnAttributeNames,
@@ -96,38 +98,97 @@ export function validateAttribute(attrName: string) {
  * adding them to the provided `dimensions` object.
  *
  * @param t - Babel types helper.
+ * @param rootElementPath - The path of the root JSX element containing the SVG.
+ *   Used to locate lexical scopes (component or program) for resolving variable references.
+ *   May be `null` if no traversal context is available.
  * @param attr - JSX attribute node (e.g., width or height).
  * @param attrName - Name of the attribute.
  * @param dimensions - Object to collect dimension key/value pairs.
  * @param nodeName - Tag name (should be 'svg').
- * @returns True if the attribute was handled and should be removed, false otherwise.
+ * @returns An object describing the result of the operation:
+ * - `resolved`: `true` if the attribute was processed (even if unresolved or removed).
+ * - `remove`: `true` if the attribute should be removed from the AST (unresolved variable or fallback case).
  */
 export function handleSvgDimensions(
     t: typeof Babel.types,
+    rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
     attr: Babel.types.JSXAttribute,
     attrName: string,
     dimensions: Record<string, string> = {},
     nodeName: string | null,
     expectedName: string
 ) {
-    if (nodeName !== expectedName) {
-        return false;
-    }
-
     const dimensionAttributes = ['width', 'height'];
 
-    if (dimensionAttributes.includes(attrName)) {
-        const result = getJSXAttributeData(t, attr);
+    // Early exit for irrelevant attributes
+    if (nodeName !== expectedName || !dimensionAttributes.includes(attrName)) {
+        return { resolved: false, remove: false };
+    }
 
-        // IMPROVEMENT: If it's a variable try to find it in the closure
-        if (result.value) {
-            attr.value = t.stringLiteral(result.value.toString());
-            dimensions[attrName] = attr.value.value;
-            return false;
+    const setDimension = (value: string) => {
+        attr.value = t.stringLiteral(value);
+        dimensions[attrName] = value;
+    };
+
+    const val = attr.value;
+
+    // Handle expression container (e.g., width={widthVal})
+    if (t.isJSXExpressionContainer(val) && t.isIdentifier(val.expression)) {
+        const variableName = getNodeName(t, val.expression);
+        let resolvedValue: string | number | null = null;
+
+        // If no root element, fallback immediately
+        if (!rootElementPath) {
+            return { resolved: true, remove: false };
+        }
+
+        // Try to find a variable in the nearest component/function/class scope
+        const componentPath = rootElementPath.findParent(
+            p =>
+                p.isFunctionDeclaration() ||
+                p.isArrowFunctionExpression() ||
+                p.isFunctionExpression() ||
+                p.isClassDeclaration()
+        );
+
+        if (componentPath && variableName) {
+            resolvedValue = findIdentifierInScope(
+                t,
+                componentPath,
+                variableName
+            );
+        }
+
+        // If not found, check the program (global) scope
+        if (resolvedValue === null && variableName) {
+            const programPath = rootElementPath.findParent(p => p.isProgram());
+            if (programPath) {
+                resolvedValue = findIdentifierInScope(
+                    t,
+                    programPath,
+                    variableName
+                );
+            }
+        }
+
+        // Use resolved value or fallback
+        if (resolvedValue != null) {
+            setDimension(resolvedValue.toString());
+            return { resolved: true, remove: false };
+        } else {
+            return { resolved: true, remove: true };
         }
     }
 
-    return true;
+    // Handle static JSX attribute values
+    const result = getJSXAttributeData(t, attr);
+    if (result.value) {
+        setDimension(result.value.toString());
+        return { resolved: true, remove: false };
+    }
+
+    // Default fallback if unrecognized case
+    return { resolved: true, remove: true };
 }
 
 /**
@@ -198,7 +259,7 @@ export function handleSeparateTransformAttributes(
  * @param transformsArray - Accumulator array for transform operations.
  * @returns True if the transform list was extracted successfully.
  */
-export function handleJoinedTranformAttributes(
+export function handleJoinedTransformAttributes(
     t: typeof Babel.types,
     attr: Babel.types.JSXAttribute,
     attrName: string,

@@ -59,7 +59,9 @@ internal class SvgViewRecorder: SessionReplayNodeRecorder {
             if let attrs = view.value(forKey: "attributes") as? [String: String] {
                 let svgId = context.ids.nodeID(view: subView, nodeRecorder: self)
                 let type = attrs["type"]
-                
+                let width = attrs["width"]
+                let height = attrs["height"]
+
                 guard let hash = attrs["hash"] else {
                     return nil
                 }
@@ -71,17 +73,48 @@ internal class SvgViewRecorder: SessionReplayNodeRecorder {
                 let bundle = Bundle(for: SvgViewRecorder.self)
                 if let url = bundle.url(forResource: "assets", withExtension: "bin") {
                     do {
-                        let data = try Data(contentsOf: url)
+                        let fileHandle = try FileHandle(forReadingFrom: url)
+                        defer { try? fileHandle.close() }
+                        
                         guard let svgInfo = svgMap[hash] else {
                             return nil
                         }
                         
-                        let range = svgInfo.offset..<(svgInfo.offset + svgInfo.length)
-                        let svgData = String(data: data.subdata(in: range), encoding: .utf8)
+                        try fileHandle.seek(toOffset: UInt64(svgInfo.offset))
+                        let svgDataChunk = try fileHandle.read(upToCount: svgInfo.length)
+                        
+                        guard let svgDataChunk = svgDataChunk,
+                              var svgData = String(data: svgDataChunk, encoding: .utf8) else {
+                            return nil
+                        }
+                        
+                        var svgAttributes: [String] = []
+                        
+                        if (width == "") {
+                            svgAttributes.append(#"width="\#(Int(subView.bounds.width))""#)
+                        }
+                        
+                        if (height == "") {
+                            svgAttributes.append(#"height="\#(Int(subView.bounds.height))""#)
+                        }
+                        
+                        if !svgAttributes.isEmpty {
+                            // Here we update the svg content but keep the original hash without these values
+                            // The goal is to save some time, as it won't matter since the hash is used as an identifier
+                            var svg = svgData
+                            
+                            if let svgStart = svg.range(of: "<svg"),
+                               let tagEnd = svg.range(of: ">", range: svgStart.upperBound..<svg.endIndex) {
+
+                                let dimensions = " " + svgAttributes.joined(separator: " ")
+                                svg.replaceSubrange(tagEnd, with: dimensions + ">")
+                                svgData = svg
+                            }
+                        }
                         
                         let svgResource = ReactNativeSVGResource(
-                             id: hash,
-                             svgContent: svgData!
+                            id: hash,
+                            svgContent: svgData
                          )
 
                         let contentFrame = CGRect(
