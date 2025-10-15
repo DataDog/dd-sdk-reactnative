@@ -12,7 +12,7 @@ export const rnAttributeNames = [
 ];
 
 export const rnSvgArrayAttributeValues = [
-    'stroke-dasharray', // this attribute is already in the web compliant format, sice the RN to web conversion already occured when this is used
+    'stroke-dasharray', // this attribute is already in the web compliant format, since the RN to web conversion already occured when this is used
     'points',
     'gradientTransform',
     'stdDeviation',
@@ -144,7 +144,6 @@ export const svgAttributesCC = [
     'startOffset',
     'stdDeviation',
     'stitchTiles',
-    // 'strokeDasharray', //
     'surfaceScale',
     'systemLanguage',
     'tableValues',

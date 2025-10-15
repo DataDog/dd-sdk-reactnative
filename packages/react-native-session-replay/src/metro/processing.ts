@@ -14,8 +14,14 @@ type SvgIndexEntry = {
 
 type SvgIndex = Record<string, SvgIndexEntry>;
 
+/**
+ * Merges all individual SVG files into assets.bin and creates an index in assets.json.
+ * This function reads all .svg files from the assets directory and packs them into
+ * a single binary file with an accompanying JSON index for efficient lookup.
+ *
+ * @param assetsDir - Absolute path to the assets directory
+ */
 export function mergeSvgAssets(assetsDir: string) {
-    // const assetsDir = 'node_modules/@datadog/mobile-react-native-session-replay/assets'
     const binName = 'assets.bin';
     const jsonName = 'assets.json';
 

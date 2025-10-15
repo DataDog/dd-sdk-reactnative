@@ -13,7 +13,7 @@ import { debounce } from './utils';
 
 let watching = false;
 
-export function withSessionReplayAggregator(metroConfig: any): any {
+export function withSessionReplayAssetBundler(metroConfig: any): any {
     const originalReporter = metroConfig.reporter;
 
     const assetsDir = path.resolve(__dirname, '../../../assets');

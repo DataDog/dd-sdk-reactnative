@@ -114,7 +114,10 @@ export function convertArrayExpressionToArray(
         }
 
         // Ignore unsupported elements (identifiers, spreads)
-        console.warn('Unsupported array element in SVG prop:', element);
+        console.warn(
+            '[convertArrayExpressionToArray] Unsupported array element in SVG prop:',
+            element
+        );
     }
 
     return data;
