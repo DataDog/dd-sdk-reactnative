@@ -195,13 +195,12 @@ export class RNSvgHandler implements SvgHandler {
                 const rnAttributesHandled = handleRNSpecificAttributes(
                     t,
                     attr,
-                    attr.name.name
+                    attr.name.name,
+                    transformsArray
                 );
 
                 if (rnAttributesHandled) {
-                    if (attr.name.name !== 'style') {
-                        el.attributes.splice(index, 1);
-                    }
+                    el.attributes.splice(index, 1);
                     continue;
                 }
 
@@ -252,7 +251,6 @@ export class RNSvgHandler implements SvgHandler {
                 );
 
                 if (arrayAttributesHandled) {
-                    el.attributes.splice(index, 1);
                     continue;
                 }
 
