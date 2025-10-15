@@ -223,6 +223,7 @@ export class ReactNativeSVG {
 
             return { original: output, optimized };
         } catch (err) {
+            console.warn(err);
             return { original: null, optimized: null };
         }
     }
