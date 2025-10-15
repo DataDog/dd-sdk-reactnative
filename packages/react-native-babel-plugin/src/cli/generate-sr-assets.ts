@@ -120,7 +120,7 @@ function mergeSvgAssets(assetsDir: string) {
  *   or
  *   npx datadog-generate-sr-assets
  */
-function generateSRAssets() {
+function generateSessionReplayAssets() {
     const rootDir = process.cwd();
     const assetsPath = getAssetsPath();
 
@@ -177,7 +177,7 @@ function generateSRAssets() {
                     ],
                     '@babel/preset-react'
                 ],
-                // Don't generate actual output, we just the asset generation
+                // Don't generate actual output, we just want the asset generation
                 code: false,
                 ast: false
             });
@@ -190,17 +190,19 @@ function generateSRAssets() {
     }
 
     if (errorCount > 0) {
-        console.log(`${errorCount} files had errors`);
+        console.warn(`${errorCount} files had errors`);
     }
 
     // Merge all individual SVG files into assets.bin and assets.json
     mergeSvgAssets(assetsPath);
 
     if (errorCount > 0) {
-        console.log('Some files had errors but asset generation completed.');
+        console.log(
+            'Asset generation finished, but some files encountered errors.'
+        );
     }
 
-    console.log('Your assets are now ready to be used by session replay.');
+    console.log('Your assets are now ready to be used by Session Replay.');
 }
 
-generateSRAssets();
+generateSessionReplayAssets();

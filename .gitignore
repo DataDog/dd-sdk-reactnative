@@ -101,5 +101,9 @@ example/android/app/src/main/assets/index.android*
 # Credentials for example app
 datadog-ci.json
 
+
+# Babel Plugin assets
+packages/react-native-babel-plugin/assets/*
+
 # Session Replay assets
 packages/react-native-session-replay/assets/*
