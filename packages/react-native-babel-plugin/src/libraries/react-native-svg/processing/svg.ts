@@ -21,32 +21,29 @@ export function convertAttributeArrayValue(
     t: typeof Babel.types,
     expression: Babel.types.ArrayExpression,
     attrName: string
-) {
+): string | null {
     const value = convertArrayExpressionToArray(t, expression, []);
-
-    if (Array.isArray(value)) {
-        switch (attrName) {
-            case 'gradientTransform':
-            case 'matrix':
-                return `matrix(${value.join(' ')})`;
-
-            case 'values':
-                return value.join(';');
-
-            case 'points': {
-                const data = value
-                    .map(v => (Array.isArray(v) ? v.join(',') : v))
-                    .join(' ');
-
-                return data;
-            }
-
-            default:
-                return value.join(' ');
-        }
+    if (!Array.isArray(value)) {
+        return null;
     }
 
-    return null;
+    switch (attrName) {
+        case 'gradientTransform':
+        case 'matrix':
+            return `matrix(${value.join(' ')})`;
+
+        case 'values':
+            return value.join(';');
+
+        case 'points': {
+            return value
+                .map(v => (Array.isArray(v) ? v.join(',') : v))
+                .join(' ');
+        }
+
+        default:
+            return value.join(' ');
+    }
 }
 
 /**

@@ -31,76 +31,64 @@ type SvgIndex = Record<string, SvgIndexEntry>;
  * @param assetsDir - Absolute path to the assets directory
  */
 function mergeSvgAssets(assetsDir: string) {
-    const binName = 'assets.bin';
-    const jsonName = 'assets.json';
+    try {
+        const binName = 'assets.bin';
+        const jsonName = 'assets.json';
 
-    const binPath = path.resolve(assetsDir, binName);
-    const jsonPath = path.resolve(assetsDir, jsonName);
+        const binPath = path.resolve(assetsDir, binName);
+        const jsonPath = path.resolve(assetsDir, jsonName);
+        const index: SvgIndex = {};
 
-    let index: SvgIndex = {};
-    let offset = 0;
+        let offset = 0;
 
-    if (!fs.existsSync(assetsDir)) {
-        fs.mkdirSync(assetsDir, { recursive: true });
-    }
+        // Read SVG files from directory
+        let files: string[] = [];
+        files = fs
+            .readdirSync(assetsDir)
+            .filter(f => f.endsWith('.svg'))
+            .sort();
 
-    if (fs.existsSync(binPath) && fs.existsSync(jsonPath)) {
-        try {
-            index = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as SvgIndex;
-            offset = fs.statSync(binPath).size;
-        } catch (err) {
-            index = {};
-            offset = 0;
+        let added = 0;
 
-            if (fs.existsSync(binPath)) {
-                fs.unlinkSync(binPath);
+        for (const f of files) {
+            const id = path.basename(f, path.extname(f));
+            if (index[id]) {
+                continue;
             }
-            if (fs.existsSync(jsonPath)) {
-                fs.unlinkSync(jsonPath);
+
+            try {
+                const svg = fs.readFileSync(path.join(assetsDir, f), 'utf8');
+                const buf = Buffer.from(svg, 'utf8');
+                const length = buf.length;
+
+                fs.appendFileSync(binPath, buf);
+                index[id] = { offset, length };
+                offset += length;
+                added++;
+            } catch (err) {
+                console.warn(`[mergeSvgAssets] Failed to process ${f}:`, err);
             }
         }
-    } else {
-        if (fs.existsSync(binPath)) {
-            fs.unlinkSync(binPath);
-        }
-        if (fs.existsSync(jsonPath)) {
-            fs.unlinkSync(jsonPath);
-        }
-    }
 
-    const files = fs.readdirSync(assetsDir).sort();
-    let added = 0;
-
-    for (const f of files) {
-        if (f === binName || f === jsonName) {
-            continue;
-        }
-
-        const id = path.basename(f, path.extname(f));
-        if (index[id]) {
-            continue;
-        }
-
+        // Write final index
         try {
-            const svg = fs.readFileSync(path.join(assetsDir, f), 'utf8');
-            const buf = Buffer.from(svg, 'utf8');
-            const length = buf.length;
-
-            fs.appendFileSync(binPath, buf);
-            index[id] = { offset, length };
-            offset += length;
-            added++;
+            fs.writeFileSync(jsonPath, JSON.stringify(index, null, 2));
         } catch (err) {
-            console.warn(`[mergeSvgAssets] Failed to process ${f}:`, err);
+            console.error('[mergeSvgAssets] Failed to write assets index', err);
+            return;
         }
-    }
 
-    fs.writeFileSync(jsonPath, JSON.stringify(index, null, 2));
-    if (added > 0) {
-        console.log(
-            `\nPacked ${added} new Session Replay assets -> total: ${
-                Object.keys(index).length
-            }`
+        if (added > 0) {
+            console.log(
+                `\nPacked ${added} new Session Replay assets -> total: ${
+                    Object.keys(index).length
+                }`
+            );
+        }
+    } catch (err) {
+        console.error(
+            '[mergeSvgAssets] Unexpected error during asset merge',
+            err
         );
     }
 }

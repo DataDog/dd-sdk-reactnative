@@ -266,31 +266,33 @@ export function handleJoinedTransformAttributes(
     transformsArray: { name: string; value: string | number }[] = []
 ) {
     if (
-        attrName === 'transform' &&
-        t.isJSXExpressionContainer(attr.value) &&
-        t.isArrayExpression(attr.value.expression)
+        attrName !== 'transform' ||
+        !t.isJSXExpressionContainer(attr.value) ||
+        !t.isArrayExpression(attr.value.expression)
     ) {
-        const transformList = evaluateStaticNode(t, attr.value.expression);
+        return false;
+    }
 
-        if (Array.isArray(transformList)) {
-            for (const entry of transformList) {
-                if (
-                    entry &&
-                    typeof entry === 'object' &&
-                    !Array.isArray(entry)
-                ) {
-                    for (const key of Object.keys(entry)) {
-                        transformsArray.push({
-                            name: key,
-                            value: entry[key]
-                        });
-                    }
-                }
-            }
-            return true;
+    const transformList = evaluateStaticNode(t, attr.value.expression);
+
+    if (!Array.isArray(transformList)) {
+        return false;
+    }
+
+    for (const entry of transformList) {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+            continue;
+        }
+
+        for (const key of Object.keys(entry)) {
+            transformsArray.push({
+                name: key,
+                value: entry[key]
+            });
         }
     }
-    return false;
+
+    return true;
 }
 
 /**
