@@ -4,23 +4,27 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export const rnAttributeNames = [
+export const svgSupportedNames = ['Svg', 'SvgUri'];
+
+export const xmlNamespace = ['xmlns', 'http://www.w3.org/2000/svg'];
+
+export const rnAttributeNames = new Set([
     '__self',
     'accessibilityLabel',
     'accessibilityRole',
     'style'
-];
+]);
 
-export const rnSvgArrayAttributeValues = [
+export const rnSvgArrayAttributeValues = new Set([
     'stroke-dasharray', // this attribute is already in the web compliant format, since the RN to web conversion already occured when this is used
     'points',
     'gradientTransform',
     'stdDeviation',
     'values'
-];
+]);
 
 // All these values are deprecated, but still allowed in react-native-svg
-export const rnSvgTransformAttributeValues = [
+export const rnSvgTransformAttributeValues = new Set([
     'translateX',
     'translateY',
     'scaleX',
@@ -29,79 +33,75 @@ export const rnSvgTransformAttributeValues = [
     'skewX',
     'skewY',
     'matrix'
-];
+]);
 
-export const svgSupportedNames = ['Svg', 'SvgUri'];
+export const svgElements = new Set([
+    'a',
+    'animate',
+    'animateMotion',
+    'animateTransform',
+    'circle',
+    'clipPath',
+    'defs',
+    'desc',
+    'ellipse',
+    'feBlend',
+    'feColorMatrix',
+    'feComponentTransfer',
+    'feComposite',
+    'feConvolveMatrix',
+    'feDiffuseLighting',
+    'feDisplacementMap',
+    'feDistantLight',
+    'feDropShadow',
+    'feFlood',
+    'feFuncA',
+    'feFuncB',
+    'feFuncG',
+    'feFuncR',
+    'feGaussianBlur',
+    'feImage',
+    'feMerge',
+    'feMergeNode',
+    'feMorphology',
+    'feOffset',
+    'fePointLight',
+    'feSpecularLighting',
+    'feSpotLight',
+    'feTile',
+    'feTurbulence',
+    'filter',
+    'foreignObject',
+    'g',
+    'image',
+    'line',
+    'linearGradient',
+    'marker',
+    'mask',
+    'metadata',
+    'mpath',
+    'path',
+    'pattern',
+    'polygon',
+    'polyline',
+    'radialGradient',
+    'rect',
+    'script',
+    'set',
+    'stop',
+    'style',
+    'svg',
+    'switch',
+    'symbol',
+    'text',
+    'textPath',
+    'title',
+    'tspan',
+    'use',
+    'view'
+]);
 
-export const xmlNamespace = ['xmlns', 'http://www.w3.org/2000/svg'];
-
-export const svgElements = [
-    '<a>',
-    '<animate>',
-    '<animateMotion>',
-    '<animateTransform>',
-    '<circle>',
-    '<clipPath>',
-    '<defs>',
-    '<desc>',
-    '<ellipse>',
-    '<feBlend>',
-    '<feColorMatrix>',
-    '<feComponentTransfer>',
-    '<feComposite>',
-    '<feConvolveMatrix>',
-    '<feDiffuseLighting>',
-    '<feDisplacementMap>',
-    '<feDistantLight>',
-    '<feDropShadow>',
-    '<feFlood>',
-    '<feFuncA>',
-    '<feFuncB>',
-    '<feFuncG>',
-    '<feFuncR>',
-    '<feGaussianBlur>',
-    '<feImage>',
-    '<feMerge>',
-    '<feMergeNode>',
-    '<feMorphology>',
-    '<feOffset>',
-    '<fePointLight>',
-    '<feSpecularLighting>',
-    '<feSpotLight>',
-    '<feTile>',
-    '<feTurbulence>',
-    '<filter>',
-    '<foreignObject>',
-    '<g>',
-    '<image>',
-    '<line>',
-    '<linearGradient>',
-    '<marker>',
-    '<mask>',
-    '<metadata>',
-    '<mpath>',
-    '<path>',
-    '<pattern>',
-    '<polygon>',
-    '<polyline>',
-    '<radialGradient>',
-    '<rect>',
-    '<script>',
-    '<set>',
-    '<stop>',
-    '<style>',
-    '<svg>',
-    '<switch>',
-    '<symbol>',
-    '<text>',
-    '<textPath>',
-    '<title>',
-    '<tspan>',
-    '<use>',
-    '<view>'
-];
-
-export const svgAttributesCC = [
+export const svgAttributesCC = new Set([
     'attributeName',
     'attributeType',
     'baseFrequency',
@@ -151,9 +151,9 @@ export const svgAttributesCC = [
     'viewBox',
     'xChannelSelector',
     'yChannelSelector'
-];
+]);
 
-export const svgAttributesKC = [
+export const svgAttributesKC = new Set([
     'accumulate',
     'additive',
     'alignment-baseline',
@@ -288,4 +288,4 @@ export const svgAttributesKC = [
     'y1',
     'y2',
     'z'
-];
+]);

@@ -43,7 +43,7 @@ export function handleRNSpecificAttributes(
     attr: Babel.types.JSXAttribute,
     attrName: string
 ) {
-    if (rnAttributeNames.includes(attrName)) {
+    if (rnAttributeNames.has(attrName)) {
         if (attrName === 'style') {
             const styleObj = parseStyleNode(t, attr);
             if (styleObj) {
@@ -76,16 +76,16 @@ export function handleRNSpecificAttributes(
 export function validateAttribute(attrName: string) {
     const result = { attrName, isInvalidAttribute: false };
 
-    if (rnSvgTransformAttributeValues.includes(attrName)) {
+    if (rnSvgTransformAttributeValues.has(attrName)) {
         return result;
     }
 
     // This means that the attribute name is already in the right format
-    if (!svgAttributesCC.includes(attrName)) {
+    if (!svgAttributesCC.has(attrName)) {
         result.attrName = kebabCase(attrName);
 
         // This means that the attribute name is not a valid SVG attribute and should be ignored
-        if (!svgAttributesKC.includes(result.attrName)) {
+        if (!svgAttributesKC.has(result.attrName)) {
             result.isInvalidAttribute = true;
         }
     }
@@ -206,7 +206,7 @@ export function handleArrayAttributes(
     attrName: string
 ) {
     if (
-        rnSvgArrayAttributeValues.includes(attrName) &&
+        rnSvgArrayAttributeValues.has(attrName) &&
         t.isJSXExpressionContainer(attr.value) &&
         t.isArrayExpression(attr.value.expression)
     ) {
@@ -240,7 +240,7 @@ export function handleSeparateTransformAttributes(
     attrName: string,
     transformsArray: { name: string; value: string | number }[] = []
 ) {
-    if (rnSvgTransformAttributeValues.includes(attrName)) {
+    if (rnSvgTransformAttributeValues.has(attrName)) {
         convertAttributeTransformArray(t, transformsArray, attr);
         return true;
     }
