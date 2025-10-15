@@ -32,21 +32,46 @@ import {
 /**
  * Handles React Native–specific attributes that are not directly supported in web SVG.
  * Currently processes the `style` attribute by converting it to a flat inline CSS string.
+ * Extracts transform properties from style objects and adds them to the transforms array.
  *
  * @param t - Babel types helper.
  * @param attr - JSX attribute node to process.
  * @param attrName - Name of the attribute (e.g., 'style').
+ * @param transformsArray - Optional array to collect transform operations from style objects.
  * @returns True if the attribute was handled (and should be removed), false otherwise.
  */
 export function handleRNSpecificAttributes(
     t: typeof Babel.types,
     attr: Babel.types.JSXAttribute,
-    attrName: string
+    attrName: string,
+    transformsArray: { name: string; value: string | number }[] = []
 ) {
     if (rnAttributeNames.has(attrName)) {
         if (attrName === 'style') {
             const styleObj = parseStyleNode(t, attr);
             if (styleObj) {
+                // Extract transform properties and add to transforms array
+                const transformProps = [
+                    'translateX',
+                    'translateY',
+                    'scaleX',
+                    'scaleY',
+                    'rotate',
+                    'skewX',
+                    'skewY'
+                ];
+
+                for (const prop of transformProps) {
+                    if (styleObj[prop] != null) {
+                        transformsArray.push({
+                            name: prop,
+                            value: styleObj[prop]
+                        });
+                        delete styleObj[prop];
+                    }
+                }
+
+                // Convert remaining (non-transform) properties to CSS
                 const cssObj = convertStyleObjToCssObj(styleObj);
                 const styleString = Object.entries(cssObj)
                     .map(([k, v]) => `${k}:${v}`)
@@ -54,8 +79,11 @@ export function handleRNSpecificAttributes(
 
                 if (styleString) {
                     attr.value = t.stringLiteral(styleString);
-                    return true;
+                    return false; // Keep the style attribute
                 }
+
+                // If no CSS properties remain, the style should be removed
+                return true;
             }
 
             return true;
