@@ -104,7 +104,7 @@ export function mergeSvgAssets(assetsDir: string) {
 
         fs.writeFileSync(jsonPath, JSON.stringify(index, null, 2));
         if (added > 0) {
-            console.log(
+            console.info(
                 `[SessionReplayAssetBundler] Packed ${added} new Session Replay SVG assets → total: ${
                     Object.keys(index).length
                 }`

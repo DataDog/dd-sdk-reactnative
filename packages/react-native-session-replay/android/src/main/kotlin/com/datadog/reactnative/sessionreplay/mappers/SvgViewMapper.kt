@@ -29,6 +29,7 @@ internal open class SvgViewMapper<T: View>(
 ) {
     private val queuedResourceIds = Collections.synchronizedSet(HashSet<String>())
 
+    @Suppress("LongMethod", "ComplexMethod")
     override fun map(
         view: T,
         mappingContext: MappingContext,
