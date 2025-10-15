@@ -218,42 +218,8 @@ export function convertStyleObjToCssObj(
         css['column-gap'] = addPx(style.columnGap);
     }
 
-    // Transforms
-    if (Array.isArray(style.transform)) {
-        const parts: string[] = [];
-        for (const t of style.transform) {
-            const k = Object.keys(t)[0] as keyof typeof t;
-            const v: any = (t as any)[k];
-            if (k === 'translateX') {
-                parts.push(`translateX(${addPx(v)})`);
-            } else if (k === 'translateY') {
-                parts.push(`translateY(${addPx(v)})`);
-            } else if (k === 'translate') {
-                const [x = 0, y = 0] = v || [];
-                parts.push(`translate(${addPx(x)} ${addPx(y)})`);
-            } else if (k === 'scale') {
-                parts.push(`scale(${v})`);
-            } else if (k === 'scaleX') {
-                parts.push(`scaleX(${v})`);
-            } else if (k === 'scaleY') {
-                parts.push(`scaleY(${v})`);
-            } else if (k === 'rotate') {
-                parts.push(`rotate(${v})`);
-            } else if (k === 'skewX') {
-                parts.push(`skewX(${v})`);
-            } else if (k === 'skewY') {
-                parts.push(`skewY(${v})`);
-            } else if (k === 'matrix') {
-                parts.push(`matrix(${v.join(',')})`);
-            }
-        }
-        if (parts.length) {
-            css.transform = parts.join(' ');
-        }
-    }
-    if (style.transformMatrix) {
-        css.transform = `matrix(${style.transformMatrix.join(',')})`;
-    }
+    // Transform properties (translateX, scaleX, rotate, etc.) are NOT handled here as they are igonore if set on a style attribute
+    // They should be extracted separately and set as SVG transform attributes,
 
     // Shadows / elevation → box-shadow
     if (
@@ -290,6 +256,43 @@ export function convertStyleObjToCssObj(
     }
     if (style.aspectRatio != null) {
         css['aspect-ratio'] = String(style.aspectRatio);
+    }
+
+    // SVG-specific properties
+    if (style.fill) {
+        css.fill = style.fill;
+    }
+    if (style.fillOpacity != null) {
+        css['fill-opacity'] = style.fillOpacity;
+    }
+    if (style.fillRule) {
+        css['fill-rule'] = style.fillRule;
+    }
+    if (style.stroke) {
+        css.stroke = style.stroke;
+    }
+    if (style.strokeWidth != null) {
+        css['stroke-width'] = style.strokeWidth;
+    }
+    if (style.strokeOpacity != null) {
+        css['stroke-opacity'] = style.strokeOpacity;
+    }
+    if (style.strokeLinecap) {
+        css['stroke-linecap'] = style.strokeLinecap;
+    }
+    if (style.strokeLinejoin) {
+        css['stroke-linejoin'] = style.strokeLinejoin;
+    }
+    if (style.strokeDasharray) {
+        css['stroke-dasharray'] = Array.isArray(style.strokeDasharray)
+            ? style.strokeDasharray.join(',')
+            : style.strokeDasharray;
+    }
+    if (style.strokeDashoffset != null) {
+        css['stroke-dashoffset'] = style.strokeDashoffset;
+    }
+    if (style.strokeMiterlimit != null) {
+        css['stroke-miterlimit'] = style.strokeMiterlimit;
     }
 
     return css;
