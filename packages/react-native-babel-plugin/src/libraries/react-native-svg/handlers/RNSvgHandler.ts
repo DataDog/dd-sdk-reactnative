@@ -9,7 +9,7 @@ import generate from '@babel/generator';
 import { jsxAttribute, jSXIdentifier, stringLiteral } from '@babel/types';
 
 import { getNodeName } from '../../../utils';
-import { svgSupportedNames, xmlNamespace } from '../constants';
+import { svgElements, svgSupportedNames, xmlNamespace } from '../constants';
 import {
     buildTransformStringAttribute,
     handleArrayAttributes,
@@ -105,6 +105,11 @@ export class RNSvgHandler implements SvgHandler {
         // Fix casing for openingElement
         if (isJSXIdentifierOpen) {
             openingNode.name = convertAttributeCasing(openingNode.name);
+            if (!svgElements.has(openingNode.name)) {
+                throw new Error(
+                    `RNSvgHandler[transformElement]: Failed to transform element: "${openingNode.name}" is not supported`
+                );
+            }
         }
 
         const closingNode = el.closingElement?.name;
@@ -113,6 +118,12 @@ export class RNSvgHandler implements SvgHandler {
         // Fix casing for closingElement
         if (isJSXIdentifierClose) {
             closingNode.name = convertAttributeCasing(closingNode.name);
+
+            if (!svgElements.has(closingNode.name)) {
+                throw new Error(
+                    `RNSvgHandler[transformElement]: Failed to transform element: "${closingNode.name}" is not supported`
+                );
+            }
         }
 
         this.processAttributes(t, rootElementPath, el, dimensions);
