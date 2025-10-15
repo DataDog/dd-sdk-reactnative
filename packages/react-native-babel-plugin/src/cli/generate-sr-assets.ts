@@ -205,4 +205,5 @@ function generateSessionReplayAssets() {
     console.log('Your assets are now ready to be used by Session Replay.');
 }
 
+// TODO: Add flag support [e.g., --verbose] (RUM-12186)
 generateSessionReplayAssets();

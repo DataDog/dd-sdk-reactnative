@@ -62,7 +62,7 @@ export class ReactNativeSVG {
      * and config files.
      */
     buildSvgMap() {
-        // IMPROVEMENT: Support aliased paths
+        // TODO: Support aliased paths (RUM-12185)
         const files = glob.sync(
             ['**/*.{js,jsx,ts,tsx}', '**/*.{js,jsx,ts,tsx}'],
             {
