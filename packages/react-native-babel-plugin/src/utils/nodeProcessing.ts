@@ -533,7 +533,6 @@ export function parseStyleNode(
         }
 
         // Any other type at top-level is not a valid style object
-        return null;
     }
 
     return null;

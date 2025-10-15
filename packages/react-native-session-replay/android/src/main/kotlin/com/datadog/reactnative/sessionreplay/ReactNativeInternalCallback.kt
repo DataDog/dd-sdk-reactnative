@@ -7,6 +7,7 @@
 package com.datadog.reactnative.sessionreplay
 
 import android.app.Activity
+import android.util.Log
 import com.datadog.android.sessionreplay.SessionReplayInternalCallback
 import com.datadog.android.sessionreplay.SessionReplayInternalResourceQueue
 import com.facebook.react.bridge.ReactContext
@@ -26,6 +27,7 @@ class ReactNativeInternalCallback(
     companion object {
         private const val ASSETS_JSON = "assets.json"
         private const val ASSETS_BIN = "assets.bin"
+        private const val TAG = "SessionReplayInternalCallback"
     }
 
     private val jsonObject: JSONObject? = loadAssetsJson()
@@ -45,8 +47,10 @@ class ReactNativeInternalCallback(
                 .use { it.readText() }
             JSONObject(jsonText)
         } catch (e: IOException) {
+            Log.w(TAG, "Failed to read $ASSETS_JSON from assets: ${e.message}")
             null
         } catch (e: JSONException) {
+            Log.w(TAG, "Invalid JSON in $ASSETS_JSON: ${e.message}")
             null
         }
     }
@@ -84,6 +88,7 @@ class ReactNativeInternalCallback(
         return try {
             readAssetBytes(reactContext, offset, length)
         } catch (e: Exception) {
+            Log.w(TAG, "Failed to read entry from binary: ${e.message}")
             null
         }
     }

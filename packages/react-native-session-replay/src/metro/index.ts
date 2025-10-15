@@ -13,6 +13,10 @@ import { debounce } from './utils';
 
 let watching = false;
 
+const MERGE_DEBOUNCE_MS = 300;
+const WATCH_STABILITY_THRESHOLD_MS = 200;
+const WATCH_POLL_INTERVAL_MS = 50;
+
 export function withSessionReplayAssetBundler(metroConfig: any): any {
     const originalReporter = metroConfig.reporter;
 
@@ -28,7 +32,7 @@ export function withSessionReplayAssetBundler(metroConfig: any): any {
         } catch (error) {
             console.warn('[SessionReplayAggregator] merge failed:', error);
         }
-    }, 300);
+    }, MERGE_DEBOUNCE_MS);
 
     // Prevent potential multiple watchers if metro loads the config multiple times
     if (!watching) {
@@ -40,9 +44,9 @@ export function withSessionReplayAssetBundler(metroConfig: any): any {
                 depth: 0,
                 awaitWriteFinish: {
                     // Wait 200ms after last change
-                    stabilityThreshold: 200,
+                    stabilityThreshold: WATCH_STABILITY_THRESHOLD_MS,
                     // Check every 50ms
-                    pollInterval: 50
+                    pollInterval: WATCH_POLL_INTERVAL_MS
                 }
             })
             .on('add', file => {

@@ -69,20 +69,6 @@ export function getAssetsPath() {
 }
 
 /**
- * Ensures that the given assets directory exists.
- * If it does not exist, creates it using `fs.mkdirSync`.
- *
- * @param assetsPath - Absolute path to the assets directory.
- */
-export function ensureAssetsDir(assetsPath: string) {
-    try {
-        fs.accessSync(assetsPath, fs.constants.F_OK);
-    } catch (error) {
-        fs.mkdirSync(assetsPath);
-    }
-}
-
-/**
  * Deletes all files (non-recursively) in the provided assets directory.
  * Only removes files, leaving subdirectories untouched.
  *
