@@ -26,12 +26,14 @@ export type DdRumResourceTracingAttributes =
           rulePsr: number;
           propagatorTypes: PropagatorType[];
           rumSessionId?: string;
+          baggageHeaders?: Set<string>;
       }
     | {
           tracingStrategy: 'DISCARD';
           traceId?: void;
           spanId?: void;
           samplingPriorityHeader: '0';
+          baggageHeaders?: Set<string>;
       };
 
 const DISCARDED_TRACE_ATTRIBUTES: DdRumResourceTracingAttributes = {

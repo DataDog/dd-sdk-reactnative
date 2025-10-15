@@ -6,7 +6,10 @@
 
 import { Timer } from '../../../../../utils/Timer';
 import { getCachedSessionId } from '../../../../sessionId/sessionIdHelper';
-import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
+import {
+    BAGGAGE_HEADER_KEY,
+    getTracingHeadersFromAttributes
+} from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
 import {
@@ -224,6 +227,14 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                 this._datadog_xhr.graphql.variables = value;
                 return;
             }
+        }
+
+        if (header.toLowerCase() === BAGGAGE_HEADER_KEY) {
+            if (!this._datadog_xhr.tracingAttributes.baggageHeaders) {
+                this._datadog_xhr.tracingAttributes.baggageHeaders = new Set<string>();
+            }
+
+            this._datadog_xhr.tracingAttributes.baggageHeaders?.add(value);
         }
 
         // eslint-disable-next-line prefer-rest-params

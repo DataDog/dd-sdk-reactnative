@@ -839,6 +839,55 @@ describe('XHRProxy', () => {
             // THEN
             expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
         });
+
+        it('rum session id does not overwrite existing baggage headers', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId('TEST-SESSION-ID');
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader('baggage', 'existing.key=existing-value');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toContain(
+                'existing.key=existing-value'
+            );
+
+            const values = xhr.requestHeaders[BAGGAGE_HEADER_KEY].split(
+                ', '
+            ).sort();
+
+            expect(values[0]).toBe('existing.key=existing-value');
+            expect(values[1]).toBe('session.id=TEST-SESSION-ID');
+        });
     });
 
     describe('DdRum.startResource calls', () => {
