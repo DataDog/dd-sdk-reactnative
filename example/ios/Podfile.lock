@@ -1,34 +1,34 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (2.30.0):
-    - DatadogInternal (= 2.30.0)
-  - DatadogCrashReporting (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogCore (2.30.2):
+    - DatadogInternal (= 2.30.2)
+  - DatadogCrashReporting (2.30.2):
+    - DatadogInternal (= 2.30.2)
     - PLCrashReporter (~> 1.12.0)
-  - DatadogInternal (2.30.0)
-  - DatadogLogs (2.30.0):
-    - DatadogInternal (= 2.30.0)
-  - DatadogRUM (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogInternal (2.30.2)
+  - DatadogLogs (2.30.2):
+    - DatadogInternal (= 2.30.2)
+  - DatadogRUM (2.30.2):
+    - DatadogInternal (= 2.30.2)
   - DatadogSDKReactNative (2.12.3):
-    - DatadogCore (= 2.30.0)
-    - DatadogCrashReporting (= 2.30.0)
-    - DatadogLogs (= 2.30.0)
-    - DatadogRUM (= 2.30.0)
-    - DatadogTrace (= 2.30.0)
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogCore (= 2.30.2)
+    - DatadogCrashReporting (= 2.30.2)
+    - DatadogLogs (= 2.30.2)
+    - DatadogRUM (= 2.30.2)
+    - DatadogTrace (= 2.30.2)
+    - DatadogWebViewTracking (= 2.30.2)
     - React-Core
   - DatadogSDKReactNative/Tests (2.12.3):
-    - DatadogCore (= 2.30.0)
-    - DatadogCrashReporting (= 2.30.0)
-    - DatadogLogs (= 2.30.0)
-    - DatadogRUM (= 2.30.0)
-    - DatadogTrace (= 2.30.0)
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogCore (= 2.30.2)
+    - DatadogCrashReporting (= 2.30.2)
+    - DatadogLogs (= 2.30.2)
+    - DatadogRUM (= 2.30.2)
+    - DatadogTrace (= 2.30.2)
+    - DatadogWebViewTracking (= 2.30.2)
     - React-Core
   - DatadogSDKReactNativeSessionReplay (2.12.3):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 2.30.0)
+    - DatadogSessionReplay (= 2.30.2)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -51,7 +51,7 @@ PODS:
     - Yoga
   - DatadogSDKReactNativeSessionReplay/Tests (2.12.3):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 2.30.0)
+    - DatadogSessionReplay (= 2.30.2)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -74,24 +74,24 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - DatadogSDKReactNativeWebView (2.12.3):
-    - DatadogInternal (= 2.30.0)
+    - DatadogInternal (= 2.30.2)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogWebViewTracking (= 2.30.2)
     - React-Core
   - DatadogSDKReactNativeWebView/Tests (2.12.3):
-    - DatadogInternal (= 2.30.0)
+    - DatadogInternal (= 2.30.2)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogWebViewTracking (= 2.30.2)
     - React-Core
     - react-native-webview
     - React-RCTText
-  - DatadogSessionReplay (2.30.0):
-    - DatadogInternal (= 2.30.0)
-  - DatadogTrace (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogSessionReplay (2.30.2):
+    - DatadogInternal (= 2.30.2)
+  - DatadogTrace (2.30.2):
+    - DatadogInternal (= 2.30.2)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogWebViewTracking (2.30.2):
+    - DatadogInternal (= 2.30.2)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)

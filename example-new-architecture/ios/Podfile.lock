@@ -1,22 +1,22 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (2.30.0):
-    - DatadogInternal (= 2.30.0)
-  - DatadogCrashReporting (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogCore (2.30.2):
+    - DatadogInternal (= 2.30.2)
+  - DatadogCrashReporting (2.30.2):
+    - DatadogInternal (= 2.30.2)
     - PLCrashReporter (~> 1.12.0)
-  - DatadogInternal (2.30.0)
-  - DatadogLogs (2.30.0):
-    - DatadogInternal (= 2.30.0)
-  - DatadogRUM (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogInternal (2.30.2)
+  - DatadogLogs (2.30.2):
+    - DatadogInternal (= 2.30.2)
+  - DatadogRUM (2.30.2):
+    - DatadogInternal (= 2.30.2)
   - DatadogSDKReactNative (2.12.3):
-    - DatadogCore (= 2.30.0)
-    - DatadogCrashReporting (= 2.30.0)
-    - DatadogLogs (= 2.30.0)
-    - DatadogRUM (= 2.30.0)
-    - DatadogTrace (= 2.30.0)
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogCore (= 2.30.2)
+    - DatadogCrashReporting (= 2.30.2)
+    - DatadogLogs (= 2.30.2)
+    - DatadogRUM (= 2.30.2)
+    - DatadogTrace (= 2.30.2)
+    - DatadogWebViewTracking (= 2.30.2)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -38,12 +38,12 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - DatadogSDKReactNative/Tests (2.12.3):
-    - DatadogCore (= 2.30.0)
-    - DatadogCrashReporting (= 2.30.0)
-    - DatadogLogs (= 2.30.0)
-    - DatadogRUM (= 2.30.0)
-    - DatadogTrace (= 2.30.0)
-    - DatadogWebViewTracking (= 2.30.0)
+    - DatadogCore (= 2.30.2)
+    - DatadogCrashReporting (= 2.30.2)
+    - DatadogLogs (= 2.30.2)
+    - DatadogRUM (= 2.30.2)
+    - DatadogTrace (= 2.30.2)
+    - DatadogWebViewTracking (= 2.30.2)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -64,11 +64,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogTrace (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogTrace (2.30.2):
+    - DatadogInternal (= 2.30.2)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (2.30.0):
-    - DatadogInternal (= 2.30.0)
+  - DatadogWebViewTracking (2.30.2):
+    - DatadogInternal (= 2.30.2)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
