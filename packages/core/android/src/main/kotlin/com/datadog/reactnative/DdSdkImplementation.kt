@@ -351,7 +351,6 @@ class DdSdkImplementation(
         }
     }
 
-
     /**
      * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
      * @param frameTimeSeconds: the frame time to normalize. In seconds.
