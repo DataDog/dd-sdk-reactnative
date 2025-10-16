@@ -1181,6 +1181,114 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(rumMonitorMock.receivedLongTasks.first?.value, 0.25)
         XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.25)
     }
+    
+    func testFrameTimeNormalizationFromCallback() {
+        let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
+        let rumMonitorMock = MockRUMMonitor()
+
+        DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: mockRefreshRateMonitor,
+            RUMMonitorProvider: { rumMonitorMock },
+            RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
+        ).initialize(
+            configuration: .mockAny(
+                longTaskThresholdMs: 200,
+                vitalsUpdateFrequency: "average"
+            ),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+        
+        XCTAssertTrue(mockRefreshRateMonitor.isStarted)
+        
+        // 10 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.1)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.1)
+        
+        // 30 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.03)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.03)
+        
+        // 45 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.02)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds], 0.02)
+        
+        // 60 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.016)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
+        
+        // 90 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.011)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
+        
+        // 120 fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.008)
+        sharedQueue.sync {}
+        XCTAssertEqual(rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016, accuracy: 0.001)
+    }
+    
+    func testFrameTimeNormalizationUtilityFunction() {
+
+        // 10 fps, 60fps capable device, 60 fps budget -> Normalized to 10fps
+        var frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.1, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        XCTAssertEqual(frameTimeSeconds, 0.1, accuracy: 0.01)
+        
+        // 30 fps, 60fps capable device, 60 fps budget -> Normalized to 30fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.03, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        XCTAssertEqual(frameTimeSeconds, 0.03, accuracy: 0.01)
+        
+        // 60 fps, 60fps capable device, 60 fps budget-> Normalized to 60fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 60.0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.01)
+        
+        // 60 fps, 120fps capable device, 60 fps budget -> Normalized to 30fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        XCTAssertEqual(frameTimeSeconds, 0.03, accuracy: 0.01)
+        
+        // 120 fps, 120fps capable device, 60 fps budget -> Normalized to 60fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0083, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+        
+        // 90 fps, 120fps capable device, 60 fps budget -> Normalized to 45fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0111, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        XCTAssertEqual(frameTimeSeconds, 0.0222, accuracy: 0.001)
+        
+        // 100 fps, 120fps capable device, 60 fps budget -> Normalized to 50fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.01, fpsBudget: 60.0, deviceDisplayFps: 120.0)
+        XCTAssertEqual(frameTimeSeconds, 0.02, accuracy: 0.001)
+        
+        // 120 fps, 120fps capable device, 120 fps budget -> Normalized to 120fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0083, fpsBudget: 120.0, deviceDisplayFps: 120.0)
+        XCTAssertEqual(frameTimeSeconds, 0.0083, accuracy: 0.001)
+        
+        // 80 fps, 160fps capable device, 60 fps budget -> Normalized to 30fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.0125, fpsBudget: 60.0, deviceDisplayFps: 160.0)
+        XCTAssertEqual(frameTimeSeconds, 0.033, accuracy: 0.001)
+        
+        // 160 fps, 160fps capable device, 60 fps budget -> Normalized to 60fps
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.00625, fpsBudget: 60.0, deviceDisplayFps: 160.0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+        
+        // Edge cases
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0, fpsBudget: 0, deviceDisplayFps: 0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+        
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 0, deviceDisplayFps: 0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+        
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 60.0, deviceDisplayFps: 0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+        
+        frameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(0.016, fpsBudget: 0, deviceDisplayFps: 60.0)
+        XCTAssertEqual(frameTimeSeconds, 0.016, accuracy: 0.001)
+    }
 
     func testSDKInitializationWithCustomEndpoints() throws {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
