@@ -244,7 +244,8 @@ public class DdSdkImplementation: NSObject {
             // Leave JS thread ASAP to give as much time to JS engine work.
             sharedQueue.async {
                 if (shouldRecordFrameTime) {
-                    rumMonitorInternal.updatePerformanceMetric(at: now, metric: .jsFrameTimeSeconds, value: frameTime, attributes: [:])
+                    let normalizedFrameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(frameTime)
+                    rumMonitorInternal.updatePerformanceMetric(at: now, metric: .jsFrameTimeSeconds, value: normalizedFrameTimeSeconds, attributes: [:])
                 }
                 if (shouldRecordLongTask) {
                     rumMonitorInternal.addLongTask(at: now, duration: frameTime, attributes: ["long_task.target": "javascript"])
@@ -254,5 +255,23 @@ public class DdSdkImplementation: NSObject {
         
         return frameTimeCallback
     }
+    
+    // Normalizes frameTime values so when they are turned into FPS metrics they are normalized on a range between 0 and fpsBudget. If fpsBudget is not provided it will default to 60hz.
+    public static func normalizeFrameTimeForDeviceRefreshRate(_ frameTime: Double, fpsBudget: Double? = nil, deviceDisplayFps: Double? = nil) -> Double {
+        let DEFAULT_REFRESH_HZ = 60.0
+        let frameTimeMs: Double = frameTime * 1000.0
+        let frameBudgetHz: Double = fpsBudget ?? DEFAULT_REFRESH_HZ
+        let maxDeviceDisplayHz = deviceDisplayFps ?? Double(UIScreen.main.maximumFramesPerSecond)
+        let maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
+        let budgetFrameTimeMs = 1000.0 / frameBudgetHz
+                
+        guard maxDeviceDisplayHz > 0, frameTimeMs.isFinite, frameTimeMs > 0, frameBudgetHz > 0, budgetFrameTimeMs.isFinite, budgetFrameTimeMs > 0, maxDeviceFrameTimeMs.isFinite, maxDeviceFrameTimeMs > 0 else {
+            return 1.0 / DEFAULT_REFRESH_HZ
+        }
+                
+        var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
+        normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
 
+        return normalizedFrameTimeMs / 1000.0 // in seconds
+    }
 }
