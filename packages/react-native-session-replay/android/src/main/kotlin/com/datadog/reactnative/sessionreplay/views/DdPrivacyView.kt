@@ -56,7 +56,7 @@ class DdPrivacyView(context: Context) : ReactViewGroup(context) {
     var nativeID: String? = null
 
     /**
-     * Defines a set of attributes used for transformations
+     * Defines a set of attributes used for transformations.
      */
     var attributes: Map<String, String>? = null
 
