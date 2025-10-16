@@ -6,8 +6,12 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-afterEvaluate {
+interface InjectedExecOps {
+    @Inject //@javax.inject.Inject
+    ExecOperations getExecOps()
+}
 
+afterEvaluate {
     def androidExtension = extensions.findByName("android")
 
     if (androidExtension == null || android.applicationVariants == null) {
@@ -294,9 +298,11 @@ private def getReactConfig(File buildDir, variant) {
         def targetPath = variant.name
         reactConfig['bundleTaskName'] = "createBundle${targetName}JsAndAssets"
         reactConfig['bundleFileResolver'] = getBundleFileResolver([
+            "$buildDir/generated/assets/react/${targetName.toLowerCase()}", // RN 0.82+
             "$buildDir/ASSETS/createBundle${targetName}JsAndAssets", // Android Gradle Plugin 7.3
             "$buildDir/generated/assets/createBundle${targetName}JsAndAssets" // Android Gradle Plugin 7.4 and up
         ] as String[], bundleAssetName)
+
         reactConfig['bundleAssetName'] = bundleAssetName
         reactConfig['targetPath'] = targetPath
         reactConfig['targetName'] = targetName
@@ -339,7 +345,8 @@ private def runShellCommand(
     def errorStream = new ByteArrayOutputStream()
 
     try {
-        def result = exec {
+        def injected = project.objects.newInstance(InjectedExecOps)
+        def result = injected.execOps.exec {
             workingDir = workingDirectory
             standardOutput = outputStream
             errorOutput = errorStream
@@ -360,7 +367,7 @@ private def runShellCommand(
         def errorStreamContent = errorStream.toString("UTF-8")
         def standardStreamContent = outputStream.toString("UTF-8")
         logger.error("Exception raised during command execution," +
-                " stderr=${errorStreamContent}, stdout=${standardStreamContent}")
+                " stderr=${errorStreamContent}, stdout=${standardStreamContent}, exception=${e}")
         throw e
     }
 }
