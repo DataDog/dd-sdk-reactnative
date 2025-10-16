@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative.sessionreplay
 
+import android.content.res.AssetManager
 import com.datadog.android.sessionreplay.ImagePrivacy
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
@@ -20,6 +21,7 @@ import fr.xgouchet.elmyr.annotation.BoolForgery
 import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.junit5.ForgeExtension
+import java.io.IOException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -31,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
@@ -56,6 +59,9 @@ internal class DdSessionReplayImplementationTest {
     @Mock
     lateinit var mockUiManagerModule: UIManagerModule
 
+    @Mock
+    lateinit var mockAssetManager: AssetManager
+
     private val imagePrivacyMap = mapOf(
         "MASK_ALL" to ImagePrivacy.MASK_ALL,
         "MASK_NON_BUNDLED_ONLY" to ImagePrivacy.MASK_LARGE_ONLY,
@@ -77,6 +83,8 @@ internal class DdSessionReplayImplementationTest {
     fun `set up`() {
         whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
             .doReturn(mockUiManagerModule)
+        whenever(mockReactContext.assets).doReturn(mockAssetManager)
+        whenever(mockAssetManager.open(any())).doThrow(IOException("No assets in test"))
 
         testedSessionReplay =
             DdSessionReplayImplementation(mockReactContext) { mockSessionReplay }
