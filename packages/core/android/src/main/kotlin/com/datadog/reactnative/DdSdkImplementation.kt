@@ -394,6 +394,32 @@ class DdSdkImplementation(
     }
 
     // endregion
+
+        val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
+        val budgetFrameTimeMs = 1000.0 / frameBudgetHz
+
+        if (listOf(
+            maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+        ).any { !it.isFinite() || it <= 0.0 }
+        ) return 1.0 / DEFAULT_REFRESH_HZ
+
+
+        var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
+
+        normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
+
+        return normalizedFrameTimeMs / 1000.0 // in seconds
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun getMaxDisplayRefreshRate(context: Context?): Double {
+        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+
+        return display.supportedModes.maxOf { it.refreshRate.toDouble() }
+    }
+
+    // endregion
     internal companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_VERSION = "_dd.version"
