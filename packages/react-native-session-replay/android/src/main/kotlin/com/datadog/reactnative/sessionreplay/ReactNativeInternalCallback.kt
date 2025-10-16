@@ -24,6 +24,9 @@ class ReactNativeInternalCallback(
 ) : SessionReplayInternalCallback {
     private var resourceQueue: SessionReplayInternalResourceQueue? = null
 
+    /**
+     * Companion object containing constants used by the internal callback implementation.
+     */
     companion object {
         private const val ASSETS_JSON = "assets.json"
         private const val ASSETS_BIN = "assets.bin"
@@ -32,14 +35,6 @@ class ReactNativeInternalCallback(
 
     private val jsonObject: JSONObject? = loadAssetsJson()
 
-    /**
-     * Loads and parses the `assets.json` file from the app's assets directory.
-     * The JSON file maps unique asset keys to metadata entries containing
-     * their offset and length inside the `assets.bin` binary file.
-     *
-     * @return A [JSONObject] representing the parsed asset index, or `null` if
-     * the file could not be read or contained invalid JSON.
-     */
     private fun loadAssetsJson(): JSONObject? {
         return try {
             val jsonText = reactContext.assets.open(ASSETS_JSON)
@@ -87,23 +82,13 @@ class ReactNativeInternalCallback(
 
         return try {
             readAssetBytes(reactContext, offset, length)
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             Log.w(TAG, "Failed to read entry from binary: ${e.message}")
             null
         }
     }
 
 
-    /**
-     * Reads a specific byte range from the `assets.bin` file.
-     * Skips forward to the given offset and reads `length` bytes.
-     *
-     * @param context The React context used to access the app's assets.
-     * @param offset The byte offset within `assets.bin` to start reading from.
-     * @param length The number of bytes to read.
-     * @return A [ByteArray] containing the requested portion of the binary asset.
-     * @throws IOException If the file cannot be read or skipped to the correct offset.
-     */
     private fun readAssetBytes(context: ReactContext, offset: Int, length: Int): ByteArray {
         context.assets.open(ASSETS_BIN).use { input ->
             var skipped = 0L

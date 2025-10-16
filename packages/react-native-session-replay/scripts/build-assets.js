@@ -19,13 +19,11 @@ function ensureAssets() {
     // Create empty .bin if missing
     if (!fs.existsSync(binPath)) {
         fs.writeFileSync(binPath, Buffer.alloc(0));
-        console.log('[build-assets] Created', binPath);
     }
 
     // Create empty .json if missing
     if (!fs.existsSync(jsonPath)) {
         fs.writeFileSync(jsonPath, JSON.stringify({}, null, 2));
-        console.log('[build-assets] Created', jsonPath);
     }
 }
 

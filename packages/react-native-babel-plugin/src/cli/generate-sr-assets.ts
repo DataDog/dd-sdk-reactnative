@@ -79,7 +79,7 @@ function mergeSvgAssets(assetsDir: string) {
         }
 
         if (added > 0) {
-            console.log(
+            console.info(
                 `\nPacked ${added} new Session Replay assets -> total: ${
                     Object.keys(index).length
                 }`
@@ -116,7 +116,7 @@ function generateSessionReplayAssets() {
         process.exit(0);
     }
 
-    console.log(`Scanning for session replay assets in ${rootDir}...`);
+    console.info(`Scanning for session replay assets in ${rootDir}...`);
 
     // Clear existing assets to ensure a fresh state
     clearAssetsDir(assetsPath);
@@ -185,12 +185,12 @@ function generateSessionReplayAssets() {
     mergeSvgAssets(assetsPath);
 
     if (errorCount > 0) {
-        console.log(
+        console.info(
             'Asset generation finished, but some files encountered errors.'
         );
     }
 
-    console.log('Your assets are now ready to be used by Session Replay.');
+    console.info('Your assets are now ready to be used by Session Replay.');
 }
 
 // TODO: Add flag support [e.g., --verbose] (RUM-12186)

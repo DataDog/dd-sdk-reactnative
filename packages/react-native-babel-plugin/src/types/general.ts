@@ -7,8 +7,8 @@
 import type * as Babel from '@babel/core';
 
 import type { RumAction } from '../constants';
-
 import type { ReactNativeSVG } from '../libraries/react-native-svg';
+
 export const MemoTypes = {
     USE_CALLBACK: 'useCallback',
     USE_MEMO: 'useMemo'
