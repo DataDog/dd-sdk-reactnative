@@ -7,7 +7,10 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.hardware.display.DisplayManager
+import android.os.Build
 import android.util.Log
+import android.view.Display
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
@@ -18,6 +21,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
 
 /** The entry point to initialize Datadog's features. */
 @Suppress("TooManyFunctions")
@@ -248,9 +252,10 @@ class DdSdkImplementation(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
+                val normalizedFrameTimeSeconds = normalizeFrameTime(it, appContext)
                 datadog.getRumMonitor()
                     ._getInternal()
-                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, normalizedFrameTimeSeconds)
             }
             if (jsLongTasksMonitoringEnabled &&
                 it >
@@ -263,6 +268,49 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
+     * @param frameTimeSeconds: the frame time to normalize. In seconds.
+     * @param context: The current app context
+     * @param fpsBudget: The maximum fps under which the frame Time will be normalized [0-fpsBudget]. Defaults to 60Hz.
+     * @param deviceDisplayFps: The maximum fps supported by the device. If not provided it will be set from the value obtained from the app context.
+     */
+    @Suppress("CyclomaticComplexMethod")
+    fun normalizeFrameTime(
+        frameTimeSeconds: Double,
+        context: Context,
+        fpsBudget: Double? = null,
+        deviceDisplayFps: Double? = null,
+    ) : Double {
+        val frameTimeMs = frameTimeSeconds * 1000.0
+        val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
+        val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
+            ?: 60.0
+
+        val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
+        val budgetFrameTimeMs = 1000.0 / frameBudgetHz
+
+        if (listOf(
+            maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+        ).any { !it.isFinite() || it <= 0.0 }
+        ) return 1.0 / DEFAULT_REFRESH_HZ
+
+
+        var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
+
+        normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
+
+        return normalizedFrameTimeMs / 1000.0 // in seconds
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun getMaxDisplayRefreshRate(context: Context?): Double {
+        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+
+        return display.supportedModes.maxOf { it.refreshRate.toDouble() }
+    }
+
     // endregion
 
     companion object {
@@ -273,6 +321,7 @@ class DdSdkImplementation(
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
+        internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
     }
 }

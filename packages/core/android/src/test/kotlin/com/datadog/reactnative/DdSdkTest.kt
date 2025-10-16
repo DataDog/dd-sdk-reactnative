@@ -59,6 +59,7 @@ import java.util.Locale
 import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -78,7 +79,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
-import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -3128,6 +3128,132 @@ internal class DdSdkTest {
             verify(mockDatadog)
                 .clearAllData()
         }
+    }
+
+    @Test
+    fun `𝕄 normalize frameTime according to the device's refresh rate`() {
+        // 10 fps, 60Hz device, 60 fps budget -> 10 fps
+        var frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.1,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.1)
+
+        // 30 fps, 60Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.03,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.03)
+
+        // 60 fps, 60Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 60 fps, 120Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.032)
+
+        // 120 fps, 120Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 90 fps, 120Hz device, 60 fps budget -> 45 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0111,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0222, Offset.offset(0.001))
+
+        // 100 fps, 120Hz device, 60 fps budget -> 50 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.01,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.02, Offset.offset(0.001))
+
+        // 120 fps, 120Hz device, 120 fps budget -> 120 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 120.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0083, Offset.offset(0.001))
+
+        // 80 fps, 160Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0125,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.033, Offset.offset(0.001))
+
+        // 160 fps, 160Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.00625,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        // Edge cases
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
     }
 
     // endregion
