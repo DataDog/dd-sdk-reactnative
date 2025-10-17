@@ -4,8 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { debugId } from '../metro/debugIdResolver';
-
 export const EMPTY_MESSAGE = 'Unknown Error';
 export const EMPTY_STACK_TRACE = '';
 export const DEFAULT_ERROR_NAME = 'Error';
@@ -72,15 +70,4 @@ export const getErrorName = (error: unknown): string => {
         // Do nothing
     }
     return DEFAULT_ERROR_NAME;
-};
-
-export const getErrorContext = (originalContext: any): Record<string, any> => {
-    const _debugId = debugId;
-    if (!_debugId) {
-        return originalContext;
-    }
-    return {
-        ...originalContext,
-        '_dd.debug_id': _debugId
-    };
 };
