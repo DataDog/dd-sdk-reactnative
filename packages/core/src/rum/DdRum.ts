@@ -7,12 +7,12 @@ import type { GestureResponderEvent } from 'react-native';
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
+import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { validateContext } from '../utils/argsUtils';
-import { getErrorContext } from '../utils/errorUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
@@ -140,13 +140,16 @@ class DdRumWrapper implements DdRumType {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
             type,
             name,
-            context: validateContext(context),
+            context,
             timestampMs,
             actionContext
         });
         if (!mappedEvent) {
             return generateEmptyPromise();
         }
+
+        const validatedContext = validateContext(mappedEvent.context);
+
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
@@ -155,7 +158,7 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.addAction(
                 mappedEvent.type,
                 mappedEvent.name,
-                mappedEvent.context,
+                validatedContext,
                 mappedEvent.timestampMs
             )
         );
@@ -198,7 +201,7 @@ class DdRumWrapper implements DdRumType {
             statusCode,
             kind,
             size,
-            context: validateContext(context),
+            context,
             timestampMs,
             resourceContext
         });
@@ -222,6 +225,8 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
+        const validatedContext = validateContext(mappedEvent.context);
+
         InternalLog.log(
             `Stopping RUM Resource #${key} status:${statusCode}`,
             SdkVerbosity.DEBUG
@@ -232,7 +237,7 @@ class DdRumWrapper implements DdRumType {
                 mappedEvent.statusCode,
                 mappedEvent.kind,
                 mappedEvent.size,
-                mappedEvent.context,
+                validatedContext,
                 mappedEvent.timestampMs
             )
         );
@@ -250,7 +255,7 @@ class DdRumWrapper implements DdRumType {
             message,
             source,
             stacktrace,
-            context: getErrorContext(validateContext(context)),
+            context,
             timestampMs,
             fingerprint: fingerprint ?? ''
         });
@@ -259,8 +264,16 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
         InternalLog.log(`Adding RUM Error “${message}”`, SdkVerbosity.DEBUG);
-        const updatedContext: any = mappedEvent.context;
+
+        const updatedContext: any = validateContext(mappedEvent.context);
+
         updatedContext[DdAttributes.errorSourceType] = 'react-native';
+
+        const _debugId = debugId;
+        if (_debugId) {
+            updatedContext[DdAttributes.debugId] = _debugId;
+        }
+
         return bufferVoidNativeCall(() =>
             this.nativeRum.addError(
                 mappedEvent.message,
@@ -391,7 +404,7 @@ class DdRumWrapper implements DdRumType {
         const mappedEvent = this.actionEventMapper.applyEventMapper({
             type,
             name,
-            context: validateContext(context),
+            context,
             timestampMs
         });
         if (!mappedEvent) {
@@ -407,11 +420,13 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
+        const validatedContext = validateContext(mappedEvent.context);
+
         return bufferVoidNativeCall(() =>
             this.nativeRum.stopAction(
                 mappedEvent.type,
                 mappedEvent.name,
-                mappedEvent.context,
+                validatedContext,
                 mappedEvent.timestampMs
             )
         );
@@ -438,7 +453,7 @@ class DdRumWrapper implements DdRumType {
             return [
                 args[0],
                 args[1],
-                validateContext(args[2]),
+                args[2] || {},
                 args[3] || this.timeProvider.now()
             ];
         }
@@ -451,7 +466,7 @@ class DdRumWrapper implements DdRumType {
                 return [
                     type,
                     name,
-                    validateContext(args[0]),
+                    args[0] || {},
                     args[1] || this.timeProvider.now()
                 ];
             }

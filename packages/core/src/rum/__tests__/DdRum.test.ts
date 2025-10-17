@@ -1181,7 +1181,13 @@ describe('DdRum', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Adding RUM Error'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining('Context will be empty'),
                     SdkVerbosity.ERROR
                 );
 
@@ -1208,7 +1214,15 @@ describe('DdRum', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Adding RUM Error'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining(
+                        'The given context is an array, it will be nested'
+                    ),
                     SdkVerbosity.WARN
                 );
 

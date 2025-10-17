@@ -702,7 +702,15 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking debug log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining(
+                        'The given context is an array, it will be nested'
+                    ),
                     SdkVerbosity.WARN
                 );
 
@@ -732,7 +740,13 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking debug log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining('Context will be empty.'),
                     SdkVerbosity.ERROR
                 );
 
@@ -792,7 +806,15 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking warn log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining(
+                        'The given context is an array, it will be nested'
+                    ),
                     SdkVerbosity.WARN
                 );
 
@@ -820,7 +842,13 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking warn log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining('Context will be empty.'),
                     SdkVerbosity.ERROR
                 );
 
@@ -880,7 +908,15 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking info log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining(
+                        'The given context is an array, it will be nested'
+                    ),
                     SdkVerbosity.WARN
                 );
 
@@ -908,7 +944,13 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking info log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining('Context will be empty.'),
                     SdkVerbosity.ERROR
                 );
 
@@ -968,7 +1010,15 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking error log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining(
+                        'The given context is an array, it will be nested'
+                    ),
                     SdkVerbosity.WARN
                 );
 
@@ -998,7 +1048,13 @@ describe('DdLogs', () => {
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     1,
-                    expect.anything(),
+                    expect.stringContaining('Tracking error log'),
+                    SdkVerbosity.DEBUG
+                );
+
+                expect(InternalLog.log).toHaveBeenNthCalledWith(
+                    2,
+                    expect.stringContaining('Context will be empty.'),
                     SdkVerbosity.ERROR
                 );
 
