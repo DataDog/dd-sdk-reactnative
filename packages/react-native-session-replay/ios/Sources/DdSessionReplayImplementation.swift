@@ -10,7 +10,7 @@ import DatadogInternal
 import DatadogSDKReactNative
 import React
 
-struct SVGData: Codable {
+internal struct SVGData: Codable {
     let offset: Int
     let length: Int
 }
@@ -31,7 +31,7 @@ public class DdSessionReplayImplementation: NSObject {
         self.uiManager = uiManager
         self.fabricWrapper = fabricWrapper
     }
-
+    
     @objc
     public convenience init(bridge: RCTBridge) {
         self.init(
@@ -40,7 +40,7 @@ public class DdSessionReplayImplementation: NSObject {
             fabricWrapper: RCTFabricWrapper()
         )
     }
-
+    
     @objc
     public func enable(
         replaySampleRate: Double,
@@ -56,7 +56,7 @@ public class DdSessionReplayImplementation: NSObject {
         if (customEndpoint != "") {
             customEndpointURL = URL(string: "\(customEndpoint)/api/v2/replay" as String)
         }
-
+        
         var sessionReplayConfiguration = SessionReplay.Configuration(
             replaySampleRate: Float(replaySampleRate),
             textAndInputPrivacyLevel: convertTextAndInputPrivacy(textAndInputPrivacyLevel),
@@ -75,7 +75,7 @@ public class DdSessionReplayImplementation: NSObject {
                 let decoder = JSONDecoder()
                 svgMap = try decoder.decode([String: SVGData].self, from: data)
             } catch {
-                consolePrint("Failed to load or decode assets.json", .debug)
+                consolePrint("Failed to load or decode assets.json: \(error)", .debug)
             }
         }
         
@@ -90,7 +90,7 @@ public class DdSessionReplayImplementation: NSObject {
                 fabricWrapper: fabricWrapper
             )
         ])
-
+        
         if let core = DatadogSDKWrapper.shared.getCoreInstance() {
             sessionReplay.enable(
                 with: sessionReplayConfiguration,
@@ -99,7 +99,7 @@ public class DdSessionReplayImplementation: NSObject {
         } else {
             consolePrint("Core instance was not found when initializing Session Replay.", .critical)
         }
-        
+
         resolve(nil)
     }
     

@@ -13,20 +13,29 @@ import UIKit
 import React
 
 
+private enum SVGConstants {
+    static let attributes = "attributes"
+    static let width = "width"
+    static let height = "height"
+    static let hash = "hash"
+    static let type = "type"
+    static let svgTypeValue = "svg"
+}
+
 internal struct ReactNativeSVGResource: SessionReplayResource {
     let identifier: String
     let svgContent: String
     let mimeType: String = "image/svg+xml"
-
+    
     init(id: String, svgContent: String) {
         self.identifier = id
         self.svgContent = svgContent
     }
-
+    
     func calculateIdentifier() -> String {
         return identifier
     }
-
+    
     func calculateData() -> Data {
         return svgContent.data(using: .utf8) ?? Data()
     }
@@ -35,11 +44,11 @@ internal struct ReactNativeSVGResource: SessionReplayResource {
 
 internal class SvgViewRecorder: SessionReplayNodeRecorder {
     internal var identifier = UUID()
-
+    
     internal let uiManager: RCTUIManager
     internal let fabricWrapper: RCTFabricWrapper
     internal let svgMap: [String: SVGData]
-
+    
     internal init(uiManager: RCTUIManager, fabricWrapper: RCTFabricWrapper, svgMap: [String: SVGData]) {
         self.uiManager = uiManager
         self.fabricWrapper = fabricWrapper
@@ -52,101 +61,121 @@ internal class SvgViewRecorder: SessionReplayNodeRecorder {
         in context: SessionReplayViewTreeRecordingContext
     ) -> SessionReplayNodeSemantics? {
         
-        if (view.accessibilityIdentifier != nil) {
-            let viewId = context.ids.nodeID(view: view, nodeRecorder: self)
-            let subView = view.subviews[0]
-            
-            if let attrs = view.value(forKey: "attributes") as? [String: String] {
-                let svgId = context.ids.nodeID(view: subView, nodeRecorder: self)
-                let type = attrs["type"]
-                let width = attrs["width"]
-                let height = attrs["height"]
-
-                guard let hash = attrs["hash"] else {
-                    return nil
-                }
-                
-                if (type != "svg") {
-                    return nil
-                }
-                
-                let bundle = Bundle(for: SvgViewRecorder.self)
-                if let url = bundle.url(forResource: "assets", withExtension: "bin") {
-                    do {
-                        let fileHandle = try FileHandle(forReadingFrom: url)
-                        defer { try? fileHandle.close() }
-                        
-                        guard let svgInfo = svgMap[hash] else {
-                            return nil
-                        }
-                        
-                        try fileHandle.seek(toOffset: UInt64(svgInfo.offset))
-                        let svgDataChunk = try fileHandle.read(upToCount: svgInfo.length)
-                        
-                        guard let svgDataChunk = svgDataChunk,
-                              var svgData = String(data: svgDataChunk, encoding: .utf8) else {
-                            return nil
-                        }
-                        
-                        var svgAttributes: [String] = []
-                        
-                        if (width == "") {
-                            svgAttributes.append(#"width="\#(Int(subView.bounds.width))""#)
-                        }
-                        
-                        if (height == "") {
-                            svgAttributes.append(#"height="\#(Int(subView.bounds.height))""#)
-                        }
-                        
-                        if !svgAttributes.isEmpty {
-                            // Here we update the svg content but keep the original hash without these values
-                            // The goal is to save some time, as it won't matter since the hash is used as an identifier
-                            var svg = svgData
-                            
-                            if let svgStart = svg.range(of: "<svg"),
-                               let tagEnd = svg.range(of: ">", range: svgStart.upperBound..<svg.endIndex) {
-
-                                let dimensions = " " + svgAttributes.joined(separator: " ")
-                                svg.replaceSubrange(tagEnd, with: dimensions + ">")
-                                svgData = svg
-                            }
-                        }
-                        
-                        let svgResource = ReactNativeSVGResource(
-                            id: hash,
-                            svgContent: svgData
-                         )
-
-                        let contentFrame = CGRect(
-                            origin: attributes.frame.origin,
-                            size: CGSize(width: subView.bounds.width,
-                                         height: subView.bounds.height)
-                        )
-                        
-                        let builder = SvgViewWireframesBuilder(
-                            wireframeID: viewId,
-                            imageWireframeID: svgId,
-                            attributes: attributes,
-                            contentFrame: contentFrame,
-                            svgResource: svgResource,
-                            imagePrivacyLevel: context.recorder.imagePrivacy
-                        )
-                        
-                        let element = SessionReplaySpecificElement(subtreeStrategy: .ignore, nodes: [
-                            SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
-                        ])
-                        
-                        return element
-                    } catch {
-                        return nil
-                    }
-                }
-            }
+        guard view.accessibilityIdentifier != nil else {
+            return nil
         }
-
-        return nil
+        
+        guard let attrs = view.value(forKey: SVGConstants.attributes) as? [String: String] else {
+            return nil
+        }
+        
+        guard let type = attrs[SVGConstants.type], type == "svg" else {
+            return nil
+        }
+        
+        guard let hash = attrs[SVGConstants.hash] else {
+            return nil
+        }
+        
+        let bundle = Bundle(for: SvgViewRecorder.self)
+        guard let url = bundle.url(forResource: "assets", withExtension: "bin") else {
+            return nil
+        }
+        
+        guard let subView = view.subviews.first else {
+            return nil
+        }
+        
+        
+        let viewId = context.ids.nodeID(view: view, nodeRecorder: self)
+        let svgId = context.ids.nodeID(view: subView, nodeRecorder: self)
+        
+        do {
+            guard let svgInfo = svgMap[hash] else {
+                return nil
+            }
+            
+            let fileHandle = try FileHandle(forReadingFrom: url)
+            defer { try? fileHandle.close() }
+            
+            try fileHandle.seek(toOffset: UInt64(svgInfo.offset))
+            let svgDataChunk = try fileHandle.read(upToCount: svgInfo.length)
+            
+            guard let svgDataChunk = svgDataChunk,
+                  var svgData = String(data: svgDataChunk, encoding: .utf8) else {
+                return nil
+            }
+            
+            if let updatedSvgData = handleDynamicSvgDimensions(view: subView, svgData: svgData, attrs: attrs) {
+                svgData = updatedSvgData
+            }
+            
+            let svgResource = ReactNativeSVGResource(
+                id: hash,
+                svgContent: svgData
+            )
+            
+            let contentFrame = CGRect(
+                origin: attributes.frame.origin,
+                size: CGSize(width: subView.bounds.width,
+                             height: subView.bounds.height)
+            )
+            
+            let builder = SvgViewWireframesBuilder(
+                wireframeID: viewId,
+                imageWireframeID: svgId,
+                attributes: attributes,
+                contentFrame: contentFrame,
+                svgResource: svgResource,
+                imagePrivacyLevel: context.recorder.imagePrivacy
+            )
+            
+            // Children are ignored because they were already processed and converted by the babel plugin
+            let element = SessionReplaySpecificElement(subtreeStrategy: .ignore, nodes: [
+                SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
+            ])
+            
+            return element
+        } catch {
+            return nil
+        }
     }
 }
+
+func handleDynamicSvgDimensions(view: UIView, svgData: String, attrs: [String: String]) -> String? {
+    let width = attrs[SVGConstants.width] ?? ""
+    let height = attrs[SVGConstants.height] ?? ""
+    
+    var svgAttributes: [String] = []
+    
+    if width.isEmpty {
+        svgAttributes.append(#"width="\#(Int(view.bounds.width))""#)
+    }
+    
+    if height.isEmpty {
+        svgAttributes.append(#"height="\#(Int(view.bounds.height))""#)
+    }
+    
+    if !svgAttributes.isEmpty {
+        // Here we update the svg content but keep the original hash without these values
+        // The goal is to save some time, as it won't matter since the hash is used as an identifier
+        var svg = svgData
+        let pattern = #"<svg[^>]*>"#
+        
+        if let match = svg.range(of: pattern, options: .regularExpression) {
+            let dimensions = " " + svgAttributes.joined(separator: " ")
+            
+            if let closingBracketRange = svg.range(of: ">", range: match.lowerBound..<match.upperBound) {
+                svg.replaceSubrange(closingBracketRange, with: dimensions + ">")
+                return svg
+            }
+        }
+        
+    }
+    
+    return nil
+}
+
 
 internal struct SvgViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
     let wireframeID: WireframeID
@@ -189,7 +218,7 @@ internal struct SvgViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
                 )
             )
         }
-
+        
         return wireframes
     }
 }
