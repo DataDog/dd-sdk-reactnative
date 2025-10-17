@@ -12,18 +12,19 @@ const binPath = path.join(assetsDir, 'assets.bin');
 const jsonPath = path.join(assetsDir, 'assets.json');
 
 function ensureAssets() {
-    if (!fs.existsSync(assetsDir)) {
+    try {
+        if (fs.existsSync(assetsDir)) {
+            fs.rmSync(assetsDir, { recursive: true, force: true });
+        }
+
         fs.mkdirSync(assetsDir, { recursive: true });
-    }
 
-    // Create empty .bin if missing
-    if (!fs.existsSync(binPath)) {
         fs.writeFileSync(binPath, Buffer.alloc(0));
-    }
 
-    // Create empty .json if missing
-    if (!fs.existsSync(jsonPath)) {
         fs.writeFileSync(jsonPath, JSON.stringify({}, null, 2));
+    } catch (error) {
+        console.error('Error creating assets:', error.message);
+        process.exit(1);
     }
 }
 
