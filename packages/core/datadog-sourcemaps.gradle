@@ -11,6 +11,11 @@ interface InjectedExecOps {
     ExecOperations getExecOps()
 }
 
+def isDryRun = (
+    System.getenv("DATADOG_SOURCEMAPS_DRY_RUN")?.toBoolean() ?:
+    (project.hasProperty("datadogSourcemapsDryRun") && project.property("datadogSourcemapsDryRun") == "true")
+)
+
 afterEvaluate {
     def androidExtension = extensions.findByName("android")
 
@@ -97,7 +102,13 @@ afterEvaluate {
                     copyDebugId(packagerOutputSourceMapFile.absolutePath, jsOutputSourceMapFile.absolutePath, reactRoot)
                 }
 
-                runShellCommand(uploadSourcemap(jsBundleFile), reactRoot)
+                def uploadCommand = uploadSourcemap(jsBundleFile);
+                if (isDryRun) {
+                    logger.lifecycle("Dry run mode enabled, not uploading sourcemaps to Datadog.")
+                    uploadCommand += ["--dry-run"]
+                }
+
+                runShellCommand(uploadCommand, reactRoot)
             }
         }
 
