@@ -77,15 +77,14 @@ internal class SvgViewRecorder: SessionReplayNodeRecorder {
             return nil
         }
         
-        let bundle = Bundle(for: SvgViewRecorder.self)
-        guard let url = bundle.url(forResource: "assets", withExtension: "bin") else {
+        let bundle = Bundle.ddSessionReplayResources
+        guard let url = bundle?.url(forResource: "assets", withExtension: "bin") else {
             return nil
         }
         
         guard let subView = view.subviews.first else {
             return nil
         }
-        
         
         let viewId = context.ids.nodeID(view: view, nodeRecorder: self)
         let svgId = context.ids.nodeID(view: subView, nodeRecorder: self)

@@ -66,10 +66,12 @@ public class DdSessionReplayImplementation: NSObject {
             customEndpoint: customEndpointURL
         )
         
-        let bundle = Bundle(for: DdSessionReplayImplementation.self)
+//        let bundle = Bundle(for: DdSessionReplayImplementation.self)
+
         var svgMap: [String: SVGData] = [:]
         
-        if let url = bundle.url(forResource: "assets", withExtension: "json") {
+        if let bundle = Bundle.ddSessionReplayResources,
+           let url = bundle.url(forResource: "assets", withExtension: "json") {
             do {
                 let data = try Data(contentsOf: url)
                 let decoder = JSONDecoder()
