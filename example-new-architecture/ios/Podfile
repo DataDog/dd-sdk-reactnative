@@ -19,6 +19,11 @@ end
 target 'DdSdkReactNativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
+  # These dependencies are not yet released, so we need to use the branch from the feature/flags branch.
+  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+
   config = use_native_modules!
 
   use_react_native!(
