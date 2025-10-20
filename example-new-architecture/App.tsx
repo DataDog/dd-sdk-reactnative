@@ -8,6 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
+  DdFlags,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -32,6 +33,8 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
+  console.log({constant: await DdFlags.getConstant()});
+
   const config = new DdSdkReactNativeConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
