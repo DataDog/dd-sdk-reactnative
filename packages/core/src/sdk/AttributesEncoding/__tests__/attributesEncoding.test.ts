@@ -130,6 +130,122 @@ describe('encodeAttributes', () => {
         expect(result).toEqual({ valid: 'ok' });
     });
 
+    it('does not modify original object when dropping values', () => {
+        const input = { valid: 'ok', bad: () => {} };
+        const result = encodeAttributes(input);
+        expect(result).toEqual({ valid: 'ok' });
+        expect(input).toHaveProperty('bad');
+    });
+
+    it('does not modify original object when dropping nested invalid values', () => {
+        const input = { user: { profile: { bad: () => {}, good: 'ok' } } };
+        const userBefore = { ...input.user };
+        const profileBefore = { ...input.user.profile };
+
+        const result = encodeAttributes(input);
+
+        // Encoder should flatten and drop invalid function
+        expect(result).toEqual({ 'user.profile.good': 'ok' });
+
+        // Verify that the original objects were not mutated or replaced
+        expect(input.user).toEqual(userBefore);
+        expect(input.user.profile).toEqual(profileBefore);
+    });
+
+    it('does not modify original array inside object', () => {
+        const arr = [1, 2, () => {}];
+        const input = { data: arr };
+        const arrBefore = [...arr];
+
+        const result = encodeAttributes(input);
+        expect(result).toEqual({ data: [1, 2] }); // dropped the function
+        expect(input.data).toEqual(arrBefore); // original array untouched
+    });
+
+    it('does not modify original nested arrays of objects', () => {
+        const objA = { val: 1 };
+        const objB = { bad: () => {} };
+        const objC = { val: 2 };
+
+        const input = {
+            matrix: [[objA, objB], [objC]]
+        };
+
+        // capture snapshots
+        const matrixBefore = input.matrix;
+        const row0Before = input.matrix[0];
+        const row1Before = input.matrix[1];
+        const objA_before = { ...objA };
+        const objB_before = { ...objB };
+        const objC_before = { ...objC };
+
+        const result = encodeAttributes(input);
+
+        expect(result).toEqual({
+            matrix: [
+                [{ val: 1 }, {}], // objB sanitized
+                [{ val: 2 }]
+            ]
+        });
+
+        // check original references untouched
+        expect(input.matrix).toBe(matrixBefore); // same outer array reference
+        expect(input.matrix[0]).toBe(row0Before); // same row0 reference
+        expect(input.matrix[1]).toBe(row1Before); // same row1 reference
+        expect(objA).toEqual(objA_before); // object A unchanged
+        expect(objB).toEqual(objB_before); // object B unchanged
+        expect(objC).toEqual(objC_before); // object C unchanged
+    });
+
+    it('does not modify original Map when encoding', () => {
+        const innerMap = new Map([['x', 1]]);
+        const outerMap = new Map<any, any>([['inner', innerMap]]);
+        const input = { outer: outerMap };
+
+        const snapshot = new Map(outerMap);
+        const innerSnapshot = new Map(innerMap);
+
+        const result = encodeAttributes(input);
+        expect(result.outer).toBeInstanceOf(Array);
+        expect(input.outer).toBe(outerMap); // same reference
+        expect(Array.from(input.outer.entries())).toEqual(
+            Array.from(snapshot.entries())
+        );
+        expect(Array.from(innerMap.entries())).toEqual(
+            Array.from(innerSnapshot.entries())
+        );
+    });
+
+    it('does not modify original object when attribute limit is reached', () => {
+        const input: Record<string, string> = {};
+        for (let i = 0; i < 200; i++) {
+            input[`k${i}`] = `v${i}`;
+        }
+        const snapshot = { ...input };
+
+        const result = encodeAttributes(input);
+        expect(Object.keys(result)).toHaveLength(128);
+        expect(input).toEqual(snapshot); // original still has 200 keys
+    });
+
+    it('does not modify original when sanitizing arrays of objects', () => {
+        const obj1 = { ok: true };
+        const obj2 = { bad: () => {} };
+        const input = [obj1, obj2];
+
+        // Capture pre-encode snapshots manually
+        const obj1Before = { ...obj1 };
+        const obj2Before = { ...obj2 };
+        const arrayBefore = [...input];
+
+        const result = encodeAttributes(input);
+
+        expect(result).toEqual({ context: [{ ok: true }, {}] });
+        expect(input).toEqual(arrayBefore);
+        expect(input[0]).toEqual(obj1Before);
+        expect(input[1]).toEqual(obj2Before);
+    });
+
     it('handles deeply nested objects', () => {
         const deep = { level1: { level2: { level3: { value: 42 } } } };
         const result = encodeAttributes(deep);
