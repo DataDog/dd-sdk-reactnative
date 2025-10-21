@@ -21,6 +21,7 @@
         "lib/**",
         "assets/**",
         "scripts/**",
+        "metro.js",
         "android/build.gradle",
         "android/detekt.yml",
         "android/gradle.properties",
@@ -36,19 +37,6 @@
     "react-native": "src/index",
     "source": "src",
     "module": "lib/module/index",
-    "exports": {
-        ".": {
-            "import": "./lib/module/index.js",
-            "require": "./lib/commonjs/index.js",
-            "types": "./lib/typescript/index.d.ts"
-        },
-        "./metro": {
-            "import": "./lib/module/metro/index.js",
-            "require": "./lib/commonjs/metro/index.js",
-            "types": "./lib/typescript/metro/index.d.ts"
-        },
-        "./package.json": "./package.json"
-    },
     "publishConfig": {
         "access": "public"
     },
