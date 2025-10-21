@@ -7,7 +7,7 @@
 import { DdSdk } from '../DdSdk';
 
 import { builtInEncoders } from './defaultEncoders';
-import { encodeAttributesInPlace } from './helpers';
+import { encodeAttributesInPlace, type EncodeContext } from './helpers';
 import type { Encodable } from './types';
 import { isPlainObject, warn } from './utils';
 
@@ -23,14 +23,14 @@ import { isPlainObject, warn } from './utils';
 export function encodeAttributes(input: unknown): Record<string, Encodable> {
     const result: Record<string, Encodable> = {};
     const allEncoders = [...DdSdk.attributeEncoders, ...builtInEncoders];
-
+    const context: EncodeContext = { numOfAttributes: 0 };
     if (isPlainObject(input)) {
         for (const [k, v] of Object.entries(input)) {
-            encodeAttributesInPlace(v, result, [k], allEncoders);
+            encodeAttributesInPlace(v, result, [k], allEncoders, context);
         }
     } else {
         // Fallback for primitive values passed as root
-        encodeAttributesInPlace(input, result, ['context'], allEncoders);
+        encodeAttributesInPlace(input, result, ['context'], allEncoders, context);
         warn(
             'Warning: attributes root should be an object.\n' +
                 'Received a primitive/array instead, which will be wrapped under the "context" key.'
