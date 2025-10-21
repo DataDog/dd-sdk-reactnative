@@ -7,6 +7,13 @@
 import type { AttributeEncoder, Encodable } from './types';
 import { formatPathForLog, isPlainObject, warn } from './utils';
 
+const MAX_ATTRIBUTES = 128;
+
+export interface EncodeContext {
+    numOfAttributes: number;
+    limitReachedWarned?: boolean;
+}
+
 /**
  * Recursive in-place encoder: flattens values into `out` dictionary.
  * Never applies "context", that's only for the root.
@@ -15,7 +22,8 @@ export function encodeAttributesInPlace(
     input: unknown,
     out: Record<string, Encodable>,
     path: string[],
-    encoders: AttributeEncoder<any>[]
+    encoders: AttributeEncoder<any>[],
+    context: EncodeContext = { numOfAttributes: 0 }
 ): void {
     const value = applyEncoders(input, encoders);
 
@@ -27,7 +35,7 @@ export function encodeAttributesInPlace(
         typeof value === 'number' ||
         typeof value === 'boolean'
     ) {
-        out[path.join('.')] = value;
+        addEncodedAttribute(out, path, value, context);
         return;
     }
 
@@ -49,7 +57,7 @@ export function encodeAttributesInPlace(
 
             if (isPlainObject(v)) {
                 const nested: Record<string, Encodable> = {};
-                encodeAttributesInPlace(v, nested, [], encoders);
+                encodeAttributesInPlace(v, nested, [], encoders, context);
                 return nested;
             }
 
@@ -66,16 +74,20 @@ export function encodeAttributesInPlace(
             return undefined;
         };
 
-        out[path.join('.')] = value
-            .map(normalize)
-            .filter(item => item !== undefined); // drop unsupported
+        addEncodedAttribute(
+            out,
+            path,
+            value.map(normalize).filter(item => item !== undefined),
+            context
+        );
+
         return;
     }
 
     // Plain object
     if (isPlainObject(value)) {
         for (const [k, v] of Object.entries(value)) {
-            encodeAttributesInPlace(v, out, [...path, k], encoders);
+            encodeAttributesInPlace(v, out, [...path, k], encoders, context);
         }
         return;
     }
@@ -94,7 +106,8 @@ export function encodeAttributesInPlace(
  */
 export function sanitizeForJson(
     value: unknown,
-    encoders: AttributeEncoder<any>[]
+    encoders: AttributeEncoder<any>[],
+    context: EncodeContext = { numOfAttributes: 0 }
 ): Encodable {
     const v = applyEncoders(value, encoders);
 
@@ -102,14 +115,14 @@ export function sanitizeForJson(
     if (isPlainObject(v)) {
         const out: Record<string, Encodable> = {};
         for (const [k, val] of Object.entries(v)) {
-            encodeAttributesInPlace(val, out, [k], encoders);
+            encodeAttributesInPlace(val, out, [k], encoders, context);
         }
         return out;
     }
 
     // If array, sanitize items
     if (Array.isArray(v)) {
-        return v.map(item => sanitizeForJson(item, encoders));
+        return v.map(item => sanitizeForJson(item, encoders, context));
     }
 
     return v;
@@ -131,4 +144,33 @@ export function applyEncoders(
     }
     // Not matched by any encoder; leave as-is for the visitor to decide
     return value as Encodable;
+}
+
+function addEncodedAttribute(
+    out: Record<string, Encodable>,
+    path: string[],
+    value: Encodable,
+    context: EncodeContext
+): void {
+    if (context.numOfAttributes >= MAX_ATTRIBUTES) {
+        // Only warn once to avoid log spam
+        if (!context.limitReachedWarned) {
+            warn(
+                `Attribute limit of ${MAX_ATTRIBUTES} reached; further attributes will be dropped.`
+            );
+            context.limitReachedWarned = true;
+        }
+
+        // Optional: warn for specific dropped attribute (if desired)
+        warn(
+            `Dropped attribute at '${formatPathForLog(
+                path
+            )}' because limit of ${MAX_ATTRIBUTES} attributes was reached. All further attributes will be dropped.`
+        );
+
+        return;
+    }
+
+    out[path.join('.')] = value;
+    context.numOfAttributes++;
 }

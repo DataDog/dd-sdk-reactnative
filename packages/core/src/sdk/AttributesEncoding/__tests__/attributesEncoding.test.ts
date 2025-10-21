@@ -263,4 +263,35 @@ describe('encodeAttributes', () => {
             ])
         );
     });
+
+    it('drops attributes after reaching the 128 limit and warns once', () => {
+        // Prepare 200 simple attributes — max=128
+        const input: Record<string, number> = {};
+        for (let i = 0; i < 200; i++) {
+            input[`key${i}`] = i;
+        }
+
+        const result = encodeAttributes(input);
+
+        // Check that only 128 attributes remain
+        expect(Object.keys(result)).toHaveLength(128);
+
+        // Check the first ones are preserved
+        expect(result).toHaveProperty('key0', 0);
+        expect(result).toHaveProperty('key127', 127);
+
+        // Check later ones were dropped
+        expect(result).not.toHaveProperty('key128');
+
+        // Check that a warning was shown at least once
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining('Attribute limit')
+        );
+
+        // Check there is only one "limit reached" warning (even if multiple attributes were dropped)
+        const limitWarnings = (warn as jest.Mock).mock.calls.filter(([msg]) =>
+            msg.includes('Attribute limit')
+        );
+        expect(limitWarnings).toHaveLength(1);
+    });
 });
