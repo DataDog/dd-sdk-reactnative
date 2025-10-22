@@ -40,7 +40,16 @@ You can configure the plugin to adjust how it processes your code, giving you co
 | Option               | Type   | Default | Description |
 |-----------------------|--------|---------|-------------|
 | `actionNameAttribute` | string | –       | The chosen attribute name to use for action names. |
+| `sessionReplay`          | object | –       | Session Replay configuration. |
 | `components`          | object | –       | Component tracking configuration. |
+
+---
+
+#### `sessionReplay` options
+
+| Option          | Type    | Default | Description |
+|-----------------|---------|---------|-------------|
+| `svgTracking`    | boolean | true   | Whether to track SVG assets in the context of Session Replay. |
 
 ---
 
@@ -85,8 +94,11 @@ module.exports = {
   plugins: [
     [
       '@datadog/mobile-react-native-babel-plugin',
-      {actionNameAttribute: 'custom-prop-value'},
       {
+        actionNameAttribute: 'custom-prop-value',
+        sessionReplay: {
+          svgTracking: true
+        },
         components: {
           useContent: true,
           useNamePrefix: true,

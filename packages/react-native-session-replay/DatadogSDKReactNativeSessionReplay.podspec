@@ -14,12 +14,16 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "12.0", :tvos => "12.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/Sources/*.{h,m,mm,swift}"
+  s.source_files = "ios/Sources/**/*.{h,m,mm,swift}"
+
+  s.resource_bundles = {
+    'DDSessionReplay' => ['assets/assets.json', 'assets/assets.bin']
+  }
 
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogSessionReplay', '2.30.0'
+  s.dependency 'DatadogSessionReplay', '2.30.2'
   s.dependency 'DatadogSDKReactNative'
 
   s.test_spec 'Tests' do |test_spec|

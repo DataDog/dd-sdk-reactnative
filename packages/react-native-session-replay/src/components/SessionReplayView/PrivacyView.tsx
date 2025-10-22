@@ -13,6 +13,7 @@ import type {
     TouchPrivacyLevel
 } from '../../SessionReplay';
 import View from '../../specs/DdPrivacyView';
+import type { Attributes } from '../../types/DdPrivacyView';
 
 type Props = ViewProps & {
     /**
@@ -31,6 +32,14 @@ type Props = ViewProps & {
      * When true, completely hides this view and its children from session replays.
      */
     hide?: boolean;
+    /**
+     * When set, allows the view to be uniquely identifiable in the native layer.
+     */
+    nativeID?: string;
+    /**
+     * When set, allows view attributes to be passed to the native layer.
+     */
+    attributes?: Attributes;
 };
 
 /**
@@ -50,6 +59,7 @@ export function PrivacyView({
     textAndInputPrivacy,
     imagePrivacy,
     touchPrivacy,
+    nativeID,
     hide = false,
     ...props
 }: Props) {
@@ -60,6 +70,7 @@ export function PrivacyView({
             imagePrivacy={imagePrivacy as string}
             touchPrivacy={touchPrivacy as string}
             hide={hide || false}
+            nativeID={nativeID as string}
         >
             {children}
         </View>
