@@ -13,7 +13,7 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: '18.x'
-            - run: yarn config set npmAuthToken $NPM_PUBLISH_TOKEN
+            - run: yarn config set npmAuthToken $NPM_PUBLISH_TOKEN --home # Uses --home to avoid updating the project's .yarnrc.yml
               env:
                   NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
             - run: yarn
