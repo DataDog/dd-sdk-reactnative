@@ -7,9 +7,12 @@
 import { AttributesSingleton } from '../AttributesSingleton';
 
 describe('AttributesSingleton', () => {
-    it('adds, returns and resets the user info', () => {
-        // Adding first attributes
-        AttributesSingleton.getInstance().setAttributes({
+    beforeEach(() => {
+        AttributesSingleton.reset();
+    });
+
+    it('adds, returns and resets the attributes', () => {
+        AttributesSingleton.getInstance().addAttributes({
             appType: 'student',
             extraInfo: {
                 loggedIn: true
@@ -23,11 +26,8 @@ describe('AttributesSingleton', () => {
             }
         });
 
-        // Removing and adding new attributes
-        AttributesSingleton.getInstance().setAttributes({
-            appType: undefined,
-            newAttribute: false
-        });
+        AttributesSingleton.getInstance().removeAttribute('appType');
+        AttributesSingleton.getInstance().addAttribute('newAttribute', false);
 
         expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
             newAttribute: false,
@@ -40,5 +40,49 @@ describe('AttributesSingleton', () => {
         AttributesSingleton.reset();
 
         expect(AttributesSingleton.getInstance().getAttributes()).toEqual({});
+    });
+
+    it('addAttribute sets a single key and getAttribute returns it', () => {
+        AttributesSingleton.getInstance().addAttribute('userId', '123');
+        expect(AttributesSingleton.getInstance().getAttribute('userId')).toBe(
+            '123'
+        );
+        expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+            userId: '123'
+        });
+    });
+
+    it('removeAttribute removes a single key and leaves others intact', () => {
+        AttributesSingleton.getInstance().addAttributes({
+            a: 1,
+            b: 2
+        });
+
+        AttributesSingleton.getInstance().removeAttribute('a');
+
+        expect(
+            AttributesSingleton.getInstance().getAttribute('a')
+        ).toBeUndefined();
+        expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+            b: 2
+        });
+    });
+
+    it('removeAttributes removes multiple keys (missing keys are ignored)', () => {
+        AttributesSingleton.getInstance().addAttributes({
+            keyToKeep: 'yes',
+            keyToRemove1: true,
+            keyToRemove2: false
+        });
+
+        AttributesSingleton.getInstance().removeAttributes([
+            'keyToRemove1',
+            'keyToRemove2',
+            'keyToIgnore'
+        ]);
+
+        expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+            keyToKeep: 'yes'
+        });
     });
 });
