@@ -10,7 +10,7 @@ export const PluginConstants = {
 
 export const defaultPluginOptions = {
     sessionReplay: {
-        svgTracking: true
+        svgTracking: false
     },
     components: {
         useContent: true,

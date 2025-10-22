@@ -81,8 +81,8 @@ module.exports = {
       '@datadog/mobile-react-native-babel-plugin',
       {
         sessionReplay: {
-          // SVG tracking is enabled by default
-          // Set to false to disable SVG asset extraction
+          // SVG tracking is disabled by default
+          // Set to true to enable SVG asset extraction
           svgTracking: true
         }
       }
