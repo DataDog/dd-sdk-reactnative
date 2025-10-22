@@ -57,7 +57,8 @@ export default declare(
                     reactNativeSVG = new ReactNativeSVG(
                         api.types,
                         process.cwd(),
-                        assetsPath
+                        assetsPath,
+                        options.__internal_saveSvgMapToDisk || false
                     );
                 }
             },

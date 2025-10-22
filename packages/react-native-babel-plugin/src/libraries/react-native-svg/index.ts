@@ -45,7 +45,8 @@ export class ReactNativeSVG {
     constructor(
         private t: typeof Babel.types,
         private rootDir: string,
-        private assetsPath: string
+        private assetsPath: string,
+        private saveSvgMapToDisk: boolean = false
     ) {
         this.buildSvgMap();
     }
@@ -60,8 +61,34 @@ export class ReactNativeSVG {
      *
      * This method ignores files in `node_modules`, `lib`, and `dist`, as well as `.d.ts`, test,
      * and config files.
+     *
+     * If `saveSvgMapToDisk` is false, it will first attempt to load the mapping from a previously
+     * saved `svg-map.json` file for better performance. If the file doesn't exist or can't be read,
+     * it falls back to scanning the codebase.
+     *
+     * If `saveSvgMapToDisk` is true, the mapping will be saved to a JSON file in the assets directory
+     * after scanning.
      */
     buildSvgMap() {
+        // If not saving to disk, try to load from existing svg-map.json first
+        if (!this.saveSvgMapToDisk) {
+            // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
+            const packageRoot = pathN.resolve(__dirname, '../../../..');
+            const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
+            try {
+                if (fs.existsSync(svgMapPath)) {
+                    const mapContent = fs.readFileSync(svgMapPath, 'utf8');
+                    this.localSvgMap = JSON.parse(mapContent);
+                    return;
+                }
+            } catch (err) {
+                console.warn(
+                    '[buildSvgMap]: Failed to load SVG map from disk, falling back to codebase scan',
+                    err
+                );
+            }
+        }
+
         // TODO: Support aliased paths (RUM-12185)
         const files = glob.sync(
             ['**/*.{js,jsx,ts,tsx}', '**/*.{js,jsx,ts,tsx}'],
@@ -148,6 +175,25 @@ export class ReactNativeSVG {
                 });
             } catch (err) {
                 console.error(`[buildSvgMap]: \n File: ${file}\n`, err);
+            }
+        }
+
+        // Save the mapping to disk if requested
+        if (this.saveSvgMapToDisk) {
+            try {
+                // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
+                const packageRoot = pathN.resolve(__dirname, '../../../..');
+                const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
+                fs.writeFileSync(
+                    svgMapPath,
+                    JSON.stringify(this.localSvgMap, null, 2),
+                    'utf8'
+                );
+            } catch (err) {
+                console.error(
+                    '[buildSvgMap]: Failed to save SVG map to disk',
+                    err
+                );
             }
         }
     }

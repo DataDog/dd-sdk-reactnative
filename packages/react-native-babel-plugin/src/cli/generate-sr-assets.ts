@@ -154,7 +154,8 @@ function generateSessionReplayAssets() {
                         {
                             sessionReplay: {
                                 svgTracking: true
-                            }
+                            },
+                            __internal_saveSvgMapToDisk: true
                         }
                     ]
                 ],

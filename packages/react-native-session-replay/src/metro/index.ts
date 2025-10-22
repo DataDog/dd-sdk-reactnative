@@ -30,7 +30,10 @@ export function withSessionReplayAssetBundler(metroConfig: any): any {
         try {
             mergeSvgAssets(assetsDir);
         } catch (error) {
-            console.warn('[SessionReplayAggregator] merge failed:', error);
+            console.warn(
+                '[SessionReplayAssetBundler] SVGs merge failed:',
+                error
+            );
         }
     }, MERGE_DEBOUNCE_MS);
 

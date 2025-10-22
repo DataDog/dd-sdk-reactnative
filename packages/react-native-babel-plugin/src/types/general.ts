@@ -42,6 +42,8 @@ export type PluginOptions = {
         useNamePrefix: boolean;
         tracked: TrackedComponent[];
     };
+    // Internal option used by CLI - not meant for end users
+    __internal_saveSvgMapToDisk?: boolean;
 };
 
 export type PluginPassState = Babel.PluginPass & {
