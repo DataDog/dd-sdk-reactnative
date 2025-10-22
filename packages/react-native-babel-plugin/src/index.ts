@@ -137,3 +137,5 @@ export default declare(
         };
     }
 );
+
+module.exports = exports.default;
