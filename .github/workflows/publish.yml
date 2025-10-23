@@ -9,12 +9,12 @@ jobs:
         runs-on: ubuntu-latest
         environment: Production
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: '18.x'
             - run: yarn config set npmAuthToken $NPM_PUBLISH_TOKEN --home # Uses --home to avoid updating the project's .yarnrc.yml
               env:
                   NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
             - run: yarn
-            - run: yarn run lerna publish from-package
+            - run: yarn run lerna publish from-package --yes
