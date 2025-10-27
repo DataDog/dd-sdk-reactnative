@@ -39,7 +39,7 @@ PODS:
     - DatadogInternal (= 3.1.0)
   - DatadogRUM (3.1.0):
     - DatadogInternal (= 3.1.0)
-  - DatadogSDKReactNative (2.12.1):
+  - DatadogSDKReactNative (2.13.0):
     - DatadogCore (= 3.1.0)
     - DatadogCrashReporting (= 3.1.0)
     - DatadogLogs (= 3.1.0)
@@ -68,6 +68,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
 <<<<<<< HEAD
+<<<<<<< HEAD
   - DatadogSDKReactNative/Tests (2.14.0):
     - DatadogCore (= 2.30.2)
     - DatadogCrashReporting (= 2.30.2)
@@ -86,6 +87,9 @@ PODS:
     - DatadogWebViewTracking (= 3.0.0)
 >>>>>>> 51280318 (Bump native SDK dependencies to 3.0.0)
 =======
+=======
+  - DatadogSDKReactNative/Tests (2.13.0):
+>>>>>>> 71638bf0 (Bump Android Native SDK to 3.2.0 and regenerate app podfiles)
     - DatadogCore (= 3.1.0)
     - DatadogCrashReporting (= 3.1.0)
     - DatadogLogs (= 3.1.0)
@@ -1925,7 +1929,7 @@ SPEC CHECKSUMS:
   DatadogInternal: 7837b2ce3d525d429682532eeda697b181299fdc
   DatadogLogs: 250894b5a99da5b924a019049c0d0326823cdbd6
   DatadogRUM: 0d2a60e1abb8aacfb8827ef84f6d5deb4d5026c8
-  DatadogSDKReactNative: 069ea9876220b2d09b0f4b180ce571b1b6ecbb35
+  DatadogSDKReactNative: 2f11191b56e18680f633bfb125ab1832b327d9b4
   DatadogTrace: f59e933074cd285ad7e9f5af991f8fe04b095991
   DatadogWebViewTracking: 9bc92b4147aeed47eb1911451f651094aa6dd6c1
 >>>>>>> a19a7316 (Bump Native SDKs to 3.1.0)
