@@ -338,7 +338,6 @@ class DdSdkImplementation(
         ).any { !it.isFinite() || it <= 0.0 }
         ) return 1.0 / DEFAULT_REFRESH_HZ
 
-
         var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
 
         normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
