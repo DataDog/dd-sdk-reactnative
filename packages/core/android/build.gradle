@@ -201,16 +201,16 @@ dependencies {
   // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0. 
   // To avoid this, we enforce 1.0.0-beta01 on RN < 0.76.0
   if (reactNativeMinorVersion < 76) {
-      implementation("com.datadoghq:dd-sdk-android-rum:3.1.0") {
+      implementation("com.datadoghq:dd-sdk-android-rum:3.2.0") {
           exclude group: "androidx.metrics", module: "metrics-performance"
       }
       implementation "androidx.metrics:metrics-performance:1.0.0-beta01"
   } else {
-      implementation "com.datadoghq:dd-sdk-android-rum:3.1.0"
+      implementation "com.datadoghq:dd-sdk-android-rum:3.2.0"
   }
-  implementation "com.datadoghq:dd-sdk-android-logs:3.1.0"
-  implementation "com.datadoghq:dd-sdk-android-trace:3.1.0"
-  implementation "com.datadoghq:dd-sdk-android-webview:3.1.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:3.2.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:3.2.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:3.2.0"
   implementation "com.google.code.gson:gson:2.10.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
