@@ -115,8 +115,7 @@ class DdSdkImplementation(
     fun removeAttributes(keys: ReadableArray, promise: Promise) {
         val keysArray = mutableListOf<String>()
         for (i in 0 until keys.size()) {
-            val key: String = keys.getString(i)
-            keysArray.add(key)
+            keys.getString(i)?.let { if (it.isNotBlank()) keysArray.add(it) }
         }
         val keysStringArray = keysArray.toTypedArray()
 
