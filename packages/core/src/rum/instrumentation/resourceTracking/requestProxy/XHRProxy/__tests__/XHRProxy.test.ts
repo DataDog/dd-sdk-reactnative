@@ -882,7 +882,7 @@ describe('XHRProxy', () => {
             );
 
             const values = xhr.requestHeaders[BAGGAGE_HEADER_KEY].split(
-                ', '
+                ','
             ).sort();
 
             expect(values[0]).toBe('existing.key=existing-value');

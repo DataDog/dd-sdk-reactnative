@@ -137,26 +137,14 @@ export const getTracingHeadersFromAttributes = (
                 );
             }
         }
-        if (tracingAttributes.rumSessionId) {
-            if (!tracingAttributes.baggageHeaders) {
-                tracingAttributes.baggageHeaders = new Set<string>();
-            }
-
-            tracingAttributes.baggageHeaders?.add(
-                `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
-            );
-        }
-
-        const baggageHeader = tracingAttributes.baggageHeaders
-            ? Array.from(tracingAttributes.baggageHeaders).join(', ')
-            : null;
-        if (baggageHeader) {
-            headers.push({
-                header: BAGGAGE_HEADER_KEY,
-                value: baggageHeader
-            });
-        }
     });
+
+    if (tracingAttributes.rumSessionId) {
+        headers.push({
+            header: BAGGAGE_HEADER_KEY,
+            value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
+        });
+    }
 
     return headers;
 };
