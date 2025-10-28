@@ -10,9 +10,12 @@ import DatadogInternal
 import DatadogLogs
 import DatadogRUM
 import DatadogTrace
-import DatadogWebViewTracking
 import Foundation
 import React
+
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
 
 func getDefaultAppVersion() -> String {
     let bundleShortVersion =
@@ -28,7 +31,10 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+
+#if os(iOS)
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+#endif
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1
 
@@ -193,11 +199,12 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
 
+#if os(iOS)
     @objc
     public func consumeWebviewEvent(
         message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
     ) {
-        do {
+        do{
             try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
         } catch {
             DdTelemetry.telemetryError(
@@ -206,9 +213,9 @@ public class DdSdkImplementation: NSObject {
                 kind: "WebViewEventBridgeError" as String,
                 stack: String(describing: error) as String)
         }
-
         resolve(nil)
     }
+#endif
 
     @objc
     public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {

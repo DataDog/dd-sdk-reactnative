@@ -10,9 +10,12 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import Foundation
+
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
 
 public typealias OnSdkInitializedListener = () -> Void
 
@@ -47,6 +50,7 @@ public class DatadogSDKWrapper {
         self.loggerConfiguration = loggerConfiguration
     }
 
+#if os(iOS)
     // Webview
     private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
@@ -57,6 +61,7 @@ public class DatadogSDKWrapper {
     internal func sendWebviewMessage(body: NSString) throws {
         try self.webviewMessageEmitter?.send(body: body)
     }
+#endif
 }
 
 
