@@ -1,6 +1,8 @@
 import java.nio.file.Paths
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+apply plugin: "io.gitlab.arturbosch.detekt"
+
 buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
   def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['DdSdkReactNative_kotlinVersion']
@@ -16,7 +18,7 @@ buildscript {
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
-    classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.18.0"
+    classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8"
     classpath 'com.github.bjoernq:unmockplugin:0.7.9'
 // Uncomment here and in settings.gradle for getting rid of IDE errors for new architecture:
 //    classpath "com.facebook.react:react-native-gradle-plugin"
@@ -36,7 +38,7 @@ if (isNewArchitectureEnabled()) {
 }
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
-apply plugin: "io.gitlab.arturbosch.detekt"
+
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
@@ -96,6 +98,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  compileSdk getExtOrIntegerDefault('compileSdkVersion')
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
 
@@ -122,6 +125,7 @@ android {
   }
 
   defaultConfig {
+    compileSdk getExtOrIntegerDefault('compileSdkVersion')
     minSdkVersion getExtOrIntegerDefault('minSdkVersion')
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
@@ -197,16 +201,16 @@ dependencies {
   // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0. 
   // To avoid this, we enforce 1.0.0-beta01 on RN < 0.76.0
   if (reactNativeMinorVersion < 76) {
-      implementation("com.datadoghq:dd-sdk-android-rum:3.1.0") {
+      implementation("com.datadoghq:dd-sdk-android-rum:3.2.0") {
           exclude group: "androidx.metrics", module: "metrics-performance"
       }
       implementation "androidx.metrics:metrics-performance:1.0.0-beta01"
   } else {
-      implementation "com.datadoghq:dd-sdk-android-rum:3.1.0"
+      implementation "com.datadoghq:dd-sdk-android-rum:3.2.0"
   }
-  implementation "com.datadoghq:dd-sdk-android-logs:3.1.0"
-  implementation "com.datadoghq:dd-sdk-android-trace:3.1.0"
-  implementation "com.datadoghq:dd-sdk-android-webview:3.1.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:3.2.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:3.2.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:3.2.0"
   implementation "com.google.code.gson:gson:2.10.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
@@ -222,6 +226,8 @@ dependencies {
   testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
   unmock 'org.robolectric:android-all:4.4_r1-robolectric-r2'
+  detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:1.23.8"
+  detektPlugins "io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.8"
 }
 
 unMock {

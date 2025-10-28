@@ -400,7 +400,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     }
 
     // endregion
-
+    @Suppress("UndocumentedPublicClass")
     companion object {
         private const val MISSING_RESOURCE_SIZE = -1L
         internal const val NAME = "DdRum"

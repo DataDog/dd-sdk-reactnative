@@ -51,4 +51,93 @@ SessionReplay.startRecording();
 SessionReplay.stopRecording();
 ```
 
+## SVG Support
+
+Session Replay provides enhanced support for capturing SVG images in your React Native application. To enable SVG tracking, you need to set up the Datadog Babel plugin and Metro plugin.
+
+### Prerequisites
+
+Install the Datadog Babel plugin:
+
+```sh
+npm install @datadog/mobile-react-native-babel-plugin
+```
+
+or with Yarn:
+
+```sh
+yarn add @datadog/mobile-react-native-babel-plugin
+```
+
+### Setup Babel Plugin
+
+Configure the Babel plugin in your `babel.config.js` to enable SVG tracking:
+
+```js
+module.exports = {
+  presets: ['module:@react-native/babel-preset'],
+  plugins: [
+    [
+      '@datadog/mobile-react-native-babel-plugin',
+      {
+        sessionReplay: {
+          // SVG tracking is disabled by default
+          // Set to true to enable SVG asset extraction
+          svgTracking: true
+        }
+      }
+    ]
+  ]
+};
+```
+
+### Setup Metro Plugin
+
+Configure the Metro plugin in your `metro.config.js` to enable automatic SVG asset bundling:
+
+```js
+const { withSessionReplayAssetBundler } = require('@datadog/mobile-react-native-session-replay/metro');
+
+module.exports = withSessionReplayAssetBundler({
+  /* your existing Metro config */
+});
+```
+
+The Metro plugin automatically monitors and bundles SVG assets during development and production builds.
+
+### Installation Workflow
+
+When setting up your project or after installing new dependencies, follow this workflow to ensure SVG assets are properly generated for native builds:
+
+```sh
+# 1. Install dependencies
+yarn install
+
+# 2. Generate Session Replay SVG assets
+npx datadog-generate-sr-assets
+
+# 3. Install iOS pods (if building for iOS)
+cd ios && pod install && cd ..
+
+# 4. Run your app
+yarn ios
+# or
+yarn android
+```
+
+The `datadog-generate-sr-assets` CLI utility scans your codebase for SVG elements and pre-generates optimized assets that will be included in your native builds.
+
+**Note for CI/CD**: If you use continuous integration for your builds, make sure to include these steps in your CI pipeline. The workflow should be: `yarn install` → `npx datadog-generate-sr-assets` → `pod install` (for iOS) → build your app. This ensures SVG assets are properly generated before the native build process.
+
+### Development Workflow
+
+During development, the Metro plugin automatically handles SVG assets created by the Babel plugin:
+
+1. Write your components with SVG elements from `react-native-svg`
+2. The Babel plugin extracts and transforms SVG nodes during the build process
+3. The Metro plugin detects new SVG assets and automatically bundles them
+4. SVG images are seamlessly captured in Session Replay recordings
+
+No manual asset management is required during development.
+
 [1]: https://www.npmjs.com/package/@datadog/mobile-react-native

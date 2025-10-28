@@ -37,7 +37,7 @@ function build_ios_app {
 
     echo export NODE_BINARY=$(command -v node) > ${ROOT}/ios/.xcode.env
     rm Podfile.lock || true
-    pod install --repo-update
+    RCT_NEW_ARCH_ENABLED=1 pod install --repo-update
 
     # Build & Archive
     LOG_PATH="${XCODEBUILD_LOG_PATH:-logs/xcodebuild_full_output_benchmark_runner.log}"

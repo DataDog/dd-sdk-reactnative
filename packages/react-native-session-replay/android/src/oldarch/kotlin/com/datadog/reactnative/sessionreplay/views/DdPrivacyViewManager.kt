@@ -6,6 +6,7 @@
 package com.datadog.reactnative.sessionreplay.views
 
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -39,5 +40,17 @@ class DdPrivacyViewManager(context: ReactApplicationContext) : ViewGroupManager<
     @ReactProp(name = "touchPrivacy")
     fun setTouchPrivacy(view: DdPrivacyView?, value: String?) {
         view?.let { view.touchPrivacy = value }
+    }
+
+    @ReactProp(name = "nativeID")
+    fun setNativeID(view: DdPrivacyView?, value: String?) {
+        view?.nativeID = value
+    }
+
+    @ReactProp(name = "attributes")
+    fun setAttributes(view: DdPrivacyView?, map: ReadableMap?) {
+        view?.attributes = map?.toHashMap()?.mapValues {
+            it.value.toString() ?: ""
+        }
     }
 }

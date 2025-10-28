@@ -1711,7 +1711,7 @@ internal class DdSdkTest {
                 mapOf(
                     "match" to match,
                     "propagatorTypes" to headerTypes.map {
-                        it.name.lowercase()
+                        it.name.lowercase(Locale.US)
                     }.toReadableArray()
                 ).toReadableMap()
             )
@@ -1783,7 +1783,7 @@ internal class DdSdkTest {
                 mapOf(
                     "match" to match,
                     "propagatorTypes" to listOf(
-                        TracingHeaderType.DATADOG.name.lowercase(),
+                        TracingHeaderType.DATADOG.name.lowercase(Locale.US),
                         forge.aString()
                     ).toReadableArray()
                 ).toReadableMap()
@@ -1857,7 +1857,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.DATADOG.name.lowercase()
+                    TracingHeaderType.DATADOG.name.lowercase(Locale.US)
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1865,7 +1865,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.B3.name.lowercase()
+                    TracingHeaderType.B3.name.lowercase(Locale.US)
                 ).toReadableArray()
             ).toReadableMap()
         )

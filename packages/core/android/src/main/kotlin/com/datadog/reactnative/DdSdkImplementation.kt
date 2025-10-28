@@ -115,8 +115,7 @@ class DdSdkImplementation(
     fun removeAttributes(keys: ReadableArray, promise: Promise) {
         val keysArray = mutableListOf<String>()
         for (i in 0 until keys.size()) {
-            val key: String = keys.getString(i)
-            keysArray.add(key)
+            keys.getString(i)?.let { if (it.isNotBlank()) keysArray.add(it) }
         }
         val keysStringArray = keysArray.toTypedArray()
 
@@ -338,7 +337,6 @@ class DdSdkImplementation(
         ).any { !it.isFinite() || it <= 0.0 }
         ) return 1.0 / DEFAULT_REFRESH_HZ
 
-
         var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
 
         normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
@@ -355,8 +353,7 @@ class DdSdkImplementation(
     }
 
     // endregion
-
-    companion object {
+    internal companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
