@@ -16,11 +16,24 @@
 
 RCT_EXPORT_MODULE()
 
-// FIXME: This is a temporary method to test whether the native library setup is working.
-RCT_REMAP_METHOD(getConstant, withResolve:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_REMAP_METHOD(setEvaluationContext,
+                 withClientName:(NSString *)clientName
+                 withTargetingKey:(NSString *)targetingKey
+                 withAttributes:(NSDictionary *)attributes
+                 withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
 {
-    [self getConstant:resolve reject:reject];
+    [self setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(getBooleanValue,
+                 withClientName:(NSString *)clientName
+                 withKey:(NSString *)key
+                 withDefaultValue:(BOOL)defaultValue
+                 withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
+{
+    [self getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
@@ -48,8 +61,12 @@ RCT_REMAP_METHOD(getConstant, withResolve:(RCTPromiseResolveBlock)resolve
     return [RNQueue getSharedQueue];
 }
 
-- (void)getConstant:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddFlagsImplementation getConstant:resolve reject:reject];
+- (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)getBooleanValue:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
 @end

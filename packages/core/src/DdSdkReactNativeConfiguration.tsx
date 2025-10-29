@@ -358,6 +358,8 @@ export class DdSdkReactNativeConfiguration {
 
     public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
 
+    // TODO: Handle flags configuration.
+
     constructor(
         readonly clientToken: string,
         readonly env: string,

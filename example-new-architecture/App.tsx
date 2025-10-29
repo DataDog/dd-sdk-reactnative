@@ -8,7 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
-  DdFlags,
+  DatadogFlags,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -33,8 +33,6 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  console.log({constant: await DdFlags.getConstant()});
-
   const config = new DdSdkReactNativeConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
@@ -57,6 +55,18 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   await DdLogs.info('info log');
   const spanId = await DdTrace.startSpan('test span');
   await DdTrace.finishSpan(spanId);
+
+  const flagsClient = DatadogFlags.getClient();
+
+  await flagsClient.setEvaluationContext({
+    targetingKey: 'test-user-1',
+    attributes: {
+      country: 'US',
+    },
+  });
+
+  // Feature flag page: https://app.datadoghq.com/feature-flags/c715d5a6-939e-486e-be12-6f96cb36a018?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+  console.log({booleanValue: await flagsClient.getBooleanValue('dp-test-flag', false)})
 })();
 
 type SectionProps = PropsWithChildren<{

@@ -12,8 +12,22 @@ import { TurboModuleRegistry } from 'react-native';
  * Do not import this Spec directly, use DdNativeFlagsType instead.
  */
 export interface Spec extends TurboModule {
-    // TODO: This is a temporary method to test whether the native library setup is working.
-    readonly getConstant: () => Promise<number>;
+    // TODO: Flags and all other features are initialized globally for now. We want to change this in the future.
+    // readonly enable: (
+    //     configuration: DatadogFlagsConfiguration
+    // ) => Promise<void>;
+
+    readonly setEvaluationContext: (
+        clientName: string,
+        targetingKey: string,
+        attributes: { [key: string]: unknown }
+    ) => Promise<void>;
+
+    readonly getBooleanValue: (
+        clientName: string,
+        key: string,
+        defaultValue: boolean
+    ) => Promise<boolean>;
 }
 
 // eslint-disable-next-line import/no-default-export

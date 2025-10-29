@@ -6,3 +6,5 @@
 
 // This file is imported in the auto-generated DatadogSDKReactNative-Swift.h header file.
 // Deleting it could result in iOS builds failing.
+
+#import <React/RCTBridgeModule.h>

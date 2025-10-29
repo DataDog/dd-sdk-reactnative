@@ -1638,11 +1638,15 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - DatadogFlags (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogInternal (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogRUM (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
+  - DatadogCore (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
+  - DatadogCrashReporting (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
+  - DatadogFlags (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
+  - DatadogInternal (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
+  - DatadogLogs (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
+  - DatadogRUM (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogTrace (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `develop`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1711,10 +1715,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - DatadogCore
-    - DatadogCrashReporting
-    - DatadogLogs
-    - DatadogTrace
     - DatadogWebViewTracking
     - OpenTelemetrySwiftApi
     - PLCrashReporter
@@ -1723,17 +1723,29 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
+  DatadogCore:
+    :branch: develop
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogCrashReporting:
+    :branch: develop
+    :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogFlags:
-    :branch: feature/flags
+    :branch: develop
     :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogInternal:
-    :branch: feature/flags
+    :branch: develop
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogLogs:
+    :branch: develop
     :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogRUM:
-    :branch: feature/flags
+    :branch: develop
     :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogTrace:
+    :branch: develop
+    :git: https://github.com/DataDog/dd-sdk-ios.git
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   fast_float:
@@ -1863,14 +1875,26 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 CHECKOUT OPTIONS:
+  DatadogCore:
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogCrashReporting:
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
+    :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogFlags:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
     :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogInternal:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogLogs:
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
     :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogRUM:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogTrace:
+    :commit: 00bb35ce9eb9b50b37cf725f29b0a96da9fa46f1
     :git: https://github.com/DataDog/dd-sdk-ios.git
 
 SPEC CHECKSUMS:
@@ -1951,6 +1975,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: a25d6a4a713f5e05063f261c976c29ec22e26585
+PODFILE CHECKSUM: 0371740c3ef15f157e2090328ec6d4963ce43cd5
 
 COCOAPODS: 1.16.2
