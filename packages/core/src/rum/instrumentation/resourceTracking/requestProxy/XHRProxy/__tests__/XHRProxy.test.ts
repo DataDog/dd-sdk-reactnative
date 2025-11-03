@@ -840,6 +840,44 @@ describe('XHRProxy', () => {
             expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
         });
 
+        it('does not add rum session id to baggage headers when propagator type is not datadog or w3c', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://example.com';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com', // <-- no datadog or tracecontext here
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId('TEST-SESSION-ID');
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+        });
+
         it('rum session id does not overwrite existing baggage headers', async () => {
             // GIVEN
             const method = 'GET';
