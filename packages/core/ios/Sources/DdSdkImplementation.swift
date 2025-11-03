@@ -10,9 +10,12 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import React
+
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
 
 func getDefaultAppVersion() -> String {
     let bundleShortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -27,7 +30,10 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+
+#if os(iOS)
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+#endif
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1;
 
@@ -149,6 +155,7 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
     
+#if os(iOS)
     @objc
     public func consumeWebviewEvent(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do{
@@ -158,6 +165,7 @@ public class DdSdkImplementation: NSObject {
         }
         resolve(nil)
     }
+#endif
     
     @objc
     public func clearAllData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
