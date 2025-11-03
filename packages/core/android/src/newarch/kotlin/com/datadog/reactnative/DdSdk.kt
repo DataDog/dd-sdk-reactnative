@@ -107,6 +107,32 @@ class DdSdk(
     }
 
     /**
+     * Set the account information.
+     * @param account The account object (use builtin attributes: 'id', 'name', and any custom * attribute inside 'extraInfo').
+     */
+    @ReactMethod
+    override fun setAccountInfo(account: ReadableMap, promise: Promise) {
+        implementation.setAccountInfo(account, promise)
+    }
+
+    /**
+     * Sets the account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    @ReactMethod
+    override fun addAccountExtraInfo(extraInfo: ReadableMap, promise: Promise) {
+        implementation.addAccountExtraInfo(extraInfo, promise)
+    }
+
+    /**
+     * Clears the account information.
+     */
+    @ReactMethod
+    override fun clearAccountInfo(promise: Promise) {
+        implementation.clearAccountInfo(promise)
+    }
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent Consent, which can take one of the following values: 'pending',
      * 'granted', 'not_granted'.

@@ -130,6 +130,27 @@ export type DdSdkType = {
     addUserExtraInfo(extraUserInfo: Record<string, unknown>): Promise<void>;
 
     /**
+     * Sets the account information.
+     * @param id: A unique account identifier (relevant to your business domain)
+     * @param name: The account name.
+     * @param extraInfo: Additional information.
+     */
+    setAccountInfo(accountInfo: AccountInfo): Promise<void>;
+
+    /**
+     * Clears the account information.
+     */
+    clearAccountInfo(): Promise<void>;
+
+    /**
+     * Add additional account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    addAccountExtraInfo(
+        extraAccountInfo: Record<string, unknown>
+    ): Promise<void>;
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */
@@ -173,6 +194,12 @@ export type UserInfo = {
     id: string;
     name?: string;
     email?: string;
+    extraInfo?: object;
+};
+
+export type AccountInfo = {
+    id: string;
+    name?: string;
     extraInfo?: object;
 };
 

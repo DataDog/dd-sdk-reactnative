@@ -7,6 +7,8 @@
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { DdSdk } from '../../sdk/DdSdk';
+import { AccountInfoSingleton } from '../AccountInfoSingleton/AccountInfoSingleton';
+import type { AccountInfo } from '../AccountInfoSingleton/types';
 import { AttributesSingleton } from '../AttributesSingleton/AttributesSingleton';
 import type { Attributes } from '../AttributesSingleton/types';
 import { UserInfoSingleton } from '../UserInfoSingleton/UserInfoSingleton';
@@ -16,6 +18,7 @@ import { deepClone } from './utils/deepClone';
 
 export type AdditionalEventDataForMapper = {
     userInfo?: UserInfo;
+    accountInfo?: AccountInfo;
     attributes: Attributes;
 };
 
@@ -66,9 +69,11 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
 
         // formatting
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        const accountInfo = AccountInfoSingleton.getInstance().getAccountInfo();
         const attributes = AttributesSingleton.getInstance().getAttributes();
         const initialEvent = this.formatRawEventForMapper(rawEvent, {
             userInfo,
+            accountInfo,
             attributes
         });
 
