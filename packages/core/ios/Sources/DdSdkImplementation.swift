@@ -161,6 +161,44 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
+    public func setAccountInfo(
+        accountInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        let castedAccountInfo = castAttributesToSwift(accountInfo)
+        let id = castedAccountInfo["id"] as? String
+        let name = castedAccountInfo["name"] as? String
+        var extraInfo: [AttributeKey: AttributeValue] = [:]
+
+        if let extraInfoEncodable = castedAccountInfo["extraInfo"] as? AnyEncodable,
+            let extraInfoDict = extraInfoEncodable.value as? [String: Any]
+        {
+            extraInfo = castAttributesToSwift(extraInfoDict)
+        }
+
+        if let validId = id {
+            Datadog.setAccountInfo(id: validId, name: name, extraInfo: extraInfo)
+        }
+
+        resolve(nil)
+    }
+
+    @objc
+    public func addAccountExtraInfo(
+        extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        let castedExtraInfo = castAttributesToSwift(extraInfo)
+
+        Datadog.addAccountExtraInfo(castedExtraInfo)
+        resolve(nil)
+    }
+
+    @objc
+    public func clearAccountInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        Datadog.clearAccountInfo()
+        resolve(nil)
+    }
+
+    @objc
     public func setTrackingConsent(
         trackingConsent: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
     ) {
