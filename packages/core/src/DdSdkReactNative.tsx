@@ -356,7 +356,8 @@ export class DdSdkReactNative {
             configuration.resourceTracingSamplingRate,
             configuration.trackWatchdogTerminations,
             configuration.batchProcessingLevel,
-            configuration.initialResourceThreshold
+            configuration.initialResourceThreshold,
+            configuration.flagsConfiguration
         );
     };
 

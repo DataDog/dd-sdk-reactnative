@@ -5,6 +5,7 @@
  */
 
 import DatadogCore
+import DatadogFlags
 import DatadogRUM
 import DatadogInternal
 import Foundation
@@ -43,6 +44,7 @@ extension NSDictionary {
         let trackWatchdogTerminations = object(forKey: "trackWatchdogTerminations") as? Bool
         let batchProcessingLevel = object(forKey: "batchProcessingLevel") as? NSString
         let initialResourceThreshold = object(forKey: "initialResourceThreshold") as? Double
+        let configurationForFlags = object(forKey: "configurationForFlags") as? NSDictionary
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -75,7 +77,8 @@ extension NSDictionary {
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
-            initialResourceThreshold: initialResourceThreshold
+            initialResourceThreshold: initialResourceThreshold,
+            configurationForFlags: configurationForFlags?.asConfigurationForFlags()
         )
     }
 
@@ -96,7 +99,38 @@ extension NSDictionary {
             reactNativeVersion: reactNativeVersion
         )
     }
-    
+
+    func asConfigurationForFlags() -> Flags.Configuration? {
+        let enabled = object(forKey: "enabled") as! Bool
+
+        if !enabled {
+            return nil
+        }
+
+        let gracefulModeEnabled = object(forKey: "gracefulModeEnabled") as? Bool
+        let customFlagsHeaders = object(forKey: "customFlagsHeaders") as? [String: String]
+        let trackExposures = object(forKey: "trackExposures") as? Bool
+        let rumIntegrationEnabled = object(forKey: "rumIntegrationEnabled") as? Bool
+
+        var customFlagsEndpointURL: URL? = nil
+        if let customFlagsEndpoint = object(forKey: "customFlagsEndpoint") as? String {
+            customFlagsEndpointURL = URL(string: "\(customFlagsEndpoint)/precompute-assignments" as String)
+        }
+        var customExposureEndpointURL: URL? = nil
+        if let customExposureEndpoint = object(forKey: "customExposureEndpoint") as? String {
+            customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
+        }
+
+        return Flags.Configuration(
+            gracefulModeEnabled: gracefulModeEnabled ?? true,
+            customFlagsEndpoint: customFlagsEndpointURL,
+            customFlagsHeaders: customFlagsHeaders,
+            customExposureEndpoint: customExposureEndpointURL,
+            trackExposures: trackExposures ?? true,
+            rumIntegrationEnabled: rumIntegrationEnabled ?? true
+        )
+    }
+
     func asCustomEndpoints() -> CustomEndpoints {
         let rum = object(forKey: "rum") as? NSString
         let logs = object(forKey: "logs") as? NSString
@@ -244,6 +278,7 @@ extension Dictionary where Key == String, Value == AnyObject {
         let trackWatchdogTerminations = configuration["trackWatchdogTerminations"] as? Bool
         let batchProcessingLevel = configuration["batchProcessingLevel"] as? NSString
         let initialResourceThreshold = configuration["initialResourceThreshold"] as? Double
+        let configurationForFlags = configuration["configurationForFlags"] as? NSDictionary
         
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -279,7 +314,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
-            initialResourceThreshold: initialResourceThreshold
+            initialResourceThreshold: initialResourceThreshold,
+            configurationForFlags: configurationForFlags?.asConfigurationForFlags()
         )
     }
 }

@@ -7,6 +7,7 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
+import type { DatadogFlagsConfiguration } from './flags/types';
 import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
@@ -358,7 +359,7 @@ export class DdSdkReactNativeConfiguration {
 
     public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
 
-    // TODO: Handle flags configuration.
+    public flagsConfiguration?: DatadogFlagsConfiguration;
 
     constructor(
         readonly clientToken: string,

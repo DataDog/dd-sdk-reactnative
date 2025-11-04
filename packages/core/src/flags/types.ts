@@ -16,6 +16,7 @@ export interface EvaluationContext {
  * Configuration settings for flags.
  */
 export interface DatadogFlagsConfiguration {
+    enabled: boolean;
     gracefulModeEnabled?: boolean;
     customFlagsEndpoint?: string;
     customFlagsHeaders?: Record<string, string>;
