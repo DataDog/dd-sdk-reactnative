@@ -103,4 +103,15 @@ describe('formatBaggageHeader', () => {
         const result = formatBaggageHeader(entries);
         expect(result).toBe('first=1,second=2,third=3');
     });
+
+    it('should trim keys and values', () => {
+        const entries = new Set([
+            'traceId=abc123;sampled=true;debug',
+            'test1  = this is a test'
+        ]);
+        const result = formatBaggageHeader(entries);
+        expect(result).toBe(
+            'traceId=abc123;sampled=true;debug,test1=this%20is%20a%20test'
+        );
+    });
 });

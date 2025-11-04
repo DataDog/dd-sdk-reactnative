@@ -102,7 +102,7 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
 
     if (formattedParts.length > MAX_MEMBERS) {
         InternalLog.log(
-            `XHRProxy: Too many baggage members: ${formattedParts.length} > ${MAX_MEMBERS} - entries might be dropped (https://www.w3.org/TR/baggage/#limits)`,
+            `XHRProxy: Too many baggage members: ${formattedParts.length} > ${MAX_MEMBERS} - entries may be dropped (https://www.w3.org/TR/baggage/#limits)`,
             SdkVerbosity.WARN
         );
     } else if (formattedParts.length === 0) {
@@ -114,7 +114,7 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
 
     if (byteLength > MAX_BYTES) {
         InternalLog.log(
-            `Baggage header too large: ${byteLength} bytes > ${MAX_BYTES} - entries might be dropped (https://www.w3.org/TR/baggage/#limits)`,
+            `Baggage header too large: ${byteLength} bytes > ${MAX_BYTES} - entries may be dropped (https://www.w3.org/TR/baggage/#limits)`,
             SdkVerbosity.WARN
         );
     }
