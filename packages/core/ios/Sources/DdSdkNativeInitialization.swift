@@ -10,9 +10,12 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import React
+
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
 
 @objc
 public class DdSdkNativeInitialization: NSObject {
@@ -90,7 +93,9 @@ public class DdSdkNativeInitialization: NSObject {
             DatadogSDKWrapper.shared.enableCrashReporting()
         }
         
+#if os(iOS)
         DatadogSDKWrapper.shared.enableWebviewTracking()
+#endif
     }
 
     func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {

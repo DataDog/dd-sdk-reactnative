@@ -128,9 +128,11 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
     return [RNQueue getSharedQueue];
 }
 
+#if TARGET_OS_IOS
 - (void)consumeWebviewEvent:(NSString *)message resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation consumeWebviewEventWithMessage:message resolve:resolve reject:reject];
 }
+#endif
 
 - (void)initialize:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation initializeWithConfiguration:configuration resolve:resolve reject:reject];
