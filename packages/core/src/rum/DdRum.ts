@@ -31,6 +31,7 @@ import {
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
 import {
+    clearCachedSessionId,
     getCachedSessionId,
     setCachedSessionId
 } from './sessionId/sessionIdHelper';
@@ -295,6 +296,7 @@ class DdRumWrapper implements DdRumType {
 
     stopSession = (): Promise<void> => {
         InternalLog.log('Stopping RUM Session', SdkVerbosity.DEBUG);
+        clearCachedSessionId();
         return bufferVoidNativeCall(() => this.nativeRum.stopSession());
     };
 
