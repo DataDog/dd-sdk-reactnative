@@ -48,9 +48,12 @@ export const getTracingHeadersFromAttributes = (
     if (tracingAttributes.tracingStrategy === 'DISCARD') {
         return headers;
     }
+
+    let hasDatadogOrW3CPropagator = false;
     tracingAttributes.propagatorTypes.forEach(propagator => {
         switch (propagator) {
             case PropagatorType.DATADOG: {
+                hasDatadogOrW3CPropagator = true;
                 headers.push(
                     {
                         header: ORIGIN_HEADER_KEY,
@@ -82,6 +85,7 @@ export const getTracingHeadersFromAttributes = (
                 break;
             }
             case PropagatorType.TRACECONTEXT: {
+                hasDatadogOrW3CPropagator = true;
                 const isSampled =
                     tracingAttributes.samplingPriorityHeader === '1';
                 headers.push(
@@ -137,13 +141,14 @@ export const getTracingHeadersFromAttributes = (
                 );
             }
         }
-        if (tracingAttributes.rumSessionId) {
-            headers.push({
-                header: BAGGAGE_HEADER_KEY,
-                value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
-            });
-        }
     });
+
+    if (hasDatadogOrW3CPropagator && tracingAttributes.rumSessionId) {
+        headers.push({
+            header: BAGGAGE_HEADER_KEY,
+            value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
+        });
+    }
 
     return headers;
 };
