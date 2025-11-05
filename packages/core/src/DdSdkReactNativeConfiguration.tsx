@@ -133,7 +133,8 @@ export const DEFAULTS = {
     bundleLogsWithTraces: true,
     useAccessibilityLabel: true,
     trackWatchdogTerminations: false,
-    batchProcessingLevel: BatchProcessingLevel.MEDIUM
+    batchProcessingLevel: BatchProcessingLevel.MEDIUM,
+    trackMemoryWarnings: true
 };
 
 /**
@@ -329,6 +330,16 @@ export class DdSdkReactNativeConfiguration {
         DEFAULTS.trackWatchdogTerminations;
 
     /**
+     * Enables tracking of memory warnings as RUM events.
+     *
+     * When enabled, the SDK will automatically record a RUM event each time the app
+     * receives a memory warning from the operating system.
+     *
+     * **Note:** This setting is only supported on **iOS**. It has no effect on other platforms.
+     */
+    public trackMemoryWarnings: boolean = DEFAULTS.trackMemoryWarnings;
+
+    /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
      *
      * For example if you set it to `testID`, the value of the `testID` prop is used as a custom action name:
@@ -469,6 +480,7 @@ export type PartialInitializationConfiguration = {
     readonly bundleLogsWithTraces?: boolean;
     readonly batchProcessingLevel?: BatchProcessingLevel;
     readonly initialResourceThreshold?: number;
+    readonly trackMemoryWarnings?: boolean;
 };
 
 const setConfigurationAttribute = <
