@@ -43,6 +43,7 @@ extension NSDictionary {
         let trackWatchdogTerminations = object(forKey: "trackWatchdogTerminations") as? Bool
         let batchProcessingLevel = object(forKey: "batchProcessingLevel") as? NSString
         let initialResourceThreshold = object(forKey: "initialResourceThreshold") as? Double
+        let trackMemoryWarnings = object(forKey: "trackMemoryWarnings") as? Bool
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -75,7 +76,8 @@ extension NSDictionary {
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
-            initialResourceThreshold: initialResourceThreshold
+            initialResourceThreshold: initialResourceThreshold,
+            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings
         )
     }
 
@@ -206,6 +208,7 @@ internal struct DefaultConfiguration {
     static let bundleLogsWithRum = true
     static let bundleLogsWithTraces = true
     static let trackWatchdogTerminations = false
+    static let trackMemoryWarnings = true
 }
 
 extension Dictionary where Key == String, Value == AnyObject {
@@ -244,6 +247,7 @@ extension Dictionary where Key == String, Value == AnyObject {
         let trackWatchdogTerminations = configuration["trackWatchdogTerminations"] as? Bool
         let batchProcessingLevel = configuration["batchProcessingLevel"] as? NSString
         let initialResourceThreshold = configuration["initialResourceThreshold"] as? Double
+        let trackMemoryWarnings = configuration["trackMemoryWarnings"] as? Bool
         
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -279,7 +283,8 @@ extension Dictionary where Key == String, Value == AnyObject {
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
-            initialResourceThreshold: initialResourceThreshold
+            initialResourceThreshold: initialResourceThreshold,
+            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings
         )
     }
 }
