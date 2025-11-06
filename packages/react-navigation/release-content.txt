@@ -80,10 +80,14 @@ package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributed
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/distributedTracing/TracingIdentifier.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/graphql/graphqlHeaders.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/graphql/graphqlHeaders.d.ts.map
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/headers.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/headers.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RequestProxy.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/interfaces/RumResource.d.ts.map
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/baggageHeaderUtils.d.ts
+package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/baggageHeaderUtils.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/internalDevResourceBlocklist.d.ts
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/internalDevResourceBlocklist.d.ts.map
 package/lib/typescript/core/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/ResourceReporter.d.ts
