@@ -1,0 +1,36 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+let _cachedSessionId: string | undefined;
+let _cachedUserId: string | undefined;
+let _cachedAccountId: string | undefined;
+
+export const getCachedSessionId = () => {
+    return _cachedSessionId;
+};
+
+export const setCachedSessionId = (sessionId: string) => {
+    _cachedSessionId = sessionId;
+};
+
+export const clearCachedSessionId = () => {
+    _cachedSessionId = undefined;
+};
+
+export const getCachedUserId = () => {
+    return _cachedUserId;
+};
+
+export const setCachedUserId = (userId: string) => {
+    _cachedUserId = userId;
+};
+
+export const getCachedAccountId = () => {
+    return _cachedAccountId;
+};
+
+export const setCachedAccountId = (accountId: string) => {
+    _cachedAccountId = accountId;
+};

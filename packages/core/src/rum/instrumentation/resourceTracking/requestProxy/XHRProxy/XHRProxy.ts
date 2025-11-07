@@ -5,21 +5,29 @@
  */
 
 import { Timer } from '../../../../../utils/Timer';
-import { getCachedSessionId } from '../../../../sessionId/sessionIdHelper';
-import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
+import {
+    getCachedAccountId,
+    getCachedSessionId,
+    getCachedUserId
+} from '../../../../helper';
+import {
+    BAGGAGE_HEADER_KEY,
+    getTracingHeadersFromAttributes
+} from '../../distributedTracing/distributedTracingHeaders';
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
-    DATADOG_GRAPH_QL_VARIABLES_HEADER,
-    isDatadogCustomHeader
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../graphql/graphqlHeaders';
+import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 
 import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';
+import { formatBaggageHeader } from './baggageHeaderUtils';
 import { calculateResponseSize } from './responseSize';
 
 const RESPONSE_START_LABEL = 'response_start';
@@ -39,6 +47,7 @@ interface DdRumXhrContext {
     reported: boolean;
     timer: Timer;
     tracingAttributes: DdRumResourceTracingAttributes;
+    baggageHeaderEntries: Set<string>;
 }
 
 interface XHRProxyProviders {
@@ -110,8 +119,11 @@ const proxyOpen = (
                 hostname,
                 firstPartyHostsRegexMap,
                 tracingSamplingRate,
-                rumSessionId: getCachedSessionId()
-            })
+                rumSessionId: getCachedSessionId(),
+                userId: getCachedUserId(),
+                accountId: getCachedAccountId()
+            }),
+            baggageHeaderEntries: new Set<string>()
         };
         // eslint-disable-next-line prefer-rest-params
         return originalXhrOpen.apply(this, arguments as any);
@@ -127,12 +139,22 @@ const proxySend = (providers: XHRProxyProviders): void => {
             // keep track of start time
             this._datadog_xhr.timer.start();
 
+            // Tracing Headers
             const tracingHeaders = getTracingHeadersFromAttributes(
                 this._datadog_xhr.tracingAttributes
             );
+
             tracingHeaders.forEach(({ header, value }) => {
                 this.setRequestHeader(header, value);
             });
+
+            // Join all baggage header entries
+            const baggageHeader = formatBaggageHeader(
+                this._datadog_xhr.baggageHeaderEntries
+            );
+            if (baggageHeader) {
+                this.setRequestHeader(DATADOG_BAGGAGE_HEADER, baggageHeader);
+            }
         }
 
         proxyOnReadyStateChange(this, providers);
@@ -211,22 +233,37 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
         header: string,
         value: string
     ) {
-        if (isDatadogCustomHeader(header)) {
-            if (header === DATADOG_GRAPH_QL_OPERATION_NAME_HEADER) {
-                this._datadog_xhr.graphql.operationName = value;
-                return;
+        const key = header.toLowerCase();
+        if (isDatadogCustomHeader(key)) {
+            switch (key) {
+                case DATADOG_GRAPH_QL_OPERATION_NAME_HEADER:
+                    this._datadog_xhr.graphql.operationName = value;
+                    break;
+                case DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER:
+                    this._datadog_xhr.graphql.operationType = value;
+                    break;
+                case DATADOG_GRAPH_QL_VARIABLES_HEADER:
+                    this._datadog_xhr.graphql.variables = value;
+                    break;
+                case DATADOG_BAGGAGE_HEADER:
+                    // Apply Baggage Header only if pre-processed by Datadog
+                    return originalXhrSetRequestHeader.apply(this, [
+                        BAGGAGE_HEADER_KEY,
+                        value
+                    ]);
+                default:
+                    return originalXhrSetRequestHeader.apply(
+                        this,
+                        // eslint-disable-next-line prefer-rest-params
+                        arguments as any
+                    );
             }
-            if (header === DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER) {
-                this._datadog_xhr.graphql.operationType = value;
-                return;
-            }
-            if (header === DATADOG_GRAPH_QL_VARIABLES_HEADER) {
-                this._datadog_xhr.graphql.variables = value;
-                return;
-            }
+        } else if (key === BAGGAGE_HEADER_KEY) {
+            // Intercept User Baggage Header entries to apply them later
+            this._datadog_xhr.baggageHeaderEntries?.add(value);
+        } else {
+            // eslint-disable-next-line prefer-rest-params
+            return originalXhrSetRequestHeader.apply(this, arguments as any);
         }
-
-        // eslint-disable-next-line prefer-rest-params
-        return originalXhrSetRequestHeader.apply(this, arguments as any);
     };
 };

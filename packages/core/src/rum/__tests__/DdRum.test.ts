@@ -17,11 +17,11 @@ import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
+import { setCachedSessionId } from '../helper';
 import { DatadogTracingContext } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
-import { setCachedSessionId } from '../sessionId/sessionIdHelper';
 import type { FirstPartyHost } from '../types';
 import { PropagatorType, RumActionType } from '../types';
 

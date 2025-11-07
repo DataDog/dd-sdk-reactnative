@@ -20,12 +20,19 @@ import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
-import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
-import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
+import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
-import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
+import {
+    clearCachedSessionId,
+    getCachedAccountId,
+    getCachedSessionId,
+    getCachedUserId,
+    setCachedSessionId
+} from './helper';
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
@@ -33,16 +40,12 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
-import {
-    getCachedSessionId,
-    setCachedSessionId
-} from './sessionId/sessionIdHelper';
 import type {
     DdRumType,
-    RumActionType,
-    ResourceKind,
     FirstPartyHost,
-    PropagatorType
+    PropagatorType,
+    ResourceKind,
+    RumActionType
 } from './types';
 
 const RUM_MODULE = 'com.datadog.reactnative.rum';
@@ -343,6 +346,7 @@ class DdRumWrapper implements DdRumType {
 
     stopSession = (): Promise<void> => {
         InternalLog.log('Stopping RUM Session', SdkVerbosity.DEBUG);
+        clearCachedSessionId();
         return bufferVoidNativeCall(() => this.nativeRum.stopSession());
     };
 
@@ -381,7 +385,9 @@ class DdRumWrapper implements DdRumType {
             url,
             tracingSamplingRate,
             firstPartyHosts,
-            getCachedSessionId()
+            getCachedSessionId(),
+            getCachedUserId(),
+            getCachedAccountId()
         );
     };
 
@@ -392,7 +398,9 @@ class DdRumWrapper implements DdRumType {
         return getTracingContextForPropagators(
             propagators,
             tracingSamplingRate,
-            getCachedSessionId()
+            getCachedSessionId(),
+            getCachedUserId(),
+            getCachedAccountId()
         );
     };
 

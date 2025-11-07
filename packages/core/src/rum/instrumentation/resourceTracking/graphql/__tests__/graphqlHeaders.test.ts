@@ -4,11 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { isDatadogCustomHeader } from '../../headers';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
-    DATADOG_GRAPH_QL_VARIABLES_HEADER,
-    isDatadogCustomHeader
+    DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../graphqlHeaders';
 
 describe('GraphQL custom headers', () => {
@@ -18,11 +18,5 @@ describe('GraphQL custom headers', () => {
         DATADOG_GRAPH_QL_VARIABLES_HEADER
     ])('%s matches the custom header pattern', header => {
         expect(isDatadogCustomHeader(header)).toBeTruthy();
-    });
-
-    describe('isDatadogCustomHeader', () => {
-        it('returns false for non-custom headers', () => {
-            expect(isDatadogCustomHeader('non-custom-header')).toBeFalsy();
-        });
     });
 });
