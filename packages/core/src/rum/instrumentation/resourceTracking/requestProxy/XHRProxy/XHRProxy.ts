@@ -5,7 +5,11 @@
  */
 
 import { Timer } from '../../../../../utils/Timer';
-import { getCachedSessionId } from '../../../../sessionId/sessionIdHelper';
+import {
+    getCachedAccountId,
+    getCachedSessionId,
+    getCachedUserId
+} from '../../../../helper';
 import {
     BAGGAGE_HEADER_KEY,
     getTracingHeadersFromAttributes
@@ -115,7 +119,9 @@ const proxyOpen = (
                 hostname,
                 firstPartyHostsRegexMap,
                 tracingSamplingRate,
-                rumSessionId: getCachedSessionId()
+                rumSessionId: getCachedSessionId(),
+                userId: getCachedUserId(),
+                accountId: getCachedAccountId()
             }),
             baggageHeaderEntries: new Set<string>()
         };
