@@ -76,6 +76,7 @@ public class DdSdkConfiguration: NSObject {
     public var trackWatchdogTerminations: Bool
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     public var initialResourceThreshold: Double? = nil
+    public var trackMemoryWarnings: Bool
 
     public init(
         clientToken: String,
@@ -108,7 +109,8 @@ public class DdSdkConfiguration: NSObject {
         appHangThreshold: Double?,
         trackWatchdogTerminations: Bool,
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
-        initialResourceThreshold: Double?
+        initialResourceThreshold: Double?,
+        trackMemoryWarnings: Bool = true
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -141,6 +143,7 @@ public class DdSdkConfiguration: NSObject {
         self.trackWatchdogTerminations = trackWatchdogTerminations
         self.batchProcessingLevel = batchProcessingLevel
         self.initialResourceThreshold = initialResourceThreshold
+        self.trackMemoryWarnings = trackMemoryWarnings
     }
 }
 
