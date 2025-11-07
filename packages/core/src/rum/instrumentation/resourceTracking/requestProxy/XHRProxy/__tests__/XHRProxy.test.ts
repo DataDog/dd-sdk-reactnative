@@ -11,7 +11,7 @@ import { InternalLog } from '../../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../../DdRum';
-import { setCachedSessionId } from '../../../../../sessionId/sessionIdHelper';
+import { setCachedSessionId } from '../../../../../helper';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
