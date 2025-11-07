@@ -1,6 +1,5 @@
 /*
- * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
- * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0. This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
 
@@ -29,6 +28,8 @@ export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
 export const TAGS_HEADER_KEY = 'x-datadog-tags';
 export const DD_TRACE_ID_TAG = '_dd.p.tid';
 export const DD_RUM_SESSION_ID_TAG = 'session.id';
+export const DD_RUM_USER_ID_TAG = 'user.id';
+export const DD_RUM_ACCOUNT_ID_TAG = 'account.id';
 
 /**
  * OTel headers
@@ -143,6 +144,29 @@ export const getTracingHeadersFromAttributes = (
         }
     });
 
+    if (hasDatadogOrW3CPropagator) {
+        if (tracingAttributes.rumSessionId) {
+            headers.push({
+                header: BAGGAGE_HEADER_KEY,
+                value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
+            });
+        }
+
+        if (tracingAttributes.userId) {
+            headers.push({
+                header: BAGGAGE_HEADER_KEY,
+                value: `${DD_RUM_USER_ID_TAG}=${tracingAttributes.userId}`
+            });
+        }
+
+        if (tracingAttributes.accountId) {
+            headers.push({
+                header: BAGGAGE_HEADER_KEY,
+                value: `${DD_RUM_ACCOUNT_ID_TAG}=${tracingAttributes.accountId}`
+            });
+        }
+    }
+
     if (hasDatadogOrW3CPropagator && tracingAttributes.rumSessionId) {
         headers.push({
             header: BAGGAGE_HEADER_KEY,
@@ -157,7 +181,9 @@ export const getTracingContext = (
     url: string,
     tracingSamplingRate: number,
     firstPartyHosts: FirstPartyHost[],
-    rumSessionId?: string
+    rumSessionId?: string,
+    userId?: string,
+    accountId?: string
 ): DatadogTracingContext => {
     const hostname = URLHostParser(url);
     const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder(
@@ -167,7 +193,9 @@ export const getTracingContext = (
         hostname,
         firstPartyHostsRegexMap,
         tracingSamplingRate,
-        rumSessionId
+        rumSessionId,
+        userId,
+        accountId
     });
 
     return getTracingContextForAttributes(
@@ -179,13 +207,17 @@ export const getTracingContext = (
 export const getTracingContextForPropagators = (
     propagators: PropagatorType[],
     tracingSamplingRate: number,
-    rumSessionId?: string
+    rumSessionId?: string,
+    userId?: string,
+    accountId?: string
 ): DatadogTracingContext => {
     return getTracingContextForAttributes(
         generateTracingAttributesWithSampling(
             tracingSamplingRate,
             propagators,
-            rumSessionId
+            rumSessionId,
+            userId,
+            accountId
         ),
         tracingSamplingRate
     );
