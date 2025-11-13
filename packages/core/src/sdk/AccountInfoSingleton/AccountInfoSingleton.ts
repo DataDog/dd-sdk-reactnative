@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { setCachedAccountId } from '../../rum/helper';
+
 import type { AccountInfo } from './types';
 
 class AccountInfoProvider {
@@ -11,6 +13,7 @@ class AccountInfoProvider {
 
     setAccountInfo = (accountInfo: AccountInfo) => {
         this.accountInfo = accountInfo;
+        setCachedAccountId(this.accountInfo.id);
     };
 
     addAccountExtraInfo = (extraInfo: AccountInfo['extraInfo']) => {
