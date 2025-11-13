@@ -11,7 +11,11 @@ import { InternalLog } from '../../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../../DdRum';
-import { setCachedSessionId } from '../../../../../helper';
+import {
+    setCachedSessionId,
+    setCachedUserId,
+    setCachedAccountId
+} from '../../../../../helper';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
@@ -90,6 +94,10 @@ afterEach(() => {
     (Date.now as jest.MockedFunction<typeof Date.now>).mockClear();
     jest.spyOn(global.Math, 'random').mockRestore();
     DdRum.unregisterResourceEventMapper();
+
+    setCachedSessionId(undefined as any);
+    setCachedUserId(undefined as any);
+    setCachedAccountId(undefined as any);
 });
 
 describe('XHRProxy', () => {
