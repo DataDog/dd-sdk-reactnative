@@ -20,13 +20,13 @@ target 'DdSdkReactNativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
   # Flags don't seem to be released yet so we pull them from the iOS SDK develop branch.
-  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
-  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'develop'
+  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
+  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '00bb35ce9'
 
   config = use_native_modules!
 
