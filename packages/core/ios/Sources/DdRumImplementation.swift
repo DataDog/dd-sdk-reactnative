@@ -182,6 +182,34 @@ public class DdRumImplementation: NSObject {
     }
     
     @objc
+    public func addViewAttribute(key: AttributeKey, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if let attributeValue = value.object(forKey: "value") {
+            let castedAttribute = castValueToSwift(attributeValue)
+            nativeRUM.addViewAttribute(forKey: key, value: castedAttribute)
+        }
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeViewAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.removeViewAttribute(forKey: key)
+        resolve(nil)
+    }
+    
+    @objc
+    public func addViewAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.addViewAttributes(castedAttributes)
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeViewAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.removeViewAttributes(forKeys: keys)
+        resolve(nil)
+    }
+    
+    @objc
     public func addViewLoadingTime(overwrite: Bool, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addViewLoadingTime(overwrite: overwrite)
         resolve(nil)

@@ -7,7 +7,7 @@ import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
-import {DatadogProvider} from '@datadog/mobile-react-native'
+import {DatadogProvider, FileBasedConfiguration} from '@datadog/mobile-react-native'
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
@@ -19,9 +19,25 @@ const viewPredicate: ViewNamePredicate = function customViewNamePredicate(route:
   return "Custom RN " + trackedName;
 }
 
+// === Datadog Provider Configuration schemes ===
+
+// 1.- Direct configuration
+const configuration = getDatadogConfig(TrackingConsent.GRANTED)
+
+// 2.- File based configuration from .json
+// const configuration = new FileBasedConfiguration(require("../datadog-configuration.json"));
+
+// 3.- File based configuration from .json and custom mapper setup
+// const configuration = new FileBasedConfiguration( {
+//   configuration: require("../datadog-configuration.json").configuration, 
+//   errorEventMapper: (event) => event, 
+//   resourceEventMapper: (event) => event, 
+//   actionEventMapper: (event) => event});
+
+
 export default function App() {
   return (
-    <DatadogProvider configuration={getDatadogConfig(TrackingConsent.GRANTED)} onInitialization={onDatadogInitialization}>
+    <DatadogProvider configuration={configuration} onInitialization={onDatadogInitialization}>
       <NavigationContainer ref={navigationRef} onReady={() => {
         DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewPredicate)
       }}>

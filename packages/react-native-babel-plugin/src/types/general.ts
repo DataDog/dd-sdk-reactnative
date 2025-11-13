@@ -7,6 +7,7 @@
 import type * as Babel from '@babel/core';
 
 import type { RumAction } from '../constants';
+import type { ReactNativeSVG } from '../libraries/react-native-svg';
 
 export const MemoTypes = {
     USE_CALLBACK: 'useCallback',
@@ -29,13 +30,20 @@ export type TrackedComponent = {
     }[];
 };
 
+export type SessionReplayOptions = {
+    svgTracking: boolean;
+};
+
 export type PluginOptions = {
     actionNameAttribute?: string;
+    sessionReplay: SessionReplayOptions;
     components: {
         useContent: boolean;
         useNamePrefix: boolean;
         tracked: TrackedComponent[];
     };
+    // Internal option used by CLI - not meant for end users
+    __internal_saveSvgMapToDisk?: boolean;
 };
 
 export type PluginPassState = Babel.PluginPass & {
@@ -43,6 +51,7 @@ export type PluginPassState = Babel.PluginPass & {
     memoization?: Record<string, string>;
     hasValidTapAction?: boolean;
     trackedComponents?: Record<string, Omit<TrackedComponent, 'name'>>;
+    reactNativeSVG?: ReactNativeSVG | null;
 };
 
 export type PluginResult = Babel.PluginObj<Babel.PluginPass>;

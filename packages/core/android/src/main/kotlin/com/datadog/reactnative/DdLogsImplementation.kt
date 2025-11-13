@@ -227,7 +227,7 @@ class DdLogsImplementation(
         promise.resolve(null)
     }
 
-    companion object {
+    internal companion object {
         private const val SDK_NOT_INITIALIZED_MESSAGE = "DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT"
         internal const val NAME = "DdLogs"
     }

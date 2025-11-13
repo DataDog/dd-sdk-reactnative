@@ -137,6 +137,31 @@ export interface Spec extends TurboModule {
     addTiming(name: string): Promise<void>;
 
     /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    addViewAttribute(key: string, value: Object): Promise<void>;
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    removeViewAttribute(key: string): Promise<void>;
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    addViewAttributes(attributes: Object): Promise<void>;
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    removeViewAttributes(keys: string[]): Promise<void>;
+
+    /**
      * Adds the loading time of the view to the active view.
      * It is calculated as the difference between the current time and the start time of the view.
      * @param overwrite: If true, overwrites the previously calculated view loading time.

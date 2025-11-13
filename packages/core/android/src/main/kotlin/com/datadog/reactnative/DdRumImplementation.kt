@@ -13,6 +13,7 @@ import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 
@@ -249,6 +250,49 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     }
 
     /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    fun addViewAttribute(key: String, value: ReadableMap, promise: Promise) {
+        val attributeValue = value.toMap()["value"]
+        val attributes = mutableMapOf<String, Any?>()
+        attributes[key] = attributeValue
+        datadog.getRumMonitor().addViewAttributes(attributes)
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    fun removeViewAttribute(key: String, promise: Promise) {
+        val keysToDelete: Collection<String> = listOf(key)
+        datadog.getRumMonitor().removeViewAttributes(keysToDelete)
+        promise.resolve(null)
+    }
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    fun addViewAttributes(attributes: ReadableMap, promise: Promise) {
+        datadog.getRumMonitor().addViewAttributes(attributes.toMap())
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    fun removeViewAttributes(keys: ReadableArray, promise: Promise) {
+        val keysToDelete = (0 until keys.size())
+            .mapNotNull { keys.getString(it) }
+        datadog.getRumMonitor().removeViewAttributes(keysToDelete)
+        promise.resolve(null)
+    }
+
+    /**
      * Adds the loading time of the view to the active view.
      * It is calculated as the difference between the current time and the start time of the view.
      * @param overwrite: If true, overwrites the previously calculated view loading time.
@@ -356,7 +400,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     }
 
     // endregion
-
+    @Suppress("UndocumentedPublicClass")
     companion object {
         private const val MISSING_RESOURCE_SIZE = -1L
         internal const val NAME = "DdRum"

@@ -17,6 +17,9 @@
 @property (nonatomic, strong) NSString *imagePrivacy;
 @property (nonatomic, strong) NSString *touchPrivacy;
 @property (nonatomic, assign) BOOL hide;
+@property (nonatomic, copy) NSString *nativeID;
+
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> *attributes;
 
 @end
 
@@ -53,6 +56,27 @@ RCT_CUSTOM_VIEW_PROPERTY(touchPrivacy, NSString, DdPrivacyView) {
 RCT_CUSTOM_VIEW_PROPERTY(hide, BOOL, DdPrivacyView) {
     view.hide = json ? [json boolValue] : NO;
     [self setPrivacyOverridesFor:view];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(nativeID, NSString, DdPrivacyView) {
+    view.nativeID = [RCTConvert NSString:json];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(attributes, NSDictionary, DdPrivacyView) {
+    if (json && [json isKindOfClass:[NSDictionary class]]) {
+        NSMutableDictionary<NSString *, NSString *> *dict = [NSMutableDictionary new];
+        for (id key in json) {
+            id value = json[key];
+            if ([key isKindOfClass:[NSString class]] && [value isKindOfClass:[NSString class]]) {
+                dict[key] = value;
+            } else if ([key isKindOfClass:[NSString class]] && value != [NSNull null]) {
+                dict[key] = [value description];
+            }
+        }
+        view.attributes = dict;
+    } else {
+        view.attributes = nil;
+    }
 }
 
 - (void) setPrivacyOverridesFor:(DdPrivacyView *) view {

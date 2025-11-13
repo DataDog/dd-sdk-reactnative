@@ -12,13 +12,14 @@ import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
     reactContext: ReactApplicationContext,
-    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper(),
     ddTelemetry: DdTelemetry = DdTelemetry()
 ) : NativeDdSdkSpec(reactContext) {
 
@@ -40,13 +41,43 @@ class DdSdk(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    @ReactMethod
+    override fun addAttribute(key: String, value: ReadableMap, promise: Promise) {
+        implementation.addAttribute(key, value, promise)
+    }
+
+    /**
+     * Removes an attribute from the context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    @ReactMethod
+    override fun removeAttribute(key: String, promise: Promise) {
+        implementation.removeAttribute(key, promise)
+    }
+
+    /**
+     * Adds a set of attributes to the global context that is attached with all future Logs, Spans and RUM
      * events.
      * @param attributes The global context attributes.
      */
     @ReactMethod
-    override fun setAttributes(attributes: ReadableMap, promise: Promise) {
-        implementation.setAttributes(attributes, promise)
+    override fun addAttributes(attributes: ReadableMap, promise: Promise) {
+        implementation.addAttributes(attributes, promise)
+    }
+
+    /**
+     * Removes a set of attributes from the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    @ReactMethod
+    override fun removeAttributes(keys: ReadableArray, promise: Promise) {
+        implementation.removeAttributes(keys, promise)
     }
 
     /**

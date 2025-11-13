@@ -91,12 +91,34 @@ interface DatadogWrapper {
      */
     fun clearUserInfo()
 
+
+    /** Adds a global attribute.
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    fun addRumGlobalAttribute(key: String, value: Any?)
+
+    /**
+     * Removes a global attribute.
+     *
+     * @param key: Key that identifies the attribute.
+     */
+    fun removeRumGlobalAttribute(key: String)
+
     /**
      * Adds global attributes.
      *
      * @param attributes Attributes to add
      */
     fun addRumGlobalAttributes(attributes: Map<String, Any?>)
+
+    /**
+     * Removes global attributes.
+     *
+     * @param keys Keys linked to the attributes to be removed
+     */
+    fun removeRumGlobalAttributes(keys: Array<String>)
 
     /**
      * Sets tracking consent.

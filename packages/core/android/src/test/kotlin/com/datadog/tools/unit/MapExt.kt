@@ -11,6 +11,7 @@ import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import java.util.Locale
 
 fun Map<*, *>.toReadableMap(): ReadableMap {
     val keysAndValues = mutableListOf<Any?>()
@@ -33,7 +34,7 @@ fun Map<String, Set<TracingHeaderType>>.toFirstPartyHostsReadableArray(): Readab
                 "match" to it.key,
                 "propagatorTypes" to it.value.map {
                         tracingHeaderType ->
-                    tracingHeaderType.toString().lowercase()
+                    tracingHeaderType.toString().lowercase(Locale.US)
                 }.toReadableArray()
             ).toReadableMap()
         )

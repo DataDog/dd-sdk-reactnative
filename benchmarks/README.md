@@ -6,17 +6,19 @@
 2. From the iOS folder, run `pod install`.
 3. From the root folder, run `yarn ios` or `yarn android`.
 
-## Enable new architecture
+## Enable old architecture
+
+The Benchmark app uses React Native's New Architecture by default. However, you may need to switch to the Old Architecture to compare performance between the two systems or reproduce bugs that are specific to legacy environments.
 
 ### iOS
 
 ```
-RCT_NEW_ARCH_ENABLED=1 pod install
+RCT_NEW_ARCH_ENABLED=0 pod install
 ```
 
 ### Android
 
-Set `newArchEnabled=true` in `benchmarks/android/gradle.properties`.
+Set `newArchEnabled=false` in `benchmarks/android/gradle.properties`.
 
 ## ENV config
 

@@ -13,6 +13,8 @@ import {
     insertRumActionImport
 } from './actions/rum';
 import { defaultPluginOptions } from './constants';
+import { getAssetsPath } from './libraries/react-native-svg/processing/fs';
+import { ReactNativeSVG } from './libraries/react-native-svg';
 import type {
     PluginAPI,
     PluginOptions,
@@ -27,18 +29,43 @@ export default declare(
 
         const options = {
             ...opt,
+            sessionReplay: {
+                ...defaultPluginOptions.sessionReplay,
+                ...opt.sessionReplay
+            },
             components: {
                 ...defaultPluginOptions.components,
                 ...opt.components
             }
         };
 
+        let reactNativeSVG: ReactNativeSVG | null = null;
+
+        let assetsPath: string | null = null;
+
         return {
+            pre() {
+                if (!options.sessionReplay.svgTracking) {
+                    return;
+                }
+
+                if (!assetsPath) {
+                    assetsPath = getAssetsPath();
+                }
+
+                if (!reactNativeSVG && assetsPath) {
+                    reactNativeSVG = new ReactNativeSVG(
+                        api.types,
+                        process.cwd(),
+                        assetsPath,
+                        options.__internal_saveSvgMapToDisk || false
+                    );
+                }
+            },
             visitor: {
                 Program: {
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
-
                         const { path: p, name } = getFileInfo(this);
 
                         if (p?.includes('node_modules')) {
@@ -46,6 +73,7 @@ export default declare(
                         }
 
                         pluginState.fileInfo = { path: p, name };
+                        pluginState.reactNativeSVG = reactNativeSVG;
 
                         insertSetupFlag(path, state, api.types);
                         loadImportMap(path, api.types, pluginState, options);
@@ -102,8 +130,12 @@ export default declare(
                         pluginState,
                         options
                     );
+
+                    pluginState.reactNativeSVG?.processItem(path, name);
                 }
             }
         };
     }
 );
+
+module.exports = exports.default;

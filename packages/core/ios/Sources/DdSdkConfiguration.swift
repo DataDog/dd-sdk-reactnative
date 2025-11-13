@@ -4,46 +4,44 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Foundation
 import DatadogCore
 import DatadogFlags
 import DatadogInternal
 import DatadogRUM
+import Foundation
 
-/**
- A configuration object to initialize Datadog's features.
- - Parameters:
-     - clientToken: A valid Datadog client token.
-     - env: The application’s environment, for example: prod, pre-prod, staging, etc.
-     - applicationId: The RUM application ID.
-     - nativeCrashReportEnabled: Whether the SDK should track native (pure iOS or pure Android) crashes (default is false).
-     - nativeLongTaskThresholdMs: The threshold for native long tasks reporting in milliseconds.
-     - longTaskThresholdMs: The threshold for javascript long tasks reporting in milliseconds.
-     - sampleRate: The sample rate (between 0 and 100) of RUM sessions kept.
-     - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
-     - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
-     - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
-     - vitalsUpdateFrequency: The frequency at which to measure vitals performance metrics.
-     - uploadFrequency: The frequency at which batches of data are sent.
-     - batchSize: The preferred size of batched data uploaded to Datadog.
-     - trackFrustrations: Whether to track frustration signals or not.
-     - trackBackgroundEvents: Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
-     - customEndpoints: Custom endpoints for RUM/Logs/Trace features.
-     - additionalConfig: Additional configuration parameters.
-     - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
-     - nativeViewTracking: Enables/Disables tracking RUM Views on the native level.
-     - nativeInteractionTracking: Enables/Disables tracking RUM Actions on the native level.
-     - verbosity: Verbosity level of the SDK.
-     - proxyConfig: Configuration for proxying SDK data.
-     - serviceName: Custom service name.
-     - firstPartyHosts: List of backend hosts to enable tracing with.
-     - bundleLogsWithRum: Correlates logs with RUM.
-     - bundleLogsWithTraces: Correlates logs with traces.
-     - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
-     - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
-     - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
-     - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)
- */
+/// A configuration object to initialize Datadog's features.
+/// - Parameters:
+///     - clientToken: A valid Datadog client token.
+///     - env: The application’s environment, for example: prod, pre-prod, staging, etc.
+///     - applicationId: The RUM application ID.
+///     - nativeCrashReportEnabled: Whether the SDK should track native (pure iOS or pure Android) crashes (default is false).
+///     - nativeLongTaskThresholdMs: The threshold for native long tasks reporting in milliseconds.
+///     - longTaskThresholdMs: The threshold for javascript long tasks reporting in milliseconds.
+///     - sampleRate: The sample rate (between 0 and 100) of RUM sessions kept.
+///     - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
+///     - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
+///     - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
+///     - vitalsUpdateFrequency: The frequency at which to measure vitals performance metrics.
+///     - uploadFrequency: The frequency at which batches of data are sent.
+///     - batchSize: The preferred size of batched data uploaded to Datadog.
+///     - trackFrustrations: Whether to track frustration signals or not.
+///     - trackBackgroundEvents: Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
+///     - customEndpoints: Custom endpoints for RUM/Logs/Trace features.
+///     - additionalConfig: Additional configuration parameters.
+///     - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
+///     - nativeViewTracking: Enables/Disables tracking RUM Views on the native level.
+///     - nativeInteractionTracking: Enables/Disables tracking RUM Actions on the native level.
+///     - verbosity: Verbosity level of the SDK.
+///     - proxyConfig: Configuration for proxying SDK data.
+///     - serviceName: Custom service name.
+///     - firstPartyHosts: List of backend hosts to enable tracing with.
+///     - bundleLogsWithRum: Correlates logs with RUM.
+///     - bundleLogsWithTraces: Correlates logs with traces.
+///     - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
+///     - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
+///     - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
+///     - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
     public var clientToken: String = ""
@@ -77,6 +75,7 @@ public class DdSdkConfiguration: NSObject {
     public var trackWatchdogTerminations: Bool
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     public var initialResourceThreshold: Double? = nil
+    public var trackMemoryWarnings: Bool
     public var configurationForFlags: Flags.Configuration? = nil
 
     public init(
@@ -111,6 +110,7 @@ public class DdSdkConfiguration: NSObject {
         trackWatchdogTerminations: Bool,
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
         initialResourceThreshold: Double?,
+        trackMemoryWarnings: Bool = true,
         configurationForFlags: Flags.Configuration?
     ) {
         self.clientToken = clientToken
@@ -144,6 +144,7 @@ public class DdSdkConfiguration: NSObject {
         self.trackWatchdogTerminations = trackWatchdogTerminations
         self.batchProcessingLevel = batchProcessingLevel
         self.initialResourceThreshold = initialResourceThreshold
+        self.trackMemoryWarnings = trackMemoryWarnings
         self.configurationForFlags = configurationForFlags
     }
 }
@@ -155,7 +156,7 @@ public class ConfigurationForTelemetry: NSObject {
     public let trackNetworkRequests: Bool?
     public var reactVersion: NSString?
     public var reactNativeVersion: NSString?
-    
+
     public init(
         initializationType: NSString?,
         trackErrors: Bool?,
@@ -177,7 +178,7 @@ public class CustomEndpoints: NSObject {
     public var rum: NSString?
     public var logs: NSString?
     public var trace: NSString?
-    
+
     public init(
         rum: NSString?,
         logs: NSString?,

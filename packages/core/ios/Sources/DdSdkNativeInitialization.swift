@@ -193,6 +193,7 @@ public class DdSdkNativeInitialization: NSObject {
             },
             onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
+            trackMemoryWarnings: configuration.trackMemoryWarnings,
             telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.telemetrySampleRate)
         )
     }

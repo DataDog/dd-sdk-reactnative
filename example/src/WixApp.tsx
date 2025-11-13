@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Button } from 'react-native';
 import MainScreen from './screens/MainScreen';
 import ErrorScreen from './screens/ErrorScreen';
@@ -11,6 +11,8 @@ import {
 } from '@datadog/mobile-react-native-navigation';
 
 import styles from './screens/styles';
+import { DdTrace } from '@datadog/mobile-react-native';
+import TraceScreen from './screens/TraceScreen';
 
 const viewPredicate: ViewNamePredicate = (
     _event: ComponentDidAppearEvent,
@@ -37,6 +39,7 @@ function registerScreens() {
     Navigation.registerComponent('Home', () => HomeScreen);
     Navigation.registerComponent('Main', () => MainScreen);
     Navigation.registerComponent('Error', () => ErrorScreen);
+    Navigation.registerComponent('Trace', () => TraceScreen);
     Navigation.registerComponent('About', () => AboutScreen);
 }
 
@@ -60,6 +63,15 @@ const HomeScreen = props => {
                 onPress={() => {
                     Navigation.push(props.componentId, {
                         component: { name: 'Error' }
+                    });
+                }}
+            />
+            <View style={{ marginTop: 20 }} />
+            <Button
+                title="Trace"
+                onPress={() => {
+                    Navigation.push(props.componentId, {
+                        component: { name: 'Trace' }
                     });
                 }}
             />

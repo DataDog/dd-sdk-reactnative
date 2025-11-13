@@ -111,7 +111,7 @@ class DdSdkNativeInitialization internal constructor(
             ?: DdSdkImplementation.DEFAULT_APP_VERSION
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("CyclomaticComplexMethod")
     private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
@@ -368,6 +368,7 @@ class DdSdkNativeInitialization internal constructor(
         }
     }
 
+    @Suppress("UndocumentedPublicClass")
     companion object {
         /**
          * Initializes the Datadog React Native SDK from your MainApplication.

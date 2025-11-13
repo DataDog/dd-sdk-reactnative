@@ -72,7 +72,7 @@ internal fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
     )
 }
 
-@Suppress("ComplexMethod")
+@Suppress("CyclomaticComplexMethod")
 internal fun ReadableMap.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
     val address: String? = getString("address")
 
@@ -142,7 +142,7 @@ internal object DefaultConfiguration {
     const val initialResourceThreshold = 0.1
 }
 
-@Suppress("ComplexMethod")
+@Suppress("CyclomaticComplexMethod")
 internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
     return DdSdkConfiguration(
         this.clientToken,
@@ -210,7 +210,7 @@ internal fun List<JSONFirstPartyHost>.asFirstPartyHosts(): Map<String, Set<Traci
 
 internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     return this.mapNotNull {
-        when (it.lowercase()) {
+        when (it.lowercase(Locale.US)) {
             "datadog" -> TracingHeaderType.DATADOG
             "b3" -> TracingHeaderType.B3
             "b3multi" -> TracingHeaderType.B3MULTI
@@ -220,7 +220,7 @@ internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     }.toSet()
 }
 
-@Suppress("ComplexMethod")
+@Suppress("CyclomaticComplexMethod")
 internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
     map.putString("clientToken", clientToken)
