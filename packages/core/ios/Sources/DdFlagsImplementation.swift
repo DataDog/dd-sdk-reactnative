@@ -25,27 +25,35 @@ public class DdFlagsImplementation: NSObject {
         return client
     }
 
-    private func parseAttributes(attributes: NSDictionary) -> [String: AnyValue] {
-        func asAnyValue(value: Any) -> AnyValue {
-            switch value {
-            case let s as String: return .string(s)
-            case let b as Bool: return .bool(b)
-            case let i as Int: return .int(i)
-            case let d as Double: return .double(d)
-            // FIXME: Do we even support nested evaluation contexts?
-            case let dict as NSDictionary: return .dictionary(parseAttributes(attributes: dict))
-            case let arr as NSArray: return .array(arr.compactMap(asAnyValue))
-            case is NSNull: return .null
-            default: return .null
-            }
+    private func asAnyValue(_ value: Any) -> AnyValue {
+        if value is NSNull {
+            return .null
         }
-        
+
+        if let value = value as? String {
+            return .string(value)
+        } else if let value = value as? Bool {
+            return .bool(value)
+        } else if let value = value as? Int {
+            return .int(value)
+        } else if let value = value as? Double {
+            return .double(value)
+        } else if let value = value as? NSDictionary {
+            return .dictionary(parseAttributes(attributes: value))
+        } else if let value = value as? NSArray {
+            return .array(value.compactMap(asAnyValue))
+        } else {
+            return .null
+        }
+    }
+
+    private func parseAttributes(attributes: NSDictionary) -> [String: AnyValue] {
         var result: [String: AnyValue] = [:]
         for (key, value) in attributes {
             guard let stringKey = key as? String else {
                 continue
             }
-            result[stringKey] = asAnyValue(value: value)
+            result[stringKey] = asAnyValue(value)
         }
         return result
     }
@@ -75,9 +83,50 @@ public class DdFlagsImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         let client = getClient(name: clientName)
-
         let value = client.getBooleanValue(key: key, defaultValue: defaultValue)
+        resolve(value)
+    }
 
+    @objc
+    public func getStringValue(
+        _ clientName: String,
+        key: String,
+        defaultValue: String,
+        resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        let client = getClient(name: clientName)
+        let value = client.getStringValue(key: key, defaultValue: defaultValue)
+        resolve(value)
+    }
+
+    @objc
+    public func getNumberValue(
+        _ clientName: String,
+        key: String,
+        defaultValue: Double,
+        resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        let client = getClient(name: clientName)
+        // TODO: Handle Integer flag values...
+        let value = client.getDoubleValue(key: key, defaultValue: defaultValue)
+        resolve(value)
+    }
+
+    @objc
+    public func getObjectValue(
+        _ clientName: String,
+        key: String,
+        defaultValue: NSDictionary,
+        resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        let client = getClient(name: clientName)
+
+        let val = asAnyValue(defaultValue)
+        let value = client.getObjectValue(key: key, defaultValue: val)
+        // TODO: Convert to Dictionary.
         resolve(value)
     }
 }
