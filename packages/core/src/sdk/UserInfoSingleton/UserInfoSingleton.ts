@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { setCachedUserId } from '../../rum/helper';
+
 import type { UserInfo } from './types';
 
 class UserInfoProvider {
@@ -11,6 +13,7 @@ class UserInfoProvider {
 
     setUserInfo = (userInfo: UserInfo) => {
         this.userInfo = userInfo;
+        setCachedUserId(this.userInfo.id);
     };
 
     getUserInfo = (): UserInfo | undefined => {
