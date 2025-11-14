@@ -35,6 +35,16 @@ export class FlagsClient {
         key: string,
         defaultValue: boolean
     ): Promise<FlagDetails<boolean>> => {
+        if (typeof defaultValue !== 'boolean') {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error: 'TYPE_MISMATCH'
+            };
+        }
+
         const details = await this.nativeFlags.getBooleanDetails(
             this.clientName,
             key,
@@ -47,6 +57,16 @@ export class FlagsClient {
         key: string,
         defaultValue: string
     ): Promise<FlagDetails<string>> => {
+        if (typeof defaultValue !== 'string') {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error: 'TYPE_MISMATCH'
+            };
+        }
+
         const details = await this.nativeFlags.getStringDetails(
             this.clientName,
             key,
@@ -59,6 +79,16 @@ export class FlagsClient {
         key: string,
         defaultValue: number
     ): Promise<FlagDetails<number>> => {
+        if (typeof defaultValue !== 'number') {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error: 'TYPE_MISMATCH'
+            };
+        }
+
         const details = await this.nativeFlags.getNumberDetails(
             this.clientName,
             key,
@@ -71,6 +101,16 @@ export class FlagsClient {
         key: string,
         defaultValue: { [key: string]: unknown }
     ): Promise<FlagDetails<{ [key: string]: unknown }>> => {
+        if (typeof defaultValue !== 'object') {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error: 'TYPE_MISMATCH'
+            };
+        }
+
         const details = await this.nativeFlags.getObjectDetails(
             this.clientName,
             key,
