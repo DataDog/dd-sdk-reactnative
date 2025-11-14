@@ -5,14 +5,6 @@
  */
 
 /**
- * Evaluation context for flags.
- */
-export interface EvaluationContext {
-    targetingKey: string;
-    attributes: Record<string, unknown>;
-}
-
-/**
  * Configuration settings for flags.
  */
 export interface DatadogFlagsConfiguration {
@@ -23,4 +15,25 @@ export interface DatadogFlagsConfiguration {
     customExposureEndpoint?: string;
     trackExposures?: boolean;
     rumIntegrationEnabled?: boolean;
+}
+
+/**
+ * Evaluation context for flags.
+ */
+export interface EvaluationContext {
+    targetingKey: string;
+    attributes: Record<string, unknown>;
+}
+
+export type FlagEvaluationError =
+    | 'PROVIDER_NOT_READY'
+    | 'FLAG_NOT_FOUND'
+    | 'TYPE_MISMATCH';
+
+export interface FlagDetails<T> {
+    key: string;
+    value: T;
+    variant: string | null;
+    reason: string | null;
+    error: FlagEvaluationError | null;
 }

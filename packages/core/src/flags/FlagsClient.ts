@@ -6,7 +6,7 @@
 
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
-import type { EvaluationContext } from './types';
+import type { EvaluationContext, FlagDetails } from './types';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -41,6 +41,18 @@ export class FlagsClient {
             defaultValue
         );
         return value;
+    };
+
+    getBooleanDetails = async (
+        key: string,
+        defaultValue: boolean
+    ): Promise<FlagDetails<boolean>> => {
+        const details = await this.nativeFlags.getBooleanDetails(
+            this.clientName,
+            key,
+            defaultValue
+        );
+        return details;
     };
 
     getStringValue = async (

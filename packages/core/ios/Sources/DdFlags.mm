@@ -36,6 +36,16 @@ RCT_REMAP_METHOD(getBooleanValue,
     [self getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(getBooleanDetails,
+                 getBooleanDetailsWithClientName:(NSString *)clientName
+                 withKey:(NSString *)key
+                 withDefaultValue:(BOOL)defaultValue
+                 withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
+{
+    [self getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(getStringValue,
                  getStringValueWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
@@ -97,6 +107,10 @@ RCT_REMAP_METHOD(getObjectValue,
 
 - (void)getBooleanValue:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
     [self.ddFlagsImplementation getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+- (void)getBooleanDetails:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
 - (void)getStringValue:(NSString *)clientName key:(NSString *)key defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 

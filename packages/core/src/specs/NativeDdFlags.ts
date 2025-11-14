@@ -8,6 +8,8 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
+import type { FlagDetails } from '../flags/types';
+
 /**
  * Do not import this Spec directly, use DdNativeFlagsType instead.
  */
@@ -46,6 +48,12 @@ export interface Spec extends TurboModule {
         key: string,
         defaultValue: { [key: string]: unknown }
     ) => Promise<{ [key: string]: unknown }>;
+
+    readonly getBooleanDetails: (
+        clientName: string,
+        key: string,
+        defaultValue: boolean
+    ) => Promise<FlagDetails<boolean>>;
 }
 
 // eslint-disable-next-line import/no-default-export
