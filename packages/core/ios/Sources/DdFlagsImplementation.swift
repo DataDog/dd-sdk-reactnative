@@ -90,10 +90,23 @@ public class DdFlagsImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         let client = getClient(name: clientName)
-        // TODO: Handle Integer flag values...
-        let details = client.getDoubleDetails(key: key, defaultValue: defaultValue)
-        let serializedDetails = details.toSerializedDictionary()
-        resolve(serializedDetails)
+        
+        let doubleDetails = client.getDoubleDetails(key: key, defaultValue: defaultValue)
+
+        // Try to retrieve this flag as Integer, not a Number flag type.
+        if doubleDetails.error == .typeMismatch {
+            if let safeInt = Int(exactly: defaultValue) {
+                let intDetails = client.getIntegerDetails(key: key, defaultValue: safeInt)
+                
+                // If resolved correctly, return Integer details.
+                if intDetails.error == nil {
+                    resolve(intDetails.toSerializedDictionary())
+                    return
+                }
+            }
+        }
+
+        resolve(doubleDetails.toSerializedDictionary())
     }
 
     @objc
