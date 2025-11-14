@@ -6,12 +6,16 @@
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
+import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
-import type { DatadogFlagsConfiguration } from './types';
+import type { DatadogFlagsType, DatadogFlagsConfiguration } from './types';
 
-class DatadogFlagsWrapper {
+const FLAGS_MODULE = 'com.datadog.reactnative.flags';
+
+class DatadogFlagsWrapper implements DatadogFlagsType {
     getClient = (clientName: string = 'default'): FlagsClient => {
+        // TODO: Do we have to track whether .enabled() was called before .getClient() could be called?
         return new FlagsClient(clientName);
     };
 
@@ -27,6 +31,7 @@ class DatadogFlagsWrapper {
     };
 }
 
-const DatadogFlags = new DatadogFlagsWrapper();
-
-export { DatadogFlags };
+export const DatadogFlags: DatadogFlagsType = getGlobalInstance(
+    FLAGS_MODULE,
+    () => new DatadogFlagsWrapper()
+);
