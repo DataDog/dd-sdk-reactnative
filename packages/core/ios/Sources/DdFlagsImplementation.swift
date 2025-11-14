@@ -54,19 +54,6 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
-    public func getBooleanValue(
-        _ clientName: String,
-        key: String,
-        defaultValue: Bool,
-        resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
-    ) {
-        let client = getClient(name: clientName)
-        let value = client.getBooleanValue(key: key, defaultValue: defaultValue)
-        resolve(value)
-    }
-
-    @objc
     public func getBooleanDetails(
         _ clientName: String,
         key: String,
@@ -81,7 +68,7 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
-    public func getStringValue(
+    public func getStringDetails(
         _ clientName: String,
         key: String,
         defaultValue: String,
@@ -89,12 +76,13 @@ public class DdFlagsImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         let client = getClient(name: clientName)
-        let value = client.getStringValue(key: key, defaultValue: defaultValue)
-        resolve(value)
+        let details = client.getStringDetails(key: key, defaultValue: defaultValue)
+        let serializedDetails = details.toSerializedDictionary()
+        resolve(serializedDetails)
     }
 
     @objc
-    public func getNumberValue(
+    public func getNumberDetails(
         _ clientName: String,
         key: String,
         defaultValue: Double,
@@ -103,21 +91,23 @@ public class DdFlagsImplementation: NSObject {
     ) {
         let client = getClient(name: clientName)
         // TODO: Handle Integer flag values...
-        let value = client.getDoubleValue(key: key, defaultValue: defaultValue)
-        resolve(value)
+        let details = client.getDoubleDetails(key: key, defaultValue: defaultValue)
+        let serializedDetails = details.toSerializedDictionary()
+        resolve(serializedDetails)
     }
 
     @objc
-    public func getObjectValue(
+    public func getObjectDetails(
         _ clientName: String,
         key: String,
-        defaultValue: NSDictionary,
+        defaultValue: [String: Any],
         resolve: RCTPromiseResolveBlock,
         reject: RCTPromiseRejectBlock
     ) {
         let client = getClient(name: clientName)
-        let value = client.getObjectValue(key: key, defaultValue: AnyValue.wrap(defaultValue))
-        resolve(value)
+        let details = client.getObjectDetails(key: key, defaultValue: AnyValue.wrap(defaultValue))
+        let serializedDetails = details.toSerializedDictionary()
+        resolve(serializedDetails)
     }
 }
 

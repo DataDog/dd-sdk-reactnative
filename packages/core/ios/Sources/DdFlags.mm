@@ -26,16 +26,6 @@ RCT_REMAP_METHOD(setEvaluationContext,
     [self setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getBooleanValue,
-                 getBooleanValueWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(BOOL)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
 RCT_REMAP_METHOD(getBooleanDetails,
                  getBooleanDetailsWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
@@ -46,34 +36,34 @@ RCT_REMAP_METHOD(getBooleanDetails,
     [self getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getStringValue,
-                 getStringValueWithClientName:(NSString *)clientName
+RCT_REMAP_METHOD(getStringDetails,
+                 getStringDetailsWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
                  withDefaultValue:(NSString *)defaultValue
                  withResolve:(RCTPromiseResolveBlock)resolve
                  withReject:(RCTPromiseRejectBlock)reject)
 {
-    [self getStringValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+    [self getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getNumberValue,
-                 getNumberValueWithClientName:(NSString *)clientName
+RCT_REMAP_METHOD(getNumberDetails,
+                 getNumberDetailsWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
                  withDefaultValue:(double)defaultValue
                  withResolve:(RCTPromiseResolveBlock)resolve
                  withReject:(RCTPromiseRejectBlock)reject)
 {
-    [self getNumberValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+    [self getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getObjectValue,
-                 getObjectValueWithClientName:(NSString *)clientName
+RCT_REMAP_METHOD(getObjectDetails,
+                 getObjectDetailsWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
                  withDefaultValue:(NSDictionary *)defaultValue
                  withResolve:(RCTPromiseResolveBlock)resolve
                  withReject:(RCTPromiseRejectBlock)reject)
 {
-    [self getObjectValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+    [self getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
@@ -105,23 +95,19 @@ RCT_REMAP_METHOD(getObjectValue,
     [self.ddFlagsImplementation setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
-- (void)getBooleanValue:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getBooleanValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
 - (void)getBooleanDetails:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
     [self.ddFlagsImplementation getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-- (void)getStringValue:(NSString *)clientName key:(NSString *)key defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getStringValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+- (void)getStringDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-- (void)getNumberValue:(NSString *)clientName key:(NSString *)key defaultValue:(double)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getNumberValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+- (void)getNumberDetails:(NSString *)clientName key:(NSString *)key defaultValue:(double)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 
-- (void)getObjectValue:(NSString *)clientName key:(NSString *)key defaultValue:(NSDictionary *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getObjectValue:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+- (void)getObjectDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSDictionary *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 @end

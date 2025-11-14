@@ -109,10 +109,10 @@ function App(): React.JSX.Element {
 
       const [booleanValue, stringValue, jsonValue, integerValue, numberValue] = await Promise.all([
         flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false), // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getStringValue('rn-sdk-test-string-flag', 'default-value'), // https://app.datadoghq.com/feature-flags/80756d8f-a375-437a-a023-b490c91cd506?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getObjectValue('rn-sdk-test-json-flag', {default: 'value'}), // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getNumberValue('rn-sdk-test-integer-flag', 0), // https://app.datadoghq.com/feature-flags/5cd5a154-65ef-4c15-b539-e68c93eaa7f1?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getNumberValue('rn-sdk-test-number-flag', 0.7), // https://app.datadoghq.com/feature-flags/62b3129a-f9fa-49c0-b8a2-1a772b183bf7?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+        flagsClient.getStringDetails('rn-sdk-test-string-flag', 'default-value'), // https://app.datadoghq.com/feature-flags/80756d8f-a375-437a-a023-b490c91cd506?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+        flagsClient.getObjectDetails('rn-sdk-test-json-flag', {default: 'value'}), // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+        flagsClient.getNumberDetails('rn-sdk-test-integer-flag', 0), // https://app.datadoghq.com/feature-flags/5cd5a154-65ef-4c15-b539-e68c93eaa7f1?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+        flagsClient.getNumberDetails('rn-sdk-test-number-flag', 0.7), // https://app.datadoghq.com/feature-flags/62b3129a-f9fa-49c0-b8a2-1a772b183bf7?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
       ]);
 
       const newValues = {

@@ -31,18 +31,6 @@ export class FlagsClient {
         );
     };
 
-    getBooleanValue = async (
-        key: string,
-        defaultValue: boolean
-    ): Promise<boolean> => {
-        const value = await this.nativeFlags.getBooleanValue(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return value;
-    };
-
     getBooleanDetails = async (
         key: string,
         defaultValue: boolean
@@ -55,28 +43,64 @@ export class FlagsClient {
         return details;
     };
 
-    getStringValue = async (
+    getStringDetails = async (
         key: string,
         defaultValue: string
-    ): Promise<string> => {
-        const value = await this.nativeFlags.getStringValue(
+    ): Promise<FlagDetails<string>> => {
+        const details = await this.nativeFlags.getStringDetails(
             this.clientName,
             key,
             defaultValue
         );
-        return value;
+        return details;
+    };
+
+    getNumberDetails = async (
+        key: string,
+        defaultValue: number
+    ): Promise<FlagDetails<number>> => {
+        const details = await this.nativeFlags.getNumberDetails(
+            this.clientName,
+            key,
+            defaultValue
+        );
+        return details;
+    };
+
+    getObjectDetails = async (
+        key: string,
+        defaultValue: { [key: string]: unknown }
+    ): Promise<FlagDetails<{ [key: string]: unknown }>> => {
+        const details = await this.nativeFlags.getObjectDetails(
+            this.clientName,
+            key,
+            defaultValue
+        );
+        return details;
+    };
+
+    getBooleanValue = async (
+        key: string,
+        defaultValue: boolean
+    ): Promise<boolean> => {
+        const details = await this.getBooleanDetails(key, defaultValue);
+        return details.value;
+    };
+
+    getStringValue = async (
+        key: string,
+        defaultValue: string
+    ): Promise<string> => {
+        const details = await this.getStringDetails(key, defaultValue);
+        return details.value;
     };
 
     getNumberValue = async (
         key: string,
         defaultValue: number
     ): Promise<number> => {
-        const value = await this.nativeFlags.getNumberValue(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return value;
+        const details = await this.getNumberDetails(key, defaultValue);
+        return details.value;
     };
 
     getObjectValue = async (
@@ -84,11 +108,7 @@ export class FlagsClient {
         defaultValue: { [key: string]: unknown }
     ): Promise<{ [key: string]: unknown }> => {
         // FIXME: This is broken at the moment due to issues with JSON parsing on native iOS SDK side.
-        const value = await this.nativeFlags.getObjectValue(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return value;
+        const details = await this.getObjectDetails(key, defaultValue);
+        return details.value;
     };
 }
