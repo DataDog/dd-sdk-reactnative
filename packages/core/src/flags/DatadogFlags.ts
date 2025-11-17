@@ -14,16 +14,14 @@ import type { DatadogFlagsType, DatadogFlagsConfiguration } from './types';
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
 
 class DatadogFlagsWrapper implements DatadogFlagsType {
-    private _isEnabled = false;
+    private isFeatureEnabled = false;
 
     getClient = (clientName: string = 'default'): FlagsClient => {
-        if (__DEV__) {
-            if (!this._isEnabled) {
-                InternalLog.log(
-                    'DatadogFlags.getClient() called before DatadogFlags have been initialized. Flag evaluations will resolve to default values.',
-                    SdkVerbosity.ERROR
-                );
-            }
+        if (!this.isFeatureEnabled) {
+            InternalLog.log(
+                'DatadogFlags.getClient() called before DatadogFlags have been initialized. Flag evaluations will resolve to default values.',
+                SdkVerbosity.ERROR
+            );
         }
 
         return new FlagsClient(clientName);
@@ -33,7 +31,7 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
         _configuration: DatadogFlagsConfiguration
     ): Promise<void> => {
         // Feature Flags are initialized globally by default for now.
-        this._isEnabled = _configuration.enabled;
+        this.isFeatureEnabled = _configuration.enabled;
 
         return Promise.resolve();
     };

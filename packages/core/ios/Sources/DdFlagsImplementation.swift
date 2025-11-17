@@ -52,7 +52,18 @@ public class DdFlagsImplementation: NSObject {
             case .success:
                 resolve(nil)
             case .failure(let error):
-                reject(error.localizedDescription, "", error)
+                var errorCode: String
+                switch (error) {
+                case .clientNotInitialized:
+                    errorCode = "CLIENT_NOT_INITIALIZED"
+                case .invalidConfiguration:
+                    errorCode = "INVALID_CONFIGURATION"
+                case .invalidResponse:
+                    errorCode = "INVALID_RESPONSE"
+                case .networkError:
+                    errorCode = "NETWORK_ERROR"
+                }
+                reject(nil, errorCode, error)
             }
         }
     }

@@ -123,7 +123,7 @@ function App(): React.JSX.Element {
       };
 
       setFlagValues(newValues);
-    })().catch(console.error);
+    })().catch(error => console.error(error.message));
   }, []);
 
 

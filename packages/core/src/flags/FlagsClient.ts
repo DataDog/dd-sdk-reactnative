@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../InternalLog';
+import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
 import type { EvaluationContext, FlagDetails } from './types';
@@ -24,11 +26,20 @@ export class FlagsClient {
     ): Promise<void> => {
         const { targetingKey, attributes } = context;
 
-        await this.nativeFlags.setEvaluationContext(
-            this.clientName,
-            targetingKey,
-            attributes
-        );
+        try {
+            await this.nativeFlags.setEvaluationContext(
+                this.clientName,
+                targetingKey,
+                attributes
+            );
+        } catch (error) {
+            if (error instanceof Error) {
+                InternalLog.log(
+                    `Error setting flag evaluation context: ${error.message}`,
+                    SdkVerbosity.ERROR
+                );
+            }
+        }
     };
 
     getBooleanDetails = async (
@@ -101,7 +112,7 @@ export class FlagsClient {
         key: string,
         defaultValue: { [key: string]: unknown }
     ): Promise<FlagDetails<{ [key: string]: unknown }>> => {
-        if (typeof defaultValue !== 'object') {
+        if (typeof defaultValue !== 'object' || defaultValue === null) {
             return {
                 key,
                 value: defaultValue,
