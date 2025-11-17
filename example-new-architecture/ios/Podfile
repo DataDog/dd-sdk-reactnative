@@ -19,15 +19,15 @@ end
 target 'DdSdkReactNativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
-  # Flags don't seem to be released yet so we pull them from the iOS SDK develop branch.
-  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
-  pod 'DatadogWebViewTracking', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2dfe2d0ff'
+  # Pin Datadog* dependencies to a specific reference until they are updated in feature/v3.
+  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
+  pod 'DatadogWebViewTracking', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
 
   config = use_native_modules!
 
