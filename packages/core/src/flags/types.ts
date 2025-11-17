@@ -33,25 +33,6 @@ export interface DatadogFlagsConfiguration {
      */
     enabled: boolean;
     /**
-     * Controls error handling behavior for `FlagsClient` API misuse.
-     *
-     * This setting determines how the SDK responds to incorrect usage, such as:
-     * - Creating a `FlagsClient` before calling `Flags.enable()`
-     *
-     * Error handling is selected based on the build configuration and this setting:
-     * - Release builds use safe defaults with SDK level-based logging
-     * - Debug builds with `gracefulModeEnabled = true` log warnings to console instead of crashing
-     * - Debug builds with `gracefulModeEnabled = false` crashes with fatal errors for fail-fast development
-     *
-     * Recommended usage:
-     * - Set to `false` in development, test, and QA builds for immediate error detection
-     * - Set to `true` (default) in dogfooding and staging environments for visible warnings without crashes
-     * - Production builds always handle errors gracefully regardless of this setting
-     *
-     * @default true
-     */
-    gracefulModeEnabled?: boolean;
-    /**
      * Custom server URL for retrieving flag assignments.
      *
      * If not set, the SDK uses the default Datadog Flags endpoint for the configured site.

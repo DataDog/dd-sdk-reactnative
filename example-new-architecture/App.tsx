@@ -50,6 +50,7 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
     enabled: true,
   };
   await DdSdkReactNative.initialize(config);
+  await DatadogFlags.enable(config.flagsConfiguration);
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
     await DdRum.addTiming('one_second');
@@ -58,16 +59,6 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   await DdLogs.info('info log');
   const spanId = await DdTrace.startSpan('test span');
   await DdTrace.finishSpan(spanId);
-
-  const flagsClient = DatadogFlags.getClient();
-
-  await flagsClient.setEvaluationContext({
-    targetingKey: 'test-user-1',
-    attributes: {
-      country: 'US',
-    },
-  });
-
 })();
 
 type SectionProps = PropsWithChildren<{
@@ -107,6 +98,14 @@ function App(): React.JSX.Element {
     (async () => {
       const flagsClient = DatadogFlags.getClient();
 
+      // Set flag evaluation context.
+      await flagsClient.setEvaluationContext({
+        targetingKey: 'test-user-1',
+        attributes: {
+          country: 'US',
+        },
+      });
+
       const [booleanValue, stringValue, jsonValue, integerValue, numberValue] = await Promise.all([
         flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false), // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
         flagsClient.getStringDetails('rn-sdk-test-string-flag', 'default-value'), // https://app.datadoghq.com/feature-flags/80756d8f-a375-437a-a023-b490c91cd506?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
@@ -122,8 +121,6 @@ function App(): React.JSX.Element {
         string: stringValue,
         number: numberValue,
       };
-
-      console.log({newValues});
 
       setFlagValues(newValues);
     })().catch(console.error);

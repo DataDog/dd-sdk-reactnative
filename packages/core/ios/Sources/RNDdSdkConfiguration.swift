@@ -109,7 +109,9 @@ extension NSDictionary {
             return nil
         }
 
-        let gracefulModeEnabled = object(forKey: "gracefulModeEnabled") as? Bool
+        // Hard set `gracefulModeEnabled` to `true` because this misconfiguration is handled on JS side.
+        let gracefulModeEnabled = true
+        
         let customFlagsHeaders = object(forKey: "customFlagsHeaders") as? [String: String]
         let trackExposures = object(forKey: "trackExposures") as? Bool
         let rumIntegrationEnabled = object(forKey: "rumIntegrationEnabled") as? Bool
@@ -124,7 +126,7 @@ extension NSDictionary {
         }
 
         return Flags.Configuration(
-            gracefulModeEnabled: gracefulModeEnabled ?? true,
+            gracefulModeEnabled: gracefulModeEnabled,
             customFlagsEndpoint: customFlagsEndpointURL,
             customFlagsHeaders: customFlagsHeaders,
             customExposureEndpoint: customExposureEndpointURL,

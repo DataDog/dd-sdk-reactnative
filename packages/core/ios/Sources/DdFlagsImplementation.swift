@@ -5,23 +5,27 @@
  */
 
 import Foundation
+import DatadogInternal
 import DatadogFlags
 
 @objc
 public class DdFlagsImplementation: NSObject {
-    // Store a registry of client providers by name
-    // Use providers instead of direct clients to ensure lazy initialization
     private var clientProviders: [String: () -> FlagsClientProtocol] = [:]
 
+    /// Retrieve a `FlagsClient` instance in a non-interruptive way for usage in methods bridged to React Native.
+    ///
+    /// We create a simple registry of client providers by client name holding closures for retrieving a client since client references are kept internally in the flagging SDK.
+    /// This is motivated by the fact that it is impossible to create a bridged synchronous `FlagsClient` creation; thus, we create a client instance dynamically on-demand.
+    ///
+    /// - Important: Due to specifics of React Native hot reloading, this registry is destroyed upon JS bundle refresh. This leads to`FlagsClient.create` being called several times during development process for the same client.
+    ///              This should not be a problem because `gracefulModeEnabled` is hard set to `true` for the RN SDK.
     private func getClient(name: String) -> FlagsClientProtocol {
         if let provider = clientProviders[name] {
             return provider()
         }
 
         let client = FlagsClient.create(name: name)
-
         clientProviders[name] = { FlagsClient.shared(named: name) }
-
         return client
     }
 

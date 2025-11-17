@@ -14,18 +14,26 @@ import type { DatadogFlagsType, DatadogFlagsConfiguration } from './types';
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
 
 class DatadogFlagsWrapper implements DatadogFlagsType {
+    private _isEnabled = false;
+
     getClient = (clientName: string = 'default'): FlagsClient => {
-        // TODO: Do we have to track whether .enabled() was called before .getClient() could be called?
+        if (__DEV__) {
+            if (!this._isEnabled) {
+                InternalLog.log(
+                    'DatadogFlags.getClient() called before DatadogFlags have been initialized. Flag evaluations will resolve to default values.',
+                    SdkVerbosity.ERROR
+                );
+            }
+        }
+
         return new FlagsClient(clientName);
     };
 
     enable = async (
         _configuration: DatadogFlagsConfiguration
     ): Promise<void> => {
-        InternalLog.log(
-            'No-op DatadogFlags.enable() called. Flags are initialized globally by default for now.',
-            SdkVerbosity.DEBUG
-        );
+        // Feature Flags are initialized globally by default for now.
+        this._isEnabled = _configuration.enabled;
 
         return Promise.resolve();
     };
