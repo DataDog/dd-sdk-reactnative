@@ -147,7 +147,6 @@ export class FlagsClient {
         key: string,
         defaultValue: { [key: string]: unknown }
     ): Promise<{ [key: string]: unknown }> => {
-        // FIXME: This is broken at the moment due to issues with JSON parsing on native iOS SDK side.
         const details = await this.getObjectDetails(key, defaultValue);
         return details.value;
     };
