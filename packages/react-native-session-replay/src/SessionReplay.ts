@@ -95,15 +95,6 @@ export interface SessionReplayConfiguration {
      * Default: `true`.
      */
     startRecordingImmediately?: boolean;
-
-    /**
-     * Defines the way sensitive content (e.g. text) should be masked.
-     *
-     * Default `SessionReplayPrivacy.MASK`.
-     * @deprecated Use {@link imagePrivacyLevel}, {@link touchPrivacyLevel} and {@link textAndInputPrivacyLevel} instead.
-     * Note: setting this property (`defaultPrivacyLevel`) will override the individual privacy levels.
-     */
-    defaultPrivacyLevel?: SessionReplayPrivacy;
 }
 
 type InternalBaseSessionReplayConfiguration = {
@@ -121,11 +112,8 @@ type InternalPrivacySessionReplayConfiguration = {
 type InternalSessionReplayConfiguration = InternalBaseSessionReplayConfiguration &
     InternalPrivacySessionReplayConfiguration;
 
-const DEFAULTS: InternalSessionReplayConfiguration & {
-    defaultPrivacyLevel: SessionReplayPrivacy;
-} = {
+const DEFAULTS: InternalSessionReplayConfiguration = {
     replaySampleRate: 100,
-    defaultPrivacyLevel: SessionReplayPrivacy.MASK,
     customEndpoint: '',
     imagePrivacyLevel: ImagePrivacyLevel.MASK_ALL,
     touchPrivacyLevel: TouchPrivacyLevel.HIDE,
@@ -174,33 +162,6 @@ export class SessionReplayWrapper {
                 configuration.textAndInputPrivacyLevel ??
                 DEFAULTS.textAndInputPrivacyLevel
         };
-
-        // Legacy Default Privacy Level property handling
-        if (configuration.defaultPrivacyLevel) {
-            switch (configuration.defaultPrivacyLevel) {
-                case SessionReplayPrivacy.MASK:
-                    privacyConfig.imagePrivacyLevel =
-                        ImagePrivacyLevel.MASK_ALL;
-                    privacyConfig.touchPrivacyLevel = TouchPrivacyLevel.HIDE;
-                    privacyConfig.textAndInputPrivacyLevel =
-                        TextAndInputPrivacyLevel.MASK_ALL;
-                    break;
-                case SessionReplayPrivacy.MASK_USER_INPUT:
-                    privacyConfig.imagePrivacyLevel =
-                        ImagePrivacyLevel.MASK_NONE;
-                    privacyConfig.touchPrivacyLevel = TouchPrivacyLevel.HIDE;
-                    privacyConfig.textAndInputPrivacyLevel =
-                        TextAndInputPrivacyLevel.MASK_ALL_INPUTS;
-                    break;
-                case SessionReplayPrivacy.ALLOW:
-                    privacyConfig.imagePrivacyLevel =
-                        ImagePrivacyLevel.MASK_NONE;
-                    privacyConfig.touchPrivacyLevel = TouchPrivacyLevel.SHOW;
-                    privacyConfig.textAndInputPrivacyLevel =
-                        TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS;
-                    break;
-            }
-        }
 
         return { ...baseConfig, ...privacyConfig };
     };
