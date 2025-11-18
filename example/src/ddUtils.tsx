@@ -4,7 +4,9 @@ import {
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     SdkVerbosity,
-    TrackingConsent
+    TrackingConsent,
+    DatadogFlags,
+    type DatadogFlagsConfiguration,
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
@@ -24,6 +26,11 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     config.sessionSamplingRate = 100
     config.serviceName = "com.datadoghq.reactnative.sample"
     config.verbosity = SdkVerbosity.DEBUG;
+
+    const flagsConfiguration: DatadogFlagsConfiguration = {
+        enabled: true,
+    }
+    config.flagsConfiguration = flagsConfiguration
 
     return config
 }
@@ -51,9 +58,16 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     config.serviceName = "com.datadoghq.reactnative.sample"
     config.verbosity = SdkVerbosity.DEBUG;
 
+    const flagsConfiguration: DatadogFlagsConfiguration = {
+        enabled: true,
+    }
+    config.flagsConfiguration = flagsConfiguration
+
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')
         DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
         DdSdkReactNative.addAttributes({campaign: "ad-network"})
     });
+
+    DatadogFlags.enable(flagsConfiguration)
 }

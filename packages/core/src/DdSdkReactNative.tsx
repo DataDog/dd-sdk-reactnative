@@ -24,6 +24,7 @@ import {
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
+import { DatadogFlags } from './flags/DatadogFlags';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
@@ -470,6 +471,10 @@ export class DdSdkReactNative {
 
         if (configuration.actionEventMapper) {
             DdRum.registerActionEventMapper(configuration.actionEventMapper);
+        }
+
+        if (configuration.flagsConfiguration) {
+            DatadogFlags.enable(configuration.flagsConfiguration);
         }
 
         DdSdkReactNative.wasAutoInstrumented = true;

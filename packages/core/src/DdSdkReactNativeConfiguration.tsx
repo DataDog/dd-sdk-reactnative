@@ -417,6 +417,7 @@ export type AutoInstrumentationParameters = {
     readonly actionEventMapper: ActionEventMapper | null;
     readonly useAccessibilityLabel: boolean;
     readonly actionNameAttribute?: string;
+    readonly flagsConfiguration?: DatadogFlagsConfiguration;
 };
 
 /**

@@ -92,40 +92,21 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
-  const [flagValues, setFlagValues] = React.useState<Record<string, unknown>>({});
-
+  const [testFlagValue, setTestFlagValue] = React.useState(false);
   React.useEffect(() => {
-    (async () => {
-      const flagsClient = DatadogFlags.getClient();
-
-      // Set flag evaluation context.
-      await flagsClient.setEvaluationContext({
-        targetingKey: 'test-user-1',
-        attributes: {
-          country: 'US',
-        },
-      });
-
-      const [booleanValue, stringValue, jsonValue, integerValue, numberValue] = await Promise.all([
-        flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false), // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getStringDetails('rn-sdk-test-string-flag', 'default-value'), // https://app.datadoghq.com/feature-flags/80756d8f-a375-437a-a023-b490c91cd506?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getObjectDetails('rn-sdk-test-json-flag', {default: 'value'}), // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getNumberDetails('rn-sdk-test-integer-flag', 0), // https://app.datadoghq.com/feature-flags/5cd5a154-65ef-4c15-b539-e68c93eaa7f1?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-        flagsClient.getNumberDetails('rn-sdk-test-number-flag', 0.7), // https://app.datadoghq.com/feature-flags/62b3129a-f9fa-49c0-b8a2-1a772b183bf7?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-      ]);
-
-      const newValues = {
-        boolean: booleanValue,
-        json: jsonValue,
-        integer: integerValue,
-        string: stringValue,
-        number: numberValue,
-      };
-
-      setFlagValues(newValues);
-    })().catch(error => console.error(error.message));
+      (async () => {
+          const flagsClient = DatadogFlags.getClient();
+          await flagsClient.setEvaluationContext({
+              targetingKey: 'test-user-1',
+              attributes: {
+                  country: 'US',
+              },
+          });
+          const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+          console.log({flag})
+          setTestFlagValue(flag.value);
+      })();
   }, []);
-
 
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -143,13 +124,11 @@ function App(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
+        <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(testFlagValue)}</Text>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <View>
-            <Text style={{ fontFamily: 'monospace' }}>{JSON.stringify(flagValues, (key, value) => value === undefined ? '<undefined>' : value, 2)}</Text>
-          </View>
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.
