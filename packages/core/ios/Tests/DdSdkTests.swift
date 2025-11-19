@@ -1634,7 +1634,8 @@ extension DdSdkConfiguration {
         appHangThreshold: Double? = nil,
         trackWatchdogTerminations: Bool = false,
         batchProcessingLevel: NSString? = "MEDIUM",
-        initialResourceThreshold: Double? = nil
+        initialResourceThreshold: Double? = nil,
+        configurationForFlags: NSDictionary? = nil
     ) -> DdSdkConfiguration {
         DdSdkConfiguration(
             clientToken: clientToken as String,
@@ -1667,7 +1668,8 @@ extension DdSdkConfiguration {
             appHangThreshold: appHangThreshold,
             trackWatchdogTerminations: trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
-            initialResourceThreshold: initialResourceThreshold
+            initialResourceThreshold: initialResourceThreshold,
+            configurationForFlags: configurationForFlags?.asConfigurationForFlags()
         )
     }
 }
