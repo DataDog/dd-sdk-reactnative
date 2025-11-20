@@ -11,7 +11,11 @@ import { InternalLog } from '../../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../../SdkVerbosity';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../../DdRum';
-import { setCachedSessionId } from '../../../../../sessionId/sessionIdHelper';
+import {
+    setCachedSessionId,
+    setCachedUserId,
+    setCachedAccountId
+} from '../../../../../helper';
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
@@ -90,6 +94,10 @@ afterEach(() => {
     (Date.now as jest.MockedFunction<typeof Date.now>).mockClear();
     jest.spyOn(global.Math, 'random').mockRestore();
     DdRum.unregisterResourceEventMapper();
+
+    setCachedSessionId(undefined as any);
+    setCachedUserId(undefined as any);
+    setCachedAccountId(undefined as any);
 });
 
 describe('XHRProxy', () => {
@@ -838,6 +846,93 @@ describe('XHRProxy', () => {
 
             // THEN
             expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+        });
+
+        it('does not add rum session id to baggage headers when propagator type is not datadog or w3c', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://example.com';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com', // <-- no datadog or tracecontext here
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId('TEST-SESSION-ID');
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+        });
+
+        it('rum session id does not overwrite existing baggage headers', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com:443/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [
+                            PropagatorType.DATADOG,
+                            PropagatorType.TRACECONTEXT
+                        ]
+                    },
+                    {
+                        match: 'example.com',
+                        propagatorTypes: [
+                            PropagatorType.B3,
+                            PropagatorType.B3MULTI
+                        ]
+                    }
+                ])
+            });
+
+            setCachedSessionId('TEST-SESSION-ID');
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader('baggage', 'existing.key=existing-value');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
+            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toContain(
+                'existing.key=existing-value'
+            );
+
+            const values = xhr.requestHeaders[BAGGAGE_HEADER_KEY].split(
+                ','
+            ).sort();
+
+            expect(values[0]).toBe('existing.key=existing-value');
+            expect(values[1]).toBe('session.id=TEST-SESSION-ID');
         });
     });
 

@@ -30,6 +30,7 @@ import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AccountInfoSingleton } from './sdk/AccountInfoSingleton/AccountInfoSingleton';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
 import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
@@ -297,6 +298,71 @@ export class DdSdkReactNative {
 
         await DdSdk.addUserExtraInfo(extraUserInfo);
         UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
+    };
+
+    /**
+     * Sets the account information.
+     * @param id: A mandatory unique account identifier (relevant to your business domain).
+     * @param name: The account name.
+     * @param extraInfo: Additional information.
+     * @returns a Promise.
+     */
+    static setAccountInfo = async (accountInfo: {
+        id: string;
+        name?: string;
+        extraInfo?: Record<string, unknown>;
+    }): Promise<void> => {
+        InternalLog.log(
+            `Setting account ${JSON.stringify(accountInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+
+        await DdSdk.setAccountInfo(accountInfo);
+        AccountInfoSingleton.getInstance().setAccountInfo(accountInfo);
+    };
+
+    /**
+     * Clears the account information.
+     * @returns a Promise.
+     */
+    static clearAccountInfo = async (): Promise<void> => {
+        InternalLog.log('Clearing account info', SdkVerbosity.DEBUG);
+        await DdSdk.clearAccountInfo();
+        AccountInfoSingleton.getInstance().clearAccountInfo();
+    };
+
+    /**
+     * Set the account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     * @returns a Promise.
+     */
+    static addAccountExtraInfo = async (
+        extraAccountInfo: Record<string, unknown>
+    ): Promise<void> => {
+        InternalLog.log(
+            `Adding extra account info ${JSON.stringify(extraAccountInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+
+        const accountInfo = AccountInfoSingleton.getInstance().getAccountInfo();
+        if (!accountInfo) {
+            InternalLog.log(
+                'Skipped adding Account Extra Info: Account Info is currently undefined. An account ID must be set before adding extra info. Please call setAccountInfo() first.',
+                SdkVerbosity.WARN
+            );
+
+            return;
+        }
+
+        const extraInfo = {
+            ...accountInfo.extraInfo,
+            ...extraAccountInfo
+        };
+
+        await DdSdk.addAccountExtraInfo(extraInfo);
+        AccountInfoSingleton.getInstance().addAccountExtraInfo(
+            extraAccountInfo
+        );
     };
 
     /**

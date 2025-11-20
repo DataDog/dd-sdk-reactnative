@@ -169,6 +169,47 @@ class DdSdkImplementation(
     }
 
     /**
+     * Set the account information.
+     * @param accountInfo The account object (use builtin attributes: 'id', 'name', and any custom
+     * attribute inside 'extraInfo').
+     */
+    fun setAccountInfo(accountInfo: ReadableMap, promise: Promise) {
+        val accountInfoMap = accountInfo.toHashMap().toMutableMap()
+        val id = accountInfoMap["id"] as? String
+        val name = accountInfoMap["name"] as? String
+        val extraInfo = (accountInfoMap["extraInfo"] as? Map<*, *>)?.filterKeys { it is String }
+            ?.mapKeys { it.key as String }
+            ?.mapValues { it.value } ?: emptyMap()
+
+        if (id != null) {
+            datadog.setAccountInfo(id, name, extraInfo)
+        }
+
+        promise.resolve(null)
+    }
+
+    /**
+     * Sets the account extra information.
+     * @param accountExtraInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    fun addAccountExtraInfo(
+        accountExtraInfo: ReadableMap, promise: Promise
+    ) {
+        val extraInfoMap = accountExtraInfo.toHashMap().toMutableMap()
+
+        datadog.addAccountExtraInfo(extraInfoMap)
+        promise.resolve(null)
+    }
+
+    /**
+     * Clears the account information.
+     */
+    fun clearAccountInfo(promise: Promise) {
+        datadog.clearAccountInfo()
+        promise.resolve(null)
+    }
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent Consent, which can take one of the following values: 'pending',
      * 'granted', 'not_granted'.
