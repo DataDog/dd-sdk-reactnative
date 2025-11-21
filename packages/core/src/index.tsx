@@ -42,7 +42,7 @@ import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { DdSdk } from './sdk/DdSdk';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { DdTrace } from './trace/DdTrace';
-import { ErrorSource } from './types';
+import { ErrorSource, FeatureOperationFailure } from './types';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
 import type { Timestamp } from './utils/time-provider/TimeProvider';
 import { TimeProvider } from './utils/time-provider/TimeProvider';
@@ -57,6 +57,7 @@ export {
     DdRum,
     RumActionType,
     ErrorSource,
+    FeatureOperationFailure,
     DdSdkReactNativeConfiguration,
     DdSdkReactNative,
     DdSdk,
