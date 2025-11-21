@@ -12,6 +12,7 @@ import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
+import com.datadog.android.rum.featureoperations.FailureReason
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -331,6 +332,59 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         datadog.getRumMonitor().getCurrentSessionId {
             promise.resolve(it)
         }
+    }
+
+    /**
+     * Starts a Feature Operation.
+     *
+     * @param name Human-readable operation name (e.g., "login_flow").
+     * @param operationKey Optional key that uniquely identifies this operation instance.
+     * @param attributes Additional attributes to attach to the operation.
+     * @param promise Resolved with `null` when the call completes.
+     */
+    fun startFeatureOperation(name: String, operationKey: String? = null, attributes: ReadableMap, promise: Promise) {
+        val attributesMap = attributes.toHashMap().toMutableMap()
+        datadog.getRumMonitor().startFeatureOperation(name, operationKey, attributesMap);
+        promise.resolve(null)
+    }
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     *
+     * @param name The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey The key of the operation instance to complete, if one was provided when starting it.
+     * @param attributes A map of custom attributes to attach to this completion event.
+     */
+    fun succeedFeatureOperation(name: String, operationKey: String? = null, attributes: ReadableMap, promise: Promise) {
+        val attributesMap = attributes.toHashMap().toMutableMap()
+        datadog.getRumMonitor().succeedFeatureOperation(name, operationKey, attributesMap)
+        promise.resolve(null)
+    }
+
+
+    /**
+     * Marks a Feature Operation as failed.
+     *
+     * @param name The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey The key of the operation instance to fail, if one was provided when starting it.
+     * @param failureReason The reason for the failure. Possible values are defined in [FailureReason]
+     *                      (e.g., `FailureReason.ERROR`, `FailureReason.ABANDONED`, `FailureReason.OTHER`).
+     * @param attributes A map of custom attributes to attach to this failure event.
+     */
+    fun failFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        failureReason: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        val attributesMap = attributes.toHashMap().toMutableMap()
+        val reason = runCatching {
+            enumValueOf<FailureReason>(failureReason.uppercase())
+        }.getOrDefault(FailureReason.OTHER)
+
+        datadog.getRumMonitor().failFeatureOperation(name, operationKey, reason, attributesMap)
+        promise.resolve(null)
     }
 
     // region Internal
