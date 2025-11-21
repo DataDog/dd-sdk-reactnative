@@ -164,6 +164,37 @@ RCT_REMAP_METHOD(getCurrentSessionId,
     [self getCurrentSessionId:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(startFeatureOperation,
+                 startWithName:(NSString*)name
+                 withOperationKey:(NSString*)operationKey
+                 withAttributes:(NSDictionary*)attributes
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self startFeatureOperation:name operationKey:operationKey attributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(succeedFeatureOperation,
+                 succeedWithName:(NSString*)name
+                 withOperationKey:(NSString*)operationKey
+                 withAttributes:(NSDictionary*)attributes
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self succeedFeatureOperation:name operationKey:operationKey attributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(failFeatureOperation,
+                 failWithName:(NSString*)name
+                 withOperationKey:(NSString*)operationKey
+                 withReason:(NSString*)reason
+                 withAttributes:(NSDictionary*)attributes
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self failFeatureOperation:name operationKey:operationKey reason:reason attributes:attributes resolve:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -255,6 +286,18 @@ RCT_REMAP_METHOD(getCurrentSessionId,
 
 - (void)stopView:(NSString *)key context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation stopViewWithKey:key context:context timestampMs:timestampMs resolve:resolve reject:reject];
+}
+
+- (void) startFeatureOperation:(NSString *)name operationKey:(NSString *)operationKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation startFeatureOperationWithName:name operationKey:operationKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void) succeedFeatureOperation:(NSString *)name operationKey:(NSString *)operationKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation succeedFeatureOperationWithName:name operationKey:operationKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void) failFeatureOperation:(NSString *)name operationKey:(NSString *)operationKey reason:(NSString *)reason attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation failFeatureOperationWithName:name operationKey:operationKey reason:reason attributes:attributes resolve:resolve reject:reject];
 }
 
 @end
