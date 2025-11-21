@@ -63,6 +63,16 @@ private extension RUMMethod {
     }
 }
 
+internal extension RUMFeatureOperationFailureReason {
+    init(from string: String) {
+        switch string.lowercased() {
+        case "error": self = .error
+        case "abandoned": self = .abandoned
+        default: self = .other
+        }
+    }
+}
+
 @objc
 public class DdRumImplementation: NSObject {
     internal static let timestampKey = "_dd.timestamp"
@@ -235,6 +245,47 @@ public class DdRumImplementation: NSObject {
         nativeRUM.currentSessionID { sessionId in
             resolve(sessionId)
         }
+    }
+    
+    @objc
+    public func startFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.startFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
+        resolve(nil)
+    }
+
+    @objc
+    public func succeedFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.succeedFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
+        resolve(nil)
+    }
+
+    @objc
+    public func failFeatureOperation(
+        name: String,
+        operationKey: String?,
+        reason: String,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.failFeatureOperation(name: name, operationKey: operationKey,
+                                       reason: RUMFeatureOperationFailureReason(from: reason), attributes: castedAttributes)
+        resolve(nil)
     }
 
     // MARK: - Private methods

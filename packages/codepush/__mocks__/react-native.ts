@@ -119,7 +119,16 @@ actualRN.NativeModules.DdRum = {
             new Promise<string | undefined>(resolve =>
                 resolve('test-session-id')
             )
-    ) as jest.MockedFunction<DdRumType['getCurrentSessionId']>
+    ) as jest.MockedFunction<DdRumType['getCurrentSessionId']>,
+    startFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['startFeatureOperation']>,
+    succeedFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['startFeatureOperation']>,
+    failFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['failFeatureOperation']>
 };
 
 module.exports = actualRN;

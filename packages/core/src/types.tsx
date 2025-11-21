@@ -232,3 +232,9 @@ export enum ErrorSource {
     WEBVIEW = 'WEBVIEW',
     CUSTOM = 'CUSTOM'
 }
+
+export enum FeatureOperationFailure {
+    ERROR = 'ERROR',
+    ABANDONED = 'ABANDONED',
+    OTHER = 'OTHER'
+}
