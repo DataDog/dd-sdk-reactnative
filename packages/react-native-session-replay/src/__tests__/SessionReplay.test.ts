@@ -9,7 +9,6 @@ import { NativeModules } from 'react-native';
 import {
     ImagePrivacyLevel,
     SessionReplay,
-    SessionReplayPrivacy,
     TextAndInputPrivacyLevel,
     TouchPrivacyLevel
 } from '../SessionReplay';
@@ -41,27 +40,9 @@ describe('SessionReplay', () => {
             );
         });
 
-        it('calls native session replay with provided configuration { w defaultPrivacyLevel = ALLOW }', () => {
+        it('calls native session replay with provided configuration { w custom endpoint }', () => {
             SessionReplay.enable({
                 replaySampleRate: 100,
-                defaultPrivacyLevel: SessionReplayPrivacy.ALLOW,
-                customEndpoint: 'https://session-replay.example.com'
-            });
-
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                100,
-                'https://session-replay.example.com',
-                'MASK_NONE',
-                'SHOW',
-                'MASK_SENSITIVE_INPUTS',
-                true
-            );
-        });
-
-        it('calls native session replay with provided configuration { w defaultPrivacyLevel = MASK }', () => {
-            SessionReplay.enable({
-                replaySampleRate: 100,
-                defaultPrivacyLevel: SessionReplayPrivacy.MASK,
                 customEndpoint: 'https://session-replay.example.com'
             });
 
@@ -71,23 +52,6 @@ describe('SessionReplay', () => {
                 'MASK_ALL',
                 'HIDE',
                 'MASK_ALL',
-                true
-            );
-        });
-
-        it('calls native session replay with provided configuration { w defaultPrivacyLevel = MASK_USER_INPUT }', () => {
-            SessionReplay.enable({
-                replaySampleRate: 100,
-                defaultPrivacyLevel: SessionReplayPrivacy.MASK_USER_INPUT,
-                customEndpoint: 'https://session-replay.example.com'
-            });
-
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                100,
-                'https://session-replay.example.com',
-                'MASK_NONE',
-                'HIDE',
-                'MASK_ALL_INPUTS',
                 true
             );
         });
