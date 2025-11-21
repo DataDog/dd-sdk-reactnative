@@ -154,6 +154,15 @@ module.exports = {
             .mockImplementation(
                 () => new Promise(resolve => resolve('test-session-id'))
             ),
+        startFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        succeedFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        failFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise() < (resolve => resolve())),
         setTimeProvider: jest.fn().mockImplementation(() => {}),
         timeProvider: jest.fn().mockReturnValue(undefined),
         getTracingContext: jest.fn().mockReturnValue(undefined),

@@ -5,7 +5,7 @@
  */
 
 import type { Attributes } from '../sdk/AttributesSingleton/types';
-import type { ErrorSource } from '../types';
+import type { ErrorSource, FeatureOperationFailure } from '../types';
 
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import type { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
@@ -230,6 +230,46 @@ export type DdRumType = {
      * Generates a unique 128bit Span ID.
      */
     generateSpanId(): DatadogTracingIdentifier;
+
+    /**
+     * Starts a Feature Operation, representing a high-level logical flow within your application (e.g., `login_flow`).
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - An optional key to uniquely identify a specific instance of this operation when multiple are running concurrently.
+     * @param attributes - Custom attributes to attach to this operation.
+     */
+    startFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void>;
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     * Should be called when a previously started operation (via `startFeatureOperation`) finishes without error.
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - The key for the operation instance to complete, if it was specified when starting it.
+     * @param attributes - Custom attributes to attach to this operation’s completion event.
+     */
+    succeedFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void>;
+
+    /**
+     * Marks a Feature Operation as failed.
+     * Should be called when a previously started operation (via `startFeatureOperation`) ends with an error.
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - The key for the operation instance to fail, if it was specified when starting it.
+     * @param reason - The reason for the failure.
+     * @param attributes - Custom attributes to attach to this operation’s failure event.
+     */
+    failFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        reason: FeatureOperationFailure,
+        attributes: object
+    ): Promise<void>;
 };
 
 /**

@@ -13,7 +13,7 @@ import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
-import type { ErrorSource } from '../types';
+import type { ErrorSource, FeatureOperationFailure } from '../types';
 import { validateContext } from '../utils/argsUtils';
 import { getErrorContext } from '../utils/errorUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
@@ -132,6 +132,58 @@ class DdRumWrapper implements DdRumType {
         }
         return this.callNativeStopAction(...nativeCallArgs);
     };
+
+    startFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Starting feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.startFeatureOperation(name, operationKey, attributes)
+        );
+    }
+
+    succeedFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Succeding feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.succeedFeatureOperation(
+                name,
+                operationKey,
+                attributes
+            )
+        );
+    }
+
+    failFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        reason: FeatureOperationFailure,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Failing feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.failFeatureOperation(
+                name,
+                operationKey,
+                reason,
+                attributes
+            )
+        );
+    }
 
     setTimeProvider = (timeProvider: TimeProvider): void => {
         this.timeProvider = timeProvider;

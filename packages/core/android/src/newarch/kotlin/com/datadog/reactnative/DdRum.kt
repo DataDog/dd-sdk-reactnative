@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.rum.featureoperations.FailureReason
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -52,7 +53,12 @@ class DdRum(
      * If not provided, current timestamp will be used.
      */
     @ReactMethod
-    override fun stopView(key: String, context: ReadableMap, timestampMs: Double, promise: Promise) {
+    override fun stopView(
+        key: String,
+        context: ReadableMap,
+        timestampMs: Double,
+        promise: Promise
+    ) {
         implementation.stopView(key, context, timestampMs, promise)
     }
 
@@ -275,5 +281,60 @@ class DdRum(
     @ReactMethod
     override fun getCurrentSessionId(promise: Promise) {
         implementation.getCurrentSessionId(promise)
+    }
+
+    /**
+     * Starts a RUM Feature Operation.
+     *
+     * @param name Human-readable operation name (e.g., "login_flow").
+     * @param operationKey Optional key that uniquely identifies this operation instance.
+     * @param attributes Additional attributes to attach to the operation.
+     * @param promise Resolved with `null` when the call completes.
+     */
+    @ReactMethod
+    override fun startFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.startFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     *
+     * @param name The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey The key of the operation instance to complete, if one was provided when starting it.
+     * @param attributes A map of custom attributes to attach to this completion event.
+     */
+    @ReactMethod
+    override fun succeedFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.succeedFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as failed.
+     *
+     * @param name The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey The key of the operation instance to fail, if one was provided when starting it.
+     * @param failureReason The reason for the failure. Possible values are defined in [FailureReason]
+     *                      (e.g., `FailureReason.ERROR`, `FailureReason.ABANDONED`, `FailureReason.OTHER`).
+     * @param attributes A map of custom attributes to attach to this failure event.
+     */
+    @ReactMethod
+    override fun failFeatureOperation(
+        name: String,
+        operationKey: String?,
+        failureReason: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.failFeatureOperation(name, operationKey, failureReason, attributes, promise)
     }
 }
