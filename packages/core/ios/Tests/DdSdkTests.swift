@@ -8,6 +8,7 @@ import XCTest
 
 @testable import DatadogCore
 @testable import DatadogCrashReporting
+@testable import DatadogFlags
 @testable import DatadogInternal
 @testable import DatadogLogs
 @testable import DatadogRUM
@@ -308,6 +309,35 @@ class DdSdkTests: XCTestCase {
         XCTAssertNotNil(core.features[RUMFeature.name])
         XCTAssertNotNil(core.features[LogsFeature.name])
         XCTAssertNotNil(core.features[TraceFeature.name])
+    }
+    
+    func testFlagsFeatureDisabledByDefault() {
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        defer { CoreRegistry.unregisterDefault() }
+
+        let configuration: DdSdkConfiguration = .mockAny(configurationForFlags: nil)
+
+        DdSdkNativeInitialization().enableFeatures(
+            sdkConfiguration: configuration
+        )
+        
+        // Flagging SDK is disabled by default if no configuration is provided.
+        XCTAssertNil(core.features[FlagsFeature.name])
+    }
+    
+    func testEnableFeatureFlags() {
+        let core = MockDatadogCore()
+        CoreRegistry.register(default: core)
+        defer { CoreRegistry.unregisterDefault() }
+
+        let configuration: DdSdkConfiguration = .mockAny(configurationForFlags: ["enabled":true])
+
+        DdSdkNativeInitialization().enableFeatures(
+            sdkConfiguration: configuration
+        )
+
+        XCTAssertNotNil(core.features[FlagsFeature.name])
     }
 
     func testBuildConfigurationDefaultEndpoint() {

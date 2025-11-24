@@ -10,7 +10,20 @@ import DatadogFlags
 
 @objc
 public class DdFlagsImplementation: NSObject {
+    private let core: DatadogCoreProtocol
+
     private var clientProviders: [String: () -> FlagsClientProtocol] = [:]
+
+    internal init(
+        core: DatadogCoreProtocol
+    ) {
+        self.core = core
+    }
+
+    @objc
+    public override convenience init() {
+        self.init(core: CoreRegistry.default)
+    }
 
     /// Retrieve a `FlagsClient` instance in a non-interruptive way for usage in methods bridged to React Native.
     ///
@@ -24,8 +37,8 @@ public class DdFlagsImplementation: NSObject {
             return provider()
         }
 
-        let client = FlagsClient.create(name: name)
-        clientProviders[name] = { FlagsClient.shared(named: name) }
+        let client = FlagsClient.create(name: name, in: self.core)
+        clientProviders[name] = { FlagsClient.shared(named: name, in: self.core) }
         return client
     }
 

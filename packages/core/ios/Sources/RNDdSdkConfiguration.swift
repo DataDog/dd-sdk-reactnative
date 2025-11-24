@@ -103,7 +103,7 @@ extension NSDictionary {
     }
 
     func asConfigurationForFlags() -> Flags.Configuration? {
-        let enabled = object(forKey: "enabled") as! Bool
+        let enabled = object(forKey: "enabled") as? Bool ?? false
 
         if !enabled {
             return nil
