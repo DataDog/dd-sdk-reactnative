@@ -8,17 +8,50 @@ import type { FlagsClient } from './FlagsClient';
 
 export type DatadogFlagsType = {
     /**
+     * Enables the Datadog Flags feature in your application.
+     *
+     * Call this method after initializing the Datadog SDK to enable feature flag evaluation.
+     * This method must be called before creating any `FlagsClient` instances via `DatadogFlags.getClient()`.
+     *
+     * @example
+     * ```ts
+     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DatadogFlags } from '@datadog/mobile-react-native';
+     *
+     * // Initialize the Datadog SDK.
+     * await DdSdkReactNative.initialize(...);
+     *
+     * // Optinal flags configuration object.
+     * const flagsConfig = {
+     *     customFlagsEndpoint: 'https://flags.example.com'
+     * };
+     *
+     * // Enable the feature.
+     * await DatadogFlags.enable(flagsConfig);
+     *
+     * // Retrieve the client and access feature flags.
+     * const flagsClient = DatadogFlags.getClient();
+     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
+     * ```
+     *
+     * @param configuration Configuration options for the Datadog Flags feature.
+     */
+    enable: (configuration?: DatadogFlagsConfiguration) => Promise<void>;
+    /**
      * Returns a `FlagsClient` instance for further feature flag evaluation.
      *
-     * If client name is not provided, the `'default'` client is returned.
+     * For most applications, you would need only one client. If you need multiple clients,
+     * you can retrieve a couple of clients with different names.
+     *
+     * @param clientName An optional name of the client to retrieve. Defaults to `'default'`.
+     *
+     * @example
+     * ```ts
+     * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
+     * const flagsClient = DatadogFlags.getClient();
+     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
+     * ```
      */
     getClient: (clientName?: string) => FlagsClient;
-    /**
-     * Enables the Datadog Flags feature.
-     *
-     * TODO: This method is no-op for now, as flags are initialized globally by default.
-     */
-    enable: (configuration: DatadogFlagsConfiguration) => Promise<void>;
 };
 
 /**
@@ -27,7 +60,7 @@ export type DatadogFlagsType = {
  * Use this type to customize the behavior of feature flag evaluation, including custom endpoints,
  * exposure tracking, and error handling modes.
  */
-export interface DatadogFlagsConfiguration {
+export type DatadogFlagsConfiguration = {
     /**
      * Controls whether the feature flag evaluation feature is enabled.
      */
@@ -72,7 +105,7 @@ export interface DatadogFlagsConfiguration {
      * @default true
      */
     rumIntegrationEnabled?: boolean;
-}
+};
 
 /**
  * Context information used for feature flag targeting and evaluation.

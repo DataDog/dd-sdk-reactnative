@@ -25,6 +25,17 @@ public class DdFlagsImplementation: NSObject {
         self.init(core: CoreRegistry.default)
     }
 
+    @objc
+    public func enable(_ configuration: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        if let config = configuration.asConfigurationForFlags() {
+            Flags.enable(with: config)
+        } else {
+            consolePrint("Invalid configuration provided for Flags. Feature initialization skipped.", .error)
+        }
+
+        resolve(nil)
+    }
+
     /// Retrieve a `FlagsClient` instance in a non-interruptive way for usage in methods bridged to React Native.
     ///
     /// We create a simple registry of client providers by client name holding closures for retrieving a client since client references are kept internally in the flagging SDK.

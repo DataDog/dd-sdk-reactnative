@@ -46,11 +46,7 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   config.telemetrySampleRate = 100;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
-  config.flagsConfiguration = {
-    enabled: true,
-  };
   await DdSdkReactNative.initialize(config);
-  await DatadogFlags.enable(config.flagsConfiguration);
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
     await DdRum.addTiming('one_second');
@@ -95,6 +91,8 @@ function App(): React.JSX.Element {
   const [testFlagValue, setTestFlagValue] = React.useState(false);
   React.useEffect(() => {
       (async () => {
+          await DatadogFlags.enable();
+
           const flagsClient = DatadogFlags.getClient();
           await flagsClient.setEvaluationContext({
               targetingKey: 'test-user-1',
@@ -103,7 +101,6 @@ function App(): React.JSX.Element {
               },
           });
           const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-          console.log({flag})
           setTestFlagValue(flag.value);
       })();
   }, []);

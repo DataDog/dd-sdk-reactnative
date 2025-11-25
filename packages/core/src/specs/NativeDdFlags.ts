@@ -14,10 +14,7 @@ import type { FlagDetails } from '../flags/types';
  * Do not import this Spec directly, use DdNativeFlagsType instead.
  */
 export interface Spec extends TurboModule {
-    // TODO: Flags and all other features are initialized globally for now. We want to change this in the future.
-    // readonly enable: (
-    //     configuration: DatadogFlagsConfiguration
-    // ) => Promise<void>;
+    readonly enable: (configuration: Object) => Promise<void>;
 
     readonly setEvaluationContext: (
         clientName: string,

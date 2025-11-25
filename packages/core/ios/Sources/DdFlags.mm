@@ -16,6 +16,14 @@
 
 RCT_EXPORT_MODULE()
 
+RCT_REMAP_METHOD(enable,
+                 withConfiguration:(NSDictionary *)configuration
+                 withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
+{
+    [self enable:configuration resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(setEvaluationContext,
                  withClientName:(NSString *)clientName
                  withTargetingKey:(NSString *)targetingKey
@@ -89,6 +97,10 @@ RCT_REMAP_METHOD(getObjectDetails,
 
 - (dispatch_queue_t)methodQueue {
     return [RNQueue getSharedQueue];
+}
+
+- (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+    [self.ddFlagsImplementation enable:configuration resolve:resolve reject:reject];
 }
 
 - (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
