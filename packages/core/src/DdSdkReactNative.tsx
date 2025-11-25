@@ -15,11 +15,12 @@ import type {
     PartialInitializationConfiguration
 } from './DdSdkReactNativeConfiguration';
 import {
-    DdSdkReactNativeConfiguration,
+    DEFAULTS,
     InitializationMode,
     addDefaultValuesToAutoInstrumentationConfiguration,
     buildConfigurationFromPartialConfiguration,
-    formatFirstPartyHosts
+    formatFirstPartyHosts,
+    CoreSDKConfiguration
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -39,7 +40,12 @@ import { NativeDdSdk } from './sdk/DdSdkInternal';
 import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
-import { DdSdkConfiguration } from './types';
+import { DdSdkNativeConfiguration } from './types';
+import type {
+    LogsNativeConfiguration,
+    RUMNativeConfiguration,
+    TraceNativeConfiguration
+} from './types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
@@ -63,7 +69,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static initialize = async (
-        configuration: DdSdkReactNativeConfiguration
+        configuration: CoreSDKConfiguration
     ): Promise<void> => {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
@@ -73,7 +79,7 @@ export class DdSdkReactNative {
     };
 
     private static initializeNativeSDK = async (
-        configuration: DdSdkReactNativeConfiguration,
+        configuration: CoreSDKConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
@@ -129,7 +135,7 @@ export class DdSdkReactNative {
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
-        if (configuration instanceof DdSdkReactNativeConfiguration) {
+        if (configuration instanceof CoreSDKConfiguration) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
                 initializationModeForTelemetry: 'SYNC'
             });
@@ -385,11 +391,11 @@ export class DdSdkReactNative {
     };
 
     private static buildConfiguration = (
-        configuration: DdSdkReactNativeConfiguration,
+        configuration: CoreSDKConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
-    ): DdSdkConfiguration => {
+    ): DdSdkNativeConfiguration => {
         configuration.additionalConfiguration[DdSdkReactNative.DD_SOURCE_KEY] =
             'react-native';
         configuration.additionalConfiguration[
@@ -419,62 +425,87 @@ export class DdSdkReactNative {
             ] = `${reactNativeVersion}`;
         }
 
-        return new DdSdkConfiguration(
+        const rumConfiguration = configuration.rumConfiguration;
+        if (rumConfiguration) {
+            const longTaskThresholdMs =
+                configuration.rumConfiguration?.longTaskThresholdMs ||
+                DEFAULTS.longTaskThresholdMs;
+            rumConfiguration.longTaskThresholdMs = adaptLongTaskThreshold(
+                longTaskThresholdMs
+            );
+        }
+
+        const trackInteractions =
+            configuration.rumConfiguration?.trackInteractions ||
+            DEFAULTS.trackInteractions;
+        const trackResources =
+            configuration.rumConfiguration?.trackResources ||
+            DEFAULTS.trackResources;
+        const trackErrors =
+            configuration.rumConfiguration?.trackErrors || DEFAULTS.trackErrors;
+
+        return new DdSdkNativeConfiguration(
+            configuration.additionalConfiguration,
             configuration.clientToken,
             configuration.env,
-            configuration.applicationId,
+            configuration.site,
+            configuration.service,
+            configuration.verbosity,
             configuration.nativeCrashReportEnabled,
             adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
-            adaptLongTaskThreshold(configuration.longTaskThresholdMs),
-            configuration.sampleRate === undefined
-                ? configuration.sessionSamplingRate
-                : configuration.sampleRate,
-            configuration.site,
             configuration.trackingConsent,
-            configuration.additionalConfiguration,
-            configuration.telemetrySampleRate,
-            configuration.vitalsUpdateFrequency,
             configuration.uploadFrequency,
             configuration.batchSize,
-            configuration.trackFrustrations,
-            configuration.trackBackgroundEvents,
-            configuration.customEndpoints,
+            configuration.batchProcessingLevel,
+            configuration.proxyConfiguration,
+            formatFirstPartyHosts(configuration.firstPartyHosts),
+            configuration.attributeEncoders,
+            rumConfiguration as RUMNativeConfiguration,
+            configuration.logsConfiguration as LogsNativeConfiguration,
+            configuration.traceConfiguration as TraceNativeConfiguration,
             {
                 initializationType: params.initializationModeForTelemetry,
-                trackErrors: configuration.trackErrors,
-                trackInteractions: configuration.trackInteractions,
-                trackNetworkRequests: configuration.trackResources,
+                trackErrors,
+                trackInteractions,
+                trackNetworkRequests: trackResources,
                 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                 reactNativeVersion: require('react-native/package.json')
                     .version,
                 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                 reactVersion: require('react/package.json').version
-            },
-            configuration.nativeViewTracking,
-            configuration.nativeInteractionTracking,
-            configuration.verbosity,
-            configuration.proxyConfig,
-            configuration.serviceName,
-            formatFirstPartyHosts(configuration.firstPartyHosts),
-            configuration.bundleLogsWithRum,
-            configuration.bundleLogsWithTraces,
-            configuration.trackNonFatalAnrs,
-            configuration.appHangThreshold,
-            configuration.resourceTracingSamplingRate,
-            configuration.trackWatchdogTerminations,
-            configuration.batchProcessingLevel,
-            configuration.initialResourceThreshold,
-            configuration.trackMemoryWarnings,
-            configuration.attributeEncoders
+            }
         );
     };
 
     private static enableFeatures(
         configuration: AutoInstrumentationParameters
     ) {
+        const firstPartyHosts =
+            configuration.firstPartyHosts || DEFAULTS.getFirstPartyHosts();
+        const trackInteractions =
+            configuration.rumConfiguration?.trackInteractions ||
+            DEFAULTS.trackInteractions;
+        const trackResources =
+            configuration.rumConfiguration?.trackResources ||
+            DEFAULTS.trackResources;
+        const trackErrors =
+            configuration.rumConfiguration?.trackErrors || DEFAULTS.trackErrors;
+        const actionNameAttribute =
+            configuration.rumConfiguration?.actionNameAttribute;
+        const resourceTraceSampleRate =
+            configuration.traceConfiguration?.resourceTraceSampleRate ||
+            DEFAULTS.resourceTraceSampleRate;
+        const logEventMapper = configuration.logsConfiguration?.logEventMapper;
+        const errorEventMapper =
+            configuration.rumConfiguration?.errorEventMapper;
+        const resourceEventMapper =
+            configuration.rumConfiguration?.resourceEventMapper;
+        const actionEventMapper =
+            configuration.rumConfiguration?.actionEventMapper;
+
         if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdBabelInteractionTracking.config = {
-                trackInteractions: configuration.trackInteractions,
+                trackInteractions,
                 useAccessibilityLabel: configuration.useAccessibilityLabel
             };
 
@@ -489,45 +520,38 @@ export class DdSdkReactNative {
             return;
         }
 
-        if (
-            configuration.trackInteractions &&
-            !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__
-        ) {
+        if (trackInteractions && !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdRumUserInteractionTracking.startTracking({
-                actionNameAttribute: configuration.actionNameAttribute,
+                actionNameAttribute,
                 useAccessibilityLabel: configuration.useAccessibilityLabel
             });
         }
 
-        if (configuration.trackResources) {
+        if (trackResources) {
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: configuration.resourceTracingSamplingRate,
-                firstPartyHosts: formatFirstPartyHosts(
-                    configuration.firstPartyHosts
-                )
+                tracingSamplingRate: resourceTraceSampleRate,
+                firstPartyHosts: formatFirstPartyHosts(firstPartyHosts)
             });
         }
 
-        if (configuration.trackErrors) {
+        if (trackErrors) {
             DdRumErrorTracking.startTracking();
         }
 
-        if (configuration.logEventMapper) {
-            DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        if (logEventMapper) {
+            DdLogs.registerLogEventMapper(logEventMapper);
         }
 
-        if (configuration.errorEventMapper) {
-            DdRum.registerErrorEventMapper(configuration.errorEventMapper);
+        if (errorEventMapper) {
+            DdRum.registerErrorEventMapper(errorEventMapper);
         }
 
-        if (configuration.resourceEventMapper) {
-            DdRum.registerResourceEventMapper(
-                configuration.resourceEventMapper
-            );
+        if (resourceEventMapper) {
+            DdRum.registerResourceEventMapper(resourceEventMapper);
         }
 
-        if (configuration.actionEventMapper) {
-            DdRum.registerActionEventMapper(configuration.actionEventMapper);
+        if (actionEventMapper) {
+            DdRum.registerActionEventMapper(actionEventMapper);
         }
 
         DdSdkReactNative.wasAutoInstrumented = true;

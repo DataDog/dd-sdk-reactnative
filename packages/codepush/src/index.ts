@@ -10,7 +10,7 @@ import {
 } from '@datadog/mobile-react-native';
 import type {
     AutoInstrumentationConfiguration,
-    DdSdkReactNativeConfiguration
+    CoreSDKConfiguration
 } from '@datadog/mobile-react-native';
 import codePush from 'react-native-code-push';
 
@@ -21,9 +21,7 @@ import type { RequiredOrDiscard } from './utils';
  * Use this class instead of DdSdkReactNative to initialize the Datadog SDK when using AppCenter CodePush.
  */
 export const DatadogCodepush = {
-    async initialize(
-        configuration: DdSdkReactNativeConfiguration
-    ): Promise<void> {
+    async initialize(configuration: CoreSDKConfiguration): Promise<void> {
         const codePushUpdateMetadata = await codePush.getUpdateMetadata();
         if (codePushUpdateMetadata) {
             configuration.versionSuffix = `codepush.${codePushUpdateMetadata.label}`;
