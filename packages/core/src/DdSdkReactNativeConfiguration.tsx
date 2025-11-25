@@ -80,12 +80,6 @@ const isLegacyFirstPartyHost = (
     return typeof firstPartyHost === 'string';
 };
 
-export type CustomEndpoints = {
-    rum?: string;
-    logs?: string;
-    trace?: string;
-};
-
 /**
  * Defaults legacy first party hosts format to Datadog first party hosts to keep
  * retro-compatibility before OTel support was introduced.
@@ -109,8 +103,8 @@ export const formatFirstPartyHosts = (
 
 export const DEFAULTS = {
     nativeCrashReportEnabled: false,
-    sessionSamplingRate: 100.0,
-    resourceTracingSamplingRate: 100.0,
+    sessionSampleRate: 100.0,
+    resourceTraceSampleRate: 100.0,
     site: 'US1',
     longTaskThresholdMs: 0,
     nativeLongTaskThresholdMs: 200,
@@ -129,95 +123,43 @@ export const DEFAULTS = {
     uploadFrequency: UploadFrequency.AVERAGE,
     batchSize: BatchSize.MEDIUM,
     trackBackgroundEvents: false,
-    getCustomEndpoints: () => ({}),
     bundleLogsWithRum: true,
     bundleLogsWithTraces: true,
     useAccessibilityLabel: true,
     trackWatchdogTerminations: false,
     batchProcessingLevel: BatchProcessingLevel.MEDIUM,
-    trackMemoryWarnings: true
+    trackMemoryWarnings: true,
+    trackInteractions: false,
+    trackResources: false,
+    trackErrors: false
 };
 
 /**
- * The SDK configuration class.
+ * The Core SDK configuration class.
  * It will be used to configure the SDK functionality at initialization.
  */
-export class DdSdkReactNativeConfiguration {
+export class CoreSDKConfiguration {
+    public additionalConfiguration: {
+        [k: string]: any;
+    } = DEFAULTS.getAdditionalConfiguration();
+
+    /**
+     * Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.
+     * Smaller batches mean smaller but more network requests, whereas larger batches mean fewer but larger network requests.
+     */
+    public batchSize: BatchSize = DEFAULTS.batchSize;
+
+    /**
+     * Sets the preferred level for processing batches of data.
+     */
+    public batchProcessingLevel: BatchProcessingLevel =
+        BatchProcessingLevel.MEDIUM;
+
     /**
      * Enables crash reporting for native platforms (iOS, Android). Default `false`.
      */
     public nativeCrashReportEnabled: boolean =
         DEFAULTS.nativeCrashReportEnabled;
-    /**
-     * @deprecated `sampleRate` has been replaced by `sessionSamplingRate` to avoid confusion with `resourceTracingSamplingRate` and will be removed in a future release.
-     */
-    public sampleRate?: number;
-    /**
-     * Percentage of sampled RUM sessions. Range `0`-`100`.
-     */
-    public sessionSamplingRate: number = DEFAULTS.sessionSamplingRate;
-    /**
-     * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
-     */
-    public resourceTracingSamplingRate: number =
-        DEFAULTS.resourceTracingSamplingRate;
-    public site: string = DEFAULTS.site;
-    /**
-     * Verbosity for internal SDK logging.
-     * Set to `SdkVerbosity.DEBUG` to debug your SDK implementation.
-     */
-    public verbosity: SdkVerbosity | undefined = undefined;
-    /**
-     * Enables native views tracking.
-     * Set to `true` if you use a custom navigation system relying on native views.
-     */
-    public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
-    /**
-     * Enables native interaction tracking.
-     * Set to `true` if you want to track interactions on native screens.
-     */
-    public nativeInteractionTracking: boolean =
-        DEFAULTS.nativeInteractionTracking;
-    public proxyConfig?: ProxyConfiguration = undefined;
-    public serviceName?: string = undefined;
-    /**
-     * List of your backends hosts to enable tracing with.
-     * Regular expressions are NOT supported.
-     *
-     * Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`.
-     */
-    public firstPartyHosts: FirstPartyHostsConfiguration = DEFAULTS.getFirstPartyHosts();
-    /**
-     * Overrides the reported version of the app.
-     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
-     * Other special characters are converted to underscores.
-     *
-     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
-     *
-     * Make sure you set it correctly, as it will have to match the one specified during the upload of your source maps and other mapping files.
-     */
-    public version?: string;
-    /**
-     * Add a suffix to the reported version of the app.
-     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
-     * Other special characters are converted to underscores.
-     *
-     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
-     *
-     * A dash (`-`) will be automatically added between the version and the suffix
-     */
-    public versionSuffix?: string;
-
-    /**
-     * The sampling rate for Internal Telemetry (info related to the work of the
-     * SDK internals).
-     *
-     * The sampling rate must be a value between 0 and 100. A value of 0 means no
-     * telemetry will be sent, 100 means all telemetry will be sent. When
-     * `telemetrySampleRate` is not set, the default value from the iOS and
-     * Android SDK is used, which is 20.
-     */
-    public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
 
     /**
      * The threshold for native long tasks reporting in milliseconds.
@@ -231,27 +173,9 @@ export class DdSdkReactNativeConfiguration {
     public nativeLongTaskThresholdMs: number | false =
         DEFAULTS.nativeLongTaskThresholdMs;
 
-    /**
-     * The threshold for javascript long tasks reporting in milliseconds.
-     *
-     * - Setting it to `0` or `false` disables javascript long task reporting.
-     * - Values below `100` will be raised to `100`.
-     * - Values above `5000` will be lowered to `5000`.
-     *
-     * Default value is `0`
-     */
-    public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
+    public proxyConfiguration?: ProxyConfiguration = undefined;
 
-    /**
-     * Sets the preferred frequency for collecting mobile vitals.
-     */
-    public vitalsUpdateFrequency: VitalsUpdateFrequency =
-        DEFAULTS.vitalsUpdateFrequency;
-
-    /**
-     * Enables tracking of frustration signals (error taps). Defaults to `true`.
-     */
-    public trackFrustrations: boolean = DEFAULTS.trackFrustrations;
+    public service?: string = undefined;
 
     /**
      * Sets the preferred frequency for uploading batches of data.
@@ -259,70 +183,42 @@ export class DdSdkReactNativeConfiguration {
     public uploadFrequency: UploadFrequency = DEFAULTS.uploadFrequency;
 
     /**
-     * Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.
-     * Smaller batches mean smaller but more network requests, whereas larger batches mean fewer but larger network requests.
+     * Verbosity for internal SDK logging.
+     * Set to `SdkVerbosity.DEBUG` to debug your SDK implementation.
      */
-    public batchSize: BatchSize = DEFAULTS.batchSize;
+    public verbosity?: SdkVerbosity = undefined;
 
     /**
-     * Enables tracking of RUM event when no RUM View is active.
+     * Overrides the reported version of the app.
+     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
+     * Other special characters are converted to underscores.
      *
-     * By default, background events are not tracked. Enabling this feature might increase the
-     * number of sessions tracked and impact your billing.
-     */
-    public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
-
-    /**
-     * Enables RUM correlation with logs.
+     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
      *
-     * By default, RUM is enabled for logs.
+     * Make sure you set it correctly, as it will have to match the one specified during the upload of your source maps and other mapping files.
      */
-    public bundleLogsWithRum: boolean = DEFAULTS.bundleLogsWithRum;
+    public version?: string;
 
     /**
-     * Enables Traces correlation with logs.
+     * Add a suffix to the reported version of the app.
+     * Accepted characters are alphanumerics and `_`, `-`, `:`, `.`, `/`.
+     * Other special characters are converted to underscores.
      *
-     * By default, Traces is enabled for logs.
-     */
-    public bundleLogsWithTraces: boolean = DEFAULTS.bundleLogsWithTraces;
-
-    /**
-     * Sets the preferred level for processing batches of data.
-     */
-    public batchProcessingLevel: BatchProcessingLevel =
-        DEFAULTS.batchProcessingLevel;
-
-    /**
-     * Enables tracking of non-fatal ANRs on Android.
-     * By default, the reporting of non-fatal ANRs on Android 30+ is disabled because it would
-     * create too much noise over fatal ANRs. On Android 29 and below, however,
-     * the reporting of non-fatal ANRs is enabled by default,
-     * as fatal ANRs cannot be reported on those versions.
-     */
-    public trackNonFatalAnrs?: boolean;
-
-    /**
-     * The app hang threshold in seconds for non-fatal app hangs on iOS.
+     * See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.
      *
-     * App hangs are an iOS-specific type of error that happens when the application is unresponsive for too long.
-     * By default, app hangs reporting is disabled, but you can enable it and set your
-     * own threshold to monitor app hangs that last more than a specified
-     * duration by using the this parameter.
-     *
-     * Set the `appHangThreshold` parameter to the minimal duration you want
-     * app hangs to be reported. For example, enter 0.25 to report hangs lasting at least 250 ms.
-     * See [Configure the app hang threshold](https://docs.datadoghq.com/real_user_monitoring/error_tracking/mobile/ios/?tab=cocoapods#configure-the-app-hang-threshold)
-     * for more guidance on what to set this value to.
+     * A dash (`-`) will be automatically added between the version and the suffix
      */
-    public appHangThreshold?: number;
+    public versionSuffix?: string;
+
+    public site: string = DEFAULTS.site;
 
     /**
-     * The amount of time after a view starts where a Resource should be
-     * considered when calculating Time to Network-Settled (TNS). TNS will be
-     * calculated using all resources that start withing the specified threshold, in seconds.
-     * Defaults to 0.1 seconds.
+     * List of your backends hosts to enable tracing with.
+     * Regular expressions are NOT supported.
+     *
+     * Matches domains and subdomains, e.g. `['example.com']` matches `example.com` and `api.example.com`.
      */
-    public initialResourceThreshold?: number;
+    public firstPartyHosts: FirstPartyHostsConfiguration = DEFAULTS.getFirstPartyHosts();
 
     /**
      * Optional list of custom encoders for attributes.
@@ -340,21 +236,23 @@ export class DdSdkReactNativeConfiguration {
      */
     public attributeEncoders: AttributeEncoder<any>[] = [];
 
-    /**
-     * Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`.
-     */
-    public trackWatchdogTerminations: boolean =
-        DEFAULTS.trackWatchdogTerminations;
+    public rumConfiguration?: RUMConfiguration;
 
-    /**
-     * Enables tracking of memory warnings as RUM events.
-     *
-     * When enabled, the SDK will automatically record a RUM event each time the app
-     * receives a memory warning from the operating system.
-     *
-     * **Note:** This setting is only supported on **iOS**. It has no effect on other platforms.
-     */
-    public trackMemoryWarnings: boolean = DEFAULTS.trackMemoryWarnings;
+    public logsConfiguration?: LogsConfiguration;
+
+    public traceConfiguration?: TraceConfiguration;
+
+    constructor(
+        readonly clientToken: string,
+        readonly env: string,
+        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
+        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel // eslint-disable-next-line no-empty-function
+    ) {}
+}
+
+export class RUMConfiguration {
+    public actionEventMapper: ActionEventMapper | null =
+        DEFAULTS.actionEventMapper;
 
     /**
      * Specifies a custom prop to name RUM actions on elements having an `onPress` prop.
@@ -369,33 +267,169 @@ export class DdSdkReactNativeConfiguration {
      */
     public actionNameAttribute?: string;
 
-    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+    /**
+     * The app hang threshold in seconds for non-fatal app hangs on iOS.
+     *
+     * App hangs are an iOS-specific type of error that happens when the application is unresponsive for too long.
+     * By default, app hangs reporting is disabled, but you can enable it and set your
+     * own threshold to monitor app hangs that last more than a specified
+     * duration by using the this parameter.
+     *
+     * Set the `appHangThreshold` parameter to the minimal duration you want
+     * app hangs to be reported. For example, enter 0.25 to report hangs lasting at least 250 ms.
+     * See [Configure the app hang threshold](https://docs.datadoghq.com/real_user_monitoring/error_tracking/mobile/ios/?tab=cocoapods#configure-the-app-hang-threshold)
+     * for more guidance on what to set this value to.
+     */
+    public appHangThreshold?: number;
 
     public errorEventMapper: ErrorEventMapper | null =
         DEFAULTS.errorEventMapper;
 
+    /**
+     * The amount of time after a view starts where a Resource should be
+     * considered when calculating Time to Network-Settled (TNS). TNS will be
+     * calculated using all resources that start withing the specified threshold, in seconds.
+     * Defaults to 0.1 seconds.
+     */
+    public initialResourceThreshold?: number;
+
+    /**
+     * The threshold for javascript long tasks reporting in milliseconds.
+     *
+     * - Setting it to `0` or `false` disables javascript long task reporting.
+     * - Values below `100` will be raised to `100`.
+     * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `0`
+     */
+    public longTaskThresholdMs: number | false =
+        DEFAULTS.nativeLongTaskThresholdMs;
+
+    /**
+     * Enables tracking of memory warnings as RUM events.
+     *
+     * When enabled, the SDK will automatically record a RUM event each time the app
+     * receives a memory warning from the operating system.
+     *
+     * **Note:** This setting is only supported on **iOS**. It has no effect on other platforms.
+     */
+    public trackMemoryWarnings: boolean = DEFAULTS.trackMemoryWarnings;
+
+    /**
+     * Enables native views tracking.
+     * Set to `true` if you use a custom navigation system relying on native views.
+     */
+    public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
+
+    /**
+     * Enables native interaction tracking.
+     * Set to `true` if you want to track interactions on native screens.
+     */
+    public nativeInteractionTracking: boolean =
+        DEFAULTS.nativeInteractionTracking;
+
     public resourceEventMapper: ResourceEventMapper | null =
         DEFAULTS.resourceEventMapper;
 
-    public actionEventMapper: ActionEventMapper | null =
-        DEFAULTS.actionEventMapper;
+    /**
+     * Percentage of sampled RUM sessions. Range `0`-`100`.
+     */
+    public sessionSampleRate: number = DEFAULTS.sessionSampleRate;
 
-    public additionalConfiguration: {
-        [k: string]: any;
-    } = DEFAULTS.getAdditionalConfiguration();
+    /**
+     * Enables tracking of RUM event when no RUM View is active.
+     *
+     * By default, background events are not tracked. Enabling this feature might increase the
+     * number of sessions tracked and impact your billing.
+     */
+    public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
 
-    public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
+    /**
+     * Enables tracking of frustration signals (error taps). Defaults to `true`.
+     */
+    public trackFrustrations: boolean = DEFAULTS.trackFrustrations;
+
+    /**
+     * Enables tracking of non-fatal ANRs on Android.
+     * By default, the reporting of non-fatal ANRs on Android 30+ is disabled because it would
+     * create too much noise over fatal ANRs. On Android 29 and below, however,
+     * the reporting of non-fatal ANRs is enabled by default,
+     * as fatal ANRs cannot be reported on those versions.
+     */
+    public trackNonFatalAnrs?: boolean;
+
+    /**
+     * Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`.
+     */
+    public trackWatchdogTerminations: boolean =
+        DEFAULTS.trackWatchdogTerminations;
+
+    /**
+     * Sets the preferred frequency for collecting mobile vitals.
+     */
+    public vitalsUpdateFrequency: VitalsUpdateFrequency =
+        DEFAULTS.vitalsUpdateFrequency;
+
+    /**
+     * Sets a target custom server for RUM.
+     */
+    public customEndpoint?: string;
+
+    /**
+     * The sampling rate for Internal Telemetry (info related to the work of the
+     * SDK internals).
+     *
+     * The sampling rate must be a value between 0 and 100. A value of 0 means no
+     * telemetry will be sent, 100 means all telemetry will be sent. When
+     * `telemetrySampleRate` is not set, the default value from the iOS and
+     * Android SDK is used, which is 20.
+     */
+    public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
 
     constructor(
-        readonly clientToken: string,
-        readonly env: string,
         readonly applicationId: string,
-        readonly trackInteractions: boolean = false,
-        readonly trackResources: boolean = false,
-        readonly trackErrors: boolean = false,
-        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
-        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel // eslint-disable-next-line no-empty-function
+        readonly trackInteractions: boolean = DEFAULTS.trackInteractions,
+        readonly trackResources: boolean = DEFAULTS.trackResources,
+        readonly trackErrors: boolean = DEFAULTS.trackErrors // eslint-disable-next-line no-empty-function
     ) {}
+}
+export class LogsConfiguration {
+    /**
+     * Enables RUM correlation with logs.
+     *
+     * By default, RUM is enabled for logs.
+     */
+    public bundleLogsWithRum: boolean = DEFAULTS.bundleLogsWithRum;
+
+    /**
+     * Enables Traces correlation with logs.
+     *
+     * By default, Traces is enabled for logs.
+     */
+    public bundleLogsWithTraces: boolean = DEFAULTS.bundleLogsWithTraces;
+
+    /**
+     * Sets a target custom server for Logs.
+     */
+    public customEndpoint?: string;
+
+    public logEventMapper: LogEventMapper | null = DEFAULTS.logEventMapper;
+}
+
+export class TraceConfiguration {
+    /**
+     * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
+     */
+    public resourceTraceSampleRate: number = DEFAULTS.resourceTraceSampleRate;
+
+    /**
+     * Sets a target custom server for Traces.
+     */
+    public customEndpoint?: string;
+}
+
+export class DatadogProviderConfiguration extends CoreSDKConfiguration {
+    public initializationMode: InitializationMode = InitializationMode.SYNC;
 }
 
 /**
@@ -403,34 +437,46 @@ export class DdSdkReactNativeConfiguration {
  * Does not include default values.
  */
 export type AutoInstrumentationConfiguration = {
-    readonly trackInteractions: boolean;
-    readonly trackResources: boolean;
-    readonly firstPartyHosts?: FirstPartyHostsConfiguration;
-    readonly resourceTracingSamplingRate?: number;
-    readonly trackErrors: boolean;
-    readonly logEventMapper?: LogEventMapper | null;
-    readonly errorEventMapper?: ErrorEventMapper | null;
-    readonly resourceEventMapper?: ResourceEventMapper | null;
-    readonly actionEventMapper?: ActionEventMapper | null;
     readonly useAccessibilityLabel?: boolean;
-    readonly actionNameAttribute?: string;
+    readonly firstPartyHosts?: FirstPartyHostsConfiguration;
+    readonly rumConfiguration: {
+        readonly trackInteractions: boolean;
+        readonly trackResources: boolean;
+        readonly trackErrors: boolean;
+        readonly actionNameAttribute?: string;
+        readonly actionEventMapper?: ActionEventMapper | null;
+        readonly errorEventMapper?: ErrorEventMapper | null;
+        readonly resourceEventMapper?: ResourceEventMapper | null;
+    };
+    readonly logsConfiguration: {
+        readonly logEventMapper?: LogEventMapper | null;
+    };
+    readonly traceConfiguration: {
+        readonly resourceTraceSampleRate?: number;
+    };
 };
 
 /**
  * Parameters needed to start auto instrumentation. Includes default values.
  */
 export type AutoInstrumentationParameters = {
-    readonly trackInteractions: boolean;
-    readonly trackResources: boolean;
-    readonly firstPartyHosts: FirstPartyHostsConfiguration;
-    readonly resourceTracingSamplingRate: number;
-    readonly trackErrors: boolean;
-    readonly logEventMapper: LogEventMapper | null;
-    readonly errorEventMapper: ErrorEventMapper | null;
-    readonly resourceEventMapper: ResourceEventMapper | null;
-    readonly actionEventMapper: ActionEventMapper | null;
     readonly useAccessibilityLabel: boolean;
-    readonly actionNameAttribute?: string;
+    readonly firstPartyHosts: FirstPartyHostsConfiguration;
+    readonly rumConfiguration?: {
+        readonly trackInteractions: boolean;
+        readonly trackResources: boolean;
+        readonly trackErrors: boolean;
+        readonly actionNameAttribute?: string;
+        readonly actionEventMapper: ActionEventMapper | null;
+        readonly errorEventMapper: ErrorEventMapper | null;
+        readonly resourceEventMapper: ResourceEventMapper | null;
+    };
+    readonly logsConfiguration?: {
+        readonly logEventMapper: LogEventMapper | null;
+    };
+    readonly traceConfiguration?: {
+        readonly resourceTraceSampleRate: number;
+    };
 };
 
 /**
@@ -441,162 +487,274 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
     features: AutoInstrumentationConfiguration
 ): AutoInstrumentationParameters => {
     return {
-        ...features,
+        useAccessibilityLabel: DEFAULTS.useAccessibilityLabel,
         firstPartyHosts:
             features.firstPartyHosts || DEFAULTS.getFirstPartyHosts(),
-        resourceTracingSamplingRate:
-            features.resourceTracingSamplingRate === undefined
-                ? DEFAULTS.resourceTracingSamplingRate
-                : features.resourceTracingSamplingRate,
-        logEventMapper:
-            features.logEventMapper === undefined
-                ? DEFAULTS.logEventMapper
-                : features.logEventMapper,
-        errorEventMapper:
-            features.errorEventMapper === undefined
-                ? DEFAULTS.errorEventMapper
-                : features.errorEventMapper,
-        resourceEventMapper:
-            features.resourceEventMapper === undefined
-                ? DEFAULTS.resourceEventMapper
-                : features.resourceEventMapper,
-        actionEventMapper:
-            features.actionEventMapper === undefined
-                ? DEFAULTS.actionEventMapper
-                : features.actionEventMapper,
-        useAccessibilityLabel: DEFAULTS.useAccessibilityLabel
+        rumConfiguration: {
+            trackInteractions: features.rumConfiguration.trackInteractions,
+            trackResources: features.rumConfiguration.trackResources,
+            trackErrors: features.rumConfiguration.trackErrors,
+            actionNameAttribute: features.rumConfiguration.actionNameAttribute,
+            errorEventMapper:
+                features.rumConfiguration.errorEventMapper === undefined
+                    ? DEFAULTS.errorEventMapper
+                    : features.rumConfiguration.errorEventMapper,
+            resourceEventMapper:
+                features.rumConfiguration.resourceEventMapper === undefined
+                    ? DEFAULTS.resourceEventMapper
+                    : features.rumConfiguration.resourceEventMapper,
+            actionEventMapper:
+                features.rumConfiguration.actionEventMapper === undefined
+                    ? DEFAULTS.actionEventMapper
+                    : features.rumConfiguration.actionEventMapper
+        },
+        traceConfiguration: {
+            resourceTraceSampleRate:
+                features.traceConfiguration.resourceTraceSampleRate ===
+                undefined
+                    ? DEFAULTS.resourceTraceSampleRate
+                    : features.traceConfiguration.resourceTraceSampleRate
+        },
+        logsConfiguration: {
+            logEventMapper:
+                features.logsConfiguration.logEventMapper === undefined
+                    ? DEFAULTS.logEventMapper
+                    : features.logsConfiguration.logEventMapper
+        }
     };
 };
 
 export type PartialInitializationConfiguration = {
+    readonly additionalConfiguration?: { [k: string]: any };
     readonly clientToken: string;
     readonly env: string;
-    readonly applicationId: string;
-    readonly sessionSamplingRate?: number;
     readonly site?: string;
-    readonly verbosity?: SdkVerbosity | undefined;
-    readonly nativeViewTracking?: boolean;
-    readonly nativeInteractionTracking?: boolean;
-    readonly proxyConfig?: ProxyConfiguration;
-    readonly serviceName?: string;
-    readonly version?: string;
-    versionSuffix?: string;
-    readonly additionalConfiguration?: { [k: string]: any };
     readonly trackingConsent?: TrackingConsent;
-    readonly longTaskThresholdMs?: number | false;
+    readonly verbosity?: SdkVerbosity | undefined;
+    readonly service?: string;
+    readonly version?: string;
+    readonly versionSuffix?: string;
+    readonly proxyConfiguration?: ProxyConfiguration;
     readonly nativeLongTaskThresholdMs?: number | false;
     readonly nativeCrashReportEnabled?: boolean;
-    readonly telemetrySampleRate?: number;
-    readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
-    readonly trackFrustrations?: boolean;
     readonly uploadFrequency?: UploadFrequency;
     readonly batchSize?: BatchSize;
-    readonly trackBackgroundEvents?: boolean;
-    readonly customEndpoints?: CustomEndpoints;
-    readonly bundleLogsWithRum?: boolean;
-    readonly bundleLogsWithTraces?: boolean;
     readonly batchProcessingLevel?: BatchProcessingLevel;
-    readonly initialResourceThreshold?: number;
-    readonly trackMemoryWarnings?: boolean;
-};
-
-const setConfigurationAttribute = <
-    AttributeName extends keyof DdSdkReactNativeConfiguration
->(
-    attribute: {
-        value?: DdSdkReactNativeConfiguration[AttributeName];
-        name: AttributeName;
-    },
-    configuration: DdSdkReactNativeConfiguration
-) => {
-    if (attribute.value !== undefined) {
-        configuration[attribute.name] = attribute.value;
-    }
+    readonly rumConfiguration?: {
+        readonly applicationId: string;
+        readonly sessionSampleRate?: number;
+        readonly nativeViewTracking?: boolean;
+        readonly nativeInteractionTracking?: boolean;
+        readonly longTaskThresholdMs?: number | false;
+        readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
+        readonly trackFrustrations?: boolean;
+        readonly trackBackgroundEvents?: boolean;
+        readonly initialResourceThreshold?: number;
+        readonly trackMemoryWarnings?: boolean;
+        readonly telemetrySampleRate?: number;
+        readonly customEndpoint?: string;
+    };
+    readonly logsConfiguration?: {
+        readonly bundleLogsWithRum?: boolean;
+        readonly bundleLogsWithTraces?: boolean;
+        readonly customEndpoint?: string;
+    };
+    readonly traceConfiguration?: {
+        readonly customEndpoint?: string;
+    };
 };
 
 export const buildConfigurationFromPartialConfiguration = (
     features: AutoInstrumentationConfiguration,
     configuration: PartialInitializationConfiguration
-): DdSdkReactNativeConfiguration => {
-    const {
+): CoreSDKConfiguration => {
+    const { clientToken, env } = configuration;
+
+    const SdkConfiguration = new CoreSDKConfiguration(
         clientToken,
         env,
-        applicationId,
-        ...remainingConfiguration
-    } = configuration;
-    const SdkConfiguration = new DdSdkReactNativeConfiguration(
-        clientToken,
-        env,
-        applicationId,
-        features.trackInteractions,
-        features.trackResources,
-        features.trackErrors,
         configuration.trackingConsent,
         features.useAccessibilityLabel
     );
 
-    (Object.keys(
-        remainingConfiguration
-    ) as (keyof typeof remainingConfiguration)[]).forEach(name => {
-        setConfigurationAttribute(
-            { value: remainingConfiguration[name], name },
-            SdkConfiguration
-        );
-    });
+    if (configuration.additionalConfiguration) {
+        SdkConfiguration.additionalConfiguration =
+            configuration.additionalConfiguration;
+    }
 
-    setConfigurationAttribute(
-        {
-            name: 'resourceTracingSamplingRate',
-            value: features.resourceTracingSamplingRate
-        },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        { name: 'firstPartyHosts', value: features.firstPartyHosts },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        {
-            name: 'logEventMapper',
-            value: features.logEventMapper
-        },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        {
-            name: 'errorEventMapper',
-            value: features.errorEventMapper
-        },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        {
-            name: 'resourceEventMapper',
-            value: features.resourceEventMapper
-        },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        {
-            name: 'actionEventMapper',
-            value: features.actionEventMapper
-        },
-        SdkConfiguration
-    );
-    setConfigurationAttribute(
-        {
-            name: 'actionNameAttribute',
-            value: features.actionNameAttribute
-        },
-        SdkConfiguration
-    );
+    if (configuration.batchProcessingLevel) {
+        SdkConfiguration.batchProcessingLevel =
+            configuration.batchProcessingLevel;
+    }
+
+    if (configuration.batchSize) {
+        SdkConfiguration.batchSize = configuration.batchSize;
+    }
+
+    if (configuration.nativeCrashReportEnabled) {
+        SdkConfiguration.nativeCrashReportEnabled =
+            configuration.nativeCrashReportEnabled;
+    }
+
+    if (configuration.nativeLongTaskThresholdMs) {
+        SdkConfiguration.nativeLongTaskThresholdMs =
+            configuration.nativeLongTaskThresholdMs;
+    }
+
+    if (configuration.proxyConfiguration) {
+        SdkConfiguration.proxyConfiguration = configuration.proxyConfiguration;
+    }
+
+    if (configuration.service) {
+        SdkConfiguration.service = configuration.service;
+    }
+
+    if (configuration.site) {
+        SdkConfiguration.site = configuration.site;
+    }
+
+    if (configuration.uploadFrequency) {
+        SdkConfiguration.uploadFrequency = configuration.uploadFrequency;
+    }
+
+    if (configuration.verbosity) {
+        SdkConfiguration.verbosity = configuration.verbosity;
+    }
+
+    if (configuration.version) {
+        SdkConfiguration.version = configuration.version;
+    }
+
+    if (configuration.versionSuffix) {
+        SdkConfiguration.versionSuffix = configuration.versionSuffix;
+    }
+
+    if (features.firstPartyHosts) {
+        SdkConfiguration.firstPartyHosts = features.firstPartyHosts;
+    }
+
+    if (configuration.rumConfiguration?.applicationId) {
+        SdkConfiguration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration.applicationId,
+            features.rumConfiguration.trackInteractions,
+            features.rumConfiguration.trackResources,
+            features.rumConfiguration.trackErrors
+        );
+    }
+
+    if (SdkConfiguration.rumConfiguration) {
+        if (features.rumConfiguration.errorEventMapper) {
+            SdkConfiguration.rumConfiguration.errorEventMapper =
+                features.rumConfiguration.errorEventMapper;
+        }
+
+        if (features.rumConfiguration.resourceEventMapper) {
+            SdkConfiguration.rumConfiguration.resourceEventMapper =
+                features.rumConfiguration.resourceEventMapper;
+        }
+
+        if (features.rumConfiguration.actionEventMapper) {
+            SdkConfiguration.rumConfiguration.actionEventMapper =
+                features.rumConfiguration.actionEventMapper;
+        }
+
+        if (features.rumConfiguration.actionNameAttribute) {
+            SdkConfiguration.rumConfiguration.actionNameAttribute =
+                features.rumConfiguration.actionNameAttribute;
+        }
+
+        if (configuration.rumConfiguration?.initialResourceThreshold) {
+            SdkConfiguration.rumConfiguration.initialResourceThreshold =
+                configuration.rumConfiguration?.initialResourceThreshold;
+        }
+
+        if (configuration.rumConfiguration?.longTaskThresholdMs) {
+            SdkConfiguration.rumConfiguration.longTaskThresholdMs =
+                configuration.rumConfiguration?.longTaskThresholdMs;
+        }
+
+        if (configuration.rumConfiguration?.nativeInteractionTracking) {
+            SdkConfiguration.rumConfiguration.nativeInteractionTracking =
+                configuration.rumConfiguration?.nativeInteractionTracking;
+        }
+
+        if (configuration.rumConfiguration?.nativeViewTracking) {
+            SdkConfiguration.rumConfiguration.nativeViewTracking =
+                configuration.rumConfiguration?.nativeViewTracking;
+        }
+
+        if (configuration.rumConfiguration?.sessionSampleRate) {
+            SdkConfiguration.rumConfiguration.sessionSampleRate =
+                configuration.rumConfiguration?.sessionSampleRate;
+        }
+
+        if (configuration.rumConfiguration?.telemetrySampleRate) {
+            SdkConfiguration.rumConfiguration.telemetrySampleRate =
+                configuration.rumConfiguration?.telemetrySampleRate;
+        }
+
+        if (configuration.rumConfiguration?.trackBackgroundEvents) {
+            SdkConfiguration.rumConfiguration.trackBackgroundEvents =
+                configuration.rumConfiguration?.trackBackgroundEvents;
+        }
+
+        if (configuration.rumConfiguration?.trackFrustrations) {
+            SdkConfiguration.rumConfiguration.trackFrustrations =
+                configuration.rumConfiguration?.trackFrustrations;
+        }
+
+        if (configuration.rumConfiguration?.trackMemoryWarnings) {
+            SdkConfiguration.rumConfiguration.trackMemoryWarnings =
+                configuration.rumConfiguration?.trackMemoryWarnings;
+        }
+
+        if (configuration.rumConfiguration?.vitalsUpdateFrequency) {
+            SdkConfiguration.rumConfiguration.vitalsUpdateFrequency =
+                configuration.rumConfiguration?.vitalsUpdateFrequency;
+        }
+
+        if (configuration.rumConfiguration?.customEndpoint) {
+            SdkConfiguration.rumConfiguration.customEndpoint =
+                configuration.rumConfiguration?.customEndpoint;
+        }
+    }
+
+    if (features.traceConfiguration.resourceTraceSampleRate) {
+        SdkConfiguration.traceConfiguration = new TraceConfiguration();
+
+        SdkConfiguration.traceConfiguration.resourceTraceSampleRate =
+            features.traceConfiguration.resourceTraceSampleRate;
+
+        if (configuration.traceConfiguration?.customEndpoint) {
+            SdkConfiguration.traceConfiguration.customEndpoint =
+                configuration.traceConfiguration?.customEndpoint;
+        }
+    }
+
+    if (features.logsConfiguration.logEventMapper) {
+        SdkConfiguration.logsConfiguration = new LogsConfiguration();
+
+        SdkConfiguration.logsConfiguration.logEventMapper =
+            features.logsConfiguration.logEventMapper;
+
+        if (configuration.logsConfiguration?.bundleLogsWithRum) {
+            SdkConfiguration.logsConfiguration.bundleLogsWithRum =
+                configuration.logsConfiguration?.bundleLogsWithRum;
+        }
+
+        if (configuration.logsConfiguration?.bundleLogsWithTraces) {
+            SdkConfiguration.logsConfiguration.bundleLogsWithTraces =
+                configuration.logsConfiguration?.bundleLogsWithTraces;
+        }
+
+        if (configuration.logsConfiguration?.customEndpoint) {
+            SdkConfiguration.logsConfiguration.customEndpoint =
+                configuration.traceConfiguration?.customEndpoint;
+        }
+    }
 
     return SdkConfiguration;
 };
-
-export class DatadogProviderConfiguration extends DdSdkReactNativeConfiguration {
-    public initializationMode: InitializationMode = InitializationMode.SYNC;
-}
 
 export enum InitializationMode {
     SYNC = 'SYNC',
