@@ -354,14 +354,6 @@ export class DdSdkReactNative {
             ] = `${reactNativeVersion}`;
         }
 
-        // Hard set `gracefulModeEnabled` to `true` because crashing an app on misconfiguration
-        // is not the usual workflow for React Native.
-        if (configuration.flagsConfiguration) {
-            Object.assign(configuration.flagsConfiguration, {
-                gracefulModeEnabled: true
-            });
-        }
-
         return new DdSdkConfiguration(
             configuration.clientToken,
             configuration.env,
