@@ -99,6 +99,10 @@ export class DdSdkReactNative {
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
 
+        if (configuration.flagsConfiguration) {
+            await DatadogFlags.enable(configuration.flagsConfiguration);
+        }
+
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
         GlobalState.instance.isInitialized = true;
         BufferSingleton.onInitialization();
@@ -463,10 +467,6 @@ export class DdSdkReactNative {
 
         if (configuration.actionEventMapper) {
             DdRum.registerActionEventMapper(configuration.actionEventMapper);
-        }
-
-        if (configuration.flagsConfiguration) {
-            DatadogFlags.enable(configuration.flagsConfiguration);
         }
 
         DdSdkReactNative.wasAutoInstrumented = true;

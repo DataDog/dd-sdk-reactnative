@@ -46,6 +46,9 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   config.telemetrySampleRate = 100;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
+  config.flagsConfiguration = {
+    enabled: true,
+  };
   await DdSdkReactNative.initialize(config);
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
@@ -91,8 +94,6 @@ function App(): React.JSX.Element {
   const [testFlagValue, setTestFlagValue] = React.useState(false);
   React.useEffect(() => {
       (async () => {
-          await DatadogFlags.enable();
-
           const flagsClient = DatadogFlags.getClient();
           await flagsClient.setEvaluationContext({
               targetingKey: 'test-user-1',
