@@ -179,7 +179,6 @@ extension NSDictionary {
             reactNativeVersion: reactNativeVersion
         )
     }
-
     func asProxyConfiguration() -> [AnyHashable: Any]? {
         guard let address = object(forKey: "address") as? String else {
             return nil
