@@ -533,7 +533,7 @@ export type PartialInitializationConfiguration = {
     readonly verbosity?: SdkVerbosity | undefined;
     readonly service?: string;
     readonly version?: string;
-    readonly versionSuffix?: string;
+    versionSuffix?: string;
     readonly proxyConfiguration?: ProxyConfiguration;
     readonly nativeLongTaskThresholdMs?: number | false;
     readonly nativeCrashReportEnabled?: boolean;

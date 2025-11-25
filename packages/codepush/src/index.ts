@@ -12,9 +12,10 @@ import type {
     AutoInstrumentationConfiguration,
     CoreSDKConfiguration
 } from '@datadog/mobile-react-native';
+import { DEFAULTS } from 'packages/core/src/DdSdkReactNativeConfiguration';
 import codePush from 'react-native-code-push';
 
-import { DISCARD_PROPERTY, removeDiscardProperties } from './utils';
+import { removeDiscardProperties } from './utils';
 import type { RequiredOrDiscard } from './utils';
 
 /**
@@ -44,18 +45,32 @@ const buildPartialConfiguration = (
     configuration: DatadogProviderConfiguration
 ): AutoInstrumentationConfiguration => {
     const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
-        trackErrors: configuration.trackErrors,
-        trackResources: configuration.trackResources,
-        trackInteractions: configuration.trackInteractions,
-        firstPartyHosts: configuration.firstPartyHosts,
-        logEventMapper: configuration.logEventMapper,
-        errorEventMapper: configuration.errorEventMapper,
-        resourceEventMapper: configuration.resourceEventMapper,
-        actionEventMapper: configuration.actionEventMapper,
         useAccessibilityLabel: configuration.useAccessibilityLabel,
-        resourceTracingSamplingRate: configuration.resourceTracingSamplingRate,
-        actionNameAttribute:
-            configuration.actionNameAttribute ?? DISCARD_PROPERTY
+        firstPartyHosts: configuration.firstPartyHosts,
+        rumConfiguration: {
+            actionNameAttribute:
+                configuration.rumConfiguration?.actionNameAttribute,
+            trackErrors:
+                configuration.rumConfiguration?.trackErrors ??
+                DEFAULTS.trackErrors,
+            trackResources:
+                configuration.rumConfiguration?.trackResources ??
+                DEFAULTS.trackResources,
+            trackInteractions:
+                configuration.rumConfiguration?.trackInteractions ??
+                DEFAULTS.trackInteractions,
+            errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
+            resourceEventMapper:
+                configuration.rumConfiguration?.resourceEventMapper,
+            actionEventMapper: configuration.rumConfiguration?.actionEventMapper
+        },
+        logsConfiguration: {
+            logEventMapper: configuration.logsConfiguration?.logEventMapper
+        },
+        traceConfiguration: {
+            resourceTraceSampleRate:
+                configuration.traceConfiguration?.resourceTraceSampleRate
+        }
     };
 
     return removeDiscardProperties(
