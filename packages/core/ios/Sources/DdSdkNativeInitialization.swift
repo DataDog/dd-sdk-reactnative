@@ -99,26 +99,29 @@ public class DdSdkNativeInitialization: NSObject {
 #endif
     }
 
-    func buildSDKConfiguration(configuration: DdSdkConfiguration, defaultAppVersion: String = getDefaultAppVersion()) -> Datadog.Configuration {
+    func buildSDKConfiguration(
+        configuration: DdSdkConfiguration,
+        defaultAppVersion: String = getDefaultAppVersion()
+    ) -> Datadog.Configuration {
         var config = Datadog.Configuration(
             clientToken: configuration.clientToken,
             env: configuration.env,
             site: configuration.site,
-            service: configuration.serviceName as? String,
+            service: configuration.service as? String,
             batchSize: configuration.batchSize,
             uploadFrequency: configuration.uploadFrequency,
-            proxyConfiguration: configuration.proxyConfig,
+            proxyConfiguration: configuration.proxyConfiguration,
             batchProcessingLevel: configuration.batchProcessingLevel
         )
 
-        if var additionalConfiguration = configuration.additionalConfig as? [String: Any] {
+        if var additionalConfiguration = configuration.additionalConfiguration as? [String: Any] {
             if let versionSuffix = additionalConfiguration[InternalConfigurationAttributes.versionSuffix] as? String {
                 let datadogVersion = defaultAppVersion + versionSuffix
                 additionalConfiguration[CrossPlatformAttributes.version] = datadogVersion
             }
 
             config._internal_mutation {
-              $0.additionalConfiguration = additionalConfiguration
+                $0.additionalConfiguration = additionalConfiguration
             }
         }
 
@@ -126,60 +129,58 @@ public class DdSdkNativeInitialization: NSObject {
     }
     
     func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
-        var longTaskThreshold: TimeInterval? = nil
-        if let threshold = configuration.nativeLongTaskThresholdMs {
-            if (threshold != 0) {
-                // `nativeLongTaskThresholdMs` attribute is in milliseconds
-                longTaskThreshold = threshold / 1_000
-            }
+        guard let rumConfig = configuration.rumConfiguration else {
+            preconditionFailure("buildRUMConfiguration called without rumConfiguration")
         }
-        
+
+        var longTaskThreshold: TimeInterval? = nil
+        if let threshold = configuration.nativeLongTaskThresholdMs, threshold != 0 {
+            longTaskThreshold = threshold / 1_000
+        }
+
         var uiKitViewsPredicate: UIKitRUMViewsPredicate? = nil
-        if let enableViewTracking = configuration.nativeViewTracking, enableViewTracking {
+        if rumConfig.nativeViewTracking ?? false {
             uiKitViewsPredicate = DefaultUIKitRUMViewsPredicate()
         }
 
         var uiKitActionsPredicate: UIKitRUMActionsPredicate? = nil
-        if let enableInteractionTracking = configuration.nativeInteractionTracking, enableInteractionTracking {
+        if rumConfig.nativeInteractionTracking ?? false {
             uiKitActionsPredicate = DefaultUIKitRUMActionsPredicate()
         }
-        
+
         var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
         if let firstPartyHosts = configuration.firstPartyHosts {
-            // This is applied to make sure we also add headers to requests made on the native side.
-            // The sampling rate here does not impact the sampling rate for JS requests.
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
-                    sampleRate: (configuration.resourceTracingSamplingRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.resourceTracingSamplingRate)
+                    sampleRate: Float(configuration.traceConfiguration?.resourceTracingSamplingRate
+                                      ?? DefaultConfiguration.resourceTracingSamplingRate)
                 )
             )
         }
-        
+
         var customRUMEndpointURL: URL? = nil
-        if let customRUMEndpoint = configuration.customEndpoints?.rum as? NSString {
-            if (customRUMEndpoint != "") {
-                customRUMEndpointURL = URL(string: "\(customRUMEndpoint)/api/v2/rum" as String)
-            }
+        if let customEndpoint = rumConfig.customEndpoint, !customEndpoint.isEmpty {
+            customRUMEndpointURL = URL(string: "\(customEndpoint)/api/v2/rum")
         }
 
         var networkSettledResourcePredicate: TimeBasedTNSResourcePredicate? = nil
-        if let initialResourceThreshold = configuration.initialResourceThreshold as TimeInterval? {
-            networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(threshold: initialResourceThreshold)
+        if let initialThreshold = rumConfig.initialResourceThreshold {
+            networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(threshold: initialThreshold)
         }
-        
+
         return RUM.Configuration(
-            applicationID: configuration.applicationId,
-            sessionSampleRate: (configuration.sampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.sessionSamplingRate),
+            applicationID: rumConfig.applicationId,
+            sessionSampleRate: Float(rumConfig.sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate),
             uiKitViewsPredicate: uiKitViewsPredicate,
             uiKitActionsPredicate: uiKitActionsPredicate,
             urlSessionTracking: urlSessionTracking,
-            trackFrustrations: configuration.trackFrustrations ?? true,
-            trackBackgroundEvents: configuration.trackBackgroundEvents ?? false,
+            trackFrustrations: rumConfig.trackFrustrations ?? DefaultConfiguration.trackFrustrations,
+            trackBackgroundEvents: rumConfig.trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
             longTaskThreshold: longTaskThreshold,
-            appHangThreshold: configuration.appHangThreshold,
-            trackWatchdogTerminations: configuration.trackWatchdogTerminations,
-            vitalsUpdateFrequency: configuration.vitalsUpdateFrequency,
+            appHangThreshold: rumConfig.appHangThreshold,
+            trackWatchdogTerminations: rumConfig.trackWatchdogTerminations,
+            vitalsUpdateFrequency: rumConfig.vitalsUpdateFrequency,
             networkSettledResourcePredicate: networkSettledResourcePredicate ?? TimeBasedTNSResourcePredicate(),
             resourceEventMapper: { resourceEvent in
                 if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
@@ -195,14 +196,15 @@ public class DdSdkNativeInitialization: NSObject {
             },
             onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
-            trackMemoryWarnings: configuration.trackMemoryWarnings,
-            telemetrySampleRate: (configuration.telemetrySampleRate as? NSNumber)?.floatValue ?? Float(DefaultConfiguration.telemetrySampleRate)
+            trackMemoryWarnings: rumConfig.trackMemoryWarnings,
+            telemetrySampleRate: Float(rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
         )
     }
+
     
     func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
         var customLogsEndpointURL: URL? = nil
-        if let customLogsEndpoint = configuration.customEndpoints?.logs as? NSString {
+        if let customLogsEndpoint = configuration.logsConfiguration?.customEndpoint as? NSString {
             if (customLogsEndpoint != "") {
                 customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
             }
@@ -210,11 +212,10 @@ public class DdSdkNativeInitialization: NSObject {
         
         return Logs.Configuration(customEndpoint: customLogsEndpointURL)
     }
-    
-    
+        
     func buildTraceConfiguration(configuration: DdSdkConfiguration) -> Trace.Configuration {
         var customTraceEndpointURL: URL? = nil
-        if let customTraceEndpoint = configuration.customEndpoints?.trace as? NSString {
+        if let customTraceEndpoint = configuration.traceConfiguration?.customEndpoint as? NSString {
             if (customTraceEndpoint != "") {
                 customTraceEndpointURL = URL(string: "\(customTraceEndpoint)/api/v2/spans" as String)
             }

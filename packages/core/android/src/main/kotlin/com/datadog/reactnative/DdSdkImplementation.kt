@@ -325,9 +325,9 @@ class DdSdkImplementation(
         ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
-            buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
+            buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration?.vitalsUpdateFrequency) !=
                     VitalsUpdateFrequency.NEVER
-        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
             return null
@@ -343,7 +343,7 @@ class DdSdkImplementation(
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                    ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs?.toLong() ?: 0L
                 )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")

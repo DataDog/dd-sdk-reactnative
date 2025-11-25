@@ -264,10 +264,10 @@ public class DdSdkImplementation: NSObject {
             reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion
                 as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
-            trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
+            trackCrossPlatformLongTasks: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
             trackInteractions: rnConfiguration.configurationForTelemetry?.trackInteractions,
-            trackLongTask: rnConfiguration.longTaskThresholdMs != 0,
+            trackLongTask: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
             trackNativeErrors: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNativeLongTasks: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNetworkRequests: rnConfiguration.configurationForTelemetry?.trackNetworkRequests
@@ -283,8 +283,8 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
-        let jsRefreshRateMonitoringEnabled = sdkConfiguration.vitalsUpdateFrequency != nil
-        let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
+        let jsRefreshRateMonitoringEnabled = sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
+        let jsLongTaskMonitoringEnabled = sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
 
         if !jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled {
             return nil
@@ -295,7 +295,7 @@ public class DdSdkImplementation: NSObject {
             let shouldRecordFrameTime = jsRefreshRateMonitoringEnabled && frameTime > 0
             let shouldRecordLongTask =
                 jsLongTaskMonitoringEnabled
-                && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000
+            && frameTime > (sdkConfiguration.rumConfiguration?.longTaskThresholdMs ?? 0.0) / 1_000
             guard shouldRecordFrameTime || shouldRecordLongTask,
                 let rumMonitorInternal = RUMMonitorInternalProvider()
             else { return }
