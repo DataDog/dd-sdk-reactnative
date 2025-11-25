@@ -485,6 +485,7 @@ export type PartialInitializationConfiguration = {
     readonly batchProcessingLevel?: BatchProcessingLevel;
     readonly initialResourceThreshold?: number;
     readonly trackMemoryWarnings?: boolean;
+    readonly flagsConfiguration?: DatadogFlagsConfiguration;
 };
 
 const setConfigurationAttribute = <

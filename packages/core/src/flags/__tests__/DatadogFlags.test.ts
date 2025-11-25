@@ -4,9 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { NativeModules } from 'react-native';
+
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DatadogFlags } from '../DatadogFlags';
 
 jest.mock('../../InternalLog', () => {
@@ -21,31 +22,31 @@ jest.mock('../../InternalLog', () => {
 describe('DatadogFlags', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        BufferSingleton.onInitialization();
+        // Reset state of DatadogFlags instance.
+        Object.assign(DatadogFlags, { isFeatureEnabled: false });
     });
 
     describe('Initialization', () => {
+        it('should print an error if calling DatadogFlags.enable() for multiple times', async () => {
+            await DatadogFlags.enable();
+            await DatadogFlags.enable();
+            await DatadogFlags.enable();
+
+            expect(InternalLog.log).toHaveBeenCalledTimes(2);
+            expect(NativeModules.DdFlags.enable).toHaveBeenCalledTimes(1);
+        });
+
         it('should print an error if retrieving the client before the feature is enabled', async () => {
             DatadogFlags.getClient();
 
             expect(InternalLog.log).toHaveBeenCalledWith(
-                'DatadogFlags.getClient() called before DatadogFlags have been initialized. Flag evaluations will resolve to default values.',
-                SdkVerbosity.ERROR
-            );
-        });
-
-        it('should print an error if retrieving the client if the feature was not enabled on purpose', async () => {
-            await DatadogFlags.enable({ enabled: false });
-            DatadogFlags.getClient();
-
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                'DatadogFlags.getClient() called before DatadogFlags have been initialized. Flag evaluations will resolve to default values.',
+                '`DatadogFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
                 SdkVerbosity.ERROR
             );
         });
 
         it('should not print an error if retrieving the client after the feature is enabled', async () => {
-            await DatadogFlags.enable({ enabled: true });
+            await DatadogFlags.enable();
             DatadogFlags.getClient();
 
             expect(InternalLog.log).not.toHaveBeenCalled();

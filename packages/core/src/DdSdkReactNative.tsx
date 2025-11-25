@@ -99,7 +99,10 @@ export class DdSdkReactNative {
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
 
-        if (configuration.flagsConfiguration) {
+        if (
+            configuration.flagsConfiguration &&
+            configuration.flagsConfiguration.enabled !== false
+        ) {
             await DatadogFlags.enable(configuration.flagsConfiguration);
         }
 

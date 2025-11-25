@@ -12,6 +12,7 @@ import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
+import { DatadogFlags } from '../flags/DatadogFlags';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
@@ -27,6 +28,14 @@ import type { DdSdkConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
+
+jest.mock('../flags/DatadogFlags', () => {
+    return {
+        DatadogFlags: {
+            enable: jest.fn().mockResolvedValue(undefined)
+        }
+    };
+});
 
 jest.mock(
     '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',
@@ -74,6 +83,9 @@ beforeEach(async () => {
     >).mockClear();
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
+    >).mockClear();
+    (DatadogFlags.enable as jest.MockedFunction<
+        typeof DatadogFlags.enable
     >).mockClear();
     DdLogs.unregisterLogEventMapper();
 
@@ -506,6 +518,109 @@ describe('DdSdkReactNative', () => {
                     initialResourceThreshold: 0.123
                 })
             );
+        });
+
+        it('does not enable DatadogFlags when flagsConfiguration is not provided', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DatadogFlags.enable).not.toHaveBeenCalled();
+        });
+
+        it('enables DatadogFlags when flagsConfiguration is provided', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.flagsConfiguration = {
+                enabled: true
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DatadogFlags.enable).toHaveBeenCalledTimes(1);
+            expect(DatadogFlags.enable).toHaveBeenCalledWith({
+                enabled: true
+            });
+        });
+
+        it('enables DatadogFlags with custom configuration when provided', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const customFlagsEndpoint = 'https://flags.example.com';
+            const customFlagsHeaders = {
+                Authorization: 'Bearer token123'
+            };
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.flagsConfiguration = {
+                enabled: true,
+                customFlagsEndpoint,
+                customFlagsHeaders
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DatadogFlags.enable).toHaveBeenCalledTimes(1);
+            expect(DatadogFlags.enable).toHaveBeenCalledWith({
+                enabled: true,
+                customFlagsEndpoint,
+                customFlagsHeaders
+            });
+        });
+
+        it('does not call DatadogFlags.enable when flagsConfiguration.enabled is false', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new DdSdkReactNativeConfiguration(
+                fakeClientToken,
+                fakeEnvName,
+                fakeAppId
+            );
+            configuration.flagsConfiguration = {
+                enabled: false
+            };
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DatadogFlags.enable).not.toHaveBeenCalled();
         });
     });
 

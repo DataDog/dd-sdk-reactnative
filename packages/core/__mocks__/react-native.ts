@@ -159,6 +159,7 @@ actualRN.NativeModules.DdRum = {
 };
 
 actualRN.NativeModules.DdFlags = {
+    enable: jest.fn().mockImplementation(() => Promise.resolve()),
     setEvaluationContext: jest.fn().mockImplementation(() => Promise.resolve()),
     getBooleanDetails: jest.fn().mockImplementation(() =>
         Promise.resolve({
