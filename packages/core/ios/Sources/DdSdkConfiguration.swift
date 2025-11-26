@@ -70,7 +70,7 @@ public class DdSdkConfiguration: NSObject {
         rumConfiguration: RUMConfiguration?,
         logsConfiguration: LogsConfiguration?,
         traceConfiguration: TraceConfiguration?,
-        configurationForTelemetry: ConfigurationForTelemetry?,
+        configurationForTelemetry: ConfigurationForTelemetry?
     ) {
         self.additionalConfiguration = additionalConfiguration
         self.clientToken = clientToken
@@ -114,7 +114,7 @@ public class DdSdkConfiguration: NSObject {
 ///    - customEndpoint: A custom RUM  intake endpoint to override the default Datadog intake.
 public class RUMConfiguration: NSObject {
     public var applicationId: String = ""
-    public var trackFrustrations: Bool? = nil
+    public var trackFrustrations: Bool? = true
     public var longTaskThresholdMs: Double = 0.0
     public var sessionSampleRate: Double? = nil
     public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
@@ -124,7 +124,7 @@ public class RUMConfiguration: NSObject {
     public var appHangThreshold: Double? = nil
     public var trackWatchdogTerminations: Bool
     public var initialResourceThreshold: Double? = nil
-    public var trackMemoryWarnings: Bool = true
+    public var trackMemoryWarnings: Bool? = nil
     public var telemetrySampleRate: Double? = nil
     public var customEndpoint: String? = nil
 
@@ -140,9 +140,9 @@ public class RUMConfiguration: NSObject {
         appHangThreshold: Double?,
         trackWatchdogTerminations: Bool,
         initialResourceThreshold: Double?,
-        trackMemoryWarnings: Bool,
+        trackMemoryWarnings: Bool?,
         telemetrySampleRate: Double?,
-        customEndpoint: String?,
+        customEndpoint: String?
     ) {
         self.applicationId = applicationId
         self.trackFrustrations = trackFrustrations
@@ -176,7 +176,7 @@ public class LogsConfiguration: NSObject {
     init(
         bundleLogsWithRum: Bool,
         bundleLogsWithTraces: Bool,
-        customEndpoint: String?,
+        customEndpoint: String?
     ) {
         self.bundleLogsWithRum = bundleLogsWithRum
         self.bundleLogsWithTraces = bundleLogsWithTraces
@@ -190,14 +190,14 @@ public class LogsConfiguration: NSObject {
 ///    - resourceTracingSamplingRate: Percentage (0–100) of network resource traces to sample.
 ///    - customEndpoint: A custom Trace intake endpoint to override the default Datadog intake.
 public class TraceConfiguration: NSObject {
-    public var resourceTracingSamplingRate: Double? = nil
+    public var resourceTraceSampleRate: Double? = nil
     public var customEndpoint: String? = nil
 
     init(
-        resourceTracingSamplingRate: Double?,
-        customEndpoint: String?,
+        resourceTraceSampleRate: Double?,
+        customEndpoint: String?
     ) {
-        self.resourceTracingSamplingRate = resourceTracingSamplingRate
+        self.resourceTraceSampleRate = resourceTraceSampleRate
         self.customEndpoint = customEndpoint
     }
 }

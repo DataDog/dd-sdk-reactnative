@@ -118,7 +118,7 @@ extension NSDictionary {
             let customEndpoint = traceDict["customEndpoint"] as? String
 
             traceConfiguration = TraceConfiguration(
-                resourceTracingSamplingRate: resourceTraceSampleRate ?? DefaultConfiguration.resourceTracingSamplingRate,
+                resourceTraceSampleRate: resourceTraceSampleRate ?? DefaultConfiguration.resourceTraceSampleRate,
                 customEndpoint: customEndpoint
             )
         } else {
@@ -255,7 +255,7 @@ extension NSArray {
 internal struct DefaultConfiguration {
     static let nativeCrashReportEnabled = false
     static let sessionSamplingRate = 100.0
-    static let resourceTracingSamplingRate = 100.0
+    static let resourceTraceSampleRate = 100.0
     static let longTaskThresholdMs = 0.0
     static let nativeLongTaskThresholdMs = 200.0
     static let nativeViewTracking = false
@@ -276,7 +276,10 @@ extension Dictionary where Key == String, Value == AnyObject {
                 throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
             }
 
-            let additionalConfiguration = configuration["additionalConfiguration"] as? NSDictionary
+            let additionalConfiguration: NSDictionary = [
+                  CrossPlatformAttributes.ddsource: "react-native",
+                  CrossPlatformAttributes.sdkVersion: SdkVersion
+            ]
 
             let clientToken = (configuration["clientToken"] as? String) ?? ""
             let env = (configuration["env"] as? String) ?? ""
@@ -379,9 +382,9 @@ extension Dictionary where Key == String, Value == AnyObject {
 
             if let trace = traceDict {
                 traceConfiguration = TraceConfiguration(
-                    resourceTracingSamplingRate:
+                    resourceTraceSampleRate:
                         trace["resourceTraceSampleRate"] as? Double
-                        ?? DefaultConfiguration.resourceTracingSamplingRate,
+                        ?? DefaultConfiguration.resourceTraceSampleRate,
                     customEndpoint: trace["customEndpoint"] as? String
                 )
             } else {
