@@ -121,8 +121,8 @@
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				21A29D19EE0D8BA789DB48E2 /* [CP] Embed Pods Frameworks */,
 				CFB529A04D071A5133DC7E2B /* [CP] Copy Pods Resources */,
+				93B37AE4FB9A962A472027AF /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,24 +195,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		315CB1439E0032A0595DF991 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ddSdkReactnativeExample/Pods-ddSdkReactnativeExample-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ddSdkReactnativeExample/Pods-ddSdkReactnativeExample-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ddSdkReactnativeExample/Pods-ddSdkReactnativeExample-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		9FCE5EA816AC9B0965148B3A /* [CP] Embed Pods Frameworks */ = {
+		93B37AE4FB9A962A472027AF /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
