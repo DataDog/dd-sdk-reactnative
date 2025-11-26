@@ -153,8 +153,8 @@ public class DdSdkNativeInitialization: NSObject {
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
-                    sampleRate: Float(configuration.traceConfiguration?.resourceTracingSamplingRate
-                                      ?? DefaultConfiguration.resourceTracingSamplingRate)
+                    sampleRate: Float(configuration.traceConfiguration?.resourceTraceSampleRate
+                                      ?? DefaultConfiguration.resourceTraceSampleRate)
                 )
             )
         }
@@ -196,7 +196,7 @@ public class DdSdkNativeInitialization: NSObject {
             },
             onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
-            trackMemoryWarnings: rumConfig.trackMemoryWarnings,
+            trackMemoryWarnings: rumConfig.trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings,
             telemetrySampleRate: Float(rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
         )
     }

@@ -47,27 +47,18 @@ internal class DdLogsTests: XCTestCase {
     }
 
     func testConfigurationMapping() {
-        let enabledSdkConfiguration: DdSdkConfiguration = .mockAny(
-            bundleLogsWithRum: true,
-            bundleLogsWithTraces: true
-        )
+        let enabledSdkConfiguration: DdSdkConfiguration = .mockAny(logsConfiguration: LogsConfiguration(bundleLogsWithRum: true, bundleLogsWithTraces: true, customEndpoint: nil))
         let enabledLoggerConfiguration = Logger.Configuration(enabledSdkConfiguration)
         XCTAssertEqual(enabledLoggerConfiguration.networkInfoEnabled, true)
         XCTAssertEqual(enabledLoggerConfiguration.bundleWithRumEnabled, true)
         XCTAssertEqual(enabledLoggerConfiguration.bundleWithTraceEnabled, true)
 
-        let disabledSdkConfiguration: DdSdkConfiguration = .mockAny(
-            bundleLogsWithRum: false,
-            bundleLogsWithTraces: false
-        )
+        let disabledSdkConfiguration: DdSdkConfiguration = .mockAny(logsConfiguration: LogsConfiguration(bundleLogsWithRum: false, bundleLogsWithTraces: false, customEndpoint: nil))
         let disabledLoggerConfiguration = Logger.Configuration(disabledSdkConfiguration)
         XCTAssertEqual(disabledLoggerConfiguration.bundleWithRumEnabled, false)
         XCTAssertEqual(disabledLoggerConfiguration.bundleWithTraceEnabled, false)
 
-        let oneDisabledSdkConfiguration: DdSdkConfiguration = .mockAny(
-            bundleLogsWithRum: false,
-            bundleLogsWithTraces: true
-        )
+        let oneDisabledSdkConfiguration: DdSdkConfiguration = .mockAny(logsConfiguration: LogsConfiguration(bundleLogsWithRum: false, bundleLogsWithTraces: true, customEndpoint: nil))
         let oneDisabledLoggerConfiguration = Logger.Configuration(oneDisabledSdkConfiguration)
         XCTAssertEqual(oneDisabledLoggerConfiguration.bundleWithRumEnabled, false)
         XCTAssertEqual(oneDisabledLoggerConfiguration.bundleWithTraceEnabled, true)
