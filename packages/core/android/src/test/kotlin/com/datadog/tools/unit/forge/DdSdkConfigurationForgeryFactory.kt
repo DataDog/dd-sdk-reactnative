@@ -7,39 +7,32 @@
 package com.datadog.tools.unit.forge
 
 import com.datadog.reactnative.ConfigurationForTelemetry
-import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
+import com.datadog.reactnative.LogsConfiguration
+import com.datadog.reactnative.RUMConfiguration
+import com.datadog.reactnative.TraceConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
 import java.util.UUID
 
 class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
+
     override fun getForgery(forge: Forge): DdSdkConfiguration {
         return DdSdkConfiguration(
-            clientToken = forge.aStringMatching("pub[a-f0-9]{32}"),
-            env = forge.anAlphabeticalString(),
-            applicationId = forge.getForgery<UUID>().toString(),
-            nativeCrashReportEnabled = forge.aNullable { aBool() },
-            nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
-            longTaskThresholdMs = forge.aDouble(0.0, 100.0),
-            sampleRate = forge.aNullable { aDouble(0.0, 100.0) },
-            telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
-            vitalsUpdateFrequency = forge.aNullable {
-                anElementFrom(
-                    "RARE",
-                    "NEVER",
-                    "FREQUENT",
-                    "AVERAGE"
-                )
-            },
-            site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
-            additionalConfig = forge.aMap {
+            additionalConfiguration = forge.aMap {
                 forge.anAsciiString() to forge.anElementFrom(
                     forge.aMap { forge.anAsciiString() to forge.aString() },
                     forge.aString(),
                     null
                 )
             },
+            clientToken = forge.aStringMatching("pub[a-f0-9]{32}"),
+            env = forge.anAlphabeticalString(),
+            site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
+            service = forge.aNullable { forge.anAlphabeticalString() },
+            verbosity = forge.aNullable { anElementFrom("debug", "info", "warn", "error") },
+            nativeCrashReportEnabled = forge.aNullable { aBool() },
+            nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
             trackingConsent = forge.aNullable {
                 anElementFrom("pending", "granted", "not_granted")
             },
@@ -57,7 +50,40 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                     "LARGE"
                 )
             },
-            trackBackgroundEvents = forge.aNullable { forge.aBool() },
+            batchProcessingLevel = forge.aNullable {
+                anElementFrom(
+                    "LOW",
+                    "MEDIUM",
+                    "HIGH"
+                )
+            },
+            proxyConfiguration = null,
+            firstPartyHosts = null,
+            rumConfiguration = RUMConfiguration(
+                applicationId = forge.getForgery<UUID>().toString(),
+                trackFrustrations = forge.aNullable { aBool() },
+                longTaskThresholdMs = forge.aNullable { aDouble(0.0, 100.0) },
+                sessionSampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+                vitalsUpdateFrequency = forge.aNullable {
+                    anElementFrom("RARE", "NEVER", "FREQUENT", "AVERAGE")
+                },
+                trackBackgroundEvents = forge.aNullable { forge.aBool() },
+                nativeViewTracking = forge.aNullable { aBool() },
+                nativeInteractionTracking = forge.aNullable { aBool() },
+                trackNonFatalAnrs = forge.aNullable { aBool() },
+                initialResourceThreshold = forge.aNullable { aDouble(0.0, 2.0) },
+                telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+                customEndpoint = forge.aNullable { aString() }
+            ),
+            logsConfiguration = LogsConfiguration(
+                bundleLogsWithRum = forge.aBool(),
+                bundleLogsWithTraces = forge.aBool(),
+                customEndpoint = forge.aNullable { aString() }
+            ),
+            traceConfiguration = TraceConfiguration(
+                resourceTraceSampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+                customEndpoint = forge.aNullable { aString() }
+            ),
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = forge.anAlphabeticalString(),
                 trackErrors = forge.aBool(),
@@ -65,29 +91,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 trackNetworkRequests = forge.aBool(),
                 reactVersion = forge.aString(),
                 reactNativeVersion = forge.aString()
-            ),
-            trackFrustrations = forge.aNullable { aBool() },
-            customEndpoints = CustomEndpoints(
-                rum = forge.aNullable { aString() },
-                logs = forge.aNullable { aString() },
-                trace = forge.aNullable { aString() }
-            ),
-            nativeViewTracking = forge.aBool(),
-            nativeInteractionTracking = forge.aBool(),
-            verbosity = forge.aNullable { anElementFrom("debug", "info", "warn", "error") },
-            proxyConfig = null,
-            serviceName = forge.aNullable { forge.anAlphabeticalString() },
-            firstPartyHosts = null,
-            bundleLogsWithRum = forge.aBool(),
-            bundleLogsWithTraces = forge.aBool(),
-            trackNonFatalAnrs = forge.aBool(),
-            batchProcessingLevel = forge.aNullable {
-                anElementFrom(
-                    "LOW",
-                    "MEDIUM",
-                    "HIGH"
-                )
-            }
+            )
         )
     }
 }

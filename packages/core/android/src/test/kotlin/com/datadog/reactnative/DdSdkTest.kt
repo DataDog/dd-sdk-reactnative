@@ -224,10 +224,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("crashReportsEnabled", true)
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -278,10 +278,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("crashReportsEnabled", false)
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -333,10 +333,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("crashReportsEnabled", false)
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -355,7 +355,7 @@ internal class DdSdkTest {
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-        val expectedRumSampleRate = fakeConfiguration.sampleRate?.toFloat() ?: 100f
+        val expectedRumSampleRate = fakeConfiguration.rumConfiguration?.sessionSampleRate?.toFloat() ?: 100f // ktlint-disable-line max-line-length
 
         val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
         val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
@@ -389,10 +389,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
                 .hasField("featureConfiguration") {
                     it.hasFieldEqualTo("sampleRate", expectedRumSampleRate)
                 }
@@ -414,7 +414,7 @@ internal class DdSdkTest {
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-        val expectedTelemetrySampleRate = fakeConfiguration.telemetrySampleRate?.toFloat() ?: 20f
+        val expectedTelemetrySampleRate = fakeConfiguration.rumConfiguration?.telemetrySampleRate?.toFloat() ?: 20f // ktlint-disable-line max-line-length
 
         val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
         val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
@@ -448,10 +448,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
                 .hasField("featureConfiguration") {
                     it.hasFieldEqualTo("telemetrySampleRate", expectedTelemetrySampleRate)
                 }
@@ -469,7 +469,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {additionalConfig=null}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(additionalConfig = null)
+        fakeConfiguration = fakeConfiguration.copy(additionalConfiguration = null)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -555,10 +555,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -615,10 +615,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -672,10 +672,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -729,10 +729,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -786,10 +786,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -843,10 +843,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -900,10 +900,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -957,10 +957,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -1014,10 +1014,10 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("variant", "")
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
         } finally {
             rumMock.close()
             logsMock.close()
@@ -1201,8 +1201,9 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(nativeViewTracking = false)
         val bridgeConfiguration = configuration.copy(
-            nativeViewTracking = false
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1248,8 +1249,9 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(nativeViewTracking = true)
         val bridgeConfiguration = configuration.copy(
-            nativeViewTracking = true
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1295,8 +1297,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeInteractionTracking = false
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1342,8 +1347,9 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(trackFrustrations = true)
         val bridgeConfiguration = configuration.copy(
-            trackFrustrations = true
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1389,8 +1395,9 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(trackFrustrations = false)
         val bridgeConfiguration = configuration.copy(
-            trackFrustrations = false
+            rumConfiguration = rumConfiguration
         )
 
         val sdkConfigCaptor = argumentCaptor<Configuration>()
@@ -1437,8 +1444,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeInteractionTracking = true
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1524,11 +1534,11 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {custom service name}`(
         @Forgery configuration: DdSdkConfiguration,
-        @StringForgery serviceName: String
+        @StringForgery service: String
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            serviceName = serviceName
+            service = service
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1566,13 +1576,16 @@ internal class DdSdkTest {
                 .hasFieldEqualTo("clientToken", bridgeConfiguration.clientToken)
                 .hasFieldEqualTo("env", bridgeConfiguration.env)
                 .hasFieldEqualTo("variant", "")
-                .hasFieldEqualTo("service", serviceName)
+                .hasFieldEqualTo("service", service)
                 .hasFieldEqualTo(
                     "additionalConfig",
-                    bridgeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
+                    bridgeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty() // ktlint-disable-line max-line-length
                 )
             assertThat(rumConfigCaptor.firstValue)
-                .hasFieldEqualTo("applicationId", bridgeConfiguration.applicationId)
+                .hasFieldEqualTo(
+                    "applicationId",
+                    bridgeConfiguration.rumConfiguration?.applicationId
+                )
         } finally {
             rumMock.close()
             logsMock.close()
@@ -2082,8 +2095,11 @@ internal class DdSdkTest {
     ) {
         // Given
         val trackBackgroundEvents = forge.aNullable { forge.aBool() }
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             trackBackgroundEvents = trackBackgroundEvents
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2129,8 +2145,9 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(vitalsUpdateFrequency = "RARE")
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = "RARE"
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2182,9 +2199,12 @@ internal class DdSdkTest {
     ) {
         // Given
         doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "NEVER",
             longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2233,9 +2253,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = fakeFrequency,
             longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2304,9 +2327,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "AVERAGE",
             longTaskThresholdMs = (threshold / 1_000_000).toDouble()
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -2341,9 +2367,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "NEVER",
             longTaskThresholdMs = (threshold / 1_000_000).toDouble()
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -2379,6 +2408,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(
+            initialResourceThreshold = null
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
+        )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -2393,7 +2428,7 @@ internal class DdSdkTest {
             rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
             logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
             traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
-            testedBridgeSdk.initialize(configuration.toReadableJavaOnlyMap(), mockPromise)
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
             // Then
             inOrder(mockDatadog) {
@@ -2424,8 +2459,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             initialResourceThreshold = thresholdInSeconds
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -2479,7 +2517,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
+            additionalConfiguration = mapOf(
                 DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix
             )
         )
@@ -2544,10 +2582,13 @@ internal class DdSdkTest {
         @StringForgery reactNativeVersion: String
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(
+            longTaskThresholdMs = 0.0
+        )
         val bridgeConfiguration = configuration.copy(
             nativeCrashReportEnabled = trackNativeErrors,
             nativeLongTaskThresholdMs = 0.0,
-            longTaskThresholdMs = 0.0,
+            rumConfiguration = rumConfiguration,
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = initializationType,
                 trackErrors = trackErrors,
@@ -3167,12 +3208,19 @@ internal class DdSdkTest {
         val customRumEndpoint = forge.aNullable { aString() }
         val customLogsEndpoint = forge.aNullable { aString() }
         val customTraceEndpoint = forge.aNullable { aString() }
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            customEndpoint = customRumEndpoint
+        )
+        val logsConfiguration = fakeConfiguration.logsConfiguration?.copy(
+            customEndpoint = customLogsEndpoint
+        )
+        val traceConfiguration = fakeConfiguration.traceConfiguration?.copy(
+            customEndpoint = customTraceEndpoint
+        )
         val bridgeConfiguration = fakeConfiguration.copy(
-            customEndpoints = CustomEndpoints(
-                rum = customRumEndpoint,
-                logs = customLogsEndpoint,
-                trace = customTraceEndpoint
-            )
+            rumConfiguration = rumConfiguration,
+            logsConfiguration = logsConfiguration,
+            traceConfiguration = traceConfiguration
         )
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
