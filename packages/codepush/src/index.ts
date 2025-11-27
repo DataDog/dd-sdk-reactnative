@@ -12,7 +12,6 @@ import type {
     AutoInstrumentationConfiguration,
     CoreSDKConfiguration
 } from '@datadog/mobile-react-native';
-import { DEFAULTS } from 'packages/core/src/DdSdkReactNativeConfiguration';
 import codePush from 'react-native-code-push';
 
 import { removeDiscardProperties } from './utils';
@@ -50,15 +49,11 @@ const buildPartialConfiguration = (
         rumConfiguration: {
             actionNameAttribute:
                 configuration.rumConfiguration?.actionNameAttribute,
-            trackErrors:
-                configuration.rumConfiguration?.trackErrors ??
-                DEFAULTS.trackErrors,
+            trackErrors: configuration.rumConfiguration?.trackErrors ?? false,
             trackResources:
-                configuration.rumConfiguration?.trackResources ??
-                DEFAULTS.trackResources,
+                configuration.rumConfiguration?.trackResources ?? false,
             trackInteractions:
-                configuration.rumConfiguration?.trackInteractions ??
-                DEFAULTS.trackInteractions,
+                configuration.rumConfiguration?.trackInteractions ?? false,
             errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
             resourceEventMapper:
                 configuration.rumConfiguration?.resourceEventMapper,

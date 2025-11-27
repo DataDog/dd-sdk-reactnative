@@ -140,11 +140,16 @@ describe('DatadogProvider', () => {
         it('does not start reporting auto-instrumentation', async () => {
             const { getByText } = renderWithProvider({
                 configuration: {
-                    trackErrors: true,
-                    trackResources: true,
-                    trackInteractions: true,
+                    rumConfiguration: {
+                        trackErrors: true,
+                        trackResources: true,
+                        trackInteractions: true
+                    },
                     firstPartyHosts: ['api.com'],
-                    resourceTracingSamplingRate: 100
+                    traceConfiguration: {
+                        resourceTraceSampleRate: 100
+                    },
+                    logsConfiguration: {}
                 }
             });
             await flushPromises();
@@ -162,9 +167,11 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
 
             await DatadogProvider.initialize({
-                applicationId: 'fake-application-id',
                 clientToken: 'fake-client-token',
-                env: 'fake-env'
+                env: 'fake-env',
+                rumConfiguration: {
+                    applicationId: 'fake-application-id'
+                }
             });
             await flushPromises();
 

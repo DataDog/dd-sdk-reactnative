@@ -14,7 +14,8 @@ import {
     DEFAULTS,
     DatadogProviderConfiguration,
     RUMConfiguration,
-    TraceConfiguration
+    TraceConfiguration,
+    LogsConfiguration
 } from '../../DdSdkReactNativeConfiguration';
 import type { ProxyConfiguration } from '../../ProxyConfiguration';
 import { SdkVerbosity } from '../../SdkVerbosity';
@@ -52,10 +53,9 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
                 configuration.rumConfiguration.trackErrors
             );
 
-            if (configuration.rumConfiguration.longTaskThresholdMs) {
-                rumConfig.longTaskThresholdMs =
-                    configuration.rumConfiguration.longTaskThresholdMs;
-            }
+            rumConfig.longTaskThresholdMs =
+                configuration.rumConfiguration.longTaskThresholdMs ??
+                DEFAULTS.longTaskThresholdMs;
 
             if (configuration.rumConfiguration.actionNameAttribute) {
                 rumConfig.actionNameAttribute =
@@ -70,6 +70,16 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
                 params?.actionEventMapper || DEFAULTS.actionEventMapper;
 
             this.rumConfiguration = rumConfig;
+        }
+
+        if (configuration.logsConfiguration) {
+            this.logsConfiguration = new LogsConfiguration();
+            this.logsConfiguration.bundleLogsWithRum =
+                configuration.logsConfiguration.bundleLogsWithRum ??
+                DEFAULTS.bundleLogsWithRum;
+            this.logsConfiguration.bundleLogsWithTraces =
+                configuration.logsConfiguration.bundleLogsWithTraces ??
+                DEFAULTS.bundleLogsWithTraces;
         }
 
         if (configuration.traceConfiguration) {

@@ -6,7 +6,10 @@
 
 import { NativeModules } from 'react-native';
 
-import { DdSdkReactNativeConfiguration } from '../../DdSdkReactNativeConfiguration';
+import {
+    CoreSDKConfiguration,
+    RUMConfiguration
+} from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
@@ -199,13 +202,15 @@ describe('DdLogs', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreSDKConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RUMConfiguration(
                 fakeAppId,
                 false,
                 false,
-                true // Track Errors
+                true
             );
 
             // Register log event mapper to filter console log events
@@ -261,13 +266,16 @@ describe('DdLogs', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreSDKConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+
+            configuration.rumConfiguration = new RUMConfiguration(
                 fakeAppId,
                 false,
                 false,
-                true // Track Errors
+                true
             );
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
