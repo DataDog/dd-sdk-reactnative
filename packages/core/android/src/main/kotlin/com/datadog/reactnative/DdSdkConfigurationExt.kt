@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-@file:Suppress("TooManyFunctions")
+@file:Suppress("TooManyFunctions", "StringLiteralDuplication")
 
 package com.datadog.reactnative
 
@@ -269,29 +269,22 @@ internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     }.toSet()
 }
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
 
     map.putString("clientToken", clientToken)
     map.putString("env", env)
     map.putString("site", site.toString())
-
     service?.let { map.putString("service", it) }
     verbosity?.let { map.putString("verbosity", it) }
-
     nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
     nativeLongTaskThresholdMs?.let { map.putDouble("nativeLongTaskThresholdMs", it) }
-
     map.putString("trackingConsent", trackingConsent.toString())
     map.putString("uploadFrequency", uploadFrequency.toString())
     map.putString("batchSize", batchSize.toString())
     map.putString("batchProcessingLevel", batchProcessingLevel.toString())
-
-    // Additional configuration
     additionalConfiguration?.let { map.putMap("additionalConfiguration", it.toWritableMap()) }
-
-    // Proxy configuration
     proxyConfiguration?.let { (proxy, authenticator) ->
         val proxyMap = WritableNativeMap()
         val addr = proxy.address()
@@ -309,7 +302,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         )
         map.putMap("proxyConfiguration", proxyMap)
     }
-
     firstPartyHosts?.let { hosts ->
         val hostsArray = WritableNativeArray()
         hosts.forEach { (match, types) ->
@@ -324,7 +316,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         }
         map.putArray("firstPartyHosts", hostsArray)
     }
-
     rumConfiguration?.let { rum ->
         val rumMap = WritableNativeMap()
         rumMap.putString("applicationId", rum.applicationId)
@@ -342,7 +333,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
 
         map.putMap("rumConfiguration", rumMap)
     }
-
     logsConfiguration?.let { logs ->
         val logsMap = WritableNativeMap()
         logsMap.putBoolean("bundleLogsWithRum", logs.bundleLogsWithRum)
@@ -350,14 +340,12 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         logs.customEndpoint?.let { logsMap.putString("customEndpoint", it) }
         map.putMap("logsConfiguration", logsMap)
     }
-
     traceConfiguration?.let { trace ->
         val traceMap = WritableNativeMap()
         trace.resourceTraceSampleRate?.let { traceMap.putDouble("resourceTraceSampleRate", it) }
         trace.customEndpoint?.let { traceMap.putString("customEndpoint", it) }
         map.putMap("traceConfiguration", traceMap)
     }
-
     configurationForTelemetry?.let { telemetry ->
         val telemetryMap = WritableNativeMap()
         telemetry.initializationType?.let { telemetryMap.putString("initializationType", it) }
