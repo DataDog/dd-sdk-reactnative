@@ -22,7 +22,6 @@ function SessionReplayScenario(props: SessionReplayScenarioProps): React.JSX.Ele
                     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS,
                     imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE,
                     touchPrivacyLevel: TouchPrivacyLevel.SHOW,
-                    replaySampleRate: 100,
                 }).then(() => {
                     setIsReady(true);
                     console.log("Session replay - start recording");
