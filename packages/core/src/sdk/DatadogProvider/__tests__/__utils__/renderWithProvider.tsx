@@ -9,7 +9,10 @@ import { Animated, Button, InteractionManager, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
 import type { AutoInstrumentationConfiguration } from '../../../../DdSdkReactNativeConfiguration';
-import { DatadogProviderConfiguration } from '../../../../DdSdkReactNativeConfiguration';
+import {
+    RUMConfiguration,
+    DatadogProviderConfiguration
+} from '../../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
 
 const DefaultTestApp = () => {
@@ -37,15 +40,22 @@ const AppWithAnimation = () => {
     );
 };
 
-export const getDefaultConfiguration = () =>
-    new DatadogProviderConfiguration(
+export const getDefaultConfiguration = () => {
+    const defaultConfiguration = new DatadogProviderConfiguration(
         'fakeToken',
-        'fakeEnv',
+        'fakeEnv'
+    );
+
+    // TODO: the initialization is broken with trackResources in test, fix it
+    defaultConfiguration.rumConfiguration = new RUMConfiguration(
         'fakeApplicationId',
         true,
-        false, // TODO: the initialization is broken with trackResources in test, fix it
+        false,
         true
     );
+
+    return defaultConfiguration;
+};
 
 export const renderWithProviderAndAnimation = (params?: {
     configuration?: DatadogProviderConfiguration;
@@ -78,12 +88,15 @@ export const renderWithProvider = (params?: {
     const rerenderWithRandomConfig = () => {
         const randomConfiguration = new DatadogProviderConfiguration(
             Math.random().toString(),
-            'fakeEnv',
+            'fakeEnv'
+        );
+        randomConfiguration.rumConfiguration = new RUMConfiguration(
             'fakeApplicationId',
             true,
             false,
             true
         );
+
         result.rerender(
             <DatadogProvider configuration={randomConfiguration}>
                 {AppComponent}

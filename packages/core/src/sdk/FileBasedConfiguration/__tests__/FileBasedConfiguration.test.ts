@@ -23,19 +23,12 @@ describe('FileBasedConfiguration', () => {
 
             expect(configuration).toMatchInlineSnapshot(`
                 FileBasedConfiguration {
-                  "actionEventMapper": null,
-                  "actionNameAttribute": "action-name-attr",
                   "additionalConfiguration": {},
-                  "applicationId": "fake-app-id",
                   "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
-                  "customEndpoints": {},
                   "env": "fake-env",
-                  "errorEventMapper": null,
                   "firstPartyHosts": [
                     {
                       "match": "example.com",
@@ -46,31 +39,43 @@ describe('FileBasedConfiguration', () => {
                     },
                   ],
                   "initializationMode": "SYNC",
-                  "logEventMapper": null,
-                  "longTaskThresholdMs": 44,
+                  "logsConfiguration": LogsConfiguration {
+                    "bundleLogsWithRum": true,
+                    "bundleLogsWithTraces": true,
+                    "logEventMapper": null,
+                  },
                   "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 33,
-                  "serviceName": undefined,
-                  "sessionSamplingRate": 100,
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RUMConfiguration {
+                    "actionEventMapper": null,
+                    "actionNameAttribute": "action-name-attr",
+                    "applicationId": "fake-app-id",
+                    "errorEventMapper": null,
+                    "longTaskThresholdMs": 44,
+                    "nativeInteractionTracking": false,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "sessionSampleRate": 100,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": true,
+                    "trackFrustrations": true,
+                    "trackInteractions": true,
+                    "trackMemoryWarnings": true,
+                    "trackResources": true,
+                    "trackWatchdogTerminations": false,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": undefined,
                   "site": "US5",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackErrors": true,
-                  "trackFrustrations": true,
-                  "trackInteractions": true,
-                  "trackMemoryWarnings": true,
-                  "trackResources": true,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": TraceConfiguration {
+                    "resourceTraceSampleRate": 33,
+                  },
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
                   "useAccessibilityLabel": false,
                   "verbosity": "warn",
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
@@ -80,26 +85,30 @@ describe('FileBasedConfiguration', () => {
             getJSONConfiguration(malformedConfiguration);
 
             expect(warnSpy).toHaveBeenCalledWith(
-                'DATADOG: Warning: Malformed json configuration file - clientToken, applicationId and env are mandatory properties.'
+                'DATADOG: Warning: Malformed json configuration file - clientToken and env are mandatory Core SDK properties. ApplicationId is mandatory to enable RUM.'
             );
         });
 
         it('resolves all properties from a given file path', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    applicationId: 'fake-app-id',
+                    rumConfiguration: {
+                        trackInteractions: true,
+                        trackResources: true,
+                        trackErrors: true,
+                        applicationId: 'fake-app-id',
+                        longTaskThresholdMs: 44,
+                        actionNameAttribute: 'action-name-attr'
+                    },
                     env: 'fake-env',
                     clientToken: 'fake-client-token',
-                    trackInteractions: true,
-                    trackResources: true,
-                    trackErrors: true,
                     trackingConsent: 'NOT_GRANTED',
-                    longTaskThresholdMs: 44,
                     site: 'US5',
                     verbosity: 'WARN',
-                    actionNameAttribute: 'action-name-attr',
                     useAccessibilityLabel: false,
-                    resourceTracingSamplingRate: 33,
+                    traceConfiguration: {
+                        resourceTraceSampleRate: 33
+                    },
                     firstPartyHosts: [
                         {
                             match: 'example.com',
@@ -115,19 +124,12 @@ describe('FileBasedConfiguration', () => {
             });
             expect(config).toMatchInlineSnapshot(`
                 FileBasedConfiguration {
-                  "actionEventMapper": null,
-                  "actionNameAttribute": "action-name-attr",
                   "additionalConfiguration": {},
-                  "applicationId": "fake-app-id",
                   "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
-                  "customEndpoints": {},
                   "env": "fake-env",
-                  "errorEventMapper": null,
                   "firstPartyHosts": [
                     {
                       "match": "example.com",
@@ -140,84 +142,89 @@ describe('FileBasedConfiguration', () => {
                     },
                   ],
                   "initializationMode": "SYNC",
-                  "logEventMapper": null,
-                  "longTaskThresholdMs": 44,
                   "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 33,
-                  "serviceName": undefined,
-                  "sessionSamplingRate": 100,
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RUMConfiguration {
+                    "actionEventMapper": null,
+                    "actionNameAttribute": "action-name-attr",
+                    "applicationId": "fake-app-id",
+                    "errorEventMapper": null,
+                    "longTaskThresholdMs": 44,
+                    "nativeInteractionTracking": false,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "sessionSampleRate": 100,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": true,
+                    "trackFrustrations": true,
+                    "trackInteractions": true,
+                    "trackMemoryWarnings": true,
+                    "trackResources": true,
+                    "trackWatchdogTerminations": false,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": undefined,
                   "site": "US5",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackErrors": true,
-                  "trackFrustrations": true,
-                  "trackInteractions": true,
-                  "trackMemoryWarnings": true,
-                  "trackResources": true,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": TraceConfiguration {
+                    "resourceTraceSampleRate": 33,
+                  },
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
                   "useAccessibilityLabel": false,
                   "verbosity": "warn",
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
         it('applies default values to configuration from a given file path', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    applicationId: 'fake-app-id',
                     env: 'fake-env',
-                    clientToken: 'fake-client-token'
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id'
+                    }
                 }
             });
             expect(config).toMatchInlineSnapshot(`
                 FileBasedConfiguration {
-                  "actionEventMapper": null,
-                  "actionNameAttribute": undefined,
                   "additionalConfiguration": {},
-                  "applicationId": "fake-app-id",
                   "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
-                  "customEndpoints": {},
                   "env": "fake-env",
-                  "errorEventMapper": null,
                   "firstPartyHosts": [],
                   "initializationMode": "SYNC",
-                  "logEventMapper": null,
-                  "longTaskThresholdMs": 0,
                   "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 100,
-                  "serviceName": undefined,
-                  "sessionSamplingRate": 100,
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RUMConfiguration {
+                    "actionEventMapper": null,
+                    "applicationId": "fake-app-id",
+                    "errorEventMapper": null,
+                    "longTaskThresholdMs": 0,
+                    "nativeInteractionTracking": false,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "sessionSampleRate": 100,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": false,
+                    "trackFrustrations": true,
+                    "trackInteractions": false,
+                    "trackMemoryWarnings": true,
+                    "trackResources": false,
+                    "trackWatchdogTerminations": false,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": undefined,
                   "site": "US1",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackErrors": false,
-                  "trackFrustrations": true,
-                  "trackInteractions": false,
-                  "trackMemoryWarnings": true,
-                  "trackResources": false,
-                  "trackWatchdogTerminations": false,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "useAccessibilityLabel": true,
                   "verbosity": undefined,
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
@@ -227,17 +234,25 @@ describe('FileBasedConfiguration', () => {
             const resourceEventMapper = () => null;
             const config = new FileBasedConfiguration({
                 configuration: {
-                    applicationId: 'fake-app-id',
                     env: 'fake-env',
-                    clientToken: 'fake-client-token'
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id'
+                    }
                 },
                 actionEventMapper,
                 errorEventMapper,
                 resourceEventMapper
             });
-            expect(config.actionEventMapper).toBe(actionEventMapper);
-            expect(config.errorEventMapper).toBe(errorEventMapper);
-            expect(config.resourceEventMapper).toBe(resourceEventMapper);
+            expect(config.rumConfiguration?.actionEventMapper).toBe(
+                actionEventMapper
+            );
+            expect(config.rumConfiguration?.errorEventMapper).toBe(
+                errorEventMapper
+            );
+            expect(config.rumConfiguration?.resourceEventMapper).toBe(
+                resourceEventMapper
+            );
         });
         it('prints a warning message when the configuration file cannot be parsed correctly', () => {
             expect(

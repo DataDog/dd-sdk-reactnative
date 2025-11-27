@@ -633,7 +633,7 @@ export const buildConfigurationFromPartialConfiguration = (
         SdkConfiguration.firstPartyHosts = features.firstPartyHosts;
     }
 
-    if (configuration.rumConfiguration?.applicationId) {
+    if (configuration.rumConfiguration?.applicationId !== undefined) {
         SdkConfiguration.rumConfiguration = new RUMConfiguration(
             configuration.rumConfiguration.applicationId,
             features.rumConfiguration.trackInteractions,
@@ -719,11 +719,15 @@ export const buildConfigurationFromPartialConfiguration = (
         }
     }
 
-    if (features.traceConfiguration.resourceTraceSampleRate) {
+    if (features.traceConfiguration !== undefined) {
         SdkConfiguration.traceConfiguration = new TraceConfiguration();
 
-        SdkConfiguration.traceConfiguration.resourceTraceSampleRate =
-            features.traceConfiguration.resourceTraceSampleRate;
+        if (
+            features.traceConfiguration?.resourceTraceSampleRate !== undefined
+        ) {
+            SdkConfiguration.traceConfiguration.resourceTraceSampleRate =
+                features.traceConfiguration.resourceTraceSampleRate;
+        }
 
         if (configuration.traceConfiguration?.customEndpoint) {
             SdkConfiguration.traceConfiguration.customEndpoint =
@@ -731,11 +735,13 @@ export const buildConfigurationFromPartialConfiguration = (
         }
     }
 
-    if (features.logsConfiguration.logEventMapper) {
+    if (features.logsConfiguration !== undefined) {
         SdkConfiguration.logsConfiguration = new LogsConfiguration();
 
-        SdkConfiguration.logsConfiguration.logEventMapper =
-            features.logsConfiguration.logEventMapper;
+        if (features.logsConfiguration.logEventMapper) {
+            SdkConfiguration.logsConfiguration.logEventMapper =
+                features.logsConfiguration.logEventMapper;
+        }
 
         if (configuration.logsConfiguration?.bundleLogsWithRum) {
             SdkConfiguration.logsConfiguration.bundleLogsWithRum =
