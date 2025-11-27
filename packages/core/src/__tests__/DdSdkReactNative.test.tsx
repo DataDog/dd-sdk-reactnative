@@ -93,11 +93,19 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
+<<<<<<< HEAD
             const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
             configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+=======
+            const configuration = new CoreSDKConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+>>>>>>> 10212bf3 (Fix Typescript tests)
             configuration.logsConfiguration = new LogsConfiguration();
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -357,11 +365,19 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
+<<<<<<< HEAD
             const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
             configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+=======
+            const configuration = new CoreSDKConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+>>>>>>> 10212bf3 (Fix Typescript tests)
             configuration.rumConfiguration.sessionSampleRate = 0;
 
             // WHEN
