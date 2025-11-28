@@ -1,5 +1,5 @@
 {
   "name": "DdSdkReactNativeExample",
   "displayName": "DD RN Sample",
-  "navigation": "react-navigation"
+  "navigation": "react-native-navigation"
 }
