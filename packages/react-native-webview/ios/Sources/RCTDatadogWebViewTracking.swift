@@ -17,14 +17,14 @@ import DatadogInternal
     
     public override init() {
         super.init()
-        self.onSdkInitializedListener = { [weak self] in
+        self.onSdkInitializedListener = { [weak self] (core: DatadogCoreProtocol) in
             guard let strongSelf = self, let webView = strongSelf.webView else {
                 return
             }
             strongSelf.enableWebViewTracking(
                 webView: webView,
                 allowedHosts: strongSelf.allowedHosts,
-                core: CoreRegistry.default
+                core: core
             )
         }
     }
