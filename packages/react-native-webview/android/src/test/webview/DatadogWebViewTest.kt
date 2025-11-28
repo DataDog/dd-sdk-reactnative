@@ -10,7 +10,8 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.webview.WebViewTracking
 import com.datadog.reactnative.DatadogSDKWrapperStorage
-import com.datadog.reactnative.tools.unit.GenericAssert.Companion.assertThat
+import com.datadog.reactnative.webview.DdSdkReactNativeWebViewManager
+import main.reactnative.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.uimanager.ThemedReactContext
 import com.reactnativecommunity.webview.RNCWebView

@@ -26,10 +26,9 @@ class DdSdkReactNativeWebViewManager(
     private val reactContext: ReactContext
 ) : RNCWebViewManager() {
     // The name used to reference this custom View from React Native.
-    companion object {
-        const val VIEW_NAME = "DdReactNativeWebView"
+    override fun getName(): String {
+        return VIEW_NAME
     }
-
     /**
      * The instance of Datadog SDK Core.
      */
@@ -105,8 +104,8 @@ class DdSdkReactNativeWebViewManager(
         _isWebViewTrackingEnabled = true
     }
 
-    // The name used to reference this custom View from React Native.
-    override fun getName(): String {
-        return VIEW_NAME
+    companion object {
+        // The name used to reference this custom View from React Native.
+        const val VIEW_NAME = "DdReactNativeWebView"
     }
 }
