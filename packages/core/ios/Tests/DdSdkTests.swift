@@ -82,7 +82,7 @@ class DdSdkTests: XCTestCase {
     func testResolvesPromiseAfterInitializationIsDone() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
-        let mockListener = MockOnCoreInitializedListener()
+        let mockListener = MockOnSdkInitializedListener()
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
         let expectation = self.expectation(description: "Listener is called when promise resolves")
@@ -275,7 +275,9 @@ class DdSdkTests: XCTestCase {
 
     func testSDKInitializationWithOnInitializedCallback() {
         var isInitialized = false
+        var coreFromCallback: DatadogCoreProtocol? = nil
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {
+            core in coreFromCallback = core
             isInitialized = Datadog.isInitialized()
         })
 
@@ -718,13 +720,14 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
         XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
     }
-
-    func testClearUserInfo() throws {
+    
+    func testAddingAttribute() {
+        let rumMonitorMock = MockRUMMonitor()
         let bridge = DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             jsDispatchQueue: DispatchQueueMock(),
             jsRefreshRateMonitor: JSRefreshRateMonitor(),
-            RUMMonitorProvider: { MockRUMMonitor() },
+            RUMMonitorProvider: { rumMonitorMock },
             RUMMonitorInternalProvider: { nil }
         )
         bridge.initialize(
@@ -733,57 +736,19 @@ class DdSdkTests: XCTestCase {
             reject: mockReject
         )
 
-        bridge.setUserInfo(
-            userInfo: NSDictionary(
-                dictionary: [
-                    "id": "id_123",
-                    "name": "John Doe",
-                    "email": "john@doe.com",
-                    "extraInfo": [
-                        "extra-info-1": 123,
-                        "extra-info-2": "abc",
-                        "extra-info-3": true,
-                        "extra-info-4": [
-                            "nested-extra-info-1": 456
-                        ],
-                    ],
-                ]
-            ),
-            resolve: mockResolve,
-            reject: mockReject
-        )
+        bridge.addAttribute(key: "attribute-1", value: NSDictionary(dictionary: ["value": 123]), resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(key: "attribute-2", value: NSDictionary(dictionary: ["value": "abc"]), resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(key: "attribute-3", value: NSDictionary(dictionary: ["value": true]), resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-1"] as? Int64, 123)
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-2"] as? String, "abc")
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-3"] as? Bool, true)
 
-        var ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
-        var userInfo = try XCTUnwrap(ddContext.userInfo)
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-1"] as? Int64, 123)
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-2"] as? String, "abc")
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
 
-        XCTAssertEqual(userInfo.id, "id_123")
-        XCTAssertEqual(userInfo.name, "John Doe")
-        XCTAssertEqual(userInfo.email, "john@doe.com")
-        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, 123)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, "abc")
-        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
-
-        if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
-            as? DatadogSDKReactNative.AnyEncodable,
-            let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
-        {
-            XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
-        } else {
-            XCTFail("extra-info-4 is not of expected type or value")
-        }
-
-        bridge.clearUserInfo(resolve: mockResolve, reject: mockReject)
-
-        ddContext = try XCTUnwrap(CoreRegistry.default as? DatadogCore).contextProvider.read()
-        userInfo = try XCTUnwrap(ddContext.userInfo)
-
-        XCTAssertEqual(userInfo.id, nil)
-        XCTAssertEqual(userInfo.name, nil)
-        XCTAssertEqual(userInfo.email, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-1"] as? Int64, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
-        XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
+        GlobalState.globalAttributes.removeAll()
     }
 
     func testRemovingAttribute() {
@@ -1542,7 +1507,7 @@ class DdSdkTests: XCTestCase {
     func testCallsOnSdkInitializedListeners() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
-        let mockListener = MockOnCoreInitializedListener()
+        let mockListener = MockOnSdkInitializedListener()
 
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
@@ -1811,9 +1776,13 @@ extension DdSdkImplementation {
     }
 }
 
-class MockOnCoreInitializedListener {
+class MockOnSdkInitializedListener {
     var called = false
-    func listener() {
+    var receivedCore: DatadogCoreProtocol?
+
+    lazy var listener: OnSdkInitializedListener = { core in
         self.called = true
+        self.receivedCore = core
     }
 }
+
