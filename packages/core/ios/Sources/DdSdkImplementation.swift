@@ -224,7 +224,7 @@ public class DdSdkImplementation: NSObject {
         DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
-    
+
     @objc
     public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
