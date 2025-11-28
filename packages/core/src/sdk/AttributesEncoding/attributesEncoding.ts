@@ -7,7 +7,8 @@
 import { DdSdk } from '../DdSdk';
 
 import { builtInEncoders } from './defaultEncoders';
-import { encodeAttributesInPlace, type EncodeContext } from './helpers';
+import type { EncodeContext } from './helpers';
+import { encodeAttributesInPlace } from './helpers';
 import type { Encodable } from './types';
 import { isPlainObject, warn } from './utils';
 
@@ -30,7 +31,13 @@ export function encodeAttributes(input: unknown): Record<string, Encodable> {
         }
     } else {
         // Fallback for primitive values passed as root
-        encodeAttributesInPlace(input, result, ['context'], allEncoders, context);
+        encodeAttributesInPlace(
+            input,
+            result,
+            ['context'],
+            allEncoders,
+            context
+        );
         warn(
             'Warning: attributes root should be an object.\n' +
                 'Received a primitive/array instead, which will be wrapped under the "context" key.'
