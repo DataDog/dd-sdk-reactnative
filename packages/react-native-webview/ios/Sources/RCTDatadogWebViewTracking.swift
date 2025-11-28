@@ -24,7 +24,7 @@ import WebKit
             strongSelf.enableWebViewTracking(
                 webView: webView,
                 allowedHosts: strongSelf.allowedHosts,
-                core: CoreRegistry.default
+                core: core
             )
         }
     }
