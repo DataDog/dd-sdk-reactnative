@@ -27,6 +27,7 @@ describe('FileBasedConfiguration', () => {
                   "actionNameAttribute": "action-name-attr",
                   "additionalConfiguration": {},
                   "applicationId": "fake-app-id",
+                  "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
                   "bundleLogsWithRum": true,

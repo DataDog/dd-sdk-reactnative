@@ -39,10 +39,6 @@ export class DdSdkWrapper implements DdNativeSdkType {
         return NativeDdSdk.getConstants();
     }
 
-    setAttributes(attributes: object): Promise<void> {
-        return NativeDdSdk.setAttributes(attributes);
-    }
-
     setUserInfo(user: object): Promise<object> {
         return NativeDdSdk.setUserInfo(user);
     }
@@ -53,6 +49,28 @@ export class DdSdkWrapper implements DdNativeSdkType {
 
     addUserExtraInfo(extraInfo: object): Promise<object> {
         return NativeDdSdk.addUserExtraInfo(extraInfo);
+    }
+
+    addAttribute(key: string, value: object): Promise<void> {
+        return NativeDdSdk.addAttribute(key, value);
+    }
+    removeAttribute(key: string): Promise<void> {
+        return NativeDdSdk.removeAttribute(key);
+    }
+    addAttributes(attributes: object): Promise<void> {
+        return NativeDdSdk.addAttributes(attributes);
+    }
+    removeAttributes(keys: string[]): Promise<void> {
+        return NativeDdSdk.removeAttributes(keys);
+    }
+    setAccountInfo(account: object): Promise<object> {
+        return NativeDdSdk.setAccountInfo(account);
+    }
+    clearAccountInfo(): Promise<void> {
+        return NativeDdSdk.clearAccountInfo();
+    }
+    addAccountExtraInfo(extraInfo: object): Promise<object> {
+        return NativeDdSdk.addAccountExtraInfo(extraInfo);
     }
 
     setTrackingConsent(trackingConsent: string): Promise<void> {
