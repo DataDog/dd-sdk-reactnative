@@ -24,10 +24,39 @@ import type {
 //     'extension' [iOS] - The app is running as an app extension
 declare type AppStateListener = (appStateStatus: AppStateStatus) => void | null;
 
+export type NavigationTrackingOptions = {
+    viewNamePredicate?: ViewNamePredicate;
+    viewTrackingPredicate?: ViewTrackingPredicate;
+    paramsTrackingPredicate?: ParamsTrackingPredicate;
+};
+
 export type ViewNamePredicate = (
     route: Route<string, any | undefined>,
     trackedName: string
 ) => string | null;
+
+export type ViewTrackingPredicate = (
+    route: Route<string, any | undefined>
+) => boolean;
+
+export type ParamsTrackingPredicate = (
+    route: Route<string, any | undefined>
+) => object | undefined;
+
+function defaultViewNamePredicate(
+    _route: Route<string, any | undefined>,
+    trackedName: string
+) {
+    return trackedName;
+}
+
+function defaultParamsPredicate(_route: Route<string, any | undefined>) {
+    return undefined;
+}
+
+function defaultViewTrackingPredicate(_route: Route<string, any | undefined>) {
+    return true;
+}
 
 /**
  * Provides RUM integration for the [ReactNavigation](https://reactnavigation.org/) API.
@@ -51,6 +80,10 @@ export class DdRumReactNavigationTracking {
     private static previousRoute: string | object | undefined = undefined;
 
     private static viewNamePredicate: ViewNamePredicate;
+
+    private static viewTrackingPredicate: ViewTrackingPredicate;
+
+    private static paramsTrackingPredicate: ParamsTrackingPredicate;
 
     private static backHandler: NativeEventSubscription | null;
 
@@ -112,19 +145,22 @@ export class DdRumReactNavigationTracking {
     /**
      * Starts tracking the NavigationContainer and sends a RUM View event every time the navigation route changed.
      * @param navigationRef the reference to the real NavigationContainer.
+     * @param trackingOptions the options object defining how views will be tracked. It contains:
+     *      viewNamePredicate: the predicate to rename views.
+     *      viewTrackingPredicate: the predicate to determine if a view should be tracked or not.
+     *      paramsTrackingPredicate: the predicate to determine which parameters should be tracked for a given view.
      */
     static startTrackingViews(
         navigationRef: NavigationContainerRef | null,
-
-        // eslint-disable-next-line func-names
-        viewNamePredicate: ViewNamePredicate = function (
-            _route: Route<string, any | undefined>,
-            trackedName: string
-        ) {
-            return trackedName;
-        }
+        trackingOptions?: NavigationTrackingOptions
     ): void {
         this.navigationTimeline?.addStartTrackingEvent();
+
+        const {
+            viewNamePredicate = defaultViewNamePredicate,
+            viewTrackingPredicate = defaultViewTrackingPredicate,
+            paramsTrackingPredicate = defaultParamsPredicate
+        } = trackingOptions ?? {};
 
         if (navigationRef == null) {
             InternalLog.log(
@@ -144,6 +180,8 @@ export class DdRumReactNavigationTracking {
             );
         } else if (DdRumReactNavigationTracking.registeredContainer == null) {
             DdRumReactNavigationTracking.viewNamePredicate = viewNamePredicate;
+            DdRumReactNavigationTracking.viewTrackingPredicate = viewTrackingPredicate;
+            DdRumReactNavigationTracking.paramsTrackingPredicate = paramsTrackingPredicate;
             DdRumReactNavigationTracking.registeredContainer = navigationRef;
 
             const listener = DdRumReactNavigationTracking.resolveNavigationStateChangeListener();
@@ -242,7 +280,16 @@ export class DdRumReactNavigationTracking {
                         trackingState: this.trackingState
                     }
                 );
-                DdRum.startView(key, screenName);
+                if (DdRumReactNavigationTracking.viewTrackingPredicate(route)) {
+                    const params = DdRumReactNavigationTracking.paramsTrackingPredicate(
+                        route
+                    );
+                    if (params) {
+                        DdRum.startView(key, screenName, { params });
+                    } else {
+                        DdRum.startView(key, screenName);
+                    }
+                }
             }
         }
 

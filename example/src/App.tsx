@@ -12,13 +12,41 @@ import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
 import { TrackingConsent } from '@datadog/mobile-react-native';
+import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation/src/rum/instrumentation/DdRumReactNavigationTracking';
 
 const Tab = createBottomTabNavigator();
 
-const viewPredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
+// === Navigation Tracking custom predicates
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
   return "Custom RN " + trackedName;
 }
 
+const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(route: Route<string, any | undefined>) { 
+  if (route.name === "AlertModal") {
+    return false;
+  }
+
+  return true;
+}
+
+const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(route: Route<string, any | undefined>) { 
+  const filteredParams: any = {};
+  if (route.params?.creditCardNumber) {
+    filteredParams["creditCardNumber"] = "XXXX XXXX XXXX XXXX";
+  }
+
+  if (route.params?.username) {
+    filteredParams["username"] = route.params.username;
+  }
+
+  return filteredParams;
+}
+
+const navigationTrackingOptions: NavigationTrackingOptions = {
+  viewNamePredicate,
+  viewTrackingPredicate,
+  paramsTrackingPredicate,
+}
 // === Datadog Provider Configuration schemes ===
 
 // 1.- Direct configuration
@@ -39,7 +67,9 @@ export default function App() {
   return (
     <DatadogProvider configuration={configuration} onInitialization={onDatadogInitialization}>
       <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewPredicate)
+        DdRumReactNavigationTracking.startTrackingViews(
+          navigationRef.current,
+          navigationTrackingOptions)
       }}>
         <Tab.Navigator screenOptions={{
           tabBarLabelStyle: style.tabLabelStyle,
