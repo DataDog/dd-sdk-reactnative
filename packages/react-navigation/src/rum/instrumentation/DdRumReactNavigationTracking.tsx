@@ -218,14 +218,9 @@ export class DdRumReactNavigationTracking {
             DdRumReactNavigationTracking.backHandler = null;
             DdRumReactNavigationTracking.registeredContainer = null;
             DdRumReactNavigationTracking.navigationStateChangeListener = null;
-
-            // eslint-disable-next-line func-names
-            DdRumReactNavigationTracking.viewNamePredicate = function (
-                _route: Route<string, any | undefined>,
-                trackedName: string
-            ) {
-                return trackedName;
-            };
+            DdRumReactNavigationTracking.viewNamePredicate = defaultViewNamePredicate;
+            DdRumReactNavigationTracking.viewTrackingPredicate = defaultViewTrackingPredicate;
+            DdRumReactNavigationTracking.paramsTrackingPredicate = defaultParamsPredicate;
         }
 
         // For versions of React Native below 0.65, addEventListener does not return a subscription.
