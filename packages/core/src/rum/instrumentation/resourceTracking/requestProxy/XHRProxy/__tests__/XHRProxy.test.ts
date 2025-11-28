@@ -931,7 +931,7 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toBeUndefined();
         });
 
         it('rum session id does not overwrite existing baggage headers', async () => {
@@ -970,14 +970,17 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toContain(
+            expect(
+                xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toContain(
                 'existing.key=existing-value'
             );
 
-            const values = xhr.requestHeaders[BAGGAGE_HEADER_KEY].split(
-                ','
-            ).sort();
+            const values = xhr.requestHeaders
+                .get(BAGGAGE_HEADER_KEY)
+                ?.split(',')
+                .sort();
 
             expect(values[0]).toBe('existing.key=existing-value');
             expect(values[1]).toBe('session.id=TEST-SESSION-ID');
