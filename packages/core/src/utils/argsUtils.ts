@@ -8,6 +8,12 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 
+/**
+ * Validates the given context before passing it to the native SDKs.
+ * @param context the original context
+ * @returns the original context if it's a plain object, an object wrapping the context if it's an array,
+ *          or an empty object if the context is of any other type.
+ */
 export const validateContext = (context: any) => {
     if (!context) {
         return {};

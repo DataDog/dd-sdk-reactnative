@@ -14,8 +14,7 @@ import {
     getErrorStackTrace,
     EMPTY_STACK_TRACE,
     getErrorName,
-    DEFAULT_ERROR_NAME,
-    getErrorContext
+    DEFAULT_ERROR_NAME
 } from '../../utils/errorUtils';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
@@ -146,12 +145,7 @@ export class DdRumErrorTracking {
         context: object = {}
     ): Promise<[void, void]> => {
         return Promise.all([
-            DdRum.addError(
-                message,
-                source,
-                stacktrace,
-                getErrorContext(context)
-            ),
+            DdRum.addError(message, source, stacktrace, context),
             DdLogs.error(
                 message,
                 errorName,
