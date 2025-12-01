@@ -110,7 +110,7 @@ public class DdSdkConfiguration: NSObject {
         trackWatchdogTerminations: Bool,
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
         initialResourceThreshold: Double?,
-        trackMemoryWarnings: Bool = true,
+        trackMemoryWarnings: Bool = true
     ) {
         self.clientToken = clientToken
         self.env = env
