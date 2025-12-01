@@ -37,13 +37,6 @@ class DdSdkReactNativeWebViewManager(
     val datadogCore: SdkCore?
         get() = _datadogCore
 
-    /**
-     * Whether WebView tracking has been enabled or not.
-     */
-    @Volatile private var _isWebViewTrackingEnabled: Boolean = false
-    val isWebViewTrackingEnabled: Boolean
-        get() = _isWebViewTrackingEnabled
-
     init {
         DatadogSDKWrapperStorage.addOnInitializedListener { core ->
             _datadogCore = core
@@ -92,17 +85,11 @@ class DdSdkReactNativeWebViewManager(
         sdkCore: SdkCore,
         allowedHosts: List<String>
     ) {
-        if (_isWebViewTrackingEnabled) {
-            return
-        }
-
         WebViewTracking.enable(
             webView,
             allowedHosts = allowedHosts,
             sdkCore = sdkCore
         )
-
-        _isWebViewTrackingEnabled = true
     }
 
     // The name used to reference this custom View from React Native.

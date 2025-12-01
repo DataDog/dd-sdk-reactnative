@@ -90,9 +90,6 @@ internal class DatadogWebViewTest {
         // When first initialized, the WebView manager core should be null
         assertThat(manager.datadogCore).isNull()
 
-        // When first initialized, the WebView tracking should be disabled
-        assertThat(manager.isWebViewTrackingEnabled).isEqualTo(false)
-
         // =========
         //   When
         // =========
@@ -119,8 +116,5 @@ internal class DatadogWebViewTest {
         webViewTrackingMockedStatic.verify {
             WebViewTracking.enable(rncWebView, listOf("example.com"), 100.0f, datadogCore)
         }
-
-        // At this point 'isWebViewTrackingEnabled' should be true.
-        assertThat(manager.isWebViewTrackingEnabled).isEqualTo(true)
     }
 }
