@@ -110,6 +110,8 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   fetchBooleanFlag() {
     (async () => {
+      await DatadogFlags.enable();
+
       const flagsClient = DatadogFlags.getClient();
       await flagsClient.setEvaluationContext({
           targetingKey: 'test-user-1',

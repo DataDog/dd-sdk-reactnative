@@ -94,6 +94,8 @@ function App(): React.JSX.Element {
   const [testFlagValue, setTestFlagValue] = React.useState(false);
   React.useEffect(() => {
       (async () => {
+          await DatadogFlags.enable();
+
           const flagsClient = DatadogFlags.getClient();
           await flagsClient.setEvaluationContext({
               targetingKey: 'test-user-1',

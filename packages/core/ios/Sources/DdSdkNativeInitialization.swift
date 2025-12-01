@@ -6,7 +6,6 @@
 
 import Foundation
 import DatadogCore
-import DatadogFlags
 import DatadogRUM
 import DatadogLogs
 import DatadogTrace
@@ -87,10 +86,6 @@ public class DdSdkNativeInitialization: NSObject {
         
         let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
         Trace.enable(with: traceConfig)
-
-        if let configurationForFlags = sdkConfiguration.configurationForFlags {
-            Flags.enable(with: configurationForFlags)
-        }
 
         if sdkConfiguration.nativeCrashReportEnabled ?? false {
             CrashReporting.enable()

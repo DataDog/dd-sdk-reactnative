@@ -7,7 +7,6 @@
 import type { ProxyConfiguration } from './ProxyConfiguration';
 import type { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import type { DatadogFlagsConfiguration } from './flags/types';
 import type { ActionEventMapper } from './rum/eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './rum/eventMappers/resourceEventMapper';
@@ -370,8 +369,6 @@ export class DdSdkReactNativeConfiguration {
 
     public customEndpoints: CustomEndpoints = DEFAULTS.getCustomEndpoints();
 
-    public flagsConfiguration?: DatadogFlagsConfiguration;
-
     constructor(
         readonly clientToken: string,
         readonly env: string,
@@ -417,7 +414,6 @@ export type AutoInstrumentationParameters = {
     readonly actionEventMapper: ActionEventMapper | null;
     readonly useAccessibilityLabel: boolean;
     readonly actionNameAttribute?: string;
-    readonly flagsConfiguration?: DatadogFlagsConfiguration;
 };
 
 /**
@@ -485,7 +481,6 @@ export type PartialInitializationConfiguration = {
     readonly batchProcessingLevel?: BatchProcessingLevel;
     readonly initialResourceThreshold?: number;
     readonly trackMemoryWarnings?: boolean;
-    readonly flagsConfiguration?: DatadogFlagsConfiguration;
 };
 
 const setConfigurationAttribute = <

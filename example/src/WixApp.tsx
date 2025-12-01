@@ -47,6 +47,8 @@ const HomeScreen = props => {
     const [testFlagValue, setTestFlagValue] = useState(false);
     useEffect(() => {
         (async () => {
+            await DatadogFlags.enable();
+
             const flagsClient = DatadogFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
@@ -55,7 +57,6 @@ const HomeScreen = props => {
                 },
             });
             const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-            console.log({flag})
             setTestFlagValue(flag.value);
         })();
     }, []);

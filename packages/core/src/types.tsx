@@ -5,7 +5,6 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
-import type { DatadogFlagsConfiguration } from './flags/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
@@ -71,8 +70,7 @@ export class DdSdkConfiguration {
         readonly trackWatchdogTerminations: boolean | undefined,
         readonly batchProcessingLevel: BatchProcessingLevel, // eslint-disable-next-line no-empty-function
         readonly initialResourceThreshold: number | undefined,
-        readonly trackMemoryWarnings: boolean,
-        readonly configurationForFlags: DatadogFlagsConfiguration | undefined
+        readonly trackMemoryWarnings: boolean
     ) {}
 }
 

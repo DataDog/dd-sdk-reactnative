@@ -24,7 +24,6 @@ import {
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
 import type { TrackingConsent } from './TrackingConsent';
-import { DatadogFlags } from './flags/DatadogFlags';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
@@ -98,13 +97,6 @@ export class DdSdkReactNative {
         await DdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
-
-        if (
-            configuration.flagsConfiguration &&
-            configuration.flagsConfiguration.enabled !== false
-        ) {
-            await DatadogFlags.enable(configuration.flagsConfiguration);
-        }
 
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
         GlobalState.instance.isInitialized = true;
@@ -406,8 +398,7 @@ export class DdSdkReactNative {
             configuration.trackWatchdogTerminations,
             configuration.batchProcessingLevel,
             configuration.initialResourceThreshold,
-            configuration.trackMemoryWarnings,
-            configuration.flagsConfiguration
+            configuration.trackMemoryWarnings
         );
     };
 
