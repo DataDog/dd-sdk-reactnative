@@ -75,7 +75,6 @@ describe('DatadogProvider', () => {
                   "bundleLogsWithRum": true,
                   "bundleLogsWithTraces": true,
                   "clientToken": "fakeToken",
-                  "configurationForFlags": undefined,
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
                     "reactNativeVersion": "0.76.9",

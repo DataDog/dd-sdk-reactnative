@@ -6,7 +6,6 @@
 
 import Foundation
 import DatadogCore
-import DatadogFlags
 import DatadogInternal
 import DatadogRUM
 
@@ -43,7 +42,6 @@ import DatadogRUM
      - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
      - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
      - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)
-     - configurationForFlags: Configuration for the feature flags feature.
  */
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
@@ -79,7 +77,6 @@ public class DdSdkConfiguration: NSObject {
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     public var initialResourceThreshold: Double? = nil
     public var trackMemoryWarnings: Bool
-    public var configurationForFlags: Flags.Configuration? = nil
 
     public init(
         clientToken: String,
@@ -114,7 +111,6 @@ public class DdSdkConfiguration: NSObject {
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
         initialResourceThreshold: Double?,
         trackMemoryWarnings: Bool = true,
-        configurationForFlags: Flags.Configuration?
     ) {
         self.clientToken = clientToken
         self.env = env
@@ -148,7 +144,6 @@ public class DdSdkConfiguration: NSObject {
         self.batchProcessingLevel = batchProcessingLevel
         self.initialResourceThreshold = initialResourceThreshold
         self.trackMemoryWarnings = trackMemoryWarnings
-        self.configurationForFlags = configurationForFlags
     }
 }
 

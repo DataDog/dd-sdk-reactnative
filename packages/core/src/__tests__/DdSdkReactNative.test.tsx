@@ -12,7 +12,6 @@ import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
 import { TrackingConsent } from '../TrackingConsent';
-import { DatadogFlags } from '../flags/DatadogFlags';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';

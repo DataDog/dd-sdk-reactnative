@@ -45,7 +45,6 @@ extension NSDictionary {
         let batchProcessingLevel = object(forKey: "batchProcessingLevel") as? NSString
         let initialResourceThreshold = object(forKey: "initialResourceThreshold") as? Double
         let trackMemoryWarnings = object(forKey: "trackMemoryWarnings") as? Bool
-        let configurationForFlags = object(forKey: "configurationForFlags") as? NSDictionary
 
         return DdSdkConfiguration(
             clientToken: (clientToken != nil) ? clientToken! : String(),
@@ -79,8 +78,7 @@ extension NSDictionary {
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
             initialResourceThreshold: initialResourceThreshold,
-            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings,
-            configurationForFlags: configurationForFlags?.asConfigurationForFlags()
+            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings
         )
     }
 
@@ -284,7 +282,6 @@ extension Dictionary where Key == String, Value == AnyObject {
         let batchProcessingLevel = configuration["batchProcessingLevel"] as? NSString
         let initialResourceThreshold = configuration["initialResourceThreshold"] as? Double
         let trackMemoryWarnings = configuration["trackMemoryWarnings"] as? Bool
-        let configurationForFlags = configuration["configurationForFlags"] as? NSDictionary
         
         return DdSdkConfiguration(
             clientToken: clientToken ?? String(),
@@ -321,8 +318,7 @@ extension Dictionary where Key == String, Value == AnyObject {
             trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
             initialResourceThreshold: initialResourceThreshold,
-            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings,
-            configurationForFlags: configurationForFlags?.asConfigurationForFlags()
+            trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings
         )
     }
 }
