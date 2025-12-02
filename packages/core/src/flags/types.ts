@@ -68,6 +68,9 @@ export type DatadogFlagsConfiguration = {
     /**
      * Custom server URL for retrieving flag assignments.
      *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/precompute-assignments'.
+     *
      * If not set, the SDK uses the default Datadog Flags endpoint for the configured site.
      *
      * @default undefined
@@ -83,6 +86,9 @@ export type DatadogFlagsConfiguration = {
     customFlagsHeaders?: Record<string, string>;
     /**
      * Custom server URL for sending Flags exposure data.
+     *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/api/v2/exposures'.
      *
      * If not set, the SDK uses the default Datadog Flags exposure endpoint.
      *
@@ -156,6 +162,7 @@ export interface EvaluationContext {
 export type FlagEvaluationError =
     | 'PROVIDER_NOT_READY'
     | 'FLAG_NOT_FOUND'
+    | 'PARSE_ERROR'
     | 'TYPE_MISMATCH';
 
 /**
