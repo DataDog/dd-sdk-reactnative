@@ -77,14 +77,6 @@ export type DatadogFlagsConfiguration = {
      */
     customFlagsEndpoint?: string;
     /**
-     * Additional HTTP headers to attach to requests made to `customFlagsEndpoint`.
-     *
-     * Useful for authentication or routing when using your own Flags service. Ignored when using the default Datadog endpoint.
-     *
-     * @default undefined
-     */
-    customFlagsHeaders?: Record<string, string>;
-    /**
      * Custom server URL for sending Flags exposure data.
      *
      * The provided value should only include the base URL, and the endpoint will be appended automatically.
@@ -151,6 +143,8 @@ export interface EvaluationContext {
      * Attributes can include user properties, session data, or any other contextual information
      * needed for flag evaluation rules.
      */
+
+    // TODO: This should be a map of string to string because Android doesn't support other types
     attributes: Record<string, unknown>;
 }
 
