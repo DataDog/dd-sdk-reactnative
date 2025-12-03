@@ -14,7 +14,7 @@ import DatadogInternal
 public class DdInternalTestingImplementation: NSObject {
     @objc
     public func clearData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        let coreProxy = (DatadogSDKWrapper.shared.getCoreInstance() as! DatadogCoreProxy)
+        let coreProxy = CoreRegistry.default as! DatadogCoreProxy
         coreProxy.waitAndDeleteEvents(ofFeature: "rum")
         coreProxy.waitAndDeleteEvents(ofFeature: "logging")
         coreProxy.waitAndDeleteEvents(ofFeature: "tracing")
@@ -26,7 +26,7 @@ public class DdInternalTestingImplementation: NSObject {
     @objc
     public func getAllEvents(feature: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do {
-            let coreProxy = (DatadogSDKWrapper.shared.getCoreInstance() as! DatadogCoreProxy)
+            let coreProxy = CoreRegistry.default as! DatadogCoreProxy
             let events = coreProxy.waitAndReturnEventsData(ofFeature: feature)
             let data = try JSONSerialization.data(withJSONObject: events, options: .prettyPrinted)
             resolve(String(data: data, encoding: String.Encoding.utf8) ?? "")
@@ -39,10 +39,6 @@ public class DdInternalTestingImplementation: NSObject {
     
     @objc
     public func enable(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: {core in
-            let proxiedCore = DatadogCoreProxy(core: core)
-            DatadogSDKWrapper.shared.setCoreInstance(core: proxiedCore)
-        })
         resolve(nil)
     }
 }
@@ -51,9 +47,5 @@ public class DdInternalTestingImplementation: NSObject {
 public class DdInternalTestingNativeInitialization: NSObject {
     @objc
     public func enableFromNative() -> Void {
-        DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: {core in
-            let proxiedCore = DatadogCoreProxy(core: core)
-            DatadogSDKWrapper.shared.setCoreInstance(core: proxiedCore)
-        })
     }
 }
