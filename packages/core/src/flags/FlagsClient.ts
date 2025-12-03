@@ -162,6 +162,9 @@ export class FlagsClient {
             };
         }
 
+        // Don't await this; non-blocking.
+        this.nativeFlags.trackEvaluation(this.clientName, key);
+
         return details as FlagDetails<T>;
     };
 

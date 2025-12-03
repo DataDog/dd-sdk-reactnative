@@ -22,6 +22,11 @@ export interface Spec extends TurboModule {
         attributes: Object
     ) => Promise<{ [key: string]: FlagDetails<unknown> }>;
 
+    readonly trackEvaluation: (
+        clientName: string,
+        key: string
+    ) => Promise<void>;
+
     readonly getBooleanDetails: (
         clientName: string,
         key: string,

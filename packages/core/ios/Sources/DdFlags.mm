@@ -34,6 +34,15 @@ RCT_REMAP_METHOD(setEvaluationContext,
     [self setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(trackEvaluation,
+                 trackEvaluationWithClientName:(NSString *)clientName
+                 withKey:(NSString *)key
+                 withResolve:(RCTPromiseResolveBlock)resolve
+                 withReject:(RCTPromiseRejectBlock)reject)
+{
+    [self trackEvaluation:clientName key:key resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(getBooleanDetails,
                  getBooleanDetailsWithClientName:(NSString *)clientName
                  withKey:(NSString *)key
@@ -105,6 +114,10 @@ RCT_REMAP_METHOD(getObjectDetails,
 
 - (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
     [self.ddFlagsImplementation setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)trackEvaluation:(NSString *)clientName key:(NSString *)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackEvaluation:clientName key:key resolve:resolve reject:reject];
 }
 
 - (void)getBooleanDetails:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 

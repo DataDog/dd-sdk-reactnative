@@ -103,6 +103,13 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
+    public func trackEvaluation(_ clientName: String, key: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        let client = getClient(name: clientName)
+        client.trackEvaluation(key: key)
+        resolve(nil)
+    }
+
+    @objc
     public func getBooleanDetails(
         _ clientName: String,
         key: String,
