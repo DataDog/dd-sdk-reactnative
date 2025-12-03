@@ -26,30 +26,6 @@ export interface Spec extends TurboModule {
         clientName: string,
         key: string
     ) => Promise<void>;
-
-    readonly getBooleanDetails: (
-        clientName: string,
-        key: string,
-        defaultValue: boolean
-    ) => Promise<FlagDetails<boolean>>;
-
-    readonly getStringDetails: (
-        clientName: string,
-        key: string,
-        defaultValue: string
-    ) => Promise<FlagDetails<string>>;
-
-    readonly getNumberDetails: (
-        clientName: string,
-        key: string,
-        defaultValue: number
-    ) => Promise<FlagDetails<number>>;
-
-    readonly getObjectDetails: (
-        clientName: string,
-        key: string,
-        defaultValue: Object
-    ) => Promise<FlagDetails<Object>>;
 }
 
 // eslint-disable-next-line import/no-default-export

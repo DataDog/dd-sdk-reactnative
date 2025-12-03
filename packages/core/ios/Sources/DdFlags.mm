@@ -43,46 +43,6 @@ RCT_REMAP_METHOD(trackEvaluation,
     [self trackEvaluation:clientName key:key resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getBooleanDetails,
-                 getBooleanDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(BOOL)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getStringDetails,
-                 getStringDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(NSString *)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getNumberDetails,
-                 getNumberDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(double)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getObjectDetails,
-                 getObjectDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(NSDictionary *)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -118,21 +78,5 @@ RCT_REMAP_METHOD(getObjectDetails,
 
 - (void)trackEvaluation:(NSString *)clientName key:(NSString *)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation trackEvaluation:clientName key:key resolve:resolve reject:reject];
-}
-
-- (void)getBooleanDetails:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getStringDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getNumberDetails:(NSString *)clientName key:(NSString *)key defaultValue:(double)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getObjectDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSDictionary *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
 }
 @end
