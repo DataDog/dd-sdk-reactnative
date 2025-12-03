@@ -6,6 +6,7 @@
 
 import Foundation
 import DatadogInternal
+@_spi(Internal) 
 import DatadogFlags
 
 @objc
@@ -74,7 +75,16 @@ public class DdFlagsImplementation: NSObject {
         client.setEvaluationContext(evaluationContext) { result in
             switch result {
             case .success:
-                resolve(nil)
+                guard let flagsDetails = client.getFlagsDetails() else {
+                    reject(nil, "CLIENT_NOT_INITIALIZED", nil)
+                    return
+                }
+                
+                let result = flagsDetails.compactMapValues { details in
+                    details.toSerializedDictionary()
+                }
+                
+                resolve(result)
             case .failure(let error):
                 var errorCode: String
                 switch (error) {

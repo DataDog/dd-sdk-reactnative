@@ -21,6 +21,8 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
 
     private isFeatureEnabled = false;
 
+    private clients: Record<string, FlagsClient> = {};
+
     /**
      * Enables the Datadog Flags feature in your application.
      *
@@ -77,7 +79,16 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
      * ```ts
      * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
      * const flagsClient = DatadogFlags.getClient();
-     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
+     *
+     * // Set the evaluation context.
+     * await flagsClient.setEvaluationContext({
+     *     targetingKey: 'user-123',
+     *     attributes: {
+     *         favoriteFruit: 'apple'
+     *     }
+     * });
+     *
+     * const flagValue = flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
     getClient = (clientName: string = 'default'): FlagsClient => {
@@ -88,7 +99,9 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
             );
         }
 
-        return new FlagsClient(clientName);
+        this.clients[clientName] ??= new FlagsClient(clientName);
+
+        return this.clients[clientName];
     };
 }
 

@@ -19,8 +19,8 @@ export interface Spec extends TurboModule {
     readonly setEvaluationContext: (
         clientName: string,
         targetingKey: string,
-        attributes: { [key: string]: unknown }
-    ) => Promise<void>;
+        attributes: Object
+    ) => Promise<{ [key: string]: FlagDetails<unknown> }>;
 
     readonly getBooleanDetails: (
         clientName: string,
@@ -43,8 +43,8 @@ export interface Spec extends TurboModule {
     readonly getObjectDetails: (
         clientName: string,
         key: string,
-        defaultValue: { [key: string]: unknown }
-    ) => Promise<FlagDetails<{ [key: string]: unknown }>>;
+        defaultValue: Object
+    ) => Promise<FlagDetails<Object>>;
 }
 
 // eslint-disable-next-line import/no-default-export

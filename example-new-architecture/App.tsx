@@ -88,7 +88,8 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
-  const [testFlagValue, setTestFlagValue] = React.useState(false);
+  const testFlagKey = 'rn-sdk-test-json-flag';
+  const [testFlagValue, setTestFlagValue] = React.useState<{[key: string]: unknown}>({default: false});
   React.useEffect(() => {
       (async () => {
           await DatadogFlags.enable();
@@ -100,9 +101,9 @@ function App(): React.JSX.Element {
                   country: 'US',
               },
           });
-          const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+          const flag = flagsClient.getObjectDetails(testFlagKey, {default: {hello: 'world'}}); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
           setTestFlagValue(flag.value);
-      })();
+      })().catch(console.error);
   }, []);
 
   const isDarkMode = useColorScheme() === 'dark';
@@ -121,7 +122,9 @@ function App(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
-        <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(testFlagValue)}</Text>
+        <View style={{ marginTop: 20 }}>
+          <Text>{testFlagKey}: {JSON.stringify(testFlagValue)}</Text>
+        </View>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,

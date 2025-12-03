@@ -148,6 +148,8 @@ export interface EvaluationContext {
     attributes: Record<string, unknown>;
 }
 
+export type ObjectValue = { [key: string]: unknown };
+
 /**
  * An error tha occurs during feature flag evaluation.
  *

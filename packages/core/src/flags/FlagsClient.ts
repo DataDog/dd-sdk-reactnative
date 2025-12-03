@@ -8,7 +8,12 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
-import type { EvaluationContext, FlagDetails } from './types';
+import type {
+    ObjectValue,
+    EvaluationContext,
+    FlagDetails,
+    FlagEvaluationError
+} from './types';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -17,21 +22,48 @@ export class FlagsClient {
 
     private clientName: string;
 
+    private evaluationContext: EvaluationContext | undefined = undefined;
+    private flagsCache: Record<string, FlagDetails<unknown>> = {};
+
     constructor(clientName: string = 'default') {
         this.clientName = clientName;
     }
 
+    /**
+     * Sets the evaluation context for the client.
+     *
+     * Should be called before evaluating any flags.
+     *
+     * @param context The evaluation context to associate with the current session.
+     *
+     * @example
+     * ```ts
+     * const flagsClient = DatadogFlags.getClient();
+     *
+     * await flagsClient.setEvaluationContext({
+     *     targetingKey: 'user-123',
+     *     attributes: {
+     *         favoriteFruit: 'apple'
+     *     }
+     * });
+     *
+     * const flagValue = flagsClient.getBooleanValue('new-feature', false);
+     * ```
+     */
     setEvaluationContext = async (
         context: EvaluationContext
     ): Promise<void> => {
         const { targetingKey, attributes } = context;
 
         try {
-            await this.nativeFlags.setEvaluationContext(
+            const result = await this.nativeFlags.setEvaluationContext(
                 this.clientName,
                 targetingKey,
                 attributes
             );
+
+            this.evaluationContext = context;
+            this.flagsCache = result;
         } catch (error) {
             if (error instanceof Error) {
                 InternalLog.log(
@@ -42,10 +74,107 @@ export class FlagsClient {
         }
     };
 
-    getBooleanDetails = async (
+    /**
+     * Returns the value of a boolean feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const isNewFeatureEnabled = flagsClient.getBooleanValue('new-feature-enabled', false);
+     * ```
+     */
+    getBooleanValue = (key: string, defaultValue: boolean): boolean => {
+        return this.getBooleanDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of a string feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const appTheme = flagsClient.getStringValue('app-theme', 'light');
+     * ```
+     */
+    getStringValue = (key: string, defaultValue: string): string => {
+        return this.getStringDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of a number feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const ctaButtonSize = flagsClient.getNumberValue('cta-button-size', 16);
+     * ```
+     */
+    getNumberValue = (key: string, defaultValue: number): number => {
+        return this.getNumberDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of an object feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const pageCalloutOptions = flagsClient.getObjectValue('page-callout', { color: 'purple', text: 'Woof!' });
+     * ```
+     */
+    getObjectValue = (key: string, defaultValue: ObjectValue): ObjectValue => {
+        return this.getObjectDetails(key, defaultValue).value;
+    };
+
+    private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
+        let error: FlagEvaluationError | null = null;
+
+        if (!this.evaluationContext) {
+            InternalLog.log(
+                `The evaluation context is not set for the client ${this.clientName}. Please, call \`DatadogFlags.setEvaluationContext()\` before evaluating any flags.`,
+                SdkVerbosity.ERROR
+            );
+
+            error = 'PROVIDER_NOT_READY';
+        }
+
+        const details = this.flagsCache[key];
+
+        if (!details) {
+            error = 'FLAG_NOT_FOUND';
+        }
+
+        if (error) {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error
+            };
+        }
+
+        return details as FlagDetails<T>;
+    };
+
+    /**
+     * Evaluates a boolean feature flag with detailed evaluation information.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     */
+    getBooleanDetails = (
         key: string,
         defaultValue: boolean
-    ): Promise<FlagDetails<boolean>> => {
+    ): FlagDetails<boolean> => {
         if (typeof defaultValue !== 'boolean') {
             return {
                 key,
@@ -56,18 +185,19 @@ export class FlagsClient {
             };
         }
 
-        const details = await this.nativeFlags.getBooleanDetails(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return details;
+        return this.getDetails(key, defaultValue);
     };
 
-    getStringDetails = async (
+    /**
+     * Evaluates a string feature flag with detailed evaluation information.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     */
+    getStringDetails = (
         key: string,
         defaultValue: string
-    ): Promise<FlagDetails<string>> => {
+    ): FlagDetails<string> => {
         if (typeof defaultValue !== 'string') {
             return {
                 key,
@@ -78,18 +208,19 @@ export class FlagsClient {
             };
         }
 
-        const details = await this.nativeFlags.getStringDetails(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return details;
+        return this.getDetails(key, defaultValue);
     };
 
-    getNumberDetails = async (
+    /**
+     * Evaluates a number feature flag with detailed evaluation information.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     */
+    getNumberDetails = (
         key: string,
         defaultValue: number
-    ): Promise<FlagDetails<number>> => {
+    ): FlagDetails<number> => {
         if (typeof defaultValue !== 'number') {
             return {
                 key,
@@ -100,18 +231,19 @@ export class FlagsClient {
             };
         }
 
-        const details = await this.nativeFlags.getNumberDetails(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return details;
+        return this.getDetails(key, defaultValue);
     };
 
-    getObjectDetails = async (
+    /**
+     * Evaluates an object feature flag with detailed evaluation information.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     */
+    getObjectDetails = (
         key: string,
-        defaultValue: { [key: string]: unknown }
-    ): Promise<FlagDetails<{ [key: string]: unknown }>> => {
+        defaultValue: ObjectValue
+    ): FlagDetails<ObjectValue> => {
         if (typeof defaultValue !== 'object' || defaultValue === null) {
             return {
                 key,
@@ -122,43 +254,6 @@ export class FlagsClient {
             };
         }
 
-        const details = await this.nativeFlags.getObjectDetails(
-            this.clientName,
-            key,
-            defaultValue
-        );
-        return details;
-    };
-
-    getBooleanValue = async (
-        key: string,
-        defaultValue: boolean
-    ): Promise<boolean> => {
-        const details = await this.getBooleanDetails(key, defaultValue);
-        return details.value;
-    };
-
-    getStringValue = async (
-        key: string,
-        defaultValue: string
-    ): Promise<string> => {
-        const details = await this.getStringDetails(key, defaultValue);
-        return details.value;
-    };
-
-    getNumberValue = async (
-        key: string,
-        defaultValue: number
-    ): Promise<number> => {
-        const details = await this.getNumberDetails(key, defaultValue);
-        return details.value;
-    };
-
-    getObjectValue = async (
-        key: string,
-        defaultValue: { [key: string]: unknown }
-    ): Promise<{ [key: string]: unknown }> => {
-        const details = await this.getObjectDetails(key, defaultValue);
-        return details.value;
+        return this.getDetails(key, defaultValue);
     };
 }
