@@ -12,14 +12,12 @@ import os from 'os';
 import path from 'path';
 
 import babelPlugin from '../index';
-import {
-    ReactNativeSVG,
-    type LocalSvgMap
-} from '../libraries/react-native-svg';
+import { ReactNativeSVG } from '../libraries/react-native-svg';
 import {
     clearAssetsDir,
     getAssetsPath
 } from '../libraries/react-native-svg/processing/fs';
+import type { LocalSvgMap } from '../types';
 
 type SvgIndexEntry = {
     offset: number;
@@ -119,7 +117,8 @@ function mergeSvgAssets(assetsDir: string) {
  */
 function processFile(
     file: string,
-    prebuiltSvgMap: LocalSvgMap
+    pluginConfig: [any, any],
+    presets: any[]
 ): { success: boolean; error?: string } {
     try {
         const code = fs.readFileSync(file, 'utf8');
@@ -132,25 +131,8 @@ function processFile(
         // Transform the file using the Babel plugin with SVG tracking enabled
         transformSync(code, {
             filename: file,
-            plugins: [
-                [
-                    babelPlugin,
-                    {
-                        sessionReplay: {
-                            svgTracking: true
-                        },
-                        __internal_saveSvgMapToDisk: true,
-                        __internal_prebuiltSvgMap: prebuiltSvgMap
-                    }
-                ]
-            ],
-            presets: [
-                [
-                    '@babel/preset-typescript',
-                    { isTSX: true, allExtensions: true }
-                ],
-                '@babel/preset-react'
-            ],
+            plugins: [pluginConfig], // Reuse the same plugin config
+            presets,
             // Don't generate actual output, we just want the asset generation
             code: false,
             ast: false
@@ -170,7 +152,8 @@ function processFile(
  */
 async function processFilesInBatches(
     files: string[],
-    prebuiltSvgMap: LocalSvgMap,
+    pluginConfig: [any, any],
+    presets: any[],
     batchSize: number,
     onProgress?: (processed: number, total: number) => void
 ): Promise<{ errorCount: number }> {
@@ -186,7 +169,10 @@ async function processFilesInBatches(
             batch.map(async file => {
                 // Use setImmediate to allow event loop to process other tasks
                 await new Promise(resolve => setImmediate(resolve));
-                return { file, result: processFile(file, prebuiltSvgMap) };
+                return {
+                    file,
+                    result: processFile(file, pluginConfig, presets)
+                };
             })
         );
 
@@ -239,6 +225,7 @@ function showProgress(current: number, total: number, startTime: number): void {
  *
  * Optimizations applied:
  * - SVG map is built once before processing (not per-file)
+ * - Plugin config is created once and reused (enables Babel cache hits)
  * - Files are filtered early if they don't contain SVG patterns
  * - Batch processing for better throughput
  * - Progress reporting for visibility
@@ -266,7 +253,8 @@ async function generateSessionReplayAssets() {
     // Step 1: Build SVG map ONCE (this was the O(N²) bottleneck)
     console.info('📦 Building SVG import map...');
     const svgMapStartTime = Date.now();
-    const prebuiltSvgMap = ReactNativeSVG.buildSvgMapFromDirectory(rootDir);
+    const prebuiltSvgMap: LocalSvgMap =
+        ReactNativeSVG.buildSvgMapFromDirectory(rootDir);
     const svgMapTime = ((Date.now() - svgMapStartTime) / 1000).toFixed(2);
     const svgCount = Object.keys(prebuiltSvgMap).length;
     console.info(`   Found ${svgCount} SVG imports in ${svgMapTime}s\n`);
@@ -297,7 +285,27 @@ async function generateSessionReplayAssets() {
         return;
     }
 
-    // Step 3: Process files in batches
+    // Step 3: Create plugin config once (reused across all files for cache hits)
+    const pluginConfig: [any, any] = [
+        babelPlugin,
+        {
+            sessionReplay: {
+                svgTracking: true
+            },
+            __internal_saveSvgMapToDisk: true,
+            __internal_prebuiltSvgMap: prebuiltSvgMap
+        }
+    ];
+
+    const presets = [
+        [
+            '@babel/preset-typescript',
+            { isTSX: true, allExtensions: true }
+        ],
+        '@babel/preset-react'
+    ];
+
+    // Step 4: Process files in batches
     // Use batch size based on available CPUs
     const cpuCount = os.cpus().length;
     const batchSize = Math.max(cpuCount * 2, 16);
@@ -307,7 +315,8 @@ async function generateSessionReplayAssets() {
 
     const { errorCount } = await processFilesInBatches(
         files,
-        prebuiltSvgMap,
+        pluginConfig,
+        presets,
         batchSize,
         (processed, total) => showProgress(processed, total, processStartTime)
     );
@@ -319,7 +328,7 @@ async function generateSessionReplayAssets() {
         console.warn(`⚠️  ${errorCount} files had errors`);
     }
 
-    // Step 4: Merge all individual SVG files into assets.bin and assets.json
+    // Step 5: Merge all individual SVG files into assets.bin and assets.json
     console.info('📦 Merging SVG assets...');
     mergeSvgAssets(assetsPath);
 
