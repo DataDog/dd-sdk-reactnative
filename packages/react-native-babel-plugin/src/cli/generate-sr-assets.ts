@@ -12,11 +12,11 @@ import os from 'os';
 import path from 'path';
 
 import babelPlugin from '../index';
-import { ReactNativeSVG } from '../libraries/react-native-svg';
 import {
     clearAssetsDir,
     getAssetsPath
 } from '../libraries/react-native-svg/processing/fs';
+import { ReactNativeSVG } from '../libraries/react-native-svg';
 import type { LocalSvgMap } from '../types';
 
 type SvgIndexEntry = {
@@ -165,6 +165,7 @@ async function processFilesInBatches(
         const batch = files.slice(i, i + batchSize);
 
         // Process batch concurrently using Promise.all
+        // eslint-disable-next-line no-await-in-loop -- Intentional: process batches sequentially for memory control and progress reporting
         const results = await Promise.all(
             batch.map(async file => {
                 // Use setImmediate to allow event loop to process other tasks
@@ -253,8 +254,9 @@ async function generateSessionReplayAssets() {
     // Step 1: Build SVG map ONCE (this was the O(N²) bottleneck)
     console.info('📦 Building SVG import map...');
     const svgMapStartTime = Date.now();
-    const prebuiltSvgMap: LocalSvgMap =
-        ReactNativeSVG.buildSvgMapFromDirectory(rootDir);
+    const prebuiltSvgMap: LocalSvgMap = ReactNativeSVG.buildSvgMapFromDirectory(
+        rootDir
+    );
     const svgMapTime = ((Date.now() - svgMapStartTime) / 1000).toFixed(2);
     const svgCount = Object.keys(prebuiltSvgMap).length;
     console.info(`   Found ${svgCount} SVG imports in ${svgMapTime}s\n`);
@@ -298,10 +300,7 @@ async function generateSessionReplayAssets() {
     ];
 
     const presets = [
-        [
-            '@babel/preset-typescript',
-            { isTSX: true, allExtensions: true }
-        ],
+        ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
         '@babel/preset-react'
     ];
 
@@ -341,7 +340,9 @@ async function generateSessionReplayAssets() {
         );
     }
 
-    console.info('   Your assets are now ready to be used by Session Replay.\n');
+    console.info(
+        '   Your assets are now ready to be used by Session Replay.\n'
+    );
 }
 
 // TODO: Add flag support [e.g., --verbose] (RUM-12186)
