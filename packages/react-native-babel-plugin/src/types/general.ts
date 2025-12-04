@@ -34,6 +34,13 @@ export type SessionReplayOptions = {
     svgTracking: boolean;
 };
 
+export type LocalSvgMapEntry = {
+    path: string;
+    content?: string;
+};
+
+export type LocalSvgMap = Record<string, LocalSvgMapEntry>;
+
 export type PluginOptions = {
     actionNameAttribute?: string;
     sessionReplay: SessionReplayOptions;
@@ -44,6 +51,8 @@ export type PluginOptions = {
     };
     // Internal option used by CLI - not meant for end users
     __internal_saveSvgMapToDisk?: boolean;
+    // Pre-built SVG map to avoid scanning on every file (critical for performance)
+    __internal_prebuiltSvgMap?: LocalSvgMap;
 };
 
 export type PluginPassState = Babel.PluginPass & {

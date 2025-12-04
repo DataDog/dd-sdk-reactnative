@@ -58,7 +58,8 @@ export default declare(
                         api.types,
                         process.cwd(),
                         assetsPath,
-                        options.__internal_saveSvgMapToDisk || false
+                        options.__internal_saveSvgMapToDisk || false,
+                        options.__internal_prebuiltSvgMap
                     );
                 }
             },

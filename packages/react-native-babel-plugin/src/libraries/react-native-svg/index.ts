@@ -15,10 +15,13 @@ import pathN from 'path';
 import { optimize } from 'svgo';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { LocalSvgMap } from '../../types';
 import { getNodeName } from '../../utils';
 
 import { HandlerResolver } from './handlers/HandlerResolver';
 import { writeAssetToDisk } from './processing/fs';
+
+export type { LocalSvgMap, LocalSvgMapEntry } from '../../types';
 
 type SvgOffset = {
     start: number;
@@ -40,15 +43,126 @@ export class ReactNativeSVG {
 
     svgOffset: Record<string, SvgOffset> = {};
 
-    localSvgMap: Record<string, { path: string; content?: string }> = {};
+    localSvgMap: LocalSvgMap = {};
 
     constructor(
         private t: typeof Babel.types,
         private rootDir: string,
         private assetsPath: string,
-        private saveSvgMapToDisk: boolean = false
+        private saveSvgMapToDisk: boolean = false,
+        prebuiltSvgMap?: LocalSvgMap
     ) {
-        this.buildSvgMap();
+        if (prebuiltSvgMap) {
+            this.localSvgMap = prebuiltSvgMap;
+        } else {
+            this.buildSvgMap();
+        }
+    }
+
+    /**
+     * Scans all source files in a directory to detect `.svg` imports and builds a mapping
+     * of JSX identifiers to their corresponding SVG file paths.
+     *
+     * This static method can be called independently to pre-build the SVG map,
+     * which can then be passed to the constructor for better performance.
+     *
+     * @param rootDir - The root directory to scan for SVG imports
+     * @param babelTypes - Optional Babel types helper (uses a simple name extractor if not provided)
+     * @returns A mapping of SVG identifiers to their file paths
+     */
+    static buildSvgMapFromDirectory(
+        rootDir: string,
+        babelTypes?: typeof Babel.types
+    ): LocalSvgMap {
+        const localSvgMap: LocalSvgMap = {};
+
+        const files = glob.sync(['**/*.{js,jsx,ts,tsx}'], {
+            cwd: rootDir,
+            absolute: true,
+            ignore: [
+                '**/node_modules/**',
+                '**/lib/**',
+                '**/dist/**',
+                '**/build/**',
+                '**/*.d.ts',
+                '**/*.test.*',
+                '**/*.spec.*',
+                '**/*.config.js',
+                '**/__tests__/**',
+                '**/__mocks__/**'
+            ]
+        });
+
+        for (const file of files) {
+            try {
+                const code = fs.readFileSync(file, 'utf8');
+                if (!code) {
+                    continue;
+                }
+
+                const ast = parser.parse(code, {
+                    sourceType: 'module',
+                    plugins: [
+                        'jsx',
+                        'typescript',
+                        'exportDefaultFrom',
+                        'classProperties',
+                        'dynamicImport'
+                    ]
+                });
+
+                traverse(ast, {
+                    ImportDeclaration: path => {
+                        const source = path.node.source.value;
+                        if (!source.endsWith('.svg')) {
+                            return;
+                        }
+
+                        const resolved = pathN.resolve(
+                            pathN.dirname(file),
+                            source
+                        );
+                        for (const spec of path.node.specifiers) {
+                            const name = babelTypes
+                                ? getNodeName(babelTypes, spec.local.name)
+                                : spec.local.name;
+                            if (name) {
+                                localSvgMap[name] = {
+                                    path: resolved
+                                };
+                            }
+                        }
+                    },
+                    ExportNamedDeclaration: path => {
+                        const source = path.node.source?.value;
+                        if (!source?.endsWith('.svg')) {
+                            return;
+                        }
+
+                        const resolved = pathN.resolve(
+                            pathN.dirname(file),
+                            source
+                        );
+                        for (const spec of path.node.specifiers) {
+                            if (spec.type === 'ExportSpecifier') {
+                                const name = babelTypes
+                                    ? getNodeName(babelTypes, spec.local.name)
+                                    : spec.local.name;
+                                if (name) {
+                                    localSvgMap[name] = {
+                                        path: resolved
+                                    };
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                // Silently continue on parse errors for static map building
+            }
+        }
+
+        return localSvgMap;
     }
 
     /**
@@ -90,21 +204,22 @@ export class ReactNativeSVG {
         }
 
         // TODO: Support aliased paths (RUM-12185)
-        const files = glob.sync(
-            ['**/*.{js,jsx,ts,tsx}', '**/*.{js,jsx,ts,tsx}'],
-            {
-                cwd: this.rootDir,
-                absolute: true,
-                ignore: [
-                    '**/node_modules/**',
-                    '**/lib/**',
-                    '**/dist/**',
-                    '**/*.d.ts',
-                    '**/*.test.*',
-                    '**/*.config.js'
-                ]
-            }
-        );
+        const files = glob.sync(['**/*.{js,jsx,ts,tsx}'], {
+            cwd: this.rootDir,
+            absolute: true,
+            ignore: [
+                '**/node_modules/**',
+                '**/lib/**',
+                '**/dist/**',
+                '**/build/**',
+                '**/*.d.ts',
+                '**/*.test.*',
+                '**/*.spec.*',
+                '**/*.config.js',
+                '**/__tests__/**',
+                '**/__mocks__/**'
+            ]
+        });
 
         for (const file of files) {
             try {
