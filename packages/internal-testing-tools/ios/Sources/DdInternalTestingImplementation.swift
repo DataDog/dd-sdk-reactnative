@@ -39,6 +39,11 @@ public class DdInternalTestingImplementation: NSObject {
     
     @objc
     public func enable(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {core in
+            let proxiedCore = DatadogCoreProxy(core: core)
+            CoreRegistry.unregisterDefault()
+            CoreRegistry.register(default: proxiedCore)
+        })
         resolve(nil)
     }
 }
@@ -47,5 +52,10 @@ public class DdInternalTestingImplementation: NSObject {
 public class DdInternalTestingNativeInitialization: NSObject {
     @objc
     public func enableFromNative() -> Void {
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {core in
+            let proxiedCore = DatadogCoreProxy(core: core)
+            CoreRegistry.unregisterDefault()
+            CoreRegistry.register(default: proxiedCore)
+        })
     }
 }
