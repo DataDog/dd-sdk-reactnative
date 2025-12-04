@@ -13,27 +13,20 @@ import DatadogCore
 public class DdLogsImplementation: NSObject {
     private lazy var logger: LoggerProtocol = loggerProvider()
     private let loggerProvider: () -> LoggerProtocol
-    private let isSDKInitialized: () -> Bool
     
-    internal init(_ loggerProvider: @escaping () -> LoggerProtocol, _ isSDKInitialized: @escaping () -> Bool) {
+    internal init(_ loggerProvider: @escaping () -> LoggerProtocol) {
         self.loggerProvider = loggerProvider
-        self.isSDKInitialized = isSDKInitialized
     }
 
     @objc
     public override convenience init() {
         self.init(
-            { DatadogLogs.Logger.create(with: DatadogSDKWrapper.shared.loggerConfiguration) },
-            { Datadog.isInitialized() }
+            { DatadogLogs.Logger.create(with: DatadogSDKWrapper.shared.loggerConfiguration) }
         )
     }
 
     @objc
     public func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.debug(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -41,10 +34,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.info(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -52,10 +41,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.warn(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -63,10 +48,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.error(message, error: nil, attributes: attributes)
         resolve(nil)
@@ -74,10 +55,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .debug, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -85,10 +62,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .info, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -96,10 +69,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .warn, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
@@ -107,10 +76,6 @@ public class DdLogsImplementation: NSObject {
 
     @objc
     public func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        if (!self.isSDKInitialized()) {
-            reject(nil, Errors.logSentBeforeSDKInit, nil)
-            return
-        }
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .error, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
