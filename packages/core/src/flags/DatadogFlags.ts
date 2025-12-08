@@ -63,7 +63,8 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
             );
         }
 
-        await this.nativeFlags.enable({ ...configuration, enabled: true });
+        // Default `enabled` to `true`.
+        await this.nativeFlags.enable({ enabled: true, ...configuration });
 
         this.isFeatureEnabled = true;
     };

@@ -33,7 +33,8 @@ describe('DatadogFlags', () => {
             await DatadogFlags.enable();
 
             expect(InternalLog.log).toHaveBeenCalledTimes(2);
-            expect(NativeModules.DdFlags.enable).toHaveBeenCalledTimes(1);
+            // We let the native part of the SDK handle this gracefully.
+            expect(NativeModules.DdFlags.enable).toHaveBeenCalledTimes(3);
         });
 
         it('should print an error if retrieving the client before the feature is enabled', async () => {
