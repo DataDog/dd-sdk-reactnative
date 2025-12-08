@@ -6,7 +6,7 @@
 
 import Foundation
 import DatadogInternal
-@_spi(Internal) 
+@_spi(Internal)
 import DatadogFlags
 
 @objc
@@ -69,21 +69,21 @@ public class DdFlagsImplementation: NSObject {
     public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         let client = getClient(name: clientName)
 
-        let parsedAttributes = parseAttributes(attributes: attributes)  
+        let parsedAttributes = parseAttributes(attributes: attributes)
         let evaluationContext = FlagsEvaluationContext(targetingKey: targetingKey, attributes: parsedAttributes)
 
         client.setEvaluationContext(evaluationContext) { result in
             switch result {
             case .success:
-                guard let flagsDetails = client.getFlagsDetails() else {
+                guard let flagsDetails = client.getAllFlagsDetails() else {
                     reject(nil, "CLIENT_NOT_INITIALIZED", nil)
                     return
                 }
-                
+
                 let result = flagsDetails.compactMapValues { details in
                     details.toSerializedDictionary()
                 }
-                
+
                 resolve(result)
             case .failure(let error):
                 var errorCode: String
@@ -165,7 +165,7 @@ extension FlagDetails {
 
         return dict
     }
- 
+
     private func getSerializedValue() -> Any {
         if let boolValue = value as? Bool {
             return boolValue
@@ -182,7 +182,7 @@ extension FlagDetails {
         // Fallback for unexpected types.
         return NSNull()
     }
-    
+
     private func getSerializedError() -> String? {
         guard let error = error else {
             return nil
