@@ -333,6 +333,7 @@ export class RumConfiguration {
 
     /**
      * Percentage of sampled RUM sessions. Range `0`-`100`.
+     * Default is `100`.
      */
     public sessionSampleRate: number = DEFAULTS.sessionSampleRate;
 
@@ -419,6 +420,7 @@ export class LogsConfiguration {
 export class TraceConfiguration {
     /**
      * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
+     * Default is `100`.
      */
     public resourceTraceSampleRate: number = DEFAULTS.resourceTraceSampleRate;
 
