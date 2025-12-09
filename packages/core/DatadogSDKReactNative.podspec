@@ -13,7 +13,6 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "12.0", :tvos => "12.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
-  
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
   
   s.dependency "React-Core"
@@ -47,4 +46,18 @@ Pod::Spec.new do |s|
       Pod::UI.warn "Using Datadog React Native SDK with new architecture on RN < 0.71 is discouraged and not officially supported."
     end
   end
+
+  # Run check-metro-config.js script after installing the pod
+  s.post_install do |installer|
+    # Get the path to the script
+    metro_config_script = File.join(__dir__, "scripts", "check-metro-config.js")
+    # Fail safe if node is not available
+    unless system("which node > /dev/null 2>&1")
+      Pod::UI.warn "Node.js is not installed or not available in PATH. Skipping metro.config.js check for Datadog SDK."
+      next
+    end
+    # Run the script
+    system("node #{metro_config_script}")
+  end
+
 end

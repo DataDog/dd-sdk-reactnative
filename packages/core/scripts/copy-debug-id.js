@@ -1,7 +1,11 @@
 #!/usr/bin/env node
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-var-requires */
-
 const { readFileSync, writeFileSync, existsSync } = require('fs');
 const { argv, exit } = require('process');
 

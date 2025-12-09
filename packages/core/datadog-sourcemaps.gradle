@@ -96,6 +96,9 @@ afterEvaluate {
                     throw new GradleException("JS sourcemap file doesn't exist, aborting upload.")
                 }
 
+                // Check Metro Configuration
+                checkMetroConfig(reactRoot)
+
                 // Copy Debug ID from packager sourcemap to composed sourcemap (Hermes)
                 if (packagerOutputSourceMapFile.exists()) {
                     logger.info("Copying Debug ID from ${packagerOutputSourceMapFile.absolutePath} to ${jsOutputSourceMapFile.absolutePath}")
@@ -138,6 +141,28 @@ private def copyDebugId(String packagerSourceMapPath, String jsSourceMapPath, Fi
     ]
 
     runShellCommand(copyDebugIdCommand, workingDirectory)
+}
+
+/*
+ * Checks if Datadog Metro config is set up correctly.
+ * If not, it prints a warning message to the console.
+ */
+private def checkMetroConfig(File workingDirectory) {
+    def ddReactNativePath = getDatadogReactNativePath(workingDirectory)
+    def checkMetroConfigScript = new File("$ddReactNativePath/scripts/check-metro-config.js")
+    if (!checkMetroConfigScript.exists()) {
+        println("ERROR: check metro config script does not exist at ${checkMetroConfigScript.absolutePath}")
+        return
+    }
+
+    def nodeExecutable = Os.isFamily(Os.FAMILY_WINDOWS) ? 'node.exe' : 'node'
+
+    def checkMetroConfigCommand = [
+        nodeExecutable,
+        checkMetroConfigScript
+    ]
+
+    runShellCommand(checkMetroConfigCommand, workingDirectory)
 }
 
 /**
