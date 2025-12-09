@@ -64,7 +64,7 @@ jest.mock('../rum/instrumentation/DdRumErrorTracking', () => {
 });
 
 beforeEach(async () => {
-    GlobalState.instance.isInitialized = false;
+    GlobalState.isInitialized = false;
     DdSdkReactNative['wasAutoInstrumented'] = false;
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.addAttributes.mockClear();
@@ -174,7 +174,7 @@ describe('DdSdkReactNative', () => {
                 '_dd.sdk_version': sdkVersion
             });
 
-            expect(GlobalState.instance.isInitialized).toBe(false);
+            expect(GlobalState.isInitialized).toBe(false);
             expect(
                 DdRumUserInteractionTracking.startTracking
             ).toHaveBeenCalledTimes(0);
