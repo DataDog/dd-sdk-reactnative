@@ -68,6 +68,9 @@ public class DdFlagsImplementation: NSObject {
     @objc
     public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         let client = getClient(name: clientName)
+        guard let clientInternal = getClient(name: clientName) as? FlagsClientInternal else {
+            return
+        }
 
         let parsedAttributes = parseAttributes(attributes: attributes)
         let evaluationContext = FlagsEvaluationContext(targetingKey: targetingKey, attributes: parsedAttributes)
@@ -75,7 +78,7 @@ public class DdFlagsImplementation: NSObject {
         client.setEvaluationContext(evaluationContext) { result in
             switch result {
             case .success:
-                guard let flagsDetails = client.getAllFlagsDetails() else {
+                guard let flagsDetails = clientInternal.getAllFlagsDetails() else {
                     reject(nil, "CLIENT_NOT_INITIALIZED", nil)
                     return
                 }
@@ -104,7 +107,10 @@ public class DdFlagsImplementation: NSObject {
 
     @objc
     public func trackEvaluation(_ clientName: String, key: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        let client = getClient(name: clientName)
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            return
+        }
+
         client.trackEvaluation(key: key)
         resolve(nil)
     }
