@@ -84,7 +84,7 @@ export class DdSdkReactNative {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): Promise<void> => {
-        if (GlobalState.instance.isInitialized) {
+        if (GlobalState.isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
                 SdkVerbosity.WARN
@@ -106,7 +106,7 @@ export class DdSdkReactNative {
         );
 
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
-        GlobalState.instance.isInitialized = true;
+        GlobalState.isInitialized = true;
         BufferSingleton.onInitialization();
     };
 
