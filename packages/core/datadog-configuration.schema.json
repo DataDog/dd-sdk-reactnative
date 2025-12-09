@@ -219,7 +219,7 @@
                             "type": "boolean"
                         },
                         "sessionSampleRate": {
-                            "description": "Percentage of sampled RUM sessions. Range `0`-`100`.",
+                            "description": "Percentage of sampled RUM sessions. Range `0`-`100`. (default `100`).",
                             "type": "integer"
                         },
                         "trackBackgroundEvents": {
@@ -253,7 +253,7 @@
                             "type": "boolean"
                         },
                         "telemetrySampleRate": {
-                            "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100`.",
+                            "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100` (default `20`).",
                             "type": "integer"
                         },
                         "customEndpoint": {
@@ -288,7 +288,7 @@
                     "type": "object",
                     "properties": {
                         "resourceTraceSampleRate": {
-                            "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
+                            "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100` (default `100`).",
                             "type": "number"
                         },
                         "customEndpoint": {
