@@ -39,8 +39,8 @@ class SessionReplayPrivacySettings(
      */
     val textAndInputPrivacyLevel = getTextAndInputPrivacy(textAndInputPrivacyLevel)
 
-    companion object {
-        internal fun getImagePrivacy(imagePrivacyLevel: String): ImagePrivacy {
+    internal companion object {
+        fun getImagePrivacy(imagePrivacyLevel: String): ImagePrivacy {
             return when (imagePrivacyLevel) {
                 "MASK_NON_BUNDLED_ONLY" -> ImagePrivacy.MASK_LARGE_ONLY
                 "MASK_ALL" -> ImagePrivacy.MASK_ALL
@@ -56,7 +56,7 @@ class SessionReplayPrivacySettings(
             }
         }
 
-        internal fun getTouchPrivacy(touchPrivacyLevel: String): TouchPrivacy {
+        fun getTouchPrivacy(touchPrivacyLevel: String): TouchPrivacy {
             return when (touchPrivacyLevel) {
                 "SHOW" -> TouchPrivacy.SHOW
                 "HIDE" -> TouchPrivacy.HIDE
@@ -71,7 +71,7 @@ class SessionReplayPrivacySettings(
             }
         }
 
-        internal fun getTextAndInputPrivacy(textAndInputPrivacyLevel: String): TextAndInputPrivacy {
+        fun getTextAndInputPrivacy(textAndInputPrivacyLevel: String): TextAndInputPrivacy {
             return when (textAndInputPrivacyLevel) {
                 "MASK_SENSITIVE_INPUTS" -> TextAndInputPrivacy.MASK_SENSITIVE_INPUTS
                 "MASK_ALL_INPUTS" -> TextAndInputPrivacy.MASK_ALL_INPUTS

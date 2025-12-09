@@ -40,6 +40,7 @@ import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -59,6 +60,7 @@ import java.util.Locale
 import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -78,7 +80,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
-import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -1710,7 +1711,7 @@ internal class DdSdkTest {
                 mapOf(
                     "match" to match,
                     "propagatorTypes" to headerTypes.map {
-                        it.name.lowercase()
+                        it.name.lowercase(Locale.US)
                     }.toReadableArray()
                 ).toReadableMap()
             )
@@ -1782,7 +1783,7 @@ internal class DdSdkTest {
                 mapOf(
                     "match" to match,
                     "propagatorTypes" to listOf(
-                        TracingHeaderType.DATADOG.name.lowercase(),
+                        TracingHeaderType.DATADOG.name.lowercase(Locale.US),
                         forge.aString()
                     ).toReadableArray()
                 ).toReadableMap()
@@ -1856,7 +1857,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.DATADOG.name.lowercase()
+                    TracingHeaderType.DATADOG.name.lowercase(Locale.US)
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -1864,7 +1865,7 @@ internal class DdSdkTest {
             mapOf(
                 "match" to host,
                 "propagatorTypes" to listOf(
-                    TracingHeaderType.B3.name.lowercase()
+                    TracingHeaderType.B3.name.lowercase(Locale.US)
                 ).toReadableArray()
             ).toReadableMap()
         )
@@ -2966,32 +2967,140 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 set RUM attributes 𝕎 setAttributes`(
+    fun `M set Rum attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        verify(mockDatadog).addRumGlobalAttribute(key, value)
+    }
+
+    @Test
+    fun `M set GlobalState attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+    }
+
+    @Test
+    fun `M remove Rum attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttribute(key)
+    }
+
+    @Test
+    fun `M remove GlobalState attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).doesNotContainEntry(key, value)
+    }
+
+    @Test
+    fun `𝕄 set RUM attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         verify(mockDatadog).addRumGlobalAttributes(customAttributes)
     }
 
     @Test
-    fun `𝕄 set GlobalState attributes 𝕎 setAttributes`(
+    fun `𝕄 set GlobalState attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         customAttributes.forEach { (k, v) ->
             assertThat(GlobalState.globalAttributes).containsEntry(k, v)
+        }
+    }
+
+    @Test
+    fun `𝕄 remove RUM attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttributes(customAttributes.keys.toTypedArray())
+    }
+
+    @Test
+    fun `𝕄 remve GlobalState attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        customAttributes.forEach { (k, v) ->
+            assertThat(GlobalState.globalAttributes).doesNotContainEntry(k, v)
         }
     }
 
@@ -3128,6 +3237,132 @@ internal class DdSdkTest {
             verify(mockDatadog)
                 .clearAllData()
         }
+    }
+
+    @Test
+    fun `𝕄 normalize frameTime according to the device's refresh rate`() {
+        // 10 fps, 60Hz device, 60 fps budget -> 10 fps
+        var frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.1,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.1)
+
+        // 30 fps, 60Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.03,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.03)
+
+        // 60 fps, 60Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 60 fps, 120Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.032)
+
+        // 120 fps, 120Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 90 fps, 120Hz device, 60 fps budget -> 45 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0111,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0222, Offset.offset(0.001))
+
+        // 100 fps, 120Hz device, 60 fps budget -> 50 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.01,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.02, Offset.offset(0.001))
+
+        // 120 fps, 120Hz device, 120 fps budget -> 120 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 120.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0083, Offset.offset(0.001))
+
+        // 80 fps, 160Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0125,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.033, Offset.offset(0.001))
+
+        // 160 fps, 160Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.00625,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        // Edge cases
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
     }
 
     // endregion

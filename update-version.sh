@@ -15,13 +15,22 @@ yarn
 yarn workspace @datadog/mobile-react-native pack
 yarn workspace @datadog/mobile-react-navigation pack
 yarn workspace @datadog/mobile-react-native-navigation pack
+yarn workspace @datadog/mobile-react-native-apollo-client pack
+yarn workspace @datadog/mobile-react-native-babel-plugin pack
+yarn workspace @datadog/mobile-react-native-session-replay pack
+yarn workspace @datadog/mobile-react-native-webview pack
+yarn workspace @datadog/react-native-internal-testing-tools pack
 
 ./check-release-content.sh -p packages/core/package.tgz > packages/core/release-content.txt
 ./check-release-content.sh -p packages/react-navigation/package.tgz > packages/react-navigation/release-content.txt
 ./check-release-content.sh -p packages/react-native-navigation/package.tgz > packages/react-native-navigation/release-content.txt
+./check-release-content.sh -p packages/react-native-apollo-client/package.tgz > packages/react-native-apollo-client/release-content.txt
+./check-release-content.sh -p packages/react-native-babel-plugin/package.tgz > packages/react-native-babel-plugin/release-content.txt
+./check-release-content.sh -p packages/react-native-session-replay/package.tgz > packages/react-native-session-replay/release-content.txt
+./check-release-content.sh -p packages/react-native-internal-testing-tools/package.tgz > packages/internal-testing-tools/release-content.txt
 
 
-# Update example repo
+# Update example apps
 (cd example &&
 yarn
 (cd ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
@@ -32,6 +41,7 @@ yarn
 (cd ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
 )
 
+# Update benchmark app
 (cd benchmarks &&
 yarn
 (cd ios && pod install --repo-update)

@@ -176,19 +176,60 @@ export class DdSdkReactNative {
     };
 
     /**
+     * Adds a specific attribute to the global context attached with all future Logs, Spans and RUM.
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    static addAttribute = async (
+        key: string,
+        value: unknown
+    ): Promise<void> => {
+        InternalLog.log(
+            `Adding attribute ${JSON.stringify(value)} for key ${key}`,
+            SdkVerbosity.DEBUG
+        );
+        await DdSdk.addAttribute(key, { value });
+        AttributesSingleton.getInstance().addAttribute(key, value);
+    };
+
+    /**
+     * Removes an attribute from the context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    static removeAttribute = async (key: string): Promise<void> => {
+        InternalLog.log(
+            `Removing attribute for key ${key}`,
+            SdkVerbosity.DEBUG
+        );
+        await DdSdk.removeAttribute(key);
+        AttributesSingleton.getInstance().removeAttribute(key);
+    };
+
+    /**
      * Adds a set of attributes to the global context attached with all future Logs, Spans and RUM events.
-     * To remove an attribute, set it to `undefined` in a call to `setAttributes`.
      * @param attributes: The global context attributes.
      * @returns a Promise.
      */
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    static setAttributes = async (attributes: Attributes): Promise<void> => {
+    static addAttributes = async (attributes: Attributes): Promise<void> => {
         InternalLog.log(
-            `Setting attributes ${JSON.stringify(attributes)}`,
+            `Adding attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
-        await DdSdk.setAttributes(attributes);
-        AttributesSingleton.getInstance().setAttributes(attributes);
+        await DdSdk.addAttributes(attributes);
+        AttributesSingleton.getInstance().addAttributes(attributes);
+    };
+
+    /**
+     * Removes a set of attributes from the context attached with all future Logs, Spans and RUM events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    static removeAttributes = async (keys: string[]): Promise<void> => {
+        InternalLog.log(
+            `Removing attributes for keys ${JSON.stringify(keys)}`,
+            SdkVerbosity.DEBUG
+        );
+        await DdSdk.removeAttributes(keys);
+        AttributesSingleton.getInstance().removeAttributes(keys);
     };
 
     /**
@@ -356,7 +397,8 @@ export class DdSdkReactNative {
             configuration.resourceTracingSamplingRate,
             configuration.trackWatchdogTerminations,
             configuration.batchProcessingLevel,
-            configuration.initialResourceThreshold
+            configuration.initialResourceThreshold,
+            configuration.trackMemoryWarnings
         );
     };
 

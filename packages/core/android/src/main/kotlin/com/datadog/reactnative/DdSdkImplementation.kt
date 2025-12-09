@@ -7,17 +7,22 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.hardware.display.DisplayManager
+import android.os.Build
 import android.util.Log
+import android.view.Display
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
 
 /** The entry point to initialize Datadog's features. */
 @Suppress("TooManyFunctions")
@@ -66,14 +71,57 @@ class DdSdkImplementation(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
-     * events.
-     * @param attributes The global context attributes.
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM.
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
      */
-    fun setAttributes(attributes: ReadableMap, promise: Promise) {
+    fun addAttribute(key: String, value: ReadableMap, promise: Promise) {
+        val attributeValue = value.toMap()["value"]
+        datadog.addRumGlobalAttribute(key, attributeValue)
+        GlobalState.addAttribute(key, attributeValue)
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes an attribute from the global context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    fun removeAttribute(key: String, promise: Promise) {
+        datadog.removeRumGlobalAttribute(key)
+        GlobalState.removeAttribute(key)
+        promise.resolve(null)
+    }
+
+
+    /**
+     * Adds a set of attributes to the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param attributes: The global context attributes.
+     */
+    fun addAttributes(attributes: ReadableMap, promise: Promise) {
         datadog.addRumGlobalAttributes(attributes.toHashMap())
         for ((k,v) in attributes.toHashMap()) {
             GlobalState.addAttribute(k, v)
+        }
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes a set of attributes from the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    fun removeAttributes(keys: ReadableArray, promise: Promise) {
+        val keysArray = mutableListOf<String>()
+        for (i in 0 until keys.size()) {
+            keys.getString(i)?.let { if (it.isNotBlank()) keysArray.add(it) }
+        }
+        val keysStringArray = keysArray.toTypedArray()
+
+        datadog.removeRumGlobalAttributes(keysStringArray)
+        for (key in keysStringArray) {
+            GlobalState.removeAttribute(key)
         }
         promise.resolve(null)
     }
@@ -94,8 +142,6 @@ class DdSdkImplementation(
 
         if (id != null) {
             datadog.setUserInfo(id, name, email, extraInfo)
-        } else {
-            // TO DO - Log warning?
         }
 
         promise.resolve(null)
@@ -248,9 +294,10 @@ class DdSdkImplementation(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
+                val normalizedFrameTimeSeconds = normalizeFrameTime(it, appContext)
                 datadog.getRumMonitor()
                     ._getInternal()
-                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, normalizedFrameTimeSeconds)
             }
             if (jsLongTasksMonitoringEnabled &&
                 it >
@@ -263,9 +310,50 @@ class DdSdkImplementation(
         }
     }
 
-    // endregion
+    /**
+     * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
+     * @param frameTimeSeconds: the frame time to normalize. In seconds.
+     * @param context: The current app context
+     * @param fpsBudget: The maximum fps under which the frame Time will be normalized [0-fpsBudget]. Defaults to 60Hz.
+     * @param deviceDisplayFps: The maximum fps supported by the device. If not provided it will be set from the value obtained from the app context.
+     */
+    @Suppress("CyclomaticComplexMethod")
+    fun normalizeFrameTime(
+        frameTimeSeconds: Double,
+        context: Context,
+        fpsBudget: Double? = null,
+        deviceDisplayFps: Double? = null,
+    ) : Double {
+        val frameTimeMs = frameTimeSeconds * 1000.0
+        val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
+        val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
+            ?: 60.0
 
-    companion object {
+        val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
+        val budgetFrameTimeMs = 1000.0 / frameBudgetHz
+
+        if (listOf(
+            maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+        ).any { !it.isFinite() || it <= 0.0 }
+        ) return 1.0 / DEFAULT_REFRESH_HZ
+
+        var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
+
+        normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
+
+        return normalizedFrameTimeMs / 1000.0 // in seconds
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun getMaxDisplayRefreshRate(context: Context?): Double {
+        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+
+        return display.supportedModes.maxOf { it.refreshRate.toDouble() }
+    }
+
+    // endregion
+    internal companion object {
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
@@ -273,6 +361,7 @@ class DdSdkImplementation(
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
+        internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
     }
 }

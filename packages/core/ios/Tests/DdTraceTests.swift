@@ -90,10 +90,11 @@ internal class DdTraceTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
-        let spanID = lastResolveValue as! NSString
+        let spanID = lastResolveValue as! String
 
         XCTAssertNotNil(spanID)
-        XCTAssertEqual(Array(tracer.spanDictionary.keys), [spanID])
+        XCTAssertEqual(Array(tracer.spansById.keys), [spanID])
+        XCTAssertEqual(Array(tracer.spanStack), [spanID])
         let startedSpan = try XCTUnwrap(mockNativeTracer.startedSpans.last)
         XCTAssertEqual(startedSpan.finishTime, MockSpan.unfinished)
 
@@ -101,9 +102,10 @@ internal class DdTraceTests: XCTestCase {
         let spanDurationMs = spanDuration * 1_000
         let finishTimestampMs = timestampMs + spanDurationMs
         let finishingContext = NSDictionary(dictionary: ["last_key": "last_value"])
-        tracer.finishSpan(spanId: spanID, context: finishingContext, timestampMs: finishTimestampMs, resolve: mockResolve, reject: mockReject)
+        tracer.finishSpan(spanId: spanID as NSString, context: finishingContext, timestampMs: finishTimestampMs, resolve: mockResolve, reject: mockReject)
 
-        XCTAssertEqual(Array(tracer.spanDictionary.keys), [])
+        XCTAssertEqual(Array(tracer.spansById.keys), [])
+        XCTAssertEqual(Array(tracer.spanStack), [])
         XCTAssertEqual(
             startedSpan.finishTime!.timeIntervalSince1970, // swiftlint:disable:this force_unwrapping
             (startDate + spanDuration).timeIntervalSince1970,
@@ -124,7 +126,8 @@ internal class DdTraceTests: XCTestCase {
             reject: mockReject
         )
 
-        XCTAssertEqual(tracer.spanDictionary.count, 1)
+        XCTAssertEqual(tracer.spansById.count, 1)
+        XCTAssertEqual(tracer.spanStack.count, 1)
 
         XCTAssertNoThrow(
             tracer.finishSpan(
@@ -136,7 +139,8 @@ internal class DdTraceTests: XCTestCase {
             )
         )
 
-        XCTAssertEqual(tracer.spanDictionary.count, 1)
+        XCTAssertEqual(tracer.spansById.count, 1)
+        XCTAssertEqual(tracer.spanStack.count, 1)
     }
 
     func testTracingConcurrently() {
@@ -158,7 +162,8 @@ internal class DdTraceTests: XCTestCase {
         }
 
         XCTAssertEqual(mockNativeTracer.startedSpans.count, iterationCount, "\(mockNativeTracer.startedSpans)")
-        XCTAssertEqual(tracer.spanDictionary.count, 0)
+        XCTAssertEqual(tracer.spansById.count, 0)
+        XCTAssertEqual(tracer.spanStack.count, 0)
     }
 }
 
@@ -205,8 +210,15 @@ private class MockSpan: OTSpan {
         self.finishTime = time
     }
 
+    private final class Ctx: OTSpanContext {
+        func forEachBaggageItem(callback: (String, String) -> Bool) {
+            // No baggage in tests → do nothing
+        }
+    }
+
     // swiftlint:disable unavailable_function
-    var context: OTSpanContext { fatalError("Should not be called") }
+    var context: OTSpanContext = Ctx()
+    
     func tracer() -> OTTracer {
         fatalError("Should not be called")
     }

@@ -16,35 +16,100 @@ import malformedConfiguration from './__fixtures__/malformed-configuration.json'
 
 describe('FileBasedConfiguration', () => {
     describe('with user-specified configuration', () => {
+        it('resolves configuration fields', () => {
+            const configuration = new FileBasedConfiguration(
+                configurationAllFields
+            );
+
+            expect(configuration).toMatchInlineSnapshot(`
+                FileBasedConfiguration {
+                  "actionEventMapper": null,
+                  "actionNameAttribute": "action-name-attr",
+                  "additionalConfiguration": {},
+                  "applicationId": "fake-app-id",
+                  "batchProcessingLevel": "MEDIUM",
+                  "batchSize": "MEDIUM",
+                  "bundleLogsWithRum": true,
+                  "bundleLogsWithTraces": true,
+                  "clientToken": "fake-client-token",
+                  "customEndpoints": {},
+                  "env": "fake-env",
+                  "errorEventMapper": null,
+                  "firstPartyHosts": [
+                    {
+                      "match": "example.com",
+                      "propagatorTypes": [
+                        "b3multi",
+                        "tracecontext",
+                      ],
+                    },
+                  ],
+                  "initializationMode": "SYNC",
+                  "logEventMapper": null,
+                  "longTaskThresholdMs": 44,
+                  "nativeCrashReportEnabled": false,
+                  "nativeInteractionTracking": false,
+                  "nativeLongTaskThresholdMs": 200,
+                  "nativeViewTracking": false,
+                  "proxyConfig": undefined,
+                  "resourceEventMapper": null,
+                  "resourceTracingSamplingRate": 33,
+                  "serviceName": undefined,
+                  "sessionSamplingRate": 100,
+                  "site": "US5",
+                  "telemetrySampleRate": 20,
+                  "trackBackgroundEvents": false,
+                  "trackErrors": true,
+                  "trackFrustrations": true,
+                  "trackInteractions": true,
+                  "trackMemoryWarnings": true,
+                  "trackResources": true,
+                  "trackWatchdogTerminations": false,
+                  "trackingConsent": "not_granted",
+                  "uploadFrequency": "AVERAGE",
+                  "useAccessibilityLabel": false,
+                  "verbosity": "warn",
+                  "vitalsUpdateFrequency": "AVERAGE",
+                }
+            `);
+        });
+
+        it('prints a warning message when the configuration file cannot be parsed correctly', () => {
+            const warnSpy = jest.spyOn(console, 'warn');
+            getJSONConfiguration(malformedConfiguration);
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                'DATADOG: Warning: Malformed json configuration file - clientToken, applicationId and env are mandatory properties.'
+            );
+        });
+
         it('resolves all properties from a given file path', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    configuration: {
-                        applicationId: 'fake-app-id',
-                        env: 'fake-env',
-                        clientToken: 'fake-client-token',
-                        trackInteractions: true,
-                        trackResources: true,
-                        trackErrors: true,
-                        trackingConsent: 'NOT_GRANTED',
-                        longTaskThresholdMs: 44,
-                        site: 'US5',
-                        verbosity: 'WARN',
-                        actionNameAttribute: 'action-name-attr',
-                        useAccessibilityLabel: false,
-                        resourceTracingSamplingRate: 33,
-                        firstPartyHosts: [
-                            {
-                                match: 'example.com',
-                                propagatorTypes: [
-                                    'B3MULTI',
-                                    'TRACECONTEXT',
-                                    'B3',
-                                    'DATADOG'
-                                ]
-                            }
-                        ]
-                    }
+                    applicationId: 'fake-app-id',
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    trackInteractions: true,
+                    trackResources: true,
+                    trackErrors: true,
+                    trackingConsent: 'NOT_GRANTED',
+                    longTaskThresholdMs: 44,
+                    site: 'US5',
+                    verbosity: 'WARN',
+                    actionNameAttribute: 'action-name-attr',
+                    useAccessibilityLabel: false,
+                    resourceTracingSamplingRate: 33,
+                    firstPartyHosts: [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: [
+                                'B3MULTI',
+                                'TRACECONTEXT',
+                                'B3',
+                                'DATADOG'
+                            ]
+                        }
+                    ]
                 }
             });
             expect(config).toMatchInlineSnapshot(`
@@ -90,6 +155,7 @@ describe('FileBasedConfiguration', () => {
                   "trackErrors": true,
                   "trackFrustrations": true,
                   "trackInteractions": true,
+                  "trackMemoryWarnings": true,
                   "trackResources": true,
                   "trackWatchdogTerminations": false,
                   "trackingConsent": "not_granted",
@@ -103,11 +169,9 @@ describe('FileBasedConfiguration', () => {
         it('applies default values to configuration from a given file path', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    configuration: {
-                        applicationId: 'fake-app-id',
-                        env: 'fake-env',
-                        clientToken: 'fake-client-token'
-                    }
+                    applicationId: 'fake-app-id',
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token'
                 }
             });
             expect(config).toMatchInlineSnapshot(`
@@ -143,6 +207,7 @@ describe('FileBasedConfiguration', () => {
                   "trackErrors": false,
                   "trackFrustrations": true,
                   "trackInteractions": false,
+                  "trackMemoryWarnings": true,
                   "trackResources": false,
                   "trackWatchdogTerminations": false,
                   "trackingConsent": "granted",
@@ -159,11 +224,9 @@ describe('FileBasedConfiguration', () => {
             const resourceEventMapper = () => null;
             const config = new FileBasedConfiguration({
                 configuration: {
-                    configuration: {
-                        applicationId: 'fake-app-id',
-                        env: 'fake-env',
-                        clientToken: 'fake-client-token'
-                    }
+                    applicationId: 'fake-app-id',
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token'
                 },
                 actionEventMapper,
                 errorEventMapper,
@@ -188,60 +251,18 @@ describe('FileBasedConfiguration', () => {
         it('prints a warning message when the first party hosts contain unknown propagator types', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    configuration: {
-                        applicationId: 'fake-app-id',
-                        env: 'fake-env',
-                        clientToken: 'fake-client-token',
-                        firstPartyHosts: [
-                            {
-                                match: 'example.com',
-                                propagatorTypes: ['UNKNOWN']
-                            }
-                        ]
-                    }
+                    applicationId: 'fake-app-id',
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    firstPartyHosts: [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: ['UNKNOWN']
+                        }
+                    ]
                 }
             });
             expect(config.firstPartyHosts).toHaveLength(0);
-        });
-    });
-    describe('with resolved file configuration', () => {
-        it('resolves configuration fields', () => {
-            const configuration = getJSONConfiguration(configurationAllFields);
-
-            expect(configuration).toMatchInlineSnapshot(`
-                {
-                  "actionNameAttribute": "action-name-attr",
-                  "applicationId": "fake-app-id",
-                  "clientToken": "fake-client-token",
-                  "env": "fake-env",
-                  "firstPartyHosts": [
-                    {
-                      "match": "example.com",
-                      "propagatorTypes": [
-                        "b3multi",
-                        "tracecontext",
-                      ],
-                    },
-                  ],
-                  "longTaskThresholdMs": 44,
-                  "resourceTracingSamplingRate": 33,
-                  "site": "US5",
-                  "trackErrors": true,
-                  "trackInteractions": true,
-                  "trackResources": true,
-                  "trackingConsent": "not_granted",
-                  "useAccessibilityLabel": false,
-                  "verbosity": "warn",
-                }
-            `);
-        });
-        it('prints a warning message when the configuration file is not found', () => {
-            expect(() => getJSONConfiguration(undefined)).not.toThrow();
-        });
-        it('prints a warning message when the configuration file cannot be parsed correctly', () => {
-            expect(() =>
-                getJSONConfiguration(malformedConfiguration)
-            ).not.toThrow();
         });
     });
 

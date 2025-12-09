@@ -9,6 +9,7 @@ import { DdAttributes } from '../DdAttributes';
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeRumType } from '../nativeModulesTypes';
+import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
@@ -282,6 +283,50 @@ class DdRumWrapper implements DdRumType {
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() => this.nativeRum.addTiming(name));
+    };
+
+    addViewAttribute = (key: string, value: unknown): Promise<void> => {
+        InternalLog.log(
+            `Adding view attribute “${key}" with value “${JSON.stringify(
+                value
+            )}” to RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addViewAttribute(key, { value })
+        );
+    };
+
+    removeViewAttribute = (key: string): Promise<void> => {
+        InternalLog.log(
+            `Removing view attribute “${key}" from RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.removeViewAttribute(key)
+        );
+    };
+
+    addViewAttributes = (attributes: Attributes): Promise<void> => {
+        InternalLog.log(
+            `Adding view attributes "${JSON.stringify(
+                attributes
+            )}” to RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addViewAttributes(attributes)
+        );
+    };
+
+    removeViewAttributes = (keys: string[]): Promise<void> => {
+        InternalLog.log(
+            `Removing view attributes “${keys}" from RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.removeViewAttributes(keys)
+        );
     };
 
     addViewLoadingTime = (overwrite: boolean): Promise<void> => {

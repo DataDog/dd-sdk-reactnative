@@ -36,7 +36,16 @@ module.exports = {
         clearUserInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
-        setAttributes: jest
+        addAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttributes: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         setTrackingConsent: jest
@@ -108,6 +117,18 @@ module.exports = {
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         addTiming: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttributes: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         addViewLoadingTime: jest

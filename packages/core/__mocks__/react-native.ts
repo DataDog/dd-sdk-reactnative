@@ -27,9 +27,18 @@ actualRN.NativeModules.DdSdk = {
     clearUserInfo: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['clearUserInfo']>,
-    setAttributes: jest.fn().mockImplementation(
+    addAttribute: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdNativeSdkType['setAttributes']>,
+    ) as jest.MockedFunction<DdNativeSdkType['addAttribute']>,
+    removeAttribute: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['removeAttribute']>,
+    addAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['addAttributes']>,
+    removeAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['removeAttributes']>,
     setTrackingConsent: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['setTrackingConsent']>,
@@ -123,6 +132,18 @@ actualRN.NativeModules.DdRum = {
     addTiming: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['addTiming']>,
+    addViewAttribute: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['addViewAttribute']>,
+    removeViewAttribute: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['removeViewAttribute']>,
+    addViewAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['addViewAttributes']>,
+    removeViewAttributes: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['removeViewAttributes']>,
     addViewLoadingTime: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['addViewLoadingTime']>,
