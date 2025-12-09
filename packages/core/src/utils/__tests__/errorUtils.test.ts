@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { getErrorName } from '../errorUtils';
+import { getErrorName } from '../../sdk/AttributesEncoding/errorUtils';
 
 describe('errorUtils', () => {
     describe('getErrorName', () => {

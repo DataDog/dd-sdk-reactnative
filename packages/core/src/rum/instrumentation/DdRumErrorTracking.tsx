@@ -8,15 +8,15 @@ import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { ErrorSource } from '../../types';
+import { errorEncoder } from '../../sdk/AttributesEncoding/defaultEncoders';
 import {
+    ERROR_DEFAULT_NAME,
+    ERROR_EMPTY_STACKTRACE,
     getErrorMessage,
-    getErrorStackTrace,
-    EMPTY_STACK_TRACE,
     getErrorName,
-    DEFAULT_ERROR_NAME,
-    getErrorContext
-} from '../../utils/errorUtils';
+    getErrorStackTrace
+} from '../../sdk/AttributesEncoding/errorUtils';
+import { ErrorSource } from '../../types';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
 
@@ -72,7 +72,7 @@ export class DdRumErrorTracking {
         const stacktrace = getErrorStackTrace(error);
         this.reportError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
-            '_dd.error.raw': error
+            '_dd.error.raw': errorEncoder.encode(error)
         }).then(async () => {
             DdRumErrorTracking.isInDefaultErrorHandler = true;
             try {
@@ -96,24 +96,24 @@ export class DdRumErrorTracking {
             return;
         }
 
-        let stack: string = EMPTY_STACK_TRACE;
-        let errorName: string = DEFAULT_ERROR_NAME;
+        let stack: string = ERROR_EMPTY_STACKTRACE;
+        let errorName: string = ERROR_DEFAULT_NAME;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
 
             const paramStack = getErrorStackTrace(param);
-            if (paramStack !== EMPTY_STACK_TRACE) {
+            if (paramStack !== ERROR_EMPTY_STACKTRACE) {
                 stack = paramStack;
             }
 
             const paramErrorName = getErrorName(param);
-            if (paramErrorName !== DEFAULT_ERROR_NAME) {
+            if (paramErrorName !== ERROR_DEFAULT_NAME) {
                 errorName = paramErrorName;
             }
 
             if (
-                errorName !== DEFAULT_ERROR_NAME &&
-                stack !== EMPTY_STACK_TRACE
+                errorName !== ERROR_DEFAULT_NAME &&
+                stack !== ERROR_EMPTY_STACKTRACE
             ) {
                 break;
             }
@@ -140,11 +140,6 @@ export class DdRumErrorTracking {
         stacktrace: string,
         context: object = {}
     ): Promise<void> => {
-        return DdRum.addError(
-            message,
-            source,
-            stacktrace,
-            getErrorContext(context)
-        );
+        return DdRum.addError(message, source, stacktrace, context);
     };
 }

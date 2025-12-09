@@ -62,7 +62,7 @@ function randomInt(max: number): number {
 
 const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
-let xhrProxy;
+let xhrProxy: any;
 
 const hexToDecimal = (hex: string): string => {
     return BigInt(hex, 16).toString(10);
@@ -76,6 +76,9 @@ beforeEach(() => {
     xhrProxy = new XHRProxy({
         xhrType: XMLHttpRequestMock,
         resourceReporter: new ResourceReporter([])
+    } as {
+        xhrType: typeof XMLHttpRequest;
+        resourceReporter: ResourceReporter;
     });
 
     // we need this because with ms precision between Date.now() calls we can get 0, so we advance
@@ -236,17 +239,19 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const spanId = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
+            const spanId = xhr.requestHeaders.get(PARENT_ID_HEADER_KEY);
             expect(spanId).toBeDefined();
             expect(spanId).toMatch(/[1-9].+/);
-            const traceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+            const traceId = xhr.requestHeaders.get(TRACE_ID_HEADER_KEY);
             expect(traceId).toBeDefined();
             expect(traceId).toMatch(/[1-9].+/);
 
             expect(traceId !== spanId).toBeTruthy();
 
-            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+            expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
+                '1'
+            );
+            expect(xhr.requestHeaders.get(ORIGIN_HEADER_KEY)).toBe(ORIGIN_RUM);
         });
 
         it('does not generate spanId and traceId in request headers when no first party hosts are provided', async () => {
@@ -267,8 +272,10 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
-            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(TRACE_ID_HEADER_KEY)).toBeUndefined();
+            expect(
+                xhr.requestHeaders.get(PARENT_ID_HEADER_KEY)
+            ).toBeUndefined();
         });
 
         it('does not generate spanId and traceId in request headers when the url does not match first party hosts', async () => {
@@ -298,8 +305,10 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
-            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(TRACE_ID_HEADER_KEY)).toBeUndefined();
+            expect(
+                xhr.requestHeaders.get(PARENT_ID_HEADER_KEY)
+            ).toBeUndefined();
         });
 
         it('does not crash when provided URL is not a valid one', async () => {
@@ -325,8 +334,10 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).toBeUndefined();
-            expect(xhr.requestHeaders[PARENT_ID_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(TRACE_ID_HEADER_KEY)).toBeUndefined();
+            expect(
+                xhr.requestHeaders.get(PARENT_ID_HEADER_KEY)
+            ).toBeUndefined();
         });
 
         it('generates spanId and traceId with 0 sampling priority in request headers when trace is not sampled', async () => {
@@ -352,12 +363,16 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
             expect(
-                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+                xhr.requestHeaders.get(TRACE_ID_HEADER_KEY)
             ).not.toBeUndefined();
-            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('0');
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+            expect(
+                xhr.requestHeaders.get(PARENT_ID_HEADER_KEY)
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
+                '0'
+            );
+            expect(xhr.requestHeaders.get(ORIGIN_HEADER_KEY)).toBe(ORIGIN_RUM);
         });
 
         it('does not origin as RUM in the request headers when startTracking() + XHR.open() + XHR.send()', async () => {
@@ -378,7 +393,7 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(ORIGIN_HEADER_KEY)).toBeUndefined();
         });
 
         it('forces the agent to keep the request generated trace when startTracking() + XHR.open() + XHR.send()', async () => {
@@ -404,7 +419,9 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
+                '1'
+            );
         });
 
         it('forces the agent to discard the request generated trace when startTracking when the request is not traced', async () => {
@@ -430,7 +447,9 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('0');
+            expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
+                '0'
+            );
         });
 
         it('adds tracecontext request headers when the host is instrumented with tracecontext and request is sampled', async () => {
@@ -460,14 +479,16 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
+            const contextHeader = xhr.requestHeaders.get(
+                TRACECONTEXT_HEADER_KEY
+            );
             expect(contextHeader).toMatch(
                 /^00-[0-9a-f]{8}[0]{8}[0-9a-f]{16}-[0-9a-f]{16}-01$/
             );
 
             // Parent value of the context header is the 3rd part of it
-            const parentValue = contextHeader.split('-')[2];
-            const stateHeader = xhr.requestHeaders[TRACESTATE_HEADER_KEY];
+            const parentValue = contextHeader?.split('-')[2];
+            const stateHeader = xhr.requestHeaders.get(TRACESTATE_HEADER_KEY);
             expect(stateHeader).toBe(`dd=s:1;o:rum;p:${parentValue}`);
         });
 
@@ -510,15 +531,19 @@ describe('XHRProxy', () => {
             /* =================================================================================
              *  Verify that the trace id in the traceparent header is a 128 bit trace ID (hex).
              * ================================================================================= */
-            const traceparentHeader =
-                xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
-            const traceparentTraceId = traceparentHeader.split('-')[1];
+            const traceparentHeader = xhr.requestHeaders.get(
+                TRACECONTEXT_HEADER_KEY
+            );
+            const traceparentTraceId = traceparentHeader?.split('-')[1];
 
             expect(traceparentTraceId).toMatch(
                 /^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/
             );
             expect(
-                TracingIdentifierUtils.isWithin128Bits(traceparentTraceId, 16)
+                TracingIdentifierUtils.isWithin128Bits(
+                    traceparentTraceId as string,
+                    16
+                )
             );
 
             /* =========================================================================
@@ -526,18 +551,20 @@ describe('XHRProxy', () => {
              * ========================================================================= */
 
             // x-datadog-trace-id is a decimal representing the low 64 bits of the 128 bits Trace ID
-            const xDatadogTraceId = xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+            const xDatadogTraceId = xhr.requestHeaders.get(TRACE_ID_HEADER_KEY);
 
-            expect(TracingIdentifierUtils.isWithin64Bits(xDatadogTraceId));
+            expect(
+                TracingIdentifierUtils.isWithin64Bits(xDatadogTraceId as string)
+            );
 
             /* ===============================================================
              *  Verify that the trace id in x-datadog-tags headers is HEX 16.
              * =============================================================== */
 
             // x-datadog-tags is a HEX 16 contains the high 64 bits of the 128 bits Trace ID
-            const xDatadogTagsTraceId = xhr.requestHeaders[
-                TAGS_HEADER_KEY
-            ].split('=')[1];
+            const xDatadogTagsTraceId = xhr.requestHeaders
+                ?.get(TAGS_HEADER_KEY)
+                ?.split('=')[1] as string;
 
             expect(xDatadogTagsTraceId).toMatch(/^[a-f0-9]{16}$/);
             expect(
@@ -548,8 +575,8 @@ describe('XHRProxy', () => {
              *  Verify that the trace id in the b3 header is a 128 bit trace ID (hex).
              * ========================================================================= */
 
-            const b3Header = xhr.requestHeaders[B3_HEADER_KEY];
-            const b3TraceId = b3Header.split('-')[0];
+            const b3Header = xhr.requestHeaders.get(B3_HEADER_KEY);
+            const b3TraceId = b3Header?.split('-')[0] as string;
 
             expect(b3TraceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
             expect(TracingIdentifierUtils.isWithin128Bits(b3TraceId, 16));
@@ -558,7 +585,9 @@ describe('XHRProxy', () => {
              *  Verify that the trace id in the X-B3-TraceId header is a 128 bit trace ID (hex).
              * ================================================================================= */
 
-            const xB3TraceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
+            const xB3TraceId = xhr.requestHeaders.get(
+                B3_MULTI_TRACE_ID_HEADER_KEY
+            ) as string;
 
             expect(xB3TraceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
             expect(TracingIdentifierUtils.isWithin128Bits(xB3TraceId, 16));
@@ -601,18 +630,21 @@ describe('XHRProxy', () => {
             // THEN
 
             // x-datadog-trace-id is just the low 64 bits (DECIMAL)
-            const datadogLowTraceValue =
-                xhr.requestHeaders[TRACE_ID_HEADER_KEY];
+            const datadogLowTraceValue = xhr.requestHeaders.get(
+                TRACE_ID_HEADER_KEY
+            );
 
             // We convert the low 64 bits to HEX
-            const datadogLowTraceValueHex = `${BigInt(datadogLowTraceValue)
+            const datadogLowTraceValueHex = `${BigInt(
+                datadogLowTraceValue as string
+            )
                 .toString(16)
                 .padStart(16, '0')}`;
 
             // The high 64 bits are expressed in x-datadog-tags (HEX)
-            const datadogHighTraceValueHex = xhr.requestHeaders[
-                TAGS_HEADER_KEY
-            ].split('=')[1]; // High HEX 64 bits
+            const datadogHighTraceValueHex = xhr.requestHeaders
+                ?.get(TAGS_HEADER_KEY)
+                ?.split('=')[1] as string; // High HEX 64 bits
 
             // We re-compose the full 128 bit trace-id by joining the strings
             const datadogTraceValue128BitHex = `${datadogHighTraceValueHex}${datadogLowTraceValueHex}`;
@@ -622,18 +654,24 @@ describe('XHRProxy', () => {
                 datadogTraceValue128BitHex
             );
 
-            const datadogParentValue = xhr.requestHeaders[PARENT_ID_HEADER_KEY];
-            const contextHeader = xhr.requestHeaders[TRACECONTEXT_HEADER_KEY];
-            const traceContextValue = contextHeader.split('-')[1];
-            const parentContextValue = contextHeader.split('-')[2];
-            const b3MultiTraceHeader =
-                xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
-            const b3MultiParentHeader =
-                xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
+            const datadogParentValue = xhr.requestHeaders.get(
+                PARENT_ID_HEADER_KEY
+            );
+            const contextHeader = xhr.requestHeaders.get(
+                TRACECONTEXT_HEADER_KEY
+            );
+            const traceContextValue = contextHeader?.split('-')[1] as string;
+            const parentContextValue = contextHeader?.split('-')[2] as string;
+            const b3MultiTraceHeader = xhr.requestHeaders.get(
+                B3_MULTI_TRACE_ID_HEADER_KEY
+            ) as string;
+            const b3MultiParentHeader = xhr.requestHeaders.get(
+                B3_MULTI_SPAN_ID_HEADER_KEY
+            ) as string;
 
-            const b3Header = xhr.requestHeaders[B3_HEADER_KEY];
-            const traceB3Value = b3Header.split('-')[0];
-            const parentB3Value = b3Header.split('-')[1];
+            const b3Header = xhr.requestHeaders.get(B3_HEADER_KEY);
+            const traceB3Value = b3Header?.split('-')[0] as string;
+            const parentB3Value = b3Header?.split('-')[1] as string;
 
             expect(hexToDecimal(traceContextValue)).toBe(
                 datadogTraceValue128BitDec
@@ -676,9 +714,11 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const traceId = xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY];
-            const spanId = xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY];
-            const sampled = xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY];
+            const traceId = xhr.requestHeaders.get(
+                B3_MULTI_TRACE_ID_HEADER_KEY
+            );
+            const spanId = xhr.requestHeaders.get(B3_MULTI_SPAN_ID_HEADER_KEY);
+            const sampled = xhr.requestHeaders.get(B3_MULTI_SAMPLED_HEADER_KEY);
             expect(traceId).toMatch(/^[0-9a-f]{8}[0]{8}[0-9a-f]{16}$/);
             expect(spanId).toMatch(/^[0-9a-f]{16}$/);
             expect(sampled).toBe('1');
@@ -711,7 +751,7 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const headerValue = xhr.requestHeaders[B3_HEADER_KEY];
+            const headerValue = xhr.requestHeaders.get(B3_HEADER_KEY);
             expect(headerValue).toMatch(
                 /^[0-9a-f]{8}[0]{8}[0-9a-f]{16}-[0-9a-f]{16}-1$/
             );
@@ -750,23 +790,29 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[B3_HEADER_KEY]).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(B3_HEADER_KEY)).not.toBeUndefined();
             expect(
-                xhr.requestHeaders[B3_MULTI_TRACE_ID_HEADER_KEY]
+                xhr.requestHeaders.get(B3_MULTI_TRACE_ID_HEADER_KEY)
             ).not.toBeUndefined();
             expect(
-                xhr.requestHeaders[B3_MULTI_SPAN_ID_HEADER_KEY]
+                xhr.requestHeaders.get(B3_MULTI_SPAN_ID_HEADER_KEY)
             ).not.toBeUndefined();
-            expect(xhr.requestHeaders[B3_MULTI_SAMPLED_HEADER_KEY]).toBe('1');
+            expect(xhr.requestHeaders.get(B3_MULTI_SAMPLED_HEADER_KEY)).toBe(
+                '1'
+            );
             expect(
-                xhr.requestHeaders[TRACECONTEXT_HEADER_KEY]
+                xhr.requestHeaders.get(TRACECONTEXT_HEADER_KEY)
             ).not.toBeUndefined();
-            expect(xhr.requestHeaders[TRACE_ID_HEADER_KEY]).not.toBeUndefined();
             expect(
-                xhr.requestHeaders[PARENT_ID_HEADER_KEY]
+                xhr.requestHeaders.get(TRACE_ID_HEADER_KEY)
             ).not.toBeUndefined();
-            expect(xhr.requestHeaders[SAMPLING_PRIORITY_HEADER_KEY]).toBe('1');
-            expect(xhr.requestHeaders[ORIGIN_HEADER_KEY]).toBe(ORIGIN_RUM);
+            expect(
+                xhr.requestHeaders.get(PARENT_ID_HEADER_KEY)
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
+                '1'
+            );
+            expect(xhr.requestHeaders.get(ORIGIN_HEADER_KEY)).toBe(ORIGIN_RUM);
         });
 
         it('adds rum session id to baggage headers when available', async () => {
@@ -804,8 +850,10 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBe(
+            expect(
+                xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toBe(
                 'session.id=TEST-SESSION-ID'
             );
         });
@@ -845,7 +893,7 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toBeUndefined();
         });
 
         it('does not add rum session id to baggage headers when propagator type is not datadog or w3c', async () => {
@@ -883,7 +931,7 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toBeUndefined();
         });
 
         it('rum session id does not overwrite existing baggage headers', async () => {
@@ -922,14 +970,17 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).not.toBeUndefined();
-            expect(xhr.requestHeaders[BAGGAGE_HEADER_KEY]).toContain(
+            expect(
+                xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)
+            ).not.toBeUndefined();
+            expect(xhr.requestHeaders.get(BAGGAGE_HEADER_KEY)).toContain(
                 'existing.key=existing-value'
             );
 
-            const values = xhr.requestHeaders[BAGGAGE_HEADER_KEY].split(
-                ','
-            ).sort();
+            const values = xhr.requestHeaders
+                .get(BAGGAGE_HEADER_KEY)
+                ?.split(',')
+                .sort();
 
             expect(values[0]).toBe('existing.key=existing-value');
             expect(values[1]).toBe('session.id=TEST-SESSION-ID');
@@ -1078,27 +1129,39 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const timings =
-                DdNativeRum.stopResource.mock.calls[0][4][
-                    '_dd.resource_timings'
-                ];
+            const timings = DdNativeRum.stopResource.mock.calls[0][4];
 
             if (Platform.OS === 'ios') {
-                expect(timings['firstByte']['startTime']).toBeGreaterThan(0);
+                expect(
+                    timings['_dd.resource_timings.firstByte.startTime']
+                ).toBeGreaterThan(0);
             } else {
-                expect(timings['firstByte']['startTime']).toBe(0);
+                expect(
+                    timings['_dd.resource_timings.firstByte.startTime']
+                ).toBe(0);
             }
-            expect(timings['firstByte']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.firstByte.duration']
+            ).toBeGreaterThan(0);
 
-            expect(timings['download']['startTime']).toBeGreaterThan(0);
-            expect(timings['download']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.download.startTime']
+            ).toBeGreaterThan(0);
+
+            expect(
+                timings['_dd.resource_timings.download.duration']
+            ).toBeGreaterThan(0);
 
             if (Platform.OS === 'ios') {
-                expect(timings['fetch']['startTime']).toBeGreaterThan(0);
+                expect(
+                    timings['_dd.resource_timings.fetch.startTime']
+                ).toBeGreaterThan(0);
             } else {
-                expect(timings['fetch']['startTime']).toBe(0);
+                expect(timings['_dd.resource_timings.fetch.startTime']).toBe(0);
             }
-            expect(timings['fetch']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.fetch.duration']
+            ).toBeGreaterThan(0);
         });
 
         it(`M generate resource timings when startTracking() + XHR.open() + XHR.send() + XHR.abort(), platform=${platform}`, async () => {
@@ -1126,27 +1189,38 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN
-            const timings =
-                DdNativeRum.stopResource.mock.calls[0][4][
-                    '_dd.resource_timings'
-                ];
+            const timings = DdNativeRum.stopResource.mock.calls[0][4];
 
             if (Platform.OS === 'ios') {
-                expect(timings['firstByte']['startTime']).toBeGreaterThan(0);
+                expect(
+                    timings['_dd.resource_timings.firstByte.startTime']
+                ).toBeGreaterThan(0);
             } else {
-                expect(timings['firstByte']['startTime']).toBe(0);
+                expect(
+                    timings['_dd.resource_timings.firstByte.startTime']
+                ).toBe(0);
             }
-            expect(timings['firstByte']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.firstByte.duration']
+            ).toBeGreaterThan(0);
 
-            expect(timings['download']['startTime']).toBeGreaterThan(0);
-            expect(timings['download']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.download.startTime']
+            ).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.download.duration']
+            ).toBeGreaterThan(0);
 
             if (Platform.OS === 'ios') {
-                expect(timings['fetch']['startTime']).toBeGreaterThan(0);
+                expect(
+                    timings['_dd.resource_timings.fetch.startTime']
+                ).toBeGreaterThan(0);
             } else {
-                expect(timings['fetch']['startTime']).toBe(0);
+                expect(timings['_dd.resource_timings.fetch.startTime']).toBe(0);
             }
-            expect(timings['fetch']['duration']).toBeGreaterThan(0);
+            expect(
+                timings['_dd.resource_timings.fetch.duration']
+            ).toBeGreaterThan(0);
         });
     });
 
@@ -1183,7 +1257,7 @@ describe('XHRProxy', () => {
                 firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
             DdRum.registerResourceEventMapper(event => {
-                event.context['body'] = JSON.parse(
+                (event.context as any)['body'] = JSON.parse(
                     event.resourceContext?.response
                 );
                 return event;
@@ -1200,9 +1274,7 @@ describe('XHRProxy', () => {
             // THEN
             const attributes = DdNativeRum.stopResource.mock.calls[0][4];
 
-            expect(attributes['body']).toEqual({
-                body: 'content'
-            });
+            expect(attributes['body.body']).toEqual('content');
         });
     });
 
@@ -1453,13 +1525,13 @@ describe('XHRProxy', () => {
             expect(attributes['_dd.graphql.variables']).toEqual('{}');
 
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_NAME_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_VARIABLES_HEADER)
             ).not.toBeDefined();
         });
 
@@ -1491,13 +1563,13 @@ describe('XHRProxy', () => {
             expect(attributes['_dd.graphql.variables']).not.toBeDefined();
 
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_NAME_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_VARIABLES_HEADER)
             ).not.toBeDefined();
         });
 
@@ -1530,13 +1602,13 @@ describe('XHRProxy', () => {
             expect(attributes['_dd.graphql.variables']).not.toBeDefined();
 
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_OPERATION_NAME_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_OPERATION_NAME_HEADER)
             ).not.toBeDefined();
             expect(
-                xhr.requestHeaders[DATADOG_GRAPH_QL_VARIABLES_HEADER]
+                xhr.requestHeaders.get(DATADOG_GRAPH_QL_VARIABLES_HEADER)
             ).not.toBeDefined();
         });
 
@@ -1549,16 +1621,16 @@ describe('XHRProxy', () => {
                 firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
             });
             DdRum.registerResourceEventMapper(event => {
-                if (event.context['_dd.graphql.variables']) {
+                if ((event.context as any)['_dd.graphql.variables']) {
                     const variables = JSON.parse(
-                        event.context['_dd.graphql.variables']
+                        (event.context as any)['_dd.graphql.variables']
                     );
                     if (variables.password) {
                         variables.password = '***';
                     }
-                    event.context['_dd.graphql.variables'] = JSON.stringify(
-                        variables
-                    );
+                    (event.context as any)[
+                        '_dd.graphql.variables'
+                    ] = JSON.stringify(variables);
                 }
 
                 return event;

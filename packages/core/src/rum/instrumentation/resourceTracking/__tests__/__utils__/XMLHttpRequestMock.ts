@@ -12,7 +12,7 @@ export class XMLHttpRequestMock implements XMLHttpRequest {
     static readonly DONE = 4;
 
     public response: any;
-    public responseType: XMLHttpRequestResponseType;
+    public responseType: XMLHttpRequestResponseType = '';
     public status: number = 0;
     public readyState: number = XMLHttpRequestMock.UNSENT;
     public requestHeaders: Map<string, string> = new Map();
@@ -20,29 +20,50 @@ export class XMLHttpRequestMock implements XMLHttpRequest {
 
     // eslint-disable-next-line no-empty-function
     constructor() {}
-    responseText: string;
-    responseURL: string;
-    responseXML: Document;
-    statusText: string;
-    timeout: number;
-    upload: XMLHttpRequestUpload;
-    withCredentials: boolean;
+    responseText: string = '';
+    responseURL: string = '';
+    responseXML: Document = {} as Document;
+    statusText: string = '';
+    timeout: number = -1;
+    upload: XMLHttpRequestUpload = {} as XMLHttpRequestUpload;
+    withCredentials: boolean = false;
     getAllResponseHeaders = jest.fn();
     overrideMimeType = jest.fn();
-    DONE: number;
-    HEADERS_RECEIVED: number;
-    LOADING: number;
-    OPENED: number;
-    UNSENT: number;
+    DONE = 4 as const;
+    HEADERS_RECEIVED = 2 as const;
+    LOADING = 3 as const;
+    OPENED = 1 as const;
+    UNSENT = 0 as const;
     addEventListener = jest.fn();
     removeEventListener = jest.fn();
-    onabort: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    onerror: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    onload: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    onloadend: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    onloadstart: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    onprogress: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
-    ontimeout: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => any;
+    onabort: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    onerror: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    onload: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    onloadend: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    onloadstart: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    onprogress: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
+    ontimeout: (
+        this: XMLHttpRequest,
+        ev: ProgressEvent<EventTarget>
+    ) => any = ev => {};
     dispatchEvent(event: Event): boolean {
         throw new Error('Method not implemented.');
     }
@@ -85,14 +106,14 @@ export class XMLHttpRequestMock implements XMLHttpRequest {
     }
 
     setRequestHeader(header: string, value: string): void {
-        this.requestHeaders[header] = value;
+        this.requestHeaders.set(header, value);
     }
 
     setResponseHeader(header: string, value: string): void {
-        this.responseHeaders[header] = value;
+        this.responseHeaders.set(header, value);
     }
 
     getResponseHeader(header: string): string | null {
-        return this.responseHeaders[header];
+        return this.responseHeaders.get(header) ?? null;
     }
 }

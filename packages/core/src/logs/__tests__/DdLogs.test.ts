@@ -12,7 +12,7 @@ import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import type { DdNativeLogsType } from '../../nativeModulesTypes';
 import { ErrorSource } from '../../types';
-import type { LogEventMapper } from '../../types';
+import type { LogEventMapper, LogEvent } from '../../types';
 import { DdLogs } from '../DdLogs';
 
 jest.mock('../../InternalLog', () => {
@@ -38,7 +38,7 @@ describe('DdLogs', () => {
                     context: { newContext: 'context' },
                     status: 'info',
                     userInfo: {}
-                };
+                } as LogEvent;
             };
             DdLogs.registerLogEventMapper(logEventMapper);
 
@@ -506,7 +506,7 @@ describe('DdLogs', () => {
             it('native context is an object with nested property W context is an array', async () => {
                 await DdLogs.debug('message', [1, 2, 3]);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -516,12 +516,12 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.debug('message', obj);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
                 expect(NativeModules.DdLogs.debug).toHaveBeenCalledWith(
                     'message',
@@ -549,7 +549,7 @@ describe('DdLogs', () => {
             it('native context is an object with nested property W context is an array', async () => {
                 await DdLogs.warn('message', [1, 2, 3]);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -559,12 +559,12 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.warn('message', obj);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
                 expect(NativeModules.DdLogs.warn).toHaveBeenCalledWith(
                     'message',
@@ -592,7 +592,7 @@ describe('DdLogs', () => {
             it('native context is an object with nested property W context is an array', async () => {
                 await DdLogs.info('message', [1, 2, 3]);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -602,12 +602,12 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.info('message', obj);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
                 expect(NativeModules.DdLogs.info).toHaveBeenCalledWith(
                     'message',
@@ -635,7 +635,7 @@ describe('DdLogs', () => {
             it('native context is an object with nested property W context is an array', async () => {
                 await DdLogs.error('message', [1, 2, 3]);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -645,12 +645,12 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.error('message', obj);
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
                 expect(NativeModules.DdLogs.error).toHaveBeenCalledWith(
                     'message',
@@ -701,7 +701,7 @@ describe('DdLogs', () => {
                 ]);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -721,7 +721,7 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.debug(
                     'message',
                     'kind',
@@ -731,9 +731,9 @@ describe('DdLogs', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(
@@ -791,7 +791,7 @@ describe('DdLogs', () => {
                 ]);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -809,7 +809,7 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.warn(
                     'message',
                     'kind',
@@ -819,9 +819,9 @@ describe('DdLogs', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(
@@ -879,7 +879,7 @@ describe('DdLogs', () => {
                 ]);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -897,7 +897,7 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.info(
                     'message',
                     'kind',
@@ -907,9 +907,9 @@ describe('DdLogs', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(
@@ -967,7 +967,7 @@ describe('DdLogs', () => {
                 ]);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -987,7 +987,7 @@ describe('DdLogs', () => {
             });
 
             it('native context is empty W context is raw type', async () => {
-                const obj: any = 123;
+                const obj: any = Symbol('invalid-context');
                 await DdLogs.error(
                     'message',
                     'kind',
@@ -997,9 +997,9 @@ describe('DdLogs', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(

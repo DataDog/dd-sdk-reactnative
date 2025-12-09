@@ -19,7 +19,7 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/interaction
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
-import { DdSdk } from '../sdk/DdSdk';
+import { NativeDdSdk } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import { ErrorSource } from '../types';
@@ -428,7 +428,9 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(
-                ddSdkConfiguration.additionalConfiguration['_dd.version']
+                (ddSdkConfiguration.additionalConfiguration as {
+                    '_dd.version': string;
+                })['_dd.version']
             ).toBe('2.0.0');
         });
 
@@ -451,10 +453,14 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(
-                ddSdkConfiguration.additionalConfiguration['_dd.version']
+                (ddSdkConfiguration.additionalConfiguration as {
+                    '_dd.version': string;
+                })['_dd.version']
             ).toBeUndefined();
             expect(
-                ddSdkConfiguration.additionalConfiguration['_dd.version_suffix']
+                (ddSdkConfiguration.additionalConfiguration as {
+                    '_dd.version_suffix': string;
+                })['_dd.version_suffix']
             ).toBe('-codepush-3');
         });
 
@@ -478,10 +484,14 @@ describe('DdSdkReactNative', () => {
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkConfiguration;
             expect(
-                ddSdkConfiguration.additionalConfiguration['_dd.version']
+                (ddSdkConfiguration.additionalConfiguration as {
+                    '_dd.version': string;
+                })['_dd.version']
             ).toBe('2.0.0-codepush-3');
             expect(
-                ddSdkConfiguration.additionalConfiguration['_dd.version_suffix']
+                (ddSdkConfiguration.additionalConfiguration as {
+                    '_dd.version_suffix': string;
+                })['_dd.version_suffix']
             ).toBeUndefined();
         });
 
@@ -1056,8 +1066,10 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttribute(key, value);
 
             // THEN
-            expect(DdSdk.addAttribute).toHaveBeenCalledTimes(1);
-            expect(DdSdk.addAttribute).toHaveBeenCalledWith(key, { value });
+            expect(NativeDdSdk.addAttribute).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.addAttribute).toHaveBeenCalledWith(key, {
+                value
+            });
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
                 value
             );
@@ -1075,8 +1087,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttribute(key);
 
             // THEN
-            expect(DdSdk.removeAttribute).toHaveBeenCalledTimes(1);
-            expect(DdSdk.removeAttribute).toHaveBeenCalledWith(key);
+            expect(NativeDdSdk.removeAttribute).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.removeAttribute).toHaveBeenCalledWith(key);
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
                 undefined
             );
@@ -1093,8 +1105,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttributes(attributes);
 
             // THEN
-            expect(DdSdk.addAttributes).toHaveBeenCalledTimes(1);
-            expect(DdSdk.addAttributes).toHaveBeenCalledWith(attributes);
+            expect(NativeDdSdk.addAttributes).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.addAttributes).toHaveBeenCalledWith(attributes);
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
                 foo: 'bar'
             });
@@ -1111,8 +1123,11 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttributes(['foo', 'baz']);
 
             // THEN
-            expect(DdSdk.removeAttributes).toHaveBeenCalledTimes(1);
-            expect(DdSdk.removeAttributes).toHaveBeenCalledWith(['foo', 'baz']);
+            expect(NativeDdSdk.removeAttributes).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.removeAttributes).toHaveBeenCalledWith([
+                'foo',
+                'baz'
+            ]);
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual(
                 {}
             );
@@ -1135,8 +1150,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.setUserInfo(userInfo);
 
             // THEN
-            expect(DdSdk.setUserInfo).toHaveBeenCalledTimes(1);
-            expect(DdSdk.setUserInfo).toHaveBeenCalledWith(userInfo);
+            expect(NativeDdSdk.setUserInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.setUserInfo).toHaveBeenCalledWith(userInfo);
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
                 userInfo
             );
@@ -1156,8 +1171,10 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(DdSdk.addUserExtraInfo).toHaveBeenCalledTimes(1);
-            expect(DdSdk.addUserExtraInfo).toHaveBeenCalledWith(extraInfo);
+            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledWith(
+                extraInfo
+            );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
                 id: 'id',
                 extraInfo: {
@@ -1186,8 +1203,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.clearUserInfo();
 
             // THEN
-            expect(DdSdk.clearUserInfo).toHaveBeenCalledTimes(1);
-            expect(DdSdk.setUserInfo).toHaveBeenCalled();
+            expect(NativeDdSdk.clearUserInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.setUserInfo).toHaveBeenCalled();
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
                 undefined
             );
@@ -1204,8 +1221,10 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.setTrackingConsent(consent);
 
             // THEN
-            expect(DdSdk.setTrackingConsent).toHaveBeenCalledTimes(1);
-            expect(DdSdk.setTrackingConsent).toHaveBeenCalledWith(consent);
+            expect(NativeDdSdk.setTrackingConsent).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.setTrackingConsent).toHaveBeenCalledWith(
+                consent
+            );
         });
     });
 
@@ -1215,7 +1234,7 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.clearAllData();
 
             // THEN
-            expect(DdSdk.clearAllData).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdk.clearAllData).toHaveBeenCalledTimes(1);
         });
     });
 
