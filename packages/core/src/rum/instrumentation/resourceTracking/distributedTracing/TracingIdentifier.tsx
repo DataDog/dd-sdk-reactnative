@@ -135,11 +135,24 @@ export class TracingIdentifier {
     }
 
     /**
+     * Crate a Tracing Identifier from a given BigInt ID and type.
+     * @param id the BigInt ID.
+     * @param type the type of tracing identifier.
+     * @returns the generated {@link TraceId} or {@link SpanId}.
+     */
+    public static fromBigInt(
+        id: BigInteger,
+        type: TracingIdType
+    ): TraceId | SpanId {
+        return new TracingIdentifier(type, id) as TraceId | SpanId;
+    }
+
+    /**
      * Private constructor to initialize the {@link TracingIdentifier} based on the given
      * {@link TracingIdType}.
      */
-    private constructor(type: TracingIdType) {
-        this.id = this.generateUUID(type);
+    private constructor(type: TracingIdType, id?: BigInt.BigInteger) {
+        this.id = id ?? this.generateUUID(type);
         this.type = type;
     }
 
