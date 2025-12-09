@@ -37,6 +37,18 @@ const createCodepushPackageMock = label => ({
 describe('AppCenter Codepush integration', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        const _globalThis = (globalThis as unknown) as Record<
+            PropertyKey,
+            unknown
+        >;
+        const providerState = _globalThis[
+            Symbol.for('com.datadog.reactnative.rum.datadog_provider_state')
+        ] as
+            | {
+                  _reset: () => void;
+              }
+            | undefined;
+        providerState?._reset();
     });
 
     describe('initialize', () => {
