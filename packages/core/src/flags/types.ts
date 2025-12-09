@@ -68,21 +68,19 @@ export type DatadogFlagsConfiguration = {
     /**
      * Custom server URL for retrieving flag assignments.
      *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/precompute-assignments'.
+     *
      * If not set, the SDK uses the default Datadog Flags endpoint for the configured site.
      *
      * @default undefined
      */
     customFlagsEndpoint?: string;
     /**
-     * Additional HTTP headers to attach to requests made to `customFlagsEndpoint`.
-     *
-     * Useful for authentication or routing when using your own Flags service. Ignored when using the default Datadog endpoint.
-     *
-     * @default undefined
-     */
-    customFlagsHeaders?: Record<string, string>;
-    /**
      * Custom server URL for sending Flags exposure data.
+     *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/api/v2/exposures'.
      *
      * If not set, the SDK uses the default Datadog Flags exposure endpoint.
      *
@@ -145,6 +143,8 @@ export interface EvaluationContext {
      * Attributes can include user properties, session data, or any other contextual information
      * needed for flag evaluation rules.
      */
+
+    // TODO: This should be a map of string to string because Android doesn't support other types
     attributes: Record<string, unknown>;
 }
 
@@ -158,6 +158,7 @@ export type ObjectValue = { [key: string]: unknown };
 export type FlagEvaluationError =
     | 'PROVIDER_NOT_READY'
     | 'FLAG_NOT_FOUND'
+    | 'PARSE_ERROR'
     | 'TYPE_MISMATCH';
 
 /**

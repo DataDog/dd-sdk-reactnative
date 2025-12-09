@@ -17,7 +17,7 @@
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(enable,
-                 withConfiguration:(NSDictionary *)configuration
+                 enableDdFlagsWithConfiguration:(NSDictionary *)configuration
                  withResolve:(RCTPromiseResolveBlock)resolve
                  withReject:(RCTPromiseRejectBlock)reject)
 {
@@ -25,7 +25,7 @@ RCT_REMAP_METHOD(enable,
 }
 
 RCT_REMAP_METHOD(setEvaluationContext,
-                 withClientName:(NSString *)clientName
+                 setEvaluationContextWithClientName:(NSString *)clientName
                  withTargetingKey:(NSString *)targetingKey
                  withAttributes:(NSDictionary *)attributes
                  withResolve:(RCTPromiseResolveBlock)resolve

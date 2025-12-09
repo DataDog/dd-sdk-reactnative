@@ -52,17 +52,21 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
      * @param configuration Configuration options for the Datadog Flags feature.
      */
     enable = async (
-        configuration?: Omit<DatadogFlagsConfiguration, 'enabled'>
+        configuration?: DatadogFlagsConfiguration
     ): Promise<void> => {
+        if (configuration?.enabled === false) {
+            return;
+        }
+
         if (this.isFeatureEnabled) {
             InternalLog.log(
                 'Datadog Flags feature has already been enabled. Skipping this `DatadogFlags.enable()` call.',
                 SdkVerbosity.WARN
             );
-            return;
         }
 
-        await this.nativeFlags.enable({ ...configuration, enabled: true });
+        // Default `enabled` to `true`.
+        await this.nativeFlags.enable({ enabled: true, ...configuration });
 
         this.isFeatureEnabled = true;
     };
