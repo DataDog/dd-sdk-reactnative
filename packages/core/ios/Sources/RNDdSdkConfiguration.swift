@@ -5,8 +5,8 @@
  */
 
 import DatadogCore
-import DatadogRUM
 import DatadogInternal
+import DatadogRUM
 import Foundation
 
 extension NSDictionary {
@@ -47,7 +47,7 @@ extension NSDictionary {
         // MARK: - RUM configuration
 
         let rumConfigurationDict = self["rumConfiguration"] as? NSDictionary
-        let rumConfiguration: RUMConfiguration?
+        let rumConfiguration: RumConfiguration?
 
         if let rumDict = rumConfigurationDict {
             let applicationId = (rumDict["applicationId"] as? String) ?? ""
@@ -69,20 +69,26 @@ extension NSDictionary {
             let telemetrySampleRate = rumDict["telemetrySampleRate"] as? Double
             let customEndpoint = rumDict["customEndpoint"] as? String
 
-            rumConfiguration = RUMConfiguration(
+            rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
                 trackFrustrations: trackFrustrations ?? DefaultConfiguration.trackFrustrations,
-                longTaskThresholdMs: longTaskThresholdMs ?? DefaultConfiguration.longTaskThresholdMs,
+                longTaskThresholdMs: longTaskThresholdMs
+                    ?? DefaultConfiguration.longTaskThresholdMs,
                 sessionSampleRate: sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate,
                 vitalsUpdateFrequency: vitalsUpdateFrequency,
-                trackBackgroundEvents: trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
+                trackBackgroundEvents: trackBackgroundEvents
+                    ?? DefaultConfiguration.trackBackgroundEvents,
                 nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
-                nativeInteractionTracking: nativeInteractionTracking ?? DefaultConfiguration.nativeInteractionTracking,
+                nativeInteractionTracking: nativeInteractionTracking
+                    ?? DefaultConfiguration.nativeInteractionTracking,
                 appHangThreshold: appHangThreshold,
-                trackWatchdogTerminations: trackWatchdogTerminations ?? DefaultConfiguration.trackWatchdogTerminations,
+                trackWatchdogTerminations: trackWatchdogTerminations
+                    ?? DefaultConfiguration.trackWatchdogTerminations,
                 initialResourceThreshold: initialResourceThreshold,
-                trackMemoryWarnings: trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings,
-                telemetrySampleRate: telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate,
+                trackMemoryWarnings: trackMemoryWarnings
+                    ?? DefaultConfiguration.trackMemoryWarnings,
+                telemetrySampleRate: telemetrySampleRate
+                    ?? DefaultConfiguration.telemetrySampleRate,
                 customEndpoint: customEndpoint
             )
         } else {
@@ -101,7 +107,8 @@ extension NSDictionary {
 
             logsConfiguration = LogsConfiguration(
                 bundleLogsWithRum: bundleLogsWithRum ?? DefaultConfiguration.bundleLogsWithRum,
-                bundleLogsWithTraces: bundleLogsWithTraces ?? DefaultConfiguration.bundleLogsWithTraces,
+                bundleLogsWithTraces: bundleLogsWithTraces
+                    ?? DefaultConfiguration.bundleLogsWithTraces,
                 customEndpoint: customEndpoint
             )
         } else {
@@ -118,7 +125,8 @@ extension NSDictionary {
             let customEndpoint = traceDict["customEndpoint"] as? String
 
             traceConfiguration = TraceConfiguration(
-                resourceTraceSampleRate: resourceTraceSampleRate ?? DefaultConfiguration.resourceTraceSampleRate,
+                resourceTraceSampleRate: resourceTraceSampleRate
+                    ?? DefaultConfiguration.resourceTraceSampleRate,
                 customEndpoint: customEndpoint
             )
         } else {
@@ -137,8 +145,10 @@ extension NSDictionary {
             site: site,
             service: service,
             verbosity: verbosity,
-            nativeCrashReportEnabled: nativeCrashReportEnabled ?? DefaultConfiguration.nativeCrashReportEnabled,
-            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs ?? DefaultConfiguration.nativeLongTaskThresholdMs,
+            nativeCrashReportEnabled: nativeCrashReportEnabled
+                ?? DefaultConfiguration.nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
+                ?? DefaultConfiguration.nativeLongTaskThresholdMs,
             trackingConsent: trackingConsent,
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
@@ -169,7 +179,7 @@ extension NSDictionary {
             reactNativeVersion: reactNativeVersion
         )
     }
-    
+
     func asProxyConfiguration() -> [AnyHashable: Any]? {
         guard let address = object(forKey: "address") as? String else {
             return nil
@@ -220,35 +230,40 @@ extension NSArray {
      * iOS config: { "example.com": [DATADOG, B3] }
      */
     func asFirstPartyHosts() -> [String: Set<TracingHeaderType>] {
-        return reduce(into: [:], { firstPartyHosts, h in
-           let host = (h as? NSDictionary)
+        return reduce(
+            into: [:],
+            { firstPartyHosts, h in
+                let host = (h as? NSDictionary)
 
-            if let match = (host?.value(forKey: "match") as? String),
-               let propagatorTypes = (host?.value(forKey: "propagatorTypes") as? NSArray) {
-                if let hostPropagatorTypes = firstPartyHosts[match] {
-                    firstPartyHosts[match] = hostPropagatorTypes.union(propagatorTypes.asTracingHeaderType())
-                } else {
-                    firstPartyHosts[match] = propagatorTypes.asTracingHeaderType()
+                if let match = (host?.value(forKey: "match") as? String),
+                    let propagatorTypes = (host?.value(forKey: "propagatorTypes") as? NSArray)
+                {
+                    if let hostPropagatorTypes = firstPartyHosts[match] {
+                        firstPartyHosts[match] = hostPropagatorTypes.union(
+                            propagatorTypes.asTracingHeaderType())
+                    } else {
+                        firstPartyHosts[match] = propagatorTypes.asTracingHeaderType()
+                    }
                 }
-            }
-        })
+            })
     }
-    
+
     func asTracingHeaderType() -> Set<TracingHeaderType> {
-        return Set(compactMap { headerType in
-            switch((headerType as? String)?.lowercased()) {
-            case "datadog":
-                return TracingHeaderType.datadog
-            case "b3":
-                return TracingHeaderType.b3
-            case "b3multi":
-                return TracingHeaderType.b3multi
-            case "tracecontext":
-                return TracingHeaderType.tracecontext
-            default:
-                return nil
-            }
-        })
+        return Set(
+            compactMap { headerType in
+                switch (headerType as? String)?.lowercased() {
+                case "datadog":
+                    return TracingHeaderType.datadog
+                case "b3":
+                    return TracingHeaderType.b3
+                case "b3multi":
+                    return TracingHeaderType.b3multi
+                case "tracecontext":
+                    return TracingHeaderType.tracecontext
+                default:
+                    return nil
+                }
+            })
     }
 }
 
@@ -272,151 +287,166 @@ internal struct DefaultConfiguration {
 
 extension Dictionary where Key == String, Value == AnyObject {
     func asDdSdkConfigurationFromJSON() throws -> DdSdkConfiguration {
-            guard let configuration = self["configuration"] as? [String: Any?] else {
-                throw ProgrammerError(description: "JSON configuration file is missing top-level \"configuration\" key.")
-            }
+        guard let configuration = self["configuration"] as? [String: Any?] else {
+            throw ProgrammerError(
+                description: "JSON configuration file is missing top-level \"configuration\" key.")
+        }
 
-            let additionalConfiguration: NSDictionary = [
-                  CrossPlatformAttributes.ddsource: "react-native",
-                  CrossPlatformAttributes.sdkVersion: SdkVersion
-            ]
+        let additionalConfiguration: NSDictionary = [
+            CrossPlatformAttributes.ddsource: "react-native",
+            CrossPlatformAttributes.sdkVersion: SdkVersion,
+        ]
 
-            let clientToken = (configuration["clientToken"] as? String) ?? ""
-            let env = (configuration["env"] as? String) ?? ""
+        let clientToken = (configuration["clientToken"] as? String) ?? ""
+        let env = (configuration["env"] as? String) ?? ""
 
-            let siteString = configuration["site"] as? NSString
-            let site = siteString.asSite()
+        let siteString = configuration["site"] as? NSString
+        let site = siteString.asSite()
 
-            let service = configuration["service"] as? NSString
-            let verbosity = configuration["verbosity"] as? NSString
+        let service = configuration["service"] as? NSString
+        let verbosity = configuration["verbosity"] as? NSString
 
-            let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
+        let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
 
-            let nativeLongTaskRaw = configuration["nativeLongTaskThresholdMs"]
-            let nativeLongTaskThresholdMs: Double? = {
-                if let v = nativeLongTaskRaw as? Double { return v }
-                if let v = nativeLongTaskRaw as? Int { return Double(v) }
-                if let v = nativeLongTaskRaw as? Bool, v == false { return 0.0 }
+        let nativeLongTaskRaw = configuration["nativeLongTaskThresholdMs"]
+        let nativeLongTaskThresholdMs: Double? = {
+            if let v = nativeLongTaskRaw as? Double { return v }
+            if let v = nativeLongTaskRaw as? Int { return Double(v) }
+            if let v = nativeLongTaskRaw as? Bool, v == false { return 0.0 }
+            return nil
+        }()
+
+        let trackingConsentString = configuration["trackingConsent"] as? NSString
+        let trackingConsent = trackingConsentString.asTrackingConsent()
+
+        let uploadFrequency = (configuration["uploadFrequency"] as? NSString).asUploadFrequency()
+        let batchSize = (configuration["batchSize"] as? NSString).asBatchSize()
+        let batchProcessingLevel = (configuration["batchProcessingLevel"] as? NSString)
+            .asBatchProcessingLevel()
+
+        let proxyDict = configuration["proxyConfiguration"] as? NSDictionary
+        let proxyConfiguration = proxyDict?.asProxyConfiguration()
+
+        let firstPartyHostsArray = configuration["firstPartyHosts"] as? NSArray
+        let firstPartyHosts =
+            firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
+
+        // MARK: - RUM configuration
+
+        let rumDict = configuration["rumConfiguration"] as? [String: Any?]
+        let rumConfiguration: RumConfiguration?
+
+        if let rum = rumDict,
+            let applicationId = rum["applicationId"] as? String,
+            !applicationId.isEmpty
+        {
+
+            let longTaskRaw = rum["longTaskThresholdMs"]
+            let longTaskThresholdMs: Double? = {
+                if let v = longTaskRaw as? Double { return v }
+                if let v = longTaskRaw as? Int { return Double(v) }
+                if let v = longTaskRaw as? Bool, v == false { return 0.0 }
                 return nil
             }()
 
-            let trackingConsentString = configuration["trackingConsent"] as? NSString
-            let trackingConsent = trackingConsentString.asTrackingConsent()
+            let sessionSampleRate: Double? = {
+                if let v = rum["sessionSampleRate"] as? Double { return v }
+                if let v = rum["sessionSampleRate"] as? Int { return Double(v) }
+                return nil
+            }()
 
-            let uploadFrequency = (configuration["uploadFrequency"] as? NSString).asUploadFrequency()
-            let batchSize = (configuration["batchSize"] as? NSString).asBatchSize()
-            let batchProcessingLevel = (configuration["batchProcessingLevel"] as? NSString).asBatchProcessingLevel()
+            let vitalsUpdateFrequency =
+                (rum["vitalsUpdateFrequency"] as? NSString).asVitalsUpdateFrequency()
 
-            let proxyDict = configuration["proxyConfiguration"] as? NSDictionary
-            let proxyConfiguration = proxyDict?.asProxyConfiguration()
-
-            let firstPartyHostsArray = configuration["firstPartyHosts"] as? NSArray
-            let firstPartyHosts = firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
-
-            // MARK: - RUM configuration
-
-            let rumDict = configuration["rumConfiguration"] as? [String: Any?]
-            let rumConfiguration: RUMConfiguration?
-
-            if let rum = rumDict,
-               let applicationId = rum["applicationId"] as? String,
-               !applicationId.isEmpty {
-
-                let longTaskRaw = rum["longTaskThresholdMs"]
-                let longTaskThresholdMs: Double? = {
-                    if let v = longTaskRaw as? Double { return v }
-                    if let v = longTaskRaw as? Int { return Double(v) }
-                    if let v = longTaskRaw as? Bool, v == false { return 0.0 }
-                    return nil
-                }()
-
-                let sessionSampleRate: Double? = {
-                    if let v = rum["sessionSampleRate"] as? Double { return v }
-                    if let v = rum["sessionSampleRate"] as? Int { return Double(v) }
-                    return nil
-                }()
-
-                let vitalsUpdateFrequency =
-                    (rum["vitalsUpdateFrequency"] as? NSString).asVitalsUpdateFrequency()
-
-                rumConfiguration = RUMConfiguration(
-                    applicationId: applicationId,
-                    trackFrustrations: rum["trackFrustrations"] as? Bool ?? DefaultConfiguration.trackFrustrations,
-                    longTaskThresholdMs: longTaskThresholdMs ?? DefaultConfiguration.longTaskThresholdMs,
-                    sessionSampleRate: sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate,
-                    vitalsUpdateFrequency: vitalsUpdateFrequency,
-                    trackBackgroundEvents: rum["trackBackgroundEvents"] as? Bool ?? DefaultConfiguration.trackBackgroundEvents,
-                    nativeViewTracking: rum["nativeViewTracking"] as? Bool ?? DefaultConfiguration.nativeViewTracking,
-                    nativeInteractionTracking: rum["nativeInteractionTracking"] as? Bool ?? DefaultConfiguration.nativeInteractionTracking,
-                    appHangThreshold: rum["appHangThreshold"] as? Double,
-                    trackWatchdogTerminations: rum["trackWatchdogTerminations"] as? Bool ?? DefaultConfiguration.trackWatchdogTerminations,
-                    initialResourceThreshold: rum["initialResourceThreshold"] as? Double,
-                    trackMemoryWarnings: rum["trackMemoryWarnings"] as? Bool ?? DefaultConfiguration.trackMemoryWarnings,
-                    telemetrySampleRate: (rum["telemetrySampleRate"] as? Double)
-                        ?? DefaultConfiguration.telemetrySampleRate,
-                    customEndpoint: rum["customEndpoint"] as? String
-                )
-            } else {
-                rumConfiguration = nil
-            }
-
-            // MARK: - Logs configuration
-
-            let logsDict = configuration["logsConfiguration"] as? [String: Any?]
-            let logsConfiguration: LogsConfiguration?
-
-            if let logs = logsDict {
-                logsConfiguration = LogsConfiguration(
-                    bundleLogsWithRum: logs["bundleLogsWithRum"] as? Bool ?? DefaultConfiguration.bundleLogsWithRum,
-                    bundleLogsWithTraces: logs["bundleLogsWithTraces"] as? Bool ?? DefaultConfiguration.bundleLogsWithTraces,
-                    customEndpoint: logs["customEndpoint"] as? String
-                )
-            } else {
-                logsConfiguration = nil
-            }
-
-            // MARK: - Trace configuration
-
-            let traceDict = configuration["traceConfiguration"] as? [String: Any?]
-            let traceConfiguration: TraceConfiguration?
-
-            if let trace = traceDict {
-                traceConfiguration = TraceConfiguration(
-                    resourceTraceSampleRate:
-                        trace["resourceTraceSampleRate"] as? Double
-                        ?? DefaultConfiguration.resourceTraceSampleRate,
-                    customEndpoint: trace["customEndpoint"] as? String
-                )
-            } else {
-                traceConfiguration = nil
-            }
-
-            // MARK: - configurationForTelemetry
-
-            let telemetryDict = configuration["configurationForTelemetry"] as? NSDictionary
-            let configurationForTelemetry = telemetryDict?.asConfigurationForTelemetry()
-
-            return DdSdkConfiguration(
-                additionalConfiguration: additionalConfiguration,
-                clientToken: clientToken,
-                env: env,
-                site: site,
-                service: service,
-                verbosity: verbosity,
-                nativeCrashReportEnabled: nativeCrashReportEnabled ?? DefaultConfiguration.nativeCrashReportEnabled,
-                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs ?? DefaultConfiguration.nativeLongTaskThresholdMs,
-                trackingConsent: trackingConsent,
-                uploadFrequency: uploadFrequency,
-                batchSize: batchSize,
-                batchProcessingLevel: batchProcessingLevel,
-                proxyConfiguration: proxyConfiguration,
-                firstPartyHosts: firstPartyHosts,
-                rumConfiguration: rumConfiguration,
-                logsConfiguration: logsConfiguration,
-                traceConfiguration: traceConfiguration,
-                configurationForTelemetry: configurationForTelemetry
+            rumConfiguration = RumConfiguration(
+                applicationId: applicationId,
+                trackFrustrations: rum["trackFrustrations"] as? Bool
+                    ?? DefaultConfiguration.trackFrustrations,
+                longTaskThresholdMs: longTaskThresholdMs
+                    ?? DefaultConfiguration.longTaskThresholdMs,
+                sessionSampleRate: sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate,
+                vitalsUpdateFrequency: vitalsUpdateFrequency,
+                trackBackgroundEvents: rum["trackBackgroundEvents"] as? Bool
+                    ?? DefaultConfiguration.trackBackgroundEvents,
+                nativeViewTracking: rum["nativeViewTracking"] as? Bool
+                    ?? DefaultConfiguration.nativeViewTracking,
+                nativeInteractionTracking: rum["nativeInteractionTracking"] as? Bool
+                    ?? DefaultConfiguration.nativeInteractionTracking,
+                appHangThreshold: rum["appHangThreshold"] as? Double,
+                trackWatchdogTerminations: rum["trackWatchdogTerminations"] as? Bool
+                    ?? DefaultConfiguration.trackWatchdogTerminations,
+                initialResourceThreshold: rum["initialResourceThreshold"] as? Double,
+                trackMemoryWarnings: rum["trackMemoryWarnings"] as? Bool
+                    ?? DefaultConfiguration.trackMemoryWarnings,
+                telemetrySampleRate: (rum["telemetrySampleRate"] as? Double)
+                    ?? DefaultConfiguration.telemetrySampleRate,
+                customEndpoint: rum["customEndpoint"] as? String
             )
+        } else {
+            rumConfiguration = nil
         }
+
+        // MARK: - Logs configuration
+
+        let logsDict = configuration["logsConfiguration"] as? [String: Any?]
+        let logsConfiguration: LogsConfiguration?
+
+        if let logs = logsDict {
+            logsConfiguration = LogsConfiguration(
+                bundleLogsWithRum: logs["bundleLogsWithRum"] as? Bool
+                    ?? DefaultConfiguration.bundleLogsWithRum,
+                bundleLogsWithTraces: logs["bundleLogsWithTraces"] as? Bool
+                    ?? DefaultConfiguration.bundleLogsWithTraces,
+                customEndpoint: logs["customEndpoint"] as? String
+            )
+        } else {
+            logsConfiguration = nil
+        }
+
+        // MARK: - Trace configuration
+
+        let traceDict = configuration["traceConfiguration"] as? [String: Any?]
+        let traceConfiguration: TraceConfiguration?
+
+        if let trace = traceDict {
+            traceConfiguration = TraceConfiguration(
+                resourceTraceSampleRate:
+                    trace["resourceTraceSampleRate"] as? Double
+                    ?? DefaultConfiguration.resourceTraceSampleRate,
+                customEndpoint: trace["customEndpoint"] as? String
+            )
+        } else {
+            traceConfiguration = nil
+        }
+
+        // MARK: - configurationForTelemetry
+
+        let telemetryDict = configuration["configurationForTelemetry"] as? NSDictionary
+        let configurationForTelemetry = telemetryDict?.asConfigurationForTelemetry()
+
+        return DdSdkConfiguration(
+            additionalConfiguration: additionalConfiguration,
+            clientToken: clientToken,
+            env: env,
+            site: site,
+            service: service,
+            verbosity: verbosity,
+            nativeCrashReportEnabled: nativeCrashReportEnabled
+                ?? DefaultConfiguration.nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
+                ?? DefaultConfiguration.nativeLongTaskThresholdMs,
+            trackingConsent: trackingConsent,
+            uploadFrequency: uploadFrequency,
+            batchSize: batchSize,
+            batchProcessingLevel: batchProcessingLevel,
+            proxyConfiguration: proxyConfiguration,
+            firstPartyHosts: firstPartyHosts,
+            rumConfiguration: rumConfiguration,
+            logsConfiguration: logsConfiguration,
+            traceConfiguration: traceConfiguration,
+            configurationForTelemetry: configurationForTelemetry
+        )
+    }
 }
 
 extension NSString? {
@@ -432,7 +462,7 @@ extension NSString? {
             return .pending
         }
     }
-    
+
     func asVitalsUpdateFrequency() -> RUM.Configuration.VitalsFrequency? {
         switch self?.lowercased {
         case "never":
@@ -447,7 +477,7 @@ extension NSString? {
             return .average
         }
     }
-    
+
     func asUploadFrequency() -> Datadog.Configuration.UploadFrequency {
         switch self?.lowercased {
         case "rare":
@@ -460,7 +490,7 @@ extension NSString? {
             return .average
         }
     }
-    
+
     func asBatchSize() -> Datadog.Configuration.BatchSize {
         switch self?.lowercased {
         case "small":
@@ -473,7 +503,7 @@ extension NSString? {
             return .medium
         }
     }
-    
+
     func asSite() -> DatadogSite {
         switch self?.lowercased {
         case "us1", "us":
@@ -494,7 +524,7 @@ extension NSString? {
             return .us1
         }
     }
-    
+
     func asBatchProcessingLevel() -> Datadog.Configuration.BatchProcessingLevel {
         switch self?.lowercased {
         case "low":

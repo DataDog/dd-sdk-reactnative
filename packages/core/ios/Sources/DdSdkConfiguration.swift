@@ -47,7 +47,7 @@ public class DdSdkConfiguration: NSObject {
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     public var proxyConfiguration: [AnyHashable: Any]? = nil
     public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
-    public var rumConfiguration: RUMConfiguration? = nil
+    public var rumConfiguration: RumConfiguration? = nil
     public var logsConfiguration: LogsConfiguration? = nil
     public var traceConfiguration: TraceConfiguration? = nil
     public var configurationForTelemetry: ConfigurationForTelemetry? = nil
@@ -67,7 +67,7 @@ public class DdSdkConfiguration: NSObject {
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
         proxyConfiguration: [AnyHashable: Any]?,
         firstPartyHosts: [String: Set<TracingHeaderType>]?,
-        rumConfiguration: RUMConfiguration?,
+        rumConfiguration: RumConfiguration?,
         logsConfiguration: LogsConfiguration?,
         traceConfiguration: TraceConfiguration?,
         configurationForTelemetry: ConfigurationForTelemetry?
@@ -112,7 +112,7 @@ public class DdSdkConfiguration: NSObject {
 ///    - trackMemoryWarnings: Whether memory warning events should be tracked.
 ///    - telemetrySampleRate: Sampling rate (0–100) for internal telemetry emitted via RUM.
 ///    - customEndpoint: A custom RUM  intake endpoint to override the default Datadog intake.
-public class RUMConfiguration: NSObject {
+public class RumConfiguration: NSObject {
     public var applicationId: String = ""
     public var trackFrustrations: Bool? = true
     public var longTaskThresholdMs: Double = 0.0

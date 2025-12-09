@@ -86,7 +86,7 @@ describe('DatadogProvider', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fakeApplicationId",
                     "errorEventMapper": null,

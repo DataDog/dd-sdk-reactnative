@@ -135,10 +135,10 @@ export const DEFAULTS = {
 };
 
 /**
- * The Core SDK configuration class.
+ * The Core configuration class.
  * It will be used to configure the SDK functionality at initialization.
  */
-export class CoreSDKConfiguration {
+export class CoreConfiguration {
     public additionalConfiguration: {
         [k: string]: any;
     } = DEFAULTS.getAdditionalConfiguration();
@@ -236,7 +236,7 @@ export class CoreSDKConfiguration {
      */
     public attributeEncoders: AttributeEncoder<any>[] = [];
 
-    public rumConfiguration?: RUMConfiguration;
+    public rumConfiguration?: RumConfiguration;
 
     public logsConfiguration?: LogsConfiguration;
 
@@ -250,7 +250,7 @@ export class CoreSDKConfiguration {
     ) {}
 }
 
-export class RUMConfiguration {
+export class RumConfiguration {
     public actionEventMapper: ActionEventMapper | null =
         DEFAULTS.actionEventMapper;
 
@@ -428,7 +428,7 @@ export class TraceConfiguration {
     public customEndpoint?: string;
 }
 
-export class DatadogProviderConfiguration extends CoreSDKConfiguration {
+export class DatadogProviderConfiguration extends CoreConfiguration {
     public initializationMode: InitializationMode = InitializationMode.SYNC;
 }
 
@@ -526,6 +526,7 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
 
 export type PartialInitializationConfiguration = {
     readonly additionalConfiguration?: { [k: string]: any };
+    readonly attributeEncoders?: AttributeEncoder<any>[];
     readonly clientToken: string;
     readonly env: string;
     readonly site?: string;
@@ -567,10 +568,10 @@ export type PartialInitializationConfiguration = {
 export const buildConfigurationFromPartialConfiguration = (
     features: AutoInstrumentationConfiguration,
     configuration: PartialInitializationConfiguration
-): CoreSDKConfiguration => {
+): CoreConfiguration => {
     const { clientToken, env } = configuration;
 
-    const SdkConfiguration = new CoreSDKConfiguration(
+    const SdkConfiguration = new CoreConfiguration(
         clientToken,
         env,
         configuration.trackingConsent,
@@ -633,8 +634,12 @@ export const buildConfigurationFromPartialConfiguration = (
         SdkConfiguration.firstPartyHosts = features.firstPartyHosts;
     }
 
+    if (configuration.attributeEncoders) {
+        SdkConfiguration.attributeEncoders = configuration.attributeEncoders;
+    }
+
     if (configuration.rumConfiguration?.applicationId !== undefined) {
-        SdkConfiguration.rumConfiguration = new RUMConfiguration(
+        SdkConfiguration.rumConfiguration = new RumConfiguration(
             configuration.rumConfiguration.applicationId,
             features.rumConfiguration.trackInteractions,
             features.rumConfiguration.trackResources,

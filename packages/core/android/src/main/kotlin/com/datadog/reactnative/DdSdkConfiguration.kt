@@ -47,7 +47,7 @@ data class DdSdkConfiguration(
     val batchProcessingLevel: String? = null,
     val proxyConfiguration: Pair<Proxy, ProxyAuthenticator?>? = null,
     val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
-    val rumConfiguration: RUMConfiguration? = null,
+    val rumConfiguration: RumConfiguration? = null,
     val logsConfiguration: LogsConfiguration? = null,
     val traceConfiguration: TraceConfiguration? = null,
     val configurationForTelemetry: ConfigurationForTelemetry? = null
@@ -69,7 +69,7 @@ data class DdSdkConfiguration(
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param customEndpoint Custom RUM intake endpoint used to override the default Datadog intake.
  */
-data class RUMConfiguration(
+data class RumConfiguration(
     val applicationId: String,
     val trackFrustrations: Boolean? = null,
     val longTaskThresholdMs: Double? = null,

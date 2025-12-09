@@ -7,8 +7,8 @@
 import { NativeModules } from 'react-native';
 
 import {
-    CoreSDKConfiguration,
-    RUMConfiguration
+    CoreConfiguration,
+    RumConfiguration
 } from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
@@ -202,11 +202,11 @@ describe('DdLogs', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -266,12 +266,12 @@ describe('DdLogs', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
 
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,

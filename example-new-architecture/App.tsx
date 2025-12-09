@@ -1,5 +1,5 @@
 import {
-  CoreSDKConfiguration,
+  CoreConfiguration,
   SdkVerbosity,
   UploadFrequency,
   BatchSize,
@@ -8,7 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
-  RUMConfiguration,
+  RumConfiguration,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -33,14 +33,14 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  const config = new CoreSDKConfiguration(
+  const config = new CoreConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
   );
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
-  config.rumConfiguration = new RUMConfiguration(
+  config.rumConfiguration = new RumConfiguration(
     APPLICATION_ID,
     true,
     true,

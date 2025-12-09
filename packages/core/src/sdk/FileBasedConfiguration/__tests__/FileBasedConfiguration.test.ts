@@ -47,7 +47,7 @@ describe('FileBasedConfiguration', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "actionNameAttribute": "action-name-attr",
                     "applicationId": "fake-app-id",
@@ -145,7 +145,7 @@ describe('FileBasedConfiguration', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "actionNameAttribute": "action-name-attr",
                     "applicationId": "fake-app-id",
@@ -200,7 +200,7 @@ describe('FileBasedConfiguration', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,

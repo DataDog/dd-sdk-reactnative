@@ -36,7 +36,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     }
                 )
             ).toMatchInlineSnapshot(`
-                CoreSDKConfiguration {
+                CoreConfiguration {
                   "additionalConfiguration": {},
                   "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
@@ -52,7 +52,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,
@@ -149,7 +149,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     }
                 )
             ).toMatchInlineSnapshot(`
-                CoreSDKConfiguration {
+                CoreConfiguration {
                   "additionalConfiguration": {
                     "additionalField": "fake-value",
                   },
@@ -174,7 +174,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "port": 443,
                     "type": "https",
                   },
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": [Function],
                     "actionNameAttribute": "testID",
                     "applicationId": "fake-app-id",
@@ -253,7 +253,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     }
                 )
             ).toMatchInlineSnapshot(`
-                CoreSDKConfiguration {
+                CoreConfiguration {
                   "additionalConfiguration": {},
                   "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
@@ -269,7 +269,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "nativeCrashReportEnabled": false,
                   "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
-                  "rumConfiguration": RUMConfiguration {
+                  "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "",
                     "errorEventMapper": null,

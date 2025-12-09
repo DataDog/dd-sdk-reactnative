@@ -8,7 +8,7 @@ import type { PropsWithChildren } from 'react';
 
 import {
     DatadogProviderConfiguration,
-    CoreSDKConfiguration
+    CoreConfiguration
 } from '../../DdSdkReactNativeConfiguration';
 import type {
     PartialInitializationConfiguration,
@@ -52,10 +52,10 @@ const isConfigurationPartial = (
     if (configuration instanceof DatadogProviderConfiguration) {
         return false;
     }
-    if (configuration instanceof CoreSDKConfiguration) {
+    if (configuration instanceof CoreConfiguration) {
         // Not using InternalLog here as it is not yet instantiated
         console.warn(
-            'A CoreSDKConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
+            'A CoreConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
         );
         return false;
     }
