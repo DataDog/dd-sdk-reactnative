@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/DataDog/dd-sdk-reactnative/blob/develop/datadog-configuration.schema.json",
     "title": "Datadog React Native SDK Configuration",
-    "description": "Configuration for initializing the Datadog React Native SDK from the native layers (new configuration structure).",
+    "description": "Configuration for initializing the Datadog React Native SDK from the native layers (v3).",
     "type": "object",
     "properties": {
         "configuration": {
