@@ -42,7 +42,7 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     afterEach(() => {
         jest.clearAllMocks();
-        GlobalState.instance.isInitialized = false;
+        GlobalState.isInitialized = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
