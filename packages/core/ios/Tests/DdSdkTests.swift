@@ -82,7 +82,7 @@ class DdSdkTests: XCTestCase {
     func testResolvesPromiseAfterInitializationIsDone() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
-        let mockListener = MockOnCoreInitializedListener()
+        let mockListener = MockOnSdkInitializedListener()
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
         let expectation = self.expectation(description: "Listener is called when promise resolves")
@@ -275,7 +275,9 @@ class DdSdkTests: XCTestCase {
 
     func testSDKInitializationWithOnInitializedCallback() {
         var isInitialized = false
+        var coreFromCallback: DatadogCoreProtocol? = nil
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {
+            core in coreFromCallback = core
             isInitialized = Datadog.isInitialized()
         })
 
@@ -717,6 +719,36 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-2"] as? String, nil)
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, nil)
         XCTAssertEqual(userInfo.extraInfo["extra-info-4"] as? [String: Int], nil)
+    }
+    
+    func testAddingAttribute() {
+        let rumMonitorMock = MockRUMMonitor()
+        let bridge = DdSdkImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            jsDispatchQueue: DispatchQueueMock(),
+            jsRefreshRateMonitor: JSRefreshRateMonitor(),
+            RUMMonitorProvider: { rumMonitorMock },
+            RUMMonitorInternalProvider: { nil }
+        )
+        bridge.initialize(
+            configuration: .mockAny(),
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        bridge.addAttribute(key: "attribute-1", value: NSDictionary(dictionary: ["value": 123]), resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(key: "attribute-2", value: NSDictionary(dictionary: ["value": "abc"]), resolve: mockResolve, reject: mockReject)
+        bridge.addAttribute(key: "attribute-3", value: NSDictionary(dictionary: ["value": true]), resolve: mockResolve, reject: mockReject)
+        
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-1"] as? Int64, 123)
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-2"] as? String, "abc")
+        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-3"] as? Bool, true)
+
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-1"] as? Int64, 123)
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-2"] as? String, "abc")
+        XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
+
+        GlobalState.globalAttributes.removeAll()
     }
 
     func testRemovingAttribute() {
@@ -1475,7 +1507,7 @@ class DdSdkTests: XCTestCase {
     func testCallsOnSdkInitializedListeners() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()
-        let mockListener = MockOnCoreInitializedListener()
+        let mockListener = MockOnSdkInitializedListener()
 
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: mockListener.listener)
 
@@ -1744,9 +1776,13 @@ extension DdSdkImplementation {
     }
 }
 
-class MockOnCoreInitializedListener {
+class MockOnSdkInitializedListener {
     var called = false
-    func listener() {
+    var receivedCore: DatadogCoreProtocol?
+
+    lazy var listener: OnSdkInitializedListener = { core in
         self.called = true
+        self.receivedCore = core
     }
 }
+

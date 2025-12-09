@@ -1,22 +1,22 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.1.0):
-    - DatadogInternal (= 3.1.0)
-  - DatadogCrashReporting (3.1.0):
-    - DatadogInternal (= 3.1.0)
+  - DatadogCore (3.3.0):
+    - DatadogInternal (= 3.3.0)
+  - DatadogCrashReporting (3.3.0):
+    - DatadogInternal (= 3.3.0)
     - PLCrashReporter (~> 1.12.0)
-  - DatadogInternal (3.1.0)
-  - DatadogLogs (3.1.0):
-    - DatadogInternal (= 3.1.0)
-  - DatadogRUM (3.1.0):
-    - DatadogInternal (= 3.1.0)
-  - DatadogSDKReactNative (2.13.0):
-    - DatadogCore (= 3.1.0)
-    - DatadogCrashReporting (= 3.1.0)
-    - DatadogLogs (= 3.1.0)
-    - DatadogRUM (= 3.1.0)
-    - DatadogTrace (= 3.1.0)
-    - DatadogWebViewTracking (= 3.1.0)
+  - DatadogInternal (3.3.0)
+  - DatadogLogs (3.3.0):
+    - DatadogInternal (= 3.3.0)
+  - DatadogRUM (3.3.0):
+    - DatadogInternal (= 3.3.0)
+  - DatadogSDKReactNative (2.13.2):
+    - DatadogCore (= 3.3.0)
+    - DatadogCrashReporting (= 3.3.0)
+    - DatadogLogs (= 3.3.0)
+    - DatadogRUM (= 3.3.0)
+    - DatadogTrace (= 3.3.0)
+    - DatadogWebViewTracking (= 3.3.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -37,13 +37,13 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNative/Tests (2.13.0):
-    - DatadogCore (= 3.1.0)
-    - DatadogCrashReporting (= 3.1.0)
-    - DatadogLogs (= 3.1.0)
-    - DatadogRUM (= 3.1.0)
-    - DatadogTrace (= 3.1.0)
-    - DatadogWebViewTracking (= 3.1.0)
+  - DatadogSDKReactNative/Tests (2.13.2):
+    - DatadogCore (= 3.3.0)
+    - DatadogCrashReporting (= 3.3.0)
+    - DatadogLogs (= 3.3.0)
+    - DatadogRUM (= 3.3.0)
+    - DatadogTrace (= 3.3.0)
+    - DatadogWebViewTracking (= 3.3.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -64,11 +64,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogTrace (3.1.0):
-    - DatadogInternal (= 3.1.0)
+  - DatadogTrace (3.3.0):
+    - DatadogInternal (= 3.3.0)
     - OpenTelemetrySwiftApi (= 1.13.1)
-  - DatadogWebViewTracking (3.1.0):
-    - DatadogInternal (= 3.1.0)
+  - DatadogWebViewTracking (3.3.0):
+    - DatadogInternal (= 3.3.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
@@ -1850,14 +1850,14 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogCore: d2f51c7fb4308cf3c25e55e2e7242e5d558ee71d
-  DatadogCrashReporting: f636f1d1c534572c0b0abcdc59df244c884d825d
-  DatadogInternal: 7837b2ce3d525d429682532eeda697b181299fdc
-  DatadogLogs: 250894b5a99da5b924a019049c0d0326823cdbd6
-  DatadogRUM: 0d2a60e1abb8aacfb8827ef84f6d5deb4d5026c8
-  DatadogSDKReactNative: 2f11191b56e18680f633bfb125ab1832b327d9b4
-  DatadogTrace: f59e933074cd285ad7e9f5af991f8fe04b095991
-  DatadogWebViewTracking: 9bc92b4147aeed47eb1911451f651094aa6dd6c1
+  DatadogCore: 9b1256ac9c27a07087d6214c8546acf756e40be7
+  DatadogCrashReporting: 89a00886ef40808bffb8ccb4b6531e472f52e213
+  DatadogInternal: 21dac5a7db548da6368a096d0714bdbec66deb6c
+  DatadogLogs: 355a4ac6bce3f0cb8231819e475c03dbbdd7957c
+  DatadogRUM: 1b3a47a9b9a5a25890f7fb3aa1f2bd86009d1086
+  DatadogSDKReactNative: 3c756b98ff379907842eb3769d44e6b8b570385f
+  DatadogTrace: f13e8c09981787d6cb0a4b7fd1991351fab6d64b
+  DatadogWebViewTracking: 08fe084b5f57da05c1610fab49ce7bc84226141e
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45

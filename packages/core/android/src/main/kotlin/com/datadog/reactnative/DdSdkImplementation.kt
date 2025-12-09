@@ -351,6 +351,7 @@ class DdSdkImplementation(
         }
     }
 
+
     /**
      * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
      * @param frameTimeSeconds: the frame time to normalize. In seconds.
@@ -368,14 +369,14 @@ class DdSdkImplementation(
         val frameTimeMs = frameTimeSeconds * 1000.0
         val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
         val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
-            ?: 60.0
+        ?: 60.0
 
         val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
         val budgetFrameTimeMs = 1000.0 / frameBudgetHz
 
         if (listOf(
-            maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
-        ).any { !it.isFinite() || it <= 0.0 }
+                maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+            ).any { !it.isFinite() || it <= 0.0 }
         ) return 1.0 / DEFAULT_REFRESH_HZ
 
         var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)

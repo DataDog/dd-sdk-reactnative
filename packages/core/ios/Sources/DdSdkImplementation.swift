@@ -14,6 +14,10 @@ import DatadogWebViewTracking
 import Foundation
 import React
 
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
+
 func getDefaultAppVersion() -> String {
     let bundleShortVersion =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -28,7 +32,10 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+
+#if os(iOS)
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+#endif
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1
 
@@ -212,25 +219,19 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func telemetryDebug(
-        message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryDebug(
-            id: "datadog_react_native:\(message)", message: message as String)
+
+    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
 
     @objc
-    public func telemetryError(
-        message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryError(
-            id: "datadog_react_native:\(String(describing: kind)):\(message)",
-            message: message as String, kind: kind as String, stack: stack as String)
+    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
 
+#if os(iOS)
     @objc
     public func consumeWebviewEvent(
         message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -248,6 +249,8 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
 
+#endif
+    
     @objc
     public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.clearAllData()

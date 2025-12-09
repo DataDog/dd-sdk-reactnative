@@ -10,11 +10,15 @@ import DatadogRUM
 import DatadogLogs
 import DatadogTrace
 import DatadogCrashReporting
-import DatadogWebViewTracking
 import DatadogInternal
 import Foundation
 
-public typealias OnSdkInitializedListener = () -> Void
+
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
+
+public typealias OnSdkInitializedListener = (DatadogCoreProtocol) -> Void
 
 /// Wrapper around the Datadog SDK. Use DatadogSDKWrapper.shared to access the instance.
 public class DatadogSDKWrapper {
@@ -38,15 +42,16 @@ public class DatadogSDKWrapper {
         loggerConfiguration: DatadogLogs.Logger.Configuration,
         trackingConsent: TrackingConsent
     ) -> Void {
-        Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
+        let core = Datadog.initialize(with: coreConfiguration, trackingConsent: trackingConsent)
 
         for listener in onSdkInitializedListeners {
-            listener()
+            listener(core)
         }
 
         self.loggerConfiguration = loggerConfiguration
     }
 
+#if os(iOS)
     // Webview
     private var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
 
@@ -57,6 +62,7 @@ public class DatadogSDKWrapper {
     internal func sendWebviewMessage(body: NSString) throws {
         try self.webviewMessageEmitter?.send(body: body)
     }
+#endif
 }
 
 
