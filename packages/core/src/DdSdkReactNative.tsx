@@ -509,7 +509,7 @@ export class DdSdkReactNative {
                 useAccessibilityLabel: configuration.useAccessibilityLabel
             };
 
-            DdBabelInteractionTracking.getInstance(DdRum);
+            DdBabelInteractionTracking.attachRumInstance(DdRum);
         }
 
         if (DdSdkReactNative.wasAutoInstrumented) {
