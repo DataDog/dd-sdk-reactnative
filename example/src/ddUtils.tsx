@@ -4,7 +4,8 @@ import {
     DdSdkReactNative,
     DdSdkReactNativeConfiguration,
     SdkVerbosity,
-    TrackingConsent
+    TrackingConsent,
+    DatadogFlags,
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
@@ -56,4 +57,6 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
         DdSdkReactNative.addAttributes({campaign: "ad-network"})
     });
+
+    DatadogFlags.enable()
 }

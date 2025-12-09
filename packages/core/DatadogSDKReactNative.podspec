@@ -24,6 +24,7 @@ Pod::Spec.new do |s|
   s.dependency 'DatadogTrace', '3.1.0'
   s.dependency 'DatadogRUM', '3.1.0'
   s.dependency 'DatadogCrashReporting', '3.1.0'
+  s.dependency 'DatadogFlags', '3.1.0'
 
   # DatadogWebViewTracking is not available for tvOS
   s.ios.dependency 'DatadogWebViewTracking', '3.1.0'

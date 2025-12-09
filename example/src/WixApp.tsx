@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Button } from 'react-native';
 import MainScreen from './screens/MainScreen';
 import ErrorScreen from './screens/ErrorScreen';
@@ -11,7 +11,7 @@ import {
 } from '@datadog/mobile-react-native-navigation';
 
 import styles from './screens/styles';
-import { DdTrace } from '@datadog/mobile-react-native';
+import { DatadogFlags } from '@datadog/mobile-react-native';
 import TraceScreen from './screens/TraceScreen';
 
 const viewPredicate: ViewNamePredicate = (
@@ -44,6 +44,23 @@ function registerScreens() {
 }
 
 const HomeScreen = props => {
+    const [testFlagValue, setTestFlagValue] = useState(false);
+    useEffect(() => {
+        (async () => {
+            await DatadogFlags.enable();
+
+            const flagsClient = DatadogFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: {
+                    country: 'US',
+                },
+            });
+            const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+            setTestFlagValue(flag.value);
+        })();
+    }, []);
+
     return (
         <View style={styles.defaultScreen}>
             <Text style={{ marginBottom: 20 }}>
@@ -84,6 +101,7 @@ const HomeScreen = props => {
                     });
                 }}
             />
+            <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(testFlagValue)}</Text>
         </View>
     );
 };

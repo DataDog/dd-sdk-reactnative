@@ -154,7 +154,7 @@ public class ConfigurationForTelemetry: NSObject {
     public let trackNetworkRequests: Bool?
     public var reactVersion: NSString?
     public var reactNativeVersion: NSString?
-    
+
     public init(
         initializationType: NSString?,
         trackErrors: Bool?,
@@ -176,7 +176,7 @@ public class CustomEndpoints: NSObject {
     public var rum: NSString?
     public var logs: NSString?
     public var trace: NSString?
-    
+
     public init(
         rum: NSString?,
         logs: NSString?,

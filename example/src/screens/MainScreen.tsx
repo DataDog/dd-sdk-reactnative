@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
-import { DdLogs, DdSdkReactNative, TrackingConsent } from '@datadog/mobile-react-native';
+import { DdLogs, DdSdkReactNative, TrackingConsent, DatadogFlags } from '@datadog/mobile-react-native';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
 import { DdRum } from '../../../packages/core/src/rum/DdRum';
@@ -27,6 +27,7 @@ interface MainScreenState {
   resultTouchableNativeFeedback: string,
   trackingConsent: TrackingConsent,
   trackingConsentModalVisible: boolean
+  testFlagValue: boolean
 }
 
 export default class MainScreen extends Component<any, MainScreenState> {
@@ -40,7 +41,8 @@ export default class MainScreen extends Component<any, MainScreenState> {
       resultButtonAction: "",
       resultTouchableOpacityAction: "",
       trackingConsent: TrackingConsent.PENDING,
-      trackingConsentModalVisible: false
+      trackingConsentModalVisible: false,
+      testFlagValue: false
     } as MainScreenState;
     this.consentModal = React.createRef()
   }
@@ -94,6 +96,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   componentDidMount() {
     this.updateTrackingConsent()
+    this.fetchBooleanFlag();
     DdLogs.debug("[DATADOG SDK] Test React Native Debug Log");
   }
 
@@ -103,6 +106,23 @@ export default class MainScreen extends Component<any, MainScreenState> {
         trackingConsent: consent
       })
     })
+  }
+
+  fetchBooleanFlag() {
+    (async () => {
+      await DatadogFlags.enable();
+
+      const flagsClient = DatadogFlags.getClient();
+      await flagsClient.setEvaluationContext({
+          targetingKey: 'test-user-1',
+          attributes: {
+              country: 'US',
+          },
+      });
+      const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+      console.log({flag})
+      this.setState({ testFlagValue: flag.value })
+    })();
   }
 
   setTrackingConsentModalVisible(visible: boolean) {
@@ -205,6 +225,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
             <Text>Click me (error)</Text>
           </View>
         </TouchableNativeFeedback>
+        <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(this.state.testFlagValue)}</Text>
       </View>
     </View>
   }

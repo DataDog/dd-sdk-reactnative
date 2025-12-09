@@ -8,6 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
+  DatadogFlags,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -87,6 +88,23 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
+  const [testFlagValue, setTestFlagValue] = React.useState(false);
+  React.useEffect(() => {
+      (async () => {
+          await DatadogFlags.enable();
+
+          const flagsClient = DatadogFlags.getClient();
+          await flagsClient.setEvaluationContext({
+              targetingKey: 'test-user-1',
+              attributes: {
+                  country: 'US',
+              },
+          });
+          const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+          setTestFlagValue(flag.value);
+      })();
+  }, []);
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -103,6 +121,7 @@ function App(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
+        <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(testFlagValue)}</Text>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
