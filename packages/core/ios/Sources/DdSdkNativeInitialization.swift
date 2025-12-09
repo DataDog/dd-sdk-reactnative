@@ -4,23 +4,23 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Foundation
 import DatadogCore
-import DatadogRUM
-import DatadogLogs
-import DatadogTrace
 import DatadogCrashReporting
 import DatadogInternal
+import DatadogLogs
+import DatadogRUM
+import DatadogTrace
+import Foundation
 import React
 
 #if os(iOS)
-import DatadogWebViewTracking
+    import DatadogWebViewTracking
 #endif
 
 @objc
 public class DdSdkNativeInitialization: NSObject {
     let jsonFileReader: ResourceFileReader
-    
+
     @objc
     public convenience override init() {
         self.init(jsonFileReader: JSONFileReader())
@@ -31,7 +31,7 @@ public class DdSdkNativeInitialization: NSObject {
     ) {
         self.jsonFileReader = jsonFileReader
     }
-    
+
     internal func initialize(sdkConfiguration: DdSdkConfiguration) {
         if Datadog.isInitialized(instanceName: CoreRegistry.defaultInstanceName) {
             // Initializing the SDK twice results in Global.rum and Global.sharedTracer to be set to no-op instances
@@ -59,34 +59,38 @@ public class DdSdkNativeInitialization: NSObject {
 
         self.enableFeatures(sdkConfiguration: sdkConfiguration)
     }
-    
+
     internal func getConfigurationFromJSONFile() -> DdSdkConfiguration? {
-        if let jsonResult = jsonFileReader.parseResourceFile(resourcePath: "datadog-configuration") as? Dictionary<String, AnyObject> {
+        if let jsonResult = jsonFileReader.parseResourceFile(resourcePath: "datadog-configuration")
+            as? [String: AnyObject]
+        {
             do {
                 return try jsonResult.asDdSdkConfigurationFromJSON()
             } catch {
                 consolePrint("Error parsing datadog-configuration.json file: \(error)", .critical)
             }
         } else {
-           consolePrint("datadog-configuration.json file cannot be parsed. Make sure it is valid.", .critical)
+            consolePrint(
+                "datadog-configuration.json file cannot be parsed. Make sure it is valid.",
+                .critical)
         }
         return nil
     }
 
     @objc
-    public func initializeFromNative() -> Void {
+    public func initializeFromNative() {
         if let configuration = getConfigurationFromJSONFile() {
             self.initialize(sdkConfiguration: configuration)
         }
     }
 
     func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
-        let rumConfig = buildRUMConfiguration(configuration: sdkConfiguration)
+        let rumConfig = buildRumConfiguration(configuration: sdkConfiguration)
         RUM.enable(with: rumConfig)
-        
+
         let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
         Logs.enable(with: logsConfig)
-        
+
         let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
         Trace.enable(with: traceConfig)
 
@@ -115,7 +119,9 @@ public class DdSdkNativeInitialization: NSObject {
         )
 
         if var additionalConfiguration = configuration.additionalConfiguration as? [String: Any] {
-            if let versionSuffix = additionalConfiguration[InternalConfigurationAttributes.versionSuffix] as? String {
+            if let versionSuffix = additionalConfiguration[
+                InternalConfigurationAttributes.versionSuffix] as? String
+            {
                 let datadogVersion = defaultAppVersion + versionSuffix
                 additionalConfiguration[CrossPlatformAttributes.version] = datadogVersion
             }
@@ -127,10 +133,10 @@ public class DdSdkNativeInitialization: NSObject {
 
         return config
     }
-    
-    func buildRUMConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
+
+    func buildRumConfiguration(configuration: DdSdkConfiguration) -> RUM.Configuration {
         guard let rumConfig = configuration.rumConfiguration else {
-            preconditionFailure("buildRUMConfiguration called without rumConfiguration")
+            preconditionFailure("buildRumConfiguration called without rumConfiguration")
         }
 
         var longTaskThreshold: TimeInterval? = nil
@@ -153,8 +159,9 @@ public class DdSdkNativeInitialization: NSObject {
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
-                    sampleRate: Float(configuration.traceConfiguration?.resourceTraceSampleRate
-                                      ?? DefaultConfiguration.resourceTraceSampleRate)
+                    sampleRate: Float(
+                        configuration.traceConfiguration?.resourceTraceSampleRate
+                            ?? DefaultConfiguration.resourceTraceSampleRate)
                 )
             )
         }
@@ -166,61 +173,72 @@ public class DdSdkNativeInitialization: NSObject {
 
         var networkSettledResourcePredicate: TimeBasedTNSResourcePredicate? = nil
         if let initialThreshold = rumConfig.initialResourceThreshold {
-            networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(threshold: initialThreshold)
+            networkSettledResourcePredicate = TimeBasedTNSResourcePredicate(
+                threshold: initialThreshold)
         }
 
         return RUM.Configuration(
             applicationID: rumConfig.applicationId,
-            sessionSampleRate: Float(rumConfig.sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate),
+            sessionSampleRate: Float(
+                rumConfig.sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate),
             uiKitViewsPredicate: uiKitViewsPredicate,
             uiKitActionsPredicate: uiKitActionsPredicate,
             urlSessionTracking: urlSessionTracking,
-            trackFrustrations: rumConfig.trackFrustrations ?? DefaultConfiguration.trackFrustrations,
-            trackBackgroundEvents: rumConfig.trackBackgroundEvents ?? DefaultConfiguration.trackBackgroundEvents,
+            trackFrustrations: rumConfig.trackFrustrations
+                ?? DefaultConfiguration.trackFrustrations,
+            trackBackgroundEvents: rumConfig.trackBackgroundEvents
+                ?? DefaultConfiguration.trackBackgroundEvents,
             longTaskThreshold: longTaskThreshold,
             appHangThreshold: rumConfig.appHangThreshold,
             trackWatchdogTerminations: rumConfig.trackWatchdogTerminations,
             vitalsUpdateFrequency: rumConfig.vitalsUpdateFrequency,
-            networkSettledResourcePredicate: networkSettledResourcePredicate ?? TimeBasedTNSResourcePredicate(),
+            networkSettledResourcePredicate: networkSettledResourcePredicate
+                ?? TimeBasedTNSResourcePredicate(),
             resourceEventMapper: { resourceEvent in
-                if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                if resourceEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource]
+                    != nil
+                {
                     return nil
                 }
                 return resourceEvent
             },
             actionEventMapper: { actionEvent in
-                if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource] != nil {
+                if actionEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource]
+                    != nil
+                {
                     return nil
                 }
                 return actionEvent
             },
             onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
-            trackMemoryWarnings: rumConfig.trackMemoryWarnings ?? DefaultConfiguration.trackMemoryWarnings,
-            telemetrySampleRate: Float(rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
+            trackMemoryWarnings: rumConfig.trackMemoryWarnings
+                ?? DefaultConfiguration.trackMemoryWarnings,
+            telemetrySampleRate: Float(
+                rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
         )
     }
 
-    
     func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
         var customLogsEndpointURL: URL? = nil
         if let customLogsEndpoint = configuration.logsConfiguration?.customEndpoint as? NSString {
-            if (customLogsEndpoint != "") {
+            if customLogsEndpoint != "" {
                 customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
             }
         }
-        
+
         return Logs.Configuration(customEndpoint: customLogsEndpointURL)
     }
-        
+
     func buildTraceConfiguration(configuration: DdSdkConfiguration) -> Trace.Configuration {
         var customTraceEndpointURL: URL? = nil
         if let customTraceEndpoint = configuration.traceConfiguration?.customEndpoint as? NSString {
-            if (customTraceEndpoint != "") {
-                customTraceEndpointURL = URL(string: "\(customTraceEndpoint)/api/v2/spans" as String)
+            if customTraceEndpoint != "" {
+                customTraceEndpointURL = URL(
+                    string: "\(customTraceEndpoint)/api/v2/spans" as String)
             }
         }
-        
+
         return Trace.Configuration(customEndpoint: customTraceEndpointURL)
     }
 

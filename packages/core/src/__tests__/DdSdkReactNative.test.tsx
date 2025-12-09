@@ -8,9 +8,9 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import {
-    CoreSDKConfiguration,
+    CoreConfiguration,
     LogsConfiguration,
-    RUMConfiguration,
+    RumConfiguration,
     TraceConfiguration
 } from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
@@ -93,11 +93,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.logsConfiguration = new LogsConfiguration();
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -143,11 +143,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             NativeModules.DdSdk.initialize.mockRejectedValue('rejection');
 
@@ -190,12 +190,12 @@ describe('DdSdkReactNative', () => {
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
             const fakeConsent = TrackingConsent.NOT_GRANTED;
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName,
                 fakeConsent
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -229,12 +229,12 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
 
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -275,11 +275,11 @@ describe('DdSdkReactNative', () => {
             const proxyUsername = 'foo';
             const proxyPassword = 'bar';
 
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -333,11 +333,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -357,11 +357,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.rumConfiguration.sessionSampleRate = 0;
 
             // WHEN
@@ -382,11 +382,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.rumConfiguration.sessionSampleRate = 70;
 
             // WHEN
@@ -407,11 +407,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.logsConfiguration = new LogsConfiguration();
             configuration.logsConfiguration.bundleLogsWithRum = false;
 
@@ -431,11 +431,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.logsConfiguration = new LogsConfiguration();
             configuration.logsConfiguration.bundleLogsWithTraces = false;
 
@@ -455,11 +455,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.version = '2.0.0';
 
             // WHEN
@@ -480,11 +480,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.versionSuffix = 'codepush-3';
 
             // WHEN
@@ -510,11 +510,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.version = '2.0.0';
             configuration.versionSuffix = 'codepush-3';
 
@@ -541,11 +541,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(fakeAppId);
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.rumConfiguration.initialResourceThreshold = 0.123;
 
             // WHEN
@@ -568,11 +568,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 true
             );
@@ -606,11 +606,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 true
@@ -677,11 +677,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -717,11 +717,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -751,11 +751,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -796,11 +796,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -845,11 +845,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -891,11 +891,11 @@ describe('DdSdkReactNative', () => {
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
             const fakeService = 'aFakeService';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -931,11 +931,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -971,11 +971,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -1013,11 +1013,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -1055,11 +1055,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -1087,11 +1087,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -1119,11 +1119,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new CoreSDKConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -1352,11 +1352,11 @@ describe('DdSdkReactNative', () => {
                 const proxyAddress = '1.1.1.1';
                 const proxyPort = 8080;
 
-                const configuration = new CoreSDKConfiguration(
+                const configuration = new CoreConfiguration(
                     fakeClientToken,
                     fakeEnvName
                 );
-                configuration.rumConfiguration = new RUMConfiguration(
+                configuration.rumConfiguration = new RumConfiguration(
                     fakeAppId,
                     false,
                     false,
@@ -1415,11 +1415,11 @@ describe('DdSdkReactNative', () => {
                 const proxyUsername = 'foo';
                 const proxyPassword = 'bar';
 
-                const configuration = new CoreSDKConfiguration(
+                const configuration = new CoreConfiguration(
                     fakeClientToken,
                     fakeEnvName
                 );
-                configuration.rumConfiguration = new RUMConfiguration(
+                configuration.rumConfiguration = new RumConfiguration(
                     fakeAppId,
                     false,
                     false,

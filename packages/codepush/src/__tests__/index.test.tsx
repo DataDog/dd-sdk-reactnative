@@ -44,8 +44,8 @@ describe('AppCenter Codepush integration', () => {
             const codePush = require('react-native-code-push');
             const { DatadogCodepush } = require('..');
             const {
-                CoreSDKConfiguration,
-                RUMConfiguration,
+                CoreConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -53,8 +53,8 @@ describe('AppCenter Codepush integration', () => {
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock('v3'));
 
-            const configuration = new CoreSDKConfiguration('token', 'env');
-            configuration.rumConfiguration = new RUMConfiguration(
+            const configuration = new CoreConfiguration('token', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -73,8 +73,8 @@ describe('AppCenter Codepush integration', () => {
             const codePush = require('react-native-code-push');
             const { DatadogCodepush } = require('..');
             const {
-                CoreSDKConfiguration,
-                RUMConfiguration,
+                CoreConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -82,8 +82,8 @@ describe('AppCenter Codepush integration', () => {
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(null);
 
-            const configuration = new CoreSDKConfiguration('token', 'env');
-            configuration.rumConfiguration = new RUMConfiguration(
+            const configuration = new CoreConfiguration('token', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -114,7 +114,7 @@ describe('AppCenter Codepush integration', () => {
             const { DatadogCodepushProvider } = require('..');
             const {
                 DatadogProviderConfiguration,
-                RUMConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -126,7 +126,7 @@ describe('AppCenter Codepush integration', () => {
                 'token',
                 'env'
             );
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -188,7 +188,7 @@ describe('AppCenter Codepush integration', () => {
             const { DatadogCodepushProvider } = require('..');
             const {
                 DatadogProviderConfiguration,
-                RUMConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -201,7 +201,7 @@ describe('AppCenter Codepush integration', () => {
                 'env'
             );
 
-            configuration.rumConfiguration = new RUMConfiguration(
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,

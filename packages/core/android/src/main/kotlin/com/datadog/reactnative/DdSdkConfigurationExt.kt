@@ -26,10 +26,10 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     val traceMap = getMap("traceConfiguration")
     val telemetryMap = getMap("configurationForTelemetry")
 
-    val rumConfiguration: RUMConfiguration? = rumMap?.let { rm ->
+    val rumConfiguration: RumConfiguration? = rumMap?.let { rm ->
         val applicationId = rm.getString("applicationId").orEmpty()
 
-        RUMConfiguration(
+        RumConfiguration(
             applicationId = applicationId,
             trackFrustrations = rm.getBooleanOrNull("trackFrustrations"),
             longTaskThresholdMs = rm.getDoubleOrNull("longTaskThresholdMs") ?: 0.0,
@@ -169,8 +169,8 @@ internal object DefaultConfiguration {
 
 @Suppress("CyclomaticComplexMethod")
 internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
-    val rumConfiguration: RUMConfiguration? = this.rumConfiguration?.let { rum ->
-        RUMConfiguration(
+    val rumConfiguration: RumConfiguration? = this.rumConfiguration?.let { rum ->
+        RumConfiguration(
             applicationId = rum.applicationId ?: "",
             trackFrustrations = rum.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
             longTaskThresholdMs = rum.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,

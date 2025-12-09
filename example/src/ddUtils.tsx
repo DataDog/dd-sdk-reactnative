@@ -2,8 +2,8 @@ import {
     DatadogProviderConfiguration,
     DdLogs,
     DdSdkReactNative,
-    CoreSDKConfiguration,
-    RUMConfiguration,
+    CoreConfiguration,
+    RumConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
@@ -21,7 +21,7 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     config.service = "com.datadoghq.reactnative.sample"
     config.nativeCrashReportEnabled = true
     config.verbosity = SdkVerbosity.DEBUG;
-    config.rumConfiguration = new RUMConfiguration(APPLICATION_ID, true, true, true);
+    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
     config.rumConfiguration.sessionSampleRate = 100
     return config
 }
@@ -35,7 +35,7 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
 
-    const config = new CoreSDKConfiguration(
+    const config = new CoreConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
         trackingConsent
@@ -43,7 +43,7 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     config.nativeCrashReportEnabled = true
     config.verbosity = SdkVerbosity.DEBUG;
     config.service = "com.datadoghq.reactnative.sample"
-    config.rumConfiguration = new RUMConfiguration(APPLICATION_ID, true, true, true);
+    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
     config.rumConfiguration.sessionSampleRate = 100
 
     DdSdkReactNative.initialize(config).then(() => {
