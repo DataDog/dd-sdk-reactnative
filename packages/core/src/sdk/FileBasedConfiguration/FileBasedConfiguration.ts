@@ -13,7 +13,7 @@ import type {
 import {
     DEFAULTS,
     DatadogProviderConfiguration,
-    RUMConfiguration,
+    RumConfiguration,
     TraceConfiguration,
     LogsConfiguration
 } from '../../DdSdkReactNativeConfiguration';
@@ -46,7 +46,7 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
             configuration.firstPartyHosts || DEFAULTS.getFirstPartyHosts();
 
         if (configuration.rumConfiguration) {
-            const rumConfig = new RUMConfiguration(
+            const rumConfig = new RumConfiguration(
                 configuration.rumConfiguration.applicationId,
                 configuration.rumConfiguration.trackInteractions,
                 configuration.rumConfiguration.trackResources,

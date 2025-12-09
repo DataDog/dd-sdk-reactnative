@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 
 import type { AutoInstrumentationConfiguration } from '../../../../DdSdkReactNativeConfiguration';
 import {
-    RUMConfiguration,
+    RumConfiguration,
     DatadogProviderConfiguration
 } from '../../../../DdSdkReactNativeConfiguration';
 import { DatadogProvider } from '../../DatadogProvider';
@@ -47,7 +47,7 @@ export const getDefaultConfiguration = () => {
     );
 
     // TODO: the initialization is broken with trackResources in test, fix it
-    defaultConfiguration.rumConfiguration = new RUMConfiguration(
+    defaultConfiguration.rumConfiguration = new RumConfiguration(
         'fakeApplicationId',
         true,
         false,
@@ -90,7 +90,7 @@ export const renderWithProvider = (params?: {
             Math.random().toString(),
             'fakeEnv'
         );
-        randomConfiguration.rumConfiguration = new RUMConfiguration(
+        randomConfiguration.rumConfiguration = new RumConfiguration(
             'fakeApplicationId',
             true,
             false,

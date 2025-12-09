@@ -9,7 +9,7 @@ package com.datadog.tools.unit.forge
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
 import com.datadog.reactnative.LogsConfiguration
-import com.datadog.reactnative.RUMConfiguration
+import com.datadog.reactnative.RumConfiguration
 import com.datadog.reactnative.TraceConfiguration
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.ForgeryFactory
@@ -59,7 +59,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             },
             proxyConfiguration = null,
             firstPartyHosts = null,
-            rumConfiguration = RUMConfiguration(
+            rumConfiguration = RumConfiguration(
                 applicationId = forge.getForgery<UUID>().toString(),
                 trackFrustrations = forge.aNullable { aBool() },
                 longTaskThresholdMs = forge.aNullable { aDouble(0.0, 100.0) },

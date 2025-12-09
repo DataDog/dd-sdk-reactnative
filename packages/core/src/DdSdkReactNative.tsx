@@ -20,7 +20,7 @@ import {
     addDefaultValuesToAutoInstrumentationConfiguration,
     buildConfigurationFromPartialConfiguration,
     formatFirstPartyHosts,
-    CoreSDKConfiguration
+    CoreConfiguration
 } from './DdSdkReactNativeConfiguration';
 import { InternalLog } from './InternalLog';
 import { SdkVerbosity } from './SdkVerbosity';
@@ -69,7 +69,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static initialize = async (
-        configuration: CoreSDKConfiguration
+        configuration: CoreConfiguration
     ): Promise<void> => {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
@@ -79,7 +79,7 @@ export class DdSdkReactNative {
     };
 
     private static initializeNativeSDK = async (
-        configuration: CoreSDKConfiguration,
+        configuration: CoreConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
@@ -135,7 +135,7 @@ export class DdSdkReactNative {
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
-        if (configuration instanceof CoreSDKConfiguration) {
+        if (configuration instanceof CoreConfiguration) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
                 initializationModeForTelemetry: 'SYNC'
             });
@@ -391,7 +391,7 @@ export class DdSdkReactNative {
     };
 
     private static buildConfiguration = (
-        configuration: CoreSDKConfiguration,
+        configuration: CoreConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
