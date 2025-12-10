@@ -89,8 +89,8 @@ internal extension DatadogLogs.Logger.Configuration {
     init(_ sdkConfiguration: DdSdkConfiguration) {
         self.init(
             networkInfoEnabled: true,
-            bundleWithRumEnabled: sdkConfiguration.bundleLogsWithRum ?? true,
-            bundleWithTraceEnabled: sdkConfiguration.bundleLogsWithTraces ?? true,
+            bundleWithRumEnabled: sdkConfiguration.logsConfiguration?.bundleLogsWithRum ?? true,
+            bundleWithTraceEnabled: sdkConfiguration.logsConfiguration?.bundleLogsWithTraces ?? true,
             consoleLogFormat: .short
         )
     }
