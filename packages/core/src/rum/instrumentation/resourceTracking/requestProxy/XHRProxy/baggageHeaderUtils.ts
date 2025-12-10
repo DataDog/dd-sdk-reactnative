@@ -6,6 +6,11 @@
 
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../SdkVerbosity';
+import {
+    DD_RUM_ACCOUNT_ID_TAG,
+    DD_RUM_SESSION_ID_TAG,
+    DD_RUM_USER_ID_TAG
+} from '../../distributedTracing/distributedTracingHeaders';
 
 // The resulting baggage-string should contain 64 list-members or less (https://www.w3.org/TR/baggage/#limits)
 const MAX_MEMBERS = 64;
@@ -32,7 +37,7 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
         if (!rawEntry.includes('=')) {
             InternalLog.log(
                 'XHRProxy: Dropped invalid baggage header entry - expected format "key=value".',
-                SdkVerbosity.WARN
+                SdkVerbosity.ERROR
             );
             continue;
         }
@@ -43,23 +48,30 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
         if (idx <= 0) {
             InternalLog.log(
                 "XHRProxy: Dropped invalid baggage header entry - no '=' or empty key",
-                SdkVerbosity.WARN
+                SdkVerbosity.ERROR
             );
             continue;
         }
 
         const rawKey = mainPart.slice(0, idx).trim();
         const rawValue = mainPart.slice(idx + 1).trim();
+        const isDatadogKey = isDatadogPropertyKey(rawKey);
 
-        if (!TOKEN_REGEX.test(rawKey)) {
+        if (!isDatadogKey && !TOKEN_REGEX.test(rawKey)) {
             InternalLog.log(
-                'XHRProxy: Dropped invalid baggage header entry - key not compliant to RFC 7230 token grammar',
+                'XHRProxy: invalid baggage header keys detected (not RFC 7230-compliant); functionality may be affected.',
                 SdkVerbosity.WARN
             );
-            continue;
         }
 
-        const encodedValue = encodeValue(rawValue);
+        // Only encode datadog-specific properties
+        const encodedValue = isDatadogKey ? encodeValue(rawValue) : rawValue;
+        if (!isDatadogKey && !isCompliantBaggageValue(rawValue)) {
+            InternalLog.log(
+                'XHRProxy: invalid baggage header value detected (not RFC-compliant); functionality may be affected.',
+                SdkVerbosity.WARN
+            );
+        }
 
         // Handle properties
         const properties: string[] = [];
@@ -75,10 +87,9 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
                 const propKey = trimmed.trim();
                 if (!TOKEN_REGEX.test(propKey)) {
                     InternalLog.log(
-                        'XHRProxy: Dropped invalid baggage header entry - property key not compliant to RFC 7230 token grammar',
+                        'XHRProxy: invalid baggage header property key detected (not RFC 7230-compliant); functionality may be affected.',
                         SdkVerbosity.WARN
                     );
-                    continue;
                 }
                 properties.push(propKey);
             } else {
@@ -87,10 +98,9 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
                 const propVal = trimmed.slice(eqIdx + 1).trim();
                 if (!TOKEN_REGEX.test(propKey)) {
                     InternalLog.log(
-                        'XHRProxy: Dropped invalid baggage header entry - key-value property key not compliant to RFC 7230 token grammar',
+                        'XHRProxy: invalid baggage header key-value property key detected (not RFC 7230-compliant); functionality may be affected.',
                         SdkVerbosity.WARN
                     );
-                    continue;
                 }
                 properties.push(`${propKey}=${encodeValue(propVal)}`);
             }
@@ -149,13 +159,29 @@ function getBaggageHeaderSafeChars(): Set<string> {
     return safeChars;
 }
 
-/*
+/**
+ * Checks if the given key is a Datadog-specific baggage property key.
+ * @param key the baggage property key.
+ * @returns true if the key is Datadog-specific, false otherwise.
+ */
+function isDatadogPropertyKey(key: string): boolean {
+    return (
+        key === DD_RUM_SESSION_ID_TAG ||
+        key === DD_RUM_USER_ID_TAG ||
+        key === DD_RUM_ACCOUNT_ID_TAG
+    );
+}
+
+/**
  * Percent-encode all characters outside baggage-octet range.
+ * @param raw The raw baggage value.
+ * @returns the encoded baggage value.
  */
 function encodeValue(raw: string): string {
+    const decoded = tryDecodeValue(raw);
     const safeChars = getBaggageHeaderSafeChars();
     let result = '';
-    for (const ch of Array.from(raw)) {
+    for (const ch of Array.from(decoded)) {
         if (safeChars.has(ch)) {
             result += ch;
         } else {
@@ -169,4 +195,64 @@ function encodeValue(raw: string): string {
         }
     }
     return result;
+}
+
+/**
+ * Try to decode the given baggage value, to avoid double-encoding.
+ * @param rawValue The raw baggage value.
+ * @returns the decoded value, or the original raw value if decoding fails.
+ */
+function tryDecodeValue(rawValue: string): string {
+    try {
+        // Try interpreting it as already-encoded
+        return decodeURIComponent(rawValue);
+    } catch {
+        return rawValue;
+    }
+}
+
+/**
+ * Check if a character is a hexadecimal digit.
+ * @param ch The character to check.
+ * @returns true if the character is a hexadecimal digit, false otherwise.
+ */
+function isHexDigit(ch: string): boolean {
+    return (
+        (ch >= '0' && ch <= '9') ||
+        (ch >= 'A' && ch <= 'F') ||
+        (ch >= 'a' && ch <= 'f')
+    );
+}
+
+/**
+ * Check if a raw baggage value is RFC-compliant:
+ * - characters are in baggage-octet, OR
+ * - part of a valid %HH percent-encoded sequence.
+ */
+function isCompliantBaggageValue(raw: string): boolean {
+    const safeChars = getBaggageHeaderSafeChars();
+
+    for (let i = 0; i < raw.length; i++) {
+        const ch = raw[i];
+
+        // Directly allowed character
+        if (safeChars.has(ch)) {
+            continue;
+        }
+
+        // Percent-encoded triplet: %HH
+        if (ch === '%' && i + 2 < raw.length) {
+            const h1 = raw[i + 1];
+            const h2 = raw[i + 2];
+            if (isHexDigit(h1) && isHexDigit(h2)) {
+                i += 2; // skip the two hex digits
+                continue;
+            }
+        }
+
+        // Not safe and not a valid %HH
+        return false;
+    }
+
+    return true;
 }
