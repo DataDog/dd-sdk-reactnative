@@ -39,7 +39,7 @@ export default declare(
             }
         };
 
-        let reactNativeSVG: ReactNativeSVG | null = null;
+        let reactNativeSVG: ReactNativeSVG | undefined = undefined;
 
         let assetsPath: string | null = null;
 
@@ -53,14 +53,16 @@ export default declare(
                     assetsPath = getAssetsPath();
                 }
 
+                reactNativeSVG = options.__internal_reactNativeSVG;
                 if (!reactNativeSVG && assetsPath) {
                     reactNativeSVG = new ReactNativeSVG(
-                        api.types,
                         process.cwd(),
                         assetsPath,
                         options.__internal_saveSvgMapToDisk || false
                     );
+                    reactNativeSVG.buildSvgMap();
                 }
+                reactNativeSVG?.setApiTypes(api.types);
             },
             visitor: {
                 Program: {

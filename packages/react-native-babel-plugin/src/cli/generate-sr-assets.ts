@@ -15,6 +15,7 @@ import {
     clearAssetsDir,
     getAssetsPath
 } from '../libraries/react-native-svg/processing/fs';
+import { ReactNativeSVG } from '../libraries/react-native-svg';
 
 type SvgIndexEntry = {
     offset: number;
@@ -141,6 +142,12 @@ function generateSessionReplayAssets() {
     let errorCount = 0;
     const errors: Array<{ file: string; error: string }> = [];
 
+    const reactNativeSVG = new ReactNativeSVG(
+                            process.cwd(),
+                            assetsPath,
+                            true
+                        );
+
     for (const file of files) {
         try {
             const code = fs.readFileSync(file, 'utf8');
@@ -155,7 +162,8 @@ function generateSessionReplayAssets() {
                             sessionReplay: {
                                 svgTracking: true
                             },
-                            __internal_saveSvgMapToDisk: true
+                            __internal_saveSvgMapToDisk: true,
+                            __internal_reactNativeSVG: reactNativeSVG
                         }
                     ]
                 ],

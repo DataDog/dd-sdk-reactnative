@@ -42,13 +42,18 @@ export class ReactNativeSVG {
 
     localSvgMap: Record<string, { path: string; content?: string }> = {};
 
+    t: typeof Babel.types | null = null;
+
     constructor(
-        private t: typeof Babel.types,
         private rootDir: string,
         private assetsPath: string,
         private saveSvgMapToDisk: boolean = false
     ) {
-        this.buildSvgMap();
+        
+    }
+
+    setApiTypes(t: typeof Babel.types) {
+        this.t = t;
     }
 
     /**
@@ -70,6 +75,10 @@ export class ReactNativeSVG {
      * after scanning.
      */
     buildSvgMap() {
+        if (!this.t) {
+            return;
+        }
+
         // If not saving to disk, try to load from existing svg-map.json first
         if (!this.saveSvgMapToDisk) {
             // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
@@ -122,10 +131,13 @@ export class ReactNativeSVG {
                         'classProperties',
                         'dynamicImport'
                     ]
-                });
+                });        
 
                 traverse(ast, {
                     ImportDeclaration: path => {
+                        if (!this.t) {
+                            return;
+                        }
                         const source = path.node.source.value;
                         if (!source.endsWith('.svg')) {
                             return;
@@ -145,6 +157,9 @@ export class ReactNativeSVG {
                         }
                     },
                     ExportNamedDeclaration: path => {
+                        if (!this.t) {
+                            return;
+                        }
                         const source = path.node.source?.value;
                         if (!source?.endsWith('.svg')) {
                             return;
@@ -213,6 +228,10 @@ export class ReactNativeSVG {
      *          or `undefined` if no transformation could be performed.
      */
     processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
+        if (!this.t) {
+            return;
+        }
+
         try {
             const dimensions: { width?: string; height?: string } = {};
 
