@@ -17,7 +17,14 @@ import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
-import { setCachedSessionId } from '../helper';
+import {
+    clearCachedAccountId,
+    clearCachedSessionId,
+    clearCachedUserId,
+    setCachedAccountId,
+    setCachedSessionId,
+    setCachedUserId
+} from '../helper';
 import { DatadogTracingContext } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
@@ -48,7 +55,9 @@ describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
-        setCachedSessionId(undefined as any);
+        clearCachedSessionId();
+        clearCachedUserId();
+        clearCachedAccountId();
     });
 
     describe('Context validation', () => {
@@ -1002,6 +1011,88 @@ describe('DdRum', () => {
                         expect(requestHeaders).toHaveProperty('baggage');
                         expect(requestHeaders['baggage']).toBe(
                             `session.id=${randomSessionId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
+                it('tracing context contains User ID in baggage when User ID is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomUserId = `test-${Math.random()}`;
+
+                        setCachedUserId(randomUserId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `user.id=${randomUserId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
+                it('tracing context contains Account ID in baggage when Account ID is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomAccountId = `test-${Math.random()}`;
+
+                        setCachedAccountId(randomAccountId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `account.id=${randomAccountId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
+                it('tracing context contains User ID, Account ID and Session ID in baggage when all session info is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomSessionId = `session-${Math.random()}`;
+                        const randomUserId = `user-${Math.random()}`;
+                        const randomAccountId = `account-${Math.random()}`;
+
+                        setCachedSessionId(randomSessionId);
+                        setCachedUserId(randomUserId);
+                        setCachedAccountId(randomAccountId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `session.id=${randomSessionId},user.id=${randomUserId},account.id=${randomAccountId}`
                         );
 
                         const resourceContext = tracingContext.getRumResourceContext();
