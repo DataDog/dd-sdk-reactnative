@@ -48,9 +48,7 @@ export class ReactNativeSVG {
         private rootDir: string,
         private assetsPath: string,
         private saveSvgMapToDisk: boolean = false
-    ) {
-        
-    }
+    ) {}
 
     setApiTypes(t: typeof Babel.types) {
         this.t = t;
@@ -131,7 +129,7 @@ export class ReactNativeSVG {
                         'classProperties',
                         'dynamicImport'
                     ]
-                });        
+                });
 
                 traverse(ast, {
                     ImportDeclaration: path => {

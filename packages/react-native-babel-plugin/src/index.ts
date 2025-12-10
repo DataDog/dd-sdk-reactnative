@@ -39,7 +39,7 @@ export default declare(
             }
         };
 
-        let reactNativeSVG: ReactNativeSVG | undefined = undefined;
+        let reactNativeSVG: ReactNativeSVG | undefined;
 
         let assetsPath: string | null = null;
 
