@@ -167,13 +167,6 @@ export const getTracingHeadersFromAttributes = (
         }
     }
 
-    if (hasDatadogOrW3CPropagator && tracingAttributes.rumSessionId) {
-        headers.push({
-            header: BAGGAGE_HEADER_KEY,
-            value: `${DD_RUM_SESSION_ID_TAG}=${tracingAttributes.rumSessionId}`
-        });
-    }
-
     return headers;
 };
 
