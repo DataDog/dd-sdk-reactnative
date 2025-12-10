@@ -1,18 +1,23 @@
 {
     "$schema": "../../../../../datadog-configuration.schema.json",
     "configuration": {
-        "applicationId": "fake-app-id",
         "env": "fake-env",
         "clientToken": "fake-client-token",
-        "trackInteractions": true,
-        "trackResources": true,
-        "trackErrors": true,
+        "rumConfiguration": {
+            "applicationId": "fake-app-id",
+            "trackInteractions": true,
+            "trackResources": true,
+            "trackErrors": true,
+            "longTaskThresholdMs": 44,
+            "actionNameAttribute": "action-name-attr"
+        },
+        "traceConfiguration": {
+            "resourceTraceSampleRate": 33
+        },
+        "logsConfiguration": {},
         "trackingConsent": "NOT_GRANTED",
-        "longTaskThresholdMs": 44,
         "verbosity": "WARN",
-        "actionNameAttribute": "action-name-attr",
         "useAccessibilityLabel": false,
-        "resourceTracingSamplingRate": 33,
         "site": "US5",
         "firstPartyHosts": [
             {

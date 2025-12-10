@@ -10,20 +10,18 @@ import {
 } from '@datadog/mobile-react-native';
 import type {
     AutoInstrumentationConfiguration,
-    DdSdkReactNativeConfiguration
+    CoreConfiguration
 } from '@datadog/mobile-react-native';
 import codePush from 'react-native-code-push';
 
-import { DISCARD_PROPERTY, removeDiscardProperties } from './utils';
+import { removeDiscardProperties } from './utils';
 import type { RequiredOrDiscard } from './utils';
 
 /**
  * Use this class instead of DdSdkReactNative to initialize the Datadog SDK when using AppCenter CodePush.
  */
 export const DatadogCodepush = {
-    async initialize(
-        configuration: DdSdkReactNativeConfiguration
-    ): Promise<void> {
+    async initialize(configuration: CoreConfiguration): Promise<void> {
         const codePushUpdateMetadata = await codePush.getUpdateMetadata();
         if (codePushUpdateMetadata) {
             configuration.versionSuffix = `codepush.${codePushUpdateMetadata.label}`;
@@ -46,18 +44,28 @@ const buildPartialConfiguration = (
     configuration: DatadogProviderConfiguration
 ): AutoInstrumentationConfiguration => {
     const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
-        trackErrors: configuration.trackErrors,
-        trackResources: configuration.trackResources,
-        trackInteractions: configuration.trackInteractions,
-        firstPartyHosts: configuration.firstPartyHosts,
-        logEventMapper: configuration.logEventMapper,
-        errorEventMapper: configuration.errorEventMapper,
-        resourceEventMapper: configuration.resourceEventMapper,
-        actionEventMapper: configuration.actionEventMapper,
         useAccessibilityLabel: configuration.useAccessibilityLabel,
-        resourceTracingSamplingRate: configuration.resourceTracingSamplingRate,
-        actionNameAttribute:
-            configuration.actionNameAttribute ?? DISCARD_PROPERTY
+        firstPartyHosts: configuration.firstPartyHosts,
+        rumConfiguration: {
+            actionNameAttribute:
+                configuration.rumConfiguration?.actionNameAttribute,
+            trackErrors: configuration.rumConfiguration?.trackErrors ?? false,
+            trackResources:
+                configuration.rumConfiguration?.trackResources ?? false,
+            trackInteractions:
+                configuration.rumConfiguration?.trackInteractions ?? false,
+            errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
+            resourceEventMapper:
+                configuration.rumConfiguration?.resourceEventMapper,
+            actionEventMapper: configuration.rumConfiguration?.actionEventMapper
+        },
+        logsConfiguration: {
+            logEventMapper: configuration.logsConfiguration?.logEventMapper
+        },
+        traceConfiguration: {
+            resourceTraceSampleRate:
+                configuration.traceConfiguration?.resourceTraceSampleRate
+        }
     };
 
     return removeDiscardProperties(

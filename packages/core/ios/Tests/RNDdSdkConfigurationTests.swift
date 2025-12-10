@@ -25,13 +25,13 @@ class RNDdSdkConfigurationTests: XCTestCase {
             "password": "pwd"
         ]
 
-        var proxy = configuration.asProxyConfig()
+        var proxy = configuration.asProxyConfiguration()
 
         XCTAssertEqual(proxy?[kCFProxyUsernameKey] as? String, "username")
         XCTAssertEqual(proxy?[kCFProxyPasswordKey] as? String, "pwd")
 
         configuration.setValue("http", forKey: "type")
-        proxy = configuration.asProxyConfig()
+        proxy = configuration.asProxyConfiguration()
         XCTAssertEqual(proxy?["HTTPEnable"] as? Int, 1)
         XCTAssertEqual(proxy?["HTTPProxy"] as? String, "host")
         XCTAssertEqual(proxy?["HTTPPort"] as? Int, 99)
@@ -40,7 +40,7 @@ class RNDdSdkConfigurationTests: XCTestCase {
         XCTAssertEqual(proxy?["HTTPSPort"] as? Int, 99)
 
         configuration.setValue("https", forKey: "type")
-        proxy = configuration.asProxyConfig()
+        proxy = configuration.asProxyConfiguration()
         XCTAssertEqual(proxy?["HTTPEnable"] as? Int, 1)
         XCTAssertEqual(proxy?["HTTPProxy"] as? String, "host")
         XCTAssertEqual(proxy?["HTTPPort"] as? Int, 99)
@@ -49,13 +49,13 @@ class RNDdSdkConfigurationTests: XCTestCase {
         XCTAssertEqual(proxy?["HTTPSPort"] as? Int, 99)
 
         configuration.setValue("socks", forKey: "type")
-        proxy = configuration.asProxyConfig()
+        proxy = configuration.asProxyConfiguration()
         XCTAssertEqual(proxy?["SOCKSEnable"] as? Int, 1)
         XCTAssertEqual(proxy?["SOCKSProxy"] as? String, "host")
         XCTAssertEqual(proxy?["SOCKSPort"] as? Int, 99)
 
         configuration.setValue("99", forKey: "port")
-        proxy = configuration.asProxyConfig()
+        proxy = configuration.asProxyConfiguration()
         XCTAssertEqual(proxy?["SOCKSPort"] as? NSNumber, 99)
     }
 

@@ -7,7 +7,12 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
-import { DdSdkReactNativeConfiguration } from '../DdSdkReactNativeConfiguration';
+import {
+    CoreConfiguration,
+    LogsConfiguration,
+    RumConfiguration,
+    TraceConfiguration
+} from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
 import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
 import { SdkVerbosity } from '../SdkVerbosity';
@@ -23,7 +28,7 @@ import { NativeDdSdk } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import { ErrorSource } from '../types';
-import type { DdSdkConfiguration } from '../types';
+import type { DdSdkNativeConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
@@ -88,11 +93,12 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.logsConfiguration = new LogsConfiguration();
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -102,18 +108,28 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.trackingConsent).toBe(
                 TrackingConsent.GRANTED
             );
-            expect(ddSdkConfiguration.nativeInteractionTracking).toBe(false);
-            expect(ddSdkConfiguration.nativeViewTracking).toBe(false);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeInteractionTracking
+            ).toBe(false);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeViewTracking
+            ).toBe(false);
             expect(ddSdkConfiguration.firstPartyHosts).toEqual([]);
-            expect(ddSdkConfiguration.bundleLogsWithRum).toBe(true);
-            expect(ddSdkConfiguration.bundleLogsWithTraces).toBe(true);
+            expect(
+                ddSdkConfiguration.logsConfiguration?.bundleLogsWithRum
+            ).toBe(true);
+            expect(
+                ddSdkConfiguration.logsConfiguration?.bundleLogsWithTraces
+            ).toBe(true);
 
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
@@ -127,11 +143,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             NativeModules.DdSdk.initialize.mockRejectedValue('rejection');
 
@@ -143,9 +159,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.trackingConsent).toBe(
                 TrackingConsent.GRANTED
@@ -172,14 +190,16 @@ describe('DdSdkReactNative', () => {
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
             const fakeConsent = TrackingConsent.NOT_GRANTED;
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName,
+                fakeConsent
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
-                false,
-                fakeConsent
+                false
             );
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -190,9 +210,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.trackingConsent).toBe(fakeConsent);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
@@ -207,11 +229,12 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -224,9 +247,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
@@ -250,15 +275,17 @@ describe('DdSdkReactNative', () => {
             const proxyUsername = 'foo';
             const proxyPassword = 'bar';
 
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 false
             );
-            configuration.proxyConfig = new ProxyConfiguration(
+            configuration.proxyConfiguration = new ProxyConfiguration(
                 proxyType,
                 proxyAddress,
                 proxyPort,
@@ -277,11 +304,13 @@ describe('DdSdkReactNative', () => {
                     1
                 );
                 const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                    .calls[0][0] as DdSdkConfiguration;
+                    .calls[0][0] as DdSdkNativeConfiguration;
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                    fakeAppId
+                );
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.proxyConfig).toEqual({
+                expect(ddSdkConfiguration.proxyConfiguration).toEqual({
                     type: proxyType,
                     address: proxyAddress,
                     port: proxyPort
@@ -299,16 +328,16 @@ describe('DdSdkReactNative', () => {
             }
         });
 
-        it('initializes with default sampleRate when not specified', async () => {
+        it('initializes with default sessionSampleRate when not specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -316,22 +345,24 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    sampleRate: 100
+                    rumConfiguration: expect.objectContaining({
+                        sessionSampleRate: 100
+                    })
                 })
             );
         });
 
-        it('initializes with sampleRate when it is specified', async () => {
+        it('initializes with sessionSampleRate when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
-            configuration.sampleRate = 0;
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.rumConfiguration.sessionSampleRate = 0;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -339,22 +370,24 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    sampleRate: 0
+                    rumConfiguration: expect.objectContaining({
+                        sessionSampleRate: 0
+                    })
                 })
             );
         });
 
-        it('initializes with sessionSamplingRate when it is specified', async () => {
+        it('initializes with sessionSampleRate when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
-            configuration.sessionSamplingRate = 70;
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.rumConfiguration.sessionSampleRate = 70;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -362,7 +395,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    sampleRate: 70
+                    rumConfiguration: expect.objectContaining({
+                        sessionSampleRate: 70
+                    })
                 })
             );
         });
@@ -372,20 +407,23 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
-            configuration.bundleLogsWithRum = false;
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.logsConfiguration = new LogsConfiguration();
+            configuration.logsConfiguration.bundleLogsWithRum = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
-            expect(ddSdkConfiguration.bundleLogsWithRum).toBe(false);
+                .calls[0][0] as DdSdkNativeConfiguration;
+            expect(
+                ddSdkConfiguration.logsConfiguration?.bundleLogsWithRum
+            ).toBe(false);
         });
 
         it('initializes with bundleLogsWithTraces false when it is specified', async () => {
@@ -393,20 +431,23 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
-            configuration.bundleLogsWithTraces = false;
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.logsConfiguration = new LogsConfiguration();
+            configuration.logsConfiguration.bundleLogsWithTraces = false;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
-            expect(ddSdkConfiguration.bundleLogsWithTraces).toBe(false);
+                .calls[0][0] as DdSdkNativeConfiguration;
+            expect(
+                ddSdkConfiguration.logsConfiguration?.bundleLogsWithTraces
+            ).toBe(false);
         });
 
         it('initializes with the version when a version is specified', async () => {
@@ -414,11 +455,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.version = '2.0.0';
 
             // WHEN
@@ -426,7 +467,7 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(
                 (ddSdkConfiguration.additionalConfiguration as {
                     '_dd.version': string;
@@ -439,11 +480,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.versionSuffix = 'codepush-3';
 
             // WHEN
@@ -451,7 +492,7 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(
                 (ddSdkConfiguration.additionalConfiguration as {
                     '_dd.version': string;
@@ -469,11 +510,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
             configuration.version = '2.0.0';
             configuration.versionSuffix = 'codepush-3';
 
@@ -482,7 +523,7 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(
                 (ddSdkConfiguration.additionalConfiguration as {
                     '_dd.version': string;
@@ -500,12 +541,12 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
-                fakeAppId
+                fakeEnvName
             );
-            configuration.initialResourceThreshold = 0.123;
+            configuration.rumConfiguration = new RumConfiguration(fakeAppId);
+            configuration.rumConfiguration.initialResourceThreshold = 0.123;
 
             // WHEN
             await DdSdkReactNative.initialize(configuration);
@@ -513,7 +554,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    initialResourceThreshold: 0.123
+                    rumConfiguration: expect.objectContaining({
+                        initialResourceThreshold: 0.123
+                    })
                 })
             );
         });
@@ -525,9 +568,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 true
             );
@@ -540,9 +585,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
@@ -559,14 +606,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 true
             );
-            configuration.resourceTracingSamplingRate = 42;
+            configuration.traceConfiguration = new TraceConfiguration();
+            configuration.traceConfiguration.resourceTraceSampleRate = 42;
             configuration.firstPartyHosts = [
                 'api.example.com',
                 {
@@ -583,9 +633,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.firstPartyHosts).toEqual([
                 {
@@ -625,15 +677,18 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.resourceTracingSamplingRate = 2;
+            configuration.traceConfiguration = new TraceConfiguration();
+            configuration.traceConfiguration.resourceTraceSampleRate = 2;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -643,9 +698,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
@@ -660,15 +717,18 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.logEventMapper = log => {
+            configuration.logsConfiguration = new LogsConfiguration();
+            configuration.logsConfiguration.logEventMapper = log => {
                 log.message = 'new message';
                 return log;
             };
@@ -691,15 +751,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.errorEventMapper = event => {
+            configuration.rumConfiguration.errorEventMapper = event => {
                 event.message = 'new error massage';
                 return event;
             };
@@ -734,15 +796,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.resourceEventMapper = event => {
+            configuration.rumConfiguration.resourceEventMapper = event => {
                 event.context = {
                     ...event.context,
                     body: 'content'
@@ -781,15 +845,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.actionEventMapper = event => {
+            configuration.rumConfiguration.actionEventMapper = event => {
                 event.context = {
                     ...event.context,
                     body: 'content'
@@ -824,16 +890,18 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const fakeServiceName = 'aFakeServiceName';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const fakeService = 'aFakeService';
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.serviceName = fakeServiceName;
+            configuration.service = fakeService;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -843,11 +911,13 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.serviceName).toBe(fakeServiceName);
+            expect(ddSdkConfiguration.service).toBe(fakeService);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
@@ -861,9 +931,11 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
@@ -879,9 +951,11 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
             expect(ddSdkConfiguration.verbosity).toBe(SdkVerbosity.DEBUG);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
@@ -897,15 +971,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.nativeViewTracking = true;
+            configuration.rumConfiguration.nativeViewTracking = true;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -915,11 +991,15 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.nativeViewTracking).toBe(true);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeViewTracking
+            ).toBe(true);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
@@ -933,15 +1013,17 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.nativeInteractionTracking = true;
+            configuration.rumConfiguration.nativeInteractionTracking = true;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -951,11 +1033,15 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeModules.DdSdk.initialize.mock.calls.length).toBe(1);
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-            expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+            expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                fakeAppId
+            );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.nativeInteractionTracking).toBe(true);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeInteractionTracking
+            ).toBe(true);
             expect(ddSdkConfiguration.additionalConfiguration).toStrictEqual({
                 '_dd.react_native_version': reactNativeVersion,
                 '_dd.source': 'react-native',
@@ -969,16 +1055,18 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
             configuration.nativeLongTaskThresholdMs = 234;
-            configuration.longTaskThresholdMs = 456;
+            configuration.rumConfiguration.longTaskThresholdMs = 456;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -987,9 +1075,11 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(234);
-            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(456);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
+            ).toBe(456);
         });
 
         it('enables long task tracking when initialize { native and javascript long task false threshold }', async () => {
@@ -997,16 +1087,18 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
             configuration.nativeLongTaskThresholdMs = false;
-            configuration.longTaskThresholdMs = false;
+            configuration.rumConfiguration.longTaskThresholdMs = false;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -1015,9 +1107,11 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
+                .calls[0][0] as DdSdkNativeConfiguration;
             expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
-            expect(ddSdkConfiguration.longTaskThresholdMs).toBe(0);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
+            ).toBe(0);
         });
 
         it('enables custom endpoints when initialize { custom endpoints specified }', async () => {
@@ -1025,19 +1119,24 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
-            const configuration = new DdSdkReactNativeConfiguration(
+            const configuration = new CoreConfiguration(
                 fakeClientToken,
-                fakeEnvName,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
                 false,
                 true
             );
-            configuration.customEndpoints = {
-                rum: 'https://rum.example.com/',
-                trace: 'https://trace.example.com/',
-                logs: 'https://logs.example.com/'
-            };
+            configuration.rumConfiguration.customEndpoint =
+                'https://rum.example.com/';
+            configuration.logsConfiguration = new LogsConfiguration();
+            configuration.logsConfiguration.customEndpoint =
+                'https://logs.example.com/';
+            configuration.traceConfiguration = new TraceConfiguration();
+            configuration.traceConfiguration.customEndpoint =
+                'https://trace.example.com/';
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -1046,12 +1145,16 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                .calls[0][0] as DdSdkConfiguration;
-            expect(ddSdkConfiguration.customEndpoints).toEqual({
-                rum: 'https://rum.example.com/',
-                trace: 'https://trace.example.com/',
-                logs: 'https://logs.example.com/'
-            });
+                .calls[0][0] as DdSdkNativeConfiguration;
+            expect(ddSdkConfiguration.rumConfiguration?.customEndpoint).toEqual(
+                'https://rum.example.com/'
+            );
+            expect(
+                ddSdkConfiguration.logsConfiguration?.customEndpoint
+            ).toEqual('https://logs.example.com/');
+            expect(
+                ddSdkConfiguration.traceConfiguration?.customEndpoint
+            ).toEqual('https://trace.example.com/');
         });
     });
 
@@ -1249,16 +1352,18 @@ describe('DdSdkReactNative', () => {
                 const proxyAddress = '1.1.1.1';
                 const proxyPort = 8080;
 
-                const configuration = new DdSdkReactNativeConfiguration(
+                const configuration = new CoreConfiguration(
                     fakeClientToken,
-                    fakeEnvName,
+                    fakeEnvName
+                );
+                configuration.rumConfiguration = new RumConfiguration(
                     fakeAppId,
                     false,
                     false,
                     false
                 );
 
-                configuration.proxyConfig = {
+                configuration.proxyConfiguration = {
                     type: proxyType,
                     address: proxyAddress,
                     port: proxyPort
@@ -1274,11 +1379,13 @@ describe('DdSdkReactNative', () => {
                     1
                 );
                 const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                    .calls[0][0] as DdSdkConfiguration;
+                    .calls[0][0] as DdSdkNativeConfiguration;
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                    fakeAppId
+                );
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.proxyConfig).toStrictEqual({
+                expect(ddSdkConfiguration.proxyConfiguration).toStrictEqual({
                     type: proxyType,
                     address: proxyAddress,
                     port: proxyPort
@@ -1308,16 +1415,18 @@ describe('DdSdkReactNative', () => {
                 const proxyUsername = 'foo';
                 const proxyPassword = 'bar';
 
-                const configuration = new DdSdkReactNativeConfiguration(
+                const configuration = new CoreConfiguration(
                     fakeClientToken,
-                    fakeEnvName,
+                    fakeEnvName
+                );
+                configuration.rumConfiguration = new RumConfiguration(
                     fakeAppId,
                     false,
                     false,
                     false
                 );
 
-                configuration.proxyConfig = {
+                configuration.proxyConfiguration = {
                     type: proxyType,
                     address: proxyAddress,
                     port: proxyPort,
@@ -1335,11 +1444,13 @@ describe('DdSdkReactNative', () => {
                     1
                 );
                 const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
-                    .calls[0][0] as DdSdkConfiguration;
+                    .calls[0][0] as DdSdkNativeConfiguration;
                 expect(ddSdkConfiguration.clientToken).toBe(fakeClientToken);
-                expect(ddSdkConfiguration.applicationId).toBe(fakeAppId);
+                expect(ddSdkConfiguration.rumConfiguration?.applicationId).toBe(
+                    fakeAppId
+                );
                 expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-                expect(ddSdkConfiguration.proxyConfig).toStrictEqual({
+                expect(ddSdkConfiguration.proxyConfiguration).toStrictEqual({
                     type: proxyType,
                     address: proxyAddress,
                     port: proxyPort,

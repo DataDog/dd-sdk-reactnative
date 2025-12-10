@@ -70,10 +70,10 @@ class DdSdkNativeInitialization internal constructor(
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
-        configuration.bundleLogsWithRum?.let {
+        configuration.logsConfiguration?.bundleLogsWithRum?.let {
             datadog.bundleLogsWithRum = it
         }
-        configuration.bundleLogsWithTraces?.let {
+        configuration.logsConfiguration?.bundleLogsWithTraces?.let {
             datadog.bundleLogsWithTraces = it
         }
     }
@@ -115,20 +115,20 @@ class DdSdkNativeInitialization internal constructor(
     private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
-                applicationId = configuration.applicationId
+                applicationId = configuration.rumConfiguration?.applicationId ?: ""
             )
-        if (configuration.sampleRate != null) {
-            configBuilder.setSessionSampleRate(configuration.sampleRate.toFloat())
+        if (configuration.rumConfiguration?.sessionSampleRate != null) {
+            configBuilder.setSessionSampleRate(configuration.rumConfiguration.sessionSampleRate.toFloat())
         }
 
-        configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
-        configBuilder.trackBackgroundEvents(configuration.trackBackgroundEvents ?: false)
+        configBuilder.trackFrustrations(configuration.rumConfiguration?.trackFrustrations ?: true)
+        configBuilder.trackBackgroundEvents(configuration.rumConfiguration?.trackBackgroundEvents ?: false)
 
         configBuilder.setVitalsUpdateFrequency(
-            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+            buildVitalUpdateFrequency(configuration.rumConfiguration?.vitalsUpdateFrequency)
         )
 
-        val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
+        val telemetrySampleRate = (configuration.rumConfiguration?.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
 
         val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
@@ -136,14 +136,14 @@ class DdSdkNativeInitialization internal constructor(
             configBuilder.trackLongTasks(longTask)
         }
 
-        if (configuration.nativeViewTracking == true) {
+        if (configuration.rumConfiguration?.nativeViewTracking == true) {
             // Use sensible default
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
 
-        if (configuration.nativeInteractionTracking == false) {
+        if (configuration.rumConfiguration?.nativeInteractionTracking == false) {
             configBuilder.disableUserInteractionTracking()
         }
 
@@ -182,9 +182,9 @@ class DdSdkNativeInitialization internal constructor(
                         configuration.nativeCrashReportEnabled
                     // trackCrossPlatformLongTasks will be deprecated for trackLongTask
                     event.telemetry.configuration.trackCrossPlatformLongTasks =
-                        configuration.longTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackLongTask =
-                        configuration.longTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackNativeLongTasks =
                         configuration.nativeLongTaskThresholdMs != 0.0
 
@@ -208,15 +208,15 @@ class DdSdkNativeInitialization internal constructor(
             }
         )
 
-        configuration.customEndpoints?.rum?.let {
+        configuration.rumConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
-        configuration.trackNonFatalAnrs?.let {
+        configuration.rumConfiguration?.trackNonFatalAnrs?.let {
             configBuilder.trackNonFatalAnrs(it)
         }
 
-        configuration.initialResourceThreshold?.let {
+        configuration.rumConfiguration?.initialResourceThreshold?.let {
             val milliseconds = it.seconds.inWholeMilliseconds
             configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
         }
@@ -228,7 +228,7 @@ class DdSdkNativeInitialization internal constructor(
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
         val configBuilder = LogsConfiguration.Builder()
-        configuration.customEndpoints?.logs?.let {
+        configuration.logsConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
@@ -237,7 +237,7 @@ class DdSdkNativeInitialization internal constructor(
 
     private fun buildTraceConfiguration(configuration: DdSdkConfiguration): TraceConfiguration {
         val configBuilder = TraceConfiguration.Builder()
-        configuration.customEndpoints?.trace?.let {
+        configuration.traceConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
@@ -249,11 +249,11 @@ class DdSdkNativeInitialization internal constructor(
             clientToken = configuration.clientToken,
             env = configuration.env,
             variant = "",
-            service = configuration.serviceName
+            service = configuration.service
         )
 
-        val additionalConfig = configuration.additionalConfig?.toMutableMap()
-        val versionSuffix = configuration.additionalConfig?.get(DdSdkImplementation.DD_VERSION_SUFFIX) as? String
+        val additionalConfig = configuration.additionalConfiguration?.toMutableMap()
+        val versionSuffix = configuration.additionalConfiguration?.get(DdSdkImplementation.DD_VERSION_SUFFIX) as? String
         if (versionSuffix != null && additionalConfig != null) {
             val defaultVersion = getDefaultAppVersion()
             additionalConfig.put(DdSdkImplementation.DD_VERSION, defaultVersion + versionSuffix)
@@ -274,7 +274,7 @@ class DdSdkNativeInitialization internal constructor(
         )
 
 
-        configuration.proxyConfig?.let { (proxy, authenticator) ->
+        configuration.proxyConfiguration?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
 

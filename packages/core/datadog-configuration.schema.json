@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/DataDog/dd-sdk-reactnative/blob/develop/datadog-configuration.schema.json",
     "title": "Datadog React Native SDK Configuration",
-    "description": "Configuration for initializing the Datadog React Native SDK from the native layers.",
+    "description": "Configuration for initializing the Datadog React Native SDK from the native layers (v3).",
     "type": "object",
     "properties": {
         "configuration": {
@@ -17,41 +17,8 @@
                     "description": "The application’s environment, for example: prod, pre-prod, staging, etc.",
                     "type": "string"
                 },
-                "applicationId": {
-                    "description": "The RUM application ID.",
-                    "type": "string"
-                },
-                "nativeCrashReportEnabled": {
-                    "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
-                    "type": "boolean"
-                },
-                "nativeLongTaskThresholdMs": {
-                    "description": "The threshold for native long tasks reporting in milliseconds.",
-                    "type": "integer"
-                },
-                "longTaskThresholdMs": {
-                    "description": "The threshold for javascript long tasks reporting in milliseconds.",
-                    "type": "integer"
-                },
-                "sessionSamplingRate": {
-                    "description": "Percentage of sampled RUM sessions. Range `0`-`100`.",
-                    "type": "integer"
-                },
-                "site": {
-                    "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1', 'AP2', or 'EU1', default is 'US1').",
-                    "type": "string",
-                    "enum": [
-                        "US1",
-                        "US1_FED",
-                        "US3",
-                        "US5",
-                        "EU1",
-                        "AP1",
-                        "AP2"
-                    ]
-                },
                 "trackingConsent": {
-                    "description": "Consent, which can take one of the following values: 'PENDING', 'GRANTED', 'NOT_GRANTED'.",
+                    "description": "Consent, which can take one of the following values: 'PENDING', 'GRANTED', 'NOT_GRANTED'. Defaults to the SDK’s internal configuration when omitted.",
                     "type": "string",
                     "enum": [
                         "PENDING",
@@ -59,28 +26,14 @@
                         "NOT_GRANTED"
                     ]
                 },
-                "telemetrySampleRate": {
-                    "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100`.",
-                    "type": "integer"
+                "useAccessibilityLabel": {
+                    "description": "Determines whether the accessibility labels can be used to name RUM actions. Defaults to `true`.",
+                    "type": "boolean"
                 },
-                "vitalsUpdateFrequency": {
-                    "description": "Sets the preferred frequency for collecting mobile vitals.",
-                    "type": "string",
-                    "enum": [
-                        "NEVER",
-                        "RARE",
-                        "AVERAGE",
-                        "FREQUENT"
-                    ]
-                },
-                "uploadFrequency": {
-                    "description": "Sets the preferred frequency for uploading batches of data.",
-                    "type": "string",
-                    "enum": [
-                        "RARE",
-                        "AVERAGE",
-                        "FREQUENT"
-                    ]
+                "additionalConfiguration": {
+                    "description": "Additional custom configuration passed as key/value pairs. This is forwarded to the native SDKs.",
+                    "type": "object",
+                    "additionalProperties": true
                 },
                 "batchSize": {
                     "description": "Defines the Datadog SDK policy when batching data together before uploading it to Datadog servers.",
@@ -91,48 +44,27 @@
                         "LARGE"
                     ]
                 },
-                "trackFrustrations": {
-                    "description": "Enables tracking of frustration signals (error taps). Defaults to `true`.",
-                    "type": "boolean"
-                },
-                "trackBackgroundEvents": {
-                    "description": "Enables tracking of RUM event when no RUM View is active.",
-                    "type": "boolean"
-                },
-                "customEndpoints": {
-                    "type": "object",
-                    "description": "Target a custom server for RUM, Logs and Traces features.",
-                    "properties": {
-                        "rum": {
-                            "type": "string"
-                        },
-                        "logs": {
-                            "type": "string"
-                        },
-                        "trace": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "nativeViewTracking": {
-                    "description": "Enables native views tracking.",
-                    "type": "boolean"
-                },
-                "nativeInteractionTracking": {
-                    "description": "Enables native interaction tracking.",
-                    "type": "boolean"
-                },
-                "verbosity": {
-                    "description": "Verbosity for internal SDK logging.",
+                "batchProcessingLevel": {
+                    "description": "Sets the preferred level for processing batches of data.",
                     "type": "string",
                     "enum": [
-                        "DEBUG",
-                        "INFO",
-                        "WARN",
-                        "ERROR"
+                        "LOW",
+                        "MEDIUM",
+                        "HIGH"
                     ]
                 },
-                "proxy": {
+                "nativeCrashReportEnabled": {
+                    "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
+                    "type": "boolean"
+                },
+                "nativeLongTaskThresholdMs": {
+                    "description": "The threshold for native long tasks reporting in milliseconds. Set to a number to enable reporting or `false` to disable.",
+                    "type": [
+                        "integer",
+                        "boolean"
+                    ]
+                },
+                "proxyConfiguration": {
                     "type": "object",
                     "description": "Configuration for proxying SDK data.",
                     "properties": {
@@ -168,13 +100,49 @@
                         "address"
                     ]
                 },
-                "serviceName": {
+                "service": {
                     "description": "Custom service name.",
                     "type": "string"
+                },
+                "uploadFrequency": {
+                    "description": "Sets the preferred frequency for uploading batches of data.",
+                    "type": "string",
+                    "enum": [
+                        "RARE",
+                        "AVERAGE",
+                        "FREQUENT"
+                    ]
+                },
+                "verbosity": {
+                    "description": "Verbosity for internal SDK logging.",
+                    "type": "string",
+                    "enum": [
+                        "DEBUG",
+                        "INFO",
+                        "WARN",
+                        "ERROR"
+                    ]
                 },
                 "version": {
                     "description": "Overrides the reported version of the app.",
                     "type": "string"
+                },
+                "versionSuffix": {
+                    "description": "Add a suffix to the reported version of the app. See https://docs.datadoghq.com/getting_started/tagging/#define-tags for more information on the format.",
+                    "type": "string"
+                },
+                "site": {
+                    "description": "The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', 'AP1', 'AP2', or 'EU1', default is 'US1').",
+                    "type": "string",
+                    "enum": [
+                        "US1",
+                        "US1_FED",
+                        "US3",
+                        "US5",
+                        "EU1",
+                        "AP1",
+                        "AP2"
+                    ]
                 },
                 "firstPartyHosts": {
                     "description": "List of your backends hosts to enable tracing with.",
@@ -203,55 +171,136 @@
                         }
                     }
                 },
-                "trackInteractions": {
-                    "description": "Track React Native components interactions.",
-                    "type": "boolean"
+                "rumConfiguration": {
+                    "description": "RUM-specific configuration options.",
+                    "type": "object",
+                    "properties": {
+                        "applicationId": {
+                            "description": "The RUM application ID.",
+                            "type": "string"
+                        },
+                        "trackInteractions": {
+                            "description": "Track React Native components interactions.",
+                            "type": "boolean"
+                        },
+                        "trackResources": {
+                            "description": "Track React Native resources.",
+                            "type": "boolean"
+                        },
+                        "trackErrors": {
+                            "description": "Track React Native errors.",
+                            "type": "boolean"
+                        },
+                        "actionNameAttribute": {
+                            "description": "Specifies a custom prop to name RUM actions on elements having an `onPress` prop.",
+                            "type": "string"
+                        },
+                        "appHangThreshold": {
+                            "description": "The app hang threshold in seconds for non-fatal app hangs on iOS.",
+                            "type": "number"
+                        },
+                        "initialResourceThreshold": {
+                            "description": "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS).",
+                            "type": "number"
+                        },
+                        "longTaskThresholdMs": {
+                            "description": "The threshold for JavaScript long tasks reporting in milliseconds. Set to a number to enable reporting or `false` to disable.",
+                            "type": [
+                                "integer",
+                                "boolean"
+                            ]
+                        },
+                        "nativeViewTracking": {
+                            "description": "Enables native views tracking.",
+                            "type": "boolean"
+                        },
+                        "nativeInteractionTracking": {
+                            "description": "Enables native interaction tracking.",
+                            "type": "boolean"
+                        },
+                        "sessionSampleRate": {
+                            "description": "Percentage of sampled RUM sessions. Range `0`-`100`.",
+                            "type": "integer"
+                        },
+                        "trackBackgroundEvents": {
+                            "description": "Enables tracking of RUM events when no RUM View is active.",
+                            "type": "boolean"
+                        },
+                        "trackFrustrations": {
+                            "description": "Enables tracking of frustration signals (error taps). Defaults to `true`.",
+                            "type": "boolean"
+                        },
+                        "trackNonFatalAnrs": {
+                            "description": "Enables tracking of non-fatal ANRs on Android.",
+                            "type": "boolean"
+                        },
+                        "trackWatchdogTerminations": {
+                            "description": "Determines whether the SDK should track application termination by the watchdog on iOS. Default: `false`",
+                            "type": "boolean"
+                        },
+                        "vitalsUpdateFrequency": {
+                            "description": "Sets the preferred frequency for collecting mobile vitals.",
+                            "type": "string",
+                            "enum": [
+                                "NEVER",
+                                "RARE",
+                                "AVERAGE",
+                                "FREQUENT"
+                            ]
+                        },
+                        "trackMemoryWarnings": {
+                            "description": "Enables tracking of memory warnings as RUM events on iOS. Default: `true`",
+                            "type": "boolean"
+                        },
+                        "telemetrySampleRate": {
+                            "description": "The sampling rate for Internal Telemetry (info related to the work of the SDK internals). Range `0`-`100`.",
+                            "type": "integer"
+                        },
+                        "customEndpoint": {
+                            "description": "Target a custom server for RUM.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "applicationId"
+                    ]
                 },
-                "trackResources": {
-                    "description": "Track React Native resources.",
-                    "type": "boolean"
+                "logsConfiguration": {
+                    "description": "Logs-specific configuration options.",
+                    "type": "object",
+                    "properties": {
+                        "bundleLogsWithRum": {
+                            "description": "Enables RUM correlation with logs.",
+                            "type": "boolean"
+                        },
+                        "bundleLogsWithTraces": {
+                            "description": "Enables Traces correlation with logs.",
+                            "type": "boolean"
+                        },
+                        "customEndpoint": {
+                            "description": "Target a custom server for Logs.",
+                            "type": "string"
+                        }
+                    }
                 },
-                "trackErrors": {
-                    "description": "Track React Native errors.",
-                    "type": "boolean"
-                },
-                "actionNameAttribute": {
-                    "description": "Specifies a custom prop to name RUM actions on elements having an `onPress` prop.",
-                    "type": "string"
-                },
-                "useAccessibilityLabel": {
-                    "description": "Determines whether the accessibility labels can be used to name RUM actions (default is true)",
-                    "type": "boolean"
-                },
-                "resourceTracingSamplingRate": {
-                    "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
-                    "type": "number"
-                },
-                "bundleLogsWithRum": {
-                    "description": "Enables RUM correlation with logs.",
-                    "type": "boolean"
-                },
-                "bundleLogsWithTraces": {
-                    "description": "Enables Traces correlation with logs.",
-                    "type": "boolean"
-                },
-                "appHangThreshold": {
-                    "description": "The app hang threshold in seconds for non-fatal app hangs on iOS.",
-                    "type": "number"
-                },
-                "trackNonFatalAnrs": {
-                    "description": "Enables tracking of non-fatal ANRs on Android.",
-                    "type": "boolean"
-                },
-                "initialResourceThreshold": {
-                    "description": "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)",
-                    "type": "number"
+                "traceConfiguration": {
+                    "description": "Traces-specific configuration options.",
+                    "type": "object",
+                    "properties": {
+                        "resourceTraceSampleRate": {
+                            "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.",
+                            "type": "number"
+                        },
+                        "customEndpoint": {
+                            "description": "Target a custom server for Traces",
+                            "type": "string"
+                        }
+                    }
                 }
             },
             "required": [
                 "clientToken",
-                "env",
-                "applicationId"
+                "env"
             ]
         }
     }

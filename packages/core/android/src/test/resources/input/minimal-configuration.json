@@ -1,8 +1,10 @@
 {
     "$schema": "../../../../../datadog-configuration.schema.json",
     "configuration": {
-        "applicationId": "fake-app-id",
         "env": "fake-env",
-        "clientToken": "fake-client-token"
+        "clientToken": "fake-client-token",
+        "rumConfiguration": {
+            "applicationId": "fake-app-id"
+        }
     }
 }

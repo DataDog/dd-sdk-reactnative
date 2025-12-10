@@ -7,7 +7,7 @@ import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
-import {DatadogProvider, FileBasedConfiguration} from '@datadog/mobile-react-native'
+import {DatadogProvider, DatadogProviderConfiguration, FileBasedConfiguration, RumConfiguration} from '@datadog/mobile-react-native'
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
@@ -62,8 +62,14 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 //   resourceEventMapper: (event) => event, 
 //   actionEventMapper: (event) => event});
 
+// 4.- File based configuration from the native side (using initFromNative)
+// see https://docs.datadoghq.com/real_user_monitoring/guide/initialize-your-native-sdk-before-react-native-starts
+
+// const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
+// configuration.rumConfiguration = new RumConfiguration("fake_value")
 
 export default function App() {
+
   return (
     <DatadogProvider configuration={configuration} onInitialization={onDatadogInitialization}>
       <NavigationContainer ref={navigationRef} onReady={() => {
