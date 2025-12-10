@@ -4,10 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type {
-    DdNativeSdkConfiguration,
-    DdNativeSdkType
-} from '../nativeModulesTypes';
+import type { DdNativeSdkType } from '../nativeModulesTypes';
+import type { DdSdkNativeConfiguration } from '../types';
 
 import type { AttributeEncoder } from './AttributesEncoding/types';
 
@@ -21,7 +19,7 @@ export type DdSdkType = {
      * Initializes Datadog's features.
      * @param configuration: The configuration to use.
      */
-    initialize(configuration: DdNativeSdkConfiguration): Promise<void>;
+    initialize(configuration: DdSdkNativeConfiguration): Promise<void>;
 };
 
 export class DdSdkWrapper implements DdNativeSdkType {
@@ -30,7 +28,7 @@ export class DdSdkWrapper implements DdNativeSdkType {
     }
     private _attributeEncoders: AttributeEncoder<any>[] = [];
 
-    initialize(configuration: DdNativeSdkConfiguration): Promise<void> {
+    initialize(configuration: DdSdkNativeConfiguration): Promise<void> {
         this._attributeEncoders = [...configuration.attributeEncoders];
         return NativeDdSdk.initialize(configuration);
     }
