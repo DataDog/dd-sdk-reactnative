@@ -6,7 +6,8 @@
 
 import {
     parseCliArgs,
-    DEFAULT_IGNORE_PATTERNS
+    DEFAULT_IGNORE_PATTERNS,
+    normalizeIgnorePattern
 } from '../src/cli/generate-sr-assets';
 
 describe('generate-sr-assets CLI', () => {
@@ -231,26 +232,94 @@ describe('generate-sr-assets CLI', () => {
             expect(DEFAULT_IGNORE_PATTERNS).toContain('**/build/**');
         });
 
+        it('should include vendor directory', () => {
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/vendor/**');
+        });
+
+        it('should include native code directories', () => {
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/ios/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/android/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/Pods/**');
+        });
+
+        it('should include Expo directory', () => {
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/.expo/**');
+        });
+
+        it('should include cache and metadata directories', () => {
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/.git/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/.cache/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/.yarn/**');
+        });
+
         it('should include TypeScript declaration files', () => {
             expect(DEFAULT_IGNORE_PATTERNS).toContain('**/*.d.ts');
         });
 
-        it('should include test files', () => {
+        it('should include test files and directories', () => {
             expect(DEFAULT_IGNORE_PATTERNS).toContain('**/*.test.*');
             expect(DEFAULT_IGNORE_PATTERNS).toContain('**/*.spec.*');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/__tests__/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/__mocks__/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/__snapshots__/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/coverage/**');
         });
 
         it('should include config files', () => {
             expect(DEFAULT_IGNORE_PATTERNS).toContain('**/*.config.js');
-        });
-
-        it('should include __tests__ and __mocks__ directories', () => {
-            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/__tests__/**');
-            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/__mocks__/**');
+            expect(DEFAULT_IGNORE_PATTERNS).toContain('**/*.config.ts');
         });
 
         it('should have expected number of patterns', () => {
-            expect(DEFAULT_IGNORE_PATTERNS).toHaveLength(10);
+            expect(DEFAULT_IGNORE_PATTERNS).toHaveLength(21);
+        });
+    });
+
+    describe('normalizeIgnorePattern', () => {
+        describe('folder names (no glob characters)', () => {
+            it('should convert simple folder name to glob pattern', () => {
+                expect(normalizeIgnorePattern('legacy')).toBe('**/legacy/**');
+            });
+
+            it('should convert folder name with hyphen to glob pattern', () => {
+                expect(normalizeIgnorePattern('old-code')).toBe(
+                    '**/old-code/**'
+                );
+            });
+
+            it('should convert folder name with underscore to glob pattern', () => {
+                expect(normalizeIgnorePattern('temp_files')).toBe(
+                    '**/temp_files/**'
+                );
+            });
+
+            it('should convert nested path to glob pattern', () => {
+                expect(normalizeIgnorePattern('src/legacy')).toBe(
+                    '**/src/legacy/**'
+                );
+            });
+        });
+
+        describe('glob patterns (with * or ?)', () => {
+            it('should keep pattern with ** as-is', () => {
+                expect(normalizeIgnorePattern('**/custom/**')).toBe(
+                    '**/custom/**'
+                );
+            });
+
+            it('should keep pattern with single * as-is', () => {
+                expect(normalizeIgnorePattern('*.backup')).toBe('*.backup');
+            });
+
+            it('should keep pattern with ? as-is', () => {
+                expect(normalizeIgnorePattern('file?.txt')).toBe('file?.txt');
+            });
+
+            it('should keep complex glob pattern as-is', () => {
+                expect(normalizeIgnorePattern('**/src/**/*.test.ts')).toBe(
+                    '**/src/**/*.test.ts'
+                );
+            });
         });
     });
 });

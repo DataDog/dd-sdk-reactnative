@@ -31,17 +31,52 @@ export type CliOptions = {
     followSymlinks: boolean;
 };
 
+/**
+ * Converts a user-provided ignore pattern to a glob pattern.
+ * Simple folder names are converted to glob patterns (e.g., "legacy" becomes "** /legacy/** ").
+ * Patterns that already contain glob characters (* or ?) are used as-is.
+ *
+ * @param pattern - The user-provided pattern
+ * @returns A glob-compatible pattern
+ */
+export function normalizeIgnorePattern(pattern: string): string {
+    // If it looks like a glob pattern, use as-is
+    if (pattern.includes('*') || pattern.includes('?')) {
+        return pattern;
+    }
+    // Otherwise, treat it as a folder name and convert to glob pattern
+    return `**/${pattern}/**`;
+}
+
 export const DEFAULT_IGNORE_PATTERNS = [
+    // Dependencies and build output
     '**/node_modules/**',
     '**/lib/**',
     '**/dist/**',
     '**/build/**',
+    '**/vendor/**',
+    // Native code (not React components)
+    '**/ios/**',
+    '**/android/**',
+    '**/Pods/**',
+    // Expo
+    '**/.expo/**',
+    // Cache and metadata
+    '**/.git/**',
+    '**/.cache/**',
+    '**/.yarn/**',
+    // TypeScript declarations
     '**/*.d.ts',
+    // Test files and directories
     '**/*.test.*',
     '**/*.spec.*',
-    '**/*.config.js',
     '**/__tests__/**',
-    '**/__mocks__/**'
+    '**/__mocks__/**',
+    '**/__snapshots__/**',
+    '**/coverage/**',
+    // Config files
+    '**/*.config.js',
+    '**/*.config.ts'
 ];
 
 /**
@@ -110,9 +145,10 @@ Usage: npx datadog-generate-sr-assets [options]
 Pre-generate SVG assets for Datadog Session Replay.
 
 Options:
-  --ignore, -i <pattern>  Additional glob patterns to ignore during scanning.
+  --ignore, -i <pattern>  Additional patterns to ignore during scanning.
+                          Can be a folder name or a glob pattern.
+                          Folder names are auto-converted to glob patterns.
                           Can be specified multiple times.
-                          Example: --ignore "**/legacy/**"
   --path, -p <path>       Path to the root directory to scan.
                           Defaults to the current working directory.
   --verbose, -v           Enable verbose output for debugging.
@@ -123,8 +159,9 @@ Options:
 Examples:
   npx datadog-generate-sr-assets
   npx datadog-generate-sr-assets --path ./src
-  npx datadog-generate-sr-assets --ignore "**/legacy/**" --verbose
-  npx datadog-generate-sr-assets -p ./src -i "**/old/**" -v
+  npx datadog-generate-sr-assets --ignore legacy --ignore vendor
+  npx datadog-generate-sr-assets --ignore "**/custom-pattern/**" --verbose
+  npx datadog-generate-sr-assets -p ./src -i old-code -v
 `);
 }
 
@@ -268,14 +305,7 @@ function generateSessionReplayAssets() {
 
     // Merge default ignore patterns with user-provided ones
     // Convert simple folder names to glob patterns (e.g., "legacy" → "**/legacy/**")
-    const userIgnorePatterns = cliOptions.ignore.map(pattern => {
-        // If it looks like a glob pattern, use as-is
-        if (pattern.includes('*') || pattern.includes('?')) {
-            return pattern;
-        }
-        // Otherwise, treat it as a folder name and convert to glob pattern
-        return `**/${pattern}/**`;
-    });
+    const userIgnorePatterns = cliOptions.ignore.map(normalizeIgnorePattern);
     const ignorePatterns = [...DEFAULT_IGNORE_PATTERNS, ...userIgnorePatterns];
 
     if (verbose) {
