@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-package com.datadog.reactnative.tools.unit
+package main.reactnative.tools.unit
 
 import org.assertj.core.api.AbstractAssert
 

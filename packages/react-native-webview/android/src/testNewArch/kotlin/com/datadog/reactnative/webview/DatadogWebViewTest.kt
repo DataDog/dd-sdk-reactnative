@@ -10,7 +10,7 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.core.InternalSdkCore
 import com.datadog.android.webview.WebViewTracking
 import com.datadog.reactnative.DatadogSDKWrapperStorage
-import com.datadog.reactnative.tools.unit.GenericAssert.Companion.assertThat
+import main.reactnative.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.uimanager.ThemedReactContext
 import com.reactnativecommunity.webview.RNCWebView
@@ -90,9 +90,6 @@ internal class DatadogWebViewTest {
         // When first initialized, the WebView manager core should be null
         assertThat(manager.datadogCore).isNull()
 
-        // When first initialized, the WebView tracking should be disabled
-        assertThat(manager.isWebViewTrackingEnabled).isEqualTo(false)
-
         // =========
         //   When
         // =========
@@ -100,10 +97,11 @@ internal class DatadogWebViewTest {
         val rncWebViewWrapper = mock(RNCWebViewWrapper::class.java)
         whenever(rncWebViewWrapper.webView) doReturn rncWebView
 
-        // When tracking is enabled with a null core...
-        val allowedHosts = JavaOnlyArray()
-        allowedHosts.pushString("example.com")
-        manager.setAllowedHosts(rncWebViewWrapper, allowedHosts)
+        // When JS sends allowedHosts through 'injectedJavaScriptBeforeContentLoaded' prop
+        manager.setInjectedJavaScriptBeforeContentLoaded(
+            rncWebViewWrapper,
+            "// #allowedHosts=[\"example.com\",\"test.com\"]"
+        )
 
         // =========
         //   Then
@@ -116,11 +114,9 @@ internal class DatadogWebViewTest {
         verify(themedReactContext).runOnUiQueueThread(any())
 
         // Native WebView tracking should be called
+        val arrayList = ArrayList(listOf("example.com", "test.com"))
         webViewTrackingMockedStatic.verify {
-            WebViewTracking.enable(rncWebView, listOf("example.com"), 100.0f, datadogCore)
+            WebViewTracking.enable(rncWebView, arrayList, 100.0f, datadogCore)
         }
-
-        // At this point 'isWebViewTrackingEnabled' should be true.
-        assertThat(manager.isWebViewTrackingEnabled).isEqualTo(true)
     }
 }
