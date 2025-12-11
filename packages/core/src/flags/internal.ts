@@ -6,13 +6,13 @@ import type { EvaluationContext, FlagDetails } from './types';
 export interface FlagCacheEntry {
     key: string;
     value: unknown;
-    variationType: string;
-    variationValue: string;
-    doLog: boolean;
     allocationKey: string;
     variationKey: string;
-    extraLogging: Record<string, unknown>;
+    variationType: string;
+    variationValue: string;
     reason: string;
+    doLog: boolean;
+    extraLogging: Record<string, unknown>;
 }
 
 export const flagCacheEntryToFlagDetails = <T>(

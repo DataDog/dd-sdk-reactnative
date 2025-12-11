@@ -100,37 +100,6 @@ extension NSDictionary {
         )
     }
 
-    func asConfigurationForFlags() -> Flags.Configuration? {
-        let enabled = object(forKey: "enabled") as? Bool ?? false
-
-        if !enabled {
-            return nil
-        }
-
-        // Hard set `gracefulModeEnabled` to `true` because this misconfiguration is handled on JS side.
-        let gracefulModeEnabled = true
-        
-        let trackExposures = object(forKey: "trackExposures") as? Bool
-        let rumIntegrationEnabled = object(forKey: "rumIntegrationEnabled") as? Bool
-
-        var customFlagsEndpointURL: URL? = nil
-        if let customFlagsEndpoint = object(forKey: "customFlagsEndpoint") as? String {
-            customFlagsEndpointURL = URL(string: "\(customFlagsEndpoint)/precompute-assignments" as String)
-        }
-        var customExposureEndpointURL: URL? = nil
-        if let customExposureEndpoint = object(forKey: "customExposureEndpoint") as? String {
-            customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
-        }
-
-        return Flags.Configuration(
-            gracefulModeEnabled: gracefulModeEnabled,
-            customFlagsEndpoint: customFlagsEndpointURL,
-            customExposureEndpoint: customExposureEndpointURL,
-            trackExposures: trackExposures ?? true,
-            rumIntegrationEnabled: rumIntegrationEnabled ?? true
-        )
-    }
-
     func asCustomEndpoints() -> CustomEndpoints {
         let rum = object(forKey: "rum") as? NSString
         let logs = object(forKey: "logs") as? NSString

@@ -15,9 +15,8 @@ public class DdFlagsImplementation: NSObject {
 
     private var clientProviders: [String: () -> FlagsClientProtocol] = [:]
 
-    internal init(
-        core: DatadogCoreProtocol
-    ) {
+    /// Exposing this initializer for testing purposes. React Native will always use the default initializer.
+    internal init(core: DatadogCoreProtocol) {
         self.core = core
     }
 
@@ -28,7 +27,7 @@ public class DdFlagsImplementation: NSObject {
 
     @objc
     public func enable(_ configuration: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        if let config = configuration.asConfigurationForFlags() {
+        if let config = configuration.asFlagsConfiguration() {
             Flags.enable(with: config)
         } else {
             consolePrint("Invalid configuration provided for Flags. Feature initialization skipped.", .error)
@@ -54,17 +53,6 @@ public class DdFlagsImplementation: NSObject {
         return client
     }
 
-    private func parseAttributes(attributes: NSDictionary) -> [String: AnyValue] {
-        var result: [String: AnyValue] = [:]
-        for (key, value) in attributes {
-            guard let stringKey = key as? String else {
-                continue
-            }
-            result[stringKey] = AnyValue.wrap(value)
-        }
-        return result
-    }
-
     @objc
     public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         let client = getClient(name: clientName)
@@ -72,22 +60,23 @@ public class DdFlagsImplementation: NSObject {
             return
         }
 
-        let parsedAttributes = parseAttributes(attributes: attributes)
-        let evaluationContext = FlagsEvaluationContext(targetingKey: targetingKey, attributes: parsedAttributes)
+        let evaluationContext = buildEvaluationContext(targetingKey: targetingKey, attributes: attributes)
 
         client.setEvaluationContext(evaluationContext) { result in
             switch result {
             case .success:
-                guard let flagsDetails = clientInternal.getAllFlagsDetails() else {
+                guard let flagsSnapshot = clientInternal.getFlagAssignmentsSnapshot() else {
                     reject(nil, "CLIENT_NOT_INITIALIZED", nil)
                     return
                 }
 
-                let result = flagsDetails.compactMapValues { details in
-                    details.toSerializedDictionary()
-                }
+                let serializedFlagsSnapshot = Dictionary(
+                    uniqueKeysWithValues: flagsSnapshot.map { key, flagAssignment in
+                        (key, flagAssignment.asDictionary(flagKey: key))
+                    }
+                )
 
-                resolve(result)
+                resolve(serializedFlagsSnapshot)
             case .failure(let error):
                 var errorCode: String
                 switch (error) {
@@ -106,13 +95,120 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
-    public func trackEvaluation(_ clientName: String, key: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func trackEvaluation(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject(nil, "CLIENT_NOT_INITIALIZED", nil)
+            return
+        }
+        guard let flagAssignment = rawFlag.asFlagAssignment() else {
+            reject(nil, "INVALID_FLAG_ASSIGNMENT", nil)
             return
         }
 
-        client.trackEvaluation(key: key)
+        let evaluationContext = buildEvaluationContext(targetingKey: targetingKey, attributes: attributes)
+
+        client.trackFlagSnapshotEvaluation(key: key, assignment: flagAssignment, context: evaluationContext)
+
         resolve(nil)
+    }
+
+    /// Construct an `FlagsEvaluationContext` from a targeting key and a dictionary of attributes.
+    private func buildEvaluationContext(targetingKey: String, attributes: NSDictionary) -> FlagsEvaluationContext {
+        let dict = attributes as? [String: Any] ?? [:]
+
+        let parsedAttributes = dict.compactMapValues { value in AnyValue.wrap(value) }
+
+        return FlagsEvaluationContext(targetingKey: targetingKey, attributes: parsedAttributes)
+    }
+}
+
+extension NSDictionary {
+    func asFlagsConfiguration() -> Flags.Configuration? {
+        let enabled = object(forKey: "enabled") as? Bool ?? false
+
+        if !enabled {
+            return nil
+        }
+
+        // Hard set `gracefulModeEnabled` to `true` because this misconfiguration is handled on JS side.
+        let gracefulModeEnabled = true
+
+        let trackExposures = object(forKey: "trackExposures") as? Bool
+        let rumIntegrationEnabled = object(forKey: "rumIntegrationEnabled") as? Bool
+
+        var customFlagsEndpointURL: URL? = nil
+        if let customFlagsEndpoint = object(forKey: "customFlagsEndpoint") as? String {
+            customFlagsEndpointURL = URL(string: "\(customFlagsEndpoint)/precompute-assignments" as String)
+        }
+        var customExposureEndpointURL: URL? = nil
+        if let customExposureEndpoint = object(forKey: "customExposureEndpoint") as? String {
+            customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
+        }
+
+        return Flags.Configuration(
+            gracefulModeEnabled: gracefulModeEnabled,
+            customFlagsEndpoint: customFlagsEndpointURL,
+            customExposureEndpoint: customExposureEndpointURL,
+            trackExposures: trackExposures ?? true,
+            rumIntegrationEnabled: rumIntegrationEnabled ?? true
+        )
+    }
+}
+
+extension FlagAssignment {
+    func asDictionary(flagKey: String) -> [String: Any] {
+        let value = switch self.variation {
+        case .boolean(let v): v
+        case .string(let v): v
+        case .integer(let v): v
+        case .double(let v): v
+        case .object(let v): v.unwrap()
+        case .unknown: NSNull()
+        }
+
+        return [
+            "key": flagKey,
+            "value": value,
+            "allocationKey": allocationKey,
+            "variationKey": variationKey,
+            "reason": reason,
+            "doLog": doLog,
+            // Parity with Android. We don't use the following properties in iOS SDK.
+            "variationType": "",
+            "variationValue": "",
+            "extraLogging": [:],
+        ]
+    }
+}
+
+extension NSDictionary {
+    func asFlagAssignment() -> FlagAssignment? {
+        guard
+            let allocationKey = object(forKey: "allocationKey") as? String,
+            let variationKey = object(forKey: "variationKey") as? String,
+            let reason = object(forKey: "reason") as? String,
+            let doLog = object(forKey: "doLog") as? Bool,
+            let value = object(forKey: "value")
+        else {
+            return nil
+        }
+
+        let variation: FlagAssignment.Variation = switch value {
+        case let boolValue as Bool: .boolean(boolValue)
+        case let stringValue as String: .string(stringValue)
+        case let intValue as Int: .integer(intValue)
+        case let doubleValue as Double: .double(doubleValue)
+        case let dictValue as [String: Any]: .object(AnyValue.wrap(dictValue))
+        default: .unknown(String(describing: value))
+        }
+
+        return FlagAssignment(
+            allocationKey: allocationKey,
+            variationKey: variationKey,
+            variation: variation,
+            reason: reason,
+            doLog: doLog
+        )
     }
 }
 
@@ -155,52 +251,6 @@ extension AnyValue {
             return array.map { $0.unwrap() }
         case .null:
             return NSNull()
-        }
-    }
-}
-
-extension FlagDetails {
-    func toSerializedDictionary() -> [String: Any?] {
-        let dict: [String: Any?] = [
-            "key": key,
-            "value": getSerializedValue(),
-            "variant": variant as Any?,
-            "reason": reason as Any?,
-            "error": getSerializedError()
-        ]
-
-        return dict
-    }
-
-    private func getSerializedValue() -> Any {
-        if let boolValue = value as? Bool {
-            return boolValue
-        } else if let stringValue = value as? String {
-            return stringValue
-        } else if let intValue = value as? Int {
-            return intValue
-        } else if let doubleValue = value as? Double {
-            return doubleValue
-        } else if let anyValue = value as? AnyValue {
-            return anyValue.unwrap()
-        }
-
-        // Fallback for unexpected types.
-        return NSNull()
-    }
-
-    private func getSerializedError() -> String? {
-        guard let error = error else {
-            return nil
-        }
-
-        switch error {
-        case .providerNotReady:
-            return "PROVIDER_NOT_READY"
-        case .flagNotFound:
-            return "FLAG_NOT_FOUND"
-        case .typeMismatch:
-            return "TYPE_MISMATCH"
         }
     }
 }
