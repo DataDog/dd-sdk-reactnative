@@ -41,6 +41,8 @@ package/android/src/rn79/kotlin/com/datadog/reactnative/sessionreplay/extensions
 package/android/src/rn79/kotlin/com/datadog/reactnative/sessionreplay/utils/ReactViewBackgroundDrawableUtils.kt
 package/android/src/rn80/kotlin/com/datadog/reactnative/sessionreplay/extensions/ComputedBorderRadiusExt.kt
 package/android/src/rn80/kotlin/com/datadog/reactnative/sessionreplay/utils/ReactViewBackgroundDrawableUtils.kt
+package/android/src/rn83/kotlin/com/datadog/reactnative/sessionreplay/extensions/ComputedBorderRadiusExt.kt
+package/android/src/rn83/kotlin/com/datadog/reactnative/sessionreplay/utils/ReactViewBackgroundDrawableUtils.kt
 package/android/src/rnlegacy/kotlin/com.datadog.reactnative.sessionreplay/utils/ReactViewBackgroundDrawableUtils.kt
 package/android/src/rnpost74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKReactNativeSessionReplayPackage.kt
 package/android/src/rnpre74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKReactNativeSessionReplayPackage.kt
