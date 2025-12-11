@@ -729,9 +729,21 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
     });
 
     describe('Error Handling', () => {
-        it('should throw error or warn for unsupported element names', () => {
+        it('should warn for unsupported element names but still include them in output', () => {
+            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
             const input = '<Svg><UnsupportedElement x="10" y="10" /></Svg>';
-            expect(() => transformSvg(input)).toThrow();
+            const output = transformSvg(input);
+
+            // Unsupported elements are converted to lowercase and included
+            expect(output).toMatchInlineSnapshot(
+                `"<svg xmlns="http://www.w3.org/2000/svg"><unsupportedElement x="10" y="10" /></svg>"`
+            );
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping unsupported element')
+            );
+
+            warnSpy.mockRestore();
         });
 
         it('should handle malformed transform array gracefully', () => {
