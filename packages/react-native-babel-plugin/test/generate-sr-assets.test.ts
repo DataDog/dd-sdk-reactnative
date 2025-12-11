@@ -276,49 +276,115 @@ describe('generate-sr-assets CLI', () => {
     });
 
     describe('normalizeIgnorePattern', () => {
-        describe('folder names (no glob characters)', () => {
-            it('should convert simple folder name to glob pattern', () => {
-                expect(normalizeIgnorePattern('legacy')).toBe('**/legacy/**');
+        const mockCwd = '/home/user/project';
+
+        describe('simple folder names (no slashes, no glob)', () => {
+            it('should convert simple folder name to wildcard glob pattern', () => {
+                expect(normalizeIgnorePattern('legacy', mockCwd)).toBe(
+                    '**/legacy/**'
+                );
             });
 
-            it('should convert folder name with hyphen to glob pattern', () => {
-                expect(normalizeIgnorePattern('old-code')).toBe(
+            it('should convert folder name with hyphen to wildcard glob pattern', () => {
+                expect(normalizeIgnorePattern('old-code', mockCwd)).toBe(
                     '**/old-code/**'
                 );
             });
 
-            it('should convert folder name with underscore to glob pattern', () => {
-                expect(normalizeIgnorePattern('temp_files')).toBe(
+            it('should convert folder name with underscore to wildcard glob pattern', () => {
+                expect(normalizeIgnorePattern('temp_files', mockCwd)).toBe(
                     '**/temp_files/**'
-                );
-            });
-
-            it('should convert nested path to glob pattern', () => {
-                expect(normalizeIgnorePattern('src/legacy')).toBe(
-                    '**/src/legacy/**'
                 );
             });
         });
 
-        describe('glob patterns (with * or ?)', () => {
+        describe('relative paths (with ./ or ../)', () => {
+            it('should resolve relative path starting with ./', () => {
+                const result = normalizeIgnorePattern('./android', mockCwd);
+                expect(result).toBe('/home/user/project/android/**');
+            });
+
+            it('should resolve relative path starting with ../', () => {
+                const result = normalizeIgnorePattern('../other', mockCwd);
+                expect(result).toBe('/home/user/other/**');
+            });
+
+            it('should resolve nested relative path', () => {
+                const result = normalizeIgnorePattern('./src/legacy', mockCwd);
+                expect(result).toBe('/home/user/project/src/legacy/**');
+            });
+        });
+
+        describe('paths containing slashes (treated as relative)', () => {
+            it('should resolve path with forward slash as relative', () => {
+                const result = normalizeIgnorePattern('packages/app', mockCwd);
+                expect(result).toBe('/home/user/project/packages/app/**');
+            });
+
+            it('should resolve nested path as relative', () => {
+                const result = normalizeIgnorePattern(
+                    'src/components/legacy',
+                    mockCwd
+                );
+                expect(result).toBe(
+                    '/home/user/project/src/components/legacy/**'
+                );
+            });
+        });
+
+        describe('absolute paths', () => {
+            it('should append /** to absolute path', () => {
+                const result = normalizeIgnorePattern(
+                    '/home/dev/app/android',
+                    mockCwd
+                );
+                expect(result).toBe('/home/dev/app/android/**');
+            });
+
+            it('should keep absolute path with /** unchanged', () => {
+                const result = normalizeIgnorePattern(
+                    '/home/dev/app/android/**',
+                    mockCwd
+                );
+                expect(result).toBe('/home/dev/app/android/**');
+            });
+        });
+
+        describe('glob patterns (with * ? [ ] { } ( ))', () => {
             it('should keep pattern with ** as-is', () => {
-                expect(normalizeIgnorePattern('**/custom/**')).toBe(
+                expect(normalizeIgnorePattern('**/custom/**', mockCwd)).toBe(
                     '**/custom/**'
                 );
             });
 
             it('should keep pattern with single * as-is', () => {
-                expect(normalizeIgnorePattern('*.backup')).toBe('*.backup');
+                expect(normalizeIgnorePattern('*.backup', mockCwd)).toBe(
+                    '*.backup'
+                );
             });
 
             it('should keep pattern with ? as-is', () => {
-                expect(normalizeIgnorePattern('file?.txt')).toBe('file?.txt');
+                expect(normalizeIgnorePattern('file?.txt', mockCwd)).toBe(
+                    'file?.txt'
+                );
+            });
+
+            it('should keep pattern with brackets as-is', () => {
+                expect(normalizeIgnorePattern('[abc].txt', mockCwd)).toBe(
+                    '[abc].txt'
+                );
+            });
+
+            it('should keep pattern with braces as-is', () => {
+                expect(normalizeIgnorePattern('*.{js,ts}', mockCwd)).toBe(
+                    '*.{js,ts}'
+                );
             });
 
             it('should keep complex glob pattern as-is', () => {
-                expect(normalizeIgnorePattern('**/src/**/*.test.ts')).toBe(
-                    '**/src/**/*.test.ts'
-                );
+                expect(
+                    normalizeIgnorePattern('**/src/**/*.test.ts', mockCwd)
+                ).toBe('**/src/**/*.test.ts');
             });
         });
     });

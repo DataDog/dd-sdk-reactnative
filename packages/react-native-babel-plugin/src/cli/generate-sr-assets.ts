@@ -33,18 +33,53 @@ export type CliOptions = {
 
 /**
  * Converts a user-provided ignore pattern to a glob pattern.
- * Simple folder names are converted to glob patterns (e.g., "legacy" becomes "** /legacy/** ").
- * Patterns that already contain glob characters (* or ?) are used as-is.
+ *
+ * Handling rules:
+ * - Glob patterns (containing * ? [ ] { } ( )) are left unchanged
+ * - Absolute paths are appended with /** if not already present
+ * - Relative paths (./ or ../ or containing path separator) are resolved to absolute and appended with /**
+ * - Simple folder names (no slashes, no globs) are wrapped with ** /name/** for wildcard matching
  *
  * @param pattern - The user-provided pattern
+ * @param cwd - The base directory for resolving relative paths (required)
  * @returns A glob-compatible pattern
  */
-export function normalizeIgnorePattern(pattern: string): string {
-    // If it looks like a glob pattern, use as-is
-    if (pattern.includes('*') || pattern.includes('?')) {
+export function normalizeIgnorePattern(pattern: string, cwd: string): string {
+    // Detect glob patterns - leave unchanged
+    const isGlob = /[*?[\]{}()]/.test(pattern);
+    if (isGlob) {
         return pattern;
     }
-    // Otherwise, treat it as a folder name and convert to glob pattern
+
+    const isAbsolute = path.isAbsolute(pattern);
+    const isRelative =
+        pattern.startsWith('./') ||
+        pattern.startsWith('../') ||
+        pattern.startsWith('.\\') ||
+        pattern.startsWith('..\\') ||
+        pattern.includes(path.sep) ||
+        pattern.includes('/'); // Also check for forward slash on all platforms
+
+    // Absolute paths - append /** if needed
+    if (isAbsolute) {
+        if (pattern.endsWith('/**') || pattern.endsWith(`${path.sep}**`)) {
+            return pattern;
+        }
+        return path.join(pattern, '**');
+    }
+
+    // Relative paths - resolve to absolute and append /**
+    if (isRelative) {
+        const resolved = path.resolve(cwd, pattern);
+
+        if (resolved.endsWith('/**') || resolved.endsWith(`${path.sep}**`)) {
+            return resolved;
+        }
+
+        return path.join(resolved, '**');
+    }
+
+    // Simple folder names (no slashes, no glob characters) - wildcard match
     return `**/${pattern}/**`;
 }
 
@@ -304,8 +339,13 @@ function generateSessionReplayAssets() {
     clearAssetsDir(assetsPath);
 
     // Merge default ignore patterns with user-provided ones
-    // Convert simple folder names to glob patterns (e.g., "legacy" → "**/legacy/**")
-    const userIgnorePatterns = cliOptions.ignore.map(normalizeIgnorePattern);
+    // Convert folder names/paths to glob patterns based on type:
+    // - Simple names: "legacy" → "**/legacy/**"
+    // - Relative paths: "./android" → "/abs/path/android/**"
+    // - Absolute paths: "/home/dev/android" → "/home/dev/android/**"
+    const userIgnorePatterns = cliOptions.ignore.map(pattern =>
+        normalizeIgnorePattern(pattern, rootDir)
+    );
     const ignorePatterns = [...DEFAULT_IGNORE_PATTERNS, ...userIgnorePatterns];
 
     if (verbose) {
