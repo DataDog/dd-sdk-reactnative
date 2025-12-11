@@ -16,7 +16,6 @@ import com.datadog.android.flags.internal.model.PrecomputedFlag
 import com.datadog.android.flags.model.EvaluationContext
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.bridge.WritableMap
 import org.json.JSONObject
 
 class DdFlagsImplementation(
@@ -32,7 +31,7 @@ class DdFlagsImplementation(
         configuration: ReadableMap,
         promise: Promise,
     ) {
-        val flagsConfig = configuration.asFlagsConfiguration()
+        val flagsConfig = buildFlagsConfiguration(configuration.toMap())
         if (flagsConfig != null) {
             Flags.enable(flagsConfig, sdkCore)
         } else {
@@ -48,14 +47,11 @@ class DdFlagsImplementation(
     /**
      * Retrieve or create a FlagsClient instance.
      *
-     * Caches clients by name to avoid repeated Builder().build() calls.
-     * On hot reload, the cache is cleared and clients are recreated - this is safe
-     * because gracefulModeEnabled=true prevents crashes on duplicate creation.
+     * Caches clients by name to avoid repeated Builder().build() calls. On hot reload, the cache is
+     * cleared and clients are recreated - this is safe because gracefulModeEnabled=true prevents
+     * crashes on duplicate creation.
      */
-    private fun getClient(name: String): FlagsClient =
-        clients.getOrPut(name) {
-            FlagsClient.Builder(name, sdkCore).build()
-        }
+    private fun getClient(name: String): FlagsClient = clients.getOrPut(name) { FlagsClient.Builder(name, sdkCore).build() }
 
     /**
      * Set the evaluation context for a specific client.
@@ -78,7 +74,8 @@ class DdFlagsImplementation(
         // Retrieve flags state snapshot.
         val flagsSnapshot = client._getInternal()?.getFlagAssignmentsSnapshot()
 
-        // Send the flags state snapshot to React Native. If `flagsSnapshot` is null, the FlagsClient client is not ready yet.
+        // Send the flags state snapshot to React Native. If `flagsSnapshot` is null, the
+        // FlagsClient client is not ready yet.
         if (flagsSnapshot != null) {
             val mapOfMaps =
                 flagsSnapshot.mapValues { (key, flag) ->
@@ -113,6 +110,40 @@ class DdFlagsImplementation(
     }
 }
 
+@Suppress("UNCHECKED_CAST")
+private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConfiguration? {
+    val enabled = configuration["enabled"] as? Boolean ?: false
+
+    if (!enabled) {
+        return null
+    }
+
+    // Hard set `gracefulModeEnabled` to `true` because SDK misconfigurations are handled on JS
+    // side.
+    // This prevents crashes on hot reload when clients are recreated.
+    val gracefulModeEnabled = true
+
+    val trackExposures = configuration["trackExposures"] as? Boolean ?: true
+    val rumIntegrationEnabled = configuration["rumIntegrationEnabled"] as? Boolean ?: true
+
+    return FlagsConfiguration
+        .Builder()
+        .apply {
+            gracefulModeEnabled(gracefulModeEnabled)
+            trackExposures(trackExposures)
+            rumIntegrationEnabled(rumIntegrationEnabled)
+
+            // The SDK automatically appends endpoint names to the custom endpoints.
+            // The input config expects a base URL rather than a full URL.
+            (configuration["customFlagsEndpoint"] as? String)?.let {
+                useCustomFlagEndpoint("$it/precompute-assignments")
+            }
+            (configuration["customExposureEndpoint"] as? String)?.let {
+                useCustomExposureEndpoint("$it/api/v2/exposures")
+            }
+        }.build()
+}
+
 private fun buildEvaluationContext(
     targetingKey: String,
     attributes: ReadableMap,
@@ -127,8 +158,11 @@ private fun buildEvaluationContext(
 }
 
 /**
- * Converts a [PrecomputedFlag] to a [Map] for further React Native bridge transfer.
- * Includes the flag key and parses the value based on variationType.
+ * Converts a [PrecomputedFlag] to a [Map] for further React Native bridge transfer. Includes the
+ * flag key and parses the value based on variationType.
+ *
+ * We are using Map instead of WritableMap as an intermediate because it is more handy, and we can
+ * convert to WritableMap right before sending to React Native.
  */
 private fun convertPrecomputedFlagToMap(
     flagKey: String,
@@ -179,9 +213,7 @@ private fun convertPrecomputedFlagToMap(
     )
 }
 
-/**
- * Converts a [Map] to a [PrecomputedFlag].
- */
+/** Converts a [Map] to a [PrecomputedFlag]. */
 @Suppress("UNCHECKED_CAST")
 private fun convertMapToPrecomputedFlag(map: Map<String, Any>): PrecomputedFlag =
     PrecomputedFlag(
@@ -190,40 +222,8 @@ private fun convertMapToPrecomputedFlag(map: Map<String, Any>): PrecomputedFlag 
         doLog = map["doLog"] as? Boolean ?: false,
         allocationKey = map["allocationKey"] as? String ?: "",
         variationKey = map["variationKey"] as? String ?: "",
-        extraLogging = (map["extraLogging"] as? Map<String, Any>)?.toJSONObject() ?: JSONObject(),
+        extraLogging =
+            (map["extraLogging"] as? Map<String, Any>)?.toJSONObject()
+                ?: JSONObject(),
         reason = map["reason"] as? String ?: "",
     )
-
-/** Parse configuration from ReadableMap to FlagsConfiguration. */
-private fun ReadableMap.asFlagsConfiguration(): FlagsConfiguration? {
-    val enabled = if (hasKey("enabled")) getBoolean("enabled") else false
-
-    if (!enabled) {
-        return null
-    }
-
-    // Hard set `gracefulModeEnabled` to `true` because SDK misconfigurations are handled on JS side.
-    // This prevents crashes on hot reload when clients are recreated.
-    val gracefulModeEnabled = true
-
-    val trackExposures = if (hasKey("trackExposures")) getBoolean("trackExposures") else true
-    val rumIntegrationEnabled =
-        if (hasKey("rumIntegrationEnabled")) getBoolean("rumIntegrationEnabled") else true
-
-    return FlagsConfiguration
-        .Builder()
-        .apply {
-            gracefulModeEnabled(gracefulModeEnabled)
-            trackExposures(trackExposures)
-            rumIntegrationEnabled(rumIntegrationEnabled)
-
-            // The SDK automatically appends endpoint names to the custom endpoints.
-            // The input config expects a base URL rather than a full URL.
-            if (hasKey("customFlagsEndpoint")) {
-                getString("customFlagsEndpoint")?.let { useCustomFlagEndpoint("$it/precompute-assignments") }
-            }
-            if (hasKey("customExposureEndpoint")) {
-                getString("customExposureEndpoint")?.let { useCustomExposureEndpoint("$it/api/v2/exposures") }
-            }
-        }.build()
-}
