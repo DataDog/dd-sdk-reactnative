@@ -12,7 +12,7 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
 import com.datadog.android.flags.FlagsConfiguration
-import com.datadog.android.flags.internal.model.PrecomputedFlag
+import com.datadog.android.flags.model.PrecomputedFlag
 import com.datadog.android.flags.model.EvaluationContext
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
@@ -203,13 +203,13 @@ private fun convertPrecomputedFlagToMap(
     return mapOf(
         "key" to flagKey,
         "value" to parsedValue,
-        "variationType" to flag.variationType,
-        "variationValue" to flag.variationValue,
-        "doLog" to flag.doLog,
         "allocationKey" to flag.allocationKey,
         "variationKey" to flag.variationKey,
-        "extraLogging" to flag.extraLogging.toMap(),
+        "variationType" to flag.variationType,
+        "variationValue" to flag.variationValue,
         "reason" to flag.reason,
+        "doLog" to flag.doLog,
+        "extraLogging" to flag.extraLogging.toMap(),
     )
 }
 
