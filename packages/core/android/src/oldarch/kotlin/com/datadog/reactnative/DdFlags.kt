@@ -45,56 +45,12 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     }
 
     /**
-     * Get details for a boolean flag.
+     * Track the evaluation of a flag.
      * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
+     * @param key The key of the flag.
      */
     @ReactMethod
-    fun getBooleanDetails(
-            clientName: String,
-            key: String,
-            defaultValue: Boolean,
-            promise: Promise
-    ) {
-        implementation.getBooleanDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for a string flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    fun getStringDetails(clientName: String, key: String, defaultValue: String, promise: Promise) {
-        implementation.getStringDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for a number flag. Includes Number and Integer flags.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    fun getNumberDetails(clientName: String, key: String, defaultValue: Double, promise: Promise) {
-        implementation.getNumberDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for an object flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    fun getObjectDetails(
-            clientName: String,
-            key: String,
-            defaultValue: ReadableMap,
-            promise: Promise
-    ) {
-        implementation.getObjectDetails(clientName, key, defaultValue, promise)
+    fun trackEvaluation(clientName: String, key: String, rawFlag: ReadableMap, targetingKey: String, attributes: ReadableMap, promise: Promise) {
+        implementation.trackEvaluation(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
 }

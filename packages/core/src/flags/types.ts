@@ -142,10 +142,10 @@ export interface EvaluationContext {
      *
      * Attributes can include user properties, session data, or any other contextual information
      * needed for flag evaluation rules.
+     *
+     * NOTE: Nested object values are not supported and will be omitted from the evaluation context.
      */
-
-    // TODO: This should be a map of string to string because Android doesn't support other types
-    attributes: Record<string, unknown>;
+    attributes: Record<string, string | number | boolean | null | undefined>;
 }
 
 export type ObjectValue = { [key: string]: unknown };

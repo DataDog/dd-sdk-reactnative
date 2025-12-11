@@ -10,6 +10,7 @@ import {
   DdTrace,
   DatadogFlags,
 } from '@datadog/mobile-react-native';
+import type { FlagDetails } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
@@ -89,7 +90,7 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 
 function App(): React.JSX.Element {
   const testFlagKey = 'rn-sdk-test-json-flag';
-  const [testFlagValue, setTestFlagValue] = React.useState<{[key: string]: unknown}>({default: false});
+  const [testFlagValue, setTestFlagValue] = React.useState<FlagDetails<{[key: string]: unknown}> | null>(null);
   React.useEffect(() => {
       (async () => {
           await DatadogFlags.enable();
@@ -101,8 +102,8 @@ function App(): React.JSX.Element {
                   country: 'US',
               },
           });
-          const flag = flagsClient.getObjectDetails(testFlagKey, {default: {hello: 'world'}}); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-          setTestFlagValue(flag.value);
+          const flag = flagsClient.getObjectDetails(testFlagKey, {default: {hello: 'world'}}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+          setTestFlagValue(flag);
       })().catch(console.error);
   }, []);
 
@@ -123,7 +124,7 @@ function App(): React.JSX.Element {
         style={backgroundStyle}>
         <Header />
         <View style={{ marginTop: 20 }}>
-          <Text>{testFlagKey}: {JSON.stringify(testFlagValue)}</Text>
+          <Text>{testFlagKey}: {JSON.stringify(testFlagValue, null, 2)}</Text>
         </View>
         <View
           style={{

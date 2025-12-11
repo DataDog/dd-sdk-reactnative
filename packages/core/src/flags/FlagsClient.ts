@@ -8,12 +8,12 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
-import type {
-    ObjectValue,
-    EvaluationContext,
-    FlagDetails,
-    FlagEvaluationError
-} from './types';
+import {
+    flagCacheEntryToFlagDetails,
+    processEvaluationContext
+} from './internal';
+import type { FlagCacheEntry } from './internal';
+import type { ObjectValue, EvaluationContext, FlagDetails } from './types';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -22,8 +22,8 @@ export class FlagsClient {
 
     private clientName: string;
 
-    private evaluationContext: EvaluationContext | undefined = undefined;
-    private flagsCache: Record<string, FlagDetails<unknown>> = {};
+    private _evaluationContext: EvaluationContext | undefined = undefined;
+    private _flagsCache: Record<string, FlagCacheEntry> = {};
 
     constructor(clientName: string = 'default') {
         this.clientName = clientName;
@@ -53,17 +53,17 @@ export class FlagsClient {
     setEvaluationContext = async (
         context: EvaluationContext
     ): Promise<void> => {
-        const { targetingKey, attributes } = context;
+        const processedContext = processEvaluationContext(context);
 
         try {
             const result = await this.nativeFlags.setEvaluationContext(
                 this.clientName,
-                targetingKey,
-                attributes
+                processedContext.targetingKey,
+                processedContext.attributes
             );
 
-            this.evaluationContext = context;
-            this.flagsCache = result;
+            this._evaluationContext = processedContext;
+            this._flagsCache = result;
         } catch (error) {
             if (error instanceof Error) {
                 InternalLog.log(
@@ -135,37 +135,48 @@ export class FlagsClient {
     };
 
     private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
-        let error: FlagEvaluationError | null = null;
-
-        if (!this.evaluationContext) {
+        // Check whether the evaluation context has already been set.
+        if (!this._evaluationContext) {
             InternalLog.log(
                 `The evaluation context is not set for the client ${this.clientName}. Please, call \`DatadogFlags.setEvaluationContext()\` before evaluating any flags.`,
                 SdkVerbosity.ERROR
             );
 
-            error = 'PROVIDER_NOT_READY';
-        }
-
-        const details = this.flagsCache[key];
-
-        if (!details) {
-            error = 'FLAG_NOT_FOUND';
-        }
-
-        if (error) {
             return {
                 key,
                 value: defaultValue,
                 variant: null,
                 reason: null,
-                error
+                error: 'PROVIDER_NOT_READY'
             };
         }
 
-        // Don't await this; non-blocking.
-        this.nativeFlags.trackEvaluation(this.clientName, key);
+        // Retrieve the flag from the cache.
+        const flagCacheEntry = this._flagsCache[key];
 
-        return details as FlagDetails<T>;
+        if (!flagCacheEntry) {
+            return {
+                key,
+                value: defaultValue,
+                variant: null,
+                reason: null,
+                error: 'FLAG_NOT_FOUND'
+            };
+        }
+
+        // Convert to FlagDetails.
+        const details = flagCacheEntryToFlagDetails<T>(flagCacheEntry);
+
+        // Track the flag evaluation. Don't await this; non-blocking.
+        this.nativeFlags.trackEvaluation(
+            this.clientName,
+            key,
+            flagCacheEntry,
+            this._evaluationContext.targetingKey,
+            this._evaluationContext.attributes
+        );
+
+        return details;
     };
 
     /**

@@ -22,7 +22,7 @@ import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DatadogFlags } from './flags/DatadogFlags';
-import type { DatadogFlagsConfiguration } from './flags/types';
+import type { DatadogFlagsConfiguration, FlagDetails } from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -90,5 +90,6 @@ export type {
     FirstPartyHost,
     AutoInstrumentationConfiguration,
     PartialInitializationConfiguration,
-    DatadogFlagsConfiguration
+    DatadogFlagsConfiguration,
+    FlagDetails
 };

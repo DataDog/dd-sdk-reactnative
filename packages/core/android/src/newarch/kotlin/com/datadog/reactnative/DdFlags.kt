@@ -12,8 +12,9 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 
 /** The entry point to use Datadog's Flags feature. */
-class DdFlags(reactContext: ReactApplicationContext) : NativeDdFlagsSpec(reactContext) {
-
+class DdFlags(
+    reactContext: ReactApplicationContext,
+) : NativeDdFlagsSpec(reactContext) {
     private val implementation = DdFlagsImplementation()
 
     override fun getName(): String = DdFlagsImplementation.NAME
@@ -23,7 +24,10 @@ class DdFlags(reactContext: ReactApplicationContext) : NativeDdFlagsSpec(reactCo
      * @param configuration The configuration for Flags.
      */
     @ReactMethod
-    override fun enable(configuration: ReadableMap, promise: Promise) {
+    override fun enable(
+        configuration: ReadableMap,
+        promise: Promise,
+    ) {
         implementation.enable(configuration, promise)
     }
 
@@ -35,75 +39,28 @@ class DdFlags(reactContext: ReactApplicationContext) : NativeDdFlagsSpec(reactCo
      */
     @ReactMethod
     override fun setEvaluationContext(
-            clientName: String,
-            targetingKey: String,
-            attributes: ReadableMap,
-            promise: Promise
+        clientName: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
     ) {
         implementation.setEvaluationContext(clientName, targetingKey, attributes, promise)
     }
 
     /**
-     * Get details for a boolean flag.
+     * Track the evaluation of a flag.
      * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
+     * @param key The key of the flag.
      */
     @ReactMethod
-    override fun getBooleanDetails(
-            clientName: String,
-            key: String,
-            defaultValue: Boolean,
-            promise: Promise
+    override fun trackEvaluation(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
     ) {
-        implementation.getBooleanDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for a string flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    override fun getStringDetails(
-            clientName: String,
-            key: String,
-            defaultValue: String,
-            promise: Promise
-    ) {
-        implementation.getStringDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for a number flag. Includes Number and Integer flags.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    override fun getNumberDetails(
-            clientName: String,
-            key: String,
-            defaultValue: Double,
-            promise: Promise
-    ) {
-        implementation.getNumberDetails(clientName, key, defaultValue, promise)
-    }
-
-    /**
-     * Get details for an object flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    @ReactMethod
-    override fun getObjectDetails(
-            clientName: String,
-            key: String,
-            defaultValue: ReadableMap,
-            promise: Promise
-    ) {
-        implementation.getObjectDetails(clientName, key, defaultValue, promise)
+        implementation.trackEvaluation(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
 }

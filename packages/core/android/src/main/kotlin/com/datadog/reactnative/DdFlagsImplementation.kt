@@ -12,32 +12,34 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
 import com.datadog.android.flags.FlagsConfiguration
+import com.datadog.android.flags.internal.model.PrecomputedFlag
 import com.datadog.android.flags.model.EvaluationContext
-import com.datadog.android.flags.model.ErrorCode
-import com.datadog.android.flags.model.ResolutionDetails
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
-import com.facebook.react.bridge.WritableNativeMap
 import org.json.JSONObject
 
-class DdFlagsImplementation(private val sdkCore: SdkCore = Datadog.getInstance()) {
-
+class DdFlagsImplementation(
+    private val sdkCore: SdkCore = Datadog.getInstance(),
+) {
     private val clients: MutableMap<String, FlagsClient> = mutableMapOf()
 
     /**
      * Enable the Flags feature with the provided configuration.
      * @param configuration The configuration for Flags.
      */
-    fun enable(configuration: ReadableMap, promise: Promise) {
+    fun enable(
+        configuration: ReadableMap,
+        promise: Promise,
+    ) {
         val flagsConfig = configuration.asFlagsConfiguration()
         if (flagsConfig != null) {
             Flags.enable(flagsConfig, sdkCore)
         } else {
             InternalLogger.UNBOUND.log(
-                    InternalLogger.Level.ERROR,
-                    InternalLogger.Target.USER,
-                    { "Invalid configuration provided for Flags. Feature initialization skipped." }
+                InternalLogger.Level.ERROR,
+                InternalLogger.Target.USER,
+                { "Invalid configuration provided for Flags. Feature initialization skipped." },
             )
         }
         promise.resolve(null)
@@ -50,22 +52,10 @@ class DdFlagsImplementation(private val sdkCore: SdkCore = Datadog.getInstance()
      * On hot reload, the cache is cleared and clients are recreated - this is safe
      * because gracefulModeEnabled=true prevents crashes on duplicate creation.
      */
-    private fun getClient(name: String): FlagsClient {
-        return clients.getOrPut(name) {
+    private fun getClient(name: String): FlagsClient =
+        clients.getOrPut(name) {
             FlagsClient.Builder(name, sdkCore).build()
         }
-    }
-
-    private fun parseAttributes(attributes: ReadableMap): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-        val iterator = attributes.entryIterator
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            // Convert all values to strings as required by Android SDK
-            result[entry.key] = entry.value?.toString() ?: ""
-        }
-        return result
-    }
 
     /**
      * Set the evaluation context for a specific client.
@@ -74,90 +64,48 @@ class DdFlagsImplementation(private val sdkCore: SdkCore = Datadog.getInstance()
      * @param attributes The attributes for the evaluation context (will be converted to strings).
      */
     fun setEvaluationContext(
-            clientName: String,
-            targetingKey: String,
-            attributes: ReadableMap,
-            promise: Promise
+        clientName: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
     ) {
         val client = getClient(clientName)
-        val parsedAttributes = parseAttributes(attributes)
-        val evaluationContext = EvaluationContext(targetingKey, parsedAttributes)
 
+        // Set the evaluation context.
+        val evaluationContext = buildEvaluationContext(targetingKey, attributes)
         client.setEvaluationContext(evaluationContext)
-        promise.resolve(null)
-    }
 
-    /**
-     * Get details for a boolean flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    fun getBooleanDetails(
-            clientName: String,
-            key: String,
-            defaultValue: Boolean,
-            promise: Promise
-    ) {
-        val client = getClient(clientName)
-        val details = client.resolve<Boolean>(key, defaultValue)
-        promise.resolve(details.toReactNativeMap(key))
-    }
+        // Retrieve flags state snapshot.
+        val flagsSnapshot = client._getInternal()?.getFlagAssignmentsSnapshot()
 
-    /**
-     * Get details for a string flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    fun getStringDetails(clientName: String, key: String, defaultValue: String, promise: Promise) {
-        val client = getClient(clientName)
-        val details = client.resolve<String>(key, defaultValue)
-        promise.resolve(details.toReactNativeMap(key))
-    }
+        // Send the flags state snapshot to React Native. If `flagsSnapshot` is null, the FlagsClient client is not ready yet.
+        if (flagsSnapshot != null) {
+            val mapOfMaps =
+                flagsSnapshot.mapValues { (key, flag) ->
+                    convertPrecomputedFlagToMap(key, flag)
+                }
 
-    /**
-     * Get details for a number flag. Includes Number and Integer flags.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    fun getNumberDetails(clientName: String, key: String, defaultValue: Double, promise: Promise) {
-        val client = getClient(clientName)
-
-        // Try as Double first.
-        val doubleDetails = client.resolve<Double>(key, defaultValue)
-
-        // If type mismatch and value is an integer, try as Int.
-        if (doubleDetails.errorCode == ErrorCode.TYPE_MISMATCH) {
-            val safeInt = defaultValue.toInt()
-            val intDetails = client.resolve<Int>(key, safeInt)
-
-            if (intDetails.errorCode == null) {
-                promise.resolve(intDetails.toReactNativeMap(key))
-                return
-            }
+            promise.resolve(mapOfMaps.toWritableMap())
+        } else {
+            promise.reject("CLIENT_NOT_INITIALIZED", "CLIENT_NOT_INITIALIZED", null)
         }
-
-        promise.resolve(doubleDetails.toReactNativeMap(key))
     }
 
-    /**
-     * Get details for an object flag.
-     * @param clientName The name of the client.
-     * @param key The flag key.
-     * @param defaultValue The default value.
-     */
-    fun getObjectDetails(
-            clientName: String,
-            key: String,
-            defaultValue: ReadableMap,
-            promise: Promise
+    fun trackEvaluation(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
     ) {
         val client = getClient(clientName)
-        val jsonDefaultValue = defaultValue.toJSONObject()
-        val details = client.resolve(key, jsonDefaultValue)
-        promise.resolve(details.toReactNativeMap(key))
+
+        val precomputedFlag = convertMapToPrecomputedFlag(rawFlag.toMap())
+        val evaluationContext = buildEvaluationContext(targetingKey, attributes)
+        client._getInternal()?.trackFlagSnapshotEvaluation(key, precomputedFlag, evaluationContext)
+
+        promise.resolve(null)
     }
 
     internal companion object {
@@ -165,56 +113,86 @@ class DdFlagsImplementation(private val sdkCore: SdkCore = Datadog.getInstance()
     }
 }
 
-/** Convert ResolutionDetails to React Native map format expected by the JS layer. */
-private fun <T : Any> ResolutionDetails<T>.toReactNativeMap(key: String): WritableMap {
-    val map = WritableNativeMap()
-    map.putString("key", key)
+private fun buildEvaluationContext(
+    targetingKey: String,
+    attributes: ReadableMap,
+): EvaluationContext {
+    val parsed = mutableMapOf<String, String>()
 
-    when (val v = value) {
-        is Boolean -> map.putBoolean("value", v)
-        is String -> map.putString("value", v)
-        is Int -> map.putDouble("value", v.toDouble()) // Convert to double for RN.
-        is Double -> map.putDouble("value", v)
-        is JSONObject -> map.putMap("value", v.toWritableMap())
-        else -> map.putNull("value")
+    for ((key, value) in attributes.entryIterator) {
+        parsed[key] = value.toString()
     }
 
-    variant?.let { map.putString("variant", it) } ?: map.putNull("variant")
-    reason?.let { map.putString("reason", it.name) } ?: map.putNull("reason")
-    errorCode?.let { map.putString("error", it.name) } ?: map.putNull("error")
-
-    return map
+    return EvaluationContext(targetingKey, parsed)
 }
 
-/** Convert ReadableMap to JSONObject for flag default values. */
-private fun ReadableMap.toJSONObject(): JSONObject {
-    val json = JSONObject()
-    val iterator = entryIterator
-    while (iterator.hasNext()) {
-        val entry = iterator.next()
-        json.put(entry.key, entry.value)
-    }
-    return json
-}
+/**
+ * Converts a [PrecomputedFlag] to a [Map] for further React Native bridge transfer.
+ * Includes the flag key and parses the value based on variationType.
+ */
+private fun convertPrecomputedFlagToMap(
+    flagKey: String,
+    flag: PrecomputedFlag,
+): Map<String, Any?> {
+    // Parse the value based on variationType
+    val parsedValue: Any =
+        when (flag.variationType) {
+            "boolean" -> {
+                flag.variationValue.lowercase().toBooleanStrictOrNull() ?: flag.variationValue
+            }
 
-/** Convert JSONObject to WritableMap for React Native. */
-private fun JSONObject.toWritableMap(): WritableMap {
-    val map = WritableNativeMap()
-    val keys = keys()
-    while (keys.hasNext()) {
-        val key = keys.next()
-        when (val value = get(key)) {
-            is Boolean -> map.putBoolean(key, value)
-            is Int -> map.putInt(key, value)
-            is Double -> map.putDouble(key, value)
-            is String -> map.putString(key, value)
-            is JSONObject -> map.putMap(key, value.toWritableMap())
-            JSONObject.NULL -> map.putNull(key)
-            else -> map.putNull(key)
+            "string" -> {
+                flag.variationValue
+            }
+
+            "integer" -> {
+                flag.variationValue.toIntOrNull() ?: flag.variationValue
+            }
+
+            "number", "float" -> {
+                flag.variationValue.toDoubleOrNull() ?: flag.variationValue
+            }
+
+            "object" -> {
+                try {
+                    JSONObject(flag.variationValue).toMap()
+                } catch (e: Exception) {
+                    flag.variationValue
+                }
+            }
+
+            else -> {
+                flag.variationValue
+            }
         }
-    }
-    return map
+
+    return mapOf(
+        "key" to flagKey,
+        "value" to parsedValue,
+        "variationType" to flag.variationType,
+        "variationValue" to flag.variationValue,
+        "doLog" to flag.doLog,
+        "allocationKey" to flag.allocationKey,
+        "variationKey" to flag.variationKey,
+        "extraLogging" to flag.extraLogging.toMap(),
+        "reason" to flag.reason,
+    )
 }
+
+/**
+ * Converts a [Map] to a [PrecomputedFlag].
+ */
+@Suppress("UNCHECKED_CAST")
+private fun convertMapToPrecomputedFlag(map: Map<String, Any>): PrecomputedFlag =
+    PrecomputedFlag(
+        variationType = map["variationType"] as? String ?: "",
+        variationValue = map["variationValue"] as? String ?: "",
+        doLog = map["doLog"] as? Boolean ?: false,
+        allocationKey = map["allocationKey"] as? String ?: "",
+        variationKey = map["variationKey"] as? String ?: "",
+        extraLogging = (map["extraLogging"] as? Map<String, Any>)?.toJSONObject() ?: JSONObject(),
+        reason = map["reason"] as? String ?: "",
+    )
 
 /** Parse configuration from ReadableMap to FlagsConfiguration. */
 private fun ReadableMap.asFlagsConfiguration(): FlagsConfiguration? {
@@ -230,22 +208,22 @@ private fun ReadableMap.asFlagsConfiguration(): FlagsConfiguration? {
 
     val trackExposures = if (hasKey("trackExposures")) getBoolean("trackExposures") else true
     val rumIntegrationEnabled =
-            if (hasKey("rumIntegrationEnabled")) getBoolean("rumIntegrationEnabled") else true
+        if (hasKey("rumIntegrationEnabled")) getBoolean("rumIntegrationEnabled") else true
 
-    return FlagsConfiguration.Builder()
-            .apply {
-                gracefulModeEnabled(gracefulModeEnabled)
-                trackExposures(trackExposures)
-                rumIntegrationEnabled(rumIntegrationEnabled)
+    return FlagsConfiguration
+        .Builder()
+        .apply {
+            gracefulModeEnabled(gracefulModeEnabled)
+            trackExposures(trackExposures)
+            rumIntegrationEnabled(rumIntegrationEnabled)
 
-                // The SDK automatically appends endpoint names to the custom endpoints.
-                // The input config expects a base URL rather than a full URL.
-                if (hasKey("customFlagsEndpoint")) {
-                    getString("customFlagsEndpoint")?.let { useCustomFlagEndpoint("$it/precompute-assignments") }
-                }
-                if (hasKey("customExposureEndpoint")) {
-                    getString("customExposureEndpoint")?.let { useCustomExposureEndpoint("$it/api/v2/exposures") }
-                }
+            // The SDK automatically appends endpoint names to the custom endpoints.
+            // The input config expects a base URL rather than a full URL.
+            if (hasKey("customFlagsEndpoint")) {
+                getString("customFlagsEndpoint")?.let { useCustomFlagEndpoint("$it/precompute-assignments") }
             }
-            .build()
+            if (hasKey("customExposureEndpoint")) {
+                getString("customExposureEndpoint")?.let { useCustomExposureEndpoint("$it/api/v2/exposures") }
+            }
+        }.build()
 }

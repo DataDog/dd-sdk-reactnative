@@ -8,7 +8,7 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
-import type { FlagDetails } from '../flags/types';
+import type { FlagCacheEntry } from '../flags/internal';
 
 /**
  * Do not import this Spec directly, use DdNativeFlagsType instead.
@@ -20,11 +20,14 @@ export interface Spec extends TurboModule {
         clientName: string,
         targetingKey: string,
         attributes: Object
-    ) => Promise<{ [key: string]: FlagDetails<unknown> }>;
+    ) => Promise<{ [key: string]: FlagCacheEntry }>;
 
     readonly trackEvaluation: (
         clientName: string,
-        key: string
+        key: string,
+        rawFlag: Object,
+        targetingKey: string,
+        attributes: Object
     ) => Promise<void>;
 }
 
