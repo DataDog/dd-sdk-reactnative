@@ -56,21 +56,27 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
         const rawKey = mainPart.slice(0, idx).trim();
         const rawValue = mainPart.slice(idx + 1).trim();
         const isDatadogKey = isDatadogPropertyKey(rawKey);
+        let encodedValue: string;
 
-        if (!isDatadogKey && !TOKEN_REGEX.test(rawKey)) {
-            InternalLog.log(
-                'XHRProxy: invalid baggage header keys detected (not RFC 7230-compliant); functionality may be affected.',
-                SdkVerbosity.WARN
-            );
-        }
+        if (isDatadogKey) {
+            // Only encode datadog-specific properties
+            encodedValue = isDatadogKey ? encodeValue(rawValue) : rawValue;
+        } else {
+            if (!TOKEN_REGEX.test(rawKey)) {
+                InternalLog.log(
+                    'XHRProxy: invalid baggage header keys detected (not RFC 7230-compliant); functionality may be affected.',
+                    SdkVerbosity.WARN
+                );
+            }
+            if (!isCompliantBaggageValue(rawValue)) {
+                InternalLog.log(
+                    'XHRProxy: invalid baggage header value detected (not RFC-compliant); functionality may be affected.',
+                    SdkVerbosity.WARN
+                );
+            }
 
-        // Only encode datadog-specific properties
-        const encodedValue = isDatadogKey ? encodeValue(rawValue) : rawValue;
-        if (!isDatadogKey && !isCompliantBaggageValue(rawValue)) {
-            InternalLog.log(
-                'XHRProxy: invalid baggage header value detected (not RFC-compliant); functionality may be affected.',
-                SdkVerbosity.WARN
-            );
+            // non-datadog properties are not encoded
+            encodedValue = rawValue;
         }
 
         // Handle properties
