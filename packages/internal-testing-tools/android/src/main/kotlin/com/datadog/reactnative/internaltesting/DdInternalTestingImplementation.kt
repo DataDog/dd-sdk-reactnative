@@ -6,12 +6,9 @@
 
 package com.datadog.reactnative.internaltesting
 
-import androidx.annotation.WorkerThread
-import com.datadog.android.api.InternalLogger
 import com.datadog.android.Datadog
+import com.datadog.android.api.SdkCore
 import com.datadog.android.api.context.DatadogContext
-import com.datadog.android.api.context.NetworkInfo
-import com.datadog.android.api.context.TimeInfo
 import com.datadog.android.api.feature.EventWriteScope
 import com.datadog.android.api.feature.Feature
 import com.datadog.android.api.feature.FeatureScope
@@ -19,12 +16,13 @@ import com.datadog.android.api.storage.EventBatchWriter
 import com.datadog.android.api.storage.EventType
 import com.datadog.android.api.storage.RawBatchEvent
 import com.datadog.android.core.InternalSdkCore
-import com.datadog.android.core.internal.net.FirstPartyHostHeaderTypeResolver
-import com.datadog.android.trace.TracingHeaderType
 import com.datadog.reactnative.DatadogSDKWrapperStorage
 import com.facebook.react.bridge.Promise
 import com.google.gson.Gson
-import okhttp3.HttpUrl
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 
 /**
  * The entry point to use Datadog's internal testing feature.
@@ -56,6 +54,8 @@ class DdInternalTestingImplementation {
     fun enable(promise: Promise) {
         DatadogSDKWrapperStorage.addOnInitializedListener { ddCore ->
             this.wrappedCore = StubSDKCore(ddCore)
+            swapSdkCore(null, this.wrappedCore)
+
         }
         promise.resolve(null)
     }
@@ -70,12 +70,33 @@ class DdInternalTestingImplementation {
     internal companion object {
         internal const val NAME = "DdInternalTesting"
     }
+
+    internal fun swapSdkCore(name: String?, newSdkCore: StubSDKCore?) {
+        val registryField = Datadog::class.java.getDeclaredField("registry")
+        registryField.isAccessible = true
+        val registryInstance = registryField.get(Datadog)!!
+
+        val unregisterMethod = registryInstance.javaClass.getDeclaredMethod("unregister", String::class.java)
+        unregisterMethod.isAccessible = true
+
+        val registerMethod = registryInstance.javaClass.getDeclaredMethod(
+            "register",
+            String::class.java,
+            SdkCore::class.java
+        )
+        registerMethod.isAccessible = true
+
+        synchronized(registryInstance) {
+            unregisterMethod.invoke(registryInstance, name)
+            registerMethod.invoke(registryInstance, name, newSdkCore)
+        }
+    }
 }
 
 internal class StubSDKCore(
     private val core: InternalSdkCore
 ) : InternalSdkCore by core {
-    internal val featureScopes = mutableMapOf<String, FeatureScopeInterceptor>()
+    internal val featureScopes = ConcurrentHashMap<String, FeatureScopeInterceptor>()
 
     // region Stub
 
@@ -104,6 +125,13 @@ internal class StubSDKCore(
     }
 
     override fun getFeature(featureName: String): FeatureScope? {
+        val existing = featureScopes[featureName]
+        if (existing != null) return existing
+
+        val coreFeature = core.getFeature(featureName) ?: return null
+        val interceptor = FeatureScopeInterceptor(coreFeature, core)
+
+        featureScopes.putIfAbsent(featureName, interceptor)
         return featureScopes[featureName]
     }
 
@@ -130,10 +158,21 @@ internal class FeatureScopeInterceptor(
         withFeatureContexts: Set<String>,
         callback: (datadogContext: DatadogContext, write: EventWriteScope) -> Unit
     ) {
-        featureScope.withWriteContext(withFeatureContexts, callback)
+        featureScope.withWriteContext(withFeatureContexts) { context, realScope ->
+            val splitScope = object : EventWriteScope {
+                override fun invoke(writerBlock: (EventBatchWriter) -> Unit) {
+                    realScope.invoke(writerBlock)
 
-        core.getDatadogContext()?.let {
-            callback(it, eventWriteScopeInterceptor)
+                    @Suppress("TooGenericExceptionCaught")
+                    try {
+                        eventWriteScopeInterceptor.invoke(writerBlock)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            callback(context, splitScope)
         }
     }
 
@@ -141,7 +180,7 @@ internal class FeatureScopeInterceptor(
 }
 
 internal class EventWriteScopeInterceptor : EventWriteScope {
-    internal val events = mutableListOf<String>()
+    internal val events = CopyOnWriteArrayList<String>()
 
     fun clearData() {
         events.clear()
@@ -164,4 +203,3 @@ internal class EventWriteScopeInterceptor : EventWriteScope {
         p1(writer)
     }
 }
-
