@@ -86,9 +86,7 @@ beforeEach(() => {
     mocked(BackHandler.exitApp).mockClear();
 
     // @ts-ignore
-    DdRumReactNavigationTracking.registeredContainer = null;
-    // @ts-ignore
-    DdRumReactNavigationTracking.navigationStateChangeListener = null;
+    DdRumReactNavigationTracking._resetInternalStateForTesting();
 });
 
 // Unit tests
@@ -357,7 +355,7 @@ describe.each([
                 expect(DdRum.startView).toHaveBeenCalledTimes(2);
             });
 
-            it('does nothing when startTrackingViews { undefined any ', async () => {
+            it('does nothing when startTrackingViews { undefined any }', async () => {
                 // WHEN
                 DdRumReactNavigationTracking.startTrackingViews(null);
 

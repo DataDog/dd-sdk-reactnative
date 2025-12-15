@@ -1816,7 +1816,7 @@ describe('DdRum', () => {
 
     describe('DdRum.getCurrentSessionId', () => {
         it('calls the native API if SDK is initialized', async () => {
-            GlobalState.instance.isInitialized = true;
+            GlobalState.isInitialized = true;
             const sessionId = await DdRum.getCurrentSessionId();
             expect(NativeModules.DdRum.getCurrentSessionId).toHaveBeenCalled();
             expect(sessionId).toBe('test-session-id');
@@ -1825,7 +1825,7 @@ describe('DdRum', () => {
 
     describe('DdRum.getCurrentSessionId', () => {
         it('returns undefined if SDK is not initialized', async () => {
-            GlobalState.instance.isInitialized = false;
+            GlobalState.isInitialized = false;
             const sessionId = await DdRum.getCurrentSessionId();
             expect(
                 NativeModules.DdRum.getCurrentSessionId

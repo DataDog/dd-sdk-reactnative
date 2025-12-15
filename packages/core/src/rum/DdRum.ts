@@ -423,7 +423,7 @@ class DdRumWrapper implements DdRumType {
     };
 
     async getCurrentSessionId(): Promise<string | undefined> {
-        if (!GlobalState.instance.isInitialized) {
+        if (!GlobalState.isInitialized) {
             return undefined;
         }
         const sessionId = await this.nativeRum.getCurrentSessionId();

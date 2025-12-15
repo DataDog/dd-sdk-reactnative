@@ -4,23 +4,22 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { getGlobalInstance } from '../../utils/singletonUtils';
+
+const GLOBAL_STATE_MODULE = 'com.datadog.reactnative.sdk.global_state';
+
 /**
  * A singleton container for attributes that are shared internally across all
  * the SDK classes.
  */
-export class GlobalState {
+class _GlobalState {
     /**
      * `true` if the SDK is initialized, `false` otherwise.
      */
     public isInitialized = false;
-
-    // Singleton implementation
-    private static _instance: GlobalState | undefined = undefined;
-    public static get instance(): GlobalState {
-        if (this._instance === undefined) {
-            this._instance = new GlobalState();
-        }
-
-        return this._instance;
-    }
 }
+
+export const GlobalState = getGlobalInstance(
+    GLOBAL_STATE_MODULE,
+    () => new _GlobalState()
+);
