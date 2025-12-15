@@ -9,6 +9,7 @@ package com.datadog.reactnative
 import com.datadog.android.Datadog
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.SdkCore
+import com.datadog.android.flags._FlagsInternalProxy
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
 import com.datadog.android.flags.FlagsConfiguration
@@ -66,13 +67,14 @@ class DdFlagsImplementation(
         promise: Promise,
     ) {
         val client = getClient(clientName)
+        val internalClient = _FlagsInternalProxy(client)
 
         // Set the evaluation context.
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
         client.setEvaluationContext(evaluationContext)
 
         // Retrieve flags state snapshot.
-        val flagsSnapshot = client._getInternal()?.getFlagAssignmentsSnapshot()
+        val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
 
         // Send the flags state snapshot to React Native. If `flagsSnapshot` is null, the
         // FlagsClient client is not ready yet.
@@ -97,10 +99,11 @@ class DdFlagsImplementation(
         promise: Promise,
     ) {
         val client = getClient(clientName)
+        val internalClient = _FlagsInternalProxy(client)
 
         val precomputedFlag = convertMapToPrecomputedFlag(rawFlag.toMap())
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
-        client._getInternal()?.trackFlagSnapshotEvaluation(key, precomputedFlag, evaluationContext)
+        internalClient.trackFlagSnapshotEvaluation(key, precomputedFlag, evaluationContext)
 
         promise.resolve(null)
     }
