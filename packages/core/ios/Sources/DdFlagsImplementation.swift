@@ -65,7 +65,7 @@ public class DdFlagsImplementation: NSObject {
         client.setEvaluationContext(evaluationContext) { result in
             switch result {
             case .success:
-                guard let flagsSnapshot = clientInternal.getFlagAssignmentsSnapshot() else {
+                guard let flagsSnapshot = clientInternal.getFlagAssignments() else {
                     reject(nil, "CLIENT_NOT_INITIALIZED", nil)
                     return
                 }
@@ -107,7 +107,7 @@ public class DdFlagsImplementation: NSObject {
 
         let evaluationContext = buildEvaluationContext(targetingKey: targetingKey, attributes: attributes)
 
-        client.trackFlagSnapshotEvaluation(key: key, assignment: flagAssignment, context: evaluationContext)
+        client.sendFlagEvaluation(key: key, assignment: flagAssignment, context: evaluationContext)
 
         resolve(nil)
     }
