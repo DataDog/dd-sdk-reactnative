@@ -357,6 +357,7 @@ describe('DdSdkReactNative', () => {
             const fakeAppId = '1';
             const fakeClientToken = '2';
             const fakeEnvName = 'env';
+
             const configuration = new CoreConfiguration(
                 fakeClientToken,
                 fakeEnvName

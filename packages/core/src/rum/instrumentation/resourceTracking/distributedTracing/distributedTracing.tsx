@@ -7,6 +7,7 @@
 import BigInt from 'big-integer';
 
 import type { PropagatorType } from '../../../types';
+import { DdRumResourceTracking, MAX_TRACE_ID } from '../DdRumResourceTracking';
 import type { RegexMap } from '../requestProxy/interfaces/RequestProxy';
 
 import { TracingIdentifier } from './TracingIdentifier';
@@ -14,8 +15,7 @@ import type { SpanId, TraceId } from './TracingIdentifier';
 import type { Hostname } from './firstPartyHosts';
 import { getPropagatorsForHost } from './firstPartyHosts';
 
-const knuthFactor = BigInt('1111111111111111111');
-const twoPow64 = BigInt('10000000000000000', 16); // 2n ** 64n
+const KNUTH_FACTOR = BigInt('1111111111111111111');
 
 export type DdRumResourceTracingAttributes =
     | {
@@ -76,6 +76,48 @@ export const getTracingAttributes = ({
     return DISCARDED_TRACE_ATTRIBUTES;
 };
 
+export const shouldSampleTrace = (
+    tracingSamplingRate: number,
+    sessionId: string | null | undefined,
+    traceId: TraceId
+): boolean => {
+    if (tracingSamplingRate >= 100) {
+        return true;
+    }
+    if (tracingSamplingRate <= 0) {
+        return false;
+    }
+
+    // Offer consistent sampling for the same trace id across different environments. The rule is:
+    //
+    //   (identifier * knuthFactor) < max_trace_id
+    //
+    // We use the low 48 bits from the session id if it exists, or the low bits of the trace id if it doesn't
+    let lowBits: BigInt.BigInteger | null = null;
+
+    if (sessionId != null) {
+        const uuidParts = sessionId.split('-');
+        if (uuidParts.length === 5) {
+            const lastPart = uuidParts[4];
+            try {
+                // Parse last UUID part as hex into bigint
+                lowBits = BigInt(`${lastPart}`, 16);
+            } catch {
+                // ignore parse errors, lowBits stays null
+            }
+        }
+    }
+
+    if (lowBits === null) {
+        lowBits = traceId.id.and(MAX_TRACE_ID);
+    }
+
+    return lowBits
+        .multiply(KNUTH_FACTOR)
+        .and(MAX_TRACE_ID)
+        .lesser(DdRumResourceTracking.maxSampledTraceId);
+};
+
 export const generateTracingAttributesWithSampling = (
     tracingSamplingRate: number,
     propagatorTypes: PropagatorType[],
@@ -88,14 +130,12 @@ export const generateTracingAttributesWithSampling = (
     }
 
     const traceId = TracingIdentifier.createTraceId();
-    // for a UUID with value aaaaaaaa-bbbb-Mccc-Nddd-1234567890ab
-    // we use as the input id the last part : 0x1234567890ab
-    const baseId = rumSessionId
-        ? BigInt(rumSessionId.split('-')[4], 16)
-        : traceId.id;
-    const hash = Number(baseId.multiply(knuthFactor).remainder(twoPow64));
-    const threshold = (tracingSamplingRate / 100) * Number(twoPow64);
-    const isSampled = hash <= threshold;
+
+    const isSampled = shouldSampleTrace(
+        tracingSamplingRate,
+        rumSessionId,
+        traceId
+    );
 
     const tracingAttributes: DdRumResourceTracingAttributes = {
         traceId,
