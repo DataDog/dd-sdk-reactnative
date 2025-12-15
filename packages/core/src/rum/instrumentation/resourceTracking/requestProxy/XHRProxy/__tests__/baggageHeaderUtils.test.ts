@@ -20,10 +20,32 @@ describe('formatBaggageHeader', () => {
         expect(logSpy).not.toHaveBeenCalled();
     });
 
-    it('should percent-encode spaces and non-ASCII characters in values', () => {
+    it('should not encode non-datadog-specific property values and log a warning', () => {
         const entries = new Set(['user=Amélie', 'region=us east']);
         const result = formatBaggageHeader(entries);
-        expect(result).toBe('user=Am%C3%A9lie,region=us%20east');
+        expect(result).toBe('user=Amélie,region=us east');
+        expect(logSpy).toHaveBeenCalledWith(
+            expect.stringContaining('invalid baggage header value detected'),
+            SdkVerbosity.WARN
+        );
+    });
+
+    it('should only encode datadog-specific property values', () => {
+        const entries = new Set([
+            'user=Amélie',
+            'session.id=example session id',
+            'user.id=example user id',
+            'account.id=example account id',
+            'region=us east'
+        ]);
+        const result = formatBaggageHeader(entries);
+        expect(result).toBe(
+            'user=Amélie,session.id=example%20session%20id,user.id=example%20user%20id,account.id=example%20account%20id,region=us east'
+        );
+        expect(logSpy).toHaveBeenCalledWith(
+            expect.stringContaining('invalid baggage header value detected'),
+            SdkVerbosity.WARN
+        );
     });
 
     it('should support properties with and without values', () => {
@@ -38,32 +60,32 @@ describe('formatBaggageHeader', () => {
         expect(result).toBe('foo=bar;p1=one;p2');
     });
 
-    it('should skip invalid entries without crashing', () => {
+    it('should warn of invalid entries without crashing', () => {
         const entries = new Set(['valid=ok', 'invalidEntry']);
         const result = formatBaggageHeader(entries);
         expect(result).toBe('valid=ok');
         expect(logSpy).toHaveBeenCalledWith(
             expect.stringContaining('Dropped invalid baggage header entry'),
-            SdkVerbosity.WARN
+            SdkVerbosity.ERROR
         );
     });
 
-    it('should skip entries with invalid key (non-token)', () => {
+    it('should warn of entries with invalid key (non-token)', () => {
         const entries = new Set(['in valid=value', 'user=ok']);
         const result = formatBaggageHeader(entries);
-        expect(result).toBe('user=ok');
+        expect(result).toBe('in valid=value,user=ok');
         expect(logSpy).toHaveBeenCalledWith(
-            expect.stringContaining('key not compliant'),
+            expect.stringContaining('invalid baggage header keys detected'),
             SdkVerbosity.WARN
         );
     });
 
-    it('should skip invalid properties (bad property key)', () => {
+    it('should warn of invalid properties (bad property key)', () => {
         const entries = new Set(['user=ok;invalid key=value;good=yes']);
         const result = formatBaggageHeader(entries);
-        expect(result).toBe('user=ok;good=yes');
+        expect(result).toBe('user=ok;invalid key=value;good=yes');
         expect(logSpy).toHaveBeenCalledWith(
-            expect.stringContaining('property key not compliant'),
+            expect.stringContaining('invalid baggage header key-value'),
             SdkVerbosity.WARN
         );
     });
@@ -106,12 +128,62 @@ describe('formatBaggageHeader', () => {
 
     it('should trim keys and values', () => {
         const entries = new Set([
-            'traceId=abc123;sampled=true;debug',
+            'traceId=abc123; sampled=true;  debug',
             'test1  = this is a test'
         ]);
         const result = formatBaggageHeader(entries);
         expect(result).toBe(
-            'traceId=abc123;sampled=true;debug,test1=this%20is%20a%20test'
+            'traceId=abc123;sampled=true;debug,test1=this is a test'
+        );
+    });
+
+    it('should not double encode non-datadog-specific percent-encoded values', () => {
+        const entries = new Set([
+            'user=foo%20bar',
+            'name=Am%C3%A9lie',
+            'path=%2Fapi%2Fv1%2Fusers'
+        ]);
+
+        const result = formatBaggageHeader(entries);
+
+        expect(result).toBe(
+            'user=foo%20bar,name=Am%C3%A9lie,path=%2Fapi%2Fv1%2Fusers'
+        );
+    });
+
+    it('should not double encode non-datadog-specific percent-encoded property values', () => {
+        const entries = new Set([
+            'traceId=abc123;user=Am%C3%A9lie;note=hello%20world'
+        ]);
+
+        const result = formatBaggageHeader(entries);
+
+        expect(result).toBe(
+            'traceId=abc123;user=Am%C3%A9lie;note=hello%20world'
+        );
+    });
+
+    it('should re-encode mixed encoded/decoded datadog-specific values only once', () => {
+        const entries = new Set([
+            // should not be encoded because "user" is not datadog-specific
+            'user=hello%20world test',
+            // partially encoded: "%25" + literal space
+            'session.id=example%20session id',
+            // contains a literal "%", not a valid escape sequence
+            'user.id=example%user id',
+            // not encoded
+            'account.id=example account id'
+        ]);
+
+        const result = formatBaggageHeader(entries);
+
+        expect(result).toBe(
+            'user=hello%20world test,session.id=example%20session%20id,user.id=example%user%20id,account.id=example%20account%20id'
+        );
+
+        expect(logSpy).toHaveBeenCalledWith(
+            expect.stringContaining('invalid baggage header value detected'),
+            SdkVerbosity.WARN
         );
     });
 });

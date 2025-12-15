@@ -1,36 +1,62 @@
+import { getGlobalInstance } from '../utils/singletonUtils';
+
 /*
  * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-let _cachedSessionId: string | undefined;
-let _cachedUserId: string | undefined;
-let _cachedAccountId: string | undefined;
+const SESSION_INFO_MODULE = 'com.datadog.reactnative.sdk.session_info';
 
+class _SessionInfo {
+    sessionId: string | undefined = undefined;
+    userId: string | undefined = undefined;
+    accountId: string | undefined = undefined;
+
+    _reset() {
+        this.sessionId = undefined;
+        this.userId = undefined;
+        this.accountId = undefined;
+    }
+}
+
+const SessionInfo = getGlobalInstance(
+    SESSION_INFO_MODULE,
+    () => new _SessionInfo()
+);
+
+// Helper functions to interact with the SessionInfo singleton
 export const getCachedSessionId = () => {
-    return _cachedSessionId;
+    return SessionInfo.sessionId;
 };
 
 export const setCachedSessionId = (sessionId: string) => {
-    _cachedSessionId = sessionId;
+    SessionInfo.sessionId = sessionId;
 };
 
 export const clearCachedSessionId = () => {
-    _cachedSessionId = undefined;
+    SessionInfo.sessionId = undefined;
 };
 
 export const getCachedUserId = () => {
-    return _cachedUserId;
+    return SessionInfo.userId;
 };
 
 export const setCachedUserId = (userId: string) => {
-    _cachedUserId = userId;
+    SessionInfo.userId = userId;
+};
+
+export const clearCachedUserId = () => {
+    SessionInfo.userId = undefined;
 };
 
 export const getCachedAccountId = () => {
-    return _cachedAccountId;
+    return SessionInfo.accountId;
 };
 
 export const setCachedAccountId = (accountId: string) => {
-    _cachedAccountId = accountId;
+    SessionInfo.accountId = accountId;
+};
+
+export const clearCachedAccountId = () => {
+    SessionInfo.accountId = undefined;
 };
