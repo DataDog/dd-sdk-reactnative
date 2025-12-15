@@ -4,15 +4,17 @@
  * Copyright 2019-Present Datadog, Inc.
  */
 
-import UIKit
-@_spi(Internal)
-import DatadogSessionReplay
+@_spi(Internal) import DatadogSessionReplay
 import React
+import UIKit
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
-    internal var textObfuscator: (SessionReplayViewTreeRecordingContext, SessionReplayViewAttributes) -> SessionReplayTextObfuscating = { context, viewAttributes in
-        return viewAttributes.resolveTextAndInputPrivacyLevel(in: context).staticTextObfuscator
-    }
+    internal var textObfuscator:
+        (SessionReplayViewTreeRecordingContext, SessionReplayViewAttributes) ->
+            SessionReplayTextObfuscating = { context, viewAttributes in
+                return viewAttributes.resolveTextAndInputPrivacyLevel(in: context)
+                    .staticTextObfuscator
+            }
 
     internal var identifier = UUID()
 
@@ -30,7 +32,8 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         in context: SessionReplayViewTreeRecordingContext
     ) -> SessionReplayNodeSemantics? {
         guard
-            let textProperties = fabricWrapper.tryToExtractTextProperties(from: view) ?? tryToExtractTextProperties(view: view)
+            let textProperties = fabricWrapper.tryToExtractTextProperties(from: view)
+                ?? tryToExtractTextProperties(view: view)
         else {
             return view is RCTTextView ? SessionReplayInvisibleElement.constant : nil
         }
@@ -46,9 +49,11 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
             contentRect: textProperties.contentRect
         )
 
-        return SessionReplaySpecificElement(subtreeStrategy: .ignore, nodes: [
-            SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
-        ])
+        return SessionReplaySpecificElement(
+            subtreeStrategy: .ignore,
+            nodes: [
+                SessionReplayNode(viewAttributes: attributes, wireframesBuilder: builder)
+            ])
     }
 
     internal func tryToExtractTextFromSubViews(
@@ -80,7 +85,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
 
         let timeout: TimeInterval = 0.2
         let semaphore = DispatchSemaphore(value: 0)
-        
+
         // We need to access the shadow view from the UIManager queue, but we're currently on the main thread.
         // Calling `.sync` from the main thread to the UIManager queue is unsafe, because the UIManager queue
         // may already be executing a layout operation that in turn requires the main thread (e.g. measuring a native view).
@@ -91,7 +96,7 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
             shadowView = self.uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
             semaphore.signal()
         }
-        
+
         let waitResult = semaphore.wait(timeout: .now() + timeout)
         if waitResult == .timedOut {
             return nil
@@ -137,17 +142,17 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
     // Clipping should be 0 to avoid the text from overflowing when the
     // numberOfLines prop is used.
     // To apply clip(0 0 0 0) we set a negative clipping (which has no effect).
-    // TODO: RUM-2354 remove this when clip(0 0 0 0) is applied 
+    // TODO: RUM-2354 remove this when clip(0 0 0 0) is applied
     private var clip: SRContentClip {
-        let top = -1.0 
+        let top = -1.0
         let left = 0.0
         let bottom = 0.0
         let right = 0.0
         return SRContentClip.create(
-            bottom: Int64(withNoOverflow: bottom),
-            left: Int64(withNoOverflow: left),
-            right: Int64(withNoOverflow: right),
-            top: Int64(withNoOverflow: top)
+            bottom: Int64.ddWithNoOverflow(bottom),
+            left: Int64.ddWithNoOverflow(left),
+            right: Int64.ddWithNoOverflow(right),
+            top: Int64.ddWithNoOverflow(top)
         )
     }
 
@@ -180,7 +185,8 @@ internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder
                 // Text alignment is top for all RCTTextView and RCTParagraphComponentView components.
                 textAlignment: .init(systemTextAlignment: textAlignment, vertical: .top),
                 textColor: textColor.cgColor,
-                fontOverride: SessionReplayWireframesBuilder.FontOverride(size: fontSize.isNaN ? RCTTextPropertiesDefaultFontSize : fontSize),
+                fontOverride: SessionReplayWireframesBuilder.FontOverride(
+                    size: fontSize.isNaN ? RCTTextPropertiesDefaultFontSize : fontSize),
                 borderColor: attributes.layerBorderColor,
                 borderWidth: attributes.layerBorderWidth,
                 backgroundColor: attributes.backgroundColor,
