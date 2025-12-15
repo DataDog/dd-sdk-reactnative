@@ -203,4 +203,3 @@ internal class EventWriteScopeInterceptor : EventWriteScope {
         p1(writer)
     }
 }
-
