@@ -10,7 +10,7 @@ import { useNavigationContainerRef } from '@react-navigation/native';
 import { DatadogProvider } from "@datadog/mobile-react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
-import { DdRumReactNavigationTracking, type ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { DdRumReactNavigationTracking, type NavigationTrackingOptions, type ViewNamePredicate } from '@datadog/mobile-react-navigation';
 import type { Route } from "@react-navigation/native";
 import { RunType } from '../../../testSetup/types/testConfig';
 import { getDatadogProviderConfig } from '../../../testSetup/testUtils';
@@ -31,12 +31,17 @@ function RUMAutoScenario(props: RUMAutoScenarioProps): React.JSX.Element {
         return `RN ${Platform.OS} Benchmark - RUM Auto - ${trackedName} / ${route.name}`;
     };
 
+    const navigationTrackingOptions: NavigationTrackingOptions = {
+        viewNamePredicate,
+    };
+
     const onDatadogInitialization = () => {
         console.info("Datadog SDK initialized");
     };
 
     const Tab = createBottomTabNavigator();
     const RootStack = createNativeStackNavigator<RootStackParamList>();
+    
 
     function TabNavigatior() {
         return (
@@ -60,7 +65,7 @@ function RUMAutoScenario(props: RUMAutoScenarioProps): React.JSX.Element {
         return (
             <NavigationContainer ref={navigationRef} onReady={() => {
                 if (instrumented) {
-                    DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewNamePredicate);
+                    DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, navigationTrackingOptions);
                 };
             }}>
                 <RootStack.Navigator>
