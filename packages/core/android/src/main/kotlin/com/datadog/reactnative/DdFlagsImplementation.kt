@@ -13,11 +13,12 @@ import com.datadog.android.flags._FlagsInternalProxy
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
 import com.datadog.android.flags.FlagsConfiguration
-import com.datadog.android.flags.model.PrecomputedFlag
+import com.datadog.android.flags.model.UnparsedFlag
 import com.datadog.android.flags.model.EvaluationContext
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import org.json.JSONObject
+import java.util.Locale
 
 class DdFlagsImplementation(
     private val sdkCore: SdkCore = Datadog.getInstance(),
@@ -81,7 +82,7 @@ class DdFlagsImplementation(
         if (flagsSnapshot != null) {
             val mapOfMaps =
                 flagsSnapshot.mapValues { (key, flag) ->
-                    convertPrecomputedFlagToMap(key, flag)
+                    convertUnparsedFlagToMap(key, flag)
                 }
 
             promise.resolve(mapOfMaps.toWritableMap())
@@ -101,9 +102,9 @@ class DdFlagsImplementation(
         val client = getClient(clientName)
         val internalClient = _FlagsInternalProxy(client)
 
-        val precomputedFlag = convertMapToPrecomputedFlag(rawFlag.toMap())
+        val flag = convertMapToUnparsedFlag(rawFlag.toMap())
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
-        internalClient.trackFlagSnapshotEvaluation(key, precomputedFlag, evaluationContext)
+        internalClient.trackFlagSnapshotEvaluation(key, flag, evaluationContext)
 
         promise.resolve(null)
     }
@@ -161,51 +162,44 @@ private fun buildEvaluationContext(
 }
 
 /**
- * Converts a [PrecomputedFlag] to a [Map] for further React Native bridge transfer. Includes the
+ * Converts [UnparsedFlag] to [Map] for further React Native bridge transfer. Includes the
  * flag key and parses the value based on variationType.
  *
  * We are using Map instead of WritableMap as an intermediate because it is more handy, and we can
  * convert to WritableMap right before sending to React Native.
  */
-private fun convertPrecomputedFlagToMap(
+private fun convertUnparsedFlagToMap(
     flagKey: String,
-    flag: PrecomputedFlag,
+    flag: UnparsedFlag,
 ): Map<String, Any?> {
     // Parse the value based on variationType
-    val parsedValue: Any =
+    val parsedValue: Any? =
         when (flag.variationType) {
-            "boolean" -> {
-                flag.variationValue.lowercase().toBooleanStrictOrNull() ?: flag.variationValue
+            "boolean" -> flag.variationValue.lowercase(Locale.US).toBooleanStrictOrNull()
+            "string" -> flag.variationValue
+            "integer" -> flag.variationValue.toIntOrNull()
+            "number", "float" -> flag.variationValue.toDoubleOrNull()
+            "object" -> try {
+                JSONObject(flag.variationValue).toMap()
+            } catch (e: Exception) {
+                null
             }
-
-            "string" -> {
-                flag.variationValue
-            }
-
-            "integer" -> {
-                flag.variationValue.toIntOrNull() ?: flag.variationValue
-            }
-
-            "number", "float" -> {
-                flag.variationValue.toDoubleOrNull() ?: flag.variationValue
-            }
-
-            "object" -> {
-                try {
-                    JSONObject(flag.variationValue).toMap()
-                } catch (e: Exception) {
-                    flag.variationValue
-                }
-            }
-
             else -> {
-                flag.variationValue
+                null
             }
         }
 
+    if (parsedValue == null) {
+        InternalLogger.UNBOUND.log(
+            InternalLogger.Level.ERROR,
+            InternalLogger.Target.USER,
+            { "Flag '$flagKey': Failed to parse value '${flag.variationValue}' as '${flag.variationType}'" },
+        )
+    }
+
     return mapOf(
         "key" to flagKey,
-        "value" to parsedValue,
+        "value" to parsedValue ?: flag.variationValue,
         "allocationKey" to flag.allocationKey,
         "variationKey" to flag.variationKey,
         "variationType" to flag.variationType,
@@ -216,17 +210,17 @@ private fun convertPrecomputedFlagToMap(
     )
 }
 
-/** Converts a [Map] to a [PrecomputedFlag]. */
+/** Converts a [Map] to a [UnparsedFlag]. */
 @Suppress("UNCHECKED_CAST")
-private fun convertMapToPrecomputedFlag(map: Map<String, Any>): PrecomputedFlag =
-    PrecomputedFlag(
-        variationType = map["variationType"] as? String ?: "",
-        variationValue = map["variationValue"] as? String ?: "",
-        doLog = map["doLog"] as? Boolean ?: false,
-        allocationKey = map["allocationKey"] as? String ?: "",
-        variationKey = map["variationKey"] as? String ?: "",
-        extraLogging =
+private fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
+    object : UnparsedFlag {
+        override val variationType: String = map["variationType"] as? String ?: ""
+        override val variationValue: String = map["variationValue"] as? String ?: ""
+        override val doLog: Boolean = map["doLog"] as? Boolean ?: false
+        override val allocationKey: String = map["allocationKey"] as? String ?: ""
+        override val variationKey: String = map["variationKey"] as? String ?: ""
+        override val extraLogging: JSONObject =
             (map["extraLogging"] as? Map<String, Any>)?.toJSONObject()
-                ?: JSONObject(),
-        reason = map["reason"] as? String ?: "",
-    )
+                ?: JSONObject()
+        override val reason: String = map["reason"] as? String ?: ""
+    }
