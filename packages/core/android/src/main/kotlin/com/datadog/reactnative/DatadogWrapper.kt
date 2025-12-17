@@ -134,48 +134,6 @@ interface DatadogWrapper {
     fun removeRumGlobalAttribute(key: String)
 
     /**
-     * Sets the account information.
-     *
-     * @param id a unique account identifier (relevant to your business domain)
-     * @param name (nullable) the account name
-     * @param extraInfo additional information. An extra information can be
-     * nested up to 8 levels deep. Keys using more than 8 levels will be sanitized by SDK.
-     */
-    fun setAccountInfo(
-        id: String,
-        name: String?,
-        extraInfo: Map<String, Any?>
-    )
-
-    /**
-     * Sets the account information.
-     * @param extraInfo: The additional information. (To set the id or name please use setAccountInfo).
-     */
-    fun addAccountExtraInfo(
-        extraInfo: Map<String, Any?>
-    )
-
-    /**
-     * Clears the account information.
-     */
-    fun clearAccountInfo()
-
-
-    /** Adds a global attribute.
-     *
-     * @param key: Key that identifies the attribute.
-     * @param value: Value linked to the attribute.
-     */
-    fun addRumGlobalAttribute(key: String, value: Any?)
-
-    /**
-     * Removes a global attribute.
-     *
-     * @param key: Key that identifies the attribute.
-     */
-    fun removeRumGlobalAttribute(key: String)
-
-    /**
      * Adds global attributes.
      *
      * @param attributes Attributes to add
