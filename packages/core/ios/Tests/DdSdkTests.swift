@@ -1387,6 +1387,10 @@ class DdSdkTests: XCTestCase {
     func testFrameTimeNormalizationFromCallback() {
         let mockRefreshRateMonitor = MockJSRefreshRateMonitor()
         let rumMonitorMock = MockRUMMonitor()
+        let rumConfiguration = NSMutableDictionary(dictionary: DefaultRumConfigurationDict)
+
+        rumConfiguration["longTaskThresholdMs"] = 200
+        rumConfiguration["vitalsUpdateFrequency"] = RUM.Configuration.VitalsFrequency.average
 
         DdSdkImplementation(
             mainDispatchQueue: DispatchQueueMock(),
@@ -1396,8 +1400,7 @@ class DdSdkTests: XCTestCase {
             RUMMonitorInternalProvider: { rumMonitorMock._internalMock }
         ).initialize(
             configuration: .mockAny(
-                longTaskThresholdMs: 200,
-                vitalsUpdateFrequency: "average"
+                rumConfiguration: rumConfiguration
             ),
             resolve: mockResolve,
             reject: mockReject
