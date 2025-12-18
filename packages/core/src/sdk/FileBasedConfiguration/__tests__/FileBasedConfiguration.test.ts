@@ -140,6 +140,7 @@ describe('FileBasedConfiguration', () => {
                     },
                   ],
                   "initializationMode": "SYNC",
+                  "logsConfiguration": undefined,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -194,6 +195,7 @@ describe('FileBasedConfiguration', () => {
                   "env": "fake-env",
                   "firstPartyHosts": [],
                   "initializationMode": "SYNC",
+                  "logsConfiguration": undefined,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -220,6 +222,7 @@ describe('FileBasedConfiguration', () => {
                   },
                   "service": undefined,
                   "site": "US1",
+                  "traceConfiguration": undefined,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,

@@ -41,14 +41,19 @@ export const getDatadogProviderConfig = () => {
     let config = new DatadogProviderConfiguration(
         baseConfig.clientToken ?? '',
         baseConfig.env ?? '',
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            applicationId: baseConfig.applicationID ?? '',
+            trackInteractions: true,
+            trackResources: true,
+            trackErrors: true,
+            sessionSampleRate: 100,
+            nativeCrashReportEnabled: true
+        }
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
 
-    config.rumConfiguration = new RumConfiguration(baseConfig.applicationID ?? '', true, true, true);
-    config.rumConfiguration.nativeCrashReportEnabled = true
-    config.rumConfiguration.sessionSampleRate = 100;
 
     return config;
 };
