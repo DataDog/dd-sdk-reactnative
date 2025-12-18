@@ -268,8 +268,8 @@ public class DdSdkImplementation: NSObject {
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
             trackInteractions: rnConfiguration.configurationForTelemetry?.trackInteractions,
             trackLongTask: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
-            trackNativeErrors: rnConfiguration.nativeLongTaskThresholdMs != 0,
-            trackNativeLongTasks: rnConfiguration.nativeLongTaskThresholdMs != 0,
+            trackNativeErrors: rnConfiguration.rumConfiguration?.nativeLongTaskThresholdMs != 0,
+            trackNativeLongTasks: rnConfiguration.rumConfiguration?.nativeLongTaskThresholdMs != 0,
             trackNetworkRequests: rnConfiguration.configurationForTelemetry?.trackNetworkRequests
         )
     }

@@ -44,9 +44,10 @@ const buildPartialConfiguration = (
     configuration: DatadogProviderConfiguration
 ): AutoInstrumentationConfiguration => {
     const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
-        useAccessibilityLabel: configuration.useAccessibilityLabel,
         firstPartyHosts: configuration.firstPartyHosts,
         rumConfiguration: {
+            useAccessibilityLabel:
+                configuration.rumConfiguration?.useAccessibilityLabel ?? true,
             actionNameAttribute:
                 configuration.rumConfiguration?.actionNameAttribute,
             trackErrors: configuration.rumConfiguration?.trackErrors ?? false,
@@ -54,6 +55,8 @@ const buildPartialConfiguration = (
                 configuration.rumConfiguration?.trackResources ?? false,
             trackInteractions:
                 configuration.rumConfiguration?.trackInteractions ?? false,
+            resourceTraceSampleRate:
+                configuration.rumConfiguration?.resourceTraceSampleRate,
             errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
             resourceEventMapper:
                 configuration.rumConfiguration?.resourceEventMapper,
@@ -62,10 +65,7 @@ const buildPartialConfiguration = (
         logsConfiguration: {
             logEventMapper: configuration.logsConfiguration?.logEventMapper
         },
-        traceConfiguration: {
-            resourceTraceSampleRate:
-                configuration.traceConfiguration?.resourceTraceSampleRate
-        }
+        traceConfiguration: {}
     };
 
     return removeDiscardProperties(

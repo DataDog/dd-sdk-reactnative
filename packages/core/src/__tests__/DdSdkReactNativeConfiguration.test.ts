@@ -49,17 +49,18 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "bundleLogsWithTraces": true,
                     "logEventMapper": null,
                   },
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,
-                    "longTaskThresholdMs": 200,
+                    "longTaskThresholdMs": 0,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 100,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -69,16 +70,14 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
                   "site": "US1",
-                  "traceConfiguration": TraceConfiguration {
-                    "resourceTraceSampleRate": 100,
-                  },
+                  "traceConfiguration": TraceConfiguration {},
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": true,
                   "verbosity": undefined,
                 }
             `);
@@ -90,26 +89,27 @@ describe('DdSdkReactNativeConfiguration', () => {
                     {
                         rumConfiguration: {
                             actionNameAttribute: 'testID',
+                            useAccessibilityLabel: true,
                             trackErrors: true,
                             trackInteractions: true,
                             trackResources: true,
+                            resourceTraceSampleRate: 80,
                             errorEventMapper: event => event,
                             resourceEventMapper: event => event,
                             actionEventMapper: event => event
                         },
-                        traceConfiguration: {
-                            resourceTraceSampleRate: 80
-                        },
+                        traceConfiguration: {},
                         logsConfiguration: {
                             logEventMapper: event => event
                         },
-                        firstPartyHosts: ['api.com'],
-                        useAccessibilityLabel: true
+                        firstPartyHosts: ['api.com']
                     },
                     {
                         rumConfiguration: {
                             applicationId: 'fake-app-id',
                             sessionSampleRate: 80,
+                            nativeCrashReportEnabled: true,
+                            nativeLongTaskThresholdMs: 345,
                             nativeViewTracking: true,
                             nativeInteractionTracking: true,
                             longTaskThresholdMs: 567,
@@ -142,8 +142,6 @@ describe('DdSdkReactNativeConfiguration', () => {
                             additionalField: 'fake-value'
                         },
                         trackingConsent: TrackingConsent.PENDING,
-                        nativeCrashReportEnabled: true,
-                        nativeLongTaskThresholdMs: 345,
                         uploadFrequency: UploadFrequency.FREQUENT,
                         batchSize: BatchSize.LARGE
                     }
@@ -167,8 +165,6 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "customEndpoint": "https://trace.example.com/",
                     "logEventMapper": [Function],
                   },
-                  "nativeCrashReportEnabled": true,
-                  "nativeLongTaskThresholdMs": 345,
                   "proxyConfiguration": ProxyConfiguration {
                     "address": "api.com",
                     "port": 443,
@@ -182,9 +178,12 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "errorEventMapper": [Function],
                     "initialResourceThreshold": 0.123,
                     "longTaskThresholdMs": 567,
+                    "nativeCrashReportEnabled": true,
                     "nativeInteractionTracking": true,
+                    "nativeLongTaskThresholdMs": 345,
                     "nativeViewTracking": true,
                     "resourceEventMapper": [Function],
+                    "resourceTraceSampleRate": 80,
                     "sessionSampleRate": 80,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": true,
@@ -194,17 +193,16 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": "com.test.app",
                   "site": "EU",
                   "traceConfiguration": TraceConfiguration {
                     "customEndpoint": "https://trace.example.com/",
-                    "resourceTraceSampleRate": 80,
                   },
                   "trackingConsent": "pending",
                   "uploadFrequency": "FREQUENT",
-                  "useAccessibilityLabel": true,
                   "verbosity": "debug",
                   "version": "1.4.5",
                   "versionSuffix": "codepush-3",
@@ -217,15 +215,16 @@ describe('DdSdkReactNativeConfiguration', () => {
                 buildConfigurationFromPartialConfiguration(
                     {
                         rumConfiguration: {
+                            useAccessibilityLabel: false,
                             trackErrors: false,
                             trackInteractions: false,
-                            trackResources: false
+                            trackResources: false,
+                            resourceTraceSampleRate: 0,
+                            nativeCrashReportEnabled: false,
+                            nativeLongTaskThresholdMs: false
                         },
-                        traceConfiguration: {
-                            resourceTraceSampleRate: 0
-                        },
-                        logsConfiguration: {},
-                        useAccessibilityLabel: false
+                        traceConfiguration: {},
+                        logsConfiguration: {}
                     },
                     {
                         rumConfiguration: {
@@ -247,9 +246,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                         service: '',
                         version: '',
                         versionSuffix: '',
-                        additionalConfiguration: {},
-                        nativeCrashReportEnabled: false,
-                        nativeLongTaskThresholdMs: false
+                        additionalConfiguration: {}
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -266,17 +263,18 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "bundleLogsWithTraces": true,
                     "logEventMapper": null,
                   },
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "",
                     "errorEventMapper": null,
-                    "longTaskThresholdMs": 200,
+                    "longTaskThresholdMs": 0,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 0,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -286,16 +284,14 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
                   "site": "US1",
-                  "traceConfiguration": TraceConfiguration {
-                    "resourceTraceSampleRate": 0,
-                  },
+                  "traceConfiguration": TraceConfiguration {},
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": false,
                   "verbosity": undefined,
                 }
             `);

@@ -433,6 +433,13 @@ export class DdSdkReactNative {
             rumConfiguration.longTaskThresholdMs = adaptLongTaskThreshold(
                 longTaskThresholdMs
             );
+
+            const nativeLongTaskThresholdMs =
+                configuration.rumConfiguration?.nativeLongTaskThresholdMs ||
+                false;
+            rumConfiguration.nativeLongTaskThresholdMs = adaptLongTaskThreshold(
+                nativeLongTaskThresholdMs
+            );
         }
 
         const trackInteractions =
@@ -451,8 +458,6 @@ export class DdSdkReactNative {
             configuration.site,
             configuration.service,
             configuration.verbosity,
-            configuration.nativeCrashReportEnabled,
-            adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
             configuration.trackingConsent,
             configuration.uploadFrequency,
             configuration.batchSize,
@@ -493,7 +498,7 @@ export class DdSdkReactNative {
         const actionNameAttribute =
             configuration.rumConfiguration?.actionNameAttribute;
         const resourceTraceSampleRate =
-            configuration.traceConfiguration?.resourceTraceSampleRate ||
+            configuration.rumConfiguration?.resourceTraceSampleRate ||
             DEFAULTS.resourceTraceSampleRate;
         const logEventMapper = configuration.logsConfiguration?.logEventMapper;
         const errorEventMapper =
@@ -506,7 +511,9 @@ export class DdSdkReactNative {
         if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdBabelInteractionTracking.config = {
                 trackInteractions,
-                useAccessibilityLabel: configuration.useAccessibilityLabel
+                useAccessibilityLabel:
+                    configuration.rumConfiguration?.useAccessibilityLabel ||
+                    DEFAULTS.useAccessibilityLabel
             };
 
             DdBabelInteractionTracking.attachRumInstance(DdRum);
@@ -523,7 +530,8 @@ export class DdSdkReactNative {
         if (trackInteractions && !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdRumUserInteractionTracking.startTracking({
                 actionNameAttribute,
-                useAccessibilityLabel: configuration.useAccessibilityLabel
+                useAccessibilityLabel:
+                    configuration.rumConfiguration?.useAccessibilityLabel
             });
         }
 

@@ -19,8 +19,6 @@ import java.net.Proxy
  * @param site The Datadog site of your organization (can be 'US', 'EU' or 'GOV', default is 'US').
  * @param service Custom service name.
  * @param verbosity Verbosity level of the SDK’s internal logging.
- * @param nativeCrashReportEnabled Whether the SDK should track native Android crashes (default is false).
- * @param nativeLongTaskThresholdMs The threshold for native long tasks reporting in milliseconds.
  * @param trackingConsent Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
  * @param uploadFrequency The frequency to which batches of data are sent (can be 'RARE', 'AVERAGE' (default), 'FREQUENT')
  * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
@@ -39,8 +37,6 @@ data class DdSdkConfiguration(
     val site: String? = null,
     val service: String? = null,
     val verbosity: String? = null,
-    val nativeCrashReportEnabled: Boolean? = null,
-    val nativeLongTaskThresholdMs: Double? = null,
     val trackingConsent: String? = null,
     val uploadFrequency: String? = null,
     val batchSize: String? = null,
@@ -60,8 +56,11 @@ data class DdSdkConfiguration(
  * @param trackFrustrations Whether to track frustration signals or not.
  * @param longTaskThresholdMs The threshold for javascript long tasks reporting in milliseconds.
  * @param sessionSampleRate The sample rate (between 0 and 100) of RUM sessions kept.
+ * @param resourceTraceSampleRate Percentage (0–100) of tracing integrations for network calls between your app and your backend.
  * @param vitalsUpdateFrequency The frequency to which vitals update are sent (can be 'NEVER', 'RARE', 'AVERAGE' (default), 'FREQUENT').
  * @param trackBackgroundEvents Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
+ * @param nativeCrashReportEnabled Whether the SDK should track native Android crashes (default is false).
+ * @param nativeLongTaskThresholdMs The threshold for native long tasks reporting in milliseconds.
  * @param nativeViewTracking Enables/Disables tracking RUM Views on the native level.
  * @param nativeInteractionTracking Enables/Disables tracking RUM Actions on the native level.
  * @param trackNonFatalAnrs Enables tracking of non-fatal ANRs on Android.
@@ -74,8 +73,11 @@ data class RumConfiguration(
     val trackFrustrations: Boolean? = null,
     val longTaskThresholdMs: Double? = null,
     val sessionSampleRate: Double? = null,
+    val resourceTraceSampleRate: Double? = null,
     val vitalsUpdateFrequency: String? = null,
     val trackBackgroundEvents: Boolean? = null,
+    val nativeCrashReportEnabled: Boolean? = null,
+    val nativeLongTaskThresholdMs: Double? = null,
     val nativeViewTracking: Boolean? = null,
     val nativeInteractionTracking: Boolean? = null,
     val trackNonFatalAnrs: Boolean? = null,
@@ -100,12 +102,9 @@ data class LogsConfiguration(
 /**
  * A configuration object for Datadog Traces (APM) features.
  *
- * @param resourceTraceSampleRate Percentage (0–100) of tracing integrations for network calls between your app
- *  and your backend.
  * @param customEndpoint Custom Trace intake endpoint used to override the default Datadog intake.
  */
 data class TraceConfiguration(
-    val resourceTraceSampleRate: Double? = null,
     val customEndpoint: String? = null
 )
 
@@ -118,7 +117,6 @@ internal data class JSONDdSdkConfiguration(
     val clientToken: String,
     val env: String,
     val trackingConsent: String? = null,
-    val useAccessibilityLabel: Boolean? = null,
     val additionalConfiguration: Map<String, Any?>? = null,
     val batchSize: String? = null,
     val batchProcessingLevel: String? = null,
@@ -139,6 +137,7 @@ internal data class JSONDdSdkConfiguration(
 
 internal data class JSONRumConfiguration(
     val applicationId: String? = null,
+    val useAccessibilityLabel: Boolean? = null,
     val trackInteractions: Boolean? = null,
     val trackResources: Boolean? = null,
     val trackErrors: Boolean? = null,
@@ -152,6 +151,7 @@ internal data class JSONRumConfiguration(
     val nativeViewTracking: Boolean? = null,
     val nativeInteractionTracking: Boolean? = null,
     val sessionSampleRate: Double? = null,
+    val resourceTraceSampleRate: Double? = null,
     val trackBackgroundEvents: Boolean? = null,
     val trackFrustrations: Boolean? = null,
     val trackNonFatalAnrs: Boolean? = null,
@@ -169,7 +169,6 @@ internal data class JSONLogsConfiguration(
 )
 
 internal data class JSONTraceConfiguration(
-    val resourceTraceSampleRate: Double? = null,
     val customEndpoint: String? = null
 )
 

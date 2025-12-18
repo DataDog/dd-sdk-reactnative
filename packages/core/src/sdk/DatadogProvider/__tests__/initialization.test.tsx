@@ -83,17 +83,18 @@ describe('DatadogProvider', () => {
                   "env": "fakeEnv",
                   "firstPartyHosts": [],
                   "logsConfiguration": undefined,
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fakeApplicationId",
                     "errorEventMapper": null,
-                    "longTaskThresholdMs": 200,
+                    "longTaskThresholdMs": 0,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 100,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -103,6 +104,7 @@ describe('DatadogProvider', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
@@ -193,12 +195,11 @@ describe('DatadogProvider', () => {
                     rumConfiguration: {
                         trackErrors: true,
                         trackResources: true,
-                        trackInteractions: true
-                    },
-                    firstPartyHosts: ['api.com'],
-                    traceConfiguration: {
+                        trackInteractions: true,
                         resourceTraceSampleRate: 100
                     },
+                    firstPartyHosts: ['api.com'],
+                    traceConfiguration: {},
                     logsConfiguration: {}
                 }
             });

@@ -19,10 +19,10 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     );
 
     config.service = "com.datadoghq.reactnative.sample"
-    config.nativeCrashReportEnabled = true
     config.verbosity = SdkVerbosity.DEBUG;
     config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
-    config.rumConfiguration.sessionSampleRate = 100
+    config.rumConfiguration.sessionSampleRate = 100;
+    config.rumConfiguration.nativeCrashReportEnabled = true;
     return config
 }
 
@@ -40,11 +40,12 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         ENVIRONMENT,
         trackingConsent
     )
-    config.nativeCrashReportEnabled = true
     config.verbosity = SdkVerbosity.DEBUG;
     config.service = "com.datadoghq.reactnative.sample"
     config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
-    config.rumConfiguration.sessionSampleRate = 100
+    config.rumConfiguration.sessionSampleRate = 100;
+    config.rumConfiguration.nativeCrashReportEnabled = true;
+
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')

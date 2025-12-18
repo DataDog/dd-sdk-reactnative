@@ -27,10 +27,6 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     service?.let { map["service"] = it }
     verbosity?.let { map["verbosity"] = it }
 
-    map["nativeCrashReportEnabled"] = nativeCrashReportEnabled ?: false
-
-    map["nativeLongTaskThresholdMs"] = nativeLongTaskThresholdMs ?: 0.0
-
     trackingConsent?.let { map["trackingConsent"] = it }
 
     map["uploadFrequency"] = uploadFrequency ?: UploadFrequency.AVERAGE.toString()
@@ -60,9 +56,12 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         rumMap["trackFrustrations"] = rum?.trackFrustrations ?: false
         rumMap["longTaskThresholdMs"] = rum?.longTaskThresholdMs ?: 0.0
         rumMap["sessionSampleRate"] = rum?.sessionSampleRate ?: 100.0
+        rum.resourceTraceSampleRate?.let { rumMap["resourceTraceSampleRate"] = it }
         rumMap["vitalsUpdateFrequency"] =
             rum?.vitalsUpdateFrequency ?: VitalsUpdateFrequency.AVERAGE.toString()
         rumMap["trackBackgroundEvents"] = rum?.trackBackgroundEvents ?: false
+        rumMap["nativeCrashReportEnabled"] = rum?.nativeCrashReportEnabled ?: false
+        rumMap["nativeLongTaskThresholdMs"] = rum?.nativeLongTaskThresholdMs ?: 0.0
         rum?.nativeViewTracking?.let { rumMap["nativeViewTracking"] = it }
         rum?.nativeInteractionTracking?.let { rumMap["nativeInteractionTracking"] = it }
         rum?.trackNonFatalAnrs?.let { rumMap["trackNonFatalAnrs"] = it }
@@ -83,7 +82,6 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
 
     traceConfiguration?.let { trace ->
         val traceMap = mutableMapOf<String, Any?>()
-        trace.resourceTraceSampleRate?.let { traceMap["resourceTraceSampleRate"] = it }
         trace.customEndpoint?.let { traceMap["customEndpoint"] = it }
 
         map["traceConfiguration"] = traceMap.toReadableMap()
