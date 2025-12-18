@@ -184,7 +184,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=true}`() {
         // Given
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         val bridgeConfiguration = fakeConfiguration.copy(rumConfiguration = rumConfiguration)
@@ -241,7 +241,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=false}`() {
         // Given
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = false
         )
         fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
@@ -298,7 +298,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=null}`() {
         // Given
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = false
         )
         fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
@@ -584,7 +584,7 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
@@ -644,7 +644,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -704,7 +704,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us3")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -764,7 +764,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us5")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -824,7 +824,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1_fed")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -884,7 +884,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("eu1")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -944,7 +944,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap1")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -1004,7 +1004,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap2")
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = true
         )
         fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
@@ -1634,9 +1634,11 @@ internal class DdSdkTest {
         val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = threshold
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
+
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -1689,9 +1691,10 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = 0.0
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -3294,7 +3297,7 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {synthethics attributes}`() {
         // Given
-        val rumConfiguration = configuration.rumConfiguration?.copy(
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
             nativeCrashReportEnabled = false
         )
         fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)

@@ -56,7 +56,7 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         rumMap["trackFrustrations"] = rum?.trackFrustrations ?: false
         rumMap["longTaskThresholdMs"] = rum?.longTaskThresholdMs ?: 0.0
         rumMap["sessionSampleRate"] = rum?.sessionSampleRate ?: 100.0
-        rum.resourceTraceSampleRate?.let { rumMap["resourceTraceSampleRate"] = it }
+        rum?.resourceTraceSampleRate?.let { rumMap["resourceTraceSampleRate"] = it }
         rumMap["vitalsUpdateFrequency"] =
             rum?.vitalsUpdateFrequency ?: VitalsUpdateFrequency.AVERAGE.toString()
         rumMap["trackBackgroundEvents"] = rum?.trackBackgroundEvents ?: false
