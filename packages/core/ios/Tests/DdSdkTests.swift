@@ -927,7 +927,9 @@ class DdSdkTests: XCTestCase {
     }
 
     func testBuildLongTaskThreshold() {
-        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 2500)
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.nativeLongTaskThresholdMs = 2500
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
             configuration: configuration
@@ -937,7 +939,9 @@ class DdSdkTests: XCTestCase {
     }
 
     func testBuildNoLongTaskTracking() {
-        let configuration: DdSdkConfiguration = .mockAny(nativeLongTaskThresholdMs: 0)
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.nativeLongTaskThresholdMs = 0
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
             configuration: configuration
@@ -1807,8 +1811,6 @@ let DefaultRumConfigurationDict: NSDictionary = [
     "trackWatchdogTerminations": false,
     "trackMemoryWarnings": true,
     "telemetrySampleRate": 45.0,
-    "nativeCrashReportEnabled": nil,
-    "nativeLongTaskThresholdMs": nil,
 ]
 
 let DefaultLogsConfigurationDict: NSDictionary = [
@@ -1816,7 +1818,7 @@ let DefaultLogsConfigurationDict: NSDictionary = [
     "bundleLogsWithTraces": true,
 ]
 
-let DefaultTraceConfigurationDict: NSDictionary = []
+let DefaultTraceConfigurationDict: NSDictionary = [:]
 
 extension NSDictionary {
     static func mockAny(
