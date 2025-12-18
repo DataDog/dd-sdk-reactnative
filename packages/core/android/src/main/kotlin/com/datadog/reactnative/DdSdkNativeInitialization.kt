@@ -131,7 +131,7 @@ class DdSdkNativeInitialization internal constructor(
         val telemetrySampleRate = (configuration.rumConfiguration?.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
 
-        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        val longTask = (configuration.rumConfiguration?.nativeLongTaskThresholdMs as? Number)?.toLong()
         if (longTask != null) {
             configBuilder.trackLongTasks(longTask)
         }
@@ -179,14 +179,14 @@ class DdSdkNativeInitialization internal constructor(
                     event: TelemetryConfigurationEvent
                 ): TelemetryConfigurationEvent? {
                     event.telemetry.configuration.trackNativeErrors =
-                        configuration.nativeCrashReportEnabled
+                        configuration.rumConfiguration?.nativeCrashReportEnabled
                     // trackCrossPlatformLongTasks will be deprecated for trackLongTask
                     event.telemetry.configuration.trackCrossPlatformLongTasks =
                         configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackLongTask =
                         configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackNativeLongTasks =
-                        configuration.nativeLongTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.nativeLongTaskThresholdMs != 0.0
 
                     event.telemetry.configuration.initializationType =
                         configuration.configurationForTelemetry?.initializationType
@@ -264,7 +264,7 @@ class DdSdkNativeInitialization internal constructor(
             } as Map<String, Any>? ?: emptyMap()
         )
 
-        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
+        configBuilder.setCrashReportsEnabled(configuration.rumConfiguration?.nativeCrashReportEnabled ?: false)
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setUploadFrequency(
             buildUploadFrequency(configuration.uploadFrequency)

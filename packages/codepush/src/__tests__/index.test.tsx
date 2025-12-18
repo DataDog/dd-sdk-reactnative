@@ -286,10 +286,12 @@ describe('AppCenter Codepush integration', () => {
 
             const autoInstrumentationConfig = {
                 rumConfiguration: {
+                    useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     trackErrors: true,
                     trackResources: true,
-                    trackInteractions: true
+                    trackInteractions: true,
+                    resourceTraceSampleRate: 100
                 },
                 firstPartyHosts: [
                     {
@@ -297,11 +299,8 @@ describe('AppCenter Codepush integration', () => {
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                useAccessibilityLabel: true,
                 logsConfiguration: {},
-                traceConfiguration: {
-                    resourceTraceSampleRate: 100
-                }
+                traceConfiguration: {}
             };
 
             const configuration = new FileBasedConfiguration({
@@ -320,27 +319,26 @@ describe('AppCenter Codepush integration', () => {
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
             ).toHaveBeenCalledWith({
                 rumConfiguration: {
+                    useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     actionEventMapper: null,
                     resourceEventMapper: null,
                     errorEventMapper: null,
                     trackErrors: true,
                     trackResources: true,
-                    trackInteractions: true
+                    trackInteractions: true,
+                    resourceTraceSampleRate: 100
                 },
                 logsConfiguration: {
                     logEventMapper: null
                 },
-                traceConfiguration: {
-                    resourceTraceSampleRate: 100
-                },
+                traceConfiguration: {},
                 firstPartyHosts: [
                     {
                         match: 'example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
-                ],
-                useAccessibilityLabel: true
+                ]
             });
 
             expect(
@@ -364,10 +362,12 @@ describe('AppCenter Codepush integration', () => {
 
             const autoInstrumentationConfig = {
                 rumConfiguration: {
+                    useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     trackErrors: true,
                     trackResources: true,
-                    trackInteractions: true
+                    trackInteractions: true,
+                    resourceTraceSampleRate: 100
                 },
                 logsConfiguration: {},
                 firstPartyHosts: [
@@ -376,10 +376,7 @@ describe('AppCenter Codepush integration', () => {
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                useAccessibilityLabel: true,
-                traceConfiguration: {
-                    resourceTraceSampleRate: 100
-                }
+                traceConfiguration: {}
             };
 
             const configuration = new FileBasedConfiguration({
@@ -398,13 +395,15 @@ describe('AppCenter Codepush integration', () => {
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
             ).toHaveBeenCalledWith({
                 rumConfiguration: {
+                    useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     trackErrors: true,
                     trackResources: true,
                     trackInteractions: true,
                     actionEventMapper: null,
                     resourceEventMapper: null,
-                    errorEventMapper: null
+                    errorEventMapper: null,
+                    resourceTraceSampleRate: 100
                 },
                 logsConfiguration: {
                     logEventMapper: null
@@ -415,10 +414,7 @@ describe('AppCenter Codepush integration', () => {
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                traceConfiguration: {
-                    resourceTraceSampleRate: 100
-                },
-                useAccessibilityLabel: true
+                traceConfiguration: {}
             });
 
             expect(

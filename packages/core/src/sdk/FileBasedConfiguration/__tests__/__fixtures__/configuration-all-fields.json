@@ -5,19 +5,18 @@
         "clientToken": "fake-client-token",
         "rumConfiguration": {
             "applicationId": "fake-app-id",
+            "useAccessibilityLabel": false,
             "trackInteractions": true,
             "trackResources": true,
             "trackErrors": true,
             "longTaskThresholdMs": 44,
-            "actionNameAttribute": "action-name-attr"
-        },
-        "traceConfiguration": {
+            "actionNameAttribute": "action-name-attr",
             "resourceTraceSampleRate": 33
         },
+        "traceConfiguration": {},
         "logsConfiguration": {},
         "trackingConsent": "NOT_GRANTED",
         "verbosity": "WARN",
-        "useAccessibilityLabel": false,
         "site": "US5",
         "firstPartyHosts": [
             {

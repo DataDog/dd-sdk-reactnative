@@ -616,8 +616,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.traceConfiguration = new TraceConfiguration();
-            configuration.traceConfiguration.resourceTraceSampleRate = 42;
+            configuration.rumConfiguration.resourceTraceSampleRate = 42;
             configuration.firstPartyHosts = [
                 'api.example.com',
                 {
@@ -688,9 +687,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.traceConfiguration = new TraceConfiguration();
-            configuration.traceConfiguration.resourceTraceSampleRate = 2;
-
+            configuration.rumConfiguration.resourceTraceSampleRate = 2;
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
             // WHEN
@@ -1066,7 +1063,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.nativeLongTaskThresholdMs = 234;
+            configuration.rumConfiguration.nativeLongTaskThresholdMs = 234;
             configuration.rumConfiguration.longTaskThresholdMs = 456;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -1077,7 +1074,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkNativeConfiguration;
-            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(234);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeLongTaskThresholdMs
+            ).toBe(234);
             expect(
                 ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
             ).toBe(456);
@@ -1098,7 +1097,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.nativeLongTaskThresholdMs = false;
+            configuration.rumConfiguration.nativeLongTaskThresholdMs = false;
             configuration.rumConfiguration.longTaskThresholdMs = false;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -1109,7 +1108,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkNativeConfiguration;
-            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeLongTaskThresholdMs
+            ).toBe(0);
             expect(
                 ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
             ).toBe(0);

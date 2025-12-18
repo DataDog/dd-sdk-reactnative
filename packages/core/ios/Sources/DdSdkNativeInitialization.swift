@@ -94,7 +94,7 @@ public class DdSdkNativeInitialization: NSObject {
         let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
         Trace.enable(with: traceConfig)
 
-        if sdkConfiguration.nativeCrashReportEnabled ?? false {
+        if sdkConfiguration.rumConfiguration?.nativeCrashReportEnabled ?? false {
             CrashReporting.enable()
         }
 
@@ -140,7 +140,7 @@ public class DdSdkNativeInitialization: NSObject {
         }
 
         var longTaskThreshold: TimeInterval? = nil
-        if let threshold = configuration.nativeLongTaskThresholdMs, threshold != 0 {
+        if let threshold = configuration.rumConfiguration?.nativeLongTaskThresholdMs, threshold != 0 {
             longTaskThreshold = threshold / 1_000
         }
 
@@ -160,7 +160,7 @@ public class DdSdkNativeInitialization: NSObject {
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
                     sampleRate: Float(
-                        configuration.traceConfiguration?.resourceTraceSampleRate
+                        configuration.rumConfiguration?.resourceTraceSampleRate
                             ?? DefaultConfiguration.resourceTraceSampleRate)
                 )
             )

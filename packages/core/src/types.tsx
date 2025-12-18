@@ -24,8 +24,6 @@ export class DdSdkNativeConfiguration {
         readonly site: string,
         readonly service: string | undefined,
         readonly verbosity: string | undefined,
-        readonly nativeCrashReportEnabled: boolean,
-        readonly nativeLongTaskThresholdMs: number,
         readonly trackingConsent: string,
         readonly uploadFrequency: string,
         readonly batchSize: string,
@@ -63,8 +61,11 @@ export type RUMNativeConfiguration = {
     readonly trackFrustrations: boolean;
     readonly longTaskThresholdMs: number;
     readonly sessionSampleRate: number;
+    readonly resourceTraceSampleRate: number;
     readonly vitalsUpdateFrequency: string;
     readonly trackBackgroundEvents: boolean;
+    readonly nativeCrashReportEnabled: boolean;
+    readonly nativeLongTaskThresholdMs: number;
     readonly nativeViewTracking: boolean;
     readonly nativeInteractionTracking: boolean;
     readonly trackNonFatalAnrs: boolean | undefined;
@@ -83,7 +84,6 @@ export type LogsNativeConfiguration = {
 };
 
 export type TraceNativeConfiguration = {
-    readonly resourceTraceSampleRate: number;
     readonly customEndpoint: string;
 };
 

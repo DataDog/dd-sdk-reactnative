@@ -44,8 +44,6 @@ describe('FileBasedConfiguration', () => {
                     "bundleLogsWithTraces": true,
                     "logEventMapper": null,
                   },
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -53,9 +51,12 @@ describe('FileBasedConfiguration', () => {
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,
                     "longTaskThresholdMs": 44,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 33,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -65,16 +66,14 @@ describe('FileBasedConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
                   "site": "US5",
-                  "traceConfiguration": TraceConfiguration {
-                    "resourceTraceSampleRate": 33,
-                  },
+                  "traceConfiguration": TraceConfiguration {},
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": false,
                   "verbosity": "warn",
                 }
             `);
@@ -93,22 +92,21 @@ describe('FileBasedConfiguration', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
                     rumConfiguration: {
+                        useAccessibilityLabel: false,
                         trackInteractions: true,
                         trackResources: true,
                         trackErrors: true,
                         applicationId: 'fake-app-id',
                         longTaskThresholdMs: 44,
-                        actionNameAttribute: 'action-name-attr'
+                        actionNameAttribute: 'action-name-attr',
+                        resourceTraceSampleRate: 33
                     },
                     env: 'fake-env',
                     clientToken: 'fake-client-token',
                     trackingConsent: 'NOT_GRANTED',
                     site: 'US5',
                     verbosity: 'WARN',
-                    useAccessibilityLabel: false,
-                    traceConfiguration: {
-                        resourceTraceSampleRate: 33
-                    },
+                    traceConfiguration: {},
                     firstPartyHosts: [
                         {
                             match: 'example.com',
@@ -142,8 +140,6 @@ describe('FileBasedConfiguration', () => {
                     },
                   ],
                   "initializationMode": "SYNC",
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -151,9 +147,12 @@ describe('FileBasedConfiguration', () => {
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,
                     "longTaskThresholdMs": 44,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 33,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -163,16 +162,14 @@ describe('FileBasedConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
                   "site": "US5",
-                  "traceConfiguration": TraceConfiguration {
-                    "resourceTraceSampleRate": 33,
-                  },
+                  "traceConfiguration": TraceConfiguration {},
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": false,
                   "verbosity": "warn",
                 }
             `);
@@ -197,17 +194,18 @@ describe('FileBasedConfiguration', () => {
                   "env": "fake-env",
                   "firstPartyHosts": [],
                   "initializationMode": "SYNC",
-                  "nativeCrashReportEnabled": false,
-                  "nativeLongTaskThresholdMs": 200,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "applicationId": "fake-app-id",
                     "errorEventMapper": null,
                     "longTaskThresholdMs": 0,
+                    "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 100,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
@@ -217,13 +215,13 @@ describe('FileBasedConfiguration', () => {
                     "trackMemoryWarnings": true,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
                   "service": undefined,
                   "site": "US1",
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": true,
                   "verbosity": undefined,
                 }
             `);

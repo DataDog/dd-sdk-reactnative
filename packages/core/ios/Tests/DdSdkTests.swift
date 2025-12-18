@@ -468,7 +468,9 @@ class DdSdkTests: XCTestCase {
 
     func testBuildConfigurationNoCrashReportByDefault() {
         let core = MockDatadogCore()
-        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: nil)
+        let rumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.nativeCrashReportEnabled = nil
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         DdSdkNativeInitialization().enableFeatures(
             sdkConfiguration: configuration
@@ -479,7 +481,9 @@ class DdSdkTests: XCTestCase {
 
     func testBuildConfigurationNoCrashReport() {
         let core = MockDatadogCore()
-        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: false)
+        let rumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.nativeCrashReportEnabled = false
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         DdSdkNativeInitialization().enableFeatures(
             sdkConfiguration: configuration
@@ -493,7 +497,9 @@ class DdSdkTests: XCTestCase {
         CoreRegistry.register(default: core)
         defer { CoreRegistry.unregisterDefault() }
 
-        let configuration: DdSdkConfiguration = .mockAny(nativeCrashReportEnabled: true)
+        let rumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.nativeCrashReportEnabled = true
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         DdSdkNativeInitialization().enableFeatures(
             sdkConfiguration: configuration
@@ -941,13 +947,13 @@ class DdSdkTests: XCTestCase {
     }
 
     func testFirstPartyHosts() {
-        let traceConfiguration: TraceConfiguration = makeDefaultTraceConfiguration()
-        traceConfiguration.resourceTraceSampleRate = 66
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.resourceTraceSampleRate = 66
         let configuration: DdSdkConfiguration = .mockAny(
             firstPartyHosts: ([
                 ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
                 ["match": "datadog.com", "propagatorTypes": ["b3multi", "tracecontext"]],
-            ] as NSArray).asFirstPartyHosts(), traceConfiguration: traceConfiguration)
+            ] as NSArray).asFirstPartyHosts(), rumConfiguration: rumConfiguration)
 
         let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
             configuration: configuration
@@ -1503,10 +1509,10 @@ class DdSdkTests: XCTestCase {
 
         let rumConfiguration = makeDefaultRumConfiguration()
         rumConfiguration.longTaskThresholdMs = 0.1
+        rumConfiguration.nativeCrashReportEnabled = false
+        rumConfiguration.nativeLongTaskThresholdMs = 0.0
 
         let configuration: DdSdkConfiguration = DdSdkConfiguration.mockAny(
-            nativeCrashReportEnabled: false,
-            nativeLongTaskThresholdMs: 0.0,
             rumConfiguration: rumConfiguration,
             configurationForTelemetry: [
                 "initializationType": "LEGACY", "trackErrors": true, "trackInteractions": true,
@@ -1723,8 +1729,11 @@ func makeDefaultRumConfiguration() -> RumConfiguration {
         trackFrustrations: nil,
         longTaskThresholdMs: 0.0,
         sessionSampleRate: 75.0,
+        resourceTraceSampleRate: 80.0,
         vitalsUpdateFrequency: nil,
         trackBackgroundEvents: nil,
+        nativeCrashReportEnabled: nil,
+        nativeLongTaskThresholdMs: nil,
         nativeViewTracking: nil,
         nativeInteractionTracking: nil,
         appHangThreshold: nil,
@@ -1746,7 +1755,6 @@ func makeDefaultLogsConfiguration() -> LogsConfiguration {
 
 func makeDefaultTraceConfiguration() -> TraceConfiguration {
     TraceConfiguration(
-        resourceTraceSampleRate: 80.0,
         customEndpoint: nil
     )
 }
@@ -1759,8 +1767,6 @@ extension DdSdkConfiguration {
         site: NSString? = nil,
         service: NSString? = nil,
         verbosity: NSString? = nil,
-        nativeCrashReportEnabled: Bool? = nil,
-        nativeLongTaskThresholdMs: Double? = nil,
         trackingConsent: NSString? = "pending",
         uploadFrequency: NSString? = "AVERAGE",
         batchSize: NSString? = "MEDIUM",
@@ -1779,8 +1785,6 @@ extension DdSdkConfiguration {
             site: site.asSite(),
             service: service,
             verbosity: verbosity,
-            nativeCrashReportEnabled: nativeCrashReportEnabled,
-            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs,
             trackingConsent: trackingConsent.asTrackingConsent(),
             uploadFrequency: uploadFrequency.asUploadFrequency(),
             batchSize: batchSize.asBatchSize(),
@@ -1799,9 +1803,12 @@ let DefaultRumConfigurationDict: NSDictionary = [
     "applicationId": "app-id",
     "longTaskThresHoldMs": 0.0,
     "sessionSampleRate": 75.0,
+    "resourceTraceSampleRate": 80.0,
     "trackWatchdogTerminations": false,
     "trackMemoryWarnings": true,
     "telemetrySampleRate": 45.0,
+    "nativeCrashReportEnabled": nil,
+    "nativeLongTaskThresholdMs": nil,
 ]
 
 let DefaultLogsConfigurationDict: NSDictionary = [
@@ -1809,9 +1816,7 @@ let DefaultLogsConfigurationDict: NSDictionary = [
     "bundleLogsWithTraces": true,
 ]
 
-let DefaultTraceConfigurationDict: NSDictionary = [
-    "resourceTraceSampleRate": 80.0
-]
+let DefaultTraceConfigurationDict: NSDictionary = []
 
 extension NSDictionary {
     static func mockAny(
@@ -1821,8 +1826,6 @@ extension NSDictionary {
         site: NSString? = nil,
         service: NSString? = nil,
         verbosity: NSString? = nil,
-        nativeCrashReportEnabled: Bool? = nil,
-        nativeLongTaskThresholdMs: Double? = nil,
         trackingConsent: NSString? = "pending",
         uploadFrequency: NSString? = "AVERAGE",
         batchSize: NSString? = "MEDIUM",
@@ -1845,8 +1848,6 @@ extension NSDictionary {
         config["site"] = site
         config["service"] = service
         config["verbosity"] = verbosity
-        config["nativeCrashReportEnabled"] = nativeCrashReportEnabled
-        config["nativeLongTaskThresholdMs"] = nativeLongTaskThresholdMs
         config["uploadFrequency"] = uploadFrequency
         config["batchSize"] = batchSize
         config["batchProcessingLevel"] = batchProcessingLevel
@@ -1860,10 +1861,13 @@ extension NSDictionary {
 
         rumConfig["applicationId"] = rumConfiguration?["applicationId"]
         rumConfig["sesionSampleRate"] = rumConfiguration?["sessionSampleRate"]
+        rumConfig["resourceTraceSampleRate"] = rumConfiguration?["resourceTraceSampleRate"]
         rumConfig["longTaskThresholdMs"] = rumConfiguration?["longTaskThresholdMs"]
         rumConfig["telemetrySampleRate"] = rumConfiguration?["telemetrySampleRate"]
         rumConfig["vitalsUpdateFrequency"] = rumConfiguration?["vitalsUpdateFrequency"]
         rumConfig["trackBackgroundEvents"] = rumConfiguration?["trackBackgroundEvents"]
+        rumConfig["nativeCrashReportEnabled"] = rumConfiguration?["nativeCrashReportEnabled"]
+        rumConfig["nativeLongTaskThresholdMs"] = rumConfiguration?["nativeLongTaskThresholdMs"]
         rumConfig["nativeViewTracking"] = rumConfiguration?["nativeViewTracking"]
         rumConfig["nativeInteractionTracking"] = rumConfiguration?["nativeInteractionTracking"]
         rumConfig["customEndpoint"] = rumConfiguration?["customEndpoint"]
@@ -1873,7 +1877,6 @@ extension NSDictionary {
         logsConfig["bundleLogsWithTraces"] = logsConfiguration?["bundleLogsWithTraces"]
         logsConfig["customEndpoint"] = logsConfiguration?["customEndpoint"]
 
-        traceConfig["resourceTraceSampleRate"] = traceConfiguration?["resourceTraceSampleRate"]
         traceConfig["customEndpoint"] = traceConfiguration?["customEndpoint"]
 
         return config

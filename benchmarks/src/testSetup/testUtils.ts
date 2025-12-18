@@ -45,9 +45,9 @@ export const getDatadogProviderConfig = () => {
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-    config.nativeCrashReportEnabled = true
 
     config.rumConfiguration = new RumConfiguration(baseConfig.applicationID ?? '', true, true, true);
+    config.rumConfiguration.nativeCrashReportEnabled = true
     config.rumConfiguration.sessionSampleRate = 100;
 
     return config;
@@ -62,9 +62,9 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-    config.nativeCrashReportEnabled = true
     config.rumConfiguration = new RumConfiguration(appId ?? '', true, true, true)
     config.rumConfiguration.sessionSampleRate = 100;
+    config.rumConfiguration.nativeCrashReportEnabled = true
 
     return DdSdkReactNative.initialize(config);
 };

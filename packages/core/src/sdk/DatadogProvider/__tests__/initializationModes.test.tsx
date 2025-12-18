@@ -143,12 +143,11 @@ describe('DatadogProvider', () => {
                     rumConfiguration: {
                         trackErrors: true,
                         trackResources: true,
-                        trackInteractions: true
-                    },
-                    firstPartyHosts: ['api.com'],
-                    traceConfiguration: {
+                        trackInteractions: true,
                         resourceTraceSampleRate: 100
                     },
+                    firstPartyHosts: ['api.com'],
+                    traceConfiguration: {},
                     logsConfiguration: {}
                 }
             });

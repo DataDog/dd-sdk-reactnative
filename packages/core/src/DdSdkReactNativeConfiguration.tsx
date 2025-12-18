@@ -155,24 +155,6 @@ export class CoreConfiguration {
     public batchProcessingLevel: BatchProcessingLevel =
         BatchProcessingLevel.MEDIUM;
 
-    /**
-     * Enables crash reporting for native platforms (iOS, Android). Default `false`.
-     */
-    public nativeCrashReportEnabled: boolean =
-        DEFAULTS.nativeCrashReportEnabled;
-
-    /**
-     * The threshold for native long tasks reporting in milliseconds.
-     *
-     * - Setting it to `0` or `false` disables native long task reporting.
-     * - Values below `100` will be raised to `100`.
-     * - Values above `5000` will be lowered to `5000`.
-     *
-     * Default value is `200`.
-     */
-    public nativeLongTaskThresholdMs: number | false =
-        DEFAULTS.nativeLongTaskThresholdMs;
-
     public proxyConfiguration?: ProxyConfiguration = undefined;
 
     public service?: string = undefined;
@@ -245,12 +227,13 @@ export class CoreConfiguration {
     constructor(
         readonly clientToken: string,
         readonly env: string,
-        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
-        readonly useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel // eslint-disable-next-line no-empty-function
+        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent // eslint-disable-next-line no-empty-function
     ) {}
 }
 
 export class RumConfiguration {
+    public useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel;
+
     public actionEventMapper: ActionEventMapper | null =
         DEFAULTS.actionEventMapper;
 
@@ -302,8 +285,7 @@ export class RumConfiguration {
      *
      * Default value is `0`
      */
-    public longTaskThresholdMs: number | false =
-        DEFAULTS.nativeLongTaskThresholdMs;
+    public longTaskThresholdMs: number | false = DEFAULTS.longTaskThresholdMs;
 
     /**
      * Enables tracking of memory warnings as RUM events.
@@ -314,6 +296,24 @@ export class RumConfiguration {
      * **Note:** This setting is only supported on **iOS**. It has no effect on other platforms.
      */
     public trackMemoryWarnings: boolean = DEFAULTS.trackMemoryWarnings;
+
+    /**
+     * Enables crash reporting for native platforms (iOS, Android). Default `false`.
+     */
+    public nativeCrashReportEnabled: boolean =
+        DEFAULTS.nativeCrashReportEnabled;
+
+    /**
+     * The threshold for native long tasks reporting in milliseconds.
+     *
+     * - Setting it to `0` or `false` disables native long task reporting.
+     * - Values below `100` will be raised to `100`.
+     * - Values above `5000` will be lowered to `5000`.
+     *
+     * Default value is `200`.
+     */
+    public nativeLongTaskThresholdMs: number | false =
+        DEFAULTS.nativeLongTaskThresholdMs;
 
     /**
      * Enables native views tracking.
@@ -336,6 +336,12 @@ export class RumConfiguration {
      * Default is `100`.
      */
     public sessionSampleRate: number = DEFAULTS.sessionSampleRate;
+
+    /**
+     * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
+     * Default is `100`.
+     */
+    public resourceTraceSampleRate: number = DEFAULTS.resourceTraceSampleRate;
 
     /**
      * Enables tracking of RUM event when no RUM View is active.
@@ -419,12 +425,6 @@ export class LogsConfiguration {
 
 export class TraceConfiguration {
     /**
-     * Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100`.
-     * Default is `100`.
-     */
-    public resourceTraceSampleRate: number = DEFAULTS.resourceTraceSampleRate;
-
-    /**
      * Sets a target custom server for Traces.
      */
     public customEndpoint?: string;
@@ -439,13 +439,17 @@ export class DatadogProviderConfiguration extends CoreConfiguration {
  * Does not include default values.
  */
 export type AutoInstrumentationConfiguration = {
-    readonly useAccessibilityLabel?: boolean;
     readonly firstPartyHosts?: FirstPartyHostsConfiguration;
     readonly rumConfiguration: {
+        readonly useAccessibilityLabel: boolean;
         readonly trackInteractions: boolean;
         readonly trackResources: boolean;
         readonly trackErrors: boolean;
         readonly actionNameAttribute?: string;
+        readonly resourceTraceSampleRate?: number;
+        readonly nativeCrashReportEnabled?: boolean;
+        readonly nativeLongTaskThresholdMs?: number | false;
+        readonly nativeViewTracking?: boolean;
         readonly actionEventMapper?: ActionEventMapper | null;
         readonly errorEventMapper?: ErrorEventMapper | null;
         readonly resourceEventMapper?: ResourceEventMapper | null;
@@ -453,22 +457,21 @@ export type AutoInstrumentationConfiguration = {
     readonly logsConfiguration: {
         readonly logEventMapper?: LogEventMapper | null;
     };
-    readonly traceConfiguration: {
-        readonly resourceTraceSampleRate?: number;
-    };
+    readonly traceConfiguration?: TraceConfiguration;
 };
 
 /**
  * Parameters needed to start auto instrumentation. Includes default values.
  */
 export type AutoInstrumentationParameters = {
-    readonly useAccessibilityLabel: boolean;
     readonly firstPartyHosts: FirstPartyHostsConfiguration;
     readonly rumConfiguration?: {
+        readonly useAccessibilityLabel: boolean;
         readonly trackInteractions: boolean;
         readonly trackResources: boolean;
         readonly trackErrors: boolean;
         readonly actionNameAttribute?: string;
+        readonly resourceTraceSampleRate: number;
         readonly actionEventMapper: ActionEventMapper | null;
         readonly errorEventMapper: ErrorEventMapper | null;
         readonly resourceEventMapper: ResourceEventMapper | null;
@@ -476,9 +479,7 @@ export type AutoInstrumentationParameters = {
     readonly logsConfiguration?: {
         readonly logEventMapper: LogEventMapper | null;
     };
-    readonly traceConfiguration?: {
-        readonly resourceTraceSampleRate: number;
-    };
+    readonly traceConfiguration?: TraceConfiguration;
 };
 
 /**
@@ -489,10 +490,13 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
     features: AutoInstrumentationConfiguration
 ): AutoInstrumentationParameters => {
     return {
-        useAccessibilityLabel: DEFAULTS.useAccessibilityLabel,
         firstPartyHosts:
             features.firstPartyHosts || DEFAULTS.getFirstPartyHosts(),
         rumConfiguration: {
+            useAccessibilityLabel:
+                features.rumConfiguration.useAccessibilityLabel === undefined
+                    ? DEFAULTS.useAccessibilityLabel
+                    : features.rumConfiguration.useAccessibilityLabel,
             trackInteractions: features.rumConfiguration.trackInteractions,
             trackResources: features.rumConfiguration.trackResources,
             trackErrors: features.rumConfiguration.trackErrors,
@@ -508,14 +512,11 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
             actionEventMapper:
                 features.rumConfiguration.actionEventMapper === undefined
                     ? DEFAULTS.actionEventMapper
-                    : features.rumConfiguration.actionEventMapper
-        },
-        traceConfiguration: {
+                    : features.rumConfiguration.actionEventMapper,
             resourceTraceSampleRate:
-                features.traceConfiguration.resourceTraceSampleRate ===
-                undefined
+                features.rumConfiguration.resourceTraceSampleRate === undefined
                     ? DEFAULTS.resourceTraceSampleRate
-                    : features.traceConfiguration.resourceTraceSampleRate
+                    : features.rumConfiguration.resourceTraceSampleRate
         },
         logsConfiguration: {
             logEventMapper:
@@ -538,14 +539,14 @@ export type PartialInitializationConfiguration = {
     readonly version?: string;
     versionSuffix?: string;
     readonly proxyConfiguration?: ProxyConfiguration;
-    readonly nativeLongTaskThresholdMs?: number | false;
-    readonly nativeCrashReportEnabled?: boolean;
     readonly uploadFrequency?: UploadFrequency;
     readonly batchSize?: BatchSize;
     readonly batchProcessingLevel?: BatchProcessingLevel;
     readonly rumConfiguration?: {
         readonly applicationId: string;
         readonly sessionSampleRate?: number;
+        readonly nativeLongTaskThresholdMs?: number | false;
+        readonly nativeCrashReportEnabled?: boolean;
         readonly nativeViewTracking?: boolean;
         readonly nativeInteractionTracking?: boolean;
         readonly longTaskThresholdMs?: number | false;
@@ -576,8 +577,7 @@ export const buildConfigurationFromPartialConfiguration = (
     const SdkConfiguration = new CoreConfiguration(
         clientToken,
         env,
-        configuration.trackingConsent,
-        features.useAccessibilityLabel
+        configuration.trackingConsent
     );
 
     if (configuration.additionalConfiguration) {
@@ -592,16 +592,6 @@ export const buildConfigurationFromPartialConfiguration = (
 
     if (configuration.batchSize) {
         SdkConfiguration.batchSize = configuration.batchSize;
-    }
-
-    if (configuration.nativeCrashReportEnabled) {
-        SdkConfiguration.nativeCrashReportEnabled =
-            configuration.nativeCrashReportEnabled;
-    }
-
-    if (configuration.nativeLongTaskThresholdMs) {
-        SdkConfiguration.nativeLongTaskThresholdMs =
-            configuration.nativeLongTaskThresholdMs;
     }
 
     if (configuration.proxyConfiguration) {
@@ -650,6 +640,11 @@ export const buildConfigurationFromPartialConfiguration = (
     }
 
     if (SdkConfiguration.rumConfiguration) {
+        if (features.rumConfiguration.useAccessibilityLabel !== undefined) {
+            SdkConfiguration.rumConfiguration.useAccessibilityLabel =
+                features.rumConfiguration.useAccessibilityLabel;
+        }
+
         if (features.rumConfiguration.errorEventMapper) {
             SdkConfiguration.rumConfiguration.errorEventMapper =
                 features.rumConfiguration.errorEventMapper;
@@ -680,6 +675,16 @@ export const buildConfigurationFromPartialConfiguration = (
                 configuration.rumConfiguration?.longTaskThresholdMs;
         }
 
+        if (configuration.rumConfiguration?.nativeCrashReportEnabled) {
+            SdkConfiguration.rumConfiguration.nativeCrashReportEnabled =
+                configuration.rumConfiguration.nativeCrashReportEnabled;
+        }
+
+        if (configuration.rumConfiguration?.nativeLongTaskThresholdMs) {
+            SdkConfiguration.rumConfiguration.nativeLongTaskThresholdMs =
+                configuration.rumConfiguration.nativeLongTaskThresholdMs;
+        }
+
         if (configuration.rumConfiguration?.nativeInteractionTracking) {
             SdkConfiguration.rumConfiguration.nativeInteractionTracking =
                 configuration.rumConfiguration?.nativeInteractionTracking;
@@ -693,6 +698,11 @@ export const buildConfigurationFromPartialConfiguration = (
         if (configuration.rumConfiguration?.sessionSampleRate) {
             SdkConfiguration.rumConfiguration.sessionSampleRate =
                 configuration.rumConfiguration?.sessionSampleRate;
+        }
+
+        if (features.rumConfiguration?.resourceTraceSampleRate !== undefined) {
+            SdkConfiguration.rumConfiguration.resourceTraceSampleRate =
+                features.rumConfiguration.resourceTraceSampleRate;
         }
 
         if (configuration.rumConfiguration?.telemetrySampleRate) {
@@ -728,13 +738,6 @@ export const buildConfigurationFromPartialConfiguration = (
 
     if (features.traceConfiguration !== undefined) {
         SdkConfiguration.traceConfiguration = new TraceConfiguration();
-
-        if (
-            features.traceConfiguration?.resourceTraceSampleRate !== undefined
-        ) {
-            SdkConfiguration.traceConfiguration.resourceTraceSampleRate =
-                features.traceConfiguration.resourceTraceSampleRate;
-        }
 
         if (configuration.traceConfiguration?.customEndpoint) {
             SdkConfiguration.traceConfiguration.customEndpoint =

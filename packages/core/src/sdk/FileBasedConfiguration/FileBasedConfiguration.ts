@@ -36,8 +36,7 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
         super(
             configuration.clientToken,
             configuration.env,
-            configuration.trackingConsent,
-            configuration.useAccessibilityLabel
+            configuration.trackingConsent
         );
 
         this.verbosity = configuration.verbosity;
@@ -62,6 +61,18 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
                     configuration.rumConfiguration.actionNameAttribute;
             }
 
+            if (
+                configuration.rumConfiguration.useAccessibilityLabel !==
+                undefined
+            ) {
+                rumConfig.useAccessibilityLabel =
+                    configuration.rumConfiguration.useAccessibilityLabel;
+            }
+
+            rumConfig.resourceTraceSampleRate =
+                configuration.rumConfiguration.resourceTraceSampleRate ||
+                DEFAULTS.resourceTraceSampleRate;
+
             rumConfig.errorEventMapper =
                 params?.errorEventMapper || DEFAULTS.errorEventMapper;
             rumConfig.resourceEventMapper =
@@ -84,9 +95,6 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
 
         if (configuration.traceConfiguration) {
             this.traceConfiguration = new TraceConfiguration();
-            this.traceConfiguration.resourceTraceSampleRate =
-                configuration.traceConfiguration.resourceTraceSampleRate ||
-                DEFAULTS.resourceTraceSampleRate;
         }
     }
 }
@@ -116,12 +124,9 @@ export const getJSONConfiguration = (
     trackingConsent?: TrackingConsent;
     verbosity?: SdkVerbosity;
     service?: string;
-    useAccessibilityLabel?: boolean;
     site?: string;
     batchSize?: string;
     batchProcessingLevel?: BatchProcessingLevel;
-    nativeCrashReportEnabled?: boolean;
-    nativeLongTaskThresholdMs?: number | false;
     proxyConfiguration?: ProxyConfiguration;
     uploadFrequency?: UploadFrequency;
     version?: string;
@@ -129,6 +134,7 @@ export const getJSONConfiguration = (
     firstPartyHosts?: FirstPartyHostsConfiguration;
     rumConfiguration?: {
         applicationId: string;
+        useAccessibilityLabel?: boolean;
         trackInteractions?: boolean;
         trackResources?: boolean;
         trackErrors?: boolean;
@@ -137,10 +143,13 @@ export const getJSONConfiguration = (
         appHangThreshold?: number;
         initialResourceThreshold?: number;
         trackMemoryWarnings?: boolean;
+        nativeCrashReportEnabled?: boolean;
+        nativeLongTaskThresholdMs?: number | false;
         nativeViewTracking?: boolean;
         nativeInteractionTracking?: boolean;
         customEndpoint?: string;
         sessionSampleRate?: number;
+        resourceTraceSampleRate?: number;
         trackBackgroundEvents?: boolean;
         trackFrustrations?: boolean;
         trackNonFatalAnrs?: boolean;
@@ -148,7 +157,6 @@ export const getJSONConfiguration = (
         vitalsUpdateFrequency?: VitalsUpdateFrequency;
     };
     traceConfiguration?: {
-        resourceTraceSampleRate?: number;
         customEndpoint?: string;
     };
     logsConfiguration?: {
@@ -175,7 +183,6 @@ export const getJSONConfiguration = (
         env: configuration.env,
         trackingConsent: buildTrackingConsent(configuration.trackingConsent),
         verbosity: buildSdkVerbosity(configuration.verbosity),
-        useAccessibilityLabel: configuration.useAccessibilityLabel,
         site: configuration.site,
         service: configuration.service,
         version: configuration.version,
@@ -183,8 +190,6 @@ export const getJSONConfiguration = (
         batchSize: configuration.batchSize,
         batchProcessingLevel: configuration.batchProcessingLevel,
         uploadFrequency: configuration.uploadFrequency,
-        nativeLongTaskThresholdMs: configuration.nativeLongTaskThresholdMs,
-        nativeCrashReportEnabled: configuration.nativeCrashReportEnabled,
         proxyConfiguration: configuration.proxyConfiguration,
         firstPartyHosts:
             buildFirstPartyHosts(configuration.firstPartyHosts) ||
@@ -192,10 +197,16 @@ export const getJSONConfiguration = (
         ...(configuration.rumConfiguration !== undefined && {
             rumConfiguration: {
                 applicationId: configuration.rumConfiguration.applicationId,
+                useAccessibilityLabel:
+                    configuration.rumConfiguration.useAccessibilityLabel,
                 trackInteractions:
                     configuration.rumConfiguration.trackInteractions,
                 trackResources: configuration.rumConfiguration.trackResources,
                 trackErrors: configuration.rumConfiguration.trackErrors,
+                nativeLongTaskThresholdMs:
+                    configuration.rumConfiguration.nativeLongTaskThresholdMs,
+                nativeCrashReportEnabled:
+                    configuration.rumConfiguration.nativeCrashReportEnabled,
                 longTaskThresholdMs:
                     configuration.rumConfiguration.longTaskThresholdMs,
                 actionNameAttribute:
@@ -203,6 +214,8 @@ export const getJSONConfiguration = (
                 customEndpoint: configuration.rumConfiguration.customEndpoint,
                 sessionSampleRate:
                     configuration.rumConfiguration.sessionSampleRate,
+                resourceTraceSampleRate:
+                    configuration.rumConfiguration.resourceTraceSampleRate,
                 trackBackgroundEvents:
                     configuration.rumConfiguration.trackBackgroundEvents,
                 trackFrustrations:
@@ -217,8 +230,6 @@ export const getJSONConfiguration = (
         }),
         ...(configuration.traceConfiguration !== undefined && {
             traceConfiguration: {
-                resourceTraceSampleRate:
-                    configuration.traceConfiguration.resourceTraceSampleRate,
                 customEndpoint: configuration.traceConfiguration.customEndpoint
             }
         }),
