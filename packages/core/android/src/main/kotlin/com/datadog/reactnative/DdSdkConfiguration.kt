@@ -120,8 +120,6 @@ internal data class JSONDdSdkConfiguration(
     val additionalConfiguration: Map<String, Any?>? = null,
     val batchSize: String? = null,
     val batchProcessingLevel: String? = null,
-    val nativeCrashReportEnabled: Boolean? = null,
-    val nativeLongTaskThresholdMs: Double? = null, // we treat only numeric in JSON
     val proxyConfiguration: JSONProxyConfiguration? = null,
     val service: String? = null,
     val uploadFrequency: String? = null,
@@ -147,7 +145,8 @@ internal data class JSONRumConfiguration(
 
     // schema: integer | boolean, we only support numeric in JSON file
     val longTaskThresholdMs: Double? = null,
-
+    val nativeCrashReportEnabled: Boolean? = null,
+    val nativeLongTaskThresholdMs: Double? = null, // we treat only numeric in JSON
     val nativeViewTracking: Boolean? = null,
     val nativeInteractionTracking: Boolean? = null,
     val sessionSampleRate: Double? = null,
