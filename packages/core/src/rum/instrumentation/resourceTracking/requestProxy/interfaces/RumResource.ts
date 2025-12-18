@@ -32,4 +32,5 @@ export type DdRumResourceGraphqlAttributes = {
     operationType?: string;
     operationName?: string;
     variables?: string;
+    payload?: string;
 };

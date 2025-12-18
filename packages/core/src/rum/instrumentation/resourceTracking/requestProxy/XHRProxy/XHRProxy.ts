@@ -21,6 +21,7 @@ import {
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+    DATADOG_GRAPH_QL_PAYLOAD_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../graphql/graphqlHeaders';
 import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
@@ -44,6 +45,7 @@ interface DdRumXhrContext {
         operationType?: string;
         operationName?: string;
         variables?: string;
+        payload?: string;
     };
     method: string;
     url: string;
@@ -249,6 +251,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
         value: string
     ) {
         const key = header.toLowerCase();
+        console.log('HeaderKey: ', key);
         if (isDatadogCustomHeader(key)) {
             switch (key) {
                 case DATADOG_GRAPH_QL_OPERATION_NAME_HEADER:
@@ -259,6 +262,9 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                     break;
                 case DATADOG_GRAPH_QL_VARIABLES_HEADER:
                     this._datadog_xhr.graphql.variables = value;
+                    break;
+                case DATADOG_GRAPH_QL_PAYLOAD_HEADER:
+                    this._datadog_xhr.graphql.payload = value;
                     break;
                 case DATADOG_BAGGAGE_HEADER:
                     // Apply Baggage Header only if pre-processed by Datadog

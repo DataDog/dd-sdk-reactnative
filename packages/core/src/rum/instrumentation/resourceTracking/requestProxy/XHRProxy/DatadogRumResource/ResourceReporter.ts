@@ -74,6 +74,10 @@ const formatResourceStopContext = (
         if (graphqlAttributes.variables) {
             attributes['_dd.graphql.variables'] = graphqlAttributes.variables;
         }
+
+        if (graphqlAttributes.payload) {
+            attributes['_dd.graphql.payload'] = graphqlAttributes.payload;
+        }
     }
 
     return attributes;

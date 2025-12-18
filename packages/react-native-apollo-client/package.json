@@ -37,10 +37,12 @@
         "lint": "eslint .",
         "prepare": "rm -rf lib && yarn bob build"
     },
+    "dependencies": {
+        "graphql": "^16.8.0"
+    },
     "devDependencies": {
         "@apollo/client": "^3.8.3",
         "@testing-library/react-native": "7.0.2",
-        "graphql": "^16.8.0",
         "react-native-builder-bob": "0.26.0"
     },
     "peerDependencies": {
