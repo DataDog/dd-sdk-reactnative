@@ -8,17 +8,30 @@ import { ApolloLink } from '@apollo/client';
 import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
-    DATADOG_GRAPH_QL_VARIABLES_HEADER
+    DATADOG_GRAPH_QL_VARIABLES_HEADER,
+    DATADOG_GRAPH_QL_PAYLOAD_HEADER
 } from '@datadog/mobile-react-native';
 
-import { getOperationName, getVariables, getOperationType } from './helpers';
+import {
+    getOperationName,
+    getVariables,
+    getOperationType,
+    getPayload
+} from './helpers';
+
+export type DatadogLinkOptions = {
+    trackPayload: boolean;
+};
 
 export class DatadogLink extends ApolloLink {
-    constructor() {
+    private trackPayload = false;
+
+    constructor(options: DatadogLinkOptions = { trackPayload: false }) {
         super((operation, forward) => {
             const operationName = getOperationName(operation);
             const formattedVariables = getVariables(operation);
             const operationType = getOperationType(operation);
+            const payload = getPayload(operation, this.trackPayload);
 
             operation.setContext(({ headers = {} }) => {
                 const newHeaders: Record<string, string | null> = {
@@ -34,6 +47,7 @@ export class DatadogLink extends ApolloLink {
                 newHeaders[
                     DATADOG_GRAPH_QL_VARIABLES_HEADER
                 ] = formattedVariables;
+                newHeaders[DATADOG_GRAPH_QL_PAYLOAD_HEADER] = payload;
 
                 return {
                     headers: newHeaders
@@ -42,5 +56,7 @@ export class DatadogLink extends ApolloLink {
 
             return forward(operation);
         });
+
+        this.trackPayload = options.trackPayload;
     }
 }
