@@ -227,8 +227,16 @@ export class CoreConfiguration {
     constructor(
         readonly clientToken: string,
         readonly env: string,
-        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent // eslint-disable-next-line no-empty-function
-    ) {}
+        readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
+        rumConfiguration?: object,
+        logsConfiguration?: object,
+        traceConfiguration?: object
+        // eslint-disable-next-line no-empty-function
+    ) {
+        this.rumConfiguration = rumConfiguration as RumConfiguration;
+        this.logsConfiguration = logsConfiguration as LogsConfiguration;
+        this.traceConfiguration = traceConfiguration as TraceConfiguration;
+    }
 }
 
 export class RumConfiguration {
