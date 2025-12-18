@@ -4,7 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { getOperationName, getVariables, getOperationType } from '../helpers';
+import {
+    getOperationName,
+    getVariables,
+    getOperationType,
+    getPayload
+} from '../helpers';
 
 import {
     createCatOperation,
@@ -60,6 +65,77 @@ describe('helpers', () => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             expect(getOperationType({ query: { definitions: [] } })).toBeNull();
+        });
+    });
+
+    describe('getPayload', () => {
+        it('returns null when trackPayload is false', () => {
+            expect(getPayload(getCountryOperation, false)).toBeNull();
+        });
+
+        it('returns null when trackPayload is not provided (defaults to false)', () => {
+            expect(getPayload(getCountryOperation)).toBeNull();
+        });
+
+        it('returns the query string when trackPayload is true', () => {
+            const payload = getPayload(getCountryOperation, true);
+            expect(payload).toBeTruthy();
+            expect(payload).toContain('query CountryDetails');
+            expect(payload).toContain('country');
+        });
+
+        it('returns the query string for mutations', () => {
+            const payload = getPayload(createCatOperation, true);
+            expect(payload).toBeTruthy();
+            expect(payload).toContain('mutation CreateCat');
+        });
+
+        it('trims whitespace from the query string', () => {
+            const payload = getPayload(getCountryOperation, true);
+            expect(payload).toBeTruthy();
+            // Check that there's no leading/trailing whitespace
+            expect(payload).toBe(payload?.trim());
+        });
+
+        it('truncates query strings longer than 32 KiB', () => {
+            // Create a mock operation with a very long query
+            // Generate a query with a lot of fields to exceed 32 KiB
+            const fields = 'a'.repeat(1000);
+            const mockOperation: any = {
+                query: {
+                    kind: 'Document',
+                    definitions: [
+                        {
+                            kind: 'OperationDefinition',
+                            operation: 'query',
+                            selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: Array.from(
+                                    { length: 100 },
+                                    (_, i) => ({
+                                        kind: 'Field',
+                                        name: {
+                                            kind: 'Name',
+                                            value: `field${i}_${fields}`
+                                        }
+                                    })
+                                )
+                            }
+                        }
+                    ]
+                }
+            };
+
+            const payload = getPayload(mockOperation, true);
+            expect(payload).toBeTruthy();
+            expect(payload?.length).toBe(32 * 1024 + 3); // 32 KiB + '...'
+            expect(payload?.endsWith('...')).toBe(true);
+        });
+
+        it('does not crash if the operation is malformed', () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            expect(getPayload({}, true)).toBeNull();
         });
     });
 });
