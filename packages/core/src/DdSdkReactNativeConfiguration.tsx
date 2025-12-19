@@ -228,14 +228,34 @@ export class CoreConfiguration {
         readonly clientToken: string,
         readonly env: string,
         readonly trackingConsent: TrackingConsent = DEFAULTS.trackingConsent,
-        rumConfiguration?: object,
-        logsConfiguration?: object,
-        traceConfiguration?: object
-        // eslint-disable-next-line no-empty-function
+        rumConfiguration?: Partial<RumConfiguration>,
+        logsConfiguration?: Partial<LogsConfiguration>,
+        traceConfiguration?: Partial<TraceConfiguration>
     ) {
-        this.rumConfiguration = rumConfiguration as RumConfiguration;
-        this.logsConfiguration = logsConfiguration as LogsConfiguration;
-        this.traceConfiguration = traceConfiguration as TraceConfiguration;
+        if (rumConfiguration && rumConfiguration.applicationId) {
+            const baseRumConfig = new RumConfiguration(
+                rumConfiguration.applicationId
+            );
+
+            this.rumConfiguration = Object.assign(
+                baseRumConfig,
+                rumConfiguration
+            );
+        }
+
+        if (logsConfiguration) {
+            this.logsConfiguration = Object.assign(
+                new LogsConfiguration(),
+                logsConfiguration
+            );
+        }
+
+        if (traceConfiguration) {
+            this.traceConfiguration = Object.assign(
+                new TraceConfiguration(),
+                traceConfiguration
+            );
+        }
     }
 }
 
