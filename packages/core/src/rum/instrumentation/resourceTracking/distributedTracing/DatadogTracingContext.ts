@@ -8,7 +8,7 @@ import { formatBaggageHeader } from '../requestProxy/XHRProxy/baggageHeaderUtils
 
 import { DatadogTracingIdentifier } from './DatadogTracingIdentifier';
 import type { SpanId, TraceId } from './TracingIdentifier';
-import { BAGGAGE_HEADER_KEY } from './distributedTracingHeaders';
+import { BAGGAGE_HEADER_KEY } from './headers';
 
 /**
  * An object that contains the tracing attributes as headers for network requests and attributes

@@ -8,7 +8,7 @@ import BigInt from 'big-integer';
 import { Platform, NativeModules } from 'react-native';
 
 import { InternalLog } from '../../../../../../InternalLog';
-import { SdkVerbosity } from '../../../../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../../../../config/types';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdRum } from '../../../../../DdRum';
 import {
@@ -19,6 +19,7 @@ import {
 import { PropagatorType } from '../../../../../types';
 import { XMLHttpRequestMock } from '../../../__tests__/__utils__/XMLHttpRequestMock';
 import { TracingIdentifierUtils } from '../../../distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
+import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
 import {
     PARENT_ID_HEADER_KEY,
     TRACE_ID_HEADER_KEY,
@@ -33,8 +34,7 @@ import {
     TRACESTATE_HEADER_KEY,
     TAGS_HEADER_KEY,
     BAGGAGE_HEADER_KEY
-} from '../../../distributedTracing/distributedTracingHeaders';
-import { firstPartyHostsRegexMapBuilder } from '../../../distributedTracing/firstPartyHosts';
+} from '../../../distributedTracing/headers';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,

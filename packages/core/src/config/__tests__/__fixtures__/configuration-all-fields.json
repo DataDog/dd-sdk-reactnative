@@ -1,0 +1,57 @@
+{
+    "$schema": "../../../../../datadog-configuration.schema.json",
+    "configuration": {
+        "env": "fake-env",
+        "clientToken": "fake-client-token",
+        "rumConfiguration": {
+            "appHangThreshold": 123,
+            "applicationId": "fake-app-id",
+            "customEndpoint": "https://example.com/rum",
+            "useAccessibilityLabel": false,
+            "trackInteractions": true,
+            "trackResources": true,
+            "trackErrors": true,
+            "longTaskThresholdMs": 44,
+            "trackNonFatalAnrs": true,
+            "actionNameAttribute": "action-name-attr",
+            "resourceTraceSampleRate": 33,
+            "firstPartyHosts": [
+                {
+                    "match": "example.com",
+                    "propagatorTypes": [
+                        "B3MULTI",
+                        "TRACECONTEXT"
+                    ]
+                }
+            ],
+            "initialResourceThreshold": 456,
+            "nativeViewTracking": true,
+            "nativeInteractionTracking": true,
+            "nativeLongTaskThresholdMs": 789,
+            "nativeCrashReportEnabled": true,
+            "trackBackgroundEvents": true,
+            "trackMemoryWarnings": false,
+            "trackWatchdogTerminations": true,
+            "vitalsUpdateFrequency": "NEVER"
+        },
+        "traceConfiguration": {
+            "customEndpoint": "https://example.com/trace"
+        },
+        "logsConfiguration": {
+            "customEndpoint": "https://example.com/logs"
+        },
+        "trackingConsent": "NOT_GRANTED",
+        "verbosity": "WARN",
+        "site": "US5",
+        "service": "my-custom-service",
+        "version": "1.2.3",
+        "versionSuffix": "test-suffix",
+        "additionalConfiguration": {
+            "myProperty": 1,
+            "another.property": "test"
+        },
+        "batchSize": "SMALL",
+        "uploadFrequency": "RARE",
+        "batchProcessingLevel": "LOW"
+    }
+}

@@ -3,27 +3,33 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+import { DdSdkReactNative } from './DdSdkReactNative';
+import { InternalLog } from './InternalLog';
+import { DatadogProviderConfiguration } from './config/DatadogProviderConfiguration';
+import { FileBasedConfiguration } from './config/FileBasedConfiguration';
+import type { AutoInstrumentationConfiguration } from './config/async/AutoInstrumentationConfiguration';
+import type { PartialInitializationConfiguration } from './config/async/PartialInitializationConfiguration';
+import type { CoreConfigurationOptions } from './config/features/CoreConfiguration.type';
+import { CoreConfiguration } from './config/features/CoreConfiguration';
+import type { LogsConfigurationOptions } from './config/features/LogsConfiguration.type';
+import { LogsConfiguration } from './config/features/LogsConfiguration';
+import type { RumConfigurationOptions } from './config/features/RumConfiguration.type';
+import { RumConfiguration } from './config/features/RumConfiguration';
+import type { TraceConfigurationOptions } from './config/features/TraceConfiguration.type';
+import { TraceConfiguration } from './config/features/TraceConfiguration';
+import {
+    ProxyConfiguration,
+    ProxyType
+} from './config/types/ProxyConfiguration';
+import { SdkVerbosity } from './config/types/SdkVerbosity';
+import { TrackingConsent } from './config/types/TrackingConsent';
 import {
     BatchProcessingLevel,
     BatchSize,
-    DatadogProviderConfiguration,
-    CoreConfiguration,
-    RumConfiguration,
-    LogsConfiguration,
-    TraceConfiguration,
     InitializationMode,
     UploadFrequency,
     VitalsUpdateFrequency
-} from './DdSdkReactNativeConfiguration';
-import type {
-    AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration
-} from './DdSdkReactNativeConfiguration';
-import { DdSdkReactNative } from './DdSdkReactNative';
-import { InternalLog } from './InternalLog';
-import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
-import { SdkVerbosity } from './SdkVerbosity';
-import { TrackingConsent } from './TrackingConsent';
+} from './config/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -43,7 +49,6 @@ import type { FirstPartyHost } from './rum/types';
 import { PropagatorType, RumActionType } from './rum/types';
 import { DatadogProvider } from './sdk/DatadogProvider/DatadogProvider';
 import { DdSdk } from './sdk/DdSdk';
-import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { DdTrace } from './trace/DdTrace';
 import { ErrorSource, FeatureOperationFailure } from './types';
 import { DefaultTimeProvider } from './utils/time-provider/DefaultTimeProvider';
@@ -93,5 +98,9 @@ export type {
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,
-    PartialInitializationConfiguration
+    PartialInitializationConfiguration,
+    CoreConfigurationOptions,
+    RumConfigurationOptions,
+    LogsConfigurationOptions,
+    TraceConfigurationOptions
 };

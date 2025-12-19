@@ -4,12 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
-import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
+import { InitializationMode } from '../../../config/types';
 import { DdRum } from '../../../rum/DdRum';
-import { RumActionType } from '../../../rum/types';
+import { PropagatorType, RumActionType } from '../../../rum/types';
 import { DdTrace } from '../../../trace/DdTrace';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import { GlobalState } from '../../GlobalState/GlobalState';
@@ -65,7 +64,7 @@ describe('DatadogProvider', () => {
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkNativeConfiguration {
                   "additionalConfiguration": {
-                    "_dd.react_native_version": "${reactNativeVersion}",
+                    "_dd.react_native_version": "0.76.9",
                     "_dd.source": "react-native",
                   },
                   "attributeEncoders": [],
@@ -81,13 +80,17 @@ describe('DatadogProvider', () => {
                     "trackNetworkRequests": false,
                   },
                   "env": "fakeEnv",
-                  "firstPartyHosts": [],
                   "logsConfiguration": undefined,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
+                    "actionNameAttribute": undefined,
+                    "appHangThreshold": undefined,
                     "applicationId": "fakeApplicationId",
+                    "customEndpoint": undefined,
                     "errorEventMapper": null,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
@@ -102,6 +105,7 @@ describe('DatadogProvider', () => {
                     "trackFrustrations": true,
                     "trackInteractions": true,
                     "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": true,
@@ -196,9 +200,17 @@ describe('DatadogProvider', () => {
                         trackErrors: true,
                         trackResources: true,
                         trackInteractions: true,
-                        resourceTraceSampleRate: 100
+                        resourceTraceSampleRate: 100,
+                        firstPartyHosts: [
+                            {
+                                match: 'api.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT
+                                ]
+                            }
+                        ]
                     },
-                    firstPartyHosts: ['api.com'],
                     traceConfiguration: {},
                     logsConfiguration: {}
                 }

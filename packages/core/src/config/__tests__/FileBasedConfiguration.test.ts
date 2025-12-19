@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { PropagatorType } from '../../../rum/types';
+import { PropagatorType } from '../../rum/types';
 import {
     FileBasedConfiguration,
     formatPropagatorType,
@@ -23,58 +23,70 @@ describe('FileBasedConfiguration', () => {
 
             expect(configuration).toMatchInlineSnapshot(`
                 FileBasedConfiguration {
-                  "additionalConfiguration": {},
+                  "additionalConfiguration": {
+                    "another.property": "test",
+                    "myProperty": 1,
+                  },
                   "attributeEncoders": [],
-                  "batchProcessingLevel": "MEDIUM",
-                  "batchSize": "MEDIUM",
+                  "batchProcessingLevel": "LOW",
+                  "batchSize": "SMALL",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
-                  "firstPartyHosts": [
-                    {
-                      "match": "example.com",
-                      "propagatorTypes": [
-                        "b3multi",
-                        "tracecontext",
-                      ],
-                    },
-                  ],
                   "initializationMode": "SYNC",
                   "logsConfiguration": LogsConfiguration {
                     "bundleLogsWithRum": true,
                     "bundleLogsWithTraces": true,
+                    "customEndpoint": "https://example.com/logs",
                     "logEventMapper": null,
                   },
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "actionNameAttribute": "action-name-attr",
+                    "appHangThreshold": 123,
                     "applicationId": "fake-app-id",
+                    "customEndpoint": "https://example.com/rum",
                     "errorEventMapper": null,
+                    "firstPartyHosts": [
+                      {
+                        "match": "example.com",
+                        "propagatorTypes": [
+                          "b3multi",
+                          "tracecontext",
+                        ],
+                      },
+                    ],
+                    "initialResourceThreshold": 456,
                     "longTaskThresholdMs": 44,
-                    "nativeCrashReportEnabled": false,
-                    "nativeInteractionTracking": false,
-                    "nativeLongTaskThresholdMs": 200,
-                    "nativeViewTracking": false,
+                    "nativeCrashReportEnabled": true,
+                    "nativeInteractionTracking": true,
+                    "nativeLongTaskThresholdMs": 789,
+                    "nativeViewTracking": true,
                     "resourceEventMapper": null,
                     "resourceTraceSampleRate": 33,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
-                    "trackBackgroundEvents": false,
+                    "trackBackgroundEvents": true,
                     "trackErrors": true,
                     "trackFrustrations": true,
                     "trackInteractions": true,
-                    "trackMemoryWarnings": true,
+                    "trackMemoryWarnings": false,
+                    "trackNonFatalAnrs": true,
                     "trackResources": true,
-                    "trackWatchdogTerminations": false,
+                    "trackWatchdogTerminations": true,
                     "useAccessibilityLabel": false,
-                    "vitalsUpdateFrequency": "AVERAGE",
+                    "vitalsUpdateFrequency": "NEVER",
                   },
-                  "service": undefined,
+                  "service": "my-custom-service",
                   "site": "US5",
-                  "traceConfiguration": TraceConfiguration {},
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": "https://example.com/trace",
+                  },
                   "trackingConsent": "not_granted",
-                  "uploadFrequency": "AVERAGE",
+                  "uploadFrequency": "RARE",
                   "verbosity": "warn",
+                  "version": "1.2.3",
+                  "versionSuffix": "test-suffix",
                 }
             `);
         });
@@ -88,7 +100,7 @@ describe('FileBasedConfiguration', () => {
             );
         });
 
-        it('resolves all properties from a given file path', () => {
+        it('resolves all properties from a given configuration', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
                     rumConfiguration: {
@@ -99,25 +111,25 @@ describe('FileBasedConfiguration', () => {
                         applicationId: 'fake-app-id',
                         longTaskThresholdMs: 44,
                         actionNameAttribute: 'action-name-attr',
-                        resourceTraceSampleRate: 33
+                        resourceTraceSampleRate: 33,
+                        firstPartyHosts: [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: [
+                                    'B3MULTI',
+                                    'TRACECONTEXT',
+                                    'B3',
+                                    'DATADOG'
+                                ]
+                            }
+                        ]
                     },
                     env: 'fake-env',
                     clientToken: 'fake-client-token',
                     trackingConsent: 'NOT_GRANTED',
                     site: 'US5',
                     verbosity: 'WARN',
-                    traceConfiguration: {},
-                    firstPartyHosts: [
-                        {
-                            match: 'example.com',
-                            propagatorTypes: [
-                                'B3MULTI',
-                                'TRACECONTEXT',
-                                'B3',
-                                'DATADOG'
-                            ]
-                        }
-                    ]
+                    traceConfiguration: {}
                 }
             });
             expect(config).toMatchInlineSnapshot(`
@@ -128,24 +140,27 @@ describe('FileBasedConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
-                  "firstPartyHosts": [
-                    {
-                      "match": "example.com",
-                      "propagatorTypes": [
-                        "b3multi",
-                        "tracecontext",
-                        "b3",
-                        "datadog",
-                      ],
-                    },
-                  ],
                   "initializationMode": "SYNC",
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
                     "actionNameAttribute": "action-name-attr",
+                    "appHangThreshold": undefined,
                     "applicationId": "fake-app-id",
+                    "customEndpoint": undefined,
                     "errorEventMapper": null,
+                    "firstPartyHosts": [
+                      {
+                        "match": "example.com",
+                        "propagatorTypes": [
+                          "b3multi",
+                          "tracecontext",
+                          "b3",
+                          "datadog",
+                        ],
+                      },
+                    ],
+                    "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 44,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
@@ -160,6 +175,7 @@ describe('FileBasedConfiguration', () => {
                     "trackFrustrations": true,
                     "trackInteractions": true,
                     "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": undefined,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": false,
@@ -167,14 +183,19 @@ describe('FileBasedConfiguration', () => {
                   },
                   "service": undefined,
                   "site": "US5",
-                  "traceConfiguration": TraceConfiguration {},
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": undefined,
+                  },
                   "trackingConsent": "not_granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": "warn",
+                  "version": undefined,
+                  "versionSuffix": undefined,
                 }
             `);
         });
-        it('applies default values to configuration from a given file path', () => {
+
+        it('applies default values when parsing minimal configuration', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
                     env: 'fake-env',
@@ -192,13 +213,17 @@ describe('FileBasedConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
-                  "firstPartyHosts": [],
                   "initializationMode": "SYNC",
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
+                    "actionNameAttribute": undefined,
+                    "appHangThreshold": undefined,
                     "applicationId": "fake-app-id",
+                    "customEndpoint": undefined,
                     "errorEventMapper": null,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
@@ -213,6 +238,7 @@ describe('FileBasedConfiguration', () => {
                     "trackFrustrations": true,
                     "trackInteractions": false,
                     "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": true,
@@ -223,9 +249,12 @@ describe('FileBasedConfiguration', () => {
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
+                  "version": undefined,
+                  "versionSuffix": undefined,
                 }
             `);
         });
+
         it('applies event mappers to configuration when provided', () => {
             const actionEventMapper = () => null;
             const errorEventMapper = () => null;
@@ -252,6 +281,7 @@ describe('FileBasedConfiguration', () => {
                 resourceEventMapper
             );
         });
+
         it('prints a warning message when the configuration file cannot be parsed correctly', () => {
             expect(
                 () =>
@@ -264,21 +294,24 @@ describe('FileBasedConfiguration', () => {
                     })
             ).not.toThrow();
         });
+
         it('prints a warning message when the first party hosts contain unknown propagator types', () => {
             const config = new FileBasedConfiguration({
                 configuration: {
-                    applicationId: 'fake-app-id',
                     env: 'fake-env',
                     clientToken: 'fake-client-token',
-                    firstPartyHosts: [
-                        {
-                            match: 'example.com',
-                            propagatorTypes: ['UNKNOWN']
-                        }
-                    ]
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id',
+                        firstPartyHosts: [
+                            {
+                                match: 'example.com',
+                                propagatorTypes: ['UNKNOWN']
+                            }
+                        ]
+                    }
                 }
             });
-            expect(config.firstPartyHosts).toHaveLength(0);
+            expect(config.rumConfiguration?.firstPartyHosts).toHaveLength(0);
         });
     });
 

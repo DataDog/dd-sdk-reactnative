@@ -6,7 +6,7 @@
 
 import { DdAttributes } from '../DdAttributes';
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';

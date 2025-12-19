@@ -42,12 +42,14 @@ export const getDatadogProviderConfig = () => {
         baseConfig.env ?? '',
         TrackingConsent.GRANTED,
         {
-            applicationId: baseConfig.applicationID ?? '',
-            trackInteractions: true,
-            trackResources: true,
-            trackErrors: true,
-            sessionSampleRate: 100,
-            nativeCrashReportEnabled: true
+            rumConfiguration: {
+                applicationId: baseConfig.applicationID ?? '',
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            }
         }
     );
     config.service = `com.rn.${platform}.benchmark`
@@ -64,12 +66,14 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
         environment ?? '',
         TrackingConsent.GRANTED,
         {
-            applicationId:appId,
-            trackInteractions: true,
-            trackResources: true,
-            trackErrors: true,
-            sessionSampleRate: 100,
-            nativeCrashReportEnabled: true,
+            rumConfiguration: {
+                applicationId: appId,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true,
+            }
         }
     );
     config.service = `com.rn.${platform}.benchmark`

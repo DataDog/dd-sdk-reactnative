@@ -20,7 +20,7 @@ jest.mock('@datadog/mobile-react-native', () => {
 const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
 
-const createCodepushPackageMock = label => ({
+const createCodepushPackageMock = (label: string | null) => ({
     label,
     isMandatory: false,
     install: jest.fn(),
@@ -285,20 +285,26 @@ describe('AppCenter Codepush integration', () => {
             } = require('@datadog/mobile-react-native');
 
             const autoInstrumentationConfig = {
+                clientToken: 'fake-client-token',
+                env: 'fake-env',
                 rumConfiguration: {
+                    applicationId: 'fake-app-id',
                     useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     trackErrors: true,
                     trackResources: true,
                     trackInteractions: true,
-                    resourceTraceSampleRate: 100
+                    resourceTraceSampleRate: 100,
+                    nativeCrashReportEnabled: true,
+                    nativeLongTaskThresholdMs: false,
+                    nativeViewTracking: true,
+                    firstPartyHosts: [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: [PropagatorType.DATADOG]
+                        }
+                    ]
                 },
-                firstPartyHosts: [
-                    {
-                        match: 'example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ],
                 logsConfiguration: {},
                 traceConfiguration: {}
             };
@@ -322,23 +328,25 @@ describe('AppCenter Codepush integration', () => {
                     useAccessibilityLabel: true,
                     actionNameAttribute: 'test-action-name-attr',
                     actionEventMapper: null,
+                    nativeCrashReportEnabled: true,
+                    nativeLongTaskThresholdMs: false,
+                    nativeViewTracking: true,
                     resourceEventMapper: null,
                     errorEventMapper: null,
                     trackErrors: true,
                     trackResources: true,
                     trackInteractions: true,
-                    resourceTraceSampleRate: 100
+                    resourceTraceSampleRate: 100,
+                    firstPartyHosts: [
+                        {
+                            match: 'example.com',
+                            propagatorTypes: [PropagatorType.DATADOG]
+                        }
+                    ]
                 },
                 logsConfiguration: {
                     logEventMapper: null
-                },
-                traceConfiguration: {},
-                firstPartyHosts: [
-                    {
-                        match: 'example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ]
+                }
             });
 
             expect(
@@ -356,27 +364,15 @@ describe('AppCenter Codepush integration', () => {
             const { DatadogCodepushProvider } = require('..');
             const {
                 DdSdkReactNative,
-                PropagatorType,
                 FileBasedConfiguration
             } = require('@datadog/mobile-react-native');
 
             const autoInstrumentationConfig = {
+                clientToken: 'fake-client-token',
+                env: 'fake-env',
                 rumConfiguration: {
-                    useAccessibilityLabel: true,
-                    actionNameAttribute: 'test-action-name-attr',
-                    trackErrors: true,
-                    trackResources: true,
-                    trackInteractions: true,
-                    resourceTraceSampleRate: 100
-                },
-                logsConfiguration: {},
-                firstPartyHosts: [
-                    {
-                        match: 'example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ],
-                traceConfiguration: {}
+                    applicationId: 'fake-app-id'
+                }
             };
 
             const configuration = new FileBasedConfiguration({
@@ -393,29 +389,25 @@ describe('AppCenter Codepush integration', () => {
             });
             expect(
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
-            ).toHaveBeenCalledWith({
-                rumConfiguration: {
-                    useAccessibilityLabel: true,
-                    actionNameAttribute: 'test-action-name-attr',
-                    trackErrors: true,
-                    trackResources: true,
-                    trackInteractions: true,
-                    actionEventMapper: null,
-                    resourceEventMapper: null,
-                    errorEventMapper: null,
-                    resourceTraceSampleRate: 100
-                },
-                logsConfiguration: {
-                    logEventMapper: null
-                },
-                firstPartyHosts: [
-                    {
-                        match: 'example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ],
-                traceConfiguration: {}
-            });
+            ).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    rumConfiguration: expect.objectContaining({
+                        useAccessibilityLabel: true,
+                        actionNameAttribute: undefined,
+                        trackErrors: false,
+                        trackResources: false,
+                        trackInteractions: false,
+                        actionEventMapper: null,
+                        resourceEventMapper: null,
+                        errorEventMapper: null,
+                        resourceTraceSampleRate: 100,
+                        firstPartyHosts: []
+                    }),
+                    logsConfiguration: expect.objectContaining({
+                        logEventMapper: null
+                    })
+                })
+            );
 
             expect(
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
