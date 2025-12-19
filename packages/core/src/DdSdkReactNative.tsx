@@ -7,24 +7,26 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { InteractionManager } from 'react-native';
 
+import { InternalLog } from './InternalLog';
+import type { DatadogProviderConfiguration } from './config/DatadogProviderConfiguration';
+import { FileBasedConfiguration } from './config/FileBasedConfiguration';
 import type {
     AutoInstrumentationConfiguration,
-    AutoInstrumentationParameters,
-    DatadogProviderConfiguration,
-    InitializationModeForTelemetry,
-    PartialInitializationConfiguration
-} from './DdSdkReactNativeConfiguration';
-import {
-    DEFAULTS,
-    InitializationMode,
-    addDefaultValuesToAutoInstrumentationConfiguration,
-    buildConfigurationFromPartialConfiguration,
-    formatFirstPartyHosts,
-    CoreConfiguration
-} from './DdSdkReactNativeConfiguration';
-import { InternalLog } from './InternalLog';
-import { SdkVerbosity } from './SdkVerbosity';
-import type { TrackingConsent } from './TrackingConsent';
+    AutoInstrumentationParameters
+} from './config/async/AutoInstrumentationConfiguration';
+import { addDefaultValuesToAutoInstrumentationConfiguration } from './config/async/AutoInstrumentationConfiguration';
+import type { PartialInitializationConfiguration } from './config/async/PartialInitializationConfiguration';
+import { buildConfigurationFromPartialConfiguration } from './config/async/asyncInitializationHelper';
+import { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
+import { CoreConfiguration } from './config/features/CoreConfiguration';
+import type { LogsNativeConfiguration } from './config/features/LogsConfigurationNative';
+import type { RumNativeConfiguration } from './config/features/RumConfigurationNative';
+import { RUM_DEFAULTS } from './config/features/RumConfiguration';
+import type { TraceNativeConfiguration } from './config/features/TraceConfigurationNative';
+import type { InitializationModeForTelemetry } from './config/types/InitializationModeForTelemetry';
+import { SdkVerbosity } from './config/types/SdkVerbosity';
+import type { TrackingConsent } from './config/types/TrackingConsent';
+import { InitializationMode } from './config/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
@@ -37,15 +39,8 @@ import type { Attributes } from './sdk/AttributesSingleton/types';
 import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { NativeDdSdk } from './sdk/DdSdkInternal';
-import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
-import { DdSdkNativeConfiguration } from './types';
-import type {
-    LogsNativeConfiguration,
-    RUMNativeConfiguration,
-    TraceNativeConfiguration
-} from './types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
@@ -396,6 +391,9 @@ export class DdSdkReactNative {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): DdSdkNativeConfiguration => {
+        if (configuration.additionalConfiguration === undefined) {
+            configuration.additionalConfiguration = {};
+        }
         configuration.additionalConfiguration[DdSdkReactNative.DD_SOURCE_KEY] =
             'react-native';
         configuration.additionalConfiguration[
@@ -428,8 +426,8 @@ export class DdSdkReactNative {
         const rumConfiguration = configuration.rumConfiguration;
         if (rumConfiguration) {
             const longTaskThresholdMs =
-                configuration.rumConfiguration?.longTaskThresholdMs ||
-                DEFAULTS.longTaskThresholdMs;
+                rumConfiguration.longTaskThresholdMs ||
+                RUM_DEFAULTS.longTaskThresholdMs;
             rumConfiguration.longTaskThresholdMs = adaptLongTaskThreshold(
                 longTaskThresholdMs
             );
@@ -444,12 +442,13 @@ export class DdSdkReactNative {
 
         const trackInteractions =
             configuration.rumConfiguration?.trackInteractions ||
-            DEFAULTS.trackInteractions;
+            RUM_DEFAULTS.trackInteractions;
         const trackResources =
             configuration.rumConfiguration?.trackResources ||
-            DEFAULTS.trackResources;
+            RUM_DEFAULTS.trackResources;
         const trackErrors =
-            configuration.rumConfiguration?.trackErrors || DEFAULTS.trackErrors;
+            configuration.rumConfiguration?.trackErrors ||
+            RUM_DEFAULTS.trackErrors;
 
         return new DdSdkNativeConfiguration(
             configuration.additionalConfiguration,
@@ -463,9 +462,8 @@ export class DdSdkReactNative {
             configuration.batchSize,
             configuration.batchProcessingLevel,
             configuration.proxyConfiguration,
-            formatFirstPartyHosts(configuration.firstPartyHosts),
             configuration.attributeEncoders,
-            rumConfiguration as RUMNativeConfiguration,
+            rumConfiguration as RumNativeConfiguration,
             configuration.logsConfiguration as LogsNativeConfiguration,
             configuration.traceConfiguration as TraceNativeConfiguration,
             {
@@ -486,20 +484,22 @@ export class DdSdkReactNative {
         configuration: AutoInstrumentationParameters
     ) {
         const firstPartyHosts =
-            configuration.firstPartyHosts || DEFAULTS.getFirstPartyHosts();
+            configuration.rumConfiguration?.firstPartyHosts ||
+            RUM_DEFAULTS.getFirstPartyHosts();
         const trackInteractions =
             configuration.rumConfiguration?.trackInteractions ||
-            DEFAULTS.trackInteractions;
+            RUM_DEFAULTS.trackInteractions;
         const trackResources =
             configuration.rumConfiguration?.trackResources ||
-            DEFAULTS.trackResources;
+            RUM_DEFAULTS.trackResources;
         const trackErrors =
-            configuration.rumConfiguration?.trackErrors || DEFAULTS.trackErrors;
+            configuration.rumConfiguration?.trackErrors ||
+            RUM_DEFAULTS.trackErrors;
         const actionNameAttribute =
             configuration.rumConfiguration?.actionNameAttribute;
         const resourceTraceSampleRate =
             configuration.rumConfiguration?.resourceTraceSampleRate ||
-            DEFAULTS.resourceTraceSampleRate;
+            RUM_DEFAULTS.resourceTraceSampleRate;
         const logEventMapper = configuration.logsConfiguration?.logEventMapper;
         const errorEventMapper =
             configuration.rumConfiguration?.errorEventMapper;
@@ -513,7 +513,7 @@ export class DdSdkReactNative {
                 trackInteractions,
                 useAccessibilityLabel:
                     configuration.rumConfiguration?.useAccessibilityLabel ||
-                    DEFAULTS.useAccessibilityLabel
+                    RUM_DEFAULTS.useAccessibilityLabel
             };
 
             DdBabelInteractionTracking.attachRumInstance(DdRum);
@@ -537,8 +537,8 @@ export class DdSdkReactNative {
 
         if (trackResources) {
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: resourceTraceSampleRate,
-                firstPartyHosts: formatFirstPartyHosts(firstPartyHosts)
+                resourceTraceSampleRate,
+                firstPartyHosts
             });
         }
 

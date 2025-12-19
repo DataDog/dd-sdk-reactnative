@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getErrorMessage } from '../../../sdk/AttributesEncoding/errorUtils';
 import { NativeDdSdk } from '../../../sdk/DdSdkInternal';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';

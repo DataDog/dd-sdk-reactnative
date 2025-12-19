@@ -44,8 +44,8 @@ const buildPartialConfiguration = (
     configuration: DatadogProviderConfiguration
 ): AutoInstrumentationConfiguration => {
     const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
-        firstPartyHosts: configuration.firstPartyHosts,
         rumConfiguration: {
+            firstPartyHosts: configuration.rumConfiguration?.firstPartyHosts,
             useAccessibilityLabel:
                 configuration.rumConfiguration?.useAccessibilityLabel ?? true,
             actionNameAttribute:
@@ -56,16 +56,26 @@ const buildPartialConfiguration = (
             trackInteractions:
                 configuration.rumConfiguration?.trackInteractions ?? false,
             resourceTraceSampleRate:
-                configuration.rumConfiguration?.resourceTraceSampleRate,
-            errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
+                configuration.rumConfiguration?.resourceTraceSampleRate ?? 100,
+            nativeCrashReportEnabled:
+                configuration.rumConfiguration?.nativeCrashReportEnabled ??
+                false,
+            nativeLongTaskThresholdMs:
+                configuration.rumConfiguration?.nativeLongTaskThresholdMs ??
+                200,
+            nativeViewTracking:
+                configuration.rumConfiguration?.nativeViewTracking ?? false,
+            errorEventMapper:
+                configuration.rumConfiguration?.errorEventMapper ?? null,
             resourceEventMapper:
-                configuration.rumConfiguration?.resourceEventMapper,
-            actionEventMapper: configuration.rumConfiguration?.actionEventMapper
+                configuration.rumConfiguration?.resourceEventMapper ?? null,
+            actionEventMapper:
+                configuration.rumConfiguration?.actionEventMapper ?? null
         },
         logsConfiguration: {
-            logEventMapper: configuration.logsConfiguration?.logEventMapper
-        },
-        traceConfiguration: {}
+            logEventMapper:
+                configuration.logsConfiguration?.logEventMapper ?? null
+        }
     };
 
     return removeDiscardProperties(

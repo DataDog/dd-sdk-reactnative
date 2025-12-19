@@ -4,10 +4,13 @@ import {
     DdSdkReactNative,
     CoreConfiguration,
     SdkVerbosity,
-    TrackingConsent
+    TrackingConsent,
+    BatchSize,
+    UploadFrequency
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+import { BatchProcessingLevel } from '@datadog/mobile-react-native/src/config/types';
 
 // New SDK Setup - not available for react-native-navigation
 export function getDatadogConfig(trackingConsent: TrackingConsent) {
@@ -16,17 +19,33 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
         ENVIRONMENT,
         trackingConsent,
         {
-            applicationId: APPLICATION_ID,
-            trackInteractions: true,
-            trackResources: true,
-            trackErrors: true,
-            sessionSampleRate: 100,
-            nativeCrashReportEnabled: true
+            batchSize: BatchSize.SMALL,
+            uploadFrequency: UploadFrequency.FREQUENT,
+            batchProcessingLevel: BatchProcessingLevel.MEDIUM,
+            additionalConfiguration: {
+                customProperty: "sdk-example-app"
+            },
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            },
+            logsConfiguration: {
+                logEventMapper: (logEvent) => {
+                    logEvent.message = `[CUSTOM] ${logEvent.message}`;
+                    return logEvent;
+                }
+            },
+            traceConfiguration: {}
         }
     );
 
     config.service = "com.datadoghq.reactnative.sample"
     config.verbosity = SdkVerbosity.DEBUG;
+
     return config
 }
 
@@ -44,14 +63,17 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         ENVIRONMENT,
         trackingConsent,
         {
-            applicationId: APPLICATION_ID,
-            trackInteractions: true,
-            trackResources: true,
-            trackErrors: true,
-            sessionSampleRate: 100,
-            nativeCrashReportEnabled: true
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            }
         }
     )
+
     config.verbosity = SdkVerbosity.DEBUG;
     config.service = "com.datadoghq.reactnative.sample"
 

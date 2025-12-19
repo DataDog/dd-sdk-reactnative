@@ -41,7 +41,7 @@ describe('DdRumResourceTracking', () => {
         // GIVEN
         global.XMLHttpRequest = XMLHttpRequestMock;
         DdRumResourceTracking.startTracking({
-            tracingSamplingRate: 100,
+            resourceTraceSampleRate: 100,
             firstPartyHosts: [
                 {
                     match: 'example.com',
@@ -73,7 +73,7 @@ describe('DdRumResourceTracking', () => {
         // GIVEN
         global.XMLHttpRequest = XMLHttpRequestMock;
         DdRumResourceTracking.startTracking({
-            tracingSamplingRate: 100,
+            resourceTraceSampleRate: 100,
             firstPartyHosts: [
                 {
                     match: 'example.com',

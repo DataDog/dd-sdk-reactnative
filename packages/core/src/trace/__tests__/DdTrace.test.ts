@@ -8,7 +8,7 @@
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { DdTrace } from '../DdTrace';
 

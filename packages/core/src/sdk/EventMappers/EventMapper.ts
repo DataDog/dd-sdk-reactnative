@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { AccountInfoSingleton } from '../AccountInfoSingleton/AccountInfoSingleton';
 import type { AccountInfo } from '../AccountInfoSingleton/types';
 import { AttributesSingleton } from '../AttributesSingleton/AttributesSingleton';

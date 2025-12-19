@@ -4,88 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
-import type { AttributeEncoder } from './sdk/AttributesEncoding/types';
+import type { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
     var __DD_RN_BABEL_PLUGIN_ENABLED__: boolean;
 }
-
-/**
- * A configuration object to initialize Datadog's features.
- */
-
-export class DdSdkNativeConfiguration {
-    constructor(
-        readonly additionalConfiguration: object,
-        readonly clientToken: string,
-        readonly env: string,
-        readonly site: string,
-        readonly service: string | undefined,
-        readonly verbosity: string | undefined,
-        readonly trackingConsent: string,
-        readonly uploadFrequency: string,
-        readonly batchSize: string,
-        readonly batchProcessingLevel: BatchProcessingLevel,
-        readonly proxyConfiguration:
-            | {
-                  type: string;
-                  address: string;
-                  port: number;
-                  username?: string;
-                  password?: string;
-              }
-            | undefined,
-        readonly firstPartyHosts: {
-            match: string;
-            propagatorTypes: string[];
-        }[],
-        readonly attributeEncoders: AttributeEncoder<any>[],
-        readonly rumConfiguration: RUMNativeConfiguration | undefined,
-        readonly logsConfiguration: LogsNativeConfiguration | undefined,
-        readonly traceConfiguration: TraceNativeConfiguration | undefined,
-        readonly configurationForTelemetry: {
-            initializationType: string;
-            trackErrors: boolean;
-            trackInteractions: boolean;
-            trackNetworkRequests: boolean;
-            reactVersion: string;
-            reactNativeVersion: string;
-        } // eslint-disable-next-line no-empty-function
-    ) {}
-}
-
-export type RUMNativeConfiguration = {
-    readonly applicationId: string;
-    readonly trackFrustrations: boolean;
-    readonly longTaskThresholdMs: number;
-    readonly sessionSampleRate: number;
-    readonly resourceTraceSampleRate: number;
-    readonly vitalsUpdateFrequency: string;
-    readonly trackBackgroundEvents: boolean;
-    readonly nativeCrashReportEnabled: boolean;
-    readonly nativeLongTaskThresholdMs: number;
-    readonly nativeViewTracking: boolean;
-    readonly nativeInteractionTracking: boolean;
-    readonly trackNonFatalAnrs: boolean | undefined;
-    readonly appHangThreshold: number | undefined;
-    readonly trackWatchdogTerminations: boolean | undefined;
-    readonly initialResourceThreshold: number | undefined;
-    readonly trackMemoryWarnings: boolean;
-    readonly telemetrySampleRate: number;
-    readonly customEndpoint: string;
-};
-
-export type LogsNativeConfiguration = {
-    readonly bundleLogsWithRum: boolean;
-    readonly bundleLogsWithTraces: boolean;
-    readonly customEndpoint: string;
-};
-
-export type TraceNativeConfiguration = {
-    readonly customEndpoint: string;
-};
 
 /**
  * The entry point to initialize Datadog's features.

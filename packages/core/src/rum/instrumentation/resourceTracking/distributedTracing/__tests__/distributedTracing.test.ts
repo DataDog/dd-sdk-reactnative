@@ -14,7 +14,7 @@ import {
     TracingIdentifier,
     TracingIdFormat
 } from '../TracingIdentifier';
-import { shouldSampleTrace } from '../distributedTracing';
+import { DistributedTracingSampling } from '../distributedTracingSampling';
 
 import { TracingIdentifierUtils } from './__utils__/TracingIdentifierUtils';
 
@@ -399,7 +399,7 @@ describe('Sampling behavior', () => {
         inputs.forEach(([identifier, sampleRate, expected]) => {
             it(`sampling decision is deterministic for traceId=${identifier.toString()} and sampleRate=${sampleRate}`, () => {
                 DdRumResourceTracking.startTracking({
-                    tracingSamplingRate: sampleRate,
+                    resourceTraceSampleRate: sampleRate,
                     firstPartyHosts: []
                 });
 
@@ -408,7 +408,7 @@ describe('Sampling behavior', () => {
                     TracingIdType.trace
                 ) as TraceId;
 
-                const shouldSample = shouldSampleTrace(
+                const shouldSample = DistributedTracingSampling.shouldSampleTrace(
                     sampleRate,
                     null, // no sessionId -> fallback to traceId-based sampling
                     tracingId
@@ -504,7 +504,7 @@ describe('Sampling behavior', () => {
             it(`sampling decision is deterministic for ${sessionId} and sampleRate=${sampleRate}`, () => {
                 // see note below
                 DdRumResourceTracking.startTracking({
-                    tracingSamplingRate: sampleRate,
+                    resourceTraceSampleRate: sampleRate,
                     firstPartyHosts: []
                 });
 
@@ -513,7 +513,7 @@ describe('Sampling behavior', () => {
                     TracingIdType.trace
                 ) as TraceId;
 
-                const shouldSample = shouldSampleTrace(
+                const shouldSample = DistributedTracingSampling.shouldSampleTrace(
                     sampleRate,
                     sessionId,
                     tracingId
@@ -548,7 +548,7 @@ describe('Sampling behavior', () => {
             const sampleRate = 100;
 
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: sampleRate,
+                resourceTraceSampleRate: sampleRate,
                 firstPartyHosts: []
             });
 
@@ -560,7 +560,7 @@ describe('Sampling behavior', () => {
                 ) as TraceId;
 
                 const sessionId = uuidv4();
-                const shouldSample = shouldSampleTrace(
+                const shouldSample = DistributedTracingSampling.shouldSampleTrace(
                     sampleRate,
                     sessionId,
                     trace
@@ -574,7 +574,7 @@ describe('Sampling behavior', () => {
             const sampleRate = 0;
 
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: sampleRate,
+                resourceTraceSampleRate: sampleRate,
                 firstPartyHosts: []
             });
 
@@ -586,7 +586,7 @@ describe('Sampling behavior', () => {
                 ) as TraceId;
 
                 const sessionId = uuidv4();
-                const shouldSample = shouldSampleTrace(
+                const shouldSample = DistributedTracingSampling.shouldSampleTrace(
                     sampleRate,
                     sessionId,
                     trace
@@ -600,7 +600,7 @@ describe('Sampling behavior', () => {
             const sampleRate = 23;
 
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: sampleRate,
+                resourceTraceSampleRate: sampleRate,
                 firstPartyHosts: []
             });
 
@@ -615,7 +615,13 @@ describe('Sampling behavior', () => {
                 ) as TraceId;
 
                 const sessionId = uuidv4();
-                if (shouldSampleTrace(sampleRate, sessionId, trace)) {
+                if (
+                    DistributedTracingSampling.shouldSampleTrace(
+                        sampleRate,
+                        sessionId,
+                        trace
+                    )
+                ) {
                     sampleCount++;
                 } else {
                     noSampleCount++;
@@ -630,7 +636,7 @@ describe('Sampling behavior', () => {
             const sampleRate = 85;
 
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: sampleRate,
+                resourceTraceSampleRate: sampleRate,
                 firstPartyHosts: []
             });
 
@@ -645,7 +651,13 @@ describe('Sampling behavior', () => {
                 ) as TraceId;
 
                 const sessionId = uuidv4();
-                if (shouldSampleTrace(sampleRate, sessionId, trace)) {
+                if (
+                    DistributedTracingSampling.shouldSampleTrace(
+                        sampleRate,
+                        sessionId,
+                        trace
+                    )
+                ) {
                     sampleCount++;
                 } else {
                     noSampleCount++;

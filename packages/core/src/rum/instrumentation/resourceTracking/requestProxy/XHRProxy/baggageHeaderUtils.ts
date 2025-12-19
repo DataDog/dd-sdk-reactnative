@@ -5,12 +5,12 @@
  */
 
 import { InternalLog } from '../../../../../InternalLog';
-import { SdkVerbosity } from '../../../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../../../config/types/SdkVerbosity';
 import {
     DD_RUM_ACCOUNT_ID_TAG,
     DD_RUM_SESSION_ID_TAG,
     DD_RUM_USER_ID_TAG
-} from '../../distributedTracing/distributedTracingHeaders';
+} from '../../distributedTracing/headers';
 
 // The resulting baggage-string should contain 64 list-members or less (https://www.w3.org/TR/baggage/#limits)
 const MAX_MEMBERS = 64;

@@ -4,14 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { buildConfigurationFromPartialConfiguration } from '../config/async/asyncInitializationHelper';
 import {
     BatchSize,
-    UploadFrequency,
-    buildConfigurationFromPartialConfiguration
-} from '../DdSdkReactNativeConfiguration';
-import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
-import { SdkVerbosity } from '../SdkVerbosity';
-import { TrackingConsent } from '../TrackingConsent';
+    ProxyConfiguration,
+    ProxyType,
+    SdkVerbosity,
+    TrackingConsent,
+    UploadFrequency
+} from '../config/types';
+import { PropagatorType } from '../rum/types';
 
 describe('DdSdkReactNativeConfiguration', () => {
     describe('buildConfigurationFromPartialConfiguration', () => {
@@ -24,15 +26,16 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trackInteractions: false,
                             trackResources: false
                         },
-                        logsConfiguration: {},
-                        traceConfiguration: {}
+                        logsConfiguration: {}
                     },
                     {
                         clientToken: 'fake-client-token',
                         env: 'fake-env',
                         rumConfiguration: {
                             applicationId: 'fake-app-id'
-                        }
+                        },
+                        logsConfiguration: {},
+                        traceConfiguration: {}
                     }
                 )
             ).toMatchInlineSnapshot(`
@@ -43,17 +46,22 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
-                  "firstPartyHosts": [],
                   "logsConfiguration": LogsConfiguration {
                     "bundleLogsWithRum": true,
                     "bundleLogsWithTraces": true,
+                    "customEndpoint": undefined,
                     "logEventMapper": null,
                   },
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
+                    "actionNameAttribute": undefined,
+                    "appHangThreshold": undefined,
                     "applicationId": "fake-app-id",
+                    "customEndpoint": undefined,
                     "errorEventMapper": null,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
@@ -68,6 +76,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "trackFrustrations": true,
                     "trackInteractions": false,
                     "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": true,
@@ -75,10 +84,14 @@ describe('DdSdkReactNativeConfiguration', () => {
                   },
                   "service": undefined,
                   "site": "US1",
-                  "traceConfiguration": TraceConfiguration {},
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": undefined,
+                  },
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
+                  "version": undefined,
+                  "versionSuffix": undefined,
                 }
             `);
         });
@@ -94,15 +107,23 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trackInteractions: true,
                             trackResources: true,
                             resourceTraceSampleRate: 80,
+                            firstPartyHosts: [
+                                {
+                                    match: 'api.com',
+                                    propagatorTypes: [
+                                        PropagatorType.DATADOG,
+                                        PropagatorType.TRACECONTEXT
+                                    ]
+                                }
+                            ],
+
                             errorEventMapper: event => event,
                             resourceEventMapper: event => event,
                             actionEventMapper: event => event
                         },
-                        traceConfiguration: {},
                         logsConfiguration: {
                             logEventMapper: event => event
-                        },
-                        firstPartyHosts: ['api.com']
+                        }
                     },
                     {
                         rumConfiguration: {
@@ -114,6 +135,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                             nativeInteractionTracking: true,
                             longTaskThresholdMs: 567,
                             trackFrustrations: true,
+                            trackNonFatalAnrs: true,
                             trackBackgroundEvents: true,
                             customEndpoint: 'https://rum.example.com/',
                             initialResourceThreshold: 0.123
@@ -156,13 +178,10 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "batchSize": "LARGE",
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
-                  "firstPartyHosts": [
-                    "api.com",
-                  ],
                   "logsConfiguration": LogsConfiguration {
                     "bundleLogsWithRum": true,
                     "bundleLogsWithTraces": true,
-                    "customEndpoint": "https://trace.example.com/",
+                    "customEndpoint": "https://logs.example.com/",
                     "logEventMapper": [Function],
                   },
                   "proxyConfiguration": ProxyConfiguration {
@@ -173,9 +192,19 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": [Function],
                     "actionNameAttribute": "testID",
+                    "appHangThreshold": undefined,
                     "applicationId": "fake-app-id",
                     "customEndpoint": "https://rum.example.com/",
                     "errorEventMapper": [Function],
+                    "firstPartyHosts": [
+                      {
+                        "match": "api.com",
+                        "propagatorTypes": [
+                          "datadog",
+                          "tracecontext",
+                        ],
+                      },
+                    ],
                     "initialResourceThreshold": 0.123,
                     "longTaskThresholdMs": 567,
                     "nativeCrashReportEnabled": true,
@@ -191,6 +220,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "trackFrustrations": true,
                     "trackInteractions": true,
                     "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": true,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": true,
@@ -221,9 +251,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trackResources: false,
                             resourceTraceSampleRate: 0,
                             nativeCrashReportEnabled: false,
-                            nativeLongTaskThresholdMs: false
+                            nativeLongTaskThresholdMs: false,
+                            actionNameAttribute: ''
                         },
-                        traceConfiguration: {},
                         logsConfiguration: {}
                     },
                     {
@@ -234,12 +264,18 @@ describe('DdSdkReactNativeConfiguration', () => {
                             nativeInteractionTracking: false,
                             longTaskThresholdMs: false,
                             trackFrustrations: false,
-                            trackBackgroundEvents: false
+                            trackBackgroundEvents: false,
+                            trackMemoryWarnings: false,
+                            trackNonFatalAnrs: false,
+                            telemetrySampleRate: 0,
+                            appHangThreshold: 0,
+                            initialResourceThreshold: 0
                         },
                         logsConfiguration: {
                             bundleLogsWithRum: false,
                             bundleLogsWithTraces: false
                         },
+                        traceConfiguration: {},
                         clientToken: '',
                         env: '',
                         site: '',
@@ -257,42 +293,52 @@ describe('DdSdkReactNativeConfiguration', () => {
                   "batchSize": "MEDIUM",
                   "clientToken": "",
                   "env": "",
-                  "firstPartyHosts": [],
                   "logsConfiguration": LogsConfiguration {
-                    "bundleLogsWithRum": true,
-                    "bundleLogsWithTraces": true,
+                    "bundleLogsWithRum": false,
+                    "bundleLogsWithTraces": false,
+                    "customEndpoint": undefined,
                     "logEventMapper": null,
                   },
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
+                    "actionNameAttribute": "",
+                    "appHangThreshold": 0,
                     "applicationId": "",
+                    "customEndpoint": undefined,
                     "errorEventMapper": null,
-                    "longTaskThresholdMs": 0,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": 0,
+                    "longTaskThresholdMs": false,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
-                    "nativeLongTaskThresholdMs": 200,
+                    "nativeLongTaskThresholdMs": false,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
                     "resourceTraceSampleRate": 0,
-                    "sessionSampleRate": 100,
-                    "telemetrySampleRate": 20,
+                    "sessionSampleRate": 0,
+                    "telemetrySampleRate": 0,
                     "trackBackgroundEvents": false,
                     "trackErrors": false,
-                    "trackFrustrations": true,
+                    "trackFrustrations": false,
                     "trackInteractions": false,
-                    "trackMemoryWarnings": true,
+                    "trackMemoryWarnings": false,
+                    "trackNonFatalAnrs": false,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
                     "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
-                  "service": undefined,
-                  "site": "US1",
-                  "traceConfiguration": TraceConfiguration {},
+                  "service": "",
+                  "site": "",
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": undefined,
+                  },
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
+                  "version": "",
+                  "versionSuffix": "",
                 }
             `);
         });
