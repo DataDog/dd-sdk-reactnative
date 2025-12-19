@@ -3,7 +3,6 @@ import {
     DdLogs,
     DdSdkReactNative,
     CoreConfiguration,
-    RumConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';

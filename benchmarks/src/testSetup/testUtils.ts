@@ -63,13 +63,18 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
     const config = new CoreConfiguration(
         clientToken ?? '',
         environment ?? '',
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            applicationId:appId,
+            trackInteractions: true,
+            trackResources: true,
+            trackErrors: true,
+            sessionSampleRate: 100,
+            nativeCrashReportEnabled: true,
+        }
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-    config.rumConfiguration = new RumConfiguration(appId ?? '', true, true, true)
-    config.rumConfiguration.sessionSampleRate = 100;
-    config.rumConfiguration.nativeCrashReportEnabled = true
 
     return DdSdkReactNative.initialize(config);
 };
