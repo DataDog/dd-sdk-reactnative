@@ -6,7 +6,7 @@ import {
     SdkVerbosity,
     TrackingConsent,
     BatchSize,
-    UploadFrequency
+    UploadFrequency,
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';

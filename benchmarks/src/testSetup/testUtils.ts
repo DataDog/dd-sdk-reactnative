@@ -49,12 +49,16 @@ export const getDatadogProviderConfig = () => {
                 trackErrors: true,
                 sessionSampleRate: 100,
                 nativeCrashReportEnabled: true
-            }
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
         }
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-
 
     return config;
 };
@@ -67,13 +71,18 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
         TrackingConsent.GRANTED,
         {
             rumConfiguration: {
-                applicationId: appId,
+                applicationId: appId ??  "",
                 trackInteractions: true,
                 trackResources: true,
                 trackErrors: true,
                 sessionSampleRate: 100,
                 nativeCrashReportEnabled: true,
-            }
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
         }
     );
     config.service = `com.rn.${platform}.benchmark`

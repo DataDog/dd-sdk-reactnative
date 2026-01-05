@@ -104,7 +104,7 @@ class DdSdkTests: XCTestCase {
 
         waitForExpectations(timeout: 0.5, handler: nil)
     }
-
+        
     func testBuildConfigurationNoUIKitViewsByDefault() {
         let configuration: DdSdkConfiguration = .mockAny()
 

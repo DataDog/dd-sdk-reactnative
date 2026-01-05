@@ -46,12 +46,25 @@ class DdSdkNativeInitialization internal constructor(
 ) {
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
-        val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
+        var rumConfiguration: RumConfiguration? = null
+        var logsConfiguration: LogsConfiguration? = null
+        var traceConfiguration: TraceConfiguration? = null
+
+        if (ddSdkConfiguration.rumConfiguration != null) {
+             rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.logsConfiguration != null) {
+            logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.traceConfiguration != null) {
+            traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
+        }
 
         configureSdkVerbosity(ddSdkConfiguration)
+
         configureRumAndTracesForLogs(ddSdkConfiguration)
 
         if (datadog.isInitialized()) {
@@ -64,9 +77,17 @@ class DdSdkNativeInitialization internal constructor(
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        Rum.enable(rumConfiguration, Datadog.getInstance())
-        Logs.enable(logsConfiguration, Datadog.getInstance())
-        Trace.enable(traceConfiguration, Datadog.getInstance())
+        if (rumConfiguration != null) {
+            Rum.enable(rumConfiguration, Datadog.getInstance())
+        }
+
+        if (logsConfiguration != null) {
+            Logs.enable(logsConfiguration, Datadog.getInstance())
+        }
+
+        if (traceConfiguration != null) {
+            Trace.enable(traceConfiguration, Datadog.getInstance())
+        }
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {

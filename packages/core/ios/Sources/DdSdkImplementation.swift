@@ -15,7 +15,7 @@ import Foundation
 import React
 
 #if os(iOS)
-import DatadogWebViewTracking
+    import DatadogWebViewTracking
 #endif
 
 func getDefaultAppVersion() -> String {
@@ -30,12 +30,12 @@ public class DdSdkImplementation: NSObject {
     let jsDispatchQueue: DispatchQueueType
     let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
-    let RUMMonitorProvider: () -> RUMMonitorProtocol
-    let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+    var RUMMonitorProvider: () -> RUMMonitorProtocol?
+    var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
 
-#if os(iOS)
-    var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
-#endif
+    #if os(iOS)
+        var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+    #endif
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1
 
@@ -44,9 +44,7 @@ public class DdSdkImplementation: NSObject {
         self.init(
             mainDispatchQueue: DispatchQueue.main,
             jsDispatchQueue: bridge,
-            jsRefreshRateMonitor: JSRefreshRateMonitor.init(),
-            RUMMonitorProvider: { RUMMonitor.shared() },
-            RUMMonitorInternalProvider: { RUMMonitor.shared()._internal }
+            jsRefreshRateMonitor: JSRefreshRateMonitor.init()
         )
     }
 
@@ -54,14 +52,14 @@ public class DdSdkImplementation: NSObject {
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
         jsRefreshRateMonitor: RefreshRateMonitor,
-        RUMMonitorProvider: @escaping () -> RUMMonitorProtocol,
-        RUMMonitorInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
+        RUMMonitorProvider: (() -> RUMMonitorProtocol)? = nil,
+        RUMMonitorInternalProvider: (() -> RUMMonitorInternalProtocol?)? = nil
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
-        self.RUMMonitorProvider = RUMMonitorProvider
-        self.RUMMonitorInternalProvider = RUMMonitorInternalProvider
+        self.RUMMonitorProvider = RUMMonitorProvider ?? { nil }
+        self.RUMMonitorInternalProvider = RUMMonitorInternalProvider ?? { nil }
         super.init()
     }
 
@@ -75,49 +73,72 @@ public class DdSdkImplementation: NSObject {
         let nativeInitialization = DdSdkNativeInitialization()
 
         nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
+
+        // TO DO - We should have a better way to determine if rum is enabled
+        // core?.get(feature: RUMfeature.self ) would be nice but RUMfeature is an internal property
+        if sdkConfiguration.rumConfiguration != nil {
+
+            // Only overwrite monitors if they weren't set already (as they are sometimes during unit test runs
+            if self.RUMMonitorProvider() == nil {
+                self.RUMMonitorProvider = { RUMMonitor.shared() }
+            }
+            if self.RUMMonitorInternalProvider() == nil {
+                self.RUMMonitorInternalProvider = { RUMMonitor.shared()._internal }
+            }
+        }
+
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
         self.overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
 
         resolve(nil)
     }
-    
+
     @objc
-    public func addAttribute(key: AttributeKey, value: NSDictionary,  resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addAttribute(
+        key: AttributeKey, value: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
         if let attributeValue = value.object(forKey: "value") {
             let castedValue = castValueToSwift(attributeValue)
-            RUMMonitorProvider().addAttribute(forKey: key, value: castedValue)
+            RUMMonitorProvider()?.addAttribute(forKey: key, value: castedValue)
             GlobalState.addAttribute(forKey: key, value: castedValue)
         }
-        
-        resolve(nil)
-    }
-    
-    @objc
-    public func removeAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        RUMMonitorProvider().removeAttribute(forKey: key)
-        GlobalState.removeAttribute(key: key)
-        
+
         resolve(nil)
     }
 
     @objc
-    public func addAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func removeAttribute(
+        key: AttributeKey, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        RUMMonitorProvider()?.removeAttribute(forKey: key)
+        GlobalState.removeAttribute(key: key)
+
+        resolve(nil)
+    }
+
+    @objc
+    public func addAttributes(
+        attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
-            RUMMonitorProvider().addAttribute(forKey: key, value: value)
+            RUMMonitorProvider()?.addAttribute(forKey: key, value: value)
             GlobalState.addAttribute(forKey: key, value: value)
         }
 
         resolve(nil)
     }
-    
+
     @objc
-    public func removeAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        RUMMonitorProvider().removeAttributes(forKeys: keys)
+    public func removeAttributes(
+        keys: [AttributeKey], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        RUMMonitorProvider()?.removeAttributes(forKeys: keys)
         for (key) in keys {
             GlobalState.removeAttribute(key: key)
         }
-        
+
         resolve(nil)
     }
 
@@ -220,37 +241,45 @@ public class DdSdkImplementation: NSObject {
 
     @objc
 
-    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
-        resolve(nil)
-    }
-
-    @objc
-    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
-        resolve(nil)
-    }
-
-#if os(iOS)
-    @objc
-    public func consumeWebviewEvent(
+    public func telemetryDebug(
         message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
     ) {
-        do {
-            try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
-        } catch {
-            DdTelemetry.telemetryError(
-                id: "datadog_react_native:\(error.localizedDescription)",
-                message: "The message being sent was:\(message)" as String,
-                kind: "WebViewEventBridgeError" as String,
-                stack: String(describing: error) as String)
-        }
-
+        DdTelemetry.telemetryDebug(
+            id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
 
-#endif
-    
+    @objc
+    public func telemetryError(
+        message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        DdTelemetry.telemetryError(
+            id: "datadog_react_native:\(String(describing: kind)):\(message)",
+            message: message as String, kind: kind as String, stack: stack as String)
+        resolve(nil)
+    }
+
+    #if os(iOS)
+        @objc
+        public func consumeWebviewEvent(
+            message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        ) {
+            do {
+                try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
+            } catch {
+                DdTelemetry.telemetryError(
+                    id: "datadog_react_native:\(error.localizedDescription)",
+                    message: "The message being sent was:\(message)" as String,
+                    kind: "WebViewEventBridgeError" as String,
+                    stack: String(describing: error) as String)
+            }
+
+            resolve(nil)
+        }
+
+    #endif
+
     @objc
     public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.clearAllData()
@@ -283,8 +312,12 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
-        let jsRefreshRateMonitoringEnabled = sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
-        let jsLongTaskMonitoringEnabled = sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
+        let jsRefreshRateMonitoringEnabled =
+            sdkConfiguration.rumConfiguration != nil
+            && sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
+        let jsLongTaskMonitoringEnabled =
+            sdkConfiguration.rumConfiguration != nil
+            && sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
 
         if !jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled {
             return nil
@@ -295,7 +328,8 @@ public class DdSdkImplementation: NSObject {
             let shouldRecordFrameTime = jsRefreshRateMonitoringEnabled && frameTime > 0
             let shouldRecordLongTask =
                 jsLongTaskMonitoringEnabled
-            && frameTime > (sdkConfiguration.rumConfiguration?.longTaskThresholdMs ?? 0.0) / 1_000
+                && frameTime > (sdkConfiguration.rumConfiguration?.longTaskThresholdMs ?? 0.0)
+                    / 1_000
             guard shouldRecordFrameTime || shouldRecordLongTask,
                 let rumMonitorInternal = RUMMonitorInternalProvider()
             else { return }
@@ -304,9 +338,12 @@ public class DdSdkImplementation: NSObject {
             let now = Date()
             // Leave JS thread ASAP to give as much time to JS engine work.
             sharedQueue.async {
-                if (shouldRecordFrameTime) {
-                    let normalizedFrameTimeSeconds = DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(frameTime)
-                    rumMonitorInternal.updatePerformanceMetric(at: now, metric: .jsFrameTimeSeconds, value: normalizedFrameTimeSeconds, attributes: [:])
+                if shouldRecordFrameTime {
+                    let normalizedFrameTimeSeconds =
+                        DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(frameTime)
+                    rumMonitorInternal.updatePerformanceMetric(
+                        at: now, metric: .jsFrameTimeSeconds, value: normalizedFrameTimeSeconds,
+                        attributes: [:])
                 }
                 if shouldRecordLongTask {
                     rumMonitorInternal.addLongTask(
@@ -318,23 +355,28 @@ public class DdSdkImplementation: NSObject {
 
         return frameTimeCallback
     }
-    
+
     // Normalizes frameTime values so when they are turned into FPS metrics they are normalized on a range between 0 and fpsBudget. If fpsBudget is not provided it will default to 60hz.
-    public static func normalizeFrameTimeForDeviceRefreshRate(_ frameTime: Double, fpsBudget: Double? = nil, deviceDisplayFps: Double? = nil) -> Double {
+    public static func normalizeFrameTimeForDeviceRefreshRate(
+        _ frameTime: Double, fpsBudget: Double? = nil, deviceDisplayFps: Double? = nil
+    ) -> Double {
         let DEFAULT_REFRESH_HZ = 60.0
         let frameTimeMs: Double = frameTime * 1000.0
         let frameBudgetHz: Double = fpsBudget ?? DEFAULT_REFRESH_HZ
         let maxDeviceDisplayHz = deviceDisplayFps ?? Double(UIScreen.main.maximumFramesPerSecond)
         let maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
         let budgetFrameTimeMs = 1000.0 / frameBudgetHz
-                
-        guard maxDeviceDisplayHz > 0, frameTimeMs.isFinite, frameTimeMs > 0, frameBudgetHz > 0, budgetFrameTimeMs.isFinite, budgetFrameTimeMs > 0, maxDeviceFrameTimeMs.isFinite, maxDeviceFrameTimeMs > 0 else {
+
+        guard maxDeviceDisplayHz > 0, frameTimeMs.isFinite, frameTimeMs > 0, frameBudgetHz > 0,
+            budgetFrameTimeMs.isFinite, budgetFrameTimeMs > 0, maxDeviceFrameTimeMs.isFinite,
+            maxDeviceFrameTimeMs > 0
+        else {
             return 1.0 / DEFAULT_REFRESH_HZ
         }
-                
+
         var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
         normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
 
-        return normalizedFrameTimeMs / 1000.0 // in seconds
+        return normalizedFrameTimeMs / 1000.0  // in seconds
     }
 }
