@@ -20,6 +20,7 @@ import { isPlainObject, warn } from './utils';
  *    - Fallback to { context: givenValue } if a primitive is passed
  *    - Apply built-in and consumer encoders to all values
  *    - Drop values of unsupported types
+ * - Internal SDK attributes (starting with '_dd.') are preserved as-is without flattening
  */
 export function encodeAttributes(input: unknown): Record<string, Encodable> {
     const result: Record<string, Encodable> = {};
@@ -27,7 +28,14 @@ export function encodeAttributes(input: unknown): Record<string, Encodable> {
     const context: EncodeContext = { numOfAttributes: 0 };
     if (isPlainObject(input)) {
         for (const [k, v] of Object.entries(input)) {
-            encodeAttributesInPlace(v, result, [k], allEncoders, context);
+            // Internal SDK attributes (starting with '_dd.') should not be flattened
+            // as they have a specific structure expected by the native SDK
+            if (k.startsWith('_dd.')) {
+                result[k] = v as Encodable;
+                context.numOfAttributes++;
+            } else {
+                encodeAttributesInPlace(v, result, [k], allEncoders, context);
+            }
         }
     } else {
         // Fallback for primitive values passed as root

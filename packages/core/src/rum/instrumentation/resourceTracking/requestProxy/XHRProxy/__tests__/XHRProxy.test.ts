@@ -1130,38 +1130,27 @@ describe('XHRProxy', () => {
 
             // THEN
             const timings = DdNativeRum.stopResource.mock.calls[0][4];
+            const resourceTimings = timings['_dd.resource_timings'];
+
+            expect(resourceTimings).toBeDefined();
 
             if (Platform.OS === 'ios') {
-                expect(
-                    timings['_dd.resource_timings.firstByte.startTime']
-                ).toBeGreaterThan(0);
+                expect(resourceTimings.firstByte.startTime).toBeGreaterThan(0);
             } else {
-                expect(
-                    timings['_dd.resource_timings.firstByte.startTime']
-                ).toBe(0);
+                expect(resourceTimings.firstByte.startTime).toBe(0);
             }
-            expect(
-                timings['_dd.resource_timings.firstByte.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.firstByte.duration).toBeGreaterThan(0);
 
-            expect(
-                timings['_dd.resource_timings.download.startTime']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.download.startTime).toBeGreaterThan(0);
 
-            expect(
-                timings['_dd.resource_timings.download.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.download.duration).toBeGreaterThan(0);
 
             if (Platform.OS === 'ios') {
-                expect(
-                    timings['_dd.resource_timings.fetch.startTime']
-                ).toBeGreaterThan(0);
+                expect(resourceTimings.fetch.startTime).toBeGreaterThan(0);
             } else {
-                expect(timings['_dd.resource_timings.fetch.startTime']).toBe(0);
+                expect(resourceTimings.fetch.startTime).toBe(0);
             }
-            expect(
-                timings['_dd.resource_timings.fetch.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.fetch.duration).toBeGreaterThan(0);
         });
 
         it(`M generate resource timings when startTracking() + XHR.open() + XHR.send() + XHR.abort(), platform=${platform}`, async () => {
@@ -1190,37 +1179,26 @@ describe('XHRProxy', () => {
 
             // THEN
             const timings = DdNativeRum.stopResource.mock.calls[0][4];
+            const resourceTimings = timings['_dd.resource_timings'];
+
+            expect(resourceTimings).toBeDefined();
 
             if (Platform.OS === 'ios') {
-                expect(
-                    timings['_dd.resource_timings.firstByte.startTime']
-                ).toBeGreaterThan(0);
+                expect(resourceTimings.firstByte.startTime).toBeGreaterThan(0);
             } else {
-                expect(
-                    timings['_dd.resource_timings.firstByte.startTime']
-                ).toBe(0);
+                expect(resourceTimings.firstByte.startTime).toBe(0);
             }
-            expect(
-                timings['_dd.resource_timings.firstByte.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.firstByte.duration).toBeGreaterThan(0);
 
-            expect(
-                timings['_dd.resource_timings.download.startTime']
-            ).toBeGreaterThan(0);
-            expect(
-                timings['_dd.resource_timings.download.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.download.startTime).toBeGreaterThan(0);
+            expect(resourceTimings.download.duration).toBeGreaterThan(0);
 
             if (Platform.OS === 'ios') {
-                expect(
-                    timings['_dd.resource_timings.fetch.startTime']
-                ).toBeGreaterThan(0);
+                expect(resourceTimings.fetch.startTime).toBeGreaterThan(0);
             } else {
-                expect(timings['_dd.resource_timings.fetch.startTime']).toBe(0);
+                expect(resourceTimings.fetch.startTime).toBe(0);
             }
-            expect(
-                timings['_dd.resource_timings.fetch.duration']
-            ).toBeGreaterThan(0);
+            expect(resourceTimings.fetch.duration).toBeGreaterThan(0);
         });
     });
 
