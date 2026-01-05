@@ -9,7 +9,6 @@ import {
     DatadogProviderConfiguration,
     DdSdkReactNative,
     CoreConfiguration,
-    RumConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
