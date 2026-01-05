@@ -11,7 +11,9 @@ import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.SdkCore
 import com.datadog.android.flags._FlagsInternalProxy
 import com.datadog.android.flags.Flags
+import com.datadog.android.flags.EvaluationContextCallback
 import com.datadog.android.flags.FlagsClient
+import com.datadog.android.flags.model.FlagsClientState
 import com.datadog.android.flags.FlagsConfiguration
 import com.datadog.android.flags.model.UnparsedFlag
 import com.datadog.android.flags.model.EvaluationContext
@@ -72,23 +74,30 @@ class DdFlagsImplementation(
 
         // Set the evaluation context.
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
-        client.setEvaluationContext(evaluationContext)
+        client.setEvaluationContext(evaluationContext, object : EvaluationContextCallback {
+            override fun onSuccess() {
+                val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
+                val serializedFlagsSnapshot =
+                    flagsSnapshot.mapValues { (key, flag) ->
+                        convertUnparsedFlagToMap(key, flag)
+                    }.toWritableMap()
+                promise.resolve(serializedFlagsSnapshot)
+            }
 
-        // Retrieve flags state snapshot.
-        val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
-
-        // Send the flags state snapshot to React Native. If `flagsSnapshot` is null, the
-        // FlagsClient client is not ready yet.
-        if (flagsSnapshot != null) {
-            val mapOfMaps =
-                flagsSnapshot.mapValues { (key, flag) ->
-                    convertUnparsedFlagToMap(key, flag)
+            override fun onFailure(error: Throwable) {
+                // If network request fails and there are cached flags, return them.
+                if (client.state.getCurrentState() == FlagsClientState.Stale) {
+                    val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
+                    val serializedFlagsSnapshot =
+                        flagsSnapshot.mapValues { (key, flag) ->
+                            convertUnparsedFlagToMap(key, flag)
+                        }.toWritableMap()
+                    promise.resolve(serializedFlagsSnapshot)
+                } else {
+                    promise.reject("CLIENT_NOT_INITIALIZED", error.message, error)
                 }
-
-            promise.resolve(mapOfMaps.toWritableMap())
-        } else {
-            promise.reject("CLIENT_NOT_INITIALIZED", "CLIENT_NOT_INITIALIZED", null)
-        }
+            }
+        })
     }
 
     fun trackEvaluation(
@@ -181,7 +190,7 @@ private fun convertUnparsedFlagToMap(
             "number", "float" -> flag.variationValue.toDoubleOrNull()
             "object" -> try {
                 JSONObject(flag.variationValue).toMap()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
             else -> {
@@ -199,7 +208,7 @@ private fun convertUnparsedFlagToMap(
 
     return mapOf(
         "key" to flagKey,
-        "value" to parsedValue ?: flag.variationValue,
+        "value" to (parsedValue ?: flag.variationValue),
         "allocationKey" to flag.allocationKey,
         "variationKey" to flag.variationKey,
         "variationType" to flag.variationType,
