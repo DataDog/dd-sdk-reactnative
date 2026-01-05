@@ -30,8 +30,8 @@ public class DdSdkImplementation: NSObject {
     let jsDispatchQueue: DispatchQueueType
     let jsRefreshRateMonitor: RefreshRateMonitor
     let mainDispatchQueue: DispatchQueueType
-    let RUMMonitorProvider: () -> RUMMonitorProtocol
-    let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+    var RUMMonitorProvider: () -> RUMMonitorProtocol?
+    var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
 
 #if os(iOS)
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
@@ -45,8 +45,6 @@ public class DdSdkImplementation: NSObject {
             mainDispatchQueue: DispatchQueue.main,
             jsDispatchQueue: bridge,
             jsRefreshRateMonitor: JSRefreshRateMonitor.init(),
-            RUMMonitorProvider: { RUMMonitor.shared() },
-            RUMMonitorInternalProvider: { RUMMonitor.shared()._internal }
         )
     }
 
@@ -54,14 +52,12 @@ public class DdSdkImplementation: NSObject {
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
         jsRefreshRateMonitor: RefreshRateMonitor,
-        RUMMonitorProvider: @escaping () -> RUMMonitorProtocol,
-        RUMMonitorInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
-        self.RUMMonitorProvider = RUMMonitorProvider
-        self.RUMMonitorInternalProvider = RUMMonitorInternalProvider
+        self.RUMMonitorProvider = { nil }
+        self.RUMMonitorInternalProvider = { nil }
         super.init()
     }
 
@@ -75,6 +71,14 @@ public class DdSdkImplementation: NSObject {
         let nativeInitialization = DdSdkNativeInitialization()
 
         nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
+        
+        // TO DO - This is filmsy, we should have a better way to determine if rum is enabled
+        // core?.get(feature: RUMfeature.self ) would be nice but RUMfeature is an internal property
+        if (sdkConfiguration.rumConfiguration != nil) {
+            self.RUMMonitorProvider = { RUMMonitor.shared() }
+            self.RUMMonitorInternalProvider = { RUMMonitor.shared()._internal }
+        }
+        
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
         self.overrideReactNativeTelemetry(rnConfiguration: sdkConfiguration)
 
@@ -85,7 +89,7 @@ public class DdSdkImplementation: NSObject {
     public func addAttribute(key: AttributeKey, value: NSDictionary,  resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         if let attributeValue = value.object(forKey: "value") {
             let castedValue = castValueToSwift(attributeValue)
-            RUMMonitorProvider().addAttribute(forKey: key, value: castedValue)
+            RUMMonitorProvider()?.addAttribute(forKey: key, value: castedValue)
             GlobalState.addAttribute(forKey: key, value: castedValue)
         }
         
@@ -94,7 +98,7 @@ public class DdSdkImplementation: NSObject {
     
     @objc
     public func removeAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        RUMMonitorProvider().removeAttribute(forKey: key)
+        RUMMonitorProvider()?.removeAttribute(forKey: key)
         GlobalState.removeAttribute(key: key)
         
         resolve(nil)
@@ -104,7 +108,7 @@ public class DdSdkImplementation: NSObject {
     public func addAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
-            RUMMonitorProvider().addAttribute(forKey: key, value: value)
+            RUMMonitorProvider()?.addAttribute(forKey: key, value: value)
             GlobalState.addAttribute(forKey: key, value: value)
         }
 
@@ -113,7 +117,7 @@ public class DdSdkImplementation: NSObject {
     
     @objc
     public func removeAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        RUMMonitorProvider().removeAttributes(forKeys: keys)
+        RUMMonitorProvider()?.removeAttributes(forKeys: keys)
         for (key) in keys {
             GlobalState.removeAttribute(key: key)
         }
@@ -283,8 +287,8 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
-        let jsRefreshRateMonitoringEnabled = sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
-        let jsLongTaskMonitoringEnabled = sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
+        let jsRefreshRateMonitoringEnabled = sdkConfiguration.rumConfiguration != nil && sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
+        let jsLongTaskMonitoringEnabled = sdkConfiguration.rumConfiguration != nil && sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
 
         if !jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled {
             return nil

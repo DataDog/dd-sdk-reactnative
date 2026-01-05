@@ -66,7 +66,6 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 // see https://docs.datadoghq.com/real_user_monitoring/guide/initialize-your-native-sdk-before-react-native-starts
 
 // const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
-// configuration.rumConfiguration = new RumConfiguration("fake_value")
 
 export default function App() {
 

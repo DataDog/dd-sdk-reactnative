@@ -6,7 +6,10 @@ import {
     SdkVerbosity,
     TrackingConsent,
     BatchSize,
-    UploadFrequency
+    UploadFrequency,
+    DdRum,
+    RumActionType,
+    DdTrace
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
@@ -49,7 +52,7 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     return config
 }
 
- export function onDatadogInitialization() {
+ export async function onDatadogInitialization() {
     DdLogs.info('The RN Sdk was properly initialized')
     DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
     DdSdkReactNative.addAttributes({campaign: "ad-network"})
