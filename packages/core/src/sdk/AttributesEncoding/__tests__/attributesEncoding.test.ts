@@ -410,4 +410,109 @@ describe('encodeAttributes', () => {
         );
         expect(limitWarnings).toHaveLength(1);
     });
+
+    describe('internal SDK attributes (_dd. prefix)', () => {
+        it('preserves nested structure of _dd. attributes without flattening', () => {
+            const input = {
+                '_dd.resource_timings': {
+                    firstByte: { duration: 123, startTime: 456 },
+                    download: { duration: 789, startTime: 101112 }
+                },
+                normalAttribute: 'value'
+            };
+
+            const result = encodeAttributes(input);
+
+            // _dd. attribute should be preserved as-is
+            expect(result['_dd.resource_timings']).toEqual({
+                firstByte: { duration: 123, startTime: 456 },
+                download: { duration: 789, startTime: 101112 }
+            });
+
+            // Normal attributes should still be flattened/encoded
+            expect(result.normalAttribute).toBe('value');
+        });
+
+        it('preserves multiple _dd. attributes', () => {
+            const input = {
+                '_dd.graphql.operation_type': 'query',
+                '_dd.graphql.operation_name': 'GetUser',
+                '_dd.graphql.variables': '{}',
+                '_dd.resource_timings': {
+                    firstByte: { duration: 56845703 }
+                },
+                textAttribute: { nested: 'value' }
+            };
+
+            const result = encodeAttributes(input);
+
+            // All _dd. attributes should be preserved as-is
+            expect(result['_dd.graphql.operation_type']).toBe('query');
+            expect(result['_dd.graphql.operation_name']).toBe('GetUser');
+            expect(result['_dd.graphql.variables']).toBe('{}');
+            expect(result['_dd.resource_timings']).toEqual({
+                firstByte: { duration: 56845703 }
+            });
+
+            // Other attributes should still be flattened
+            expect(result['textAttribute.nested']).toBe('value');
+            expect(result.textAttribute).toBeUndefined();
+        });
+
+        it('does not flatten _dd. attributes even with deeply nested objects', () => {
+            const input = {
+                '_dd.custom': {
+                    level1: {
+                        level2: {
+                            level3: {
+                                value: 'deep'
+                            }
+                        }
+                    }
+                }
+            };
+
+            const result = encodeAttributes(input);
+
+            // Should preserve the entire nested structure
+            expect(result['_dd.custom']).toEqual({
+                level1: {
+                    level2: {
+                        level3: {
+                            value: 'deep'
+                        }
+                    }
+                }
+            });
+
+            // Should NOT have flattened keys
+            expect(
+                result['_dd.custom.level1.level2.level3.value']
+            ).toBeUndefined();
+        });
+
+        it('mixes _dd. attributes and other attributes correctly', () => {
+            const input = {
+                '_dd.span_id': '123',
+                '_dd.trace_id': '456',
+                user: {
+                    name: 'John',
+                    profile: {
+                        age: 30
+                    }
+                }
+            };
+
+            const result = encodeAttributes(input);
+
+            // _dd. attributes preserved
+            expect(result['_dd.span_id']).toBe('123');
+            expect(result['_dd.trace_id']).toBe('456');
+
+            // Other attributes flattened
+            expect(result['user.name']).toBe('John');
+            expect(result['user.profile.age']).toBe(30);
+            expect(result.user).toBeUndefined();
+        });
+    });
 });
