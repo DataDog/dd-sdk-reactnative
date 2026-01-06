@@ -49,7 +49,7 @@ You can configure the plugin to adjust how it processes your code, giving you co
 
 | Option          | Type    | Default | Description |
 |-----------------|---------|---------|-------------|
-| `svgTracking`    | boolean | true   | Whether to track SVG assets in the context of Session Replay. |
+| `svgTracking`    | boolean | false   | Whether to track SVG assets in the context of Session Replay. |
 
 ---
 
