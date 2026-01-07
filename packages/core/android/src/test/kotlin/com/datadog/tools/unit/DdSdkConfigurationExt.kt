@@ -11,107 +11,86 @@ import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
-import com.datadog.reactnative.CustomEndpoints
 import com.datadog.reactnative.DdSdkConfiguration
 import com.datadog.reactnative.ProxyAuthenticator
 import com.facebook.react.bridge.ReadableMap
 import java.net.Proxy
 
+@Suppress("CyclomaticComplexMethod")
 fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
     val map = mutableMapOf<String, Any?>()
+
     map["clientToken"] = clientToken
     map["env"] = env
-    applicationId?.let { map.put("applicationId", it) }
-    map["nativeCrashReportEnabled"] = if (nativeCrashReportEnabled == null) {
-        false
-    } else {
-        nativeCrashReportEnabled
+
+    site?.let { map["site"] = it }
+    service?.let { map["service"] = it }
+    verbosity?.let { map["verbosity"] = it }
+
+    map["nativeCrashReportEnabled"] = nativeCrashReportEnabled ?: false
+
+    map["nativeLongTaskThresholdMs"] = nativeLongTaskThresholdMs ?: 0.0
+
+    trackingConsent?.let { map["trackingConsent"] = it }
+
+    map["uploadFrequency"] = uploadFrequency ?: UploadFrequency.AVERAGE.toString()
+
+    map["batchSize"] = batchSize ?: BatchSize.MEDIUM.toString()
+
+    map["batchProcessingLevel"] =
+        batchProcessingLevel ?: BatchProcessingLevel.MEDIUM.toString()
+
+    proxyConfiguration?.let { proxyPair ->
+        map["proxyConfiguration"] = proxyPair.toReadableMap()
     }
-    map["nativeLongTaskThresholdMs"] = if (nativeLongTaskThresholdMs == null) {
-        0f
-    } else {
-        nativeLongTaskThresholdMs
-    }
-    map["longTaskThresholdMs"] = if (longTaskThresholdMs == null) {
-        0f
-    } else {
-        longTaskThresholdMs
-    }
-    if (sampleRate != null) {
-        map["sampleRate"] = sampleRate
-    } else {
-        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
-        // ReadableMap#getDouble which doesn't allow having null value
-        map["sampleRate"] = 100f
-    }
-    if (telemetrySampleRate != null) {
-        map["telemetrySampleRate"] = telemetrySampleRate
-    } else {
-        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
-        // ReadableMap#getDouble which doesn't allow having null value
-        map["telemetrySampleRate"] = 20f
-    }
-    site?.let { map.put("site", it) }
-    trackingConsent?.let { map.put("trackingConsent", it) }
-    if (vitalsUpdateFrequency != null) {
-        map["vitalsUpdateFrequency"] = vitalsUpdateFrequency
-    } else {
-        // we have to put something, because ReadableMap.asDdSdkConfiguration() will call
-        // ReadableMap#getString which doesn't allow having null value
-        map["vitalsUpdateFrequency"] = VitalsUpdateFrequency.AVERAGE.toString()
-    }
-    map["trackFrustrations"] = if (trackFrustrations == null) {
-        false
-    } else {
-        trackFrustrations
-    }
-    if (uploadFrequency != null) {
-        map["uploadFrequency"] = uploadFrequency
-    } else {
-        map["uploadFrequency"] = UploadFrequency.AVERAGE.toString()
-    }
-    if (batchSize != null) {
-        map["batchSize"] = batchSize
-    } else {
-        map["batchSize"] = BatchSize.MEDIUM.toString()
-    }
-    map["trackBackgroundEvents"] = if (trackBackgroundEvents == null) {
-        false
-    } else {
-        trackBackgroundEvents
-    }
-    customEndpoints?.let {
-        map.put("customEndpoints", it.toReadableJavaOnlyMap())
-    }
-    additionalConfig?.let { map.put("additionalConfiguration", it.toReadableMap()) }
-    configurationForTelemetry?.let {
-        map.put("configurationForTelemetry", it.toReadableJavaOnlyMap())
-    }
-    map.put("nativeViewTracking", nativeViewTracking)
-    map.put("nativeInteractionTracking", nativeInteractionTracking)
-    verbosity?.let { map.put("verbosity", it) }
-    proxyConfig?.let {
-        map.put("proxyConfig", it.toReadableMap())
-    }
-    serviceName?.let { map.put("serviceName", it) }
+
     firstPartyHosts?.let {
-        map.put("firstPartyHosts", it.toFirstPartyHostsReadableArray())
-    }
-    map.put("bundleLogsWithRum", bundleLogsWithRum)
-    map.put("bundleLogsWithTraces", bundleLogsWithTraces)
-
-    trackNonFatalAnrs?.let { map.put("trackNonFatalAnrs", it) }
-
-    if (batchProcessingLevel != null) {
-        map["batchProcessingLevel"] = batchProcessingLevel
-    } else {
-        map["batchProcessingLevel"] = BatchProcessingLevel.MEDIUM.toString()
+        map["firstPartyHosts"] = it.toFirstPartyHostsReadableArray()
     }
 
-    if (initialResourceThreshold != null) {
-        map.put("initialResourceThreshold", initialResourceThreshold)
-    } else {
-        map.put("initialResourceThreshold", 0.1f)
+    additionalConfiguration?.let {
+        map["additionalConfiguration"] = it.toReadableMap()
+    }
+
+    run {
+        val rum = rumConfiguration
+        val rumMap = mutableMapOf<String, Any?>()
+
+        rum?.applicationId?.let { rumMap["applicationId"] = it }
+        rumMap["trackFrustrations"] = rum?.trackFrustrations ?: false
+        rumMap["longTaskThresholdMs"] = rum?.longTaskThresholdMs ?: 0.0
+        rumMap["sessionSampleRate"] = rum?.sessionSampleRate ?: 100.0
+        rumMap["vitalsUpdateFrequency"] =
+            rum?.vitalsUpdateFrequency ?: VitalsUpdateFrequency.AVERAGE.toString()
+        rumMap["trackBackgroundEvents"] = rum?.trackBackgroundEvents ?: false
+        rum?.nativeViewTracking?.let { rumMap["nativeViewTracking"] = it }
+        rum?.nativeInteractionTracking?.let { rumMap["nativeInteractionTracking"] = it }
+        rum?.trackNonFatalAnrs?.let { rumMap["trackNonFatalAnrs"] = it }
+        rumMap["initialResourceThreshold"] = rum?.initialResourceThreshold ?: 0.1
+        rumMap["telemetrySampleRate"] = rum?.telemetrySampleRate ?: 20.0
+        rum?.customEndpoint?.let { rumMap["customEndpoint"] = it }
+        map["rumConfiguration"] = rumMap.toReadableMap()
+    }
+
+    logsConfiguration?.let { logs ->
+        val logsMap = mutableMapOf<String, Any?>()
+        logsMap["bundleLogsWithRum"] = logs.bundleLogsWithRum
+        logsMap["bundleLogsWithTraces"] = logs.bundleLogsWithTraces
+        logs.customEndpoint?.let { logsMap["customEndpoint"] = it }
+
+        map["logsConfiguration"] = logsMap.toReadableMap()
+    }
+
+    traceConfiguration?.let { trace ->
+        val traceMap = mutableMapOf<String, Any?>()
+        trace.resourceTraceSampleRate?.let { traceMap["resourceTraceSampleRate"] = it }
+        trace.customEndpoint?.let { traceMap["customEndpoint"] = it }
+
+        map["traceConfiguration"] = traceMap.toReadableMap()
+    }
+
+    configurationForTelemetry?.let { telemetry ->
+        map["configurationForTelemetry"] = telemetry.toReadableJavaOnlyMap()
     }
 
     return map.toReadableMap()
@@ -125,14 +104,6 @@ internal fun ConfigurationForTelemetry.toReadableJavaOnlyMap(): ReadableMap {
     trackNetworkRequests?.let { map.put("trackNetworkRequests", it) }
     reactVersion?.let { map.put("reactVersion", it) }
     reactNativeVersion?.let { map.put("reactNativeVersion", it) }
-    return map.toReadableMap()
-}
-
-internal fun CustomEndpoints.toReadableJavaOnlyMap(): ReadableMap {
-    val map = mutableMapOf<String, Any?>()
-    rum?.let { map.put("rum", it) }
-    logs?.let { map.put("logs", it) }
-    trace?.let { map.put("trace", it) }
     return map.toReadableMap()
 }
 

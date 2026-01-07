@@ -21,7 +21,7 @@ import React from 'react';
 import type { DdNativeRumType } from '../../../nativeModulesTypes';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { DdSdk } from '../../../sdk/DdSdk';
+import { NativeDdSdk } from '../../../sdk/DdSdkInternal';
 
 const styles = StyleSheet.create({
     button: {
@@ -311,7 +311,7 @@ describe('startTracking memoization', () => {
         // GIVEN
         DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
-        const DummyComponent = props => {
+        const DummyComponent = (props: { onPress: () => void }) => {
             rendersCount++;
             return (
                 <TouchableWithoutFeedback onPress={props.onPress}>
@@ -343,7 +343,7 @@ describe('startTracking memoization', () => {
         // GIVEN
         DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
-        const DummyComponent = props => {
+        const DummyComponent = (props: { title: string }) => {
             rendersCount++;
             return (
                 <View style={styles.button}>
@@ -370,7 +370,10 @@ describe('startTracking memoization', () => {
         // GIVEN
         DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
-        const DummyComponent = props => {
+        const DummyComponent = (props: {
+            onPress: () => void;
+            title: string;
+        }) => {
             rendersCount++;
             return (
                 <TouchableWithoutFeedback onPress={props.onPress}>
@@ -410,7 +413,7 @@ describe('startTracking memoization', () => {
         // GIVEN
         DdRumUserInteractionTracking.startTracking({});
         let rendersCount = 0;
-        const DummyComponent = props => {
+        const DummyComponent = (props: { onPress: () => void }) => {
             rendersCount++;
             return (
                 <TouchableWithoutFeedback onPress={props.onPress}>
@@ -456,7 +459,7 @@ describe('startTracking', () => {
         jest.setMock('react/jsx-runtime', {});
         DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
-        expect(DdSdk.telemetryDebug).toBeCalledWith(
+        expect(NativeDdSdk.telemetryDebug).toBeCalledWith(
             'React jsx runtime does not export new jsx transform'
         );
     });
@@ -466,7 +469,7 @@ describe('startTracking', () => {
 
         DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
-        expect(DdSdk.telemetryDebug).toBeCalledWith(
+        expect(NativeDdSdk.telemetryDebug).toBeCalledWith(
             'React version does not support new jsx transform'
         );
     });

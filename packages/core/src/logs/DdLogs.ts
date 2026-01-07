@@ -8,8 +8,8 @@ import { DdAttributes } from '../DdAttributes';
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
+import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import type { ErrorSource, LogEventMapper } from '../types';
-import { validateContext } from '../utils/argsUtils';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { generateEventMapper } from './eventMapper';
@@ -37,7 +37,7 @@ const isLogWithError = (
         typeof args[1] === 'string' ||
         typeof args[2] === 'string' ||
         typeof args[3] === 'string' ||
-        typeof args[4] === 'object' ||
+        (args[4] !== undefined && args[4] !== null) ||
         typeof args[5] === 'string'
     );
 };
@@ -55,12 +55,12 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                validateContext(args[4]),
+                args[4] ?? {},
                 'debug',
                 args[5]
             );
         }
-        return this.log(args[0], validateContext(args[1]), 'debug');
+        return this.log(args[0], args[1] ?? {}, 'debug');
     };
 
     info = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -70,12 +70,12 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                validateContext(args[4]),
+                args[4] ?? {},
                 'info',
                 args[5]
             );
         }
-        return this.log(args[0], validateContext(args[1]), 'info');
+        return this.log(args[0], args[1] ?? {}, 'info');
     };
 
     warn = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -85,12 +85,12 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                validateContext(args[4]),
+                args[4] ?? {},
                 'warn',
                 args[5]
             );
         }
-        return this.log(args[0], validateContext(args[1]), 'warn');
+        return this.log(args[0], args[1] ?? {}, 'warn');
     };
 
     error = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {
@@ -100,13 +100,13 @@ class DdLogsWrapper implements DdLogsType {
                 args[1],
                 args[2],
                 args[3],
-                validateContext(args[4]),
+                args[4] ?? {},
                 'error',
                 args[5],
                 args[6]
             );
         }
-        return this.log(args[0], validateContext(args[1]), 'error');
+        return this.log(args[0], args[1] ?? {}, 'error');
     };
 
     /**
@@ -161,7 +161,10 @@ class DdLogsWrapper implements DdLogsType {
 
         this.printLogTracked(event.message, status);
         try {
-            return await this.nativeLogs[status](event.message, event.context);
+            return await this.nativeLogs[status](
+                event.message,
+                encodeAttributes(event.context)
+            );
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -204,8 +207,9 @@ class DdLogsWrapper implements DdLogsType {
 
         this.printLogTracked(mappedEvent.message, status);
         try {
+            const encodedContext = encodeAttributes(mappedEvent.context);
             const updatedContext = {
-                ...mappedEvent.context,
+                ...encodedContext,
                 [DdAttributes.errorSourceType]: 'react-native'
             };
 

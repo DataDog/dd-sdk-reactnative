@@ -86,7 +86,6 @@ internal class TelemetryConfigurationEventForgeryFactory :
                             )
                         }
                     },
-                    defaultPrivacyLevel = forge.aNullable { aString() },
                     enablePrivacyForActionName = forge.aNullable { aBool() },
                     useExcludedActivityUrls = forge.aNullable { aBool() },
                     useWorkerUrl = forge.aNullable { aBool() },

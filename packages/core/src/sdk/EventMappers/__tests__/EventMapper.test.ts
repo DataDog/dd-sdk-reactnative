@@ -4,14 +4,14 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdSdk } from '../../DdSdk';
+import { NativeDdSdk } from '../../DdSdkInternal';
 import { EventMapper } from '../EventMapper';
 
 describe('EventMapper', () => {
     it('returns the original log when the event log mapper crashes', () => {
         const eventMapper = new EventMapper(
             (event: object) => {
-                event['badData'] = 'bad data';
+                (event as { badData: string })['badData'] = 'bad data';
                 throw new Error('crashed');
             },
             (event: object) => event,
@@ -26,7 +26,7 @@ describe('EventMapper', () => {
         ).toEqual({
             someData: 'some data'
         });
-        expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+        expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
             'Error while running the event mapper'
         );
     });

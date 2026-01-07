@@ -13,16 +13,42 @@ import {
 import styles from './screens/styles';
 import { DatadogFlags } from '@datadog/mobile-react-native';
 import TraceScreen from './screens/TraceScreen';
+import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-native-navigation/src/rum/instrumentation/DdRumReactNativeNavigationTracking';
 
-const viewPredicate: ViewNamePredicate = (
-    _event: ComponentDidAppearEvent,
-    trackedName: string
-) => {
-    return 'Custom RNN ' + trackedName;
-};
+// === Navigation Tracking custom predicates
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(_event: ComponentDidAppearEvent, trackedName: string) {
+    return "Custom RN " + trackedName;
+}
+
+const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(event: ComponentDidAppearEvent) {
+    if (event.name === "AlertModal") {
+        return false;
+    }
+
+    return true;
+}
+
+const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(event: ComponentDidAppearEvent) {
+    const filteredParams: any = {};
+    if (event.passProps?.creditCardNumber) {
+        filteredParams["creditCardNumber"] = "XXXX XXXX XXXX XXXX";
+    }
+
+    if (event.passProps?.username) {
+        filteredParams["username"] = event.passProps.username;
+    }
+
+    return filteredParams;
+}
+
+const navigationTrackingOptions: NavigationTrackingOptions = {
+  viewNamePredicate,
+  viewTrackingPredicate,
+  paramsTrackingPredicate,
+}
 
 function startReactNativeNavigation() {
-    DdRumReactNativeNavigationTracking.startTracking(viewPredicate);
+    DdRumReactNativeNavigationTracking.startTracking(navigationTrackingOptions);
     registerScreens();
     Navigation.events().registerAppLaunchedListener(async () => {
         Navigation.setRoot({
@@ -97,7 +123,12 @@ const HomeScreen = props => {
                 title="About"
                 onPress={() => {
                     Navigation.push(props.componentId, {
-                        component: { name: 'About' }
+                        component: { name: 'About',
+                                    passProps: {
+                                        username: "test",
+                                        creditCardNumber: "4242 4242 4242 4242"
+                                    }
+                                }
                     });
                 }}
             />

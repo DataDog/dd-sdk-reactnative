@@ -16,7 +16,11 @@ import { Navigation } from 'react-native-navigation';
 import { AppState, Button } from 'react-native';
 import React from 'react';
 
-import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
+import type {
+    ParamsTrackingPredicate,
+    ViewNamePredicate,
+    ViewTrackingPredicate
+} from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 import { DdRumReactNativeNavigationTracking } from '../../../rum/instrumentation/DdRumReactNativeNavigationTracking';
 
 import { AppStateMockLegacy } from './__utils__/AppStateMockLegacy';
@@ -104,7 +108,7 @@ it('M send a RUM ViewEvent W startTracking() for the first view', async () => {
     );
 });
 
-it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPredicate }', async () => {
+it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewNamePredicate }', async () => {
     // GIVEN
 
     // eslint-disable-next-line func-names
@@ -117,7 +121,9 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPre
         }
         return _trackedName;
     };
-    DdRumReactNativeNavigationTracking.startTracking(predicate);
+    DdRumReactNativeNavigationTracking.startTracking({
+        viewNamePredicate: predicate
+    });
 
     // WHEN
     const { findByText } = render(
@@ -135,7 +141,7 @@ it('M send a RUM ViewEvent W startTracking() componentDidAppear { custom viewPre
     );
 });
 
-it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewPredicate returns null }', async () => {
+it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewNamePredicate returns null }', async () => {
     // GIVEN
     let viewDropped = false;
 
@@ -150,7 +156,9 @@ it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewPredic
         }
         return _trackedName;
     };
-    DdRumReactNativeNavigationTracking.startTracking(predicate);
+    DdRumReactNativeNavigationTracking.startTracking({
+        viewNamePredicate: predicate
+    });
 
     // WHEN
     const { findByText } = render(
@@ -163,6 +171,101 @@ it('M not send a RUM ViewEvent W startTracking() componentDidAppear { viewPredic
     // THEN
     expect(DdRum.startView).toHaveBeenCalledTimes(1);
     expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home');
+});
+
+it('M send a RUM ViewEvent W startTracking() componentDidAppear { viewTrackingPredicate always returns true }', async () => {
+    // GIVEN
+    // eslint-disable-next-line func-names
+    let hasRunPredicate = false;
+    const predicate: ViewTrackingPredicate = function (
+        _event: ComponentDidAppearEvent
+    ) {
+        hasRunPredicate = true;
+        return true;
+    };
+    DdRumReactNativeNavigationTracking.startTracking({
+        viewTrackingPredicate: predicate
+    });
+
+    // WHEN
+    const { findByText } = render(
+        <ApplicationMock entryPoint={() => startPlayground()} />
+    );
+    const button = await findByText('Go to About');
+    await fireEvent(button, 'press');
+    await waitFor(() => hasRunPredicate);
+
+    // THEN
+    expect(DdRum.startView).toHaveBeenCalledTimes(2);
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home');
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'About');
+});
+
+it('M send a RUM ViewEvent W startTracking() componentDidAppear { viewTrackingPredicate skips tracking About screen }', async () => {
+    // GIVEN
+    // eslint-disable-next-line func-names
+    let hasRunPredicate = false;
+    const predicate: ViewTrackingPredicate = function (
+        _event: ComponentDidAppearEvent
+    ) {
+        hasRunPredicate = true;
+        return _event.componentName !== 'About';
+    };
+    DdRumReactNativeNavigationTracking.startTracking({
+        viewTrackingPredicate: predicate
+    });
+
+    // WHEN
+    const { findByText } = render(
+        <ApplicationMock entryPoint={() => startPlayground()} />
+    );
+    const button = await findByText('Go to About');
+    await fireEvent(button, 'press');
+    await waitFor(() => hasRunPredicate);
+
+    // THEN
+    expect(DdRum.startView).toHaveBeenCalledTimes(1);
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home');
+    expect(DdRum.startView).not.toHaveBeenCalledWith(
+        expect.any(String),
+        'About'
+    );
+});
+
+it('M send a RUM ViewEvent W startTracking() componentDidAppear { paramsTrackingPredicate adds custom parameters }', async () => {
+    // GIVEN
+    // eslint-disable-next-line func-names
+    let hasRunPredicate = false;
+    const testPassProps = {
+        param1: true,
+        param2: 'abc'
+    };
+    const predicate: ParamsTrackingPredicate = function (
+        _event: ComponentDidAppearEvent
+    ) {
+        hasRunPredicate = true;
+        return testPassProps;
+    };
+    DdRumReactNativeNavigationTracking.startTracking({
+        paramsTrackingPredicate: predicate
+    });
+
+    // WHEN
+    const { findByText } = render(
+        <ApplicationMock entryPoint={() => startPlayground()} />
+    );
+    const button = await findByText('Go to About');
+    await fireEvent(button, 'press');
+    await waitFor(() => hasRunPredicate);
+
+    // THEN
+    expect(DdRum.startView).toHaveBeenCalledTimes(2);
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'Home', {
+        passProps: testPassProps
+    });
+    expect(DdRum.startView).toHaveBeenCalledWith(expect.any(String), 'About', {
+        passProps: testPassProps
+    });
 });
 
 describe.each([

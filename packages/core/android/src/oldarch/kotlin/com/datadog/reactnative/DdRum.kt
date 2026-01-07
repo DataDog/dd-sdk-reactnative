@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.rum.featureoperations.FailureReason
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -265,5 +266,60 @@ class DdRum(
     @ReactMethod
     fun getCurrentSessionId(promise: Promise) {
         implementation.getCurrentSessionId(promise)
+    }
+
+    /**
+     * Starts a RUM Feature Operation.
+     *
+     * @param name Human-readable operation name (e.g., "login_flow").
+     * @param operationKey Optional key that uniquely identifies this operation instance.
+     * @param attributes Additional attributes to attach to the operation.
+     * @param promise Resolved with `null` when the call completes.
+     */
+    @ReactMethod
+    fun startFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.startFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     *
+     * @param name The name of the feature operation (for example, "login_flow").
+     * @param operationKey The key of the operation instance to complete, if one was provided.
+     * @param attributes A map of custom attributes to attach to this completion event.
+     */
+    @ReactMethod
+    fun succeedFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.succeedFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as failed.
+     *
+     * @param name The name of the feature operation (for example, "login_flow").
+     * @param operationKey The key of the operation instance to fail, if one was provided.
+     * @param failureReason The reason for the failure. Values are defined in [FailureReason]
+     *                      (e.g., `FailureReason.ERROR`, `FailureReason.ABANDONED`, `FailureReason.OTHER`).
+     * @param attributes A map of custom attributes to attach to this failure event.
+     */
+    @ReactMethod
+    fun failFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        failureReason: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.failFeatureOperation(name, operationKey, failureReason, attributes, promise)
     }
 }

@@ -5,6 +5,7 @@
  */
 
 import type { BatchProcessingLevel } from './DdSdkReactNativeConfiguration';
+import type { AttributeEncoder } from './sdk/AttributesEncoding/types';
 
 declare global {
     // eslint-disable-next-line no-var, vars-on-top
@@ -14,41 +15,22 @@ declare global {
 /**
  * A configuration object to initialize Datadog's features.
  */
-export class DdSdkConfiguration {
+
+export class DdSdkNativeConfiguration {
     constructor(
+        readonly additionalConfiguration: object,
         readonly clientToken: string,
         readonly env: string,
-        readonly applicationId: string,
+        readonly site: string,
+        readonly service: string | undefined,
+        readonly verbosity: string | undefined,
         readonly nativeCrashReportEnabled: boolean,
         readonly nativeLongTaskThresholdMs: number,
-        readonly longTaskThresholdMs: number,
-        readonly sampleRate: number,
-        readonly site: string,
         readonly trackingConsent: string,
-        readonly additionalConfiguration: object,
-        readonly telemetrySampleRate: number,
-        readonly vitalsUpdateFrequency: string,
         readonly uploadFrequency: string,
         readonly batchSize: string,
-        readonly trackFrustrations: boolean,
-        readonly trackBackgroundEvents: boolean,
-        readonly customEndpoints: {
-            rum?: string;
-            trace?: string;
-            logs?: string;
-        },
-        readonly configurationForTelemetry: {
-            initializationType: string;
-            trackErrors: boolean;
-            trackInteractions: boolean;
-            trackNetworkRequests: boolean;
-            reactVersion: string;
-            reactNativeVersion: string;
-        },
-        readonly nativeViewTracking: boolean,
-        readonly nativeInteractionTracking: boolean,
-        readonly verbosity: string | undefined,
-        readonly proxyConfig:
+        readonly batchProcessingLevel: BatchProcessingLevel,
+        readonly proxyConfiguration:
             | {
                   type: string;
                   address: string;
@@ -57,22 +39,53 @@ export class DdSdkConfiguration {
                   password?: string;
               }
             | undefined,
-        readonly serviceName: string | undefined,
         readonly firstPartyHosts: {
             match: string;
             propagatorTypes: string[];
         }[],
-        readonly bundleLogsWithRum: boolean,
-        readonly bundleLogsWithTraces: boolean,
-        readonly trackNonFatalAnrs: boolean | undefined,
-        readonly appHangThreshold: number | undefined,
-        readonly resourceTracingSamplingRate: number,
-        readonly trackWatchdogTerminations: boolean | undefined,
-        readonly batchProcessingLevel: BatchProcessingLevel, // eslint-disable-next-line no-empty-function
-        readonly initialResourceThreshold: number | undefined,
-        readonly trackMemoryWarnings: boolean
+        readonly attributeEncoders: AttributeEncoder<any>[],
+        readonly rumConfiguration: RUMNativeConfiguration | undefined,
+        readonly logsConfiguration: LogsNativeConfiguration | undefined,
+        readonly traceConfiguration: TraceNativeConfiguration | undefined,
+        readonly configurationForTelemetry: {
+            initializationType: string;
+            trackErrors: boolean;
+            trackInteractions: boolean;
+            trackNetworkRequests: boolean;
+            reactVersion: string;
+            reactNativeVersion: string;
+        } // eslint-disable-next-line no-empty-function
     ) {}
 }
+
+export type RUMNativeConfiguration = {
+    readonly applicationId: string;
+    readonly trackFrustrations: boolean;
+    readonly longTaskThresholdMs: number;
+    readonly sessionSampleRate: number;
+    readonly vitalsUpdateFrequency: string;
+    readonly trackBackgroundEvents: boolean;
+    readonly nativeViewTracking: boolean;
+    readonly nativeInteractionTracking: boolean;
+    readonly trackNonFatalAnrs: boolean | undefined;
+    readonly appHangThreshold: number | undefined;
+    readonly trackWatchdogTerminations: boolean | undefined;
+    readonly initialResourceThreshold: number | undefined;
+    readonly trackMemoryWarnings: boolean;
+    readonly telemetrySampleRate: number;
+    readonly customEndpoint: string;
+};
+
+export type LogsNativeConfiguration = {
+    readonly bundleLogsWithRum: boolean;
+    readonly bundleLogsWithTraces: boolean;
+    readonly customEndpoint: string;
+};
+
+export type TraceNativeConfiguration = {
+    readonly resourceTraceSampleRate: number;
+    readonly customEndpoint: string;
+};
 
 /**
  * The entry point to initialize Datadog's features.
@@ -82,7 +95,7 @@ export type DdSdkType = {
      * Initializes Datadog's features.
      * @param configuration: The configuration to use.
      */
-    initialize(configuration: DdSdkConfiguration): Promise<void>;
+    initialize(configuration: DdSdkNativeConfiguration): Promise<void>;
 
     /**
      * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM
@@ -128,6 +141,27 @@ export type DdSdkType = {
      * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     addUserExtraInfo(extraUserInfo: Record<string, unknown>): Promise<void>;
+
+    /**
+     * Sets the account information.
+     * @param id: A unique account identifier (relevant to your business domain)
+     * @param name: The account name.
+     * @param extraInfo: Additional information.
+     */
+    setAccountInfo(accountInfo: AccountInfo): Promise<void>;
+
+    /**
+     * Clears the account information.
+     */
+    clearAccountInfo(): Promise<void>;
+
+    /**
+     * Add additional account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    addAccountExtraInfo(
+        extraAccountInfo: Record<string, unknown>
+    ): Promise<void>;
 
     /**
      * Set the tracking consent regarding the data collection.
@@ -176,6 +210,12 @@ export type UserInfo = {
     extraInfo?: object;
 };
 
+export type AccountInfo = {
+    id: string;
+    name?: string;
+    extraInfo?: object;
+};
+
 // DdLogs
 
 export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
@@ -197,11 +237,16 @@ export type LogEvent = {
 export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
 
 // DdRum
-
 export enum ErrorSource {
     NETWORK = 'NETWORK',
     SOURCE = 'SOURCE',
     CONSOLE = 'CONSOLE',
     WEBVIEW = 'WEBVIEW',
     CUSTOM = 'CUSTOM'
+}
+
+export enum FeatureOperationFailure {
+    ERROR = 'ERROR',
+    ABANDONED = 'ABANDONED',
+    OTHER = 'OTHER'
 }

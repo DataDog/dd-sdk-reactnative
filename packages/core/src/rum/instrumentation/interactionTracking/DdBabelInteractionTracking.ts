@@ -5,6 +5,7 @@
  */
 
 import DdSdk from '../../../specs/NativeDdSdk';
+import { getGlobalInstance } from '../../../utils/singletonUtils';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
 import type { DdRum } from '../../DdRum';
@@ -12,10 +13,8 @@ import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 import type { RumActionType } from '../../types';
 import { ActionSource } from '../../types';
 
-const StateErrors = {
-    ALREADY_INITIALIZED:
-        'Interaction Tracking singleton already initialized, please use `getInstance`.'
-} as const;
+const BABEL_INTERACTION_TRACKING_MODULE =
+    'com.datadog.reactnative.rum.babel_interaction_tracking';
 
 type BabelConfig = {
     trackInteractions: boolean;
@@ -32,10 +31,8 @@ type TargetObject = {
     [key: string]: any;
 };
 
-export class DdBabelInteractionTracking {
-    private static instance: DdBabelInteractionTracking | null = null;
-
-    static config: BabelConfig = {
+class BabelInteractionTracking {
+    config: BabelConfig = {
         trackInteractions: false,
         useAccessibilityLabel: true
     };
@@ -48,34 +45,20 @@ export class DdBabelInteractionTracking {
 
     isInitialized: boolean = false;
 
-    private constructor(ddRum?: typeof DdRum) {
-        if (DdBabelInteractionTracking.instance) {
-            throw new Error(StateErrors.ALREADY_INITIALIZED);
-        }
-
-        if (ddRum) {
-            this.ddRum = ddRum;
-        }
-
-        DdBabelInteractionTracking.instance = this;
+    getInstance() {
+        return DdBabelInteractionTracking;
     }
 
-    static getInstance(ddRum?: typeof DdRum) {
-        if (!DdBabelInteractionTracking.instance) {
-            DdBabelInteractionTracking.instance = new DdBabelInteractionTracking(
-                ddRum
-            );
-        }
-
-        return DdBabelInteractionTracking.instance;
+    attachRumInstance(ddRum: typeof DdRum) {
+        this.ddRum = ddRum;
+        this.isInitialized = true;
     }
 
-    static getTelemetryConfig() {
+    getTelemetryConfig() {
         return {
             babel_plugin: {
                 enabled: !!globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__,
-                track_interactions: !!DdBabelInteractionTracking.config
-                    .trackInteractions
+                track_interactions: !!this.config.trackInteractions
             }
         };
     }
@@ -91,7 +74,7 @@ export class DdBabelInteractionTracking {
             ...attrs
         } = targetObject;
 
-        const { useAccessibilityLabel } = DdBabelInteractionTracking.config;
+        const { useAccessibilityLabel } = this.config;
 
         const tryContent = () => {
             const content = getContent?.();
@@ -144,7 +127,7 @@ export class DdBabelInteractionTracking {
             if (!this.telemetrySent) {
                 DdSdk?.sendTelemetryLog(
                     BABEL_PLUGIN_TELEMETRY,
-                    DdBabelInteractionTracking.getTelemetryConfig(),
+                    this.getTelemetryConfig(),
                     { onlyOnce: true }
                 );
 
@@ -153,7 +136,7 @@ export class DdBabelInteractionTracking {
 
             const targetName = this.getTargetName(targetObject);
 
-            const { trackInteractions } = DdBabelInteractionTracking.config;
+            const { trackInteractions } = this.config;
 
             if (trackInteractions) {
                 this.ddRum
@@ -178,3 +161,8 @@ export class DdBabelInteractionTracking {
         };
     }
 }
+
+export const DdBabelInteractionTracking = getGlobalInstance(
+    BABEL_INTERACTION_TRACKING_MODULE,
+    () => new BabelInteractionTracking()
+);
