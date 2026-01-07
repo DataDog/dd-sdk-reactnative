@@ -21,6 +21,17 @@ target 'ddSdkReactnativeExample' do
   pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
   pod 'DatadogSDKReactNativeWebView', :path => '../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec', :testspecs => ['Tests']
 
+  # TODO: Remove this once the 3.5.0 release is cut.
+  # Pin Datadog* dependencies to a specific commit.
+  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+  pod 'DatadogWebViewTracking', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :commit => '2f28ab9'
+
   config = use_native_modules!
 
   use_react_native!(

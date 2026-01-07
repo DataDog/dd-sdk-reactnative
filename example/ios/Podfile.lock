@@ -93,7 +93,7 @@ PODS:
     - DatadogInternal (= 3.4.0)
   - DatadogTrace (3.4.0):
     - DatadogInternal (= 3.4.0)
-    - OpenTelemetrySwiftApi (= 1.13.1)
+    - OpenTelemetry-Swift-Api (~> 2.3.0)
   - DatadogWebViewTracking (3.4.0):
     - DatadogInternal (= 3.4.0)
   - DoubleConversion (1.1.6)
@@ -105,7 +105,7 @@ PODS:
     - hermes-engine/Pre-built (= 0.76.9)
   - hermes-engine/Pre-built (0.76.9)
   - HMSegmentedControl (1.5.6)
-  - OpenTelemetrySwiftApi (1.13.1)
+  - OpenTelemetry-Swift-Api (2.3.0)
   - PLCrashReporter (1.12.0)
   - RCT-Folly (2024.10.14.00):
     - boost
@@ -1745,12 +1745,20 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
+  - DatadogCore (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogCrashReporting (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogFlags (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogInternal (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogLogs (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogRUM (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNativeSessionReplay (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DatadogSDKReactNativeSessionReplay/Tests (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DatadogSDKReactNativeWebView (from `../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec`)
   - DatadogSDKReactNativeWebView/Tests (from `../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec`)
+  - DatadogTrace (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
+  - DatadogWebViewTracking (from `https://github.com/DataDog/dd-sdk-ios.git`, commit `2f28ab9`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1826,29 +1834,45 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - DatadogCore
-    - DatadogCrashReporting
-    - DatadogFlags
-    - DatadogInternal
-    - DatadogLogs
-    - DatadogRUM
     - DatadogSessionReplay
-    - DatadogTrace
-    - DatadogWebViewTracking
     - HMSegmentedControl
-    - OpenTelemetrySwiftApi
+    - OpenTelemetry-Swift-Api
     - PLCrashReporter
     - SocketRocket
 
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
+  DatadogCore:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogCrashReporting:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogFlags:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogInternal:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogLogs:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogRUM:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
   DatadogSDKReactNativeSessionReplay:
     :path: "../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
   DatadogSDKReactNativeWebView:
     :path: "../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
+  DatadogTrace:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogWebViewTracking:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   fast_float:
@@ -1991,6 +2015,32 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  DatadogCore:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogCrashReporting:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogFlags:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogInternal:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogLogs:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogRUM:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogTrace:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+  DatadogWebViewTracking:
+    :commit: 2f28ab9
+    :git: https://github.com/DataDog/dd-sdk-ios.git
+
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
   DatadogCore: 8c384b6338c49534e43fdf7f9a0508b62bf1d426
@@ -2003,7 +2053,7 @@ SPEC CHECKSUMS:
   DatadogSDKReactNativeSessionReplay: fcbd7cf17dc515949607e112c56374354c8d08ef
   DatadogSDKReactNativeWebView: 24fefd471c18d13d950a239a51712c830bf6bf7a
   DatadogSessionReplay: 462a3a2e39e9e2193528cf572c8d1acfd6cdace1
-  DatadogTrace: 852cb80f9370eb1321eb30a73c82c8e3d9e4e980
+  DatadogTrace: 68b7cc49378ba492423191c29280e3904978a684
   DatadogWebViewTracking: 32dfeaf7aad47a605a689ed12e0d21ee8eb56141
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
@@ -2012,7 +2062,7 @@ SPEC CHECKSUMS:
   glog: 08b301085f15bcbb6ff8632a8ebaf239aae04e6a
   hermes-engine: 9e868dc7be781364296d6ee2f56d0c1a9ef0bb11
   HMSegmentedControl: 34c1f54d822d8308e7b24f5d901ec674dfa31352
-  OpenTelemetrySwiftApi: aaee576ed961e0c348af78df58b61300e95bd104
+  OpenTelemetry-Swift-Api: 3d77582ab6837a63b65bf7d2eacc57d8f2595edd
   PLCrashReporter: db59ef96fa3d25f3650040d02ec2798cffee75f2
   RCT-Folly: 7b4f73a92ad9571b9dbdb05bb30fad927fa971e1
   RCTDeprecation: ebe712bb05077934b16c6bf25228bdec34b64f83
@@ -2080,6 +2130,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: 9a1faac3ae43394b0b86e6fcabf63eced6c66dc2
+PODFILE CHECKSUM: 6309cef88a0921166cdd8af528b6f360fb4fe89b
 
 COCOAPODS: 1.16.2
