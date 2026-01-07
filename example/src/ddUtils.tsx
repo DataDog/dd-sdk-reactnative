@@ -7,9 +7,6 @@ import {
     TrackingConsent,
     BatchSize,
     UploadFrequency,
-    DdRum,
-    RumActionType,
-    DdTrace
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';

@@ -51,7 +51,7 @@ public class DdSdkImplementation: NSObject {
     init(
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
-        jsRefreshRateMonitor: RefreshRateMonitor,
+        jsRefreshRateMonitor: RefreshRateMonitor
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
