@@ -321,6 +321,7 @@ class DdSdkImplementation(
         return frameRateProvider
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun buildFrameTimeCallback(
         ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
