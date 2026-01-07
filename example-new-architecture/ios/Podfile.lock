@@ -5,6 +5,8 @@ PODS:
   - DatadogCrashReporting (3.4.0):
     - DatadogInternal (= 3.4.0)
     - PLCrashReporter (~> 1.12.0)
+  - DatadogFlags (3.4.0):
+    - DatadogInternal (= 3.4.0)
   - DatadogInternal (3.4.0)
   - DatadogLogs (3.4.0):
     - DatadogInternal (= 3.4.0)
@@ -13,6 +15,7 @@ PODS:
   - DatadogSDKReactNative (2.13.2):
     - DatadogCore (= 3.4.0)
     - DatadogCrashReporting (= 3.4.0)
+    - DatadogFlags (= 3.4.0)
     - DatadogLogs (= 3.4.0)
     - DatadogRUM (= 3.4.0)
     - DatadogTrace (= 3.4.0)
@@ -40,6 +43,7 @@ PODS:
   - DatadogSDKReactNative/Tests (2.13.2):
     - DatadogCore (= 3.4.0)
     - DatadogCrashReporting (= 3.4.0)
+    - DatadogFlags (= 3.4.0)
     - DatadogLogs (= 3.4.0)
     - DatadogRUM (= 3.4.0)
     - DatadogTrace (= 3.4.0)
@@ -1634,16 +1638,8 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - DatadogCore (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogCrashReporting (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogFlags (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogInternal (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogLogs (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogRUM (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
-  - DatadogTrace (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
-  - DatadogWebViewTracking (from `https://github.com/DataDog/dd-sdk-ios.git`, branch `feature/flags`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1712,6 +1708,14 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
+    - DatadogCore
+    - DatadogCrashReporting
+    - DatadogFlags
+    - DatadogInternal
+    - DatadogLogs
+    - DatadogRUM
+    - DatadogTrace
+    - DatadogWebViewTracking
     - OpenTelemetrySwiftApi
     - PLCrashReporter
     - SocketRocket
@@ -1719,32 +1723,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
-  DatadogCore:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogCrashReporting:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogFlags:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogInternal:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogLogs:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogRUM:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
-  DatadogTrace:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogWebViewTracking:
-    :branch: feature/flags
-    :git: https://github.com/DataDog/dd-sdk-ios.git
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   fast_float:
@@ -1873,40 +1853,15 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
-CHECKOUT OPTIONS:
-  DatadogCore:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogCrashReporting:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogFlags:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogInternal:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogLogs:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogRUM:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogTrace:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-  DatadogWebViewTracking:
-    :commit: 18ee3ce825a9806c350133179f5e38168d78e0ba
-    :git: https://github.com/DataDog/dd-sdk-ios.git
-
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
   DatadogCore: 8c384b6338c49534e43fdf7f9a0508b62bf1d426
   DatadogCrashReporting: 103bfb4077db2ccee1846f71e53712972732d3b7
+  DatadogFlags: fbc8dc0e5e387c6c8e15a0afa39d067107e2e7ce
   DatadogInternal: b0372935ad8dde5ad06960fe8d88c39b2cc92bcc
   DatadogLogs: 484bb1bfe0c9a7cb2a7d9733f61614e8ea7b2f3a
   DatadogRUM: 00069b27918e0ce4a9223b87b4bfa7929d6a0a1f
-  DatadogSDKReactNative: 02cd4d00e3eecdc8ac57042db50b921054bbe709
+  DatadogSDKReactNative: 7625fa42b4600102f01a3eee16162db6e51d86ff
   DatadogTrace: 852cb80f9370eb1321eb30a73c82c8e3d9e4e980
   DatadogWebViewTracking: 32dfeaf7aad47a605a689ed12e0d21ee8eb56141
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
@@ -1976,6 +1931,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: 470f1ade1ca669373855527342da02c29dfcdfdf
+PODFILE CHECKSUM: 2046fc46dd3311048c09b49573c69b7aba2aab81
 
 COCOAPODS: 1.16.2
