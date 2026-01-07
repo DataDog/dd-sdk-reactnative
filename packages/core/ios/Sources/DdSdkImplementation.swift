@@ -52,12 +52,14 @@ public class DdSdkImplementation: NSObject {
         mainDispatchQueue: DispatchQueueType,
         jsDispatchQueue: DispatchQueueType,
         jsRefreshRateMonitor: RefreshRateMonitor,
+        RUMMonitorProvider: (() -> RUMMonitorProtocol)? = nil,
+        RUMMonitorInternalProvider: (() -> RUMMonitorInternalProtocol?)? = nil
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.jsDispatchQueue = jsDispatchQueue
         self.jsRefreshRateMonitor = jsRefreshRateMonitor
-        self.RUMMonitorProvider = { nil }
-        self.RUMMonitorInternalProvider = { nil }
+        self.RUMMonitorProvider = RUMMonitorProvider ?? { nil }
+        self.RUMMonitorInternalProvider = RUMMonitorInternalProvider ?? { nil }
         super.init()
     }
 
@@ -72,11 +74,17 @@ public class DdSdkImplementation: NSObject {
 
         nativeInitialization.initialize(sdkConfiguration: sdkConfiguration)
         
-        // TO DO - This is filmsy, we should have a better way to determine if rum is enabled
+        // TO DO - We should have a better way to determine if rum is enabled
         // core?.get(feature: RUMfeature.self ) would be nice but RUMfeature is an internal property
         if (sdkConfiguration.rumConfiguration != nil) {
-            self.RUMMonitorProvider = { RUMMonitor.shared() }
-            self.RUMMonitorInternalProvider = { RUMMonitor.shared()._internal }
+
+            // Only overwrite monitors if they weren't set already (as they are sometimes during unit test runs
+            if self.RUMMonitorProvider() == nil {
+                self.RUMMonitorProvider = { RUMMonitor.shared() }
+            }
+            if (self.RUMMonitorInternalProvider() == nil) {
+                self.RUMMonitorInternalProvider = { RUMMonitor.shared()._internal }
+            }
         }
         
         self.startJSRefreshRateMonitoring(sdkConfiguration: sdkConfiguration)
