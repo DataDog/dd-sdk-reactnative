@@ -32,7 +32,7 @@ export class FlagsClient {
     /**
      * Sets the evaluation context for the client.
      *
-     * Should be called before evaluating any flags.
+     * Should be called before evaluating any flags. Otherwise, the client will fall back to serving default flag values.
      *
      * @param context The evaluation context to associate with the current session.
      *
@@ -59,7 +59,7 @@ export class FlagsClient {
             const result = await this.nativeFlags.setEvaluationContext(
                 this.clientName,
                 processedContext.targetingKey,
-                processedContext.attributes
+                processedContext.attributes ?? {}
             );
 
             this._evaluationContext = processedContext;
@@ -72,66 +72,6 @@ export class FlagsClient {
                 );
             }
         }
-    };
-
-    /**
-     * Returns the value of a boolean feature flag.
-     *
-     * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
-     *
-     * @example
-     * ```ts
-     * const isNewFeatureEnabled = flagsClient.getBooleanValue('new-feature-enabled', false);
-     * ```
-     */
-    getBooleanValue = (key: string, defaultValue: boolean): boolean => {
-        return this.getBooleanDetails(key, defaultValue).value;
-    };
-
-    /**
-     * Returns the value of a string feature flag.
-     *
-     * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
-     *
-     * @example
-     * ```ts
-     * const appTheme = flagsClient.getStringValue('app-theme', 'light');
-     * ```
-     */
-    getStringValue = (key: string, defaultValue: string): string => {
-        return this.getStringDetails(key, defaultValue).value;
-    };
-
-    /**
-     * Returns the value of a number feature flag.
-     *
-     * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
-     *
-     * @example
-     * ```ts
-     * const ctaButtonSize = flagsClient.getNumberValue('cta-button-size', 16);
-     * ```
-     */
-    getNumberValue = (key: string, defaultValue: number): number => {
-        return this.getNumberDetails(key, defaultValue).value;
-    };
-
-    /**
-     * Returns the value of an object feature flag.
-     *
-     * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
-     *
-     * @example
-     * ```ts
-     * const pageCalloutOptions = flagsClient.getObjectValue('page-callout', { color: 'purple', text: 'Woof!' });
-     * ```
-     */
-    getObjectValue = (key: string, defaultValue: ObjectValue): ObjectValue => {
-        return this.getObjectDetails(key, defaultValue).value;
     };
 
     private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
@@ -173,7 +113,7 @@ export class FlagsClient {
             key,
             flagCacheEntry,
             this._evaluationContext.targetingKey,
-            this._evaluationContext.attributes
+            this._evaluationContext.attributes ?? {}
         );
 
         return details;
@@ -269,5 +209,65 @@ export class FlagsClient {
         }
 
         return this.getDetails(key, defaultValue);
+    };
+
+    /**
+     * Returns the value of a boolean feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const isNewFeatureEnabled = flagsClient.getBooleanValue('new-feature-enabled', false);
+     * ```
+     */
+    getBooleanValue = (key: string, defaultValue: boolean): boolean => {
+        return this.getBooleanDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of a string feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const appTheme = flagsClient.getStringValue('app-theme', 'light');
+     * ```
+     */
+    getStringValue = (key: string, defaultValue: string): string => {
+        return this.getStringDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of a number feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const ctaButtonSize = flagsClient.getNumberValue('cta-button-size', 16);
+     * ```
+     */
+    getNumberValue = (key: string, defaultValue: number): number => {
+        return this.getNumberDetails(key, defaultValue).value;
+    };
+
+    /**
+     * Returns the value of an object feature flag.
+     *
+     * @param key The key of the flag to evaluate.
+     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     *
+     * @example
+     * ```ts
+     * const pageCalloutOptions = flagsClient.getObjectValue('page-callout', { color: 'purple', text: 'Woof!' });
+     * ```
+     */
+    getObjectValue = (key: string, defaultValue: ObjectValue): ObjectValue => {
+        return this.getObjectDetails(key, defaultValue).value;
     };
 }

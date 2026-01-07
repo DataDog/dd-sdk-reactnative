@@ -145,7 +145,7 @@ export interface EvaluationContext {
      *
      * NOTE: Nested object values are not supported and will be omitted from the evaluation context.
      */
-    attributes: Record<string, string | number | boolean | null | undefined>;
+    attributes?: Record<string, string | number | boolean | null | undefined>;
 }
 
 export type ObjectValue = { [key: string]: unknown };

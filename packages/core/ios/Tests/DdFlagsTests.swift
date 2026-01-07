@@ -6,13 +6,17 @@
 
 import XCTest
 import DatadogCore
+@_spi(Internal)
 import DatadogFlags
 import DatadogInternal
-@testable import DatadogSDKReactNative
+@_spi(Internal)
+@testable
+import DatadogSDKReactNative
 
 class DdFlagsTests: XCTestCase {
 
     private var core: FlagsTestCore!
+    private var implementation: DdFlagsImplementation!
 
     override func setUp() {
         super.setUp()
@@ -20,89 +24,229 @@ class DdFlagsTests: XCTestCase {
         core = FlagsTestCore()
         CoreRegistry.register(default: core)
         Flags.enable(in: core)
+        implementation = DdFlagsImplementation(core: core)
     }
 
     override func tearDown() {
         CoreRegistry.unregisterDefault()
         super.tearDown()
     }
-    
+
+    // MARK: - Bridge Tests
+
+    func testEnable() {
+        let expectation = self.expectation(description: "Enable resolves")
+        implementation.enable(["enabled": true], resolve: { _ in
+            expectation.fulfill()
+        }, reject: { _, _, _ in
+            XCTFail("Should not reject")
+        })
+        waitForExpectations(timeout: 1, handler: nil)
+    }
+
+    func testSetEvaluationContextSuccess() {
+        let expectation = self.expectation(description: "SetEvaluationContext resolves with flags")
+
+        let mockClient = MockFlagsClient()
+        mockClient.assignments = [
+            "flag1": FlagAssignment(
+                allocationKey: "a",
+                variationKey: "v",
+                variation: .boolean(true),
+                reason: "r",
+                doLog: true
+            )
+        ]
+
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        implementation.setEvaluationContext("test_client", targetingKey: "user_1", attributes: ["tier": "pro"], resolve: { result in
+            guard let flags = result as? [String: Any] else {
+                XCTFail("Expected dictionary result")
+                expectation.fulfill()
+                return
+            }
+
+            XCTAssertNotNil(flags["flag1"])
+            if let flag = flags["flag1"] as? [String: Any] {
+                XCTAssertEqual(flag["value"] as? Bool, true)
+            } else {
+                XCTFail("Expected flag1 dictionary")
+            }
+
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTFail("Should not reject: \(String(describing: code))")
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+
+        XCTAssertEqual(mockClient.lastEvaluationContext?.targetingKey, "user_1")
+        XCTAssertEqual(mockClient.lastEvaluationContext?.attributes["tier"], .string("pro"))
+    }
+
+    func testSetEvaluationContextClientNotInitialized() {
+        let expectation = self.expectation(description: "SetEvaluationContext rejects when client returns nil assignments")
+
+        let mockClient = MockFlagsClient()
+        mockClient.assignments = nil // Simulates uninitialized state
+
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        implementation.setEvaluationContext("test_client", targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTFail("Should not resolve")
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTAssertEqual(message, "CLIENT_NOT_INITIALIZED")
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+
+    func testSetEvaluationContextFailure() {
+        let expectation = self.expectation(description: "SetEvaluationContext rejects with error")
+
+        let mockClient = MockFlagsClient()
+        mockClient.errorToReturn = .networkError(NSError(domain: "test_domain", code: 400, userInfo: nil))
+
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        implementation.setEvaluationContext("test_client", targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTFail("Should not resolve")
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTAssertEqual(message, "NETWORK_ERROR")
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+
+    func testTrackEvaluation() {
+        let expectation = self.expectation(description: "TrackEvaluation resolves")
+
+        let mockClient = MockFlagsClient()
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        let rawFlag: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": true
+        ]
+
+        implementation.trackEvaluation("test_client", key: "feature_flag", rawFlag: rawFlag, targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTAssertNil(result)
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTFail("Should not reject: \(String(describing: code))")
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+
+        XCTAssertEqual(mockClient.trackedEvaluation?.key, "feature_flag")
+        XCTAssertEqual(mockClient.trackedEvaluation?.assignment.variationKey, "var")
+    }
+
+    func testTrackEvaluationWithInvalidFlag() {
+        let expectation = self.expectation(description: "TrackEvaluation rejects invalid flag")
+
+        let invalidFlag: NSDictionary = [
+            "allocationKey": "alloc"
+            // Missing required fields
+        ]
+
+        implementation.trackEvaluation("test_client", key: "feature_flag", rawFlag: invalidFlag, targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTFail("Should not resolve")
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTAssertEqual(message, "INVALID_FLAG_ASSIGNMENT")
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+
     // MARK: - AnyValue Tests
-    
+
     func testAnyValueWrapUnwrapNull() {
         let original: Any = NSNull()
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .null = wrapped {
             XCTAssertTrue(true)
         } else {
             XCTFail("Expected .null, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap()
         XCTAssertTrue(unwrapped is NSNull)
     }
-    
+
     func testAnyValueWrapUnwrapString() {
         let original = "test string"
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .string(let value) = wrapped {
             XCTAssertEqual(value, original)
         } else {
             XCTFail("Expected .string, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? String
         XCTAssertEqual(unwrapped, original)
     }
-    
+
     func testAnyValueWrapUnwrapBool() {
         let original = true
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .bool(let value) = wrapped {
             XCTAssertEqual(value, original)
         } else {
             XCTFail("Expected .bool, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? Bool
         XCTAssertEqual(unwrapped, original)
     }
-    
+
     func testAnyValueWrapUnwrapInt() {
         let original = 42
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .int(let value) = wrapped {
             XCTAssertEqual(value, original)
         } else {
             XCTFail("Expected .int, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? Int
         XCTAssertEqual(unwrapped, original)
     }
-    
+
     func testAnyValueWrapUnwrapDouble() {
         let original = 3.14
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .double(let value) = wrapped {
             XCTAssertEqual(value, original)
         } else {
             XCTFail("Expected .double, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? Double
         XCTAssertEqual(unwrapped, original)
     }
-    
+
     func testAnyValueWrapUnwrapDictionary() {
         let original: [String: Any] = ["key": "value", "number": 1]
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .dictionary(let dict) = wrapped {
             XCTAssertEqual(dict.count, 2)
             if let val = dict["key"], case .string(let s) = val {
@@ -118,16 +262,16 @@ class DdFlagsTests: XCTestCase {
         } else {
             XCTFail("Expected .dictionary, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? [String: Any]
         XCTAssertEqual(unwrapped?["key"] as? String, "value")
         XCTAssertEqual(unwrapped?["number"] as? Int, 1)
     }
-    
+
     func testAnyValueWrapUnwrapArray() {
         let original: [Any] = ["value", 1]
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .array(let array) = wrapped {
             XCTAssertEqual(array.count, 2)
             if case .string(let s) = array[0] {
@@ -143,7 +287,7 @@ class DdFlagsTests: XCTestCase {
         } else {
             XCTFail("Expected .array, got \(wrapped)")
         }
-        
+
         let unwrapped = wrapped.unwrap() as? [Any]
         XCTAssertEqual(unwrapped?[0] as? String, "value")
         XCTAssertEqual(unwrapped?[1] as? Int, 1)
@@ -153,195 +297,143 @@ class DdFlagsTests: XCTestCase {
         struct UnknownType {}
         let original = UnknownType()
         let wrapped = AnyValue.wrap(original)
-        
+
         if case .null = wrapped {
             XCTAssertTrue(true)
         } else {
             XCTFail("Expected .null for unknown type, got \(wrapped)")
         }
     }
-    
-    // MARK: - FlagDetails Tests
-    
-    func testFlagDetailsToSerializedDictionarySuccess() {
-        let details = FlagDetails(
-            key: "test_flag",
-            value: "test_value",
-            variant: "control",
-            reason: "targeting_match",
-            error: nil
-        )
-        
-        let serialized = details.toSerializedDictionary()
-        
-        XCTAssertEqual(serialized["key"] as? String, "test_flag")
-        XCTAssertEqual(serialized["value"] as? String, "test_value")
-        XCTAssertEqual(serialized["variant"] as? String, "control")
-        XCTAssertEqual(serialized["reason"] as? String, "targeting_match")
-        XCTAssertNil(serialized["error"] as? String)
-    }
-    
-    func testFlagDetailsToSerializedDictionaryWithError() {
-        let details = FlagDetails<Bool>(
-            key: "test_flag",
-            value: false,
-            variant: nil,
-            reason: nil,
-            error: .flagNotFound
-        )
-        
-        let serialized = details.toSerializedDictionary()
-        
-        XCTAssertEqual(serialized["key"] as? String, "test_flag")
-        XCTAssertTrue(serialized["value"] as? Bool != nil)
-        XCTAssertNil(serialized["variant"] as? String)
-        XCTAssertNil(serialized["reason"] as? String)
-        XCTAssertEqual(serialized["error"] as? String, "FLAG_NOT_FOUND")
-    }
-    
-    func testFlagDetailsToSerializedDictionaryWithOtherErrors() {
-        let errorCases: [(FlagEvaluationError, String)] = [
-            (.providerNotReady, "PROVIDER_NOT_READY"),
-            (.typeMismatch, "TYPE_MISMATCH"),
-            (.flagNotFound, "FLAG_NOT_FOUND")
+
+    // MARK: - Configuration Tests
+
+    func testConfigurationParsing() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "trackExposures": false,
+            "rumIntegrationEnabled": false,
+            "customFlagsEndpoint": "https://flags.example.com",
+            "customExposureEndpoint": "https://exposure.example.com"
         ]
-        
-        for (error, expectedString) in errorCases {
-            let details = FlagDetails<Bool>(
-                key: "key",
-                value: false,
-                variant: nil,
-                reason: nil,
-                error: error
-            )
-            let serialized = details.toSerializedDictionary()
-            XCTAssertEqual(serialized["error"] as? String, expectedString)
+
+        let config = configDict.asFlagsConfiguration()
+
+        XCTAssertNotNil(config)
+        XCTAssertEqual(config?.trackExposures, false)
+        XCTAssertEqual(config?.rumIntegrationEnabled, false)
+        XCTAssertEqual(config?.customFlagsEndpoint?.absoluteString, "https://flags.example.com/precompute-assignments")
+        XCTAssertEqual(config?.customExposureEndpoint?.absoluteString, "https://exposure.example.com/api/v2/exposures")
+    }
+
+    func testConfigurationParsingDefaults() {
+        let configDict: NSDictionary = ["enabled": true]
+        let config = configDict.asFlagsConfiguration()
+
+        XCTAssertNotNil(config)
+        XCTAssertEqual(config?.trackExposures, true)
+        XCTAssertEqual(config?.rumIntegrationEnabled, true)
+        XCTAssertNil(config?.customFlagsEndpoint)
+        XCTAssertNil(config?.customExposureEndpoint)
+    }
+
+    func testConfigurationParsingDisabled() {
+        let configDict: NSDictionary = ["enabled": false]
+        let config = configDict.asFlagsConfiguration()
+        XCTAssertNil(config)
+    }
+
+    // MARK: - FlagAssignment Tests
+
+    func testFlagAssignmentToDictionary() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .boolean(true),
+            reason: "reason",
+            doLog: true
+        )
+
+        let dict = assignment.asDictionary(flagKey: "flag1")
+
+        XCTAssertEqual(dict["key"] as? String, "flag1")
+        XCTAssertEqual(dict["value"] as? Bool, true)
+        XCTAssertEqual(dict["allocationKey"] as? String, "alloc")
+        XCTAssertEqual(dict["variationKey"] as? String, "var")
+        XCTAssertEqual(dict["reason"] as? String, "reason")
+        XCTAssertEqual(dict["doLog"] as? Bool, true)
+        // Check Android parity fields
+        XCTAssertEqual(dict["variationType"] as? String, "")
+        XCTAssertEqual(dict["variationValue"] as? String, "")
+        XCTAssertNotNil(dict["extraLogging"] as? [String: Any])
+    }
+
+    func testDictionaryToFlagAssignment() {
+        let dict: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": "string_value"
+        ]
+
+        let assignment = dict.asFlagAssignment()
+
+        XCTAssertNotNil(assignment)
+        XCTAssertEqual(assignment?.allocationKey, "alloc")
+        XCTAssertEqual(assignment?.variationKey, "var")
+        if case .string(let v) = assignment?.variation {
+            XCTAssertEqual(v, "string_value")
+        } else {
+            XCTFail("Expected string variation")
         }
-    }
-    
-    func testFlagDetailsToSerializedDictionaryWithDifferentValueTypes() {
-        let boolDetails = FlagDetails(key: "k", value: true, variant: nil, reason: nil, error: nil)
-        XCTAssertEqual(boolDetails.toSerializedDictionary()["value"] as? Bool, true)
-        
-        let intDetails = FlagDetails(key: "k", value: 123, variant: nil, reason: nil, error: nil)
-        XCTAssertEqual(intDetails.toSerializedDictionary()["value"] as? Int, 123)
-        
-        let doubleDetails = FlagDetails(key: "k", value: 12.34, variant: nil, reason: nil, error: nil)
-        XCTAssertEqual(doubleDetails.toSerializedDictionary()["value"] as? Double, 12.34)
-        
-        let anyValueDetails = FlagDetails(key: "k", value: AnyValue.string("s"), variant: nil, reason: nil, error: nil)
-        XCTAssertEqual(anyValueDetails.toSerializedDictionary()["value"] as? String, "s")
-        
-        struct Unknown: Equatable {}
-        let unknownDetails = FlagDetails(key: "k", value: Unknown(), variant: nil, reason: nil, error: nil)
-        XCTAssertTrue(unknownDetails.toSerializedDictionary()["value"] as? NSNull != nil)
-    }
-    
-    // MARK: - get*Details Tests
-
-    func testGetBooleanDetails() {        
-        let implementation = DdFlagsImplementation()
-        
-        let expectation = self.expectation(description: "Resolution called")
-        implementation.getBooleanDetails("default", key: "test_key", defaultValue: true, resolve: { result in
-            guard let dict = result as? [String: Any] else {
-                XCTFail("Expected dictionary result")
-                expectation.fulfill()
-                return
-            }
-            XCTAssertEqual(dict["value"] as? Bool, true)
-            expectation.fulfill()
-        }, reject: { _, _, _ in
-            XCTFail("Should not reject")
-            expectation.fulfill()
-        })
-        
-        waitForExpectations(timeout: 1, handler: nil)
-    }
-
-    func testGetStringDetails() {
-        let implementation = DdFlagsImplementation()
-        
-        let expectation = self.expectation(description: "Resolution called")
-        implementation.getStringDetails("default", key: "test_key", defaultValue: "default", resolve: { result in
-            guard let dict = result as? [String: Any] else {
-                XCTFail("Expected dictionary result")
-                expectation.fulfill()
-                return
-            }
-            XCTAssertEqual(dict["value"] as? String, "default")
-            expectation.fulfill()
-        }, reject: { _, _, _ in
-            XCTFail("Should not reject")
-            expectation.fulfill()
-        })
-        
-        waitForExpectations(timeout: 1, handler: nil)
-    }
-
-    func testGetNumberDetails() {
-        let implementation = DdFlagsImplementation()
-        
-        let expectation = self.expectation(description: "Resolution called")
-        implementation.getNumberDetails("default", key: "test_key", defaultValue: 123.45, resolve: { result in
-            guard let dict = result as? [String: Any] else {
-                XCTFail("Expected dictionary result")
-                expectation.fulfill()
-                return
-            }
-            XCTAssertEqual(dict["value"] as? Double, 123.45)
-            expectation.fulfill()
-        }, reject: { _, _, _ in
-            XCTFail("Should not reject")
-            expectation.fulfill()
-        })
-        
-        waitForExpectations(timeout: 1, handler: nil)
-    }
-
-    func testGetObjectDetails() {
-        let implementation = DdFlagsImplementation(core: core)
-        let defaultValue: [String: Any] = ["foo": "bar"]
-        
-        let expectation = self.expectation(description: "Resolution called")
-        implementation.getObjectDetails("default", key: "test_key", defaultValue: defaultValue, resolve: { result in
-            guard let dict = result as? [String: Any] else {
-                XCTFail("Expected dictionary result")
-                expectation.fulfill()
-                return
-            }
-            guard let value = dict["value"] as? [String: Any] else {
-                 XCTFail("Expected dictionary value")
-                 expectation.fulfill()
-                 return
-            }
-            XCTAssertEqual(value["foo"] as? String, "bar")
-            expectation.fulfill()
-        }, reject: { _, _, _ in
-            XCTFail("Should not reject")
-            expectation.fulfill()
-        })
-        
-        waitForExpectations(timeout: 1, handler: nil)
     }
 }
 
 private class FlagsTestCore: DatadogCoreProtocol {
     private var features: [String: DatadogFeature] = [:]
-    
+
     func register<T>(feature: T) throws where T : DatadogFeature {
         features[T.name] = feature
     }
-    
+
     func feature<T>(named name: String, type: T.Type) -> T? {
         return features[name] as? T
     }
-    
+
     func scope<T>(for featureType: T.Type) -> any FeatureScope where T : DatadogFeature {
         return NOPFeatureScope()
     }
-    
+
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {}
     func set<Context>(context: @escaping () -> Context?) where Context: AdditionalContext {}
     func mostRecentModifiedFileAt(before: Date) throws -> Date? { return nil }
+}
+
+private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
+    func getDetails<T>(key: String, defaultValue: T) -> DatadogFlags.FlagDetails<T> where T : DatadogFlags.FlagValue, T : Equatable {
+        return FlagDetails(key: key, value: defaultValue, variant: nil, reason: nil, error: nil)
+    }
+
+    var assignments: [String: FlagAssignment]? = [:]
+    var errorToReturn: FlagsError?
+
+    var lastEvaluationContext: FlagsEvaluationContext?
+    var trackedEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+
+    func setEvaluationContext(_ context: DatadogFlags.FlagsEvaluationContext, completion: @escaping (Result<Void, DatadogFlags.FlagsError>) -> Void) {
+        lastEvaluationContext = context
+        if let error = errorToReturn {
+            completion(.failure(error))
+        } else {
+            completion(.success(()))
+        }
+    }
+
+    func getFlagAssignments() -> [String: DatadogFlags.FlagAssignment]? {
+        return assignments
+    }
+
+    func sendFlagEvaluation(key: String, assignment: DatadogFlags.FlagAssignment, context: DatadogFlags.FlagsEvaluationContext) {
+        trackedEvaluation = (key, assignment, context)
+    }
 }

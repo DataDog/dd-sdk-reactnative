@@ -23,7 +23,10 @@ describe('DatadogFlags', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // Reset state of DatadogFlags instance.
-        Object.assign(DatadogFlags, { isFeatureEnabled: false });
+        Object.assign(DatadogFlags, {
+            isFeatureEnabled: false,
+            clients: {}
+        });
     });
 
     describe('Initialization', () => {

@@ -5,6 +5,7 @@
  */
 
 import type {
+    DdNativeFlagsType,
     DdNativeSdkType,
     DdNativeLogsType
 } from '../src/nativeModulesTypes';
@@ -158,45 +159,11 @@ actualRN.NativeModules.DdRum = {
     ) as jest.MockedFunction<DdRumType['getCurrentSessionId']>
 };
 
-actualRN.NativeModules.DdFlags = {
-    enable: jest.fn().mockImplementation(() => Promise.resolve()),
-    setEvaluationContext: jest.fn().mockImplementation(() => Promise.resolve()),
-    getBooleanDetails: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-            key: 'test-boolean-flag',
-            value: true,
-            variant: 'true',
-            reason: 'STATIC',
-            error: null
-        })
-    ),
-    getStringDetails: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-            key: 'test-string-flag',
-            value: 'hello world',
-            variant: 'hello world',
-            reason: 'STATIC',
-            error: null
-        })
-    ),
-    getNumberDetails: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-            key: 'test-number-flag',
-            value: 6,
-            variant: '6',
-            reason: 'STATIC',
-            error: null
-        })
-    ),
-    getObjectDetails: jest.fn().mockImplementation(() =>
-        Promise.resolve({
-            key: 'test-object-flag',
-            value: { hello: 'world' },
-            variant: 'hello world',
-            reason: 'STATIC',
-            error: null
-        })
-    )
+const DdFlags: DdNativeFlagsType = {
+    enable: jest.fn(() => Promise.resolve()),
+    setEvaluationContext: jest.fn(() => Promise.resolve({})),
+    trackEvaluation: jest.fn(() => Promise.resolve())
 };
+actualRN.NativeModules.DdFlags = DdFlags;
 
 module.exports = actualRN;

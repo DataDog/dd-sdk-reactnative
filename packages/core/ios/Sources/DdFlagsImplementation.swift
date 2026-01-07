@@ -13,7 +13,7 @@ import DatadogFlags
 public class DdFlagsImplementation: NSObject {
     private let core: DatadogCoreProtocol
 
-    private var clientProviders: [String: () -> FlagsClientProtocol] = [:]
+    internal var clientProviders: [String: () -> FlagsClientProtocol] = [:]
 
     /// Exposing this initializer for testing purposes. React Native will always use the default initializer.
     internal init(core: DatadogCoreProtocol) {
@@ -156,7 +156,7 @@ extension NSDictionary {
 }
 
 extension FlagAssignment {
-    func asDictionary(flagKey: String) -> [String: Any] {
+    public func asDictionary(flagKey: String) -> [String: Any] {
         let value = switch self.variation {
         case .boolean(let v): v
         case .string(let v): v

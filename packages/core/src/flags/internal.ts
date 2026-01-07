@@ -31,7 +31,7 @@ export const processEvaluationContext = (
     context: EvaluationContext
 ): EvaluationContext => {
     const { targetingKey } = context;
-    let { attributes } = context;
+    let attributes = context.attributes ?? {};
 
     // Filter out object values from attributes because Android doesn't support nested object values in the evaluation context.
     attributes = Object.fromEntries(
