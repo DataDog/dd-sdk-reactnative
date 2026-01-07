@@ -96,7 +96,7 @@ private final class FeatureScopeInterceptor: @unchecked Sendable {
         let actualWriter: Writer
         unowned var interception: FeatureScopeInterceptor?
 
-        func write<T: Encodable, M: Encodable>(value: T, metadata: M) {
+        func write<T, M>(value: T, metadata: M?, completion: @escaping DatadogInternal.CompletionHandler) where T : Encodable, M : Encodable {
             group.enter()
             defer { group.leave() }
 

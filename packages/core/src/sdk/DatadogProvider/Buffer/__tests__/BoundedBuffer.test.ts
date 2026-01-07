@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../../../InternalLog';
-import { DdSdk } from '../../../DdSdk';
+import { NativeDdSdk } from '../../../DdSdkInternal';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {
@@ -126,7 +126,7 @@ describe('BoundedBuffer', () => {
             await buffer.drain();
             expect(callbackWithId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenNthCalledWith(1, 'callbackId1');
-            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryError).toHaveBeenCalledWith(
                 'Could not generate enough random numbers happened 2 times.',
                 '',
                 'RandomIdGenerationError'
@@ -146,7 +146,7 @@ describe('BoundedBuffer', () => {
 
             await buffer.drain();
             expect(fakeCallback).toHaveBeenCalledTimes(3);
-            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryError).toHaveBeenCalledWith(
                 'Buffer overflow happened 1 times.',
                 '',
                 'BufferOverflow'
@@ -171,7 +171,7 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).not.toHaveBeenCalled();
             expect(callbackWithId).not.toHaveBeenCalled();
-            expect(DdSdk.telemetryError).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryError).toHaveBeenCalledWith(
                 'Buffer overflow happened 2 times.',
                 '',
                 'BufferOverflow'
@@ -196,7 +196,7 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledTimes(1);
-            expect(DdSdk.telemetryError).not.toHaveBeenCalled();
+            expect(NativeDdSdk.telemetryError).not.toHaveBeenCalled();
         });
     });
 });

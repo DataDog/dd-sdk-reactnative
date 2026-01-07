@@ -2,7 +2,8 @@ import {
     DatadogProviderConfiguration,
     DdLogs,
     DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
+    CoreConfiguration,
+    RumConfiguration,
     SdkVerbosity,
     TrackingConsent,
     DatadogFlags,
@@ -15,17 +16,14 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     const config = new DatadogProviderConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
-        APPLICATION_ID,
-        true,
-        true,
-        true,
-        trackingConsent
-    )
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
-    config.verbosity = SdkVerbosity.DEBUG;
+        trackingConsent,
+    );
 
+    config.service = "com.datadoghq.reactnative.sample"
+    config.nativeCrashReportEnabled = true
+    config.verbosity = SdkVerbosity.DEBUG;
+    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
+    config.rumConfiguration.sessionSampleRate = 100
     return config
 }
 
@@ -38,19 +36,16 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
 
-    const config = new DdSdkReactNativeConfiguration(
+    const config = new CoreConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
-        APPLICATION_ID,
-        true,
-        true,
-        true,
         trackingConsent
     )
     config.nativeCrashReportEnabled = true
-    config.sampleRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
     config.verbosity = SdkVerbosity.DEBUG;
+    config.service = "com.datadoghq.reactnative.sample"
+    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
+    config.rumConfiguration.sessionSampleRate = 100
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')

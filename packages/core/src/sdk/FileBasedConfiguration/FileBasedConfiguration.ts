@@ -4,11 +4,20 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { FirstPartyHostsConfiguration } from '../../DdSdkReactNativeConfiguration';
-import {
-    DatadogProviderConfiguration,
-    DEFAULTS
+import type {
+    BatchProcessingLevel,
+    FirstPartyHostsConfiguration,
+    UploadFrequency,
+    VitalsUpdateFrequency
 } from '../../DdSdkReactNativeConfiguration';
+import {
+    DEFAULTS,
+    DatadogProviderConfiguration,
+    RumConfiguration,
+    TraceConfiguration,
+    LogsConfiguration
+} from '../../DdSdkReactNativeConfiguration';
+import type { ProxyConfiguration } from '../../ProxyConfiguration';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { TrackingConsent } from '../../TrackingConsent';
 import type { ActionEventMapper } from '../../rum/eventMappers/actionEventMapper';
@@ -27,29 +36,58 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
         super(
             configuration.clientToken,
             configuration.env,
-            configuration.applicationId,
-            configuration.trackInteractions,
-            configuration.trackResources,
-            configuration.trackErrors,
             configuration.trackingConsent,
             configuration.useAccessibilityLabel
         );
-        this.longTaskThresholdMs =
-            configuration.longTaskThresholdMs || DEFAULTS.longTaskThresholdMs;
+
         this.verbosity = configuration.verbosity;
-        this.actionNameAttribute = configuration.actionNameAttribute;
         this.site = configuration.site || DEFAULTS.site;
-        this.resourceTracingSamplingRate =
-            configuration.resourceTracingSamplingRate ||
-            DEFAULTS.resourceTracingSamplingRate;
         this.firstPartyHosts =
             configuration.firstPartyHosts || DEFAULTS.getFirstPartyHosts();
-        this.errorEventMapper =
-            params?.errorEventMapper || DEFAULTS.errorEventMapper;
-        this.resourceEventMapper =
-            params?.resourceEventMapper || DEFAULTS.resourceEventMapper;
-        this.actionEventMapper =
-            params?.actionEventMapper || DEFAULTS.actionEventMapper;
+
+        if (configuration.rumConfiguration) {
+            const rumConfig = new RumConfiguration(
+                configuration.rumConfiguration.applicationId,
+                configuration.rumConfiguration.trackInteractions,
+                configuration.rumConfiguration.trackResources,
+                configuration.rumConfiguration.trackErrors
+            );
+
+            rumConfig.longTaskThresholdMs =
+                configuration.rumConfiguration.longTaskThresholdMs ??
+                DEFAULTS.longTaskThresholdMs;
+
+            if (configuration.rumConfiguration.actionNameAttribute) {
+                rumConfig.actionNameAttribute =
+                    configuration.rumConfiguration.actionNameAttribute;
+            }
+
+            rumConfig.errorEventMapper =
+                params?.errorEventMapper || DEFAULTS.errorEventMapper;
+            rumConfig.resourceEventMapper =
+                params?.resourceEventMapper || DEFAULTS.resourceEventMapper;
+            rumConfig.actionEventMapper =
+                params?.actionEventMapper || DEFAULTS.actionEventMapper;
+
+            this.rumConfiguration = rumConfig;
+        }
+
+        if (configuration.logsConfiguration) {
+            this.logsConfiguration = new LogsConfiguration();
+            this.logsConfiguration.bundleLogsWithRum =
+                configuration.logsConfiguration.bundleLogsWithRum ??
+                DEFAULTS.bundleLogsWithRum;
+            this.logsConfiguration.bundleLogsWithTraces =
+                configuration.logsConfiguration.bundleLogsWithTraces ??
+                DEFAULTS.bundleLogsWithTraces;
+        }
+
+        if (configuration.traceConfiguration) {
+            this.traceConfiguration = new TraceConfiguration();
+            this.traceConfiguration.resourceTraceSampleRate =
+                configuration.traceConfiguration.resourceTraceSampleRate ||
+                DEFAULTS.resourceTraceSampleRate;
+        }
     }
 }
 
@@ -75,46 +113,124 @@ export const getJSONConfiguration = (
 ): {
     clientToken: string;
     env: string;
-    applicationId: string;
-    trackInteractions: boolean | undefined;
-    trackResources: boolean | undefined;
-    trackErrors: boolean | undefined;
-    trackingConsent: TrackingConsent | undefined;
-    longTaskThresholdMs: number | undefined;
-    verbosity: SdkVerbosity | undefined;
-    actionNameAttribute: string | undefined;
-    resourceTracingSamplingRate: number | undefined;
-    firstPartyHosts: FirstPartyHostsConfiguration | undefined;
-    site: string | undefined;
-    useAccessibilityLabel: boolean | undefined;
+    trackingConsent?: TrackingConsent;
+    verbosity?: SdkVerbosity;
+    service?: string;
+    useAccessibilityLabel?: boolean;
+    site?: string;
+    batchSize?: string;
+    batchProcessingLevel?: BatchProcessingLevel;
+    nativeCrashReportEnabled?: boolean;
+    nativeLongTaskThresholdMs?: number | false;
+    proxyConfiguration?: ProxyConfiguration;
+    uploadFrequency?: UploadFrequency;
+    version?: string;
+    versionSuffix?: string;
+    firstPartyHosts?: FirstPartyHostsConfiguration;
+    rumConfiguration?: {
+        applicationId: string;
+        trackInteractions?: boolean;
+        trackResources?: boolean;
+        trackErrors?: boolean;
+        longTaskThresholdMs?: number;
+        actionNameAttribute?: string;
+        appHangThreshold?: number;
+        initialResourceThreshold?: number;
+        trackMemoryWarnings?: boolean;
+        nativeViewTracking?: boolean;
+        nativeInteractionTracking?: boolean;
+        customEndpoint?: string;
+        sessionSampleRate?: number;
+        trackBackgroundEvents?: boolean;
+        trackFrustrations?: boolean;
+        trackNonFatalAnrs?: boolean;
+        trackWatchdogTerminations?: boolean;
+        vitalsUpdateFrequency?: VitalsUpdateFrequency;
+    };
+    traceConfiguration?: {
+        resourceTraceSampleRate?: number;
+        customEndpoint?: string;
+    };
+    logsConfiguration?: {
+        bundleLogsWithRum?: boolean;
+        bundleLogsWithTraces?: boolean;
+        customEndpoint?: string;
+    };
 } => {
     const configuration = resolveJSONConfiguration(userSpecifiedConfiguration);
 
     if (
         configuration.clientToken === undefined ||
         configuration.env === undefined ||
-        configuration.applicationId === undefined
+        (configuration.rumConfiguration !== undefined &&
+            configuration.rumConfiguration.applicationId === undefined)
     ) {
         console.warn(
-            'DATADOG: Warning: Malformed json configuration file - clientToken, applicationId and env are mandatory properties.'
+            'DATADOG: Warning: Malformed json configuration file - clientToken and env are mandatory Core SDK properties. ApplicationId is mandatory to enable RUM.'
         );
     }
 
     return {
         clientToken: configuration.clientToken,
         env: configuration.env,
-        applicationId: configuration.applicationId,
-        trackInteractions: configuration.trackInteractions,
-        trackResources: configuration.trackResources,
-        trackErrors: configuration.trackErrors,
         trackingConsent: buildTrackingConsent(configuration.trackingConsent),
-        longTaskThresholdMs: configuration.longTaskThresholdMs,
         verbosity: buildSdkVerbosity(configuration.verbosity),
-        actionNameAttribute: configuration.actionNameAttribute,
-        resourceTracingSamplingRate: configuration.resourceTracingSamplingRate,
-        firstPartyHosts: buildFirstPartyHosts(configuration.firstPartyHosts),
+        useAccessibilityLabel: configuration.useAccessibilityLabel,
         site: configuration.site,
-        useAccessibilityLabel: configuration.useAccessibilityLabel
+        service: configuration.service,
+        version: configuration.version,
+        versionSuffix: configuration.versionSuffix,
+        batchSize: configuration.batchSize,
+        batchProcessingLevel: configuration.batchProcessingLevel,
+        uploadFrequency: configuration.uploadFrequency,
+        nativeLongTaskThresholdMs: configuration.nativeLongTaskThresholdMs,
+        nativeCrashReportEnabled: configuration.nativeCrashReportEnabled,
+        proxyConfiguration: configuration.proxyConfiguration,
+        firstPartyHosts:
+            buildFirstPartyHosts(configuration.firstPartyHosts) ||
+            DEFAULTS.getFirstPartyHosts(),
+        ...(configuration.rumConfiguration !== undefined && {
+            rumConfiguration: {
+                applicationId: configuration.rumConfiguration.applicationId,
+                trackInteractions:
+                    configuration.rumConfiguration.trackInteractions,
+                trackResources: configuration.rumConfiguration.trackResources,
+                trackErrors: configuration.rumConfiguration.trackErrors,
+                longTaskThresholdMs:
+                    configuration.rumConfiguration.longTaskThresholdMs,
+                actionNameAttribute:
+                    configuration.rumConfiguration.actionNameAttribute,
+                customEndpoint: configuration.rumConfiguration.customEndpoint,
+                sessionSampleRate:
+                    configuration.rumConfiguration.sessionSampleRate,
+                trackBackgroundEvents:
+                    configuration.rumConfiguration.trackBackgroundEvents,
+                trackFrustrations:
+                    configuration.rumConfiguration.trackFrustrations,
+                trackNonFatalAnrs:
+                    configuration.rumConfiguration.trackNonFatalAnrs,
+                trackWatchdogTerminations:
+                    configuration.rumConfiguration.trackWatchdogTerminations,
+                vitalsUpdateFrequency:
+                    configuration.rumConfiguration.vitalsUpdateFrequency
+            }
+        }),
+        ...(configuration.traceConfiguration !== undefined && {
+            traceConfiguration: {
+                resourceTraceSampleRate:
+                    configuration.traceConfiguration.resourceTraceSampleRate,
+                customEndpoint: configuration.traceConfiguration.customEndpoint
+            }
+        }),
+        ...(configuration.logsConfiguration !== undefined && {
+            logsConfiguration: {
+                bundleLogsWithRum:
+                    configuration.logsConfiguration.bundleLogsWithRum,
+                bundleLogsWithTraces:
+                    configuration.logsConfiguration.bundleLogsWithTraces,
+                customEndpoint: configuration.logsConfiguration.customEndpoint
+            }
+        })
     };
 };
 
@@ -165,10 +281,11 @@ export const formatPropagatorType = (
 
 const buildTrackingConsent = (
     trackingConsent: string | undefined
-): TrackingConsent | undefined => {
+): TrackingConsent => {
     if (trackingConsent === undefined) {
-        return undefined;
+        return DEFAULTS.trackingConsent;
     }
+
     switch (trackingConsent.toLowerCase()) {
         case 'granted': {
             return TrackingConsent.GRANTED;

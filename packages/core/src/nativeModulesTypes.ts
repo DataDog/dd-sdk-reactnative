@@ -9,6 +9,7 @@ import type { Spec as NativeDdLogs } from './specs/NativeDdLogs';
 import type { Spec as NativeDdRum } from './specs/NativeDdRum';
 import type { Spec as NativeDdSdk } from './specs/NativeDdSdk';
 import type { Spec as NativeDdTrace } from './specs/NativeDdTrace';
+import type { DdSdkNativeConfiguration } from './types';
 
 /**
  * In this file, native modules types extend the specs for TurboModules.
@@ -31,22 +32,6 @@ export type DdNativeTraceType = NativeDdTrace;
 export type DdNativeFlagsType = NativeDdFlags;
 
 /**
- * A configuration object to initialize Datadog's features.
- */
-export class DdNativeSdkConfiguration {
-    constructor(
-        readonly clientToken: string,
-        readonly env: string,
-        readonly applicationId: string,
-        readonly nativeCrashReportEnabled: boolean,
-        readonly sampleRate: number,
-        readonly site: string,
-        readonly trackingConsent: string,
-        readonly additionalConfiguration: object // eslint-disable-next-line no-empty-function
-    ) {}
-}
-
-/**
  * The entry point to initialize Datadog's features.
  */
 export interface DdNativeSdkType extends NativeDdSdk {
@@ -54,7 +39,7 @@ export interface DdNativeSdkType extends NativeDdSdk {
      * Initializes Datadog's features.
      * @param configuration: The configuration to use.
      */
-    initialize(configuration: DdNativeSdkConfiguration): Promise<void>;
+    initialize(configuration: DdSdkNativeConfiguration): Promise<void>;
 }
 
 type ActionType = 'TAP' | 'SCROLL' | 'SWIPE' | 'BACK' | 'CUSTOM';

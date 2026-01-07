@@ -37,6 +37,18 @@ const createCodepushPackageMock = label => ({
 describe('AppCenter Codepush integration', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        const _globalThis = (globalThis as unknown) as Record<
+            PropertyKey,
+            unknown
+        >;
+        const providerState = _globalThis[
+            Symbol.for('com.datadog.reactnative.rum.datadog_provider_state')
+        ] as
+            | {
+                  _reset: () => void;
+              }
+            | undefined;
+        providerState?._reset();
     });
 
     describe('initialize', () => {
@@ -44,7 +56,8 @@ describe('AppCenter Codepush integration', () => {
             const codePush = require('react-native-code-push');
             const { DatadogCodepush } = require('..');
             const {
-                DdSdkReactNativeConfiguration,
+                CoreConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -52,9 +65,8 @@ describe('AppCenter Codepush integration', () => {
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(createCodepushPackageMock('v3'));
 
-            const configuration = new DdSdkReactNativeConfiguration(
-                'token',
-                'env',
+            const configuration = new CoreConfiguration('token', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -73,7 +85,8 @@ describe('AppCenter Codepush integration', () => {
             const codePush = require('react-native-code-push');
             const { DatadogCodepush } = require('..');
             const {
-                DdSdkReactNativeConfiguration,
+                CoreConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -81,9 +94,8 @@ describe('AppCenter Codepush integration', () => {
                 typeof codePush.getUpdateMetadata
             >).mockResolvedValueOnce(null);
 
-            const configuration = new DdSdkReactNativeConfiguration(
-                'token',
-                'env',
+            const configuration = new CoreConfiguration('token', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -114,6 +126,7 @@ describe('AppCenter Codepush integration', () => {
             const { DatadogCodepushProvider } = require('..');
             const {
                 DatadogProviderConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -123,10 +136,12 @@ describe('AppCenter Codepush integration', () => {
 
             const configuration = new DatadogProviderConfiguration(
                 'token',
-                'env',
+                'env'
+            );
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
-                false,
+                true,
                 true
             );
             render(<DatadogCodepushProvider configuration={configuration} />);
@@ -185,6 +200,7 @@ describe('AppCenter Codepush integration', () => {
             const { DatadogCodepushProvider } = require('..');
             const {
                 DatadogProviderConfiguration,
+                RumConfiguration,
                 DdSdkReactNative
             } = require('@datadog/mobile-react-native');
 
@@ -194,7 +210,10 @@ describe('AppCenter Codepush integration', () => {
 
             const configuration = new DatadogProviderConfiguration(
                 'token',
-                'env',
+                'env'
+            );
+
+            configuration.rumConfiguration = new RumConfiguration(
                 'appId',
                 true,
                 true,
@@ -237,9 +256,11 @@ describe('AppCenter Codepush integration', () => {
             ).not.toHaveBeenCalled();
 
             DatadogCodepushProvider.initialize({
-                applicationId: 'fake-application-id',
                 clientToken: 'fake-client-token',
-                env: 'fake-env'
+                env: 'fake-env',
+                rumConfiguration: {
+                    applicationId: 'fake-application-id'
+                }
             });
             await flushPromises();
 
@@ -264,9 +285,12 @@ describe('AppCenter Codepush integration', () => {
             } = require('@datadog/mobile-react-native');
 
             const autoInstrumentationConfig = {
-                trackErrors: true,
-                trackResources: true,
-                trackInteractions: true,
+                rumConfiguration: {
+                    actionNameAttribute: 'test-action-name-attr',
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true
+                },
                 firstPartyHosts: [
                     {
                         match: 'example.com',
@@ -274,8 +298,10 @@ describe('AppCenter Codepush integration', () => {
                     }
                 ],
                 useAccessibilityLabel: true,
-                actionNameAttribute: 'test-action-name-attr',
-                resourceTracingSamplingRate: 100
+                logsConfiguration: {},
+                traceConfiguration: {
+                    resourceTraceSampleRate: 100
+                }
             };
 
             const configuration = new FileBasedConfiguration({
@@ -293,22 +319,28 @@ describe('AppCenter Codepush integration', () => {
             expect(
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
             ).toHaveBeenCalledWith({
-                actionEventMapper: null,
-                logEventMapper: null,
-                resourceEventMapper: null,
-                errorEventMapper: null,
-                trackErrors: true,
-                trackResources: true,
-                trackInteractions: true,
+                rumConfiguration: {
+                    actionNameAttribute: 'test-action-name-attr',
+                    actionEventMapper: null,
+                    resourceEventMapper: null,
+                    errorEventMapper: null,
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true
+                },
+                logsConfiguration: {
+                    logEventMapper: null
+                },
+                traceConfiguration: {
+                    resourceTraceSampleRate: 100
+                },
                 firstPartyHosts: [
                     {
                         match: 'example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                useAccessibilityLabel: true,
-                actionNameAttribute: 'test-action-name-attr',
-                resourceTracingSamplingRate: 100
+                useAccessibilityLabel: true
             });
 
             expect(
@@ -331,18 +363,23 @@ describe('AppCenter Codepush integration', () => {
             } = require('@datadog/mobile-react-native');
 
             const autoInstrumentationConfig = {
-                trackErrors: true,
-                trackResources: true,
-                trackInteractions: true,
+                rumConfiguration: {
+                    actionNameAttribute: 'test-action-name-attr',
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true
+                },
+                logsConfiguration: {},
                 firstPartyHosts: [
                     {
                         match: 'example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                // useAccessibilityLabel: true,
-                // actionNameAttribute: 'test-action-name-attr',
-                resourceTracingSamplingRate: 100
+                useAccessibilityLabel: true,
+                traceConfiguration: {
+                    resourceTraceSampleRate: 100
+                }
             };
 
             const configuration = new FileBasedConfiguration({
@@ -360,21 +397,27 @@ describe('AppCenter Codepush integration', () => {
             expect(
                 DdSdkReactNative._enableFeaturesFromDatadogProvider
             ).toHaveBeenCalledWith({
-                actionEventMapper: null,
-                logEventMapper: null,
-                resourceEventMapper: null,
-                errorEventMapper: null,
-                trackErrors: true,
-                trackResources: true,
-                trackInteractions: true,
+                rumConfiguration: {
+                    actionNameAttribute: 'test-action-name-attr',
+                    trackErrors: true,
+                    trackResources: true,
+                    trackInteractions: true,
+                    actionEventMapper: null,
+                    resourceEventMapper: null,
+                    errorEventMapper: null
+                },
+                logsConfiguration: {
+                    logEventMapper: null
+                },
                 firstPartyHosts: [
                     {
                         match: 'example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
                 ],
-                resourceTracingSamplingRate: 100,
-                actionNameAttribute: undefined,
+                traceConfiguration: {
+                    resourceTraceSampleRate: 100
+                },
                 useAccessibilityLabel: true
             });
 

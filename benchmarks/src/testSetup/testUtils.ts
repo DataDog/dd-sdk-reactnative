@@ -8,7 +8,8 @@ import queryString from 'query-string';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
+    CoreConfiguration,
+    RumConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
@@ -40,36 +41,30 @@ export const getDatadogProviderConfig = () => {
     let config = new DatadogProviderConfiguration(
         baseConfig.clientToken ?? '',
         baseConfig.env ?? '',
-        baseConfig.applicationID ?? '',
-        true,
-        true,
-        true,
         TrackingConsent.GRANTED
     );
-
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100;
-    config.serviceName = `com.rn.${platform}.benchmark`
+    config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
+    config.nativeCrashReportEnabled = true
+
+    config.rumConfiguration = new RumConfiguration(baseConfig.applicationID ?? '', true, true, true);
+    config.rumConfiguration.sessionSampleRate = 100;
 
     return config;
 };
 
 export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string): Promise<void> =>  {
     const platform = Platform.OS;
-    const config = new DdSdkReactNativeConfiguration(
+    const config = new CoreConfiguration(
         clientToken ?? '',
         environment ?? '',
-        appId ?? '',
-        true,
-        true,
-        true,
         TrackingConsent.GRANTED
     );
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100;
-    config.serviceName = `com.rn.${platform}.benchmark`
+    config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
+    config.nativeCrashReportEnabled = true
+    config.rumConfiguration = new RumConfiguration(appId ?? '', true, true, true)
+    config.rumConfiguration.sessionSampleRate = 100;
 
     return DdSdkReactNative.initialize(config);
 };

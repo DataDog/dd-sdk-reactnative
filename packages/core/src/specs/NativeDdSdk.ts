@@ -68,6 +68,23 @@ export interface Spec extends TurboModule {
     addUserExtraInfo(extraInfo: Object): Promise<Object>;
 
     /**
+     * Set the account information.
+     * @param account: The account object (use builtin attributes: 'id', 'name', and any custom attribute under extraInfo).
+     */
+    setAccountInfo(account: Object): Promise<Object>;
+
+    /**
+     * Clears the account information.
+     */
+    clearAccountInfo(): Promise<void>;
+
+    /**
+     * Add custom attributes to the current account information
+     * @param extraInfo: The extraInfo object containing additional custom attributes
+     */
+    addAccountExtraInfo(extraInfo: Object): Promise<Object>;
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
      */

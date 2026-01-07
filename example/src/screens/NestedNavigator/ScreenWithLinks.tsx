@@ -5,6 +5,6 @@ import {useNavigation} from '@react-navigation/native'
 export const ScreenWithLinks = (props: {links: { routeName: string}[]}) => {
     const {navigate} = useNavigation()
     return (<>
-    {props.links.map(link => <Button title={`go to ${link.routeName}`} onPress={() => navigate(link.routeName)} key={link.routeName} />)}
+    {props.links.map(link => <Button title={`go to ${link.routeName}`} onPress={() => navigate(link.routeName, {username: "test", creditCardNumber: "4242 4242 4242 4242"})} key={link.routeName} />)}
     </>)
 }

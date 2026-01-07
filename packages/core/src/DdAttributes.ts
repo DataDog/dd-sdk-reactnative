@@ -16,5 +16,12 @@ export const DdAttributes = {
      * Custom fingerprint to an error.
      * Expects {@link String} value.
      */
-    errorFingerprint: '_dd.error.fingerprint'
+    errorFingerprint: '_dd.error.fingerprint',
+
+    /**
+     * Debug ID attached to a log or a RUM event.
+     * The Debug ID establishes a unique connection between a bundle and its corresponding sourcemap.
+     * Expects {@link String} value.
+     */
+    debugId: '_dd.debug_id'
 };

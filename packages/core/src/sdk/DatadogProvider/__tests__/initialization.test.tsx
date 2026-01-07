@@ -42,7 +42,7 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     afterEach(() => {
         jest.clearAllMocks();
-        GlobalState.instance.isInitialized = false;
+        GlobalState.isInitialized = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
         (nowMock as any).mockReturnValue('timestamp_not_specified');
@@ -63,17 +63,14 @@ describe('DatadogProvider', () => {
                 '_dd.sdk_version'
             ];
             expect(receivedConfiguration).toMatchInlineSnapshot(`
-                DdSdkConfiguration {
+                DdSdkNativeConfiguration {
                   "additionalConfiguration": {
                     "_dd.react_native_version": "${reactNativeVersion}",
                     "_dd.source": "react-native",
                   },
-                  "appHangThreshold": undefined,
-                  "applicationId": "fakeApplicationId",
+                  "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
@@ -83,30 +80,37 @@ describe('DatadogProvider', () => {
                     "trackInteractions": true,
                     "trackNetworkRequests": false,
                   },
-                  "customEndpoints": {},
                   "env": "fakeEnv",
                   "firstPartyHosts": [],
-                  "initialResourceThreshold": undefined,
-                  "longTaskThresholdMs": 0,
+                  "logsConfiguration": undefined,
                   "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
                   "nativeLongTaskThresholdMs": 200,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceTracingSamplingRate": 100,
-                  "sampleRate": 100,
-                  "serviceName": undefined,
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RumConfiguration {
+                    "actionEventMapper": null,
+                    "applicationId": "fakeApplicationId",
+                    "errorEventMapper": null,
+                    "longTaskThresholdMs": 200,
+                    "nativeInteractionTracking": false,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "sessionSampleRate": 100,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": true,
+                    "trackFrustrations": true,
+                    "trackInteractions": true,
+                    "trackMemoryWarnings": true,
+                    "trackResources": false,
+                    "trackWatchdogTerminations": false,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": undefined,
                   "site": "US1",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackFrustrations": true,
-                  "trackMemoryWarnings": true,
-                  "trackNonFatalAnrs": undefined,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": undefined,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
 
@@ -186,11 +190,16 @@ describe('DatadogProvider', () => {
             const { getByText } = renderWithProvider({
                 onInitialization,
                 configuration: {
-                    trackErrors: true,
-                    trackResources: true,
-                    trackInteractions: true,
+                    rumConfiguration: {
+                        trackErrors: true,
+                        trackResources: true,
+                        trackInteractions: true
+                    },
                     firstPartyHosts: ['api.com'],
-                    resourceTracingSamplingRate: 100
+                    traceConfiguration: {
+                        resourceTraceSampleRate: 100
+                    },
+                    logsConfiguration: {}
                 }
             });
             getByText('I am a test application');
@@ -198,9 +207,11 @@ describe('DatadogProvider', () => {
             expect(onInitialization).not.toHaveBeenCalled();
 
             await DatadogProvider.initialize({
-                applicationId: 'fake-application-id',
                 clientToken: 'fake-client-token',
-                env: 'fake-env'
+                env: 'fake-env',
+                rumConfiguration: {
+                    applicationId: 'fake-application-id'
+                }
             });
             await flushPromises();
             expect(onInitialization).toHaveBeenCalledTimes(1);

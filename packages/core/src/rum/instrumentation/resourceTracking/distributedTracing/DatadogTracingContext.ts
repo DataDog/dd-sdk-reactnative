@@ -4,8 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { formatBaggageHeader } from '../requestProxy/XHRProxy/baggageHeaderUtils';
+
 import { DatadogTracingIdentifier } from './DatadogTracingIdentifier';
 import type { SpanId, TraceId } from './TracingIdentifier';
+import { BAGGAGE_HEADER_KEY } from './distributedTracingHeaders';
 
 /**
  * An object that contains the tracing attributes as headers for network requests and attributes
@@ -23,7 +26,7 @@ export class DatadogTracingContext {
         traceId: TraceId | undefined | void,
         spanId: SpanId | undefined | void
     ) {
-        this.headersForRequest = requestHeaders;
+        this.headersForRequest = this.processHeaders(requestHeaders);
         this.rumResourceContext = resourceContext;
         this.traceId = traceId
             ? new DatadogTracingIdentifier(traceId)
@@ -77,5 +80,25 @@ export class DatadogTracingContext {
         Object.keys(this.rumResourceContext).forEach((key: string) => {
             inject(key, this.rumResourceContext[key]);
         });
+    }
+
+    private processHeaders(
+        requestHeaders: { header: string; value: string }[]
+    ) {
+        const baggageHeaderEntries = requestHeaders
+            .filter(
+                ({ header, value }) => header === BAGGAGE_HEADER_KEY && value
+            )
+            .map(({ value }) => value);
+        const baggageHeader = formatBaggageHeader(
+            new Set(baggageHeaderEntries)
+        );
+        if (!baggageHeader) {
+            return requestHeaders;
+        }
+
+        return requestHeaders
+            .filter(({ header }) => header !== BAGGAGE_HEADER_KEY)
+            .concat({ header: BAGGAGE_HEADER_KEY, value: baggageHeader });
     }
 }

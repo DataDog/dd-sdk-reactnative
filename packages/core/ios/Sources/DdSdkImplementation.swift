@@ -14,6 +14,10 @@ import DatadogWebViewTracking
 import Foundation
 import React
 
+#if os(iOS)
+import DatadogWebViewTracking
+#endif
+
 func getDefaultAppVersion() -> String {
     let bundleShortVersion =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
@@ -28,7 +32,10 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     let RUMMonitorProvider: () -> RUMMonitorProtocol
     let RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+
+#if os(iOS)
     var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
+#endif
 
     private let jsLongTaskThresholdInSeconds: TimeInterval = 0.1
 
@@ -154,6 +161,44 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
+    public func setAccountInfo(
+        accountInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        let castedAccountInfo = castAttributesToSwift(accountInfo)
+        let id = castedAccountInfo["id"] as? String
+        let name = castedAccountInfo["name"] as? String
+        var extraInfo: [AttributeKey: AttributeValue] = [:]
+
+        if let extraInfoEncodable = castedAccountInfo["extraInfo"] as? AnyEncodable,
+            let extraInfoDict = extraInfoEncodable.value as? [String: Any]
+        {
+            extraInfo = castAttributesToSwift(extraInfoDict)
+        }
+
+        if let validId = id {
+            Datadog.setAccountInfo(id: validId, name: name, extraInfo: extraInfo)
+        }
+
+        resolve(nil)
+    }
+
+    @objc
+    public func addAccountExtraInfo(
+        extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        let castedExtraInfo = castAttributesToSwift(extraInfo)
+
+        Datadog.addAccountExtraInfo(castedExtraInfo)
+        resolve(nil)
+    }
+
+    @objc
+    public func clearAccountInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        Datadog.clearAccountInfo()
+        resolve(nil)
+    }
+
+    @objc
     public func setTrackingConsent(
         trackingConsent: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
     ) {
@@ -174,25 +219,19 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func telemetryDebug(
-        message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryDebug(
-            id: "datadog_react_native:\(message)", message: message as String)
+
+    public func telemetryDebug(message: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryDebug(id: "datadog_react_native:\(message)", message: message as String)
         resolve(nil)
     }
 
     @objc
-    public func telemetryError(
-        message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
-    ) {
-        DdTelemetry.telemetryError(
-            id: "datadog_react_native:\(String(describing: kind)):\(message)",
-            message: message as String, kind: kind as String, stack: stack as String)
+    public func telemetryError(message: NSString, stack: NSString, kind: NSString, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        DdTelemetry.telemetryError(id: "datadog_react_native:\(String(describing: kind)):\(message)", message: message as String, kind: kind as String, stack: stack as String)
         resolve(nil)
     }
 
+#if os(iOS)
     @objc
     public func consumeWebviewEvent(
         message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -210,6 +249,8 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
 
+#endif
+    
     @objc
     public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         Datadog.clearAllData()
@@ -223,10 +264,10 @@ public class DdSdkImplementation: NSObject {
             reactNativeVersion: rnConfiguration.configurationForTelemetry?.reactNativeVersion
                 as? String,
             reactVersion: rnConfiguration.configurationForTelemetry?.reactVersion as? String,
-            trackCrossPlatformLongTasks: rnConfiguration.longTaskThresholdMs != 0,
+            trackCrossPlatformLongTasks: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
             trackErrors: rnConfiguration.configurationForTelemetry?.trackErrors,
             trackInteractions: rnConfiguration.configurationForTelemetry?.trackInteractions,
-            trackLongTask: rnConfiguration.longTaskThresholdMs != 0,
+            trackLongTask: rnConfiguration.rumConfiguration?.longTaskThresholdMs != 0,
             trackNativeErrors: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNativeLongTasks: rnConfiguration.nativeLongTaskThresholdMs != 0,
             trackNetworkRequests: rnConfiguration.configurationForTelemetry?.trackNetworkRequests
@@ -242,8 +283,8 @@ public class DdSdkImplementation: NSObject {
     }
 
     func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
-        let jsRefreshRateMonitoringEnabled = sdkConfiguration.vitalsUpdateFrequency != nil
-        let jsLongTaskMonitoringEnabled = sdkConfiguration.longTaskThresholdMs != 0
+        let jsRefreshRateMonitoringEnabled = sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
+        let jsLongTaskMonitoringEnabled = sdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0
 
         if !jsRefreshRateMonitoringEnabled && !jsLongTaskMonitoringEnabled {
             return nil
@@ -254,7 +295,7 @@ public class DdSdkImplementation: NSObject {
             let shouldRecordFrameTime = jsRefreshRateMonitoringEnabled && frameTime > 0
             let shouldRecordLongTask =
                 jsLongTaskMonitoringEnabled
-                && frameTime > sdkConfiguration.longTaskThresholdMs / 1_000
+            && frameTime > (sdkConfiguration.rumConfiguration?.longTaskThresholdMs ?? 0.0) / 1_000
             guard shouldRecordFrameTime || shouldRecordLongTask,
                 let rumMonitorInternal = RUMMonitorInternalProvider()
             else { return }

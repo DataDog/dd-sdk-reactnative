@@ -13,6 +13,10 @@ function TextViews(): React.JSX.Element {
             <Text style={[styles.sessionReplayText, styles.sessionReplayTextCursive]}>Borkdrive doggo he made many woofs many pats tungg shibe you are doing me the shock heckin good boys shoob, h*ck wow such tempt porgo sub woofer floofs shoober doge borkf smol, blep dat tungg tho ur givin me a spook very taste wow most angery pupper I have ever seen length boy woofer.</Text>
             <Text style={[styles.sessionReplayText, styles.sessionReplayTextBold]}>Super chub big ol pupper floofs blep doggo pupper such treat shooberino, adorable doggo borkdrive he made many woofs heck long water shoob h*ck, wrinkler lotsa pats dat tungg tho fat boi much ruin diet most angery pupper I have ever seen.</Text>
             <Text style={[styles.sessionReplayText, styles.sessionReplayTextSpaced]}>Adorable doggo waggy wags maximum borkdrive smol long doggo mlem bork, fluffer ur givin me a spook doggorino puggorino.</Text>
+            <View>
+                <Text style={[styles.sessionReplayText]} ellipsizeMode='tail' numberOfLines={1}>Ellipsized doggo waggy wags maximum borkdrive smol long doggo mlem bork, fluffer ur givin me a spook doggorino puggorino, fluffer ur givin me a spook doggorino puggorino, fluffer ur givin me a spook doggorino puggorino.</Text>
+                <Text style={[styles.sessionReplayText]} ellipsizeMode='tail' numberOfLines={2}>Ellipsized doggo waggy wags maximum borkdrive smol long doggo mlem bork, fluffer ur givin me a spook doggorino puggorino.</Text>
+            </View>
         </View>
     )                
 };
