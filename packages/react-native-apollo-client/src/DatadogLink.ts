@@ -21,18 +21,23 @@ import {
 } from './helpers';
 
 export type DatadogLinkOptions = {
+    trackVariables?: boolean;
     trackPayload?: boolean;
     trackErrors?: boolean;
 };
 
 export class DatadogLink extends ApolloLink {
+    private trackVariables = true;
     private trackPayload = false;
     private trackErrors = false;
 
     constructor(options: DatadogLinkOptions = {}) {
         super((operation, forward) => {
             const operationName = getOperationName(operation);
-            const formattedVariables = getVariables(operation);
+            const formattedVariables = getVariables(
+                operation,
+                this.trackVariables
+            );
             const operationType = getOperationType(operation);
             const payload = getPayload(operation, this.trackPayload);
 
@@ -44,14 +49,20 @@ export class DatadogLink extends ApolloLink {
                 newHeaders[
                     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER
                 ] = operationType;
+
                 newHeaders[
                     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER
                 ] = operationName;
-                newHeaders[
-                    DATADOG_GRAPH_QL_VARIABLES_HEADER
-                ] = formattedVariables;
 
-                newHeaders[DATADOG_GRAPH_QL_PAYLOAD_HEADER] = payload;
+                if (formattedVariables) {
+                    newHeaders[
+                        DATADOG_GRAPH_QL_VARIABLES_HEADER
+                    ] = formattedVariables;
+                }
+
+                if (payload) {
+                    newHeaders[DATADOG_GRAPH_QL_PAYLOAD_HEADER] = payload;
+                }
 
                 newHeaders[DATADOG_GRAPH_QL_ERROR_HEADER] = this.trackErrors
                     ? 'true'
@@ -65,6 +76,7 @@ export class DatadogLink extends ApolloLink {
             return forward(operation);
         });
 
+        this.trackVariables = options.trackVariables ?? false;
         this.trackPayload = options.trackPayload ?? false;
         this.trackErrors = options.trackErrors ?? false;
     }

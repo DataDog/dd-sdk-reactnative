@@ -20,8 +20,11 @@ const apolloVersion = `[Apollo v${version}]`;
 
 const GRAPHQL_PAYLOAD_LIMIT = 32 * 1024;
 
-export const getVariables = (operation: Operation): string | null => {
-    if (operation.variables) {
+export const getVariables = (
+    operation: Operation,
+    trackVariables: boolean = false
+): string | null => {
+    if (operation.variables && trackVariables) {
         try {
             return JSON.stringify(operation.variables);
         } catch (e) {
