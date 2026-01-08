@@ -4,10 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-
 import DatadogCore
-import DatadogRUM
 import DatadogLogs
+import DatadogRUM
 import DatadogTrace
 import DatadogCrashReporting
 import DatadogInternal
@@ -32,7 +31,7 @@ public class DatadogSDKWrapper {
 
     private init() { }
 
-    public func addOnSdkInitializedListener(listener:@escaping OnSdkInitializedListener) {
+    public func addOnSdkInitializedListener(listener: @escaping OnSdkInitializedListener) {
         onSdkInitializedListeners.append(listener)
     }
 
@@ -64,5 +63,3 @@ public class DatadogSDKWrapper {
     }
 #endif
 }
-
-

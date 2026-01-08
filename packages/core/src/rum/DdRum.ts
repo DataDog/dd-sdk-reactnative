@@ -206,6 +206,7 @@ class DdRumWrapper implements DdRumType {
         if (!mappedEvent) {
             return generateEmptyPromise();
         }
+
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
