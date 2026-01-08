@@ -49,7 +49,7 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     return config
 }
 
- export async function onDatadogInitialization() {
+ export function onDatadogInitialization() {
     DdLogs.info('The RN Sdk was properly initialized')
     DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
     DdSdkReactNative.addAttributes({campaign: "ad-network"})
