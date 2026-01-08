@@ -13,6 +13,7 @@ import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum.featureoperations.FailureReason
+import com.datadog.android.rum.model.ResourceEvent
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -191,11 +192,20 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
+
         val resourceSize = if (size.toLong() == MISSING_RESOURCE_SIZE) {
             null
         } else {
             size.toLong()
         }
+
+        val rawGraphqlErrors = context.toHashMap()[RumAttributes.GRAPHQL_ERRORS]
+        val graphqlErrors = GraphqlParser.parse(rawGraphqlErrors)
+
+        if (graphqlErrors != null) {
+            attributes.put(RumAttributes.GRAPHQL_ERRORS, graphqlErrors as Any)
+        }
+
         datadog.getRumMonitor().stopResource(
             key = key,
             statusCode = statusCode.toInt(),

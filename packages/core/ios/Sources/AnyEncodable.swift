@@ -6,15 +6,22 @@
 
 import Foundation
 
-internal func castAttributesToSwift(_ attributes: NSDictionary) -> [String: Encodable] {
-    return castAttributesToSwift(attributes as? [String: Any] ?? [:])
+internal func castAttributesToSwift(_ attributes: NSDictionary, _ keys: [String]? = nil) -> [String: Encodable] {
+    return castAttributesToSwift(attributes as? [String: Any] ?? [:], keys)
 }
 
-internal func castAttributesToSwift(_ attributes: [String: Any]) -> [String: Encodable] {
+internal func castAttributesToSwift(_ attributes: [String: Any], _ keys: [String]? = nil) -> [String: Encodable] {
     var casted: [String: Encodable] = [:]
+    casted.reserveCapacity(attributes.count)
 
     attributes.forEach { key, value in
-        casted[key] = castValueToSwift(value)
+        if let keys, keys.contains(key),
+           JSONSerialization.isValidJSONObject(value),
+           let data = try? JSONSerialization.data(withJSONObject: value) {
+            casted[key] = data
+        } else {
+            casted[key] = castValueToSwift(value)
+        }
     }
 
     return casted

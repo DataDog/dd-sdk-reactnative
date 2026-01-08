@@ -157,12 +157,14 @@ public class DdRumImplementation: NSObject {
             addResourceMetrics(key: key, resourceTimings: resourceTimings)
         }
 
+        let dataKeys: [String] = [CrossPlatformAttributes.graphqlErrors]
+
         nativeRUM.stopResource(
             resourceKey: key,
             statusCode: Int(statusCode),
             kind: RUMResourceType(from: kind),
             size: Int64(size) == Self.missingResourceSize ? nil : Int64(size),
-            attributes: attributes(from: mutableContext, with: timestampMs)
+            attributes: attributes(from: mutableContext, with: timestampMs, keys: dataKeys)
         )
         resolve(nil)
     }
@@ -290,10 +292,10 @@ public class DdRumImplementation: NSObject {
 
     // MARK: - Private methods
 
-    private func attributes(from context: NSDictionary, with timestampMs: Double) -> [String: Encodable] {
+    private func attributes(from context: NSDictionary, with timestampMs: Double, keys: [String]? = nil) -> [String: Encodable] {
         var context = context as? [String: Any] ?? [:]
         context[Self.timestampKey] = Int64(timestampMs)
-        return castAttributesToSwift(context)
+        return castAttributesToSwift(context, keys)
     }
 
     private func addResourceMetrics(key: String, resourceTimings: [String: Any]) {
