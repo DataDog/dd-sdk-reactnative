@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../../../InternalLog';
+import { SdkVerbosity } from '../../../../../SdkVerbosity';
 import { Timer } from '../../../../../utils/Timer';
 import {
     getCachedAccountId,
@@ -20,8 +22,10 @@ import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_PAYLOAD_HEADER,
-    DATADOG_GRAPH_QL_VARIABLES_HEADER
+    DATADOG_GRAPH_QL_VARIABLES_HEADER,
+    DATADOG_GRAPH_QL_ERROR_HEADER
 } from '../../graphql/graphqlHeaders';
+import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
@@ -30,6 +34,7 @@ import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { URLHostParser } from './URLHostParser';
 import { formatBaggageHeader } from './baggageHeaderUtils';
 import { calculateResponseSize } from './responseSize';
+import { getErrorData, readXhrJsonBody } from './xhrUtils';
 
 const RESPONSE_START_LABEL = 'response_start';
 
@@ -43,6 +48,13 @@ interface DdRumXhrContext {
         operationName?: string;
         variables?: string;
         payload?: string;
+        trackErrors?: boolean;
+        errors?: {
+            message: string;
+            code?: string;
+            locations?: Array<{ line: number; column: number }>;
+            path?: Array<string | number>;
+        }[];
     };
     method: string;
     url: string;
@@ -176,7 +188,15 @@ const proxyOnReadyStateChange = (
     xhrProxy.onreadystatechange = function onreadystatechange() {
         if (xhrProxy.readyState === xhrType.DONE) {
             if (!xhrProxy._datadog_xhr.reported) {
-                reportXhr(xhrProxy, providers.resourceReporter);
+                reportXhr(xhrProxy, providers.resourceReporter).catch(error => {
+                    const errorData = getErrorData(error);
+                    if (errorData) {
+                        InternalLog.log(
+                            `reportXhr failed: ${errorData}`,
+                            SdkVerbosity.WARN
+                        );
+                    }
+                });
                 xhrProxy._datadog_xhr.reported = true;
             }
         } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
@@ -201,6 +221,27 @@ const reportXhr = async (
     const key = `${context.timer.startTime}/${context.method}`;
 
     context.timer.stop();
+
+    // Only extract GraphQL errors if operationType is set AND error tracking is enabled
+    if (context.graphql.operationType && context.graphql.trackErrors) {
+        try {
+            const body = await readXhrJsonBody(xhrProxy);
+
+            const errors = body?.errors;
+            if (Array.isArray(errors) && errors.length > 0) {
+                const filtered = extractGraphQLErrors(errors);
+
+                if (filtered.length > 0) {
+                    context.graphql.errors = filtered;
+                }
+            }
+        } catch (error) {
+            const errorData = getErrorData(error);
+            if (errorData) {
+                InternalLog.log(`reportXhr: ${errorData}`, SdkVerbosity.WARN);
+            }
+        }
+    }
 
     resourceReporter.reportResource({
         key,
@@ -236,7 +277,6 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
         value: string
     ) {
         const key = header.toLowerCase();
-        console.log('HeaderKey: ', key);
         if (isDatadogCustomHeader(key)) {
             switch (key) {
                 case DATADOG_GRAPH_QL_OPERATION_NAME_HEADER:
@@ -250,6 +290,10 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                     break;
                 case DATADOG_GRAPH_QL_PAYLOAD_HEADER:
                     this._datadog_xhr.graphql.payload = value;
+                    break;
+                case DATADOG_GRAPH_QL_ERROR_HEADER:
+                    this._datadog_xhr.graphql.trackErrors =
+                        value === 'true' || value === '1';
                     break;
                 case DATADOG_BAGGAGE_HEADER:
                     // Apply Baggage Header only if pre-processed by Datadog

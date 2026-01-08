@@ -78,6 +78,12 @@ const formatResourceStopContext = (
         if (graphqlAttributes.payload) {
             attributes['_dd.graphql.payload'] = graphqlAttributes.payload;
         }
+
+        if (graphqlAttributes.errors) {
+            attributes['_dd.graphql.errors'] = {
+                errors: graphqlAttributes.errors
+            };
+        }
     }
 
     return attributes;

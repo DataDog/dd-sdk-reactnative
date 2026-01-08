@@ -87,7 +87,7 @@ export const getPayload = (
 
         return safeTruncate(trimmedQuery, GRAPHQL_PAYLOAD_LIMIT, '...');
     } catch (e) {
-        DdSdk?.telemetryError(
+        (DdSdk as any)?.telemetryError(
             _getErrorMessage(
                 ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR,
                 apolloVersion

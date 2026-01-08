@@ -38,7 +38,8 @@ import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER,
-    DATADOG_GRAPH_QL_PAYLOAD_HEADER
+    DATADOG_GRAPH_QL_PAYLOAD_HEADER,
+    DATADOG_GRAPH_QL_ERROR_HEADER
 } from './rum/instrumentation/resourceTracking/graphql/graphqlHeaders';
 import type { FirstPartyHost } from './rum/types';
 import { PropagatorType, RumActionType } from './rum/types';
@@ -84,6 +85,7 @@ export {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER,
     DATADOG_GRAPH_QL_PAYLOAD_HEADER,
+    DATADOG_GRAPH_QL_ERROR_HEADER,
     TracingIdType,
     TracingIdFormat,
     DatadogTracingIdentifier,

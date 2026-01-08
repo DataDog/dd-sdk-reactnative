@@ -9,7 +9,8 @@ import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER,
-    DATADOG_GRAPH_QL_PAYLOAD_HEADER
+    DATADOG_GRAPH_QL_PAYLOAD_HEADER,
+    DATADOG_GRAPH_QL_ERROR_HEADER
 } from '@datadog/mobile-react-native';
 
 import {
@@ -20,13 +21,15 @@ import {
 } from './helpers';
 
 export type DatadogLinkOptions = {
-    trackPayload: boolean;
+    trackPayload?: boolean;
+    trackErrors?: boolean;
 };
 
 export class DatadogLink extends ApolloLink {
     private trackPayload = false;
+    private trackErrors = false;
 
-    constructor(options: DatadogLinkOptions = { trackPayload: false }) {
+    constructor(options: DatadogLinkOptions = {}) {
         super((operation, forward) => {
             const operationName = getOperationName(operation);
             const formattedVariables = getVariables(operation);
@@ -47,7 +50,12 @@ export class DatadogLink extends ApolloLink {
                 newHeaders[
                     DATADOG_GRAPH_QL_VARIABLES_HEADER
                 ] = formattedVariables;
+
                 newHeaders[DATADOG_GRAPH_QL_PAYLOAD_HEADER] = payload;
+
+                newHeaders[DATADOG_GRAPH_QL_ERROR_HEADER] = this.trackErrors
+                    ? 'true'
+                    : 'false';
 
                 return {
                     headers: newHeaders
@@ -57,6 +65,7 @@ export class DatadogLink extends ApolloLink {
             return forward(operation);
         });
 
-        this.trackPayload = options.trackPayload;
+        this.trackPayload = options.trackPayload ?? false;
+        this.trackErrors = options.trackErrors ?? false;
     }
 }
