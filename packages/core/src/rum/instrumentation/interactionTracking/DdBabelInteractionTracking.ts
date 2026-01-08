@@ -139,8 +139,6 @@ export class DdBabelInteractionTracking {
         targetObject: TargetObject
     ): (...args: any[]) => any {
         return (...args: any[]) => {
-            const result = func(...args);
-
             if (!this.telemetrySent) {
                 DdSdk?.sendTelemetryLog(
                     BABEL_PLUGIN_TELEMETRY,
@@ -174,7 +172,7 @@ export class DdBabelInteractionTracking {
                     });
             }
 
-            return result;
+            return func(...args);
         };
     }
 }
