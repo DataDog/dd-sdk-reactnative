@@ -191,6 +191,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
+
         val resourceSize = if (size.toLong() == MISSING_RESOURCE_SIZE) {
             null
         } else {

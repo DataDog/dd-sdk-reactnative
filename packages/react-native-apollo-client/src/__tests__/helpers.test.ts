@@ -31,8 +31,10 @@ describe('helpers', () => {
 
     describe('getVariables', () => {
         it('returns variables as a string if they exist', () => {
-            expect(getVariables(getCountryOperation)).toBe('{"code":"BE"}');
-            expect(getVariables(getCountriesOperation)).toBe('{}');
+            expect(getVariables(getCountryOperation, true)).toBe(
+                '{"code":"BE"}'
+            );
+            expect(getVariables(getCountriesOperation, true)).toBe('{}');
         });
         it('returns null if there are no variables', () => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -46,7 +48,7 @@ describe('helpers', () => {
             root['circular'] = child;
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            expect(getVariables({ variables: { root } })).toBeNull();
+            expect(getVariables({ variables: { root } }, true)).toBeNull();
         });
     });
 

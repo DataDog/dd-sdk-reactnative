@@ -20,8 +20,11 @@ const apolloVersion = `[Apollo v${version}]`;
 
 const GRAPHQL_PAYLOAD_LIMIT = 32 * 1024;
 
-export const getVariables = (operation: Operation): string | null => {
-    if (operation.variables) {
+export const getVariables = (
+    operation: Operation,
+    trackVariables: boolean = false
+): string | null => {
+    if (operation.variables && trackVariables) {
         try {
             return JSON.stringify(operation.variables);
         } catch (e) {
@@ -87,13 +90,13 @@ export const getPayload = (
 
         return safeTruncate(trimmedQuery, GRAPHQL_PAYLOAD_LIMIT, '...');
     } catch (e) {
-        DdSdk?.telemetryError(
+        (DdSdk as any)?.telemetryError(
             _getErrorMessage(
-                ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR,
+                ErrorCode.GQL_PAYLOAD_RETRIEVAL_ERROR,
                 apolloVersion
             ),
             _getErrorStack(e),
-            ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR
+            ErrorCode.GQL_PAYLOAD_RETRIEVAL_ERROR
         );
         return null;
     }

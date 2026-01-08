@@ -38,6 +38,7 @@ import {
     TRACKED_BY_HEADER_VALUE
 } from '../../../distributedTracing/headers';
 import {
+    DATADOG_GRAPH_QL_ERROR_HEADER,
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
@@ -1690,6 +1691,792 @@ describe('XHRProxy', () => {
             expect(attributes['_dd.graphql.variables']).toBe(
                 '{"password":"***"}'
             );
+        });
+    });
+
+    describe('GraphQL error filtering', () => {
+        it('extracts and filters GraphQL errors with all fields from response', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: null },
+                errors: [
+                    {
+                        message: 'User not found',
+                        locations: [{ line: 2, column: 3 }],
+                        path: ['user', 0, 'id'],
+                        extensions: {
+                            code: 'NOT_FOUND',
+                            stacktrace: ['at UserResolver.getUser...', '...'],
+                            timestamp: '2024-01-01',
+                            customField: 'should be filtered'
+                        }
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
+                'GetUser'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.operation_type']).toEqual('query');
+            expect(attributes['_dd.graphql.operation_name']).toEqual('GetUser');
+            expect(attributes['_dd.graphql.errors']).toBeDefined();
+
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors).toHaveLength(1);
+
+            expect(errors[0]).toEqual({
+                message: 'User not found',
+                code: 'NOT_FOUND',
+                locations: [{ line: 2, column: 3 }],
+                path: ['user', 0, 'id']
+            });
+            // Verify stacktrace and other extensions are filtered out
+            expect(errors[0].extensions).toBeUndefined();
+            expect(errors[0].stacktrace).toBeUndefined();
+            expect(errors[0].timestamp).toBeUndefined();
+        });
+
+        it('extracts code from legacy top-level code field when extensions.code is missing', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: null,
+                errors: [
+                    {
+                        message: 'Invalid query',
+                        code: 'GRAPHQL_VALIDATION_FAILED' // Legacy top-level code
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors[0]).toEqual({
+                message: 'Invalid query',
+                code: 'GRAPHQL_VALIDATION_FAILED'
+            });
+        });
+
+        it('handles multiple GraphQL errors', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: { id: '1', posts: null, comments: null } },
+                errors: [
+                    {
+                        message: 'Insufficient permissions',
+                        path: ['user', 'posts'],
+                        extensions: { code: 'FORBIDDEN' }
+                    },
+                    {
+                        message: 'Database timeout',
+                        path: ['user', 'comments'],
+                        extensions: { code: 'TIMEOUT' }
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors).toHaveLength(2);
+            expect(errors[0]).toEqual({
+                message: 'Insufficient permissions',
+                code: 'FORBIDDEN',
+                path: ['user', 'posts']
+            });
+            expect(errors[1]).toEqual({
+                message: 'Database timeout',
+                code: 'TIMEOUT',
+                path: ['user', 'comments']
+            });
+        });
+
+        it('handles GraphQL errors with only required message field', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: null,
+                errors: [
+                    {
+                        message: 'Internal server error'
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'mutation'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors[0]).toEqual({
+                message: 'Internal server error'
+            });
+        });
+
+        it('does not extract errors for non-GraphQL requests', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/users';
+            const response = {
+                errors: [{ message: 'Some error' }]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            // Note: No GraphQL operation type header
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(response);
+            xhr.complete(200, JSON.stringify(response));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+        });
+
+        it('does not extract errors when trackErrors is false', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: null },
+                errors: [
+                    {
+                        message: 'User not found',
+                        extensions: { code: 'NOT_FOUND' }
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'false'); // Explicitly disabled
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN - errors should NOT be extracted
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+            // But other GraphQL attributes should still be set
+            expect(attributes['_dd.graphql.operation_type']).toEqual('query');
+        });
+
+        it('does not extract errors when trackErrors header is missing', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: null },
+                errors: [
+                    {
+                        message: 'User not found',
+                        extensions: { code: 'NOT_FOUND' }
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            // Note: No DATADOG_GRAPH_QL_ERROR_HEADER set
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN - errors should NOT be extracted
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+            // But other GraphQL attributes should still be set
+            expect(attributes['_dd.graphql.operation_type']).toEqual('query');
+        });
+
+        it('handles invalid JSON response gracefully', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const invalidJson = '{ invalid json }';
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = invalidJson;
+            xhr.complete(200, invalidJson);
+            await flushPromises();
+
+            // THEN - should not crash and should not set errors attribute
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+        });
+
+        it('handles GraphQL response with empty errors array', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: { id: '1' } },
+                errors: []
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN - empty array should not set errors attribute
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+        });
+
+        it('handles GraphQL response without errors field', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: { user: { id: '1' } }
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            expect(attributes['_dd.graphql.errors']).toBeUndefined();
+        });
+
+        it('prefers extensions.code over legacy top-level code', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: null,
+                errors: [
+                    {
+                        message: 'Error',
+                        code: 'LEGACY_CODE',
+                        extensions: {
+                            code: 'EXTENSIONS_CODE' // Should take precedence
+                        }
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors[0].code).toEqual('EXTENSIONS_CODE');
+        });
+
+        it('handles mixed path types (strings and integers)', async () => {
+            // GIVEN
+            const method = 'POST';
+            const url = 'https://api.example.com/graphql';
+            const graphqlResponse = {
+                data: null,
+                errors: [
+                    {
+                        message: 'Item not found',
+                        path: ['items', 0, 'name', 'first'] // Mixed string and int
+                    }
+                ]
+            };
+
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.responseText = JSON.stringify(graphqlResponse);
+            xhr.complete(200, JSON.stringify(graphqlResponse));
+            await flushPromises();
+
+            // THEN
+            const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+            const errors = JSON.parse(attributes['_dd.graphql.errors']);
+            expect(errors[0].path).toEqual(['items', 0, 'name', 'first']);
+        });
+
+        describe('response integrity during error extraction', () => {
+            it('allows application to read responseText while extracting errors (text responseType)', async () => {
+                // GIVEN
+                const method = 'POST';
+                const url = 'https://api.example.com/graphql';
+                const graphqlResponse = {
+                    data: { user: null },
+                    errors: [
+                        {
+                            message: 'User not found',
+                            extensions: { code: 'NOT_FOUND' }
+                        }
+                    ]
+                };
+                const responseBody = JSON.stringify(graphqlResponse);
+
+                xhrProxy.onTrackingStart({
+                    tracingSamplingRate: 100,
+                    firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+                });
+
+                // WHEN
+                const xhr = new XMLHttpRequestMock();
+                let applicationReadResponse: string | null = null;
+
+                xhr.open(method, url);
+                xhr.setRequestHeader(
+                    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                    'query'
+                );
+                xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+
+                // Simulate application reading response in onreadystatechange
+                const originalOnReadyStateChange = xhr.onreadystatechange;
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequestMock.DONE) {
+                        // Application reads responseText immediately when request completes
+                        applicationReadResponse = xhr.responseText;
+                    }
+                    return originalOnReadyStateChange.call(xhr);
+                };
+
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.responseText = responseBody;
+                xhr.complete(200, responseBody, 'text');
+                await flushPromises();
+
+                // THEN - Application successfully read the response
+                expect(applicationReadResponse).toBe(responseBody);
+                const parsedByApp = JSON.parse(applicationReadResponse!);
+                expect(parsedByApp.errors).toHaveLength(1);
+                expect(parsedByApp.errors[0].message).toBe('User not found');
+
+                // AND - Datadog successfully extracted filtered errors
+                const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+                const errors = JSON.parse(attributes['_dd.graphql.errors']);
+                expect(errors).toHaveLength(1);
+                expect(errors[0]).toEqual({
+                    message: 'User not found',
+                    code: 'NOT_FOUND'
+                });
+            });
+
+            it('allows application to read response object while extracting errors (json responseType)', async () => {
+                // GIVEN
+                const method = 'POST';
+                const url = 'https://api.example.com/graphql';
+                const graphqlResponse = {
+                    data: { user: null },
+                    errors: [
+                        {
+                            message: 'Access denied',
+                            path: ['user'],
+                            extensions: { code: 'FORBIDDEN' }
+                        }
+                    ]
+                };
+
+                xhrProxy.onTrackingStart({
+                    tracingSamplingRate: 100,
+                    firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+                });
+
+                // WHEN
+                const xhr = new XMLHttpRequestMock();
+                let applicationReadResponse: any = null;
+
+                xhr.open(method, url);
+                xhr.setRequestHeader(
+                    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                    'mutation'
+                );
+
+                xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+
+                // Simulate application reading response in onreadystatechange
+                const originalOnReadyStateChange = xhr.onreadystatechange;
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequestMock.DONE) {
+                        // Application reads parsed response object (json responseType)
+                        applicationReadResponse = xhr.response;
+                    }
+                    return originalOnReadyStateChange.call(xhr);
+                };
+
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.complete(200, graphqlResponse, 'json');
+                await flushPromises();
+
+                // THEN - Application successfully read the parsed response
+                expect(applicationReadResponse).toEqual(graphqlResponse);
+                expect(applicationReadResponse.errors).toHaveLength(1);
+                expect(applicationReadResponse.errors[0].message).toBe(
+                    'Access denied'
+                );
+                expect(applicationReadResponse.errors[0].extensions.code).toBe(
+                    'FORBIDDEN'
+                );
+
+                // AND - Datadog successfully extracted filtered errors (extensions filtered out)
+                const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+                const errors = JSON.parse(attributes['_dd.graphql.errors']);
+                expect(errors).toHaveLength(1);
+                expect(errors[0]).toEqual({
+                    message: 'Access denied',
+                    code: 'FORBIDDEN',
+                    path: ['user']
+                });
+                expect(errors[0].extensions).toBeUndefined();
+            });
+
+            it('allows application to read blob response while extracting errors (blob responseType)', async () => {
+                // GIVEN
+                const method = 'POST';
+                const url = 'https://api.example.com/graphql';
+                const graphqlResponse = {
+                    data: null,
+                    errors: [
+                        {
+                            message: 'Server error',
+                            extensions: { code: 'INTERNAL_ERROR' }
+                        }
+                    ]
+                };
+                const responseBody = JSON.stringify(graphqlResponse);
+
+                // Create a mock blob with _data property (RN-style blob)
+                const mockBlob = {
+                    _data: responseBody,
+                    size: responseBody.length,
+                    type: 'application/json'
+                };
+
+                xhrProxy.onTrackingStart({
+                    tracingSamplingRate: 100,
+                    firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+                });
+
+                // WHEN
+                const xhr = new XMLHttpRequestMock();
+                let applicationReadBlob: any = null;
+
+                xhr.open(method, url);
+                xhr.setRequestHeader(
+                    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                    'query'
+                );
+
+                xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+
+                // Simulate application reading response in onreadystatechange
+                const originalOnReadyStateChange = xhr.onreadystatechange;
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequestMock.DONE) {
+                        // Application reads blob response
+                        applicationReadBlob = xhr.response;
+                    }
+                    return originalOnReadyStateChange.call(xhr);
+                };
+
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.complete(200, mockBlob, 'blob');
+                await flushPromises();
+
+                // THEN - Application successfully read the blob
+                expect(applicationReadBlob).toBe(mockBlob);
+                expect(applicationReadBlob._data).toBe(responseBody);
+                expect(applicationReadBlob.size).toBe(responseBody.length);
+
+                // AND - Datadog successfully extracted filtered errors
+                const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+                const errors = JSON.parse(attributes['_dd.graphql.errors']);
+                expect(errors).toHaveLength(1);
+                expect(errors[0]).toEqual({
+                    message: 'Server error',
+                    code: 'INTERNAL_ERROR'
+                });
+            });
+
+            it('handles multiple errors without affecting application response access', async () => {
+                // GIVEN
+                const method = 'POST';
+                const url = 'https://api.example.com/graphql';
+                const graphqlResponse = {
+                    data: {
+                        user: { id: '1', name: 'Alice' },
+                        posts: null,
+                        comments: null
+                    },
+                    errors: [
+                        {
+                            message: 'Posts not found',
+                            path: ['posts'],
+                            extensions: {
+                                code: 'NOT_FOUND',
+                                details: 'filtered'
+                            }
+                        },
+                        {
+                            message: 'Comments timeout',
+                            path: ['comments'],
+                            extensions: { code: 'TIMEOUT', stacktrace: ['...'] }
+                        }
+                    ]
+                };
+                const responseBody = JSON.stringify(graphqlResponse);
+
+                xhrProxy.onTrackingStart({
+                    tracingSamplingRate: 100,
+                    firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+                });
+
+                // WHEN
+                const xhr = new XMLHttpRequestMock();
+                let applicationReadResponse: string | null = null;
+
+                xhr.open(method, url);
+                xhr.setRequestHeader(
+                    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                    'query'
+                );
+
+                xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+
+                // Simulate application reading response
+                const originalOnReadyStateChange = xhr.onreadystatechange;
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequestMock.DONE) {
+                        applicationReadResponse = xhr.responseText;
+                    }
+                    return originalOnReadyStateChange.call(xhr);
+                };
+
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.responseText = responseBody;
+                xhr.complete(200, responseBody, 'text');
+                await flushPromises();
+
+                // THEN - Application got complete response with all error details
+                expect(applicationReadResponse).toBe(responseBody);
+                const parsedByApp = JSON.parse(applicationReadResponse!);
+                expect(parsedByApp.errors).toHaveLength(2);
+                expect(parsedByApp.errors[0].extensions.details).toBe(
+                    'filtered'
+                );
+                expect(parsedByApp.errors[1].extensions.stacktrace).toEqual([
+                    '...'
+                ]);
+
+                // AND - Datadog got filtered errors (no extensions details)
+                const attributes = DdNativeRum.stopResource.mock.calls[0][4];
+                const errors = JSON.parse(attributes['_dd.graphql.errors']);
+                expect(errors).toHaveLength(2);
+                expect(errors[0]).toEqual({
+                    message: 'Posts not found',
+                    code: 'NOT_FOUND',
+                    path: ['posts']
+                });
+                expect(errors[0].extensions).toBeUndefined();
+                expect(errors[0].details).toBeUndefined();
+                expect(errors[1]).toEqual({
+                    message: 'Comments timeout',
+                    code: 'TIMEOUT',
+                    path: ['comments']
+                });
+                expect(errors[1].stacktrace).toBeUndefined();
+            });
         });
     });
 });

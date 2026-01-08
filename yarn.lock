@@ -2309,6 +2309,7 @@ __metadata:
   peerDependencies:
     "@apollo/client": ">=3.0"
     "@datadog/mobile-react-native": ^3.0.0
+    graphql: ">=15.0.0"
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
