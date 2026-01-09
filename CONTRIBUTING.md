@@ -150,12 +150,15 @@ const App: () => React$Node = () => {
     "<ENVIRONMENT_NAME>",
     TrackingConsent.GRANTED,
     {
-      rumConfiguration: {
-        applicationId: APPLICATION_ID,
-        trackInteractions: true,
-        trackResources: true,
-        trackFrustrations: true,
-      }
+        rumConfiguration: {
+            applicationId: APPLICATION_ID,
+            trackInteractions: true,
+            trackResources: true,
+            trackFrustrations: true,
+            trackErrors: true,
+        },
+        logsConfiguration: {},
+        traceConfiguration: {}
     }
   )
 
