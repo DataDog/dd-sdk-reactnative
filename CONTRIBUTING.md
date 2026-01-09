@@ -142,17 +142,23 @@ use_frameworks!
 Now you can go back to your `App.js/tsx` and use `@datadog/mobile-react-native` from there
 Example code:
 ```
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from '@datadog/mobile-react-native';
+import { DdSdkReactNative, CoreConfiguration, TrackingConsent } from '@datadog/mobile-react-native';
 
 const App: () => React$Node = () => {
-  const config = new DdSdkReactNativeConfiguration(
+  const config = new CoreConfiguration(
     "<CLIENT_TOKEN>",
     "<ENVIRONMENT_NAME>",
-    "<RUM_APPLICATION_ID>",
-    true, // track User interactions (e.g.: Tap on buttons)
-    true, // track XHR Resources
-    true // track Errors
+    TrackingConsent.GRANTED,
+    {
+      rumConfiguration: {
+        applicationId: APPLICATION_ID,
+        trackInteractions: true,
+        trackResources: true,
+        trackFrustrations: true,
+      }
+    }
   )
+
   DdSdkReactNative.initialize(config);
   ...
 ```
