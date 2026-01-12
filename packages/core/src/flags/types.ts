@@ -6,16 +6,16 @@
 
 import type { FlagsClient } from './FlagsClient';
 
-export type DatadogFlagsType = {
+export type DdFlagsType = {
     /**
      * Enables the Datadog Flags feature in your application.
      *
      * Call this method after initializing the Datadog SDK to enable feature flag evaluation.
-     * This method must be called before creating any `FlagsClient` instances via `DatadogFlags.getClient()`.
+     * This method must be called before creating any `FlagsClient` instances via `DdFlags.getClient()`.
      *
      * @example
      * ```ts
-     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DatadogFlags } from '@datadog/mobile-react-native';
+     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdFlags } from '@datadog/mobile-react-native';
      *
      * // Initialize the Datadog SDK.
      * await DdSdkReactNative.initialize(...);
@@ -26,16 +26,16 @@ export type DatadogFlagsType = {
      * };
      *
      * // Enable the feature.
-     * await DatadogFlags.enable(flagsConfig);
+     * await DdFlags.enable(flagsConfig);
      *
      * // Retrieve the client and access feature flags.
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
      * ```
      *
      * @param configuration Configuration options for the Datadog Flags feature.
      */
-    enable: (configuration?: DatadogFlagsConfiguration) => Promise<void>;
+    enable: (configuration?: DdFlagsConfiguration) => Promise<void>;
     /**
      * Returns a `FlagsClient` instance for further feature flag evaluation.
      *
@@ -47,7 +47,7 @@ export type DatadogFlagsType = {
      * @example
      * ```ts
      * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
@@ -60,7 +60,7 @@ export type DatadogFlagsType = {
  * Use this type to customize the behavior of feature flag evaluation, including custom endpoints,
  * exposure tracking, and error handling modes.
  */
-export type DatadogFlagsConfiguration = {
+export type DdFlagsConfiguration = {
     /**
      * Controls whether the feature flag evaluation feature is enabled.
      */

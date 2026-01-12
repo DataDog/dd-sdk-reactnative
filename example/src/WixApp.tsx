@@ -11,7 +11,7 @@ import {
 } from '@datadog/mobile-react-native-navigation';
 
 import styles from './screens/styles';
-import { DatadogFlags } from '@datadog/mobile-react-native';
+import { DdFlags } from '@datadog/mobile-react-native';
 import TraceScreen from './screens/TraceScreen';
 import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-native-navigation/src/rum/instrumentation/DdRumReactNativeNavigationTracking';
 
@@ -73,9 +73,9 @@ const HomeScreen = props => {
     const [testFlagValue, setTestFlagValue] = useState(false);
     useEffect(() => {
         (async () => {
-            await DatadogFlags.enable();
+            await DdFlags.enable();
 
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: {

@@ -9,7 +9,7 @@ import {
   DdLogs,
   DdTrace,
   RumConfiguration,
-  DatadogFlags,
+  DdFlags,
 } from '@datadog/mobile-react-native';
 import type { FlagDetails } from '@datadog/mobile-react-native';
 import React from 'react';
@@ -97,9 +97,9 @@ function App(): React.JSX.Element {
   const [testFlagValue, setTestFlagValue] = React.useState<FlagDetails<{[key: string]: unknown}> | null>(null);
   React.useEffect(() => {
       (async () => {
-          await DatadogFlags.enable();
+          await DdFlags.enable();
 
-          const flagsClient = DatadogFlags.getClient();
+          const flagsClient = DdFlags.getClient();
           await flagsClient.setEvaluationContext({
               targetingKey: 'test-user-1',
               attributes: {

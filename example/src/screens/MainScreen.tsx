@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
-import { DdLogs, DdSdkReactNative, TrackingConsent, DatadogFlags } from '@datadog/mobile-react-native';
+import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
 import { DdRum } from '../../../packages/core/src/rum/DdRum';
@@ -110,9 +110,9 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   fetchBooleanFlag() {
     (async () => {
-      await DatadogFlags.enable();
+      await DdFlags.enable();
 
-      const flagsClient = DatadogFlags.getClient();
+      const flagsClient = DdFlags.getClient();
       await flagsClient.setEvaluationContext({
           targetingKey: 'test-user-1',
           attributes: {
