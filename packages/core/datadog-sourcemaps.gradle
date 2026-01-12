@@ -309,7 +309,8 @@ private def getReactConfig(File buildDir, variant) {
         def targetPath = variant.name
         reactConfig['bundleTaskName'] = "createBundle${targetName}JsAndAssets"
         reactConfig['bundleFileResolver'] = getBundleFileResolver([
-            "$buildDir/generated/assets/react/${targetName.toLowerCase()}", // RN 0.82+
+            "$buildDir/generated/assets/react/${targetName}", // RN 0.82+ - for case sensitive OS's
+            "$buildDir/generated/assets/react/${targetName.toLowerCase()}", // RN 0.82+ - for case insensitive OS's
             "$buildDir/ASSETS/createBundle${targetName}JsAndAssets", // Android Gradle Plugin 7.3
             "$buildDir/generated/assets/createBundle${targetName}JsAndAssets" // Android Gradle Plugin 7.4 and up
         ] as String[], bundleAssetName)
