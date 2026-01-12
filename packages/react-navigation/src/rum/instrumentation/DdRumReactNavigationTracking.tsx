@@ -15,6 +15,7 @@ import type {
     Route,
     NavigationListener
 } from './react-navigation';
+import { transformViewKey } from './utils';
 
 const REACT_NAVIGATION_TRACKING_MODULE =
     'com.datadog.reactnative.rum.react_navigation_tracking';
@@ -287,6 +288,7 @@ class RumReactNavigationTracking {
         }
         const key = route.key;
         const screenName = this.viewNamePredicate(route, route.name);
+        const customKey = transformViewKey(key, screenName);
 
         if (key != null && screenName != null) {
             // On iOS, the app can start in either "active", "background" or "unknown" state
@@ -305,9 +307,9 @@ class RumReactNavigationTracking {
                 if (this.viewTrackingPredicate(route)) {
                     const params = this.paramsTrackingPredicate(route);
                     if (params) {
-                        DdRum.startView(key, screenName, { params });
+                        DdRum.startView(customKey, screenName, { params });
                     } else {
-                        DdRum.startView(key, screenName);
+                        DdRum.startView(customKey, screenName);
                     }
                 }
             }
@@ -326,6 +328,7 @@ class RumReactNavigationTracking {
         );
         const key = route.key;
         const screenName = this.viewNamePredicate(route, route.name);
+        const customKey = transformViewKey(key, screenName);
 
         if (key != null && screenName != null) {
             if (appStateStatus === 'background') {
@@ -339,7 +342,7 @@ class RumReactNavigationTracking {
                         trackingState: this.trackingState
                     }
                 );
-                DdRum.stopView(key);
+                DdRum.stopView(customKey);
                 this.previousRoute = undefined;
             } else if (
                 appStateStatus === 'active' &&
