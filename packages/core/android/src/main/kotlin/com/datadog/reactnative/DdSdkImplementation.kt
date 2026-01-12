@@ -169,6 +169,47 @@ class DdSdkImplementation(
     }
 
     /**
+     * Set the account information.
+     * @param accountInfo The account object (use builtin attributes: 'id', 'name', and any custom
+     * attribute inside 'extraInfo').
+     */
+    fun setAccountInfo(accountInfo: ReadableMap, promise: Promise) {
+        val accountInfoMap = accountInfo.toHashMap().toMutableMap()
+        val id = accountInfoMap["id"] as? String
+        val name = accountInfoMap["name"] as? String
+        val extraInfo = (accountInfoMap["extraInfo"] as? Map<*, *>)?.filterKeys { it is String }
+            ?.mapKeys { it.key as String }
+            ?.mapValues { it.value } ?: emptyMap()
+
+        if (id != null) {
+            datadog.setAccountInfo(id, name, extraInfo)
+        }
+
+        promise.resolve(null)
+    }
+
+    /**
+     * Sets the account extra information.
+     * @param accountExtraInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    fun addAccountExtraInfo(
+        accountExtraInfo: ReadableMap, promise: Promise
+    ) {
+        val extraInfoMap = accountExtraInfo.toHashMap().toMutableMap()
+
+        datadog.addAccountExtraInfo(extraInfoMap)
+        promise.resolve(null)
+    }
+
+    /**
+     * Clears the account information.
+     */
+    fun clearAccountInfo(promise: Promise) {
+        datadog.clearAccountInfo()
+        promise.resolve(null)
+    }
+
+    /**
      * Set the tracking consent regarding the data collection.
      * @param trackingConsent Consent, which can take one of the following values: 'pending',
      * 'granted', 'not_granted'.
@@ -284,9 +325,9 @@ class DdSdkImplementation(
         ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
-            buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
+            buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration?.vitalsUpdateFrequency) !=
                     VitalsUpdateFrequency.NEVER
-        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
             return null
@@ -302,13 +343,14 @@ class DdSdkImplementation(
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                    ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs?.toLong() ?: 0L
                 )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
     }
+
 
     /**
      * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
@@ -327,14 +369,14 @@ class DdSdkImplementation(
         val frameTimeMs = frameTimeSeconds * 1000.0
         val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
         val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
-            ?: 60.0
+        ?: 60.0
 
         val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
         val budgetFrameTimeMs = 1000.0 / frameBudgetHz
 
         if (listOf(
-            maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
-        ).any { !it.isFinite() || it <= 0.0 }
+                maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+            ).any { !it.isFinite() || it <= 0.0 }
         ) return 1.0 / DEFAULT_REFRESH_HZ
 
         var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)

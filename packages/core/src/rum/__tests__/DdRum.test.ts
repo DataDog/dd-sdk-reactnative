@@ -10,18 +10,25 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { DdSdk } from '../../sdk/DdSdk';
+import { NativeDdSdk } from '../../sdk/DdSdkInternal';
 import { GlobalState } from '../../sdk/GlobalState/GlobalState';
 import { ErrorSource } from '../../types';
 import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from '../eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../eventMappers/resourceEventMapper';
+import {
+    clearCachedAccountId,
+    clearCachedSessionId,
+    clearCachedUserId,
+    setCachedAccountId,
+    setCachedSessionId,
+    setCachedUserId
+} from '../helper';
 import { DatadogTracingContext } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from '../instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdFormat } from '../instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
 import { TracingIdentifierUtils } from '../instrumentation/resourceTracking/distributedTracing/__tests__/__utils__/TracingIdentifierUtils';
-import { setCachedSessionId } from '../sessionId/sessionIdHelper';
 import type { FirstPartyHost } from '../types';
 import { PropagatorType, RumActionType } from '../types';
 
@@ -48,7 +55,9 @@ describe('DdRum', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         BufferSingleton.onInitialization();
-        setCachedSessionId(undefined as any);
+        clearCachedSessionId();
+        clearCachedUserId();
+        clearCachedAccountId();
     });
 
     describe('Context validation', () => {
@@ -69,13 +78,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.startView('key', 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startView).toHaveBeenCalledWith(
@@ -122,7 +131,7 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startView('key', 'name');
                 await DdRum.stopView('key', context);
@@ -130,7 +139,7 @@ describe('DdRum', () => {
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.stopView).toHaveBeenCalledWith(
@@ -177,13 +186,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.startAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
                     2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startAction).toHaveBeenCalledWith(
@@ -236,7 +245,7 @@ describe('DdRum', () => {
                 });
 
                 test('uses empty context with error when context is invalid or null', async () => {
-                    const context: any = 123;
+                    const context: any = Symbol('invalid-context');
 
                     await DdRum.startAction(RumActionType.SCROLL, 'name');
                     await DdRum.stopAction(
@@ -248,7 +257,7 @@ describe('DdRum', () => {
                     expect(InternalLog.log).toHaveBeenNthCalledWith(
                         3,
                         expect.anything(),
-                        SdkVerbosity.ERROR
+                        SdkVerbosity.WARN
                     );
 
                     expect(NativeModules.DdRum.stopAction).toHaveBeenCalledWith(
@@ -353,14 +362,14 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startResource('key', 'method', 'url', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
@@ -414,15 +423,15 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
 
                 await DdRum.startResource('key', 'method', 'url', {});
                 await DdRum.stopResource('key', 200, 'other', -1, context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
@@ -442,7 +451,7 @@ describe('DdRum', () => {
                 await DdRum.stopResource('key', 200, 'other', -1, context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    2,
+                    3,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -1009,6 +1018,88 @@ describe('DdRum', () => {
                     }
                 });
 
+                it('tracing context contains User ID in baggage when User ID is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomUserId = `test-${Math.random()}`;
+
+                        setCachedUserId(randomUserId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `user.id=${randomUserId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
+                it('tracing context contains Account ID in baggage when Account ID is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomAccountId = `test-${Math.random()}`;
+
+                        setCachedAccountId(randomAccountId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `account.id=${randomAccountId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
+                it('tracing context contains User ID, Account ID and Session ID in baggage when all session info is cached', () => {
+                    for (let i = 0; i < 100; i++) {
+                        const randomSessionId = `session-${Math.random()}`;
+                        const randomUserId = `user-${Math.random()}`;
+                        const randomAccountId = `account-${Math.random()}`;
+
+                        setCachedSessionId(randomSessionId);
+                        setCachedUserId(randomUserId);
+                        setCachedAccountId(randomAccountId);
+                        const tracingContext = DdRum.getTracingContextForPropagators(
+                            [
+                                PropagatorType.DATADOG,
+                                PropagatorType.TRACECONTEXT,
+                                PropagatorType.B3MULTI,
+                                PropagatorType.B3
+                            ],
+                            100
+                        );
+
+                        const requestHeaders = tracingContext.getHeadersForRequest();
+                        expect(requestHeaders).toHaveProperty('baggage');
+                        expect(requestHeaders['baggage']).toBe(
+                            `session.id=${randomSessionId},user.id=${randomUserId},account.id=${randomAccountId}`
+                        );
+
+                        const resourceContext = tracingContext.getRumResourceContext();
+                        expect(resourceContext['baggage']).toBeUndefined();
+                    }
+                });
+
                 it('injects headers and context correctly with all propagators and sampling rate (50% 0, 50% 100)', () => {
                     for (let i = 0; i < 100; i++) {
                         const tracingSamplingRate =
@@ -1200,13 +1291,13 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.addAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
@@ -1222,7 +1313,7 @@ describe('DdRum', () => {
                 await DdRum.addAction(RumActionType.SCROLL, 'name', context);
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -1264,7 +1355,7 @@ describe('DdRum', () => {
             });
 
             test('uses empty context with error when context is invalid or null', async () => {
-                const context: any = 123;
+                const context: any = Symbol('invalid-context');
                 await DdRum.addError(
                     'error',
                     ErrorSource.CUSTOM,
@@ -1273,9 +1364,9 @@ describe('DdRum', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
 
                 expect(NativeModules.DdRum.addError).toHaveBeenCalledWith(
@@ -1300,7 +1391,7 @@ describe('DdRum', () => {
                 );
 
                 expect(InternalLog.log).toHaveBeenNthCalledWith(
-                    1,
+                    2,
                     expect.anything(),
                     SdkVerbosity.WARN
                 );
@@ -1349,7 +1440,7 @@ describe('DdRum', () => {
         test('does not call the native SDK when startAction has not been called before and using old API', async () => {
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).not.toHaveBeenCalled();
-            expect(DdSdk.telemetryDebug).not.toHaveBeenCalled();
+            expect(NativeDdSdk.telemetryDebug).not.toHaveBeenCalled();
         });
 
         test('calls the native SDK when called with old API', async () => {
@@ -1361,7 +1452,7 @@ describe('DdRum', () => {
                 { user: 'me' },
                 789
             );
-            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });
@@ -1375,7 +1466,7 @@ describe('DdRum', () => {
                 {},
                 456
             );
-            expect(DdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });
@@ -1725,7 +1816,7 @@ describe('DdRum', () => {
 
     describe('DdRum.getCurrentSessionId', () => {
         it('calls the native API if SDK is initialized', async () => {
-            GlobalState.instance.isInitialized = true;
+            GlobalState.isInitialized = true;
             const sessionId = await DdRum.getCurrentSessionId();
             expect(NativeModules.DdRum.getCurrentSessionId).toHaveBeenCalled();
             expect(sessionId).toBe('test-session-id');
@@ -1734,7 +1825,7 @@ describe('DdRum', () => {
 
     describe('DdRum.getCurrentSessionId', () => {
         it('returns undefined if SDK is not initialized', async () => {
-            GlobalState.instance.isInitialized = false;
+            GlobalState.isInitialized = false;
             const sessionId = await DdRum.getCurrentSessionId();
             expect(
                 NativeModules.DdRum.getCurrentSessionId

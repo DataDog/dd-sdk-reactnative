@@ -71,6 +71,9 @@ internal class SvgViewRecorder: SessionReplayNodeRecorder {
             }
         }
 
+        let sel = NSSelectorFromString(SVGConstants.attributes)
+        guard view.responds(to: sel) else { return nil }
+
         guard let attrs = view.value(forKey: SVGConstants.attributes) as? [String: String] else {
             return nil
         }

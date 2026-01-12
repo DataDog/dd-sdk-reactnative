@@ -18,6 +18,7 @@ function SessionReplayScenario(props: SessionReplayScenarioProps): React.JSX.Ele
         if (props.testConfig?.runType !== RunType.BASELINE) {
             instrument().then(() => {
                 SessionReplay.enable({
+                    replaySampleRate: 100,
                     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS,
                     imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE,
                     touchPrivacyLevel: TouchPrivacyLevel.SHOW,

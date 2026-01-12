@@ -19,16 +19,6 @@ end
 target 'DdSdkReactNativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
-  # Pin Datadog* dependencies to a specific reference until they are updated in feature/v3.
-  pod 'DatadogInternal', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogCore', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogLogs', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogTrace', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogRUM', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogCrashReporting', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogFlags', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-  pod 'DatadogWebViewTracking', :git => 'https://github.com/DataDog/dd-sdk-ios.git', :branch => 'feature/flags'
-
   config = use_native_modules!
 
   use_react_native!(
@@ -36,7 +26,7 @@ target 'DdSdkReactNativeExample' do
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
-  
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

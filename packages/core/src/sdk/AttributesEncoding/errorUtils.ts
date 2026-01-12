@@ -3,25 +3,9 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-
-import { debugId } from '../metro/debugIdResolver';
-
-export const EMPTY_MESSAGE = 'Unknown Error';
-export const EMPTY_STACK_TRACE = '';
-export const DEFAULT_ERROR_NAME = 'Error';
-
-export const getErrorMessage = (error: any | undefined): string => {
-    let message = EMPTY_MESSAGE;
-    if (error === undefined || error === null) {
-        message = EMPTY_MESSAGE;
-    } else if (typeof error === 'object' && 'message' in error) {
-        message = String(error.message);
-    } else {
-        message = String(error);
-    }
-
-    return message;
-};
+export const ERROR_EMPTY_STACKTRACE = '';
+export const ERROR_EMPTY_MESSAGE = 'Unknown Error';
+export const ERROR_DEFAULT_NAME = 'Error';
 
 /**
  * Will extract the stack from the error, taking the first key found among:
@@ -32,13 +16,13 @@ export const getErrorMessage = (error: any | undefined): string => {
  * generate a stack from this information.
  */
 export const getErrorStackTrace = (error: any | undefined): string => {
-    let stack = EMPTY_STACK_TRACE;
+    let stack = ERROR_EMPTY_STACKTRACE;
 
     try {
         if (error === undefined || error === null) {
-            stack = EMPTY_STACK_TRACE;
+            stack = ERROR_EMPTY_STACKTRACE;
         } else if (typeof error === 'string') {
-            stack = EMPTY_STACK_TRACE;
+            stack = ERROR_EMPTY_STACKTRACE;
         } else if (typeof error === 'object') {
             if ('stacktrace' in error) {
                 stack = String(error.stacktrace);
@@ -60,10 +44,52 @@ export const getErrorStackTrace = (error: any | undefined): string => {
     return stack;
 };
 
+export const getErrorMessage = (error: any | undefined): string => {
+    if (error == null) {
+        return ERROR_EMPTY_MESSAGE;
+    }
+
+    // If it's an actual Error (or subclass)
+    if (error instanceof Error) {
+        // Prefer .message if defined, otherwise fallback to .toString()
+        return error.message || error.toString() || ERROR_EMPTY_MESSAGE;
+    }
+
+    // If it's an object with a message property (not necessarily Error)
+    if (
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof (error as any).message === 'string'
+    ) {
+        return (error as any).message || ERROR_EMPTY_MESSAGE;
+    }
+
+    // If it’s a primitive (string, number, boolean, symbol)
+    if (
+        typeof error === 'string' ||
+        typeof error === 'number' ||
+        typeof error === 'boolean' ||
+        typeof error === 'symbol'
+    ) {
+        return String(error);
+    }
+
+    // If it has its own toString (not the default Object one)
+    if (
+        typeof error?.toString === 'function' &&
+        error.toString !== Object.prototype.toString
+    ) {
+        return error.toString();
+    }
+
+    // Fallback
+    return ERROR_EMPTY_MESSAGE;
+};
+
 export const getErrorName = (error: unknown): string => {
     try {
         if (typeof error !== 'object' || error === null) {
-            return DEFAULT_ERROR_NAME;
+            return ERROR_DEFAULT_NAME;
         }
         if (typeof (error as any).name === 'string') {
             return (error as any).name;
@@ -71,16 +97,5 @@ export const getErrorName = (error: unknown): string => {
     } catch (e) {
         // Do nothing
     }
-    return DEFAULT_ERROR_NAME;
-};
-
-export const getErrorContext = (originalContext: any): Record<string, any> => {
-    const _debugId = debugId;
-    if (!_debugId) {
-        return originalContext;
-    }
-    return {
-        ...originalContext,
-        '_dd.debug_id': _debugId
-    };
+    return ERROR_DEFAULT_NAME;
 };

@@ -72,7 +72,7 @@ describe('DdSdkNativeBridge', () => {
     afterEach(() => {
         jest.resetModules();
         jest.resetAllMocks();
-        delete global.RN$Bridgeless;
+        delete (global as any).RN$Bridgeless;
     });
 
     describe('new architecture implementation', () => {

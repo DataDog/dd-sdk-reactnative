@@ -1,5 +1,5 @@
 import {
-  DdSdkReactNativeConfiguration,
+  CoreConfiguration,
   SdkVerbosity,
   UploadFrequency,
   BatchSize,
@@ -8,6 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
+  RumConfiguration,
   DatadogFlags,
 } from '@datadog/mobile-react-native';
 import React from 'react';
@@ -33,19 +34,22 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  const config = new DdSdkReactNativeConfiguration(
+  const config = new CoreConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
+  );
+  config.verbosity = SdkVerbosity.DEBUG;
+  config.uploadFrequency = UploadFrequency.FREQUENT;
+  config.batchSize = BatchSize.SMALL;
+  config.rumConfiguration = new RumConfiguration(
     APPLICATION_ID,
     true,
     true,
-    true,
-  );
-  config.sessionSamplingRate = 100;
-  config.verbosity = SdkVerbosity.DEBUG;
-  config.telemetrySampleRate = 100;
-  config.uploadFrequency = UploadFrequency.FREQUENT;
-  config.batchSize = BatchSize.SMALL;
+    true
+  )
+  config.rumConfiguration.sessionSampleRate = 100;
+  config.rumConfiguration.telemetrySampleRate = 100;
+
   await DdSdkReactNative.initialize(config);
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {

@@ -4,8 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import BigInt from 'big-integer';
+
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../SdkVerbosity';
+import { getGlobalInstance } from '../../../utils/singletonUtils';
 import type { FirstPartyHost } from '../../types';
 
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
@@ -14,17 +17,30 @@ import { filterDevResource } from './requestProxy/XHRProxy/DatadogRumResource/in
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
+export const MAX_TRACE_ID = BigInt.one.shiftLeft(64).minus(BigInt.one);
+const RUM_RESOURCE_TRACKING_MODULE =
+    'com.datadog.reactnative.rum.resource_tracking';
+
 /**
  * Provides RUM auto-instrumentation feature to track resources (fetch, XHR, axios) as RUM events.
  */
-export class DdRumResourceTracking {
-    private static isTracking = false;
-    private static requestProxy: RequestProxy | null;
+class RumResourceTracking {
+    private _isTracking = false;
+    private _requestProxy: RequestProxy | null = null;
+    private _maxSampledTraceId: BigInt.BigInteger | null = null;
+
+    get isTracking(): boolean {
+        return this._isTracking;
+    }
+
+    get maxSampledTraceId(): BigInt.BigInteger {
+        return this._maxSampledTraceId ?? BigInt(0);
+    }
 
     /**
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
-    static startTracking({
+    startTracking({
         tracingSamplingRate,
         firstPartyHosts
     }: {
@@ -32,7 +48,7 @@ export class DdRumResourceTracking {
         firstPartyHosts: FirstPartyHost[];
     }): void {
         // extra safety to avoid proxying the XHR class twice
-        if (DdRumResourceTracking.isTracking) {
+        if (this._isTracking) {
             InternalLog.log(
                 'Datadog SDK is already tracking XHR resources',
                 SdkVerbosity.WARN
@@ -40,11 +56,11 @@ export class DdRumResourceTracking {
             return;
         }
 
-        this.requestProxy = new XHRProxy({
+        this._requestProxy = new XHRProxy({
             xhrType: XMLHttpRequest,
             resourceReporter: new ResourceReporter([filterDevResource])
         });
-        this.requestProxy.onTrackingStart({
+        this._requestProxy.onTrackingStart({
             tracingSamplingRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
                 firstPartyHosts
@@ -55,16 +71,30 @@ export class DdRumResourceTracking {
             'Datadog SDK is tracking XHR resources',
             SdkVerbosity.INFO
         );
-        DdRumResourceTracking.isTracking = true;
+
+        this._isTracking = true;
+        this._maxSampledTraceId = RumResourceTracking.getMaxTraceId(
+            tracingSamplingRate
+        );
     }
 
-    static stopTracking(): void {
-        if (DdRumResourceTracking.isTracking) {
-            DdRumResourceTracking.isTracking = false;
-            if (this.requestProxy) {
-                this.requestProxy.onTrackingStop();
+    stopTracking(): void {
+        if (this._isTracking) {
+            this._isTracking = false;
+            if (this._requestProxy) {
+                this._requestProxy.onTrackingStop();
             }
-            this.requestProxy = null;
+            this._requestProxy = null;
+            this._maxSampledTraceId = null;
         }
     }
+
+    private static getMaxTraceId(sampleRate: number): BigInt.BigInteger {
+        return BigInt(MAX_TRACE_ID.toJSNumber() * (sampleRate / 100.0));
+    }
 }
+
+export const DdRumResourceTracking = getGlobalInstance(
+    RUM_RESOURCE_TRACKING_MODULE,
+    () => new RumResourceTracking()
+);

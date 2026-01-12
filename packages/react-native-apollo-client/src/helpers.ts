@@ -22,7 +22,7 @@ export const getVariables = (operation: Operation): string | null => {
         try {
             return JSON.stringify(operation.variables);
         } catch (e) {
-            DdSdk?.telemetryError(
+            (DdSdk as any)?.telemetryError(
                 _getErrorMessage(
                     ErrorCode.GQL_VARIABLE_RETRIEVAL_ERROR,
                     apolloVersion
@@ -61,7 +61,7 @@ export const getOperationType = (
                 })[0] || null
         );
     } catch (e) {
-        DdSdk?.telemetryError(
+        (DdSdk as any)?.telemetryError(
             _getErrorMessage(ErrorCode.GQL_OPERATION_TYPE_ERROR, apolloVersion),
             _getErrorStack(e),
             ErrorCode.GQL_OPERATION_TYPE_ERROR

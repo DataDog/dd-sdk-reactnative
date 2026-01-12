@@ -12,3 +12,7 @@ export const getCachedSessionId = () => {
 export const setCachedSessionId = (sessionId: string) => {
     _cachedSessionId = sessionId;
 };
+
+export const clearCachedSessionId = () => {
+    _cachedSessionId = undefined;
+};
