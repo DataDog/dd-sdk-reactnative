@@ -75,7 +75,7 @@ function App() {
 }
 ```
 
-These predicates are optional, and when not set the default behavior will be used for each one of them. The default behaviours are as follows:
+These predicates are optional, and when not set the default behavior will be used for each one of them. The default behaviors are as follows:
 
 - ViewNamePredicate - directly forwards the view given name to RUM.
 - ViewTrackingPredicate - tracks all views on RUM.
