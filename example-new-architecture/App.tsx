@@ -9,12 +9,12 @@ import {
   DdLogs,
   DdTrace,
   RumConfiguration,
-  DatadogFlags,
+  DdFlags,
 } from '@datadog/mobile-react-native';
-import type { FlagDetails } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -93,29 +93,42 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
-  const testFlagKey = 'rn-sdk-test-json-flag';
-  const [testFlagValue, setTestFlagValue] = React.useState<FlagDetails<{[key: string]: unknown}> | null>(null);
-  React.useEffect(() => {
-      (async () => {
-          await DatadogFlags.enable();
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
-          const flagsClient = DatadogFlags.getClient();
-          await flagsClient.setEvaluationContext({
-              targetingKey: 'test-user-1',
-              attributes: {
-                  country: 'US',
-              },
-          });
-          const flag = flagsClient.getObjectDetails(testFlagKey, {default: {hello: 'world'}}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-          setTestFlagValue(flag);
-      })().catch(console.error);
+  React.useEffect(() => {
+    (async () => {
+      // This is a blocking async app initialization effect.
+      // It simulates the way most React Native applications are initialized.
+      await DdFlags.enable();
+      const client = DdFlags.getClient();
+
+      const userId = 'test-user-1';
+      const userAttributes = {
+        country: 'US',
+      };
+
+      await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
+
+      setIsInitialized(true);
+    })().catch(console.error);
   }, []);
 
   const isDarkMode = useColorScheme() === 'dark';
-
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  if (!isInitialized) {
+    return (
+      <SafeAreaView style={{height: '100%', justifyContent: 'center'}}>
+        <ActivityIndicator />
+      </SafeAreaView>
+    );
+  }
+
+  // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
+  const testFlagKey = 'rn-sdk-test-json-flag';
+  const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -127,13 +140,14 @@ function App(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
-        <View style={{ marginTop: 20 }}>
-          <Text>{testFlagKey}: {JSON.stringify(testFlagValue, null, 2)}</Text>
-        </View>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
+          <Section title="Feature Flags">
+            Flag value for <Text style={styles.highlight}>{testFlagKey}</Text> is{'\n'}
+            <Text style={styles.highlight}>{JSON.stringify(testFlag)}</Text>
+          </Section>
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.

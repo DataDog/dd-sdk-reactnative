@@ -6,7 +6,7 @@ import {
     RumConfiguration,
     SdkVerbosity,
     TrackingConsent,
-    DatadogFlags,
+    DdFlags,
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
@@ -53,5 +53,5 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         DdSdkReactNative.addAttributes({campaign: "ad-network"})
     });
 
-    DatadogFlags.enable()
+    DdFlags.enable()
 }

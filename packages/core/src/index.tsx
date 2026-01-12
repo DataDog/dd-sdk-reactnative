@@ -24,8 +24,8 @@ import { InternalLog } from './InternalLog';
 import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
-import { DatadogFlags } from './flags/DatadogFlags';
-import type { DatadogFlagsConfiguration, FlagDetails } from './flags/types';
+import { DdFlags } from './flags/DdFlags';
+import type { DdFlagsConfiguration, FlagDetails } from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -58,7 +58,7 @@ export {
     FileBasedConfiguration,
     InitializationMode,
     DdLogs,
-    DatadogFlags,
+    DdFlags,
     DdTrace,
     DdRum,
     RumActionType,
@@ -97,6 +97,6 @@ export type {
     FirstPartyHost,
     AutoInstrumentationConfiguration,
     PartialInitializationConfiguration,
-    DatadogFlagsConfiguration,
+    DdFlagsConfiguration,
     FlagDetails
 };

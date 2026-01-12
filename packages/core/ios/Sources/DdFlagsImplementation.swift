@@ -27,6 +27,9 @@ public class DdFlagsImplementation: NSObject {
 
     @objc
     public func enable(_ configuration: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        // Client providers become stale upon subsequent enable calls (which can happen e.g. in case of a React Native hot reload).
+        clientProviders.removeAll()
+
         if let config = configuration.asFlagsConfiguration() {
             Flags.enable(with: config)
         } else {
@@ -40,9 +43,6 @@ public class DdFlagsImplementation: NSObject {
     ///
     /// We create a simple registry of client providers by client name holding closures for retrieving a client since client references are kept internally in the flagging SDK.
     /// This is motivated by the fact that it is impossible to create a bridged synchronous `FlagsClient` creation; thus, we create a client instance dynamically on-demand.
-    ///
-    /// - Important: Due to specifics of React Native hot reloading, this registry is destroyed upon JS bundle refresh. This leads to`FlagsClient.create` being called several times during development process for the same client.
-    ///              This should not be a problem because `gracefulModeEnabled` is hard set to `true` for the RN SDK.
     private func getClient(name: String) -> FlagsClientProtocol {
         if let provider = clientProviders[name] {
             return provider()
@@ -56,7 +56,8 @@ public class DdFlagsImplementation: NSObject {
     @objc
     public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         let client = getClient(name: clientName)
-        guard let clientInternal = getClient(name: clientName) as? FlagsClientInternal else {
+        guard let clientInternal = client as? FlagsClientInternal else {
+            reject(nil, "CLIENT_NOT_INITIALIZED", nil)
             return
         }
 

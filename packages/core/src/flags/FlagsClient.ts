@@ -38,7 +38,7 @@ export class FlagsClient {
      *
      * @example
      * ```ts
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      *
      * await flagsClient.setEvaluationContext({
      *     targetingKey: 'user-123',
@@ -78,7 +78,7 @@ export class FlagsClient {
         // Check whether the evaluation context has already been set.
         if (!this._evaluationContext) {
             InternalLog.log(
-                `The evaluation context is not set for the client ${this.clientName}. Please, call \`DatadogFlags.setEvaluationContext()\` before evaluating any flags.`,
+                `The evaluation context is not set for the client ${this.clientName}. Please, call \`DdFlags.setEvaluationContext()\` before evaluating any flags.`,
                 SdkVerbosity.ERROR
             );
 

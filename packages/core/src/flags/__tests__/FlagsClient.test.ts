@@ -8,7 +8,7 @@ import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { DatadogFlags } from '../DatadogFlags';
+import { DdFlags } from '../DdFlags';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
     'test-boolean-flag': {
@@ -72,18 +72,18 @@ describe('FlagsClient', () => {
     beforeEach(async () => {
         jest.clearAllMocks();
 
-        // Reset state of the global DatadogFlags instance.
-        Object.assign(DatadogFlags, {
+        // Reset state of the global DdFlags instance.
+        Object.assign(DdFlags, {
             isFeatureEnabled: false,
             clients: {}
         });
 
-        await DatadogFlags.enable({ enabled: true });
+        await DdFlags.enable({ enabled: true });
     });
 
     describe('setEvaluationContext', () => {
         it('should set the evaluation context', async () => {
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -99,7 +99,7 @@ describe('FlagsClient', () => {
                 new Error('NETWORK_ERROR')
             );
 
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -115,7 +115,7 @@ describe('FlagsClient', () => {
     describe('getDetails', () => {
         it('should succesfully return flag details for flags', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -165,7 +165,7 @@ describe('FlagsClient', () => {
         });
 
         it('should return PROVIDER_NOT_READY if evaluation context is not set', () => {
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             // Skip `setEvaluationContext` call here.
 
             const details = flagsClient.getBooleanDetails(
@@ -185,7 +185,7 @@ describe('FlagsClient', () => {
         });
 
         it('should return FLAG_NOT_FOUND if flag is missing from context', async () => {
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -206,7 +206,7 @@ describe('FlagsClient', () => {
 
         it('should return the default value if there is a type mismatch between default value and called method type', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -264,7 +264,7 @@ describe('FlagsClient', () => {
     describe('getValue', () => {
         it('should succesfully return flag values', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }
@@ -296,7 +296,7 @@ describe('FlagsClient', () => {
 
         it('should return the default value if there is a type mismatch between default value and called method type', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
-            const flagsClient = DatadogFlags.getClient();
+            const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'test-user-1',
                 attributes: { country: 'US' }

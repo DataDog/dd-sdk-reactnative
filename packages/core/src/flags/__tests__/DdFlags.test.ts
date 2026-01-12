@@ -8,7 +8,7 @@ import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../SdkVerbosity';
-import { DatadogFlags } from '../DatadogFlags';
+import { DdFlags } from '../DdFlags';
 
 jest.mock('../../InternalLog', () => {
     return {
@@ -19,21 +19,21 @@ jest.mock('../../InternalLog', () => {
     };
 });
 
-describe('DatadogFlags', () => {
+describe('DdFlags', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Reset state of DatadogFlags instance.
-        Object.assign(DatadogFlags, {
+        // Reset state of DdFlags instance.
+        Object.assign(DdFlags, {
             isFeatureEnabled: false,
             clients: {}
         });
     });
 
     describe('Initialization', () => {
-        it('should print an error if calling DatadogFlags.enable() for multiple times', async () => {
-            await DatadogFlags.enable();
-            await DatadogFlags.enable();
-            await DatadogFlags.enable();
+        it('should print an error if calling DdFlags.enable() for multiple times', async () => {
+            await DdFlags.enable();
+            await DdFlags.enable();
+            await DdFlags.enable();
 
             expect(InternalLog.log).toHaveBeenCalledTimes(2);
             // We let the native part of the SDK handle this gracefully.
@@ -41,17 +41,17 @@ describe('DatadogFlags', () => {
         });
 
         it('should print an error if retrieving the client before the feature is enabled', async () => {
-            DatadogFlags.getClient();
+            DdFlags.getClient();
 
             expect(InternalLog.log).toHaveBeenCalledWith(
-                '`DatadogFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
+                '`DdFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
                 SdkVerbosity.ERROR
             );
         });
 
         it('should not print an error if retrieving the client after the feature is enabled', async () => {
-            await DatadogFlags.enable();
-            DatadogFlags.getClient();
+            await DdFlags.enable();
+            DdFlags.getClient();
 
             expect(InternalLog.log).not.toHaveBeenCalled();
         });
