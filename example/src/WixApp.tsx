@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
+import React from 'react';
+import { View, Text, Button, ActivityIndicator } from 'react-native';
 import MainScreen from './screens/MainScreen';
 import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
@@ -70,22 +70,37 @@ function registerScreens() {
 }
 
 const HomeScreen = props => {
-    const [testFlagValue, setTestFlagValue] = useState(false);
-    useEffect(() => {
-        (async () => {
-            await DdFlags.enable();
+    const [isInitialized, setIsInitialized] = React.useState(false);
 
-            const flagsClient = DdFlags.getClient();
-            await flagsClient.setEvaluationContext({
-                targetingKey: 'test-user-1',
-                attributes: {
-                    country: 'US',
-                },
-            });
-            const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-            setTestFlagValue(flag.value);
-        })();
+    React.useEffect(() => {
+      (async () => {
+        // This is a blocking async app initialization effect.
+        // It simulates the way most React Native applications are initialized.
+        await DdFlags.enable();
+        const client = DdFlags.getClient();
+
+        const userId = 'test-user-1';
+        const userAttributes = {
+          country: 'US',
+        };
+
+        await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
+
+        setIsInitialized(true);
+      })().catch(console.error);
     }, []);
+
+    if (!isInitialized) {
+      return (
+        <View style={styles.defaultScreen}>
+            <ActivityIndicator />
+        </View>
+      )
+    }
+
+    // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
+    const testFlagKey = 'rn-sdk-test-json-flag';
+    const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
 
     return (
         <View style={styles.defaultScreen}>
@@ -132,7 +147,7 @@ const HomeScreen = props => {
                     });
                 }}
             />
-            <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(testFlagValue)}</Text>
+            <Text style={{ marginTop: 20 }}>{testFlagKey}: {JSON.stringify(testFlag)}</Text>
         </View>
     );
 };

@@ -7,7 +7,7 @@
 import React, { Component, RefObject } from 'react';
 import {
   View, Text, Button, TouchableOpacity,
-  TouchableWithoutFeedback, TouchableNativeFeedback
+  TouchableWithoutFeedback, TouchableNativeFeedback, ActivityIndicator
 } from 'react-native';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
@@ -27,7 +27,7 @@ interface MainScreenState {
   resultTouchableNativeFeedback: string,
   trackingConsent: TrackingConsent,
   trackingConsentModalVisible: boolean
-  testFlagValue: boolean
+  flagsInitialized: boolean
 }
 
 export default class MainScreen extends Component<any, MainScreenState> {
@@ -42,7 +42,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
       resultTouchableOpacityAction: "",
       trackingConsent: TrackingConsent.PENDING,
       trackingConsentModalVisible: false,
-      testFlagValue: false
+      flagsInitialized: false
     } as MainScreenState;
     this.consentModal = React.createRef()
   }
@@ -96,7 +96,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   componentDidMount() {
     this.updateTrackingConsent()
-    this.fetchBooleanFlag();
+    this.initializeFlags();
     DdLogs.debug("[DATADOG SDK] Test React Native Debug Log");
   }
 
@@ -108,20 +108,21 @@ export default class MainScreen extends Component<any, MainScreenState> {
     })
   }
 
-  fetchBooleanFlag() {
+  initializeFlags() {
     (async () => {
+      // This is a blocking async app initialization effect.
+      // It simulates the way most React Native applications are initialized.
       await DdFlags.enable();
+      const client = DdFlags.getClient();
 
-      const flagsClient = DdFlags.getClient();
-      await flagsClient.setEvaluationContext({
-          targetingKey: 'test-user-1',
-          attributes: {
-              country: 'US',
-          },
-      });
-      const flag = await flagsClient.getBooleanDetails('rn-sdk-test-boolean-flag', false); // https://app.datadoghq.com/feature-flags/046d0e70-626d-41e1-8314-3f009fb79b7a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-      console.log({flag})
-      this.setState({ testFlagValue: flag.value })
+      const userId = 'test-user-1';
+      const userAttributes = {
+        country: 'US',
+      };
+
+      await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
+
+      this.setState({ flagsInitialized: true })
     })();
   }
 
@@ -133,6 +134,16 @@ export default class MainScreen extends Component<any, MainScreenState> {
   }
 
   render() {
+    if (!this.state.flagsInitialized) {
+      return <View style={styles.defaultScreen}>
+        <ActivityIndicator />
+      </View>
+    }
+
+    // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
+    const testFlagKey = 'rn-sdk-test-json-flag';
+    const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+
     return <View style={styles.defaultScreen}>
       <Text>{this.state.welcomeMessage}</Text>
       <View style={{ marginTop: 40, alignItems: "center" }}>
@@ -225,7 +236,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
             <Text>Click me (error)</Text>
           </View>
         </TouchableNativeFeedback>
-        <Text style={{ marginTop: 20 }}>rn-sdk-test-boolean-flag: {String(this.state.testFlagValue)}</Text>
+        <Text style={{ marginTop: 20 }}>{testFlagKey}: {JSON.stringify(testFlag)}</Text>
       </View>
     </View>
   }
