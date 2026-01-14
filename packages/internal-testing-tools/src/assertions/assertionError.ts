@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { Wireframe } from 'rum-events-format';
+import type { RumEvent, Wireframe } from 'rum-events-format';
 
 import type { DDEvent } from '../types/events';
 
@@ -13,7 +13,7 @@ export class AssertionError extends Error {
         message: string,
         expected: string,
         actual: string | undefined,
-        events: DDEvent[] | Wireframe | Wireframe[]
+        events: DDEvent[] | Wireframe | Wireframe[] | RumEvent[]
     ) {
         if (actual !== undefined) {
             super(
