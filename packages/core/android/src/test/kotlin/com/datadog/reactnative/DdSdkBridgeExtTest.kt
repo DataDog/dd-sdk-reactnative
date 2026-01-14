@@ -9,6 +9,7 @@ package com.datadog.reactnative
 import com.datadog.tools.unit.keys
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableMap
+import com.datadog.tools.unit.toReadableMapDeep
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.WritableArray
@@ -342,7 +343,8 @@ internal class DdSdkBridgeExtTest {
         }
 
         // When
-        val writableMap = jsonObject.toWritableMap()
+        // Use the parameterized version to avoid native library requirements in unit tests
+        val writableMap = jsonObject.toMap().toWritableMap(createWritableMap, createWritableArray)
 
         // Then
         assertThat(writableMap.getInt("int")).isEqualTo(1)
@@ -407,7 +409,7 @@ internal class DdSdkBridgeExtTest {
             "double" to 2.0,
             "string" to "test",
             "boolean" to true
-        ).toReadableMap()
+        ).toReadableMapDeep()
 
         // When
         val jsonObject = readableMap.toJSONObject()
@@ -426,7 +428,7 @@ internal class DdSdkBridgeExtTest {
         val readableMap = mapOf(
             "map" to mapOf("nestedKey" to "nestedValue"),
             "list" to listOf("item1", "item2")
-        ).toReadableMap()
+        ).toReadableMapDeep()
 
         // When
         val jsonObject = readableMap.toJSONObject()
