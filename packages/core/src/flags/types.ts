@@ -6,16 +6,16 @@
 
 import type { FlagsClient } from './FlagsClient';
 
-export type DatadogFlagsType = {
+export type DdFlagsType = {
     /**
      * Enables the Datadog Flags feature in your application.
      *
      * Call this method after initializing the Datadog SDK to enable feature flag evaluation.
-     * This method must be called before creating any `FlagsClient` instances via `DatadogFlags.getClient()`.
+     * This method must be called before creating any `FlagsClient` instances via `DdFlags.getClient()`.
      *
      * @example
      * ```ts
-     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DatadogFlags } from '@datadog/mobile-react-native';
+     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdFlags } from '@datadog/mobile-react-native';
      *
      * // Initialize the Datadog SDK.
      * await DdSdkReactNative.initialize(...);
@@ -26,16 +26,16 @@ export type DatadogFlagsType = {
      * };
      *
      * // Enable the feature.
-     * await DatadogFlags.enable(flagsConfig);
+     * await DdFlags.enable(flagsConfig);
      *
      * // Retrieve the client and access feature flags.
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
      * ```
      *
      * @param configuration Configuration options for the Datadog Flags feature.
      */
-    enable: (configuration?: DatadogFlagsConfiguration) => Promise<void>;
+    enable: (configuration?: DdFlagsConfiguration) => Promise<void>;
     /**
      * Returns a `FlagsClient` instance for further feature flag evaluation.
      *
@@ -47,7 +47,7 @@ export type DatadogFlagsType = {
      * @example
      * ```ts
      * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
@@ -60,7 +60,7 @@ export type DatadogFlagsType = {
  * Use this type to customize the behavior of feature flag evaluation, including custom endpoints,
  * exposure tracking, and error handling modes.
  */
-export type DatadogFlagsConfiguration = {
+export type DdFlagsConfiguration = {
     /**
      * Controls whether the feature flag evaluation feature is enabled.
      */
@@ -68,21 +68,19 @@ export type DatadogFlagsConfiguration = {
     /**
      * Custom server URL for retrieving flag assignments.
      *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/precompute-assignments'.
+     *
      * If not set, the SDK uses the default Datadog Flags endpoint for the configured site.
      *
      * @default undefined
      */
     customFlagsEndpoint?: string;
     /**
-     * Additional HTTP headers to attach to requests made to `customFlagsEndpoint`.
-     *
-     * Useful for authentication or routing when using your own Flags service. Ignored when using the default Datadog endpoint.
-     *
-     * @default undefined
-     */
-    customFlagsHeaders?: Record<string, string>;
-    /**
      * Custom server URL for sending Flags exposure data.
+     *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, if you provide 'https://flags.example.com', the SDK will use 'https://flags.example.com/api/v2/exposures'.
      *
      * If not set, the SDK uses the default Datadog Flags exposure endpoint.
      *
@@ -144,9 +142,13 @@ export interface EvaluationContext {
      *
      * Attributes can include user properties, session data, or any other contextual information
      * needed for flag evaluation rules.
+     *
+     * NOTE: Nested object values are not supported and will be omitted from the evaluation context.
      */
-    attributes: Record<string, unknown>;
+    attributes?: Record<string, string | number | boolean | null | undefined>;
 }
+
+export type ObjectValue = { [key: string]: unknown };
 
 /**
  * An error tha occurs during feature flag evaluation.
@@ -156,6 +158,7 @@ export interface EvaluationContext {
 export type FlagEvaluationError =
     | 'PROVIDER_NOT_READY'
     | 'FLAG_NOT_FOUND'
+    | 'PARSE_ERROR'
     | 'TYPE_MISMATCH';
 
 /**

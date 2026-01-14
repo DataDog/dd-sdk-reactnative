@@ -33,14 +33,6 @@ import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
 
-jest.mock('../flags/DatadogFlags', () => {
-    return {
-        DatadogFlags: {
-            enable: jest.fn().mockResolvedValue(undefined)
-        }
-    };
-});
-
 jest.mock(
     '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',
     () => {

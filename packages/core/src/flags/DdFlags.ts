@@ -10,26 +10,28 @@ import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
-import type { DatadogFlagsType, DatadogFlagsConfiguration } from './types';
+import type { DdFlagsType, DdFlagsConfiguration } from './types';
 
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
 
-class DatadogFlagsWrapper implements DatadogFlagsType {
+class DdFlagsWrapper implements DdFlagsType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
         .default;
 
     private isFeatureEnabled = false;
 
+    private clients: Record<string, FlagsClient> = {};
+
     /**
      * Enables the Datadog Flags feature in your application.
      *
      * Call this method after initializing the Datadog SDK to enable feature flag evaluation.
-     * This method must be called before creating any `FlagsClient` instances via `DatadogFlags.getClient()`.
+     * This method must be called before creating any `FlagsClient` instances via `DdFlags.getClient()`.
      *
      * @example
      * ```ts
-     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DatadogFlags } from '@datadog/mobile-react-native';
+     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdFlags } from '@datadog/mobile-react-native';
      *
      * // Initialize the Datadog SDK.
      * await DdSdkReactNative.initialize(...);
@@ -40,25 +42,23 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
      * };
      *
      * // Enable the feature.
-     * await DatadogFlags.enable(flagsConfig);
+     * await DdFlags.enable(flagsConfig);
      *
      * // Retrieve the client and access feature flags.
-     * const flagsClient = DatadogFlags.getClient();
+     * const flagsClient = DdFlags.getClient();
      * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
      * ```
      *
      * @param configuration Configuration options for the Datadog Flags feature.
      */
-    enable = async (
-        configuration?: DatadogFlagsConfiguration
-    ): Promise<void> => {
+    enable = async (configuration?: DdFlagsConfiguration): Promise<void> => {
         if (configuration?.enabled === false) {
             return;
         }
 
         if (this.isFeatureEnabled) {
             InternalLog.log(
-                'Datadog Flags feature has already been enabled. Skipping this `DatadogFlags.enable()` call.',
+                'Datadog Flags feature has already been enabled. Skipping this `DdFlags.enable()` call.',
                 SdkVerbosity.WARN
             );
         }
@@ -80,23 +80,34 @@ class DatadogFlagsWrapper implements DatadogFlagsType {
      * @example
      * ```ts
      * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
-     * const flagsClient = DatadogFlags.getClient();
-     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
+     * const flagsClient = DdFlags.getClient();
+     *
+     * // Set the evaluation context.
+     * await flagsClient.setEvaluationContext({
+     *     targetingKey: 'user-123',
+     *     attributes: {
+     *         favoriteFruit: 'apple'
+     *     }
+     * });
+     *
+     * const flagValue = flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
     getClient = (clientName: string = 'default'): FlagsClient => {
         if (!this.isFeatureEnabled) {
             InternalLog.log(
-                '`DatadogFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
+                '`DdFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
                 SdkVerbosity.ERROR
             );
         }
 
-        return new FlagsClient(clientName);
+        this.clients[clientName] ??= new FlagsClient(clientName);
+
+        return this.clients[clientName];
     };
 }
 
-export const DatadogFlags: DatadogFlagsType = getGlobalInstance(
+export const DdFlags: DdFlagsType = getGlobalInstance(
     FLAGS_MODULE,
-    () => new DatadogFlagsWrapper()
+    () => new DdFlagsWrapper()
 );

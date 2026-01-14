@@ -16,62 +16,31 @@
 
 RCT_EXPORT_MODULE()
 
-RCT_REMAP_METHOD(enable,
-                 enableDdFlagsWithConfiguration:(NSDictionary *)configuration
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(enable:(NSDictionary *)configuration
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self enable:configuration resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(setEvaluationContext,
-                 setEvaluationContextWithClientName:(NSString *)clientName
-                 withTargetingKey:(NSString *)targetingKey
-                 withAttributes:(NSDictionary *)attributes
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setEvaluationContext:(NSString *)clientName
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(getBooleanDetails,
-                 getBooleanDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(BOOL)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(trackEvaluation:(NSString *)clientName
+                  withKey:(NSString *)key
+                  withRawFlag:(NSDictionary *)rawFlag
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getStringDetails,
-                 getStringDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(NSString *)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getNumberDetails,
-                 getNumberDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(double)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-RCT_REMAP_METHOD(getObjectDetails,
-                 getObjectDetailsWithClientName:(NSString *)clientName
-                 withKey:(NSString *)key
-                 withDefaultValue:(NSDictionary *)defaultValue
-                 withResolve:(RCTPromiseResolveBlock)resolve
-                 withReject:(RCTPromiseRejectBlock)reject)
-{
-    [self getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+    [self trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
@@ -99,27 +68,15 @@ RCT_REMAP_METHOD(getObjectDetails,
     return [RNQueue getSharedQueue];
 }
 
-- (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+- (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation enable:configuration resolve:resolve reject:reject];
 }
 
-- (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
+- (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation setEvaluationContext:clientName targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
-- (void)getBooleanDetails:(NSString *)clientName key:(NSString *)key defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getBooleanDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getStringDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getStringDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getNumberDetails:(NSString *)clientName key:(NSString *)key defaultValue:(double)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getNumberDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
-}
-
-- (void)getObjectDetails:(NSString *)clientName key:(NSString *)key defaultValue:(NSDictionary *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject { 
-    [self.ddFlagsImplementation getObjectDetails:clientName key:key defaultValue:defaultValue resolve:resolve reject:reject];
+- (void)trackEvaluation:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 @end
