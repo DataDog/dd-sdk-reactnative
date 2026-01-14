@@ -3,6 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+@file:Suppress("TooManyFunctions")
 
 package com.datadog.reactnative
 
@@ -15,8 +16,8 @@ import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
-import org.json.JSONObject
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Converts the [List] to a [WritableNativeArray].
@@ -32,6 +33,7 @@ internal fun List<*>.toWritableArray(): WritableArray =
  * @param createWritableMap a function to provide a concrete instance of new WritableMap(s)
  * @param createWritableArray a function to provide a concrete instance of new WritableArray(s)
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun List<*>.toWritableArray(
     createWritableMap: () -> WritableMap,
     createWritableArray: () -> WritableArray,
@@ -112,6 +114,7 @@ internal fun Map<*, *>.toWritableMap(): WritableMap =
  * @param createWritableMap a function to provide a concrete instance for WritableMap(s)
  * @param createWritableArray a function to provide a concrete instance for WritableArray(s)
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun Map<*, *>.toWritableMap(
     createWritableMap: () -> WritableMap,
     createWritableArray: () -> WritableArray,
@@ -249,6 +252,7 @@ internal fun ReadableMap.toMap(): Map<String, Any> {
  * such as [List], [Map] and the raw types.
  * or [List], instead of [ReadableMap] and [ReadableArray] respectively).
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun ReadableArray.toList(): List<*> {
     val list = mutableListOf<Any?>()
     for (i in 0 until size()) {

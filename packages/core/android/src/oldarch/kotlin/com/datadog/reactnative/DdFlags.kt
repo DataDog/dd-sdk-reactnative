@@ -36,10 +36,10 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
      */
     @ReactMethod
     fun setEvaluationContext(
-            clientName: String,
-            targetingKey: String,
-            attributes: ReadableMap,
-            promise: Promise
+        clientName: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise
     ) {
         implementation.setEvaluationContext(clientName, targetingKey, attributes, promise)
     }
@@ -50,7 +50,14 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
      * @param key The key of the flag.
      */
     @ReactMethod
-    fun trackEvaluation(clientName: String, key: String, rawFlag: ReadableMap, targetingKey: String, attributes: ReadableMap, promise: Promise) {
+    fun trackEvaluation(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
         implementation.trackEvaluation(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
 }

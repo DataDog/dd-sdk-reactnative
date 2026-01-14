@@ -9,19 +9,22 @@ package com.datadog.reactnative
 import com.datadog.android.Datadog
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.SdkCore
-import com.datadog.android.flags._FlagsInternalProxy
-import com.datadog.android.flags.Flags
 import com.datadog.android.flags.EvaluationContextCallback
+import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
-import com.datadog.android.flags.model.FlagsClientState
 import com.datadog.android.flags.FlagsConfiguration
-import com.datadog.android.flags.model.UnparsedFlag
+import com.datadog.android.flags._FlagsInternalProxy
 import com.datadog.android.flags.model.EvaluationContext
+import com.datadog.android.flags.model.FlagsClientState
+import com.datadog.android.flags.model.UnparsedFlag
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import org.json.JSONObject
 import java.util.Locale
 
+/**
+ * The entry point to use Datadog's Flags feature.
+ */
 class DdFlagsImplementation(
     private val sdkCore: SdkCore = Datadog.getInstance(),
 ) {
@@ -48,13 +51,6 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
-    /**
-     * Retrieve or create a FlagsClient instance.
-     *
-     * Caches clients by name to avoid repeated Builder().build() calls. On hot reload, the cache is
-     * cleared and clients are recreated - this is safe because gracefulModeEnabled=true prevents
-     * crashes on duplicate creation.
-     */
     private fun getClient(name: String): FlagsClient = clients.getOrPut(name) { FlagsClient.Builder(name, sdkCore).build() }
 
     /**
@@ -74,32 +70,45 @@ class DdFlagsImplementation(
 
         // Set the evaluation context.
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
-        client.setEvaluationContext(evaluationContext, object : EvaluationContextCallback {
-            override fun onSuccess() {
-                val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
-                val serializedFlagsSnapshot =
-                    flagsSnapshot.mapValues { (key, flag) ->
-                        convertUnparsedFlagToMap(key, flag)
-                    }.toWritableMap()
-                promise.resolve(serializedFlagsSnapshot)
-            }
-
-            override fun onFailure(error: Throwable) {
-                // If network request fails and there are cached flags, return them.
-                if (client.state.getCurrentState() == FlagsClientState.Stale) {
+        client.setEvaluationContext(
+            evaluationContext,
+            object : EvaluationContextCallback {
+                override fun onSuccess() {
                     val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
                     val serializedFlagsSnapshot =
                         flagsSnapshot.mapValues { (key, flag) ->
                             convertUnparsedFlagToMap(key, flag)
                         }.toWritableMap()
                     promise.resolve(serializedFlagsSnapshot)
-                } else {
-                    promise.reject("CLIENT_NOT_INITIALIZED", error.message, error)
                 }
-            }
-        })
+
+                override fun onFailure(error: Throwable) {
+                    // If network request fails and there are cached flags, return them.
+                    if (client.state.getCurrentState() == FlagsClientState.Stale) {
+                        val flagsSnapshot = internalClient.getFlagAssignmentsSnapshot()
+                        val serializedFlagsSnapshot =
+                            flagsSnapshot.mapValues { (key, flag) ->
+                                convertUnparsedFlagToMap(key, flag)
+                            }.toWritableMap()
+                        promise.resolve(serializedFlagsSnapshot)
+                    } else {
+                        promise.reject("CLIENT_NOT_INITIALIZED", error.message, error)
+                    }
+                }
+            },
+        )
     }
 
+    /**
+     * A bridge for tracking feature flag evaluations in React Native.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param rawFlag The raw flag from the JavaScript cache.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param promise The promise to resolve.
+     */
+    @Suppress("LongParameterList")
     fun trackEvaluation(
         clientName: String,
         key: String,
@@ -170,13 +179,6 @@ private fun buildEvaluationContext(
     return EvaluationContext(targetingKey, parsed)
 }
 
-/**
- * Converts [UnparsedFlag] to [Map] for further React Native bridge transfer. Includes the
- * flag key and parses the value based on variationType.
- *
- * We are using Map instead of WritableMap as an intermediate because it is more handy, and we can
- * convert to WritableMap right before sending to React Native.
- */
 private fun convertUnparsedFlagToMap(
     flagKey: String,
     flag: UnparsedFlag,
@@ -206,6 +208,7 @@ private fun convertUnparsedFlagToMap(
         )
     }
 
+    // Return a [Map] as an intermediate because it is easier to use; we can convert it to WritableMap right before sending to React Native.
     return mapOf(
         "key" to flagKey,
         "value" to (parsedValue ?: flag.variationValue),
@@ -219,7 +222,6 @@ private fun convertUnparsedFlagToMap(
     )
 }
 
-/** Converts a [Map] to a [UnparsedFlag]. */
 @Suppress("UNCHECKED_CAST")
 private fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
     object : UnparsedFlag {
