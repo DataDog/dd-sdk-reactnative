@@ -24,6 +24,11 @@ class DdFlagsWrapper implements DdFlagsType {
 
     private isFeatureEnabled = false;
 
+    /**
+     * A map of client names to their corresponding {@link FlagsClient} instances.
+     *
+     * Each of these clients hold their own context and flags state.
+     */
     private clients: Record<string, FlagsClient> = {};
 
     enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {

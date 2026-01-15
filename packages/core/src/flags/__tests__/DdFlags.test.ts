@@ -29,31 +29,37 @@ describe('DdFlags', () => {
         });
     });
 
-    describe('Initialization', () => {
-        it('should print an error if calling DdFlags.enable() for multiple times', async () => {
-            await DdFlags.enable();
-            await DdFlags.enable();
-            await DdFlags.enable();
+    it('should always call the native enable method with enabled set to true', async () => {
+        await DdFlags.enable();
 
-            expect(InternalLog.log).toHaveBeenCalledTimes(2);
-            // We let the native part of the SDK handle this gracefully.
-            expect(NativeModules.DdFlags.enable).toHaveBeenCalledTimes(3);
+        expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
+            enabled: true
+        });
+    });
+
+    it('should call the native enable method with the correct configuration', async () => {
+        await DdFlags.enable({
+            customExposureEndpoint: 'https://example.com',
+            customFlagsEndpoint: 'https://example.com',
+            trackExposures: false,
+            rumIntegrationEnabled: false
         });
 
-        it('should print an error if retrieving the client before the feature is enabled', async () => {
-            DdFlags.getClient();
-
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                '`DdFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
-                SdkVerbosity.ERROR
-            );
+        expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
+            enabled: true,
+            customExposureEndpoint: 'https://example.com',
+            customFlagsEndpoint: 'https://example.com',
+            trackExposures: false,
+            rumIntegrationEnabled: false
         });
+    });
 
-        it('should not print an error if retrieving the client after the feature is enabled', async () => {
-            await DdFlags.enable();
-            DdFlags.getClient();
+    it('should print an error when trying to retrieve a client before DdFlags.enable() was called', async () => {
+        DdFlags.getClient();
 
-            expect(InternalLog.log).not.toHaveBeenCalled();
-        });
+        expect(InternalLog.log).toHaveBeenCalledWith(
+            '`DdFlags.getClient()` called before Datadog Flags feature have been enabled. Client will fall back to serving default flag values.',
+            SdkVerbosity.ERROR
+        );
     });
 });

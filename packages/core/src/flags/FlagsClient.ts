@@ -32,6 +32,8 @@ export class FlagsClient {
      *
      * Should be called before evaluating any flags. Otherwise, the client will fall back to serving default flag values.
      *
+     * Throws an error if there is an error setting the evaluation context and logs an error message.
+     *
      * @param context The evaluation context to associate with the current client.
      *
      * @example
