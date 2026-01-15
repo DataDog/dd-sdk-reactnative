@@ -25,7 +25,12 @@ import { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 import { SdkVerbosity } from './SdkVerbosity';
 import { TrackingConsent } from './TrackingConsent';
 import { DdFlags } from './flags/DdFlags';
-import type { DdFlagsConfiguration, FlagDetails } from './flags/types';
+import type { FlagsClient } from './flags/FlagsClient';
+import type {
+    FlagsConfiguration,
+    FlagDetails,
+    EvaluationContext
+} from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -97,6 +102,8 @@ export type {
     FirstPartyHost,
     AutoInstrumentationConfiguration,
     PartialInitializationConfiguration,
-    DdFlagsConfiguration,
+    FlagsConfiguration,
+    FlagsClient,
+    EvaluationContext,
     FlagDetails
 };

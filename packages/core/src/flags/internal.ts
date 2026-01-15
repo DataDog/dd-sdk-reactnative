@@ -1,7 +1,7 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 
-import type { EvaluationContext, FlagDetails } from './types';
+import type { EvaluationContext, PrimitiveValue } from './types';
 
 export interface FlagCacheEntry {
     key: string;
@@ -15,41 +15,43 @@ export interface FlagCacheEntry {
     extraLogging: Record<string, unknown>;
 }
 
-export const flagCacheEntryToFlagDetails = <T>(
-    entry: FlagCacheEntry
-): FlagDetails<T> => {
-    return {
-        key: entry.key,
-        value: entry.value as T,
-        variant: entry.variationKey,
-        reason: entry.reason,
-        error: null
-    };
-};
-
 export const processEvaluationContext = (
     context: EvaluationContext
 ): EvaluationContext => {
     const { targetingKey } = context;
-    let attributes = context.attributes ?? {};
 
-    // Filter out object values from attributes because Android doesn't support nested object values in the evaluation context.
-    attributes = Object.fromEntries(
-        Object.entries(attributes)
-            .filter(([key, value]) => {
-                if (typeof value === 'object' && value !== null) {
-                    InternalLog.log(
-                        `Nested object value under "${key}" is not supported in the evaluation context. Omitting this atribute from the evaluation context.`,
-                        SdkVerbosity.WARN
-                    );
+    // We should ignore non-primitive values in the context as per FFE SDK requirements OF.3.
+    const providedAttributes: Record<string, unknown> =
+        context.attributes ?? {};
 
-                    return false;
-                }
+    const attributes: Record<string, PrimitiveValue> = {};
 
-                return true;
-            })
-            .map(([key, value]) => [key, value?.toString() ?? ''])
-    );
+    for (const [key, value] of Object.entries(providedAttributes)) {
+        const isPrimitiveValue =
+            typeof value === 'boolean' ||
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            value === undefined ||
+            value === null;
 
-    return { targetingKey, attributes };
+        if (!isPrimitiveValue) {
+            InternalLog.log(
+                `Non-primitive context value under "${key}" is not supported. Omitting this atribute from the evaluation context.`,
+                SdkVerbosity.WARN
+            );
+
+            continue;
+        }
+
+        if (value === undefined) {
+            continue;
+        }
+
+        attributes[key] = value;
+    }
+
+    return {
+        targetingKey,
+        attributes
+    };
 };

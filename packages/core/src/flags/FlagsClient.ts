@@ -8,12 +8,9 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
-import {
-    flagCacheEntryToFlagDetails,
-    processEvaluationContext
-} from './internal';
+import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
-import type { ObjectValue, EvaluationContext, FlagDetails } from './types';
+import type { JsonValue, EvaluationContext, FlagDetails } from './types';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -22,8 +19,9 @@ export class FlagsClient {
 
     private clientName: string;
 
-    private _evaluationContext: EvaluationContext | undefined = undefined;
-    private _flagsCache: Record<string, FlagCacheEntry> = {};
+    private evaluationContext: EvaluationContext | undefined = undefined;
+
+    private flagsCache: Record<string, FlagCacheEntry> = {};
 
     constructor(clientName: string = 'default') {
         this.clientName = clientName;
@@ -34,7 +32,7 @@ export class FlagsClient {
      *
      * Should be called before evaluating any flags. Otherwise, the client will fall back to serving default flag values.
      *
-     * @param context The evaluation context to associate with the current session.
+     * @param context The evaluation context to associate with the current client.
      *
      * @example
      * ```ts
@@ -53,6 +51,7 @@ export class FlagsClient {
     setEvaluationContext = async (
         context: EvaluationContext
     ): Promise<void> => {
+        // Make sure to process the incoming context because we don't support nested object values in context.
         const processedContext = processEvaluationContext(context);
 
         try {
@@ -62,8 +61,8 @@ export class FlagsClient {
                 processedContext.attributes ?? {}
             );
 
-            this._evaluationContext = processedContext;
-            this._flagsCache = result;
+            this.evaluationContext = processedContext;
+            this.flagsCache = result;
         } catch (error) {
             if (error instanceof Error) {
                 InternalLog.log(
@@ -71,59 +70,72 @@ export class FlagsClient {
                     SdkVerbosity.ERROR
                 );
             }
+
+            throw error;
         }
     };
 
-    private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
-        // Check whether the evaluation context has already been set.
-        if (!this._evaluationContext) {
-            InternalLog.log(
-                `The evaluation context is not set for the client ${this.clientName}. Please, call \`DdFlags.setEvaluationContext()\` before evaluating any flags.`,
-                SdkVerbosity.ERROR
-            );
+    private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
+        // A non-blocking call; don't await this.
+        this.nativeFlags
+            .trackEvaluation(
+                this.clientName,
+                flag.key,
+                flag,
+                context.targetingKey,
+                context.attributes ?? {}
+            )
+            .catch(error => {
+                if (error instanceof Error) {
+                    InternalLog.log(
+                        `Error tracking flag evaluation: ${error.message}`,
+                        SdkVerbosity.WARN
+                    );
+                }
+            });
+    };
 
+    private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
+        if (!this.evaluationContext) {
             return {
                 key,
                 value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'PROVIDER_NOT_READY'
+                reason: 'ERROR',
+                errorCode: 'PROVIDER_NOT_READY',
+                errorMessage: `The evaluation context is not set for '${this.clientName}'. Please, set context before evaluating any flags.`
             };
         }
 
         // Retrieve the flag from the cache.
-        const flagCacheEntry = this._flagsCache[key];
+        const flag = this.flagsCache[key];
 
-        if (!flagCacheEntry) {
+        if (!flag) {
             return {
                 key,
                 value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'FLAG_NOT_FOUND'
+                reason: 'ERROR',
+                errorCode: 'FLAG_NOT_FOUND'
             };
         }
 
-        // Convert to FlagDetails.
-        const details = flagCacheEntryToFlagDetails<T>(flagCacheEntry);
+        this.track(flag, this.evaluationContext);
 
-        // Track the flag evaluation. Don't await this; non-blocking.
-        this.nativeFlags.trackEvaluation(
-            this.clientName,
-            key,
-            flagCacheEntry,
-            this._evaluationContext.targetingKey,
-            this._evaluationContext.attributes ?? {}
-        );
+        const details: FlagDetails<T> = {
+            key: flag.key,
+            value: flag.value as T,
+            variant: flag.variationKey,
+            allocationKey: flag.allocationKey,
+            reason: flag.reason
+        };
 
         return details;
     };
 
     /**
-     * Evaluates a boolean feature flag with detailed evaluation information.
+     * Evaluate a boolean feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      */
     getBooleanDetails = (
         key: string,
@@ -133,9 +145,9 @@ export class FlagsClient {
             return {
                 key,
                 value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'TYPE_MISMATCH'
+                reason: 'ERROR',
+                errorCode: 'TYPE_MISMATCH',
+                errorMessage: 'Provided `defaultValue` is not a boolean.'
             };
         }
 
@@ -143,10 +155,10 @@ export class FlagsClient {
     };
 
     /**
-     * Evaluates a string feature flag with detailed evaluation information.
+     * Evaluate a string feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      */
     getStringDetails = (
         key: string,
@@ -156,9 +168,9 @@ export class FlagsClient {
             return {
                 key,
                 value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'TYPE_MISMATCH'
+                reason: 'ERROR',
+                errorCode: 'TYPE_MISMATCH',
+                errorMessage: 'Provided `defaultValue` is not a string.'
             };
         }
 
@@ -166,10 +178,10 @@ export class FlagsClient {
     };
 
     /**
-     * Evaluates a number feature flag with detailed evaluation information.
+     * Evaluate a number feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      */
     getNumberDetails = (
         key: string,
@@ -179,9 +191,9 @@ export class FlagsClient {
             return {
                 key,
                 value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'TYPE_MISMATCH'
+                reason: 'ERROR',
+                errorCode: 'TYPE_MISMATCH',
+                errorMessage: 'Provided `defaultValue` is not a number.'
             };
         }
 
@@ -189,33 +201,25 @@ export class FlagsClient {
     };
 
     /**
-     * Evaluates an object feature flag with detailed evaluation information.
+     * Evaluate a JSON feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      */
-    getObjectDetails = (
+    getObjectDetails = <T extends JsonValue>(
         key: string,
-        defaultValue: ObjectValue
-    ): FlagDetails<ObjectValue> => {
-        if (typeof defaultValue !== 'object' || defaultValue === null) {
-            return {
-                key,
-                value: defaultValue,
-                variant: null,
-                reason: null,
-                error: 'TYPE_MISMATCH'
-            };
-        }
+        defaultValue: T
+    ): FlagDetails<T> => {
+        // OpenFeature provider spec assumes `defaultValue` can be any JSON value (including primitves) so no validation here.
 
         return this.getDetails(key, defaultValue);
     };
 
     /**
-     * Returns the value of a boolean feature flag.
+     * Evaluate a boolean feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      *
      * @example
      * ```ts
@@ -227,10 +231,10 @@ export class FlagsClient {
     };
 
     /**
-     * Returns the value of a string feature flag.
+     * Evaluate a string feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      *
      * @example
      * ```ts
@@ -242,10 +246,10 @@ export class FlagsClient {
     };
 
     /**
-     * Returns the value of a number feature flag.
+     * Evaluate a number feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      *
      * @example
      * ```ts
@@ -257,17 +261,17 @@ export class FlagsClient {
     };
 
     /**
-     * Returns the value of an object feature flag.
+     * Evaluate an object feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue The value to return if the flag is not found or evaluation fails.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
      *
      * @example
      * ```ts
      * const pageCalloutOptions = flagsClient.getObjectValue('page-callout', { color: 'purple', text: 'Woof!' });
      * ```
      */
-    getObjectValue = (key: string, defaultValue: ObjectValue): ObjectValue => {
+    getObjectValue = <T extends JsonValue>(key: string, defaultValue: T): T => {
         return this.getObjectDetails(key, defaultValue).value;
     };
 }

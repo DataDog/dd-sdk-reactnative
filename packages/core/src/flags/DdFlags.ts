@@ -10,10 +10,13 @@ import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
-import type { DdFlagsType, DdFlagsConfiguration } from './types';
+import type { DdFlagsType, FlagsConfiguration } from './types';
 
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
 
+/**
+ * Implementation class for {@link DdFlagsType}. Please see the interface for documentation.
+ */
 class DdFlagsWrapper implements DdFlagsType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
@@ -23,76 +26,12 @@ class DdFlagsWrapper implements DdFlagsType {
 
     private clients: Record<string, FlagsClient> = {};
 
-    /**
-     * Enables the Datadog Flags feature in your application.
-     *
-     * Call this method after initializing the Datadog SDK to enable feature flag evaluation.
-     * This method must be called before creating any `FlagsClient` instances via `DdFlags.getClient()`.
-     *
-     * @example
-     * ```ts
-     * import { DdSdkReactNativeConfiguration, DdSdkReactNative, DdFlags } from '@datadog/mobile-react-native';
-     *
-     * // Initialize the Datadog SDK.
-     * await DdSdkReactNative.initialize(...);
-     *
-     * // Optinal flags configuration object.
-     * const flagsConfig = {
-     *     customFlagsEndpoint: 'https://flags.example.com'
-     * };
-     *
-     * // Enable the feature.
-     * await DdFlags.enable(flagsConfig);
-     *
-     * // Retrieve the client and access feature flags.
-     * const flagsClient = DdFlags.getClient();
-     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
-     * ```
-     *
-     * @param configuration Configuration options for the Datadog Flags feature.
-     */
-    enable = async (configuration?: DdFlagsConfiguration): Promise<void> => {
-        if (configuration?.enabled === false) {
-            return;
-        }
-
-        if (this.isFeatureEnabled) {
-            InternalLog.log(
-                'Datadog Flags feature has already been enabled. Skipping this `DdFlags.enable()` call.',
-                SdkVerbosity.WARN
-            );
-        }
-
-        // Default `enabled` to `true`.
+    enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {
         await this.nativeFlags.enable({ enabled: true, ...configuration });
 
         this.isFeatureEnabled = true;
     };
 
-    /**
-     * Returns a `FlagsClient` instance for further feature flag evaluation.
-     *
-     * For most applications, you would need only one client. If you need multiple clients,
-     * you can retrieve a couple of clients with different names.
-     *
-     * @param clientName An optional name of the client to retrieve. Defaults to `'default'`.
-     *
-     * @example
-     * ```ts
-     * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
-     * const flagsClient = DdFlags.getClient();
-     *
-     * // Set the evaluation context.
-     * await flagsClient.setEvaluationContext({
-     *     targetingKey: 'user-123',
-     *     attributes: {
-     *         favoriteFruit: 'apple'
-     *     }
-     * });
-     *
-     * const flagValue = flagsClient.getBooleanValue('new-feature', false);
-     * ```
-     */
     getClient = (clientName: string = 'default'): FlagsClient => {
         if (!this.isFeatureEnabled) {
             InternalLog.log(

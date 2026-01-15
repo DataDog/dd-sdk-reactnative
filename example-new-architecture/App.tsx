@@ -11,7 +11,13 @@ import {
   RumConfiguration,
   DdFlags,
 } from '@datadog/mobile-react-native';
-import React from 'react';
+import {DatadogProvider} from '@datadog/openfeature-react-native';
+import {
+  OpenFeature,
+  OpenFeatureProvider,
+  useObjectFlagDetails,
+} from '@openfeature/react-sdk';
+import React, {Suspense} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ActivityIndicator,
@@ -35,32 +41,110 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  const config = new CoreConfiguration(
-    CLIENT_TOKEN,
-    ENVIRONMENT,
-  );
+  const config = new CoreConfiguration(CLIENT_TOKEN, ENVIRONMENT);
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
+
+  // Enable RUM.
   config.rumConfiguration = new RumConfiguration(
     APPLICATION_ID,
     true,
     true,
-    true
-  )
+    true,
+  );
   config.rumConfiguration.sessionSampleRate = 100;
   config.rumConfiguration.telemetrySampleRate = 100;
 
+  // Initialize the Datadog SDK.
   await DdSdkReactNative.initialize(config);
+
+  // Enable Flags.
+  await DdFlags.enable();
+
+  // Usage examples.
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
     await DdRum.addTiming('one_second');
   }, 1000);
   await DdRum.addAction(RumActionType.CUSTOM, 'custom action');
+
   await DdLogs.info('info log');
+
   const spanId = await DdTrace.startSpan('test span');
   await DdTrace.finishSpan(spanId);
 })();
+
+function AppWithProviders() {
+  React.useEffect(() => {
+    const userId = 'user-123'
+
+    const evaluationContext = {
+      targetingKey: userId,
+      favoriteFruit: 'apple'
+    }
+
+    const provider = new DatadogProvider();
+    OpenFeature.setProvider(provider, evaluationContext);
+  }, [])
+
+  return (
+    <Suspense
+      fallback={
+        <SafeAreaView style={{height: '100%', justifyContent: 'center'}}>
+          <ActivityIndicator />
+        </SafeAreaView>
+      }>
+      <OpenFeatureProvider suspendUntilReady>
+        <App />
+      </OpenFeatureProvider>
+    </Suspense>
+  );
+}
+
+function App(): React.JSX.Element {
+  const greetingFlag = useObjectFlagDetails('rn-sdk-test-json-flag', {greeting: 'Default greeting'});
+
+  const isDarkMode = useColorScheme() === 'dark';
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  };
+
+  return (
+    <SafeAreaView style={backgroundStyle}>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={backgroundStyle.backgroundColor}
+      />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
+        <Header />
+
+        <View style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}>
+          <Section title={greetingFlag.value.greeting}>
+            The title of this section is based on the <Text style={styles.highlight}>{greetingFlag.flagKey}</Text> feature flag.{'\n\n'}
+
+            If it's different from "Default greeting", then it is coming from the feature flag evaluation.
+          </Section>
+
+          <Section title="Step One">
+            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
+            screen and then come back to see your edits.
+          </Section>
+          <Section title="See Your Changes">
+            <ReloadInstructions />
+          </Section>
+          <Section title="Debug">
+            <DebugInstructions />
+          </Section>
+          <Section title="Learn More">
+            Read the docs to discover what to do next:
+          </Section>
+          <LearnMoreLinks />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -92,82 +176,6 @@ function Section({children, title}: SectionProps): React.JSX.Element {
   );
 }
 
-function App(): React.JSX.Element {
-  const [isInitialized, setIsInitialized] = React.useState(false);
-
-  React.useEffect(() => {
-    (async () => {
-      // This is a blocking async app initialization effect.
-      // It simulates the way most React Native applications are initialized.
-      await DdFlags.enable();
-      const client = DdFlags.getClient();
-
-      const userId = 'test-user-1';
-      const userAttributes = {
-        country: 'US',
-      };
-
-      await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
-
-      setIsInitialized(true);
-    })().catch(console.error);
-  }, []);
-
-  const isDarkMode = useColorScheme() === 'dark';
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  if (!isInitialized) {
-    return (
-      <SafeAreaView style={{height: '100%', justifyContent: 'center'}}>
-        <ActivityIndicator />
-      </SafeAreaView>
-    );
-  }
-
-  // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
-  const testFlagKey = 'rn-sdk-test-json-flag';
-  const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Feature Flags">
-            Flag value for <Text style={styles.highlight}>{testFlagKey}</Text> is{'\n'}
-            <Text style={styles.highlight}>{JSON.stringify(testFlag)}</Text>
-          </Section>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
   sectionContainer: {
     marginTop: 32,
@@ -187,4 +195,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default AppWithProviders;
