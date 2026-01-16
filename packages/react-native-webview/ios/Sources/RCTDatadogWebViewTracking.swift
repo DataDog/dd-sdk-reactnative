@@ -6,15 +6,12 @@
 
 import DatadogCore
 import DatadogInternal
-import DatadogSDKReactNative
-import DatadogWebViewTracking
-import WebKit
 
 @objc public class RCTDatadogWebViewTracking: NSObject {
     var webView: RCTDatadogWebView? = nil
     var allowedHosts: Set<String> = Set()
     var onSdkInitializedListener: OnSdkInitializedListener?
-
+    
     public override init() {
         super.init()
         self.onSdkInitializedListener = { [weak self] (core: DatadogCoreProtocol) in
@@ -28,6 +25,7 @@ import WebKit
             )
         }
     }
+   
     /**
      Enables tracking on the given WebView.
     
@@ -43,14 +41,14 @@ import WebKit
         guard !webView.isTrackingEnabled else { return }
 
         if CoreRegistry.isRegistered(instanceName: CoreRegistry.defaultInstanceName) {
-            enableWebViewTracking(
-                webView: webView, allowedHosts: allowedHosts, core: CoreRegistry.default)
+            enableWebViewTracking(webView: webView, allowedHosts: allowedHosts, core: CoreRegistry.default)
         } else if let onSdkInitializedListener = self.onSdkInitializedListener {
             DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: onSdkInitializedListener)
         } else {
             // TODO: Report initialization problem
         }
     }
+    
 
     private func enableWebViewTracking(
         webView: RCTDatadogWebView,

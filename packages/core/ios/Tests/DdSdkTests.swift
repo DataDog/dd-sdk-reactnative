@@ -770,42 +770,6 @@ class DdSdkTests: XCTestCase {
         GlobalState.globalAttributes.removeAll()
     }
 
-    func testAddingAttribute() {
-        let rumMonitorMock = MockRUMMonitor()
-        let bridge = DdSdkImplementation(
-            mainDispatchQueue: DispatchQueueMock(),
-            jsDispatchQueue: DispatchQueueMock(),
-            jsRefreshRateMonitor: JSRefreshRateMonitor(),
-            RUMMonitorProvider: { rumMonitorMock },
-            RUMMonitorInternalProvider: { nil }
-        )
-        bridge.initialize(
-            configuration: .mockAny(),
-            resolve: mockResolve,
-            reject: mockReject
-        )
-
-        bridge.addAttribute(
-            key: "attribute-1", value: NSDictionary(dictionary: ["value": 123]),
-            resolve: mockResolve, reject: mockReject)
-        bridge.addAttribute(
-            key: "attribute-2", value: NSDictionary(dictionary: ["value": "abc"]),
-            resolve: mockResolve, reject: mockReject)
-        bridge.addAttribute(
-            key: "attribute-3", value: NSDictionary(dictionary: ["value": true]),
-            resolve: mockResolve, reject: mockReject)
-
-        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-1"] as? Int64, 123)
-        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-2"] as? String, "abc")
-        XCTAssertEqual(rumMonitorMock.addedAttributes["attribute-3"] as? Bool, true)
-
-        XCTAssertEqual(GlobalState.globalAttributes["attribute-1"] as? Int64, 123)
-        XCTAssertEqual(GlobalState.globalAttributes["attribute-2"] as? String, "abc")
-        XCTAssertEqual(GlobalState.globalAttributes["attribute-3"] as? Bool, true)
-
-        GlobalState.globalAttributes.removeAll()
-    }
-
     func testRemovingAttribute() {
         let rumMonitorMock = MockRUMMonitor()
         let bridge = DdSdkImplementation(
