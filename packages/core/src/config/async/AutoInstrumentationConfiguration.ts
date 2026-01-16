@@ -25,7 +25,7 @@ export type AutoInstrumentationConfiguration = {
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
         readonly nativeCrashReportEnabled?: boolean;
-        readonly nativeLongTaskThresholdMs?: number | false;
+        readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
         readonly actionEventMapper?: ActionEventMapper | null;
         readonly errorEventMapper?: ErrorEventMapper | null;
@@ -49,7 +49,7 @@ export type AutoInstrumentationParameters = {
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
         readonly nativeCrashReportEnabled?: boolean;
-        readonly nativeLongTaskThresholdMs?: number | false;
+        readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
         readonly actionEventMapper: ActionEventMapper | null;
         readonly errorEventMapper: ErrorEventMapper | null;

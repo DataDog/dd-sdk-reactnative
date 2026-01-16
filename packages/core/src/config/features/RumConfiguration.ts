@@ -81,7 +81,7 @@ export class RumConfiguration implements RumConfigurationType {
         DEFAULTS.nativeInteractionTracking;
 
     // Native Long Task Threshold in milliseconds
-    public nativeLongTaskThresholdMs: number | false =
+    public nativeLongTaskThresholdMs: number =
         DEFAULTS.nativeLongTaskThresholdMs;
 
     // Native View Tracking enabled

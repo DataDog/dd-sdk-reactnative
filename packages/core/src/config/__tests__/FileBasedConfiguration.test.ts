@@ -7,8 +7,7 @@
 import { PropagatorType } from '../../rum/types';
 import {
     FileBasedConfiguration,
-    formatPropagatorType,
-    getJSONConfiguration
+    formatPropagatorType
 } from '../FileBasedConfiguration';
 
 import configurationAllFields from './__fixtures__/configuration-all-fields.json';
@@ -93,10 +92,17 @@ describe('FileBasedConfiguration', () => {
 
         it('prints a warning message when the configuration file cannot be parsed correctly', () => {
             const warnSpy = jest.spyOn(console, 'warn');
-            getJSONConfiguration(malformedConfiguration);
+            const config = new FileBasedConfiguration({
+                configuration: malformedConfiguration
+            });
 
+            expect(config).not.toBeUndefined();
+            expect(warnSpy).toHaveBeenCalledTimes(2);
             expect(warnSpy).toHaveBeenCalledWith(
-                'DATADOG: Warning: Malformed json configuration file - clientToken and env are mandatory Core SDK properties. ApplicationId is mandatory to enable RUM.'
+                'DATADOG: Warning - Malformed json configuration file - `clientToken`, `env` and `trackingConsent` are mandatory Core SDK properties.'
+            );
+            expect(warnSpy).toHaveBeenCalledWith(
+                'DATADOG: Warning - Malformed RUM File Configuration - `applicationId` is undefined.'
             );
         });
 
@@ -141,6 +147,7 @@ describe('FileBasedConfiguration', () => {
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "initializationMode": "SYNC",
+                  "logsConfiguration": undefined,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -214,6 +221,7 @@ describe('FileBasedConfiguration', () => {
                   "clientToken": "fake-client-token",
                   "env": "fake-env",
                   "initializationMode": "SYNC",
+                  "logsConfiguration": undefined,
                   "proxyConfiguration": undefined,
                   "rumConfiguration": RumConfiguration {
                     "actionEventMapper": null,
@@ -246,6 +254,7 @@ describe('FileBasedConfiguration', () => {
                   },
                   "service": undefined,
                   "site": "US1",
+                  "traceConfiguration": undefined,
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
                   "verbosity": undefined,

@@ -1106,7 +1106,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.rumConfiguration.nativeLongTaskThresholdMs = false;
+            configuration.rumConfiguration.nativeLongTaskThresholdMs = 0;
             configuration.rumConfiguration.longTaskThresholdMs = false;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);

@@ -42,7 +42,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         initialResourceThreshold?: number;
         trackMemoryWarnings?: boolean;
         nativeCrashReportEnabled?: boolean;
-        nativeLongTaskThresholdMs?: number | false;
+        nativeLongTaskThresholdMs?: number;
         nativeViewTracking?: boolean;
         nativeInteractionTracking?: boolean;
         customEndpoint?: string;

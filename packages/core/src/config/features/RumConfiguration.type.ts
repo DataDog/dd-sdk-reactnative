@@ -89,7 +89,7 @@ export interface RumConfigurationOptions {
     /**
      * Threshold for native long task reporting in milliseconds.
      */
-    nativeLongTaskThresholdMs?: number | false;
+    nativeLongTaskThresholdMs?: number;
 
     /**
      * Enables native interaction tracking.

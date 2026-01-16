@@ -57,7 +57,15 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
             ...rest
         } = jsonConfiguration;
 
-        // TODO: Handle undefined clientToken, env or trackingConsent
+        if (
+            clientToken === undefined ||
+            env === undefined ||
+            trackingConsent === undefined
+        ) {
+            console.warn(
+                'DATADOG: Warning - Malformed json configuration file - `clientToken`, `env` and `trackingConsent` are mandatory Core SDK properties.'
+            );
+        }
 
         // Configure Core SDK
         const coreConfiguration = removeUndefinedEntries(rest);
@@ -86,7 +94,7 @@ export class FileBasedConfiguration extends DatadogProviderConfiguration {
                     params?.actionEventMapper ?? RUM_DEFAULTS.actionEventMapper;
             } else {
                 console.warn(
-                    'DATADOG: Warning - Malformed RUM File Configuration - `applicationId` is undefined'
+                    'DATADOG: Warning - Malformed RUM File Configuration - `applicationId` is undefined.'
                 );
                 this.rumConfiguration = undefined;
             }
@@ -131,17 +139,6 @@ export const getJSONConfiguration = (
     userSpecifiedConfiguration: unknown
 ): JsonConfiguration => {
     const configuration = resolveJSONConfiguration(userSpecifiedConfiguration);
-
-    if (
-        configuration.clientToken === undefined ||
-        configuration.env === undefined ||
-        (configuration.rumConfiguration !== undefined &&
-            configuration.rumConfiguration.applicationId === undefined)
-    ) {
-        console.warn(
-            'DATADOG: Warning: Malformed json configuration file - clientToken and env are mandatory Core SDK properties. ApplicationId is mandatory to enable RUM.'
-        );
-    }
 
     return {
         additionalConfiguration: configuration.additionalConfiguration,

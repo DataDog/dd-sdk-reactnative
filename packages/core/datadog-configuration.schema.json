@@ -214,8 +214,7 @@
                         "nativeLongTaskThresholdMs": {
                             "description": "The threshold for native long tasks reporting in milliseconds. Set to a number to enable reporting or `false` to disable.",
                             "type": [
-                                "integer",
-                                "boolean"
+                                "integer"
                             ]
                         },
                         "sessionSampleRate": {

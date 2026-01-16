@@ -8,7 +8,6 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
-  RumConfiguration,
   TrackingConsent,
 } from '@datadog/mobile-react-native';
 import React from 'react';

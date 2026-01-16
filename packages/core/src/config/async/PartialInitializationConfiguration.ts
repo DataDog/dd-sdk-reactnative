@@ -32,7 +32,7 @@ export type PartialInitializationConfiguration = {
     readonly rumConfiguration?: {
         readonly applicationId: string;
         readonly sessionSampleRate?: number;
-        readonly nativeLongTaskThresholdMs?: number | false;
+        readonly nativeLongTaskThresholdMs?: number;
         readonly nativeCrashReportEnabled?: boolean;
         readonly nativeViewTracking?: boolean;
         readonly nativeInteractionTracking?: boolean;

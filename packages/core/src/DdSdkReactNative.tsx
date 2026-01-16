@@ -433,8 +433,8 @@ export class DdSdkReactNative {
             );
 
             const nativeLongTaskThresholdMs =
-                configuration.rumConfiguration?.nativeLongTaskThresholdMs ||
-                false;
+                configuration.rumConfiguration?.nativeLongTaskThresholdMs ??
+                RUM_DEFAULTS.nativeLongTaskThresholdMs;
             rumConfiguration.nativeLongTaskThresholdMs = adaptLongTaskThreshold(
                 nativeLongTaskThresholdMs
             );

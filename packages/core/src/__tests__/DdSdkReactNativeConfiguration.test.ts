@@ -251,7 +251,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                             trackResources: false,
                             resourceTraceSampleRate: 0,
                             nativeCrashReportEnabled: false,
-                            nativeLongTaskThresholdMs: false,
+                            nativeLongTaskThresholdMs: 0,
                             actionNameAttribute: ''
                         },
                         logsConfiguration: {}
@@ -312,7 +312,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "longTaskThresholdMs": false,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
-                    "nativeLongTaskThresholdMs": false,
+                    "nativeLongTaskThresholdMs": 0,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
                     "resourceTraceSampleRate": 0,

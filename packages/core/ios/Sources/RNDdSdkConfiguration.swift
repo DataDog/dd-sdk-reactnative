@@ -352,7 +352,6 @@ extension Dictionary where Key == String, Value == AnyObject {
             let nativeLongTaskThresholdMs: Double? = {
                 if let v = nativeLongTaskRaw as? Double { return v }
                 if let v = nativeLongTaskRaw as? Int { return Double(v) }
-                if let v = nativeLongTaskRaw as? Bool, v == false { return 0.0 }
                 return nil
             }()
 
