@@ -44,9 +44,10 @@ const buildPartialConfiguration = (
     configuration: DatadogProviderConfiguration
 ): AutoInstrumentationConfiguration => {
     const partialConfiguration: RequiredOrDiscard<AutoInstrumentationConfiguration> = {
-        useAccessibilityLabel: configuration.useAccessibilityLabel,
-        firstPartyHosts: configuration.firstPartyHosts,
         rumConfiguration: {
+            firstPartyHosts: configuration.rumConfiguration?.firstPartyHosts,
+            useAccessibilityLabel:
+                configuration.rumConfiguration?.useAccessibilityLabel ?? true,
             actionNameAttribute:
                 configuration.rumConfiguration?.actionNameAttribute,
             trackErrors: configuration.rumConfiguration?.trackErrors ?? false,
@@ -54,17 +55,26 @@ const buildPartialConfiguration = (
                 configuration.rumConfiguration?.trackResources ?? false,
             trackInteractions:
                 configuration.rumConfiguration?.trackInteractions ?? false,
-            errorEventMapper: configuration.rumConfiguration?.errorEventMapper,
+            resourceTraceSampleRate:
+                configuration.rumConfiguration?.resourceTraceSampleRate ?? 100,
+            nativeCrashReportEnabled:
+                configuration.rumConfiguration?.nativeCrashReportEnabled ??
+                false,
+            nativeLongTaskThresholdMs:
+                configuration.rumConfiguration?.nativeLongTaskThresholdMs ??
+                200,
+            nativeViewTracking:
+                configuration.rumConfiguration?.nativeViewTracking ?? false,
+            errorEventMapper:
+                configuration.rumConfiguration?.errorEventMapper ?? null,
             resourceEventMapper:
-                configuration.rumConfiguration?.resourceEventMapper,
-            actionEventMapper: configuration.rumConfiguration?.actionEventMapper
+                configuration.rumConfiguration?.resourceEventMapper ?? null,
+            actionEventMapper:
+                configuration.rumConfiguration?.actionEventMapper ?? null
         },
         logsConfiguration: {
-            logEventMapper: configuration.logsConfiguration?.logEventMapper
-        },
-        traceConfiguration: {
-            resourceTraceSampleRate:
-                configuration.traceConfiguration?.resourceTraceSampleRate
+            logEventMapper:
+                configuration.logsConfiguration?.logEventMapper ?? null
         }
     };
 

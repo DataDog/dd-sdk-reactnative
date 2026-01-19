@@ -34,8 +34,11 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
             trackFrustrations = rm.getBooleanOrNull("trackFrustrations"),
             longTaskThresholdMs = rm.getDoubleOrNull("longTaskThresholdMs") ?: 0.0,
             sessionSampleRate = rm.getDoubleOrNull("sessionSampleRate"),
+            resourceTraceSampleRate = rm.getDoubleOrNull("resourceTraceSampleRate"),
             vitalsUpdateFrequency = rm.getString("vitalsUpdateFrequency"),
             trackBackgroundEvents = rm.getBooleanOrNull("trackBackgroundEvents"),
+            nativeCrashReportEnabled = rm.getBooleanOrNull("nativeCrashReportEnabled"),
+            nativeLongTaskThresholdMs = rm.getDoubleOrNull("nativeLongTaskThresholdMs"),
             nativeViewTracking = rm.getBooleanOrNull("nativeViewTracking"),
             nativeInteractionTracking = rm.getBooleanOrNull("nativeInteractionTracking"),
             trackNonFatalAnrs = rm.getBooleanOrNull("trackNonFatalAnrs"),
@@ -55,7 +58,6 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
 
     val traceConfiguration: TraceConfiguration? = traceMap?.let { tm ->
         TraceConfiguration(
-            resourceTraceSampleRate = tm.getDoubleOrNull("resourceTraceSampleRate"),
             customEndpoint = tm.getString("customEndpoint")
         )
     }
@@ -70,8 +72,6 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         site = getString("site"),
         service = getString("service"),
         verbosity = getString("verbosity"),
-        nativeCrashReportEnabled = getBooleanOrNull("nativeCrashReportEnabled"),
-        nativeLongTaskThresholdMs = getDoubleOrNull("nativeLongTaskThresholdMs"),
         trackingConsent = getString("trackingConsent"),
         uploadFrequency = getString("uploadFrequency"),
         batchSize = getString("batchSize"),
@@ -175,8 +175,11 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             trackFrustrations = rum.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
             longTaskThresholdMs = rum.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,
             sessionSampleRate = rum.sessionSampleRate ?: DefaultConfiguration.sessionSamplingRate,
+            resourceTraceSampleRate = rum.resourceTraceSampleRate,
             vitalsUpdateFrequency = rum.vitalsUpdateFrequency ?: DefaultConfiguration.vitalsUpdateFrequency,
             trackBackgroundEvents = rum.trackBackgroundEvents ?: DefaultConfiguration.trackBackgroundEvents,
+            nativeCrashReportEnabled = rum.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs = rum.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
             nativeViewTracking = rum.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
             nativeInteractionTracking = rum.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
             trackNonFatalAnrs = rum.trackNonFatalAnrs,
@@ -197,7 +200,6 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
 
     val traceConfiguration: TraceConfiguration? = this.traceConfiguration?.let { trace ->
         TraceConfiguration(
-            resourceTraceSampleRate = trace.resourceTraceSampleRate,
             customEndpoint = trace.customEndpoint
         )
     }
@@ -213,8 +215,6 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         site = this.site?: DefaultConfiguration.site,
         service = this.service,
         verbosity = this.verbosity,
-        nativeCrashReportEnabled = this.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
-        nativeLongTaskThresholdMs = this.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
         trackingConsent = this.trackingConsent ?: DefaultConfiguration.trackingConsent,
         uploadFrequency = this.uploadFrequency ?: DefaultConfiguration.uploadFrequency,
         batchSize = this.batchSize?: DefaultConfiguration.batchSize,
@@ -278,8 +278,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     map.putString("site", site.toString())
     service?.let { map.putString("service", it) }
     verbosity?.let { map.putString("verbosity", it) }
-    nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
-    nativeLongTaskThresholdMs?.let { map.putDouble("nativeLongTaskThresholdMs", it) }
     map.putString("trackingConsent", trackingConsent.toString())
     map.putString("uploadFrequency", uploadFrequency.toString())
     map.putString("batchSize", batchSize.toString())
@@ -322,8 +320,11 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         rum.trackFrustrations?.let { rumMap.putBoolean("trackFrustrations", it) }
         rum.longTaskThresholdMs?.let { map.putDouble("longTaskThresholdMs", it) }
         rum.sessionSampleRate?.let { rumMap.putDouble("sessionSampleRate", it) }
+        rum.resourceTraceSampleRate?.let { rumMap.putDouble("resourceTraceSampleRate", it) }
         rum.vitalsUpdateFrequency?.let { rumMap.putString("vitalsUpdateFrequency", it) }
         rum.trackBackgroundEvents?.let { rumMap.putBoolean("trackBackgroundEvents", it) }
+        rum.nativeCrashReportEnabled?.let { rumMap.putBoolean("nativeCrashReportEnabled", it) }
+        rum.nativeLongTaskThresholdMs?.let { rumMap.putDouble("nativeLongTaskThresholdMs", it) }
         rum.nativeViewTracking?.let { rumMap.putBoolean("nativeViewTracking", it) }
         rum.nativeInteractionTracking?.let { rumMap.putBoolean("nativeInteractionTracking", it) }
         rum.trackNonFatalAnrs?.let { rumMap.putBoolean("trackNonFatalAnrs", it) }
@@ -342,7 +343,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     }
     traceConfiguration?.let { trace ->
         val traceMap = WritableNativeMap()
-        trace.resourceTraceSampleRate?.let { traceMap.putDouble("resourceTraceSampleRate", it) }
         trace.customEndpoint?.let { traceMap.putString("customEndpoint", it) }
         map.putMap("traceConfiguration", traceMap)
     }

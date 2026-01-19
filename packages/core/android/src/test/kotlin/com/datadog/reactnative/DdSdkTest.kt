@@ -184,7 +184,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=true}`() {
         // Given
-        val bridgeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        val bridgeConfiguration = fakeConfiguration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -238,7 +241,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=false}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -292,7 +298,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=null}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
 
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -575,7 +584,10 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(site = null, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -632,7 +644,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -689,7 +704,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us3")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -746,7 +764,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us5")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -803,7 +824,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1_fed")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -860,7 +884,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("eu1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -917,7 +944,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -974,7 +1004,10 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap2")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -1601,9 +1634,11 @@ internal class DdSdkTest {
         val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = threshold
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
+
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -1656,9 +1691,10 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = 0.0
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -2583,11 +2619,11 @@ internal class DdSdkTest {
     ) {
         // Given
         val rumConfiguration = configuration.rumConfiguration?.copy(
-            longTaskThresholdMs = 0.0
+            longTaskThresholdMs = 0.0,
+            nativeCrashReportEnabled = trackNativeErrors,
+            nativeLongTaskThresholdMs = 0.0
         )
         val bridgeConfiguration = configuration.copy(
-            nativeCrashReportEnabled = trackNativeErrors,
-            nativeLongTaskThresholdMs = 0.0,
             rumConfiguration = rumConfiguration,
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = initializationType,
@@ -3261,7 +3297,10 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {synthethics attributes}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         DdSdkSynthetics.testId = "unit-test-test-id"
         DdSdkSynthetics.resultId = "unit-test-result-id"
 

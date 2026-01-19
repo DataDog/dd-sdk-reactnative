@@ -321,13 +321,15 @@ class DdSdkImplementation(
         return frameRateProvider
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun buildFrameTimeCallback(
         ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
-            buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration?.vitalsUpdateFrequency) !=
+            ddSdkConfiguration.rumConfiguration != null &&
+            buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration.vitalsUpdateFrequency) !=
                     VitalsUpdateFrequency.NEVER
-        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs != 0.0
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.rumConfiguration != null && ddSdkConfiguration.rumConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
             return null

@@ -7,16 +7,14 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
-import {
-    CoreConfiguration,
-    LogsConfiguration,
-    RumConfiguration,
-    TraceConfiguration
-} from '../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../DdSdkReactNative';
-import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
-import { SdkVerbosity } from '../SdkVerbosity';
-import { TrackingConsent } from '../TrackingConsent';
+import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
+import { CoreConfiguration } from '../config/features/CoreConfiguration';
+import { LogsConfiguration } from '../config/features/LogsConfiguration';
+import { RumConfiguration } from '../config/features/RumConfiguration';
+import { TraceConfiguration } from '../config/features/TraceConfiguration';
+import { TrackingConsent } from '../config/types/TrackingConsent';
+import { ProxyConfiguration, ProxyType, SdkVerbosity } from '../config/types';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
@@ -27,8 +25,8 @@ import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingle
 import { NativeDdSdk } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
+import type { LogEvent } from '../types';
 import { ErrorSource } from '../types';
-import type { DdSdkNativeConfiguration } from '../types';
 import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
@@ -123,7 +121,9 @@ describe('DdSdkReactNative', () => {
             expect(
                 ddSdkConfiguration.rumConfiguration?.nativeViewTracking
             ).toBe(false);
-            expect(ddSdkConfiguration.firstPartyHosts).toEqual([]);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.firstPartyHosts
+            ).toEqual([]);
             expect(
                 ddSdkConfiguration.logsConfiguration?.bundleLogsWithRum
             ).toBe(true);
@@ -616,10 +616,15 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.traceConfiguration = new TraceConfiguration();
-            configuration.traceConfiguration.resourceTraceSampleRate = 42;
-            configuration.firstPartyHosts = [
-                'api.example.com',
+            configuration.rumConfiguration.resourceTraceSampleRate = 42;
+            configuration.rumConfiguration.firstPartyHosts = [
+                {
+                    match: 'api.example.com',
+                    propagatorTypes: [
+                        PropagatorType.DATADOG,
+                        PropagatorType.TRACECONTEXT
+                    ]
+                },
                 {
                     match: 'something.fr',
                     propagatorTypes: [PropagatorType.DATADOG]
@@ -640,7 +645,9 @@ describe('DdSdkReactNative', () => {
                 fakeAppId
             );
             expect(ddSdkConfiguration.env).toBe(fakeEnvName);
-            expect(ddSdkConfiguration.firstPartyHosts).toEqual([
+            expect(
+                ddSdkConfiguration.rumConfiguration?.firstPartyHosts
+            ).toEqual([
                 {
                     match: 'api.example.com',
                     propagatorTypes: ['datadog', 'tracecontext']
@@ -659,7 +666,7 @@ describe('DdSdkReactNative', () => {
                 1
             );
             expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith({
-                tracingSamplingRate: 42,
+                resourceTraceSampleRate: 42,
                 firstPartyHosts: [
                     {
                         match: 'api.example.com',
@@ -688,9 +695,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.traceConfiguration = new TraceConfiguration();
-            configuration.traceConfiguration.resourceTraceSampleRate = 2;
-
+            configuration.rumConfiguration.resourceTraceSampleRate = 2;
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
             // WHEN
@@ -728,11 +733,12 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.logsConfiguration = new LogsConfiguration();
-            configuration.logsConfiguration.logEventMapper = log => {
-                log.message = 'new message';
-                return log;
-            };
+            configuration.logsConfiguration = new LogsConfiguration({
+                logEventMapper: (log: LogEvent) => {
+                    log.message = 'new message';
+                    return log;
+                }
+            });
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
 
@@ -1066,7 +1072,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.nativeLongTaskThresholdMs = 234;
+            configuration.rumConfiguration.nativeLongTaskThresholdMs = 234;
             configuration.rumConfiguration.longTaskThresholdMs = 456;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -1077,7 +1083,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkNativeConfiguration;
-            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(234);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeLongTaskThresholdMs
+            ).toBe(234);
             expect(
                 ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
             ).toBe(456);
@@ -1098,7 +1106,7 @@ describe('DdSdkReactNative', () => {
                 false,
                 true
             );
-            configuration.nativeLongTaskThresholdMs = false;
+            configuration.rumConfiguration.nativeLongTaskThresholdMs = 0;
             configuration.rumConfiguration.longTaskThresholdMs = false;
 
             NativeModules.DdSdk.initialize.mockResolvedValue(null);
@@ -1109,7 +1117,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
                 .calls[0][0] as DdSdkNativeConfiguration;
-            expect(ddSdkConfiguration.nativeLongTaskThresholdMs).toBe(0);
+            expect(
+                ddSdkConfiguration.rumConfiguration?.nativeLongTaskThresholdMs
+            ).toBe(0);
             expect(
                 ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs
             ).toBe(0);

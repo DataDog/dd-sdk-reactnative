@@ -10,37 +10,31 @@ import { URLHostParser } from '../requestProxy/XHRProxy/URLHostParser';
 import { DatadogTracingContext } from './DatadogTracingContext';
 import { TracingIdFormat } from './TracingIdentifier';
 import type { TraceId, SpanId } from './TracingIdentifier';
+import type { DdRumResourceTracingAttributes } from './distributedTracingAttributes';
 import {
     generateTracingAttributesWithSampling,
     getTracingAttributes
 } from './distributedTracing';
-import type { DdRumResourceTracingAttributes } from './distributedTracing';
 import { firstPartyHostsRegexMapBuilder } from './firstPartyHosts';
-
-export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
-/**
- * Datadog headers
- */
-export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
-export const ORIGIN_RUM = 'rum';
-export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
-export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';
-export const TAGS_HEADER_KEY = 'x-datadog-tags';
-export const DD_TRACE_ID_TAG = '_dd.p.tid';
-export const DD_RUM_SESSION_ID_TAG = 'session.id';
-export const DD_RUM_USER_ID_TAG = 'user.id';
-export const DD_RUM_ACCOUNT_ID_TAG = 'account.id';
-
-/**
- * OTel headers
- */
-export const TRACECONTEXT_HEADER_KEY = 'traceparent';
-export const TRACESTATE_HEADER_KEY = 'tracestate';
-export const BAGGAGE_HEADER_KEY = 'baggage';
-export const B3_HEADER_KEY = 'b3';
-export const B3_MULTI_TRACE_ID_HEADER_KEY = 'X-B3-TraceId';
-export const B3_MULTI_SPAN_ID_HEADER_KEY = 'X-B3-SpanId';
-export const B3_MULTI_SAMPLED_HEADER_KEY = 'X-B3-Sampled';
+import {
+    B3_HEADER_KEY,
+    B3_MULTI_SAMPLED_HEADER_KEY,
+    B3_MULTI_SPAN_ID_HEADER_KEY,
+    B3_MULTI_TRACE_ID_HEADER_KEY,
+    BAGGAGE_HEADER_KEY,
+    DD_RUM_ACCOUNT_ID_TAG,
+    DD_RUM_SESSION_ID_TAG,
+    DD_RUM_USER_ID_TAG,
+    DD_TRACE_ID_TAG,
+    ORIGIN_HEADER_KEY,
+    ORIGIN_RUM,
+    PARENT_ID_HEADER_KEY,
+    SAMPLING_PRIORITY_HEADER_KEY,
+    TAGS_HEADER_KEY,
+    TRACECONTEXT_HEADER_KEY,
+    TRACESTATE_HEADER_KEY,
+    TRACE_ID_HEADER_KEY
+} from './headers';
 
 export const getTracingHeadersFromAttributes = (
     tracingAttributes: DdRumResourceTracingAttributes

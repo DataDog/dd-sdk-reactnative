@@ -9,7 +9,6 @@ import {
     DatadogProviderConfiguration,
     DdSdkReactNative,
     CoreConfiguration,
-    RumConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
@@ -41,14 +40,25 @@ export const getDatadogProviderConfig = () => {
     let config = new DatadogProviderConfiguration(
         baseConfig.clientToken ?? '',
         baseConfig.env ?? '',
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            rumConfiguration: {
+                applicationId: baseConfig.applicationID ?? '',
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
+        }
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-    config.nativeCrashReportEnabled = true
-
-    config.rumConfiguration = new RumConfiguration(baseConfig.applicationID ?? '', true, true, true);
-    config.rumConfiguration.sessionSampleRate = 100;
 
     return config;
 };
@@ -58,13 +68,25 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
     const config = new CoreConfiguration(
         clientToken ?? '',
         environment ?? '',
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            rumConfiguration: {
+                applicationId: appId ??  "",
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true,
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
+        }
     );
     config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
-    config.nativeCrashReportEnabled = true
-    config.rumConfiguration = new RumConfiguration(appId ?? '', true, true, true)
-    config.rumConfiguration.sessionSampleRate = 100;
 
     return DdSdkReactNative.initialize(config);
 };

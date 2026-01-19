@@ -7,7 +7,7 @@
 import type { GestureResponderEvent } from 'react-native';
 
 import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { DdRum } from '../../DdRum';
 import { RumActionType } from '../../types';
 

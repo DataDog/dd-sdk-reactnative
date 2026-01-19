@@ -23,9 +23,6 @@ extension NSDictionary {
         let service = self["service"] as? NSString
         let verbosity = self["verbosity"] as? NSString
 
-        let nativeCrashReportEnabled = self["nativeCrashReportEnabled"] as? Bool
-        let nativeLongTaskThresholdMs = self["nativeLongTaskThresholdMs"] as? Double
-
         let trackingConsentString = self["trackingConsent"] as? NSString
         let trackingConsent = trackingConsentString.asTrackingConsent()
 
@@ -55,10 +52,13 @@ extension NSDictionary {
             let trackFrustrations = rumDict["trackFrustrations"] as? Bool
             let longTaskThresholdMs = rumDict["longTaskThresholdMs"] as? Double
             let sessionSampleRate = rumDict["sessionSampleRate"] as? Double
+            let resourceTraceSampleRate = rumDict["resourceTraceSampleRate"] as? Double
             let vitalsUpdateFrequencyString = rumDict["vitalsUpdateFrequency"] as? NSString
             let vitalsUpdateFrequency = vitalsUpdateFrequencyString.asVitalsUpdateFrequency()
 
             let trackBackgroundEvents = rumDict["trackBackgroundEvents"] as? Bool
+            let nativeCrashReportEnabled = rumDict["nativeCrashReportEnabled"] as? Bool
+            let nativeLongTaskThresholdMs = rumDict["nativeLongTaskThresholdMs"] as? Double
             let nativeViewTracking = rumDict["nativeViewTracking"] as? Bool
             let nativeInteractionTracking = rumDict["nativeInteractionTracking"] as? Bool
 
@@ -75,9 +75,15 @@ extension NSDictionary {
                 longTaskThresholdMs: longTaskThresholdMs
                     ?? DefaultConfiguration.longTaskThresholdMs,
                 sessionSampleRate: sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate,
+                resourceTraceSampleRate: resourceTraceSampleRate
+                    ?? DefaultConfiguration.resourceTraceSampleRate,
                 vitalsUpdateFrequency: vitalsUpdateFrequency,
                 trackBackgroundEvents: trackBackgroundEvents
                     ?? DefaultConfiguration.trackBackgroundEvents,
+                nativeCrashReportEnabled: nativeCrashReportEnabled
+                    ?? DefaultConfiguration.nativeCrashReportEnabled,
+                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
+                    ?? DefaultConfiguration.nativeLongTaskThresholdMs,
                 nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: nativeInteractionTracking
                     ?? DefaultConfiguration.nativeInteractionTracking,
@@ -121,12 +127,9 @@ extension NSDictionary {
         let traceConfiguration: TraceConfiguration?
 
         if let traceDict = traceConfigurationDict {
-            let resourceTraceSampleRate = traceDict["resourceTraceSampleRate"] as? Double
             let customEndpoint = traceDict["customEndpoint"] as? String
 
             traceConfiguration = TraceConfiguration(
-                resourceTraceSampleRate: resourceTraceSampleRate
-                    ?? DefaultConfiguration.resourceTraceSampleRate,
                 customEndpoint: customEndpoint
             )
         } else {
@@ -145,10 +148,6 @@ extension NSDictionary {
             site: site,
             service: service,
             verbosity: verbosity,
-            nativeCrashReportEnabled: nativeCrashReportEnabled
-                ?? DefaultConfiguration.nativeCrashReportEnabled,
-            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
-                ?? DefaultConfiguration.nativeLongTaskThresholdMs,
             trackingConsent: trackingConsent,
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,
@@ -306,16 +305,6 @@ extension Dictionary where Key == String, Value == AnyObject {
         let service = configuration["service"] as? NSString
         let verbosity = configuration["verbosity"] as? NSString
 
-        let nativeCrashReportEnabled = configuration["nativeCrashReportEnabled"] as? Bool
-
-        let nativeLongTaskRaw = configuration["nativeLongTaskThresholdMs"]
-        let nativeLongTaskThresholdMs: Double? = {
-            if let v = nativeLongTaskRaw as? Double { return v }
-            if let v = nativeLongTaskRaw as? Int { return Double(v) }
-            if let v = nativeLongTaskRaw as? Bool, v == false { return 0.0 }
-            return nil
-        }()
-
         let trackingConsentString = configuration["trackingConsent"] as? NSString
         let trackingConsent = trackingConsentString.asTrackingConsent()
 
@@ -358,6 +347,14 @@ extension Dictionary where Key == String, Value == AnyObject {
             let vitalsUpdateFrequency =
                 (rum["vitalsUpdateFrequency"] as? NSString).asVitalsUpdateFrequency()
 
+            let nativeCrashReportEnabled = rum["nativeCrashReportEnabled"] as? Bool
+            let nativeLongTaskRaw = rum["nativeLongTaskThresholdMs"]
+            let nativeLongTaskThresholdMs: Double? = {
+                if let v = nativeLongTaskRaw as? Double { return v }
+                if let v = nativeLongTaskRaw as? Int { return Double(v) }
+                return nil
+            }()
+
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
                 trackFrustrations: rum["trackFrustrations"] as? Bool
@@ -365,9 +362,16 @@ extension Dictionary where Key == String, Value == AnyObject {
                 longTaskThresholdMs: longTaskThresholdMs
                     ?? DefaultConfiguration.longTaskThresholdMs,
                 sessionSampleRate: sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate,
+                resourceTraceSampleRate:
+                    rum["resourceTraceSampleRate"] as? Double
+                    ?? DefaultConfiguration.resourceTraceSampleRate,
                 vitalsUpdateFrequency: vitalsUpdateFrequency,
                 trackBackgroundEvents: rum["trackBackgroundEvents"] as? Bool
                     ?? DefaultConfiguration.trackBackgroundEvents,
+                nativeCrashReportEnabled: nativeCrashReportEnabled
+                    ?? DefaultConfiguration.nativeCrashReportEnabled,
+                nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
+                    ?? DefaultConfiguration.nativeLongTaskThresholdMs,
                 nativeViewTracking: rum["nativeViewTracking"] as? Bool
                     ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: rum["nativeInteractionTracking"] as? Bool
@@ -410,9 +414,6 @@ extension Dictionary where Key == String, Value == AnyObject {
 
         if let trace = traceDict {
             traceConfiguration = TraceConfiguration(
-                resourceTraceSampleRate:
-                    trace["resourceTraceSampleRate"] as? Double
-                    ?? DefaultConfiguration.resourceTraceSampleRate,
                 customEndpoint: trace["customEndpoint"] as? String
             )
         } else {
@@ -431,10 +432,6 @@ extension Dictionary where Key == String, Value == AnyObject {
             site: site,
             service: service,
             verbosity: verbosity,
-            nativeCrashReportEnabled: nativeCrashReportEnabled
-                ?? DefaultConfiguration.nativeCrashReportEnabled,
-            nativeLongTaskThresholdMs: nativeLongTaskThresholdMs
-                ?? DefaultConfiguration.nativeLongTaskThresholdMs,
             trackingConsent: trackingConsent,
             uploadFrequency: uploadFrequency,
             batchSize: batchSize,

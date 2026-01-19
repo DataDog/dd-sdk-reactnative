@@ -7,7 +7,7 @@
 import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { errorEncoder } from '../../sdk/AttributesEncoding/defaultEncoders';
 import {
     ERROR_DEFAULT_NAME,
