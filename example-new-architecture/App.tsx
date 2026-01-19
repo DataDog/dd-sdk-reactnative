@@ -43,14 +43,16 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
         trackInteractions: true,
         trackResources: true,
         trackFrustrations: true,
+        trackErrors: true,
         sessionSampleRate: 100,
-        telemetrySampleRate: 100
+        telemetrySampleRate: 100,
       }
     }
   );
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
+
   
   await DdSdkReactNative.initialize(config);
   await DdRum.startView('main', 'Main');
