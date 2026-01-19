@@ -4,6 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import WebKit
+import DatadogWebViewTracking
+import DatadogSDKReactNative
 import DatadogCore
 import DatadogInternal
 
@@ -28,7 +31,7 @@ import DatadogInternal
    
     /**
      Enables tracking on the given WebView.
-    
+     
      - Parameter webView: The WebView to enable tracking on.
      - Parameter allowedHosts: The allowed hosts.
      - Note: If the SDK core is not available immediately, this method will register a listener and
@@ -60,7 +63,7 @@ import DatadogInternal
         }
         DispatchQueue.main.async {
             WebViewTracking.enable(webView: wkWebView, hosts: allowedHosts, in: core)
-            self.webView?.isTrackingEnabled = true
+            self.webView?.isTrackingEnabled = true;
         }
     }
 }
