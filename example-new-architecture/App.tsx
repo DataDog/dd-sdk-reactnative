@@ -59,10 +59,14 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   // Initialize the Datadog SDK.
   await DdSdkReactNative.initialize(config);
 
-  // Enable Flags.
+  // Enable Datadog Flags feature.
   await DdFlags.enable();
 
-  // Usage examples.
+  // Set the provider with OpenFeature.
+  const provider = new DatadogProvider();
+  OpenFeature.setProvider(provider);
+
+  // Datadog SDK usage examples.
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
     await DdRum.addTiming('one_second');
@@ -77,16 +81,16 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 function AppWithProviders() {
   React.useEffect(() => {
-    const userId = 'user-123'
+    const user = {
+      id: 'user-123',
+      favoriteFruit: 'apple',
+    };
 
-    const evaluationContext = {
-      targetingKey: userId,
-      favoriteFruit: 'apple'
-    }
-
-    const provider = new DatadogProvider();
-    OpenFeature.setProvider(provider, evaluationContext);
-  }, [])
+    OpenFeature.setContext({
+      targetingKey: user.id,
+      favoriteFruit: user.favoriteFruit,
+    });
+  }, []);
 
   return (
     <Suspense
@@ -121,9 +125,14 @@ function App(): React.JSX.Element {
 
         <View style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}>
           <Section title={greetingFlag.value.greeting}>
-            The title of this section is based on the <Text style={styles.highlight}>{greetingFlag.flagKey}</Text> feature flag.{'\n\n'}
-
-            If it's different from "Default greeting", then it is coming from the feature flag evaluation.
+            The title of this section is based on the{' '}
+            <Text style={styles.highlight}>{greetingFlag.flagKey}</Text> feature
+            flag.{'\n\n'}
+            If it's different from "Default greeting", then it is coming from
+            the feature flag evaluation.{'\n\n'}
+            Inspect <Text style={styles.highlight}>greetingFlag</Text> in{' '}
+            <Text style={styles.highlight}>App.tsx</Text> for more evaluation
+            details.
           </Section>
 
           <Section title="Step One">

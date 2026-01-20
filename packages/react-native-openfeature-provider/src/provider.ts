@@ -8,10 +8,9 @@ import { DdFlags } from '@datadog/mobile-react-native';
 import type {
     FlagDetails,
     FlagsClient,
-    EvaluationContext as DdEvaluationContext,
-    FlagsConfiguration
+    EvaluationContext as DdEvaluationContext
 } from '@datadog/mobile-react-native';
-import { ErrorCode } from '@openfeature/web-sdk';
+import { OpenFeatureEventEmitter } from '@openfeature/web-sdk';
 import type {
     EvaluationContext as OFEvaluationContext,
     JsonValue,
@@ -20,10 +19,13 @@ import type {
     Provider,
     ProviderMetadata,
     ResolutionDetails,
-    PrimitiveValue
+    PrimitiveValue,
+    ProviderEventEmitter,
+    ProviderEvents,
+    ErrorCode
 } from '@openfeature/web-sdk';
 
-export interface DatadogProviderOptions extends FlagsConfiguration {
+export interface DatadogProviderOptions {
     /**
      * The name of the Datadog Flags client to use.
      *
@@ -41,35 +43,40 @@ export class DatadogProvider implements Provider {
     };
 
     private options: DatadogProviderOptions;
-    private flagsClient: FlagsClient | undefined;
+    private flagsClient: FlagsClient;
+
+    readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();
+    private contextChangePromise = Promise.resolve();
 
     constructor(options: DatadogProviderOptions = {}) {
         options.clientName ??= 'default';
-
         this.options = options;
+
+        this.flagsClient = DdFlags.getClient(this.options.clientName);
     }
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
-        await DdFlags.enable(this.options);
+        const ddContext = toDdContext(context);
+        this.contextChangePromise = this.flagsClient.setEvaluationContext(
+            ddContext
+        );
 
-        const flagsClient = DdFlags.getClient(this.options.clientName);
-
-        await flagsClient.setEvaluationContext(toDdContext(context));
-
-        this.flagsClient = flagsClient;
+        await this.contextChangePromise;
     }
 
     async onContextChange(
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): Promise<void> {
-        if (!this.flagsClient) {
-            throw new Error(
-                'DatadogProvider not initialized yet. Please wait until `OpenFeature.setProviderAndWait()` completes before setting evaluation context.'
-            );
-        }
+        const newDdContext = toDdContext(newContext);
 
-        await this.flagsClient.setEvaluationContext(toDdContext(newContext));
+        // Promise chain in case `onContextChange` is called multiple times.
+        this.contextChangePromise = this.contextChangePromise.then(() => {
+            return this.flagsClient.setEvaluationContext(newDdContext);
+        });
+
+        // Wait for the current context change to complete.
+        await this.contextChangePromise;
     }
 
     resolveBooleanEvaluation(
@@ -78,14 +85,6 @@ export class DatadogProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<boolean> {
-        if (!this.flagsClient) {
-            return {
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: ErrorCode.PROVIDER_NOT_READY
-            };
-        }
-
         const details = this.flagsClient.getBooleanDetails(
             flagKey,
             defaultValue
@@ -99,14 +98,6 @@ export class DatadogProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<string> {
-        if (!this.flagsClient) {
-            return {
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: ErrorCode.PROVIDER_NOT_READY
-            };
-        }
-
         const details = this.flagsClient.getStringDetails(
             flagKey,
             defaultValue
@@ -120,14 +111,6 @@ export class DatadogProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<number> {
-        if (!this.flagsClient) {
-            return {
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: ErrorCode.PROVIDER_NOT_READY
-            };
-        }
-
         const details = this.flagsClient.getNumberDetails(
             flagKey,
             defaultValue
@@ -141,14 +124,6 @@ export class DatadogProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<T> {
-        if (!this.flagsClient) {
-            return {
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: ErrorCode.PROVIDER_NOT_READY
-            };
-        }
-
         const details = this.flagsClient.getObjectDetails<T>(
             flagKey,
             defaultValue
