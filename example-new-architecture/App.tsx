@@ -107,7 +107,9 @@ function AppWithProviders() {
 }
 
 function App(): React.JSX.Element {
-  const greetingFlag = useObjectFlagDetails('rn-sdk-test-json-flag', {greeting: 'Default greeting'});
+  const greetingFlag = useObjectFlagDetails('rn-sdk-test-json-flag', {
+    greeting: 'Default greeting',
+  });
 
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {

@@ -10,7 +10,7 @@ import type {
     FlagsClient,
     EvaluationContext as DdEvaluationContext
 } from '@datadog/mobile-react-native';
-import { OpenFeatureEventEmitter } from '@openfeature/web-sdk';
+import { OpenFeatureEventEmitter, ErrorCode } from '@openfeature/web-sdk';
 import type {
     EvaluationContext as OFEvaluationContext,
     JsonValue,
@@ -21,8 +21,7 @@ import type {
     ResolutionDetails,
     PrimitiveValue,
     ProviderEventEmitter,
-    ProviderEvents,
-    ErrorCode
+    ProviderEvents
 } from '@openfeature/web-sdk';
 
 export interface DatadogProviderOptions {
@@ -157,12 +156,15 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
         errorMessage
     } = details;
 
+    const parsedErrorCode =
+        errorCode && (ErrorCode[errorCode as ErrorCode] || ErrorCode.GENERAL);
+
     const result: ResolutionDetails<T> = {
         value,
         reason,
         variant,
         flagMetadata: allocationKey ? { allocationKey } : undefined,
-        errorCode: errorCode as ErrorCode | undefined,
+        errorCode: parsedErrorCode,
         errorMessage
     };
 

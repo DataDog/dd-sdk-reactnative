@@ -161,7 +161,7 @@ export interface EvaluationContext {
 }
 
 /**
- * An error tha occurs during feature flag evaluation.
+ * An error that occurs during feature flag evaluation.
  *
  * Indicates why a flag evaluation may have failed or returned a default value.
  */

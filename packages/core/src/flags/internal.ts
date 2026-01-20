@@ -36,7 +36,7 @@ export const processEvaluationContext = (
 
         if (!isPrimitiveValue) {
             InternalLog.log(
-                `Non-primitive context value under "${key}" is not supported. Omitting this atribute from the evaluation context.`,
+                `Non-primitive context value under "${key}" is not supported. Omitting this attribute from the evaluation context.`,
                 SdkVerbosity.WARN
             );
 
