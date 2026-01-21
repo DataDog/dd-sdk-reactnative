@@ -1,5 +1,5 @@
 {
-    "name": "@datadog/openfeature-react-native",
+    "name": "@datadog/mobile-react-native-openfeature",
     "version": "2.13.2",
     "description": "A client-side React Native module to provide OpenFeature integration with Datadog Feature Flags",
     "keywords": [

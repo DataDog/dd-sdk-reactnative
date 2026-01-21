@@ -3834,6 +3834,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature-provider":
+  version: 0.0.0-use.local
+  resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature-provider"
+  dependencies:
+    "@datadog/mobile-react-native": ^2.13.2
+    "@openfeature/core": ^1.8.0
+    "@openfeature/web-sdk": ^1.5.0
+    "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.26.0
+    react-native-gesture-handler: 1.10.3
+  peerDependencies:
+    "@datadog/mobile-react-native": ^2.13.2
+    "@openfeature/web-sdk": ^1.5.0
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  languageName: unknown
+  linkType: soft
+
 "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay"
@@ -3925,24 +3943,6 @@ __metadata:
   checksum: 734bf13ad0813f846e5619eed82b43386f807c83feba963ab8efea37faa9622f244362d1440ea4a39280a61318081106e25f60f267accab4634893b6e30b20bb
   languageName: node
   linkType: hard
-
-"@datadog/openfeature-react-native@workspace:packages/react-native-openfeature-provider":
-  version: 0.0.0-use.local
-  resolution: "@datadog/openfeature-react-native@workspace:packages/react-native-openfeature-provider"
-  dependencies:
-    "@datadog/mobile-react-native": ^2.13.2
-    "@openfeature/core": ^1.8.0
-    "@openfeature/web-sdk": ^1.5.0
-    "@testing-library/react-native": 7.0.2
-    react-native-builder-bob: 0.26.0
-    react-native-gesture-handler: 1.10.3
-  peerDependencies:
-    "@datadog/mobile-react-native": ^2.13.2
-    "@openfeature/web-sdk": ^1.5.0
-    react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
-  languageName: unknown
-  linkType: soft
 
 "@datadog/pprof@npm:5.8.2":
   version: 5.8.2
@@ -8693,7 +8693,7 @@ __metadata:
     "@babel/preset-env": ^7.25.3
     "@babel/runtime": ^7.26.10
     "@datadog/mobile-react-native": "workspace:packages/core"
-    "@datadog/openfeature-react-native": "workspace:packages/react-native-openfeature-provider"
+    "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature-provider"
     "@openfeature/react-sdk": ^1.1.0
     "@react-native-community/cli": 15.0.1
     "@react-native-community/cli-platform-android": 15.0.1

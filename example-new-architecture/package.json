@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@datadog/mobile-react-native": "workspace:packages/core",
-    "@datadog/openfeature-react-native": "workspace:packages/react-native-openfeature-provider",
+    "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature-provider",
     "@openfeature/react-sdk": "^1.1.0",
     "react": "18.3.1",
     "react-native": "0.76.9"

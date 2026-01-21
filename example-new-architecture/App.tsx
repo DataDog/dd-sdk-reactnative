@@ -11,7 +11,7 @@ import {
   RumConfiguration,
   DdFlags,
 } from '@datadog/mobile-react-native';
-import {DatadogProvider} from '@datadog/openfeature-react-native';
+import {DatadogProvider} from '@datadog/mobile-react-native-openfeature';
 import {
   OpenFeature,
   OpenFeatureProvider,
