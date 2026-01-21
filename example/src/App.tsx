@@ -7,11 +7,12 @@ import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
-import {DatadogProvider, DatadogProviderConfiguration, FileBasedConfiguration, RumConfiguration} from '@datadog/mobile-react-native'
+import { DatadogProvider, DatadogProviderConfiguration, FileBasedConfiguration, RumConfiguration, DdFlags, TrackingConsent } from '@datadog/mobile-react-native'
+import { DatadogProvider as OpenFeatureDatadogProvider } from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature, OpenFeatureProvider } from '@openfeature/react-sdk';
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
-import { TrackingConsent } from '@datadog/mobile-react-native';
 import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation/src/rum/instrumentation/DdRumReactNavigationTracking';
 
 const Tab = createBottomTabNavigator();
@@ -21,7 +22,7 @@ const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(ro
   return "Custom RN " + trackedName;
 }
 
-const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(route: Route<string, any | undefined>) { 
+const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(route: Route<string, any | undefined>) {
   if (route.name === "AlertModal") {
     return false;
   }
@@ -29,7 +30,7 @@ const viewTrackingPredicate: ViewTrackingPredicate = function customViewTracking
   return true;
 }
 
-const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(route: Route<string, any | undefined>) { 
+const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(route: Route<string, any | undefined>) {
   const filteredParams: any = {};
   if (route.params?.creditCardNumber) {
     filteredParams["creditCardNumber"] = "XXXX XXXX XXXX XXXX";
@@ -57,9 +58,9 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 
 // 3.- File based configuration from .json and custom mapper setup
 // const configuration = new FileBasedConfiguration( {
-//   configuration: require("../datadog-configuration.json").configuration, 
-//   errorEventMapper: (event) => event, 
-//   resourceEventMapper: (event) => event, 
+//   configuration: require("../datadog-configuration.json").configuration,
+//   errorEventMapper: (event) => event,
+//   resourceEventMapper: (event) => event,
 //   actionEventMapper: (event) => event});
 
 // 4.- File based configuration from the native side (using initFromNative)
@@ -68,26 +69,38 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 // const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
 // configuration.rumConfiguration = new RumConfiguration("fake_value")
 
-export default function App() {
+const handleDatadogInitialization = async () => {
+  onDatadogInitialization();
 
+  // Enable Datadog Flags feature.
+  await DdFlags.enable();
+
+  // Set the provider with OpenFeature.
+  const provider = new OpenFeatureDatadogProvider();
+  OpenFeature.setProvider(provider);
+}
+
+export default function App() {
   return (
-    <DatadogProvider configuration={configuration} onInitialization={onDatadogInitialization}>
-      <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(
-          navigationRef.current,
-          navigationTrackingOptions)
-      }}>
-        <Tab.Navigator screenOptions={{
-          tabBarLabelStyle: style.tabLabelStyle,
-          tabBarStyle: style.tabItemStyle,
-          tabBarIcon: () => null
+    <DatadogProvider configuration={configuration} onInitialization={handleDatadogInitialization}>
+      <OpenFeatureProvider>
+        <NavigationContainer ref={navigationRef} onReady={() => {
+          DdRumReactNavigationTracking.startTrackingViews(
+            navigationRef.current,
+            navigationTrackingOptions)
         }}>
-          <Tab.Screen name="Home" component={MainScreen} />
-          <Tab.Screen name="Error" component={ErrorScreen} />
-          <Tab.Screen name="About" component={AboutScreen} />
-          <Tab.Screen name="Nested" component={NestedNavigator} />
-        </Tab.Navigator>
-      </NavigationContainer>
+          <Tab.Navigator screenOptions={{
+            tabBarLabelStyle: style.tabLabelStyle,
+            tabBarStyle: style.tabItemStyle,
+            tabBarIcon: () => null
+          }}>
+            <Tab.Screen name="Home" component={MainScreen} />
+            <Tab.Screen name="Error" component={ErrorScreen} />
+            <Tab.Screen name="About" component={AboutScreen} />
+            <Tab.Screen name="Nested" component={NestedNavigator} />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </OpenFeatureProvider>
     </DatadogProvider>
   )
 }
