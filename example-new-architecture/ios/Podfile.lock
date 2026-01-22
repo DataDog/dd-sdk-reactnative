@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 3.4.0)
   - DatadogRUM (3.4.0):
     - DatadogInternal (= 3.4.0)
-  - DatadogSDKReactNative (2.14.1):
+  - DatadogSDKReactNative (3.0.0):
     - DatadogCore (= 3.4.0)
     - DatadogCrashReporting (= 3.4.0)
     - DatadogLogs (= 3.4.0)
@@ -37,7 +37,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNative/Tests (2.14.1):
+  - DatadogSDKReactNative/Tests (3.0.0):
     - DatadogCore (= 3.4.0)
     - DatadogCrashReporting (= 3.4.0)
     - DatadogLogs (= 3.4.0)
@@ -1855,7 +1855,7 @@ SPEC CHECKSUMS:
   DatadogInternal: b0372935ad8dde5ad06960fe8d88c39b2cc92bcc
   DatadogLogs: 484bb1bfe0c9a7cb2a7d9733f61614e8ea7b2f3a
   DatadogRUM: 00069b27918e0ce4a9223b87b4bfa7929d6a0a1f
-  DatadogSDKReactNative: dc365391ece79c792de428048724e17b1905deb7
+  DatadogSDKReactNative: 2028776f30b047eb0d118ff7efc15786a20d766f
   DatadogTrace: 852cb80f9370eb1321eb30a73c82c8e3d9e4e980
   DatadogWebViewTracking: 32dfeaf7aad47a605a689ed12e0d21ee8eb56141
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
