@@ -18,12 +18,9 @@ actualRN.NativeModules.DdSdk = {
     initialize: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['initialize']>,
-    setUser: jest.fn().mockImplementation(
+    addAttributes: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdNativeSdkType['setUser']>,
-    setAttributes: jest.fn().mockImplementation(
-        () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdNativeSdkType['setAttributes']>,
+    ) as jest.MockedFunction<DdNativeSdkType['addAttributes']>,
     setTrackingConsent: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['setTrackingConsent']>,
@@ -113,7 +110,16 @@ actualRN.NativeModules.DdRum = {
             new Promise<string | undefined>(resolve =>
                 resolve('test-session-id')
             )
-    ) as jest.MockedFunction<DdRumType['getCurrentSessionId']>
+    ) as jest.MockedFunction<DdRumType['getCurrentSessionId']>,
+    startFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['startFeatureOperation']>,
+    succeedFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['startFeatureOperation']>,
+    failFeatureOperation: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['failFeatureOperation']>
 };
 
 module.exports = actualRN;

@@ -13,6 +13,7 @@ import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum._RumInternalProxy
+import com.datadog.android.rum.featureoperations.FailureReason
 
 class MockRumMonitor : RumMonitor {
     override var debug = false
@@ -28,6 +29,14 @@ class MockRumMonitor : RumMonitor {
     ) {}
 
     override fun addAttribute(key: String, value: Any?) {}
+
+    override fun removeAttribute(key: String) {}
+
+    override fun clearAttributes() {}
+
+    override fun getAttributes(): Map<String, Any?> {
+        return mapOf()
+    }
 
     override fun addError(
         message: String,
@@ -52,15 +61,11 @@ class MockRumMonitor : RumMonitor {
     @ExperimentalRumApi
     override fun addViewLoadingTime(overwrite: Boolean) {}
 
-    override fun clearAttributes() {}
-
-    override fun getAttributes(): Map<String, Any?> {
-        return mapOf()
-    }
-
     override fun getCurrentSessionId(callback: (String?) -> Unit) {}
 
-    override fun removeAttribute(key: String) {}
+    override fun addViewAttributes(attributes: Map<String, Any?>) {}
+
+    override fun removeViewAttributes(attributes: Collection<String>) {}
 
     override fun startAction(
         type: RumActionType,
@@ -71,13 +76,6 @@ class MockRumMonitor : RumMonitor {
     override fun startResource(
         key: String,
         method: RumResourceMethod,
-        url: String,
-        attributes: Map<String, Any?>
-    ) {}
-
-    override fun startResource(
-        key: String,
-        method: String,
         url: String,
         attributes: Map<String, Any?>
     ) {}
@@ -125,6 +123,28 @@ class MockRumMonitor : RumMonitor {
 
     override fun stopView(
         key: Any,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun startFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun succeedFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun failFeatureOperation(
+        name: String,
+        operationKey: String?,
+        failureReason: FailureReason,
         attributes: Map<String, Any?>
     ) {}
 }

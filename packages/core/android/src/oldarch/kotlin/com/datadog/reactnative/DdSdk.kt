@@ -12,15 +12,21 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 /** The entry point to initialize Datadog's features. */
 class DdSdk(
     reactContext: ReactApplicationContext,
-    datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
+    datadogWrapper: DatadogWrapper = DatadogSDKWrapper(),
+    ddTelemetry: DdTelemetry = DdTelemetry()
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    private val implementation = DdSdkImplementation(reactContext, datadog = datadogWrapper)
+    private val implementation = DdSdkImplementation(
+        reactContext,
+        datadog = datadogWrapper,
+        ddTelemetry
+    )
     private var lifecycleEventListener: LifecycleEventListener? = null
 
     override fun getName(): String = DdSdkImplementation.NAME
@@ -61,24 +67,43 @@ class DdSdk(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    @ReactMethod
+    fun addAttribute(key: String, value: ReadableMap, promise: Promise) {
+        implementation.addAttribute(key, value, promise)
+    }
+
+    /**
+     * Removes an attribute from the context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    @ReactMethod
+    fun removeAttribute(key: String, promise: Promise) {
+        implementation.removeAttribute(key, promise)
+    }
+
+    /**
+     * Adds a set of attributes to the global context that is attached with all future Logs, Spans and RUM
      * events.
      * @param attributes The global context attributes.
      */
     @ReactMethod
-    fun setAttributes(attributes: ReadableMap, promise: Promise) {
-        implementation.setAttributes(attributes, promise)
+    fun addAttributes(attributes: ReadableMap, promise: Promise) {
+        implementation.addAttributes(attributes, promise)
     }
 
     /**
-     * Set the user information.
-     * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom
-     * attribute).
+     * Removes a set of attributes from the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param keys: They keys associated with the attributes to be removed.
      */
-    @Deprecated("Use setUserInfo instead; the user ID is now required.")
     @ReactMethod
-    fun setUser(user: ReadableMap, promise: Promise) {
-        implementation.setUser(user, promise)
+    fun removeAttributes(keys: ReadableArray, promise: Promise) {
+        implementation.removeAttributes(keys, promise)
     }
 
     /**
@@ -97,6 +122,40 @@ class DdSdk(
     @ReactMethod
     fun addUserExtraInfo(extraInfo: ReadableMap, promise: Promise) {
         implementation.addUserExtraInfo(extraInfo, promise)
+    }
+
+    /**
+     * Clears the user information.
+     */
+    @ReactMethod
+    fun clearUserInfo(promise: Promise) {
+        implementation.clearUserInfo(promise)
+    }
+
+    /**
+     * Set the account information.
+     * @param account The account object (use builtin attributes: 'id', 'name', and any custom * attribute inside 'extraInfo').
+     */
+    @ReactMethod
+    fun setAccountInfo(account: ReadableMap, promise: Promise) {
+        implementation.setAccountInfo(account, promise)
+    }
+
+    /**
+     * Sets the account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    @ReactMethod
+    fun addAccountExtraInfo(extraInfo: ReadableMap, promise: Promise) {
+        implementation.addAccountExtraInfo(extraInfo, promise)
+    }
+
+    /**
+     * Clears the account information.
+     */
+    @ReactMethod
+    fun clearAccountInfo(promise: Promise) {
+        implementation.clearAccountInfo(promise)
     }
 
     /**

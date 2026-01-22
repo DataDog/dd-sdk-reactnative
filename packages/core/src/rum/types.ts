@@ -4,6 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { Attributes } from '../sdk/AttributesSingleton/types';
+import type { ErrorSource, FeatureOperationFailure } from '../types';
+
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import type { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 
@@ -147,6 +150,31 @@ export type DdRumType = {
     addTiming(name: string): Promise<void>;
 
     /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    addViewAttribute(key: string, value: unknown): Promise<void>;
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    removeViewAttribute(key: string): Promise<void>;
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    addViewAttributes(attributes: Attributes): Promise<void>;
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    removeViewAttributes(keys: string[]): Promise<void>;
+
+    /**
      * Adds the loading time of the view to the active view.
      * It is calculated as the difference between the current time and the start time of the view.
      * @param overwrite: If true, overwrites the previously calculated view loading time.
@@ -202,6 +230,46 @@ export type DdRumType = {
      * Generates a unique 128bit Span ID.
      */
     generateSpanId(): DatadogTracingIdentifier;
+
+    /**
+     * Starts a Feature Operation, representing a high-level logical flow within your application (e.g., `login_flow`).
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - An optional key to uniquely identify a specific instance of this operation when multiple are running concurrently.
+     * @param attributes - Custom attributes to attach to this operation.
+     */
+    startFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void>;
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     * Should be called when a previously started operation (via `startFeatureOperation`) finishes without error.
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - The key for the operation instance to complete, if it was specified when starting it.
+     * @param attributes - Custom attributes to attach to this operation’s completion event.
+     */
+    succeedFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void>;
+
+    /**
+     * Marks a Feature Operation as failed.
+     * Should be called when a previously started operation (via `startFeatureOperation`) ends with an error.
+     * @param name - The name of the feature operation (for example, `"login_flow"`).
+     * @param operationKey - The key for the operation instance to fail, if it was specified when starting it.
+     * @param reason - The reason for the failure.
+     * @param attributes - Custom attributes to attach to this operation’s failure event.
+     */
+    failFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        reason: FeatureOperationFailure,
+        attributes: object
+    ): Promise<void>;
 };
 
 /**
@@ -232,14 +300,6 @@ export type ResourceKind =
     | 'media'
     | 'other'
     | 'native';
-
-export enum ErrorSource {
-    NETWORK = 'NETWORK',
-    SOURCE = 'SOURCE',
-    CONSOLE = 'CONSOLE',
-    WEBVIEW = 'WEBVIEW',
-    CUSTOM = 'CUSTOM'
-}
 
 /**
  * Type of instrumentation on the host.

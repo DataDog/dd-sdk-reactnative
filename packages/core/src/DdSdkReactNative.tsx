@@ -7,39 +7,40 @@
 import { version as reactNativeVersion } from 'react-native/package.json';
 import { InteractionManager } from 'react-native';
 
+import { InternalLog } from './InternalLog';
+import type { DatadogProviderConfiguration } from './config/DatadogProviderConfiguration';
+import { FileBasedConfiguration } from './config/FileBasedConfiguration';
 import type {
     AutoInstrumentationConfiguration,
-    AutoInstrumentationParameters,
-    DatadogProviderConfiguration,
-    InitializationModeForTelemetry,
-    PartialInitializationConfiguration
-} from './DdSdkReactNativeConfiguration';
-import {
-    DdSdkReactNativeConfiguration,
-    InitializationMode,
-    addDefaultValuesToAutoInstrumentationConfiguration,
-    buildConfigurationFromPartialConfiguration,
-    formatFirstPartyHosts
-} from './DdSdkReactNativeConfiguration';
-import { InternalLog } from './InternalLog';
-import { SdkVerbosity } from './SdkVerbosity';
-import type { TrackingConsent } from './TrackingConsent';
+    AutoInstrumentationParameters
+} from './config/async/AutoInstrumentationConfiguration';
+import { addDefaultValuesToAutoInstrumentationConfiguration } from './config/async/AutoInstrumentationConfiguration';
+import type { PartialInitializationConfiguration } from './config/async/PartialInitializationConfiguration';
+import { buildConfigurationFromPartialConfiguration } from './config/async/asyncInitializationHelper';
+import { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
+import { CoreConfiguration } from './config/features/CoreConfiguration';
+import type { LogsNativeConfiguration } from './config/features/LogsConfigurationNative';
+import type { RumNativeConfiguration } from './config/features/RumConfigurationNative';
+import { RUM_DEFAULTS } from './config/features/RumConfiguration';
+import type { TraceNativeConfiguration } from './config/features/TraceConfigurationNative';
+import type { InitializationModeForTelemetry } from './config/types/InitializationModeForTelemetry';
+import { SdkVerbosity } from './config/types/SdkVerbosity';
+import type { TrackingConsent } from './config/types/TrackingConsent';
+import { InitializationMode } from './config/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { AccountInfoSingleton } from './sdk/AccountInfoSingleton/AccountInfoSingleton';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
 import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
-import { DdSdk } from './sdk/DdSdk';
-import { FileBasedConfiguration } from './sdk/FileBasedConfiguration/FileBasedConfiguration';
+import { NativeDdSdk } from './sdk/DdSdkInternal';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
-import type { UserInfo } from './sdk/UserInfoSingleton/types';
-import { DdSdkConfiguration } from './types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
@@ -63,7 +64,7 @@ export class DdSdkReactNative {
      * @returns a Promise.
      */
     static initialize = async (
-        configuration: DdSdkReactNativeConfiguration
+        configuration: CoreConfiguration
     ): Promise<void> => {
         await DdSdkReactNative.initializeNativeSDK(configuration, {
             initializationModeForTelemetry: 'LEGACY'
@@ -73,18 +74,18 @@ export class DdSdkReactNative {
     };
 
     private static initializeNativeSDK = async (
-        configuration: DdSdkReactNativeConfiguration,
+        configuration: CoreConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
     ): Promise<void> => {
-        if (GlobalState.instance.isInitialized) {
+        if (GlobalState.isInitialized) {
             InternalLog.log(
                 "Can't initialize Datadog, SDK was already initialized",
                 SdkVerbosity.WARN
             );
             if (!__DEV__) {
-                DdSdk.telemetryDebug(
+                NativeDdSdk.telemetryDebug(
                     'RN SDK was already initialized in javascript'
                 );
             }
@@ -95,12 +96,12 @@ export class DdSdkReactNative {
 
         registerNativeBridge();
 
-        await DdSdk.initialize(
+        await NativeDdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
 
         InternalLog.log('Datadog SDK was initialized', SdkVerbosity.INFO);
-        GlobalState.instance.isInitialized = true;
+        GlobalState.isInitialized = true;
         BufferSingleton.onInitialization();
     };
 
@@ -129,7 +130,7 @@ export class DdSdkReactNative {
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
-        if (configuration instanceof DdSdkReactNativeConfiguration) {
+        if (configuration instanceof CoreConfiguration) {
             return DdSdkReactNative.initializeNativeSDK(configuration, {
                 initializationModeForTelemetry: 'SYNC'
             });
@@ -177,35 +178,60 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Adds a set of attributes to the global context attached with all future Logs, Spans and RUM events.
-     * To remove an attribute, set it to `undefined` in a call to `setAttributes`.
-     * @param attributes: The global context attributes.
-     * @returns a Promise.
+     * Adds a specific attribute to the global context attached with all future Logs, Spans and RUM.
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
      */
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    static setAttributes = async (attributes: Attributes): Promise<void> => {
+    static addAttribute = async (
+        key: string,
+        value: unknown
+    ): Promise<void> => {
         InternalLog.log(
-            `Setting attributes ${JSON.stringify(attributes)}`,
+            `Adding attribute ${JSON.stringify(value)} for key ${key}`,
             SdkVerbosity.DEBUG
         );
-        await DdSdk.setAttributes(attributes);
-        AttributesSingleton.getInstance().setAttributes(attributes);
+        await NativeDdSdk.addAttribute(key, { value });
+        AttributesSingleton.getInstance().addAttribute(key, value);
     };
 
     /**
-     * Set the user information.
-     * @deprecated UserInfo id property is now mandatory (please user setUserInfo instead)
-     * @param user: The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom attribute).
-     * @returns a Promise.
+     * Removes an attribute from the context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
      */
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    static setUser = async (user: UserInfo): Promise<void> => {
+    static removeAttribute = async (key: string): Promise<void> => {
         InternalLog.log(
-            `Setting user ${JSON.stringify(user)}`,
+            `Removing attribute for key ${key}`,
             SdkVerbosity.DEBUG
         );
-        await DdSdk.setUser(user);
-        UserInfoSingleton.getInstance().setUserInfo(user);
+        await NativeDdSdk.removeAttribute(key);
+        AttributesSingleton.getInstance().removeAttribute(key);
+    };
+
+    /**
+     * Adds a set of attributes to the global context attached with all future Logs, Spans and RUM events.
+     * @param attributes: The global context attributes.
+     * @returns a Promise.
+     */
+    static addAttributes = async (attributes: Attributes): Promise<void> => {
+        InternalLog.log(
+            `Adding attributes ${JSON.stringify(attributes)}`,
+            SdkVerbosity.DEBUG
+        );
+        await NativeDdSdk.addAttributes(attributes);
+        AttributesSingleton.getInstance().addAttributes(attributes);
+    };
+
+    /**
+     * Removes a set of attributes from the context attached with all future Logs, Spans and RUM events.
+     * @param keys: They keys associated with the attributes to be removed.
+     */
+    static removeAttributes = async (keys: string[]): Promise<void> => {
+        InternalLog.log(
+            `Removing attributes for keys ${JSON.stringify(keys)}`,
+            SdkVerbosity.DEBUG
+        );
+        await NativeDdSdk.removeAttributes(keys);
+        AttributesSingleton.getInstance().removeAttributes(keys);
     };
 
     /**
@@ -227,8 +253,18 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        await DdSdk.setUserInfo(userInfo);
+        await NativeDdSdk.setUserInfo(userInfo);
         UserInfoSingleton.getInstance().setUserInfo(userInfo);
+    };
+
+    /**
+     * Clears the user information.
+     * @returns a Promise.
+     */
+    static clearUserInfo = async (): Promise<void> => {
+        InternalLog.log('Clearing user info', SdkVerbosity.DEBUG);
+        await NativeDdSdk.clearUserInfo();
+        UserInfoSingleton.getInstance().clearUserInfo();
     };
 
     /**
@@ -245,6 +281,14 @@ export class DdSdkReactNative {
         );
 
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        if (!userInfo) {
+            InternalLog.log(
+                'Skipped adding User Extra Info: User Info is currently undefined. A user ID must be set before adding extra info. Please call setUserInfo() first.',
+                SdkVerbosity.WARN
+            );
+
+            return;
+        }
         const updatedUserInfo = {
             ...userInfo,
             extraInfo: {
@@ -253,8 +297,73 @@ export class DdSdkReactNative {
             }
         };
 
-        await DdSdk.addUserExtraInfo(extraUserInfo);
+        await NativeDdSdk.addUserExtraInfo(extraUserInfo);
         UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
+    };
+
+    /**
+     * Sets the account information.
+     * @param id: A mandatory unique account identifier (relevant to your business domain).
+     * @param name: The account name.
+     * @param extraInfo: Additional information.
+     * @returns a Promise.
+     */
+    static setAccountInfo = async (accountInfo: {
+        id: string;
+        name?: string;
+        extraInfo?: Record<string, unknown>;
+    }): Promise<void> => {
+        InternalLog.log(
+            `Setting account ${JSON.stringify(accountInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+
+        await NativeDdSdk.setAccountInfo(accountInfo);
+        AccountInfoSingleton.getInstance().setAccountInfo(accountInfo);
+    };
+
+    /**
+     * Clears the account information.
+     * @returns a Promise.
+     */
+    static clearAccountInfo = async (): Promise<void> => {
+        InternalLog.log('Clearing account info', SdkVerbosity.DEBUG);
+        await NativeDdSdk.clearAccountInfo();
+        AccountInfoSingleton.getInstance().clearAccountInfo();
+    };
+
+    /**
+     * Set the account information.
+     * @param extraAccountInfo: The additional information. (To set the id or name please use setAccountInfo).
+     * @returns a Promise.
+     */
+    static addAccountExtraInfo = async (
+        extraAccountInfo: Record<string, unknown>
+    ): Promise<void> => {
+        InternalLog.log(
+            `Adding extra account info ${JSON.stringify(extraAccountInfo)}`,
+            SdkVerbosity.DEBUG
+        );
+
+        const accountInfo = AccountInfoSingleton.getInstance().getAccountInfo();
+        if (!accountInfo) {
+            InternalLog.log(
+                'Skipped adding Account Extra Info: Account Info is currently undefined. An account ID must be set before adding extra info. Please call setAccountInfo() first.',
+                SdkVerbosity.WARN
+            );
+
+            return;
+        }
+
+        const extraInfo = {
+            ...accountInfo.extraInfo,
+            ...extraAccountInfo
+        };
+
+        await NativeDdSdk.addAccountExtraInfo(extraInfo);
+        AccountInfoSingleton.getInstance().addAccountExtraInfo(
+            extraAccountInfo
+        );
     };
 
     /**
@@ -264,7 +373,7 @@ export class DdSdkReactNative {
      */
     static setTrackingConsent = (consent: TrackingConsent): Promise<void> => {
         InternalLog.log(`Setting consent ${consent}`, SdkVerbosity.DEBUG);
-        return DdSdk.setTrackingConsent(consent);
+        return NativeDdSdk.setTrackingConsent(consent);
     };
 
     /**
@@ -273,15 +382,18 @@ export class DdSdkReactNative {
      */
     static clearAllData = (): Promise<void> => {
         InternalLog.log('Clearing all data', SdkVerbosity.DEBUG);
-        return DdSdk.clearAllData();
+        return NativeDdSdk.clearAllData();
     };
 
     private static buildConfiguration = (
-        configuration: DdSdkReactNativeConfiguration,
+        configuration: CoreConfiguration,
         params: {
             initializationModeForTelemetry: InitializationModeForTelemetry;
         }
-    ): DdSdkConfiguration => {
+    ): DdSdkNativeConfiguration => {
+        if (configuration.additionalConfiguration === undefined) {
+            configuration.additionalConfiguration = {};
+        }
         configuration.additionalConfiguration[DdSdkReactNative.DD_SOURCE_KEY] =
             'react-native';
         configuration.additionalConfiguration[
@@ -311,64 +423,100 @@ export class DdSdkReactNative {
             ] = `${reactNativeVersion}`;
         }
 
-        return new DdSdkConfiguration(
+        const rumConfiguration = configuration.rumConfiguration;
+        if (rumConfiguration) {
+            const longTaskThresholdMs =
+                rumConfiguration.longTaskThresholdMs ||
+                RUM_DEFAULTS.longTaskThresholdMs;
+            rumConfiguration.longTaskThresholdMs = adaptLongTaskThreshold(
+                longTaskThresholdMs
+            );
+
+            const nativeLongTaskThresholdMs =
+                configuration.rumConfiguration?.nativeLongTaskThresholdMs ??
+                RUM_DEFAULTS.nativeLongTaskThresholdMs;
+            rumConfiguration.nativeLongTaskThresholdMs = adaptLongTaskThreshold(
+                nativeLongTaskThresholdMs
+            );
+        }
+
+        const trackInteractions =
+            configuration.rumConfiguration?.trackInteractions ||
+            RUM_DEFAULTS.trackInteractions;
+        const trackResources =
+            configuration.rumConfiguration?.trackResources ||
+            RUM_DEFAULTS.trackResources;
+        const trackErrors =
+            configuration.rumConfiguration?.trackErrors ||
+            RUM_DEFAULTS.trackErrors;
+
+        return new DdSdkNativeConfiguration(
+            configuration.additionalConfiguration,
             configuration.clientToken,
             configuration.env,
-            configuration.applicationId,
-            configuration.nativeCrashReportEnabled,
-            adaptLongTaskThreshold(configuration.nativeLongTaskThresholdMs),
-            adaptLongTaskThreshold(configuration.longTaskThresholdMs),
-            configuration.sampleRate === undefined
-                ? configuration.sessionSamplingRate
-                : configuration.sampleRate,
             configuration.site,
+            configuration.service,
+            configuration.verbosity,
             configuration.trackingConsent,
-            configuration.additionalConfiguration,
-            configuration.telemetrySampleRate,
-            configuration.vitalsUpdateFrequency,
             configuration.uploadFrequency,
             configuration.batchSize,
-            configuration.trackFrustrations,
-            configuration.trackBackgroundEvents,
-            configuration.customEndpoints,
+            configuration.batchProcessingLevel,
+            configuration.proxyConfiguration,
+            configuration.attributeEncoders,
+            rumConfiguration as RumNativeConfiguration,
+            configuration.logsConfiguration as LogsNativeConfiguration,
+            configuration.traceConfiguration as TraceNativeConfiguration,
             {
                 initializationType: params.initializationModeForTelemetry,
-                trackErrors: configuration.trackErrors,
-                trackInteractions: configuration.trackInteractions,
-                trackNetworkRequests: configuration.trackResources,
+                trackErrors,
+                trackInteractions,
+                trackNetworkRequests: trackResources,
                 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                 reactNativeVersion: require('react-native/package.json')
                     .version,
                 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
                 reactVersion: require('react/package.json').version
-            },
-            configuration.nativeViewTracking,
-            configuration.nativeInteractionTracking,
-            configuration.verbosity,
-            configuration.proxyConfig,
-            configuration.serviceName,
-            formatFirstPartyHosts(configuration.firstPartyHosts),
-            configuration.bundleLogsWithRum,
-            configuration.bundleLogsWithTraces,
-            configuration.trackNonFatalAnrs,
-            configuration.appHangThreshold,
-            configuration.resourceTracingSamplingRate,
-            configuration.trackWatchdogTerminations,
-            configuration.batchProcessingLevel,
-            configuration.initialResourceThreshold
+            }
         );
     };
 
     private static enableFeatures(
         configuration: AutoInstrumentationParameters
     ) {
+        const firstPartyHosts =
+            configuration.rumConfiguration?.firstPartyHosts ||
+            RUM_DEFAULTS.getFirstPartyHosts();
+        const trackInteractions =
+            configuration.rumConfiguration?.trackInteractions ||
+            RUM_DEFAULTS.trackInteractions;
+        const trackResources =
+            configuration.rumConfiguration?.trackResources ||
+            RUM_DEFAULTS.trackResources;
+        const trackErrors =
+            configuration.rumConfiguration?.trackErrors ||
+            RUM_DEFAULTS.trackErrors;
+        const actionNameAttribute =
+            configuration.rumConfiguration?.actionNameAttribute;
+        const resourceTraceSampleRate =
+            configuration.rumConfiguration?.resourceTraceSampleRate ||
+            RUM_DEFAULTS.resourceTraceSampleRate;
+        const logEventMapper = configuration.logsConfiguration?.logEventMapper;
+        const errorEventMapper =
+            configuration.rumConfiguration?.errorEventMapper;
+        const resourceEventMapper =
+            configuration.rumConfiguration?.resourceEventMapper;
+        const actionEventMapper =
+            configuration.rumConfiguration?.actionEventMapper;
+
         if (globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdBabelInteractionTracking.config = {
-                trackInteractions: configuration.trackInteractions,
-                useAccessibilityLabel: configuration.useAccessibilityLabel
+                trackInteractions,
+                useAccessibilityLabel:
+                    configuration.rumConfiguration?.useAccessibilityLabel ||
+                    RUM_DEFAULTS.useAccessibilityLabel
             };
 
-            DdBabelInteractionTracking.getInstance(DdRum);
+            DdBabelInteractionTracking.attachRumInstance(DdRum);
         }
 
         if (DdSdkReactNative.wasAutoInstrumented) {
@@ -379,45 +527,39 @@ export class DdSdkReactNative {
             return;
         }
 
-        if (
-            configuration.trackInteractions &&
-            !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__
-        ) {
+        if (trackInteractions && !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdRumUserInteractionTracking.startTracking({
-                actionNameAttribute: configuration.actionNameAttribute,
-                useAccessibilityLabel: configuration.useAccessibilityLabel
+                actionNameAttribute,
+                useAccessibilityLabel:
+                    configuration.rumConfiguration?.useAccessibilityLabel
             });
         }
 
-        if (configuration.trackResources) {
+        if (trackResources) {
             DdRumResourceTracking.startTracking({
-                tracingSamplingRate: configuration.resourceTracingSamplingRate,
-                firstPartyHosts: formatFirstPartyHosts(
-                    configuration.firstPartyHosts
-                )
+                resourceTraceSampleRate,
+                firstPartyHosts
             });
         }
 
-        if (configuration.trackErrors) {
+        if (trackErrors) {
             DdRumErrorTracking.startTracking();
         }
 
-        if (configuration.logEventMapper) {
-            DdLogs.registerLogEventMapper(configuration.logEventMapper);
+        if (logEventMapper) {
+            DdLogs.registerLogEventMapper(logEventMapper);
         }
 
-        if (configuration.errorEventMapper) {
-            DdRum.registerErrorEventMapper(configuration.errorEventMapper);
+        if (errorEventMapper) {
+            DdRum.registerErrorEventMapper(errorEventMapper);
         }
 
-        if (configuration.resourceEventMapper) {
-            DdRum.registerResourceEventMapper(
-                configuration.resourceEventMapper
-            );
+        if (resourceEventMapper) {
+            DdRum.registerResourceEventMapper(resourceEventMapper);
         }
 
-        if (configuration.actionEventMapper) {
-            DdRum.registerActionEventMapper(configuration.actionEventMapper);
+        if (actionEventMapper) {
+            DdRum.registerActionEventMapper(actionEventMapper);
         }
 
         DdSdkReactNative.wasAutoInstrumented = true;

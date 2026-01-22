@@ -41,23 +41,33 @@ import {
 const datadogConfiguration = new DatadogProviderConfiguration(
     '<CLIENT_TOKEN>',
     '<ENVIRONMENT_NAME>',
-    '<RUM_APPLICATION_ID>',
-    true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
-    true, // track XHR Resources
-    true // track Errors
+    TrackingConsent.GRANTED,
+    {
+        rumConfiguration: {
+            applicationId: '<RUM_APPLICATION_ID>',
+            trackInteractions: true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
+            trackResources: true, // track XHR Resources
+            trackFrustrations: true, // track Frustrations
+            trackErrors: true, // track errors
+            nativeCrashReportEnabled: true, // Optional: enable or disable native crash reports
+            sessionSampleRate: 80, // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
+            resourceTracingSamplingRate: 80, // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%) 
+            // You need to specify the hosts of your backends to enable tracing with these backends
+            firstPartyHosts: ['example.com'], // matches 'example.com' and subdomains like 'api.example.com'
+        },
+        logsConfiguration: {
+            logEventMapper: (logEvent) => {
+                logEvent.message = `[CUSTOM] ${logEvent.message}`;
+                return logEvent;
+            }
+        },
+        traceConfiguration: {}
+    }
 );
 // Optional: Select your Datadog website (one of "US1", "US3", "US5", "EU1", "AP1", "AP2", or "US1_FED"). Default is "US1".
 datadogConfiguration.site = 'US1';
-// Optional: enable or disable native crash reports
-datadogConfiguration.nativeCrashReportEnabled = true;
-// Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-datadogConfiguration.sessionSamplingRate = 80;
-// Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
-// You need to specify the hosts of your backends to enable tracing with these backends
-datadogConfiguration.resourceTracingSamplingRate = 80;
-datadogConfiguration.firstPartyHosts = ['example.com']; // matches 'example.com' and subdomains like 'api.example.com'
 // Optional: set the reported service name (by default, it'll use the package name / bundleIdentifier of your Android / iOS app respectively)
-datadogConfiguration.serviceName = 'com.example.reactnative';
+datadogConfiguration.service = 'com.example.reactnative';
 // Optional: let the SDK print internal logs (above or equal to the provided level. Default = undefined (meaning no logs))
 datadogConfiguration.verbosity = SdkVerbosity.WARN;
 

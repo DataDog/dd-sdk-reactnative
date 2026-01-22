@@ -5,17 +5,20 @@
  */
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdSdk } from '../../sdk/DdSdk';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
+import { AccountInfoSingleton } from '../AccountInfoSingleton/AccountInfoSingleton';
+import type { AccountInfo } from '../AccountInfoSingleton/types';
 import { AttributesSingleton } from '../AttributesSingleton/AttributesSingleton';
 import type { Attributes } from '../AttributesSingleton/types';
+import { NativeDdSdk } from '../DdSdkInternal';
 import { UserInfoSingleton } from '../UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from '../UserInfoSingleton/types';
 
 import { deepClone } from './utils/deepClone';
 
 export type AdditionalEventDataForMapper = {
-    userInfo: UserInfo;
+    userInfo?: UserInfo;
+    accountInfo?: AccountInfo;
     attributes: Attributes;
 };
 
@@ -66,9 +69,11 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
 
         // formatting
         const userInfo = UserInfoSingleton.getInstance().getUserInfo();
+        const accountInfo = AccountInfoSingleton.getInstance().getAccountInfo();
         const attributes = AttributesSingleton.getInstance().getAttributes();
         const initialEvent = this.formatRawEventForMapper(rawEvent, {
             userInfo,
+            accountInfo,
             attributes
         });
 
@@ -87,7 +92,7 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
                 )}: ${error}`,
                 SdkVerbosity.WARN
             );
-            DdSdk.telemetryDebug('Error while running the event mapper');
+            NativeDdSdk.telemetryDebug('Error while running the event mapper');
             return this.formatMapperEventForNative(backupEvent, backupEvent);
         }
     };

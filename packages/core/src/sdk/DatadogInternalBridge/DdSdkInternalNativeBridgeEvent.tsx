@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 
 export class DdSdkInternalNativeBridgeEvent<DataType> {
     public readonly eventName: string;

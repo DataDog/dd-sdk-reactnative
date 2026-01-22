@@ -8,26 +8,27 @@ import WebKit
 import DatadogWebViewTracking
 import DatadogSDKReactNative
 import DatadogCore
+import DatadogInternal
 
 @objc public class RCTDatadogWebViewTracking: NSObject {
     var webView: RCTDatadogWebView? = nil
     var allowedHosts: Set<String> = Set()
-    var coreListener: OnCoreInitializedListener?
+    var onSdkInitializedListener: OnSdkInitializedListener?
     
     public override init() {
         super.init()
-        self.coreListener = { [weak self] (core: DatadogCoreProtocol) in
+        self.onSdkInitializedListener = { [weak self] (core: DatadogCoreProtocol) in
             guard let strongSelf = self, let webView = strongSelf.webView else {
                 return
             }
             strongSelf.enableWebViewTracking(
                 webView: webView,
                 allowedHosts: strongSelf.allowedHosts,
-                core: core
+                core: CoreRegistry.default
             )
         }
     }
-    
+   
     /**
      Enables tracking on the given WebView.
      
@@ -42,15 +43,16 @@ import DatadogCore
 
         guard !webView.isTrackingEnabled else { return }
 
-        if let core = DatadogSDKWrapper.shared.getCoreInstance() {
-            enableWebViewTracking(webView: webView, allowedHosts: allowedHosts, core: core)
-        } else if let coreListener = self.coreListener {
-            DatadogSDKWrapper.shared.addOnCoreInitializedListener(listener: coreListener)
+        if CoreRegistry.isRegistered(instanceName: CoreRegistry.defaultInstanceName) {
+            enableWebViewTracking(webView: webView, allowedHosts: allowedHosts, core: CoreRegistry.default)
+        } else if let onSdkInitializedListener = self.onSdkInitializedListener {
+            DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: onSdkInitializedListener)
         } else {
             // TODO: Report initialization problem
         }
     }
     
+
     private func enableWebViewTracking(
         webView: RCTDatadogWebView,
         allowedHosts: Set<String>,

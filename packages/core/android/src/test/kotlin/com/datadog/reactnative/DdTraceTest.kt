@@ -6,6 +6,12 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.trace.api.scope.DatadogScope
+import com.datadog.android.trace.api.span.DatadogSpan
+import com.datadog.android.trace.api.span.DatadogSpanBuilder
+import com.datadog.android.trace.api.span.DatadogSpanContext
+import com.datadog.android.trace.api.trace.DatadogTraceId
+import com.datadog.android.trace.api.tracer.DatadogTracer
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
@@ -15,11 +21,6 @@ import fr.xgouchet.elmyr.annotation.MapForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeExtension
-import io.opentracing.Scope
-import io.opentracing.ScopeManager
-import io.opentracing.Span
-import io.opentracing.SpanContext
-import io.opentracing.Tracer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -51,22 +52,19 @@ internal class DdTraceTest {
     lateinit var testedTrace: DdTraceImplementation
 
     @Mock
-    lateinit var mockTracer: Tracer
+    lateinit var mockTracer: DatadogTracer
 
     @Mock
-    lateinit var mockSpanBuilder: Tracer.SpanBuilder
+    lateinit var mockSpanBuilder: DatadogSpanBuilder
 
     @Mock
-    lateinit var mockSpanContext: SpanContext
+    lateinit var mockSpanContext: DatadogSpanContext
 
     @Mock
-    lateinit var mockScopeManager: ScopeManager
+    lateinit var mockSpan: DatadogSpan
 
     @Mock
-    lateinit var mockSpan: Span
-
-    @Mock
-    lateinit var mockScope: Scope
+    lateinit var mockScope: DatadogScope
 
     @StringForgery
     lateinit var fakeOperation: String
@@ -74,11 +72,11 @@ internal class DdTraceTest {
     @DoubleForgery(1000000000000.0, 2000000000000.0)
     var fakeTimestamp: Double = 0.0
 
-    @StringForgery(type = StringForgeryType.HEXADECIMAL)
-    lateinit var fakeSpanId: String
+    @LongForgery(100L, 2000L)
+    var fakeSpanId: Long = 0
 
-    @StringForgery(type = StringForgeryType.HEXADECIMAL)
-    lateinit var fakeTraceId: String
+    @Mock
+    lateinit var fakeTraceId: DatadogTraceId
 
     @MapForgery(
         key = AdvancedForgery(string = [StringForgery()]),
@@ -102,7 +100,6 @@ internal class DdTraceTest {
     @BeforeEach
     fun `set up`() {
         whenever(mockTracer.buildSpan(fakeOperation)) doReturn mockSpanBuilder
-        whenever(mockTracer.scopeManager()) doReturn mockScopeManager
         whenever(
             mockSpanBuilder.withStartTimestamp(
                 fakeTimestamp.toLong() * 1000
@@ -110,9 +107,9 @@ internal class DdTraceTest {
         ) doReturn mockSpanBuilder
         whenever(mockSpanBuilder.start()) doReturn mockSpan
         whenever(mockSpan.context()) doReturn mockSpanContext
-        whenever(mockSpanContext.toSpanId()) doReturn fakeSpanId
-        whenever(mockSpanContext.toTraceId()) doReturn fakeTraceId
-        whenever(mockScopeManager.activate(mockSpan)) doReturn mockScope
+        whenever(mockSpanContext.spanId) doReturn fakeSpanId
+        whenever(mockSpanContext.traceId) doReturn fakeTraceId
+        whenever(mockTracer.activateSpan(mockSpan)) doReturn mockScope
 
         testedTrace = DdTraceImplementation(tracerProvider = { mockTracer })
     }
@@ -133,7 +130,7 @@ internal class DdTraceTest {
         )
 
         // Then
-        assertThat(lastResolvedValue).isEqualTo(fakeSpanId)
+        assertThat(lastResolvedValue.toString()).isEqualTo(fakeSpanId.toString())
     }
 
     @Test
@@ -154,18 +151,20 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
+        val id = lastResolvedValue.toString()
+        testedTrace.finishSpan(id, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan).finish(endTimestamp.toLong() * 1000)
     }
 
     @Test
     fun `M do nothing W startSpan() + finishSpan() with unknown id`(
         @LongForgery(100L, 2000L) duration: Long,
-        @StringForgery(type = StringForgeryType.HEXADECIMAL) otherSpanId: String
+        @StringForgery(type = StringForgeryType.HEXADECIMAL)
+        @LongForgery(100L, 2000L)
+        otherSpanId: Long
     ) {
         // Given
         assumeTrue(otherSpanId != fakeSpanId)
@@ -178,11 +177,16 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
-        testedTrace.finishSpan(otherSpanId, fakeContext.toReadableMap(), endTimestamp, mockPromise)
+        val id = lastResolvedValue.toString()
+        testedTrace.finishSpan(
+            otherSpanId.toString(),
+            fakeContext.toReadableMap(),
+            endTimestamp,
+            mockPromise
+        )
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan, never()).finish(any())
     }
 
@@ -200,7 +204,7 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
+        val id = lastResolvedValue.toString()
         testedTrace.finishSpan(
             id as String,
             emptyMap<String, String>().toReadableMap(),
@@ -209,7 +213,7 @@ internal class DdTraceTest {
         )
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
@@ -232,11 +236,11 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
-        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
+        val id = lastResolvedValue.toString()
+        testedTrace.finishSpan(id, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
@@ -262,16 +266,16 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
+        val id = lastResolvedValue.toString()
         testedTrace.finishSpan(
-            id as String,
+            id,
             emptyMap<String, String>().toReadableMap(),
             endTimestamp,
             mockPromise
         )
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         fakeContext.forEach {
@@ -298,14 +302,14 @@ internal class DdTraceTest {
             fakeTimestamp,
             mockPromise
         )
-        val id = lastResolvedValue
+        val id = lastResolvedValue.toString()
         fakeGlobalState.forEach { (k, v) ->
             GlobalState.addAttribute(k, v)
         }
-        testedTrace.finishSpan(id as String, fakeContext.toReadableMap(), endTimestamp, mockPromise)
+        testedTrace.finishSpan(id, fakeContext.toReadableMap(), endTimestamp, mockPromise)
 
         // Then
-        assertThat(id).isEqualTo(fakeSpanId)
+        assertThat(id).isEqualTo(fakeSpanId.toString())
         verify(mockSpan).context()
         verify(mockSpan).finish(endTimestamp.toLong() * 1000)
         expectedAttributes.forEach {

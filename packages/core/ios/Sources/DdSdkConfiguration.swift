@@ -4,143 +4,201 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import Foundation
 import DatadogCore
 import DatadogInternal
 import DatadogRUM
+import Foundation
 
-/**
- A configuration object to initialize Datadog's features.
- - Parameters:
-     - clientToken: A valid Datadog client token.
-     - env: The application’s environment, for example: prod, pre-prod, staging, etc.
-     - applicationId: The RUM application ID.
-     - nativeCrashReportEnabled: Whether the SDK should track native (pure iOS or pure Android) crashes (default is false).
-     - nativeLongTaskThresholdMs: The threshold for native long tasks reporting in milliseconds.
-     - longTaskThresholdMs: The threshold for javascript long tasks reporting in milliseconds.
-     - sampleRate: The sample rate (between 0 and 100) of RUM sessions kept.
-     - site: The Datadog site of your organization (can be 'US1', 'US1_FED', 'US3', 'US5', or 'EU1', default is 'US1').
-     - trackingConsent: Consent, which can take one of the following values: 'pending', 'granted', 'not_granted'.
-     - telemetrySampleRate: The sample rate (between 0 and 100) of telemetry events.
-     - vitalsUpdateFrequency: The frequency at which to measure vitals performance metrics.
-     - uploadFrequency: The frequency at which batches of data are sent.
-     - batchSize: The preferred size of batched data uploaded to Datadog.
-     - trackFrustrations: Whether to track frustration signals or not.
-     - trackBackgroundEvents: Enables/Disables tracking RUM event when no RUM View is active. Might increase number of sessions and billing.
-     - customEndpoints: Custom endpoints for RUM/Logs/Trace features.
-     - additionalConfig: Additional configuration parameters.
-     - configurationForTelemetry: Additional configuration paramters only used for telemetry purposes.
-     - nativeViewTracking: Enables/Disables tracking RUM Views on the native level.
-     - nativeInteractionTracking: Enables/Disables tracking RUM Actions on the native level.
-     - verbosity: Verbosity level of the SDK.
-     - proxyConfig: Configuration for proxying SDK data.
-     - serviceName: Custom service name.
-     - firstPartyHosts: List of backend hosts to enable tracing with.
-     - bundleLogsWithRum: Correlates logs with RUM.
-     - bundleLogsWithTraces: Correlates logs with traces.
-     - appHangThreshold: The threshold for non-fatal app hangs reporting in seconds.
-     - trackWatchdogTerminations: Whether the SDK should track application termination by the watchdog
-     - batchProcessingLevel: Maximum number of batches processed sequentially without a delay
-     - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS)
- */
+/// A configuration object used to initialize Datadog's core SDK and its feature modules.
+/// - Parameters:
+///    - additionalConfiguration: Additional configuration parameters forwarded directly
+///      to the native Datadog SDKs.
+///    - clientToken: A valid Datadog client token.
+///    - env: The application’s environment (e.g., "prod", "pre-prod", "staging").
+///    - site: The Datadog site of your organization (e.g., `US1`, `US1_FED`, `US3`, `US5`, `EU1`).
+///    - service: The custom service name reported for logs, traces, and RUM.
+///    - verbosity: Verbosity level of the SDK’s internal logging (`DEBUG`, `INFO`, `WARN`, `ERROR`).
+///    - trackingConsent: User tracking consent (`pending`, `granted`, `not_granted`).
+///    - uploadFrequency: The frequency at which batches of data are uploaded.
+///    - batchSize: The preferred size of batches sent to Datadog.
+///    - batchProcessingLevel: Maximum number of batches processed sequentially before applying a delay.
+///    - proxyConfiguration: Configuration for proxying SDK data (proxy type, address, port, etc.).
+///    - firstPartyHosts: List of backend hosts considered first-party for network tracing.
+///    - rumConfiguration: Configuration for the RUM feature module.
+///    - logsConfiguration: Configuration for the Logs feature module.
+///    - traceConfiguration: Configuration for the Traces feature module.
+///    - configurationForTelemetry: Additional configuration parameters used only for internal telemetry.
 @objc(DdSdkConfiguration)
 public class DdSdkConfiguration: NSObject {
+    public var additionalConfiguration: NSDictionary? = nil
     public var clientToken: String = ""
     public var env: String = ""
-    public var applicationId: String = ""
-    public var nativeCrashReportEnabled: Bool? = nil
-    public var nativeLongTaskThresholdMs: Double? = nil
-    public var longTaskThresholdMs: Double = 0.0
-    public var sampleRate: Double? = nil
     public var site: DatadogSite
+    public var service: NSString? = nil
+    public var verbosity: NSString? = nil
     public var trackingConsent: TrackingConsent
-    public var telemetrySampleRate: Double? = nil
-    public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
-    public var trackFrustrations: Bool? = nil
     public var uploadFrequency: Datadog.Configuration.UploadFrequency
     public var batchSize: Datadog.Configuration.BatchSize
-    public var trackBackgroundEvents: Bool? = nil
-    public var customEndpoints: CustomEndpoints? = nil
-    public var additionalConfig: NSDictionary? = nil
-    public var configurationForTelemetry: ConfigurationForTelemetry? = nil
-    public var nativeViewTracking: Bool? = nil
-    public var nativeInteractionTracking: Bool? = nil
-    public var verbosity: NSString? = nil
-    public var proxyConfig: [AnyHashable: Any]? = nil
-    public var serviceName: NSString? = nil
-    public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
-    public var resourceTracingSamplingRate: Double? = nil
-    public var bundleLogsWithRum: Bool
-    public var bundleLogsWithTraces: Bool
-    public var appHangThreshold: Double? = nil
-    public var trackWatchdogTerminations: Bool
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
-    public var initialResourceThreshold: Double? = nil
+    public var proxyConfiguration: [AnyHashable: Any]? = nil
+    public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
+    public var rumConfiguration: RumConfiguration? = nil
+    public var logsConfiguration: LogsConfiguration? = nil
+    public var traceConfiguration: TraceConfiguration? = nil
+    public var configurationForTelemetry: ConfigurationForTelemetry? = nil
 
     public init(
+        additionalConfiguration: NSDictionary?,
         clientToken: String,
         env: String,
-        applicationId: String,
-        nativeCrashReportEnabled: Bool?,
-        nativeLongTaskThresholdMs: Double?,
-        longTaskThresholdMs: Double,
-        sampleRate: Double?,
         site: DatadogSite,
+        service: NSString?,
+        verbosity: NSString? = nil,
         trackingConsent: TrackingConsent,
-        telemetrySampleRate: Double?,
-        vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency?,
-        trackFrustrations: Bool?,
         uploadFrequency: Datadog.Configuration.UploadFrequency,
         batchSize: Datadog.Configuration.BatchSize,
-        trackBackgroundEvents: Bool?,
-        customEndpoints: CustomEndpoints?,
-        additionalConfig: NSDictionary?,
-        configurationForTelemetry: ConfigurationForTelemetry?,
-        nativeViewTracking: Bool?,
-        nativeInteractionTracking: Bool?,
-        verbosity: NSString?,
-        proxyConfig: [AnyHashable: Any]?,
-        serviceName: NSString?,
-        firstPartyHosts: [String: Set<TracingHeaderType>]?,
-        resourceTracingSamplingRate: Double?,
-        bundleLogsWithRum: Bool,
-        bundleLogsWithTraces: Bool,
-        appHangThreshold: Double?,
-        trackWatchdogTerminations: Bool,
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
-        initialResourceThreshold: Double?
+        proxyConfiguration: [AnyHashable: Any]?,
+        firstPartyHosts: [String: Set<TracingHeaderType>]?,
+        rumConfiguration: RumConfiguration?,
+        logsConfiguration: LogsConfiguration?,
+        traceConfiguration: TraceConfiguration?,
+        configurationForTelemetry: ConfigurationForTelemetry?
     ) {
+        self.additionalConfiguration = additionalConfiguration
         self.clientToken = clientToken
         self.env = env
-        self.applicationId = applicationId
-        self.nativeCrashReportEnabled = nativeCrashReportEnabled
-        self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
-        self.longTaskThresholdMs = longTaskThresholdMs
-        self.sampleRate = sampleRate
         self.site = site
+        self.service = service
+        self.verbosity = verbosity
         self.trackingConsent = trackingConsent
-        self.telemetrySampleRate = telemetrySampleRate
-        self.vitalsUpdateFrequency = vitalsUpdateFrequency
-        self.trackFrustrations = trackFrustrations
         self.uploadFrequency = uploadFrequency
         self.batchSize = batchSize
-        self.trackBackgroundEvents = trackBackgroundEvents
-        self.customEndpoints = customEndpoints
-        self.additionalConfig = additionalConfig
+        self.batchProcessingLevel = batchProcessingLevel
+        self.proxyConfiguration = proxyConfiguration
+        self.firstPartyHosts = firstPartyHosts
+        self.rumConfiguration = rumConfiguration
+        self.logsConfiguration = logsConfiguration
+        self.traceConfiguration = traceConfiguration
         self.configurationForTelemetry = configurationForTelemetry
+    }
+}
+
+/// A configuration object for the Datadog RUM feature.
+///
+/// - Parameters:
+///    - applicationId: The RUM Application ID.
+///    - trackFrustrations: Whether to track user frustration signals (e.g. rage taps).
+///    - longTaskThresholdMs: The threshold for reporting long JavaScript tasks, in milliseconds.
+///    - sessionSampleRate: Percentage (0–100) of sampled RUM sessions.
+///    - vitalsUpdateFrequency: Frequency at which the SDK collects mobile vitals metrics.
+///    - trackBackgroundEvents: Enables/disables tracking RUM events when no RUM View is active.
+///      May increase the number of sessions and billing.
+///    - nativeCrashReportEnabled: Whether the SDK should track native (iOS / Android) crashes.
+///      Default is `false`.
+///    - nativeLongTaskThresholdMs: The threshold for reporting native long tasks in milliseconds.
+///    - nativeViewTracking: Enables tracking of native iOS/Android UI views.
+///    - nativeInteractionTracking: Enables tracking of native UI interactions.
+///    - appHangThreshold: Threshold in seconds for reporting non-fatal app hangs (iOS only).
+///    - trackWatchdogTerminations: Whether the SDK should track application terminations
+///      caused by the iOS watchdog.
+///    - initialResourceThreshold: The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS).
+///    - trackMemoryWarnings: Whether memory warning events should be tracked.
+///    - telemetrySampleRate: Sampling rate (0–100) for internal telemetry emitted via RUM.
+///    - customEndpoint: A custom RUM  intake endpoint to override the default Datadog intake.
+public class RumConfiguration: NSObject {
+    public var applicationId: String = ""
+    public var trackFrustrations: Bool? = true
+    public var longTaskThresholdMs: Double = 0.0
+    public var sessionSampleRate: Double? = nil
+    public var resourceTraceSampleRate: Double? = nil
+    public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
+    public var trackBackgroundEvents: Bool? = nil
+    public var nativeCrashReportEnabled: Bool? = nil
+    public var nativeLongTaskThresholdMs: Double? = nil
+    public var nativeViewTracking: Bool? = nil
+    public var nativeInteractionTracking: Bool? = nil
+    public var appHangThreshold: Double? = nil
+    public var trackWatchdogTerminations: Bool
+    public var initialResourceThreshold: Double? = nil
+    public var trackMemoryWarnings: Bool? = nil
+    public var telemetrySampleRate: Double? = nil
+    public var customEndpoint: String? = nil
+
+    init(
+        applicationId: String,
+        trackFrustrations: Bool?,
+        longTaskThresholdMs: Double,
+        sessionSampleRate: Double?,
+        resourceTraceSampleRate: Double?,
+        vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency?,
+        trackBackgroundEvents: Bool?,
+        nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
+        nativeViewTracking: Bool?,
+        nativeInteractionTracking: Bool?,
+        appHangThreshold: Double?,
+        trackWatchdogTerminations: Bool,
+        initialResourceThreshold: Double?,
+        trackMemoryWarnings: Bool?,
+        telemetrySampleRate: Double?,
+        customEndpoint: String?
+    ) {
+        self.applicationId = applicationId
+        self.trackFrustrations = trackFrustrations
+        self.longTaskThresholdMs = longTaskThresholdMs
+        self.sessionSampleRate = sessionSampleRate
+        self.resourceTraceSampleRate = resourceTraceSampleRate
+        self.vitalsUpdateFrequency = vitalsUpdateFrequency
+        self.trackBackgroundEvents = trackBackgroundEvents
+        self.nativeCrashReportEnabled = nativeCrashReportEnabled
+        self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.nativeViewTracking = nativeViewTracking
         self.nativeInteractionTracking = nativeInteractionTracking
-        self.verbosity = verbosity
-        self.proxyConfig = proxyConfig
-        self.serviceName = serviceName
-        self.firstPartyHosts = firstPartyHosts
-        self.resourceTracingSamplingRate = resourceTracingSamplingRate
-        self.bundleLogsWithRum = bundleLogsWithRum
-        self.bundleLogsWithTraces = bundleLogsWithTraces
         self.appHangThreshold = appHangThreshold
         self.trackWatchdogTerminations = trackWatchdogTerminations
-        self.batchProcessingLevel = batchProcessingLevel
         self.initialResourceThreshold = initialResourceThreshold
+        self.trackMemoryWarnings = trackMemoryWarnings
+        self.telemetrySampleRate = telemetrySampleRate
+        self.customEndpoint = customEndpoint
+    }
+
+}
+
+/// A configuration object for Datadog Logs features.
+///
+/// - Parameters:
+///    - bundleLogsWithRum: Enables correlation between logs and RUM events.
+///    - bundleLogsWithTraces: Enables correlation between logs and tracing spans.
+///    - customEndpoint: A custom logs intake endpoint to override the default Datadog intake.
+public class LogsConfiguration: NSObject {
+    public var bundleLogsWithRum: Bool
+    public var bundleLogsWithTraces: Bool
+    public var customEndpoint: String? = nil
+
+    init(
+        bundleLogsWithRum: Bool,
+        bundleLogsWithTraces: Bool,
+        customEndpoint: String?
+    ) {
+        self.bundleLogsWithRum = bundleLogsWithRum
+        self.bundleLogsWithTraces = bundleLogsWithTraces
+        self.customEndpoint = customEndpoint
+    }
+}
+
+/// A configuration object for Datadog Tracing (APM) features.
+///
+/// - Parameters:
+///    - resourceTracingSamplingRate: Percentage (0–100) of network resource traces to sample.
+///    - customEndpoint: A custom Trace intake endpoint to override the default Datadog intake.
+public class TraceConfiguration: NSObject {
+    public var customEndpoint: String? = nil
+
+    init(
+        customEndpoint: String?
+    ) {
+        self.customEndpoint = customEndpoint
     }
 }
 
@@ -151,7 +209,7 @@ public class ConfigurationForTelemetry: NSObject {
     public let trackNetworkRequests: Bool?
     public var reactVersion: NSString?
     public var reactNativeVersion: NSString?
-    
+
     public init(
         initializationType: NSString?,
         trackErrors: Bool?,
@@ -166,21 +224,5 @@ public class ConfigurationForTelemetry: NSObject {
         self.trackNetworkRequests = trackNetworkRequests
         self.reactVersion = reactVersion
         self.reactNativeVersion = reactNativeVersion
-    }
-}
-
-public class CustomEndpoints: NSObject {
-    public var rum: NSString?
-    public var logs: NSString?
-    public var trace: NSString?
-    
-    public init(
-        rum: NSString?,
-        logs: NSString?,
-        trace: NSString?
-    ) {
-        self.rum = rum
-        self.logs = logs
-        self.trace = trace
     }
 }

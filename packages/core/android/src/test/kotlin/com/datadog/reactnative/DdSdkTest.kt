@@ -16,8 +16,10 @@ import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
+import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum._RumInternalProxy
@@ -27,6 +29,7 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
+import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
@@ -37,6 +40,7 @@ import com.datadog.tools.unit.setStaticValue
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableJavaOnlyMap
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -56,6 +60,7 @@ import java.util.Locale
 import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -75,7 +80,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
-import org.mockito.kotlin.isNotNull
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -120,6 +124,9 @@ internal class DdSdkTest {
     @Mock
     lateinit var mockDatadog: DatadogWrapper
 
+    @Mock
+    lateinit var mockDdTelemetry: DdTelemetry
+
     @Forgery
     lateinit var fakeConfiguration: DdSdkConfiguration
 
@@ -157,9 +164,13 @@ internal class DdSdkTest {
             answer.getArgument<Runnable>(0).run()
             true
         }
-        testedBridgeSdk = DdSdkImplementation(mockReactContext, mockDatadog, TestUiThreadExecutor())
+        testedBridgeSdk = DdSdkImplementation(
+            mockReactContext,
+            mockDatadog,
+            mockDdTelemetry,
+            TestUiThreadExecutor()
+        )
 
-        DatadogSDKWrapperStorage.setSdkCore(null)
         DatadogSDKWrapperStorage.onInitializedListeners.clear()
     }
 
@@ -173,121 +184,173 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=true}`() {
         // Given
-        val bridgeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        val bridgeConfiguration = fakeConfiguration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo("crashReportsEnabled", true)
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo("crashReportsEnabled", true)
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=false}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo("crashReportsEnabled", false)
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo("crashReportsEnabled", false)
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {nativeCrashReportEnabled=null}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
+
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo("crashReportsEnabled", false)
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo("crashReportsEnabled", false)
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -301,39 +364,52 @@ internal class DdSdkTest {
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-        val expectedRumSampleRate = fakeConfiguration.sampleRate?.toFloat() ?: 100f
+        val expectedRumSampleRate = fakeConfiguration.rumConfiguration?.sessionSampleRate?.toFloat() ?: 100f // ktlint-disable-line max-line-length
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("sampleRate", expectedRumSampleRate)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-            }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("sampleRate", expectedRumSampleRate)
-            }
     }
 
     // endregion
@@ -347,39 +423,52 @@ internal class DdSdkTest {
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
-        val expectedTelemetrySampleRate = fakeConfiguration.telemetrySampleRate?.toFloat() ?: 20f
+        val expectedTelemetrySampleRate = fakeConfiguration.rumConfiguration?.telemetrySampleRate?.toFloat() ?: 20f // ktlint-disable-line max-line-length
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("telemetrySampleRate", expectedTelemetrySampleRate)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-            }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("telemetrySampleRate", expectedTelemetrySampleRate)
-            }
     }
 
     // endregion
@@ -389,37 +478,50 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {additionalConfig=null}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(additionalConfig = null)
+        fakeConfiguration = fakeConfiguration.copy(additionalConfiguration = null)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo("additionalConfig", emptyMap<String, Any?>())
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo("additionalConfig", emptyMap<String, Any?>())
+            assertThat(rumConfigCaptor.firstValue)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -430,34 +532,47 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -469,41 +584,58 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(site = null, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.US1)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US1)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -512,41 +644,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.US1)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US1)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -555,41 +704,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us3")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.US3)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US3)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -598,41 +764,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us5")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.US5)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US5)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -641,41 +824,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("us1_fed")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.US1_FED)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US1_FED)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -684,41 +884,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("eu1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.EU1)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.EU1)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -727,41 +944,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap1")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.AP1)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.AP1)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -770,41 +1004,58 @@ internal class DdSdkTest {
     ) {
         // Given
         val site = forge.randomizeCase("ap2")
-        fakeConfiguration = fakeConfiguration.copy(site = site, nativeCrashReportEnabled = true)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
-                it.hasFieldEqualTo("site", DatadogSite.AP2)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
-            .hasFieldEqualTo("env", fakeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo(
-                "additionalConfig",
-                fakeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", fakeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.AP2)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -820,19 +1071,33 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                eq(TrackingConsent.PENDING)
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    eq(TrackingConsent.PENDING)
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -848,19 +1113,33 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                eq(TrackingConsent.PENDING)
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    eq(TrackingConsent.PENDING)
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -876,19 +1155,33 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                eq(TrackingConsent.GRANTED)
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    eq(TrackingConsent.GRANTED)
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -904,19 +1197,33 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                eq(TrackingConsent.NOT_GRANTED)
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    eq(TrackingConsent.NOT_GRANTED)
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -927,32 +1234,47 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(nativeViewTracking = false)
         val bridgeConfiguration = configuration.copy(
-            nativeViewTracking = false
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("viewTrackingStrategy", NoOpViewTrackingStrategy)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -960,32 +1282,47 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(nativeViewTracking = true)
         val bridgeConfiguration = configuration.copy(
-            nativeViewTracking = true
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("viewTrackingStrategy", ActivityViewTrackingStrategy(false))
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("viewTrackingStrategy", ActivityViewTrackingStrategy(false))
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -993,32 +1330,49 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeInteractionTracking = false
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("userActionTracking", false)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("userActionTracking", false)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1026,32 +1380,47 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(trackFrustrations = true)
         val bridgeConfiguration = configuration.copy(
-            trackFrustrations = true
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("trackFrustrations", true)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("trackFrustrations", true)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1059,32 +1428,48 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(trackFrustrations = false)
         val bridgeConfiguration = configuration.copy(
-            trackFrustrations = false
+            rumConfiguration = rumConfiguration
         )
+
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("trackFrustrations", false)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("trackFrustrations", false)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1092,32 +1477,50 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeInteractionTracking = true
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("userActionTracking", true)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("userActionTracking", true)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1164,46 +1567,63 @@ internal class DdSdkTest {
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {custom service name}`(
         @Forgery configuration: DdSdkConfiguration,
-        @StringForgery serviceName: String
+        @StringForgery service: String
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            serviceName = serviceName
+            service = service
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") {
-                it.hasFieldEqualTo("needsClearTextHttp", false)
-                it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-            .hasFieldEqualTo("clientToken", bridgeConfiguration.clientToken)
-            .hasFieldEqualTo("env", bridgeConfiguration.env)
-            .hasFieldEqualTo("variant", "")
-            .hasFieldEqualTo("service", serviceName)
-            .hasFieldEqualTo(
-                "additionalConfig",
-                bridgeConfiguration.additionalConfig?.filterValues { it != null }.orEmpty()
-            )
-        assertThat(rumConfigCaptor.firstValue)
-            .hasFieldEqualTo("applicationId", bridgeConfiguration.applicationId)
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", bridgeConfiguration.clientToken)
+                .hasFieldEqualTo("env", bridgeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo("service", service)
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    bridgeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty() // ktlint-disable-line max-line-length
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo(
+                    "applicationId",
+                    bridgeConfiguration.rumConfiguration?.applicationId
+                )
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1214,39 +1634,55 @@ internal class DdSdkTest {
         val threshold = forge.aDouble(min = 100.0, max = 65536.0)
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = threshold
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
+
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") { rumConfig ->
-                rumConfig.hasField("longTaskTrackingStrategy") { longTaskTrackingStrategy ->
-                    longTaskTrackingStrategy
-                        .isInstanceOf(
-                            "com.datadog.android.rum.internal.instrumentation." +
-                                "MainLooperLongTaskStrategy"
-                        )
-                        .hasFieldEqualTo("thresholdMs", threshold.toLong())
-                }
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") { rumConfig ->
+                    rumConfig.hasField("longTaskTrackingStrategy") { longTaskTrackingStrategy ->
+                        longTaskTrackingStrategy
+                            .isInstanceOf(
+                                "com.datadog.android.rum.internal.instrumentation." +
+                                    "MainLooperLongTaskStrategy"
+                            )
+                            .hasFieldEqualTo("thresholdMs", threshold.toLong())
+                    }
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1255,32 +1691,47 @@ internal class DdSdkTest {
         forge: Forge
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             nativeLongTaskThresholdMs = 0.0
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") { rumConfig ->
-                rumConfig.doesNotHaveField("longTaskTrackingStrategy")
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") { rumConfig ->
+                    rumConfig.doesNotHaveField("longTaskTrackingStrategy")
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1324,27 +1775,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "firstPartyHostsWithHeaderTypes",
-                    tracingHosts
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "firstPartyHostsWithHeaderTypes",
+                        tracingHosts
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1383,27 +1848,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "firstPartyHostsWithHeaderTypes",
-                    tracingHosts
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "firstPartyHostsWithHeaderTypes",
+                        tracingHosts
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1449,27 +1928,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "firstPartyHostsWithHeaderTypes",
-                    tracingHosts
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "firstPartyHostsWithHeaderTypes",
+                        tracingHosts
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @ParameterizedTest
@@ -1488,27 +1981,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "uploadFrequency",
-                    expectedUploadFrequency
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "uploadFrequency",
+                        expectedUploadFrequency
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @ParameterizedTest
@@ -1527,27 +2034,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "batchSize",
-                    expectedBatchSize
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "batchSize",
+                        expectedBatchSize
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @ParameterizedTest
@@ -1566,27 +2087,41 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasField("coreConfig") { coreConfig ->
-                coreConfig.hasFieldEqualTo(
-                    "batchProcessingLevel",
-                    expectedBatchSize
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") { coreConfig ->
+                    coreConfig.hasFieldEqualTo(
+                        "batchProcessingLevel",
+                        expectedBatchSize
+                    )
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1596,32 +2131,49 @@ internal class DdSdkTest {
     ) {
         // Given
         val trackBackgroundEvents = forge.aNullable { forge.aBool() }
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             trackBackgroundEvents = trackBackgroundEvents
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents ?: false)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("backgroundEventTracking", trackBackgroundEvents ?: false)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1629,36 +2181,51 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(vitalsUpdateFrequency = "RARE")
         val bridgeConfiguration = configuration.copy(
-            vitalsUpdateFrequency = "RARE"
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.RARE)
+                }
 
-        argumentCaptor<Choreographer.FrameCallback> {
-            verify(mockChoreographer).postFrameCallback(capture())
-            assertThat(firstValue).isInstanceOf(FpsFrameCallback::class.java)
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+                assertThat(firstValue).isInstanceOf(FpsFrameCallback::class.java)
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -1668,34 +2235,49 @@ internal class DdSdkTest {
     ) {
         // Given
         doThrow(IllegalStateException()).whenever(mockChoreographer).postFrameCallback(any())
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "NEVER",
             longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-        verifyNoInteractions(mockChoreographer)
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.NEVER)
+                }
+            verifyNoInteractions(mockChoreographer)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1707,9 +2289,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = fakeFrequency,
             longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1717,41 +2302,56 @@ internal class DdSdkTest {
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         val frameDurationNs = threshold + frameDurationOverThreshold
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("vitalsMonitorUpdateFrequency", VitalsUpdateFrequency.AVERAGE)
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-        argumentCaptor<Choreographer.FrameCallback> {
-            verify(mockChoreographer).postFrameCallback(capture())
-            assertThat(firstValue).isInstanceOf(FpsFrameCallback::class.java)
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo(
+                        "vitalsMonitorUpdateFrequency",
+                        VitalsUpdateFrequency.AVERAGE
+                    )
+                }
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+                assertThat(firstValue).isInstanceOf(FpsFrameCallback::class.java)
 
-            // When
-            firstValue.doFrame(timestampNs)
-            firstValue.doFrame(timestampNs + frameDurationNs)
+                // When
+                firstValue.doFrame(timestampNs)
+                firstValue.doFrame(timestampNs + frameDurationNs)
 
-            // then
-            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
-                RumPerformanceMetric.JS_FRAME_TIME,
-                frameDurationNs.toDouble()
-            )
-            verify(mockRumMonitor._getInternal()!!, never()).addLongTask(
-                frameDurationNs,
-                "javascript"
-            )
+                // then
+                verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    frameDurationNs.toDouble()
+                )
+                verify(mockRumMonitor._getInternal()!!, never()).addLongTask(
+                    frameDurationNs,
+                    "javascript"
+                )
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -1763,9 +2363,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "AVERAGE",
             longTaskThresholdMs = (threshold / 1_000_000).toDouble()
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1800,9 +2403,12 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             vitalsUpdateFrequency = "NEVER",
             longTaskThresholdMs = (threshold / 1_000_000).toDouble()
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
@@ -1838,31 +2444,49 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(
+            initialResourceThreshold = null
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
+        )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         val defaultTimeBasedIdentifier = TimeBasedInitialResourceIdentifier(100)
 
-        // When
-        testedBridgeSdk.initialize(configuration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("initialResourceIdentifier", defaultTimeBasedIdentifier)
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("initialResourceIdentifier", defaultTimeBasedIdentifier)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1871,8 +2495,11 @@ internal class DdSdkTest {
         @Forgery configuration: DdSdkConfiguration
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             initialResourceThreshold = thresholdInSeconds
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration
         )
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
@@ -1882,25 +2509,37 @@ internal class DdSdkTest {
             thresholdInSeconds.seconds.inWholeMilliseconds
         )
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("initialResourceIdentifier", timeBasedIdentifier)
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("initialResourceIdentifier", timeBasedIdentifier)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -1914,7 +2553,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val bridgeConfiguration = configuration.copy(
-            additionalConfig = mapOf(
+            additionalConfiguration = mapOf(
                 DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix
             )
         )
@@ -1923,28 +2562,42 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(sdkConfigCaptor.firstValue)
-            .hasFieldEqualTo(
-                "additionalConfig",
-                mapOf(
-                    DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix,
-                    DdSdkImplementation.DD_VERSION to mockPackageInfo.versionName + versionSuffix
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
-            )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    mapOf(
+                        DdSdkImplementation.DD_VERSION_SUFFIX to versionSuffix,
+                        DdSdkImplementation.DD_VERSION to (
+                            mockPackageInfo.versionName + versionSuffix
+                            )
+                    )
+                )
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -1965,10 +2618,13 @@ internal class DdSdkTest {
         @StringForgery reactNativeVersion: String
     ) {
         // Given
-        val bridgeConfiguration = configuration.copy(
-            nativeCrashReportEnabled = trackNativeErrors,
-            nativeLongTaskThresholdMs = 0.0,
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             longTaskThresholdMs = 0.0,
+            nativeCrashReportEnabled = trackNativeErrors,
+            nativeLongTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(
+            rumConfiguration = rumConfiguration,
             configurationForTelemetry = ConfigurationForTelemetry(
                 initializationType = initializationType,
                 trackErrors = trackErrors,
@@ -1983,47 +2639,59 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                val configurationMapper = it
-                    .getActualValue<EventMapper<TelemetryConfigurationEvent>>(
-                        "telemetryConfigurationMapper"
-                    )
-                val result = configurationMapper.map(telemetryConfigurationEvent)!!
-                assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
-                    trackNativeErrors
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
                 )
-                assertThat(result.telemetry.configuration.trackCrossPlatformLongTasks!!)
-                    .isEqualTo(false)
-                assertThat(result.telemetry.configuration.trackLongTask!!)
-                    .isEqualTo(false)
-                assertThat(result.telemetry.configuration.trackNativeLongTasks!!)
-                    .isEqualTo(false)
-
-                assertThat(result.telemetry.configuration.initializationType!!)
-                    .isEqualTo(initializationType)
-                assertThat(result.telemetry.configuration.trackInteractions!!)
-                    .isEqualTo(trackInteractions)
-                assertThat(result.telemetry.configuration.trackErrors!!).isEqualTo(trackErrors)
-                assertThat(result.telemetry.configuration.trackResources!!)
-                    .isEqualTo(trackNetworkRequests)
-                assertThat(result.telemetry.configuration.trackNetworkRequests!!)
-                    .isEqualTo(trackNetworkRequests)
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    val configurationMapper = it
+                        .getActualValue<EventMapper<TelemetryConfigurationEvent>>(
+                            "telemetryConfigurationMapper"
+                        )
+                    val result = configurationMapper.map(telemetryConfigurationEvent)!!
+                    assertThat(result.telemetry.configuration.trackNativeErrors!!).isEqualTo(
+                        trackNativeErrors
+                    )
+                    assertThat(result.telemetry.configuration.trackCrossPlatformLongTasks!!)
+                        .isEqualTo(false)
+                    assertThat(result.telemetry.configuration.trackLongTask!!)
+                        .isEqualTo(false)
+                    assertThat(result.telemetry.configuration.trackNativeLongTasks!!)
+                        .isEqualTo(false)
+
+                    assertThat(result.telemetry.configuration.initializationType!!)
+                        .isEqualTo(initializationType)
+                    assertThat(result.telemetry.configuration.trackInteractions!!)
+                        .isEqualTo(trackInteractions)
+                    assertThat(result.telemetry.configuration.trackErrors!!).isEqualTo(trackErrors)
+                    assertThat(result.telemetry.configuration.trackResources!!)
+                        .isEqualTo(trackNetworkRequests)
+                    assertThat(result.telemetry.configuration.trackNetworkRequests!!)
+                        .isEqualTo(trackNetworkRequests)
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -2040,27 +2708,39 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                val resourceMapper = it
-                    .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
-                val notDroppedEvent = resourceMapper.map(resourceEvent)
-                assertThat(notDroppedEvent).isNotNull
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    val resourceMapper = it
+                        .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
+                    val notDroppedEvent = resourceMapper.map(resourceEvent)
+                    assertThat(notDroppedEvent).isNotNull
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -2074,27 +2754,39 @@ internal class DdSdkTest {
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         resourceEvent.context?.additionalProperties?.put("_dd.resource.drop_resource", true)
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                val resourceMapper = it
-                    .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
-                val droppedEvent = resourceMapper.map(resourceEvent)
-                assertThat(droppedEvent).isNull()
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    val resourceMapper = it
+                        .getActualValue<EventMapper<ResourceEvent>>("resourceEventMapper")
+                    val droppedEvent = resourceMapper.map(resourceEvent)
+                    assertThat(droppedEvent).isNull()
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
@@ -2111,27 +2803,39 @@ internal class DdSdkTest {
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                val actionMapper = it
-                    .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
-                val notDroppedEvent = actionMapper.map(actionEvent)
-                assertThat(notDroppedEvent).isNotNull
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    val actionMapper = it
+                        .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
+                    val notDroppedEvent = actionMapper.map(actionEvent)
+                    assertThat(notDroppedEvent).isNotNull
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -2145,190 +2849,44 @@ internal class DdSdkTest {
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
         actionEvent.context?.additionalProperties?.put("_dd.action.drop_action", true)
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).initialize(
-                same(mockContext),
-                sdkConfigCaptor.capture(),
-                any()
-            )
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                val actionMapper = it
-                    .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
-                val droppedEvent = actionMapper.map(actionEvent)
-                assertThat(droppedEvent).isNull()
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    val actionMapper = it
+                        .getActualValue<EventMapper<ActionEvent>>("actionEventMapper")
+                    val droppedEvent = actionMapper.map(actionEvent)
+                    assertThat(droppedEvent).isNull()
+                }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion
 
     // region misc
-
-    @Test
-    fun `𝕄 set native user info 𝕎 setUser()`(
-        @MapForgery(
-            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
-            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
-        ) extraInfo: Map<String, String>
-    ) {
-        // When
-        testedBridgeSdk.setUser(extraInfo.toReadableMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Map<String, Any?>> {
-            verify(mockDatadog)
-                .setUser(
-                    isNull(),
-                    isNull(),
-                    isNull(),
-                    capture()
-                )
-
-            assertThat(firstValue)
-                .containsAllEntriesOf(extraInfo)
-                .hasSize(extraInfo.size)
-        }
-    }
-
-    @Test
-    fun `𝕄 set native user info 𝕎 setUser() {with id}`(
-        @StringForgery id: String,
-        @MapForgery(
-            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
-            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
-        ) extraInfo: Map<String, String>
-    ) {
-        // Given
-        val user = extraInfo.toMutableMap().also {
-            it.put("id", id)
-        }
-
-        // When
-        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Map<String, Any?>> {
-            verify(mockDatadog)
-                .setUser(
-                    eq(id),
-                    isNull(),
-                    isNull(),
-                    capture()
-                )
-
-            assertThat(firstValue)
-                .containsAllEntriesOf(extraInfo)
-                .hasSize(extraInfo.size)
-        }
-    }
-
-    @Test
-    fun `𝕄 set native user info 𝕎 setUser() {with name}`(
-        @StringForgery name: String,
-        @MapForgery(
-            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
-            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
-        ) extraInfo: Map<String, String>
-    ) {
-        // Given
-        val user = extraInfo.toMutableMap().also {
-            it.put("name", name)
-        }
-
-        // When
-        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Map<String, Any?>> {
-            verify(mockDatadog)
-                .setUser(
-                    isNull(),
-                    eq(name),
-                    isNull(),
-                    capture()
-                )
-
-            assertThat(firstValue)
-                .containsAllEntriesOf(extraInfo)
-                .hasSize(extraInfo.size)
-        }
-    }
-
-    @Test
-    fun `𝕄 set native user info 𝕎 setUser() {with email}`(
-        @StringForgery(regex = "\\w+@\\w+\\.[a-z]{3}") email: String,
-        @MapForgery(
-            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
-            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
-        ) extraInfo: Map<String, String>
-    ) {
-        // Given
-        val user = extraInfo.toMutableMap().also {
-            it.put("email", email)
-        }
-
-        // When
-        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Map<String, Any?>> {
-            verify(mockDatadog)
-                .setUser(
-                    isNull(),
-                    isNull(),
-                    eq(email),
-                    capture()
-                )
-
-            assertThat(firstValue)
-                .containsAllEntriesOf(extraInfo)
-                .hasSize(extraInfo.size)
-        }
-    }
-
-    @Test
-    fun `𝕄 set native user info 𝕎 setUser() {with id, name and email}`(
-        @StringForgery id: String,
-        @StringForgery name: String,
-        @StringForgery(regex = "\\w+@\\w+\\.[a-z]{3}") email: String,
-        @MapForgery(
-            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
-            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
-        ) extraInfo: Map<String, String>
-    ) {
-        // Given
-        val user = extraInfo.toMutableMap().also {
-            it.put("id", id)
-            it.put("name", name)
-            it.put("email", email)
-        }
-
-        // When
-        testedBridgeSdk.setUser(user.toReadableMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Map<String, Any?>> {
-            verify(mockDatadog)
-                .setUser(
-                    eq(id),
-                    eq(name),
-                    eq(email),
-                    capture()
-                )
-
-            assertThat(firstValue)
-                .containsAllEntriesOf(extraInfo)
-                .hasSize(extraInfo.size)
-        }
-    }
 
     @Test
     fun `𝕄 set native user info 𝕎 setUserInfo() {with id}`(
@@ -2475,32 +3033,151 @@ internal class DdSdkTest {
     }
 
     @Test
-    fun `𝕄 set RUM attributes 𝕎 setAttributes`(
+    fun `𝕄 clear user info 𝕎 clearUserInfo()`() {
+        // When
+        testedBridgeSdk.clearUserInfo(mockPromise)
+
+        // Then
+        argumentCaptor<Map<String, Any?>> {
+            verify(mockDatadog).clearUserInfo()
+        }
+    }
+
+    @Test
+    fun `M set Rum attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        verify(mockDatadog).addRumGlobalAttribute(key, value)
+    }
+
+    @Test
+    fun `M set GlobalState attribute W addAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // When
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+    }
+
+    @Test
+    fun `M remove Rum attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttribute(key)
+    }
+
+    @Test
+    fun `M remove GlobalState attribute W removeAttribute`(
+        @StringForgery(type = StringForgeryType.NUMERICAL) key: String,
+        @StringForgery(type = StringForgeryType.ASCII) value: String
+    ) {
+        // Given
+        val attributeMap = JavaOnlyMap().apply {
+            putString("value", value)
+        }
+        testedBridgeSdk.addAttribute(key, attributeMap, mockPromise)
+        assertThat(GlobalState.globalAttributes).containsEntry(key, value)
+
+        // When
+        testedBridgeSdk.removeAttribute(key, mockPromise)
+
+        // Then
+        assertThat(GlobalState.globalAttributes).doesNotContainEntry(key, value)
+    }
+
+    @Test
+    fun `𝕄 set RUM attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         verify(mockDatadog).addRumGlobalAttributes(customAttributes)
     }
 
     @Test
-    fun `𝕄 set GlobalState attributes 𝕎 setAttributes`(
+    fun `𝕄 set GlobalState attributes 𝕎 addAttributes`(
         @MapForgery(
             key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
             value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
         ) customAttributes: Map<String, String>
     ) {
         // When
-        testedBridgeSdk.setAttributes(customAttributes.toReadableMap(), mockPromise)
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
 
         // Then
         customAttributes.forEach { (k, v) ->
             assertThat(GlobalState.globalAttributes).containsEntry(k, v)
+        }
+    }
+
+    @Test
+    fun `𝕄 remove RUM attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        verify(mockDatadog).removeRumGlobalAttributes(customAttributes.keys.toTypedArray())
+    }
+
+    @Test
+    fun `𝕄 remve GlobalState attributes 𝕎 removeAttributes`(
+        @MapForgery(
+            key = AdvancedForgery(string = [StringForgery(StringForgeryType.NUMERICAL)]),
+            value = AdvancedForgery(string = [StringForgery(StringForgeryType.ASCII)])
+        ) customAttributes: Map<String, String>
+    ) {
+        // Given
+        testedBridgeSdk.addAttributes(customAttributes.toReadableMap(), mockPromise)
+        verify(mockDatadog).addRumGlobalAttributes(customAttributes)
+
+        // When
+        val keys = customAttributes.keys.toReadableArray()
+        testedBridgeSdk.removeAttributes(keys, mockPromise)
+
+        // Then
+        customAttributes.forEach { (k, v) ->
+            assertThat(GlobalState.globalAttributes).doesNotContainEntry(k, v)
         }
     }
 
@@ -2567,41 +3244,63 @@ internal class DdSdkTest {
         val customRumEndpoint = forge.aNullable { aString() }
         val customLogsEndpoint = forge.aNullable { aString() }
         val customTraceEndpoint = forge.aNullable { aString() }
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            customEndpoint = customRumEndpoint
+        )
+        val logsConfiguration = fakeConfiguration.logsConfiguration?.copy(
+            customEndpoint = customLogsEndpoint
+        )
+        val traceConfiguration = fakeConfiguration.traceConfiguration?.copy(
+            customEndpoint = customTraceEndpoint
+        )
         val bridgeConfiguration = fakeConfiguration.copy(
-            customEndpoints = CustomEndpoints(
-                rum = customRumEndpoint,
-                logs = customLogsEndpoint,
-                trace = customTraceEndpoint
-            )
+            rumConfiguration = rumConfiguration,
+            logsConfiguration = logsConfiguration,
+            traceConfiguration = traceConfiguration
         )
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
         val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
 
-        // Then
-        inOrder(mockDatadog) {
-            verify(mockDatadog).enableRum(rumConfigCaptor.capture())
-            verify(mockDatadog).enableTrace(traceConfigCaptor.capture())
-            verify(mockDatadog).enableLogs(logsConfigCaptor.capture())
-        }
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { } // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        assertThat(rumConfigCaptor.firstValue)
-            .hasField("featureConfiguration") {
-                it.hasFieldEqualTo("customEndpointUrl", customRumEndpoint)
+            // Then
+            inOrder(mockDatadog) {
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
             }
-        assertThat(logsConfigCaptor.firstValue)
-            .hasFieldEqualTo("customEndpointUrl", customLogsEndpoint)
-        assertThat(traceConfigCaptor.firstValue)
-            .hasFieldEqualTo("customEndpointUrl", customTraceEndpoint)
+
+            assertThat(rumConfigCaptor.firstValue)
+                .hasField("featureConfiguration") {
+                    it.hasFieldEqualTo("customEndpointUrl", customRumEndpoint)
+                }
+            assertThat(logsConfigCaptor.firstValue)
+                .hasFieldEqualTo("customEndpointUrl", customLogsEndpoint)
+            assertThat(traceConfigCaptor.firstValue)
+                .hasFieldEqualTo("customEndpointUrl", customTraceEndpoint)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {synthethics attributes}`() {
         // Given
-        fakeConfiguration = fakeConfiguration.copy(nativeCrashReportEnabled = false, site = null)
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = false
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = null, rumConfiguration = rumConfiguration)
         DdSdkSynthetics.testId = "unit-test-test-id"
         DdSdkSynthetics.resultId = "unit-test-result-id"
 
@@ -2625,6 +3324,132 @@ internal class DdSdkTest {
             verify(mockDatadog)
                 .clearAllData()
         }
+    }
+
+    @Test
+    fun `𝕄 normalize frameTime according to the device's refresh rate`() {
+        // 10 fps, 60Hz device, 60 fps budget -> 10 fps
+        var frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.1,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.1)
+
+        // 30 fps, 60Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.03,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.03)
+
+        // 60 fps, 60Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 60 fps, 120Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.032)
+
+        // 120 fps, 120Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.005))
+
+        // 90 fps, 120Hz device, 60 fps budget -> 45 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0111,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0222, Offset.offset(0.001))
+
+        // 100 fps, 120Hz device, 60 fps budget -> 50 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.01,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.02, Offset.offset(0.001))
+
+        // 120 fps, 120Hz device, 120 fps budget -> 120 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0083,
+            context = mockContext,
+            fpsBudget = 120.0,
+            deviceDisplayFps = 120.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.0083, Offset.offset(0.001))
+
+        // 80 fps, 160Hz device, 60 fps budget -> 30 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0125,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.033, Offset.offset(0.001))
+
+        // 160 fps, 160Hz device, 60 fps budget -> 60 fps
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.00625,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 160.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        // Edge cases
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.0,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 60.0,
+            deviceDisplayFps = 0.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+
+        frameTimeSeconds = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = 0.0,
+            deviceDisplayFps = 60.0
+        )
+        assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
     }
 
     // endregion

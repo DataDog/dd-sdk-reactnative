@@ -9,14 +9,17 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.core.configuration.UploadFrequency
 import com.datadog.android.event.EventMapper
+import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
@@ -25,6 +28,7 @@ import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
+import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
 import com.google.gson.Gson
 import java.util.Locale
@@ -37,16 +41,30 @@ import kotlin.time.Duration.Companion.seconds
 class DdSdkNativeInitialization internal constructor(
     private val appContext: Context,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val ddTelemetry: DdTelemetry = DdTelemetry(),
     private val jsonFileReader: JSONFileReader = JSONFileReader()
 ) {
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
-        val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
+        var rumConfiguration: RumConfiguration? = null
+        var logsConfiguration: LogsConfiguration? = null
+        var traceConfiguration: TraceConfiguration? = null
+
+        if (ddSdkConfiguration.rumConfiguration != null) {
+             rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.logsConfiguration != null) {
+            logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.traceConfiguration != null) {
+            traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
+        }
 
         configureSdkVerbosity(ddSdkConfiguration)
+
         configureRumAndTracesForLogs(ddSdkConfiguration)
 
         if (datadog.isInitialized()) {
@@ -59,18 +77,24 @@ class DdSdkNativeInitialization internal constructor(
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        datadog.enableRum(rumConfiguration)
+        if (rumConfiguration != null) {
+            Rum.enable(rumConfiguration, Datadog.getInstance())
+        }
 
-        datadog.enableTrace(traceConfiguration)
+        if (logsConfiguration != null) {
+            Logs.enable(logsConfiguration, Datadog.getInstance())
+        }
 
-        datadog.enableLogs(logsConfiguration)
+        if (traceConfiguration != null) {
+            Trace.enable(traceConfiguration, Datadog.getInstance())
+        }
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
-        configuration.bundleLogsWithRum?.let {
+        configuration.logsConfiguration?.bundleLogsWithRum?.let {
             datadog.bundleLogsWithRum = it
         }
-        configuration.bundleLogsWithTraces?.let {
+        configuration.logsConfiguration?.bundleLogsWithTraces?.let {
             datadog.bundleLogsWithTraces = it
         }
     }
@@ -95,7 +119,7 @@ class DdSdkNativeInitialization internal constructor(
             try {
                 appContext.packageManager.getPackageInfo(packageName, 0)
             } catch (e: PackageManager.NameNotFoundException) {
-                datadog.telemetryError(e.message ?: DdSdkImplementation.PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
+                ddTelemetry.telemetryError(e.message ?: DdSdkImplementation.PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE, e)
                 return DdSdkImplementation.DEFAULT_APP_VERSION
             }
 
@@ -112,35 +136,35 @@ class DdSdkNativeInitialization internal constructor(
     private fun buildRumConfiguration(configuration: DdSdkConfiguration): RumConfiguration {
         val configBuilder =
             RumConfiguration.Builder(
-                applicationId = configuration.applicationId
+                applicationId = configuration.rumConfiguration?.applicationId ?: ""
             )
-        if (configuration.sampleRate != null) {
-            configBuilder.setSessionSampleRate(configuration.sampleRate.toFloat())
+        if (configuration.rumConfiguration?.sessionSampleRate != null) {
+            configBuilder.setSessionSampleRate(configuration.rumConfiguration.sessionSampleRate.toFloat())
         }
 
-        configBuilder.trackFrustrations(configuration.trackFrustrations ?: true)
-        configBuilder.trackBackgroundEvents(configuration.trackBackgroundEvents ?: false)
+        configBuilder.trackFrustrations(configuration.rumConfiguration?.trackFrustrations ?: true)
+        configBuilder.trackBackgroundEvents(configuration.rumConfiguration?.trackBackgroundEvents ?: false)
 
         configBuilder.setVitalsUpdateFrequency(
-            buildVitalUpdateFrequency(configuration.vitalsUpdateFrequency)
+            buildVitalUpdateFrequency(configuration.rumConfiguration?.vitalsUpdateFrequency)
         )
 
-        val telemetrySampleRate = (configuration.telemetrySampleRate as? Number)?.toFloat()
+        val telemetrySampleRate = (configuration.rumConfiguration?.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
 
-        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        val longTask = (configuration.rumConfiguration?.nativeLongTaskThresholdMs as? Number)?.toLong()
         if (longTask != null) {
             configBuilder.trackLongTasks(longTask)
         }
 
-        if (configuration.nativeViewTracking == true) {
+        if (configuration.rumConfiguration?.nativeViewTracking == true) {
             // Use sensible default
             configBuilder.useViewTrackingStrategy(ActivityViewTrackingStrategy(false))
         } else {
             configBuilder.useViewTrackingStrategy(NoOpViewTrackingStrategy)
         }
 
-        if (configuration.nativeInteractionTracking == false) {
+        if (configuration.rumConfiguration?.nativeInteractionTracking == false) {
             configBuilder.disableUserInteractionTracking()
         }
 
@@ -176,14 +200,14 @@ class DdSdkNativeInitialization internal constructor(
                     event: TelemetryConfigurationEvent
                 ): TelemetryConfigurationEvent? {
                     event.telemetry.configuration.trackNativeErrors =
-                        configuration.nativeCrashReportEnabled
+                        configuration.rumConfiguration?.nativeCrashReportEnabled
                     // trackCrossPlatformLongTasks will be deprecated for trackLongTask
                     event.telemetry.configuration.trackCrossPlatformLongTasks =
-                        configuration.longTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackLongTask =
-                        configuration.longTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackNativeLongTasks =
-                        configuration.nativeLongTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.nativeLongTaskThresholdMs != 0.0
 
                     event.telemetry.configuration.initializationType =
                         configuration.configurationForTelemetry?.initializationType
@@ -205,15 +229,15 @@ class DdSdkNativeInitialization internal constructor(
             }
         )
 
-        configuration.customEndpoints?.rum?.let {
+        configuration.rumConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
-        configuration.trackNonFatalAnrs?.let {
+        configuration.rumConfiguration?.trackNonFatalAnrs?.let {
             configBuilder.trackNonFatalAnrs(it)
         }
 
-        configuration.initialResourceThreshold?.let {
+        configuration.rumConfiguration?.initialResourceThreshold?.let {
             val milliseconds = it.seconds.inWholeMilliseconds
             configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
         }
@@ -225,7 +249,7 @@ class DdSdkNativeInitialization internal constructor(
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
         val configBuilder = LogsConfiguration.Builder()
-        configuration.customEndpoints?.logs?.let {
+        configuration.logsConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
@@ -234,7 +258,7 @@ class DdSdkNativeInitialization internal constructor(
 
     private fun buildTraceConfiguration(configuration: DdSdkConfiguration): TraceConfiguration {
         val configBuilder = TraceConfiguration.Builder()
-        configuration.customEndpoints?.trace?.let {
+        configuration.traceConfiguration?.customEndpoint?.let {
             configBuilder.useCustomEndpoint(it)
         }
 
@@ -246,11 +270,11 @@ class DdSdkNativeInitialization internal constructor(
             clientToken = configuration.clientToken,
             env = configuration.env,
             variant = "",
-            service = configuration.serviceName
+            service = configuration.service
         )
 
-        val additionalConfig = configuration.additionalConfig?.toMutableMap()
-        val versionSuffix = configuration.additionalConfig?.get(DdSdkImplementation.DD_VERSION_SUFFIX) as? String
+        val additionalConfig = configuration.additionalConfiguration?.toMutableMap()
+        val versionSuffix = configuration.additionalConfiguration?.get(DdSdkImplementation.DD_VERSION_SUFFIX) as? String
         if (versionSuffix != null && additionalConfig != null) {
             val defaultVersion = getDefaultAppVersion()
             additionalConfig.put(DdSdkImplementation.DD_VERSION, defaultVersion + versionSuffix)
@@ -261,7 +285,7 @@ class DdSdkNativeInitialization internal constructor(
             } as Map<String, Any>? ?: emptyMap()
         )
 
-        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
+        configBuilder.setCrashReportsEnabled(configuration.rumConfiguration?.nativeCrashReportEnabled ?: false)
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setUploadFrequency(
             buildUploadFrequency(configuration.uploadFrequency)
@@ -271,7 +295,7 @@ class DdSdkNativeInitialization internal constructor(
         )
 
 
-        configuration.proxyConfig?.let { (proxy, authenticator) ->
+        configuration.proxyConfiguration?.let { (proxy, authenticator) ->
             configBuilder.setProxy(proxy, authenticator)
         }
 

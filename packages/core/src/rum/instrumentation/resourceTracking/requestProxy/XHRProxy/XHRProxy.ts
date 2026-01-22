@@ -5,13 +5,15 @@
  */
 
 import { Timer } from '../../../../../utils/Timer';
-import { getCachedSessionId } from '../../../../sessionId/sessionIdHelper';
 import {
-    BAGGAGE_HEADER_KEY,
-    getTracingHeadersFromAttributes
-} from '../../distributedTracing/distributedTracingHeaders';
-import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
+    getCachedAccountId,
+    getCachedSessionId,
+    getCachedUserId
+} from '../../../../helper';
+import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracingAttributes';
+import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
+import { BAGGAGE_HEADER_KEY } from '../../distributedTracing/headers';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
@@ -21,7 +23,8 @@ import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 
-import type { ResourceReporter } from './DatadogRumResource/ResourceReporter';
+import { ResourceReporter } from './DatadogRumResource/ResourceReporter';
+import { filterDevResource } from './DatadogRumResource/internalDevResourceBlocklist';
 import { URLHostParser } from './URLHostParser';
 import { formatBaggageHeader } from './baggageHeaderUtils';
 import { calculateResponseSize } from './responseSize';
@@ -63,6 +66,13 @@ export class XHRProxy extends RequestProxy {
     constructor(providers: XHRProxyProviders) {
         super();
         this.providers = providers;
+    }
+
+    static createWithResourceReporter() {
+        return new XHRProxy({
+            xhrType: XMLHttpRequest,
+            resourceReporter: new ResourceReporter([filterDevResource])
+        });
     }
 
     onTrackingStart = (context: RequestProxyOptions) => {
@@ -115,7 +125,9 @@ const proxyOpen = (
                 hostname,
                 firstPartyHostsRegexMap,
                 tracingSamplingRate,
-                rumSessionId: getCachedSessionId()
+                rumSessionId: getCachedSessionId(),
+                userId: getCachedUserId(),
+                accountId: getCachedAccountId()
             }),
             baggageHeaderEntries: new Set<string>()
         };

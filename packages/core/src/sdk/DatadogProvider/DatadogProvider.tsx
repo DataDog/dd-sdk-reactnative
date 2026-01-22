@@ -6,20 +6,16 @@
 import React from 'react';
 import type { PropsWithChildren } from 'react';
 
-import {
-    DatadogProviderConfiguration,
-    DdSdkReactNativeConfiguration
-} from '../../DdSdkReactNativeConfiguration';
-import type {
-    PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration
-} from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import type { FileBasedConfiguration } from '../FileBasedConfiguration/FileBasedConfiguration';
+import { DatadogProviderConfiguration } from '../../config/DatadogProviderConfiguration';
+import type { FileBasedConfiguration } from '../../config/FileBasedConfiguration';
+import type { AutoInstrumentationConfiguration } from '../../config/async/AutoInstrumentationConfiguration';
+import type { PartialInitializationConfiguration } from '../../config/async/PartialInitializationConfiguration';
+import { CoreConfiguration } from '../../config/features/CoreConfiguration';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 
-let isInitialized = false;
+import { DatadogProviderState } from './DatadogProviderState';
 
 type Props = PropsWithChildren<{
     /**
@@ -52,10 +48,10 @@ const isConfigurationPartial = (
     if (configuration instanceof DatadogProviderConfiguration) {
         return false;
     }
-    if (configuration instanceof DdSdkReactNativeConfiguration) {
+    if (configuration instanceof CoreConfiguration) {
         // Not using InternalLog here as it is not yet instantiated
         console.warn(
-            'A DdSdkReactNativeConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
+            'A CoreConfiguration was passed to DatadogProvider. Please use DatadogProviderConfiguration instead.'
         );
         return false;
     }
@@ -87,7 +83,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
     configuration,
     onInitialization
 }) => {
-    if (!isInitialized) {
+    if (!DatadogProviderState.isInitialized) {
         // Here we cannot use a useEffect hook since it would be called after
         // the first render. Thus, we wouldn't enable auto-instrumentation on
         // the elements rendered in this first render and what happens during
@@ -98,7 +94,7 @@ export const DatadogProvider: React.FC<Props> & StaticProperties = ({
         } else {
             initializeDatadog(configuration, onInitialization);
         }
-        isInitialized = true;
+        DatadogProviderState.setInitialized();
     }
 
     return <>{children}</>;
@@ -120,5 +116,5 @@ DatadogProvider.initialize = async (
 };
 
 export const __internalResetIsInitializedForTesting = () => {
-    isInitialized = false;
+    DatadogProviderState._reset();
 };

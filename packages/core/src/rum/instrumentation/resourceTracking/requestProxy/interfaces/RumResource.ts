@@ -5,7 +5,7 @@
  */
 
 import type { ResourceKind } from '../../../../types';
-import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracing';
+import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracingAttributes';
 
 export interface RUMResource {
     key: string;

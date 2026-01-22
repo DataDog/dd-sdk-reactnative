@@ -1,5 +1,5 @@
 import {
-  DdSdkReactNativeConfiguration,
+  CoreConfiguration,
   SdkVerbosity,
   UploadFrequency,
   BatchSize,
@@ -8,6 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
+  TrackingConsent,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -32,19 +33,27 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  const config = new DdSdkReactNativeConfiguration(
+  const config = new CoreConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
-    APPLICATION_ID,
-    true,
-    true,
-    true,
+    TrackingConsent.GRANTED,
+    {
+      rumConfiguration: {
+        applicationId: APPLICATION_ID,
+        trackInteractions: true,
+        trackResources: true,
+        trackFrustrations: true,
+        trackErrors: true,
+        sessionSampleRate: 100,
+        telemetrySampleRate: 100,
+      }
+    }
   );
-  config.sessionSamplingRate = 100;
   config.verbosity = SdkVerbosity.DEBUG;
-  config.telemetrySampleRate = 100;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
+
+  
   await DdSdkReactNative.initialize(config);
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {

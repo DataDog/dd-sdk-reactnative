@@ -8,22 +8,23 @@ import XCTest
 @testable import DatadogSDKReactNative
 import DatadogTrace
 import DatadogInternal
-
+import DatadogRUM
+import DatadogLogs
 
 internal class DatadogSdkWrapperTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
-        DatadogSDKWrapper.shared.onCoreInitializedListeners = []
+        DatadogSDKWrapper.shared.onSdkInitializedListeners = []
     }
 
-    func testItSetsCoreUsedForFeatures() {
+    func testOverrideCoreRegistryDefault() {
         let coreMock = MockDatadogCore()
-        DatadogSDKWrapper.shared.setCoreInstance(core: coreMock)
+        CoreRegistry.register(default: coreMock)
+        defer { CoreRegistry.unregisterDefault() }
 
-        DatadogSDKWrapper.shared.enableTrace(with: .init())
-        DatadogSDKWrapper.shared.enableRUM(with: .init(applicationID: "app-id"))
-        DatadogSDKWrapper.shared.enableLogs(with: .init())
+        Trace.enable(with: .init())
+        RUM.enable(with: .init(applicationID: "app-id"))
+        Logs.enable(with: .init())
 
         XCTAssertNotNil(coreMock.features["tracing"])
         XCTAssertNotNil(coreMock.features["rum"])

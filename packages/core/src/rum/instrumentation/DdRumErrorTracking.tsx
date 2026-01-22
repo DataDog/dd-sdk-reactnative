@@ -7,18 +7,18 @@
 import type { ErrorHandlerCallback } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import { DdLogs } from '../../logs/DdLogs';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
+import { errorEncoder } from '../../sdk/AttributesEncoding/defaultEncoders';
 import {
+    ERROR_DEFAULT_NAME,
+    ERROR_EMPTY_STACKTRACE,
     getErrorMessage,
-    getErrorStackTrace,
-    EMPTY_STACK_TRACE,
     getErrorName,
-    DEFAULT_ERROR_NAME
-} from '../../utils/errorUtils';
+    getErrorStackTrace
+} from '../../sdk/AttributesEncoding/errorUtils';
+import { ErrorSource } from '../../types';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
-import { ErrorSource } from '../types';
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
@@ -70,10 +70,9 @@ export class DdRumErrorTracking {
     static onGlobalError = (error: any, isFatal?: boolean): void => {
         const message = getErrorMessage(error);
         const stacktrace = getErrorStackTrace(error);
-        const errorName = getErrorName(error);
-        this.reportError(message, ErrorSource.SOURCE, stacktrace, errorName, {
+        this.reportError(message, ErrorSource.SOURCE, stacktrace, {
             '_dd.error.is_crash': isFatal,
-            '_dd.error.raw': error
+            '_dd.error.raw': errorEncoder.encode(error)
         }).then(async () => {
             DdRumErrorTracking.isInDefaultErrorHandler = true;
             try {
@@ -97,24 +96,24 @@ export class DdRumErrorTracking {
             return;
         }
 
-        let stack: string = EMPTY_STACK_TRACE;
-        let errorName: string = DEFAULT_ERROR_NAME;
+        let stack: string = ERROR_EMPTY_STACKTRACE;
+        let errorName: string = ERROR_DEFAULT_NAME;
         for (let i = 0; i < params.length; i += 1) {
             const param = params[i];
 
             const paramStack = getErrorStackTrace(param);
-            if (paramStack !== EMPTY_STACK_TRACE) {
+            if (paramStack !== ERROR_EMPTY_STACKTRACE) {
                 stack = paramStack;
             }
 
             const paramErrorName = getErrorName(param);
-            if (paramErrorName !== DEFAULT_ERROR_NAME) {
+            if (paramErrorName !== ERROR_DEFAULT_NAME) {
                 errorName = paramErrorName;
             }
 
             if (
-                errorName !== DEFAULT_ERROR_NAME &&
-                stack !== EMPTY_STACK_TRACE
+                errorName !== ERROR_DEFAULT_NAME &&
+                stack !== ERROR_EMPTY_STACKTRACE
             ) {
                 break;
             }
@@ -130,34 +129,17 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        this.reportError(message, ErrorSource.CONSOLE, stack, errorName).then(
-            () => {
-                DdRumErrorTracking.defaultConsoleError.apply(console, params);
-            }
-        );
+        this.reportError(message, ErrorSource.CONSOLE, stack).then(() => {
+            DdRumErrorTracking.defaultConsoleError.apply(console, params);
+        });
     };
 
     private static reportError = (
         message: string,
         source: ErrorSource,
         stacktrace: string,
-        errorName: string,
         context: object = {}
-    ): Promise<[void, void]> => {
-        return Promise.all([
-            DdRum.addError(message, source, stacktrace, context),
-            DdLogs.error(
-                message,
-                errorName,
-                message,
-                stacktrace,
-                {
-                    ...context,
-                    '_dd.error_log.is_crash': true
-                },
-                undefined,
-                source
-            )
-        ]);
+    ): Promise<void> => {
+        return DdRum.addError(message, source, stacktrace, context);
     };
 }

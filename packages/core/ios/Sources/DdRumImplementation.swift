@@ -63,6 +63,16 @@ private extension RUMMethod {
     }
 }
 
+internal extension RUMFeatureOperationFailureReason {
+    init(from string: String) {
+        switch string.lowercased() {
+        case "error": self = .error
+        case "abandoned": self = .abandoned
+        default: self = .other
+        }
+    }
+}
+
 @objc
 public class DdRumImplementation: NSObject {
     internal static let timestampKey = "_dd.timestamp"
@@ -182,6 +192,34 @@ public class DdRumImplementation: NSObject {
     }
     
     @objc
+    public func addViewAttribute(key: AttributeKey, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if let attributeValue = value.object(forKey: "value") {
+            let castedAttribute = castValueToSwift(attributeValue)
+            nativeRUM.addViewAttribute(forKey: key, value: castedAttribute)
+        }
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeViewAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.removeViewAttribute(forKey: key)
+        resolve(nil)
+    }
+    
+    @objc
+    public func addViewAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.addViewAttributes(castedAttributes)
+        resolve(nil)
+    }
+    
+    @objc
+    public func removeViewAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.removeViewAttributes(forKeys: keys)
+        resolve(nil)
+    }
+    
+    @objc
     public func addViewLoadingTime(overwrite: Bool, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.addViewLoadingTime(overwrite: overwrite)
         resolve(nil)
@@ -207,6 +245,47 @@ public class DdRumImplementation: NSObject {
         nativeRUM.currentSessionID { sessionId in
             resolve(sessionId)
         }
+    }
+    
+    @objc
+    public func startFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.startFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
+        resolve(nil)
+    }
+
+    @objc
+    public func succeedFeatureOperation(
+        name: String,
+        operationKey: String?,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.succeedFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
+        resolve(nil)
+    }
+
+    @objc
+    public func failFeatureOperation(
+        name: String,
+        operationKey: String?,
+        reason: String,
+        attributes: NSDictionary,
+        resolve: @escaping (Any?) -> Void,
+        reject: RCTPromiseRejectBlock
+    ){
+        let castedAttributes = castAttributesToSwift(attributes)
+        nativeRUM.failFeatureOperation(name: name, operationKey: operationKey,
+                                       reason: RUMFeatureOperationFailureReason(from: reason), attributes: castedAttributes)
+        resolve(nil)
     }
 
     // MARK: - Private methods

@@ -7,10 +7,11 @@
 import { fireEvent } from '@testing-library/react-native';
 import { NativeModules } from 'react-native';
 
-import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
+import { InitializationMode } from '../../../config/types';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
+import { PropagatorType } from '../../../rum/types';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import { GlobalState } from '../../GlobalState/GlobalState';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
@@ -42,7 +43,7 @@ const flushPromises = () =>
 describe('DatadogProvider', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        GlobalState.instance.isInitialized = false;
+        GlobalState.isInitialized = false;
         DdSdkReactNative['wasAutoInstrumented'] = false;
         __internalResetIsInitializedForTesting();
         BufferSingleton.reset();
@@ -140,11 +141,23 @@ describe('DatadogProvider', () => {
         it('does not start reporting auto-instrumentation', async () => {
             const { getByText } = renderWithProvider({
                 configuration: {
-                    trackErrors: true,
-                    trackResources: true,
-                    trackInteractions: true,
-                    firstPartyHosts: ['api.com'],
-                    resourceTracingSamplingRate: 100
+                    rumConfiguration: {
+                        trackErrors: true,
+                        trackResources: true,
+                        trackInteractions: true,
+                        resourceTraceSampleRate: 100,
+                        firstPartyHosts: [
+                            {
+                                match: 'api.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT
+                                ]
+                            }
+                        ]
+                    },
+                    traceConfiguration: {},
+                    logsConfiguration: {}
                 }
             });
             await flushPromises();
@@ -162,15 +175,18 @@ describe('DatadogProvider', () => {
             expect(NativeModules.DdRum.addAction).not.toHaveBeenCalled();
 
             await DatadogProvider.initialize({
-                applicationId: 'fake-application-id',
                 clientToken: 'fake-client-token',
-                env: 'fake-env'
+                env: 'fake-env',
+                rumConfiguration: {
+                    applicationId: 'fake-application-id'
+                }
             });
             await flushPromises();
 
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(
-                NativeModules.DdSdk.initialize.mock.calls[0][0].firstPartyHosts
+                NativeModules.DdSdk.initialize.mock.calls[0][0].rumConfiguration
+                    .firstPartyHosts
             ).toEqual([
                 {
                     match: 'api.com',

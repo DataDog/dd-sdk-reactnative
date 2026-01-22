@@ -6,10 +6,12 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.rum.featureoperations.FailureReason
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 /**
@@ -193,6 +195,43 @@ class DdRum(
     }
 
     /**
+     * Adds a custom attribute to the active RUM View. It will be propagated to all future RUM events associated with the active View.
+     * @param key: key for this view attribute.
+     * @param value: value for this attribute.
+     */
+    @ReactMethod
+    fun addViewAttribute(key: String, value: ReadableMap, promise: Promise) {
+        implementation.addViewAttribute(key, value, promise)
+    }
+
+    /**
+     * Removes an attribute from the active RUM View.
+     * @param key: key for the attribute to be removed from the view.
+     */
+    @ReactMethod
+    fun removeViewAttribute(key: String, promise: Promise) {
+        implementation.removeViewAttribute(key, promise)
+    }
+
+    /**
+     * Adds multiple attributes to the active RUM View. They will be propagated to all future RUM events associated with the active View.
+     * @param attributes: key/value object containing all attributes to be added to the view.
+     */
+    @ReactMethod
+    fun addViewAttributes(attributes: ReadableMap, promise: Promise) {
+        implementation.addViewAttributes(attributes, promise)
+    }
+
+    /**
+     * Removes multiple attributes from the active RUM View.
+     * @param keys: keys for the attributes to be removed from the view.
+     */
+    @ReactMethod
+    fun removeViewAttributes(keys: ReadableArray, promise: Promise) {
+        implementation.removeViewAttributes(keys, promise)
+    }
+
+    /**
      * Adds the loading time of the view to the active view.
      * It is calculated as the difference between the current time and the start time of the view.
      * @param overwrite: If true, overwrites the previously calculated view loading time.
@@ -227,5 +266,60 @@ class DdRum(
     @ReactMethod
     fun getCurrentSessionId(promise: Promise) {
         implementation.getCurrentSessionId(promise)
+    }
+
+    /**
+     * Starts a RUM Feature Operation.
+     *
+     * @param name Human-readable operation name (e.g., "login_flow").
+     * @param operationKey Optional key that uniquely identifies this operation instance.
+     * @param attributes Additional attributes to attach to the operation.
+     * @param promise Resolved with `null` when the call completes.
+     */
+    @ReactMethod
+    fun startFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.startFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as successfully completed.
+     *
+     * @param name The name of the feature operation (for example, "login_flow").
+     * @param operationKey The key of the operation instance to complete, if one was provided.
+     * @param attributes A map of custom attributes to attach to this completion event.
+     */
+    @ReactMethod
+    fun succeedFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.succeedFeatureOperation(name, operationKey, attributes, promise)
+    }
+
+    /**
+     * Marks a Feature Operation as failed.
+     *
+     * @param name The name of the feature operation (for example, "login_flow").
+     * @param operationKey The key of the operation instance to fail, if one was provided.
+     * @param failureReason The reason for the failure. Values are defined in [FailureReason]
+     *                      (e.g., `FailureReason.ERROR`, `FailureReason.ABANDONED`, `FailureReason.OTHER`).
+     * @param attributes A map of custom attributes to attach to this failure event.
+     */
+    @ReactMethod
+    fun failFeatureOperation(
+        name: String,
+        operationKey: String? = null,
+        failureReason: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.failFeatureOperation(name, operationKey, failureReason, attributes, promise)
     }
 }

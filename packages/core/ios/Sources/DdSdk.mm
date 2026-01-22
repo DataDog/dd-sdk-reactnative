@@ -30,18 +30,33 @@ RCT_REMAP_METHOD(initialize, withConfiguration:(NSDictionary*)configuration
     [self initialize:configuration resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(setAttributes, withAttributes:(NSDictionary*)attributes
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(addAttribute:(NSString*) key
+                  withValue:(NSDictionary*) value
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self setAttributes:attributes resolve:resolve reject:reject];
+    [self addAttribute:key value:value resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(setUser, withUser:(NSDictionary*)user
+RCT_EXPORT_METHOD(removeAttribute:(NSString*) key
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self removeAttribute:key resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(addAttributes, withAttributes:(NSDictionary*)attributes
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self setUser:user resolve:resolve reject:reject];
+    [self addAttributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(removeAttributes, withKeys:(NSArray *)keys
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self removeAttributes:keys resolve:resolve reject:reject];
 }
 
 RCT_REMAP_METHOD(setUserInfo, withUserInfo:(NSDictionary*)userInfo
@@ -56,6 +71,32 @@ RCT_REMAP_METHOD(addUserExtraInfo, withExtraInfo:(NSDictionary*)extraInfo
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self addUserExtraInfo:extraInfo resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(clearUserInfo:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self clearUserInfo:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(setAccountInfo, withAccountInfo:(NSDictionary*)accountInfo
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self setAccountInfo:accountInfo resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(addAccountExtraInfo, withAccountExtraInfo:(NSDictionary*)extraInfo
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self addAccountExtraInfo:extraInfo resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(clearAccountInfo:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self clearAccountInfo:resolve reject:reject];
 }
 
 RCT_REMAP_METHOD(setTrackingConsent, withTrackingConsent:(NSString*)trackingConsent
@@ -88,7 +129,7 @@ RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
     [self consumeWebviewEvent:message resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(clearAllData, withResolver:(RCTPromiseResolveBlock)resolve
+RCT_EXPORT_METHOD(clearAllData:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self clearAllData:resolve reject:reject];
@@ -138,24 +179,48 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
     [self.ddSdkImplementation initializeWithConfiguration:configuration resolve:resolve reject:reject];
 }
 
-- (void)setAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation setAttributesWithAttributes:attributes resolve:resolve reject:reject];
+- (void)addAttribute:(NSString *)key value:(NSDictionary *)value resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation addAttributeWithKey:key value:value resolve:resolve reject:reject];
+}
+
+- (void)removeAttribute:(NSString *)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation removeAttributeWithKey:key resolve:resolve reject:reject];
+}
+
+- (void)addAttributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation addAttributesWithAttributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)removeAttributes:(NSArray *)keys resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation removeAttributesWithKeys:keys resolve:resolve reject:reject];
 }
 
 - (void)setTrackingConsent:(NSString *)trackingConsent resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation setTrackingConsentWithTrackingConsent:trackingConsent resolve:resolve reject:reject];
 }
 
-- (void)setUser:(NSDictionary *)user resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddSdkImplementation setUserWithUser:user resolve:resolve reject:reject];
-}
-
 - (void)setUserInfo:(NSDictionary *)userInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation setUserInfoWithUserInfo:userInfo resolve:resolve reject:reject];
 }
 
+- (void)clearUserInfo:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation clearUserInfoWithResolve:resolve reject:reject];
+}
+
 -(void)addUserExtraInfo:(NSDictionary *)extraInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation addUserExtraInfoWithExtraInfo:extraInfo resolve:resolve reject:reject];
+}
+
+- (void)setAccountInfo:(NSDictionary *)accountInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation setAccountInfoWithAccountInfo:accountInfo resolve:resolve reject:reject];
+}
+
+- (void)clearAccountInfo:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation clearAccountInfoWithResolve:resolve reject:reject];
+}
+
+-(void)addAccountExtraInfo:(NSDictionary *)extraInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation addAccountExtraInfoWithExtraInfo:extraInfo resolve:resolve reject:reject];
 }
 
 - (void)sendTelemetryLog:(NSString *)message attributes:(NSDictionary *)attributes config:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

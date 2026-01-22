@@ -4,17 +4,24 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { setCachedUserId } from '../../rum/helper';
+
 import type { UserInfo } from './types';
 
 class UserInfoProvider {
-    private userInfo: UserInfo = {};
+    private userInfo: UserInfo | undefined = undefined;
 
     setUserInfo = (userInfo: UserInfo) => {
         this.userInfo = userInfo;
+        setCachedUserId(this.userInfo.id);
     };
 
-    getUserInfo = (): UserInfo => {
+    getUserInfo = (): UserInfo | undefined => {
         return this.userInfo;
+    };
+
+    clearUserInfo = () => {
+        this.userInfo = undefined;
     };
 }
 

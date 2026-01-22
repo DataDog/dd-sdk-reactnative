@@ -8,7 +8,7 @@ import queryString from 'query-string';
 import {
     DatadogProviderConfiguration,
     DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
+    CoreConfiguration,
     SdkVerbosity,
     TrackingConsent
 } from '@datadog/mobile-react-native';
@@ -40,16 +40,24 @@ export const getDatadogProviderConfig = () => {
     let config = new DatadogProviderConfiguration(
         baseConfig.clientToken ?? '',
         baseConfig.env ?? '',
-        baseConfig.applicationID ?? '',
-        true,
-        true,
-        true,
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            rumConfiguration: {
+                applicationId: baseConfig.applicationID ?? '',
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
+        }
     );
-
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100;
-    config.serviceName = `com.rn.${platform}.benchmark`
+    config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
 
     return config;
@@ -57,18 +65,27 @@ export const getDatadogProviderConfig = () => {
 
 export const initializeDatadog = (clientToken?: string, environment?: string, appId?: string): Promise<void> =>  {
     const platform = Platform.OS;
-    const config = new DdSdkReactNativeConfiguration(
+    const config = new CoreConfiguration(
         clientToken ?? '',
         environment ?? '',
-        appId ?? '',
-        true,
-        true,
-        true,
-        TrackingConsent.GRANTED
+        TrackingConsent.GRANTED,
+        {
+            rumConfiguration: {
+                applicationId: appId ??  "",
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true,
+            },
+            logsConfiguration: {
+                bundleLogsWithRum: true,
+                bundleLogsWithTraces: true,
+            },
+            traceConfiguration: {}
+        }
     );
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100;
-    config.serviceName = `com.rn.${platform}.benchmark`
+    config.service = `com.rn.${platform}.benchmark`
     config.verbosity = SdkVerbosity.DEBUG;
 
     return DdSdkReactNative.initialize(config);

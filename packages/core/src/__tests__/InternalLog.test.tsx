@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types';
 
 let baseConsoleDebugCalled = false;
 let baseConsoleDebugArg;

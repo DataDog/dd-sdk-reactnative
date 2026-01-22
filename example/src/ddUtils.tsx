@@ -2,27 +2,48 @@ import {
     DatadogProviderConfiguration,
     DdLogs,
     DdSdkReactNative,
-    DdSdkReactNativeConfiguration,
+    CoreConfiguration,
     SdkVerbosity,
-    TrackingConsent
+    TrackingConsent,
+    BatchSize,
+    UploadFrequency,
 } from '@datadog/mobile-react-native';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+import { BatchProcessingLevel } from '@datadog/mobile-react-native/src/config/types';
 
 // New SDK Setup - not available for react-native-navigation
 export function getDatadogConfig(trackingConsent: TrackingConsent) {
     const config = new DatadogProviderConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
-        APPLICATION_ID,
-        true,
-        true,
-        true,
-        trackingConsent
-    )
-    config.nativeCrashReportEnabled = true
-    config.sessionSamplingRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
+        trackingConsent,
+        {
+            batchSize: BatchSize.SMALL,
+            uploadFrequency: UploadFrequency.FREQUENT,
+            batchProcessingLevel: BatchProcessingLevel.MEDIUM,
+            additionalConfiguration: {
+                customProperty: "sdk-example-app"
+            },
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            },
+            logsConfiguration: {
+                logEventMapper: (logEvent) => {
+                    logEvent.message = `[CUSTOM] ${logEvent.message}`;
+                    return logEvent;
+                }
+            },
+            traceConfiguration: {}
+        }
+    );
+
+    config.service = "com.datadoghq.reactnative.sample"
     config.verbosity = SdkVerbosity.DEBUG;
 
     return config
@@ -31,29 +52,34 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
  export function onDatadogInitialization() {
     DdLogs.info('The RN Sdk was properly initialized')
     DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
-    DdSdkReactNative.setAttributes({campaign: "ad-network"})
+    DdSdkReactNative.addAttributes({campaign: "ad-network"})
 }
 
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
 
-    const config = new DdSdkReactNativeConfiguration(
+    const config = new CoreConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
-        APPLICATION_ID,
-        true,
-        true,
-        true,
-        trackingConsent
+        trackingConsent,
+        {
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            }
+        }
     )
-    config.nativeCrashReportEnabled = true
-    config.sampleRate = 100
-    config.serviceName = "com.datadoghq.reactnative.sample"
+
     config.verbosity = SdkVerbosity.DEBUG;
+    config.service = "com.datadoghq.reactnative.sample"
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')
         DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
-        DdSdkReactNative.setAttributes({campaign: "ad-network"})
+        DdSdkReactNative.addAttributes({campaign: "ad-network"})
     });
 }

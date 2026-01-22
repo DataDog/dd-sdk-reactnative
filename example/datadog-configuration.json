@@ -1,0 +1,21 @@
+{
+    "$schema": "./node_modules/@datadog/mobile-react-native/datadog-configuration.schema.json",
+    "configuration": {
+        "clientToken": "CLIENT_TOKEN",
+        "env": "ENVIRONMENT",
+        "site": "US1",
+        "rumConfiguration": {
+            "applicationId": "APPLICATION_ID",
+            "longTaskThresholdMs": 1000,
+            "sessionSampleRate": 100,
+            "telemetrySampleRate": 20,
+            "trackBackgroundEvents": false,
+            "trackErrors": true,
+            "trackInteractions": true,
+            "trackResources": true
+        },
+        "batchSize": "SMALL",
+        "trackingConsent": "GRANTED",
+        "verbosity": "DEBUG"
+    }
+}

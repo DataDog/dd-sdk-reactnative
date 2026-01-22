@@ -5,15 +5,18 @@
  */
 
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeTraceType } from '../nativeModulesTypes';
+import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import {
     bufferNativeCallReturningId,
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import type { DdTraceType } from '../types';
-import { validateContext } from '../utils/argsUtils';
+import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
+
+const TRACE_MODULE = 'com.datadog.reactnative.trace';
 
 const timeProvider = new DefaultTimeProvider();
 
@@ -30,7 +33,7 @@ class DdTraceWrapper implements DdTraceType {
         const spanId = bufferNativeCallReturningId(() =>
             this.nativeTrace.startSpan(
                 operation,
-                validateContext(context),
+                encodeAttributes(context),
                 timestampMs
             )
         );
@@ -51,7 +54,7 @@ class DdTraceWrapper implements DdTraceType {
             id =>
                 this.nativeTrace.finishSpan(
                     id,
-                    validateContext(context),
+                    encodeAttributes(context),
                     timestampMs
                 ),
             spanId
@@ -59,6 +62,7 @@ class DdTraceWrapper implements DdTraceType {
     };
 }
 
-const DdTrace: DdTraceType = new DdTraceWrapper();
-
-export { DdTrace };
+export const DdTrace: DdTraceType = getGlobalInstance(
+    TRACE_MODULE,
+    () => new DdTraceWrapper()
+);

@@ -27,16 +27,34 @@ module.exports = {
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         isInitialized: jest.fn().mockImplementation(() => true),
-        setUser: jest
-            .fn()
-            .mockImplementation(() => new Promise(resolve => resolve())),
         setUserInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         addUserExtraInfo: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
-        setAttributes: jest
+        clearUserInfo: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        setAccountInfo: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addAccountExtraInfo: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        clearAccountInfo: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeAttributes: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
         setTrackingConsent: jest
@@ -110,6 +128,18 @@ module.exports = {
         addTiming: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttribute: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        addViewAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        removeViewAttributes: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         addViewLoadingTime: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
@@ -124,6 +154,15 @@ module.exports = {
             .mockImplementation(
                 () => new Promise(resolve => resolve('test-session-id'))
             ),
+        startFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        succeedFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        failFeatureOperation: jest
+            .fn()
+            .mockImplementation(() => new Promise() < (resolve => resolve())),
         setTimeProvider: jest.fn().mockImplementation(() => {}),
         timeProvider: jest.fn().mockReturnValue(undefined),
         getTracingContext: jest.fn().mockReturnValue(undefined),

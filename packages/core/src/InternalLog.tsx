@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { SdkVerbosity } from './SdkVerbosity';
+import { SdkVerbosity } from './config/types/SdkVerbosity';
 
 export const DATADOG_MESSAGE_PREFIX = 'DATADOG:';
 

@@ -7,23 +7,29 @@
 package com.datadog.reactnative
 
 import android.content.Context
+import android.hardware.display.DisplayManager
+import android.os.Build
 import android.util.Log
+import android.view.Display
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.RumPerformanceMetric
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
 
 /** The entry point to initialize Datadog's features. */
 @Suppress("TooManyFunctions")
 class DdSdkImplementation(
     private val reactContext: ReactApplicationContext,
     private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val ddTelemetry: DdTelemetry = DdTelemetry(),
     private val uiThreadExecutor: UiThreadExecutor = ReactUiThreadExecutor()
 ) {
     internal val appContext: Context = reactContext.applicationContext
@@ -39,7 +45,7 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
-        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog)
+        val nativeInitialization = DdSdkNativeInitialization(appContext, datadog, ddTelemetry)
         nativeInitialization.initialize(ddSdkConfiguration)
 
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)
@@ -65,11 +71,35 @@ class DdSdkImplementation(
     }
 
     /**
-     * Sets the global context (set of attributes) attached with all future Logs, Spans and RUM
-     * events.
-     * @param attributes The global context attributes.
+     * Sets a specific attribute in the global context attached with all future Logs, Spans and RUM.
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
      */
-    fun setAttributes(attributes: ReadableMap, promise: Promise) {
+    fun addAttribute(key: String, value: ReadableMap, promise: Promise) {
+        val attributeValue = value.toMap()["value"]
+        datadog.addRumGlobalAttribute(key, attributeValue)
+        GlobalState.addAttribute(key, attributeValue)
+        promise.resolve(null)
+    }
+
+    /**
+     * Removes an attribute from the global context attached with all future Logs, Spans and RUM events.
+     * @param key: They key associated with the attribute to be removed.
+     */
+    fun removeAttribute(key: String, promise: Promise) {
+        datadog.removeRumGlobalAttribute(key)
+        GlobalState.removeAttribute(key)
+        promise.resolve(null)
+    }
+
+
+    /**
+     * Adds a set of attributes to the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param attributes: The global context attributes.
+     */
+    fun addAttributes(attributes: ReadableMap, promise: Promise) {
         datadog.addRumGlobalAttributes(attributes.toHashMap())
         for ((k,v) in attributes.toHashMap()) {
             GlobalState.addAttribute(k, v)
@@ -78,17 +108,21 @@ class DdSdkImplementation(
     }
 
     /**
-     * Set the user information.
-     * @param user The user object (use builtin attributes: 'id', 'email', 'name', and/or any custom
-     * attribute).
+     * Removes a set of attributes from the global context that is attached with all future Logs, Spans and RUM
+     * events.
+     * @param keys: They keys associated with the attributes to be removed.
      */
-    @Deprecated("Use setUserInfo instead; the user ID is now required.")
-    fun setUser(user: ReadableMap, promise: Promise) {
-        val extraInfo = user.toHashMap().toMutableMap()
-        val id = extraInfo.remove("id")?.toString()
-        val name = extraInfo.remove("name")?.toString()
-        val email = extraInfo.remove("email")?.toString()
-        datadog.setUser(id, name, email, extraInfo)
+    fun removeAttributes(keys: ReadableArray, promise: Promise) {
+        val keysArray = mutableListOf<String>()
+        for (i in 0 until keys.size()) {
+            keys.getString(i)?.let { if (it.isNotBlank()) keysArray.add(it) }
+        }
+        val keysStringArray = keysArray.toTypedArray()
+
+        datadog.removeRumGlobalAttributes(keysStringArray)
+        for (key in keysStringArray) {
+            GlobalState.removeAttribute(key)
+        }
         promise.resolve(null)
     }
 
@@ -108,15 +142,13 @@ class DdSdkImplementation(
 
         if (id != null) {
             datadog.setUserInfo(id, name, email, extraInfo)
-        } else {
-            datadog.setUser(null, name, email, extraInfo)
         }
 
         promise.resolve(null)
     }
 
     /**
-     * Sets the user information.
+     * Sets the user extra information.
      * @param userExtraInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     fun addUserExtraInfo(
@@ -125,6 +157,55 @@ class DdSdkImplementation(
         val extraInfoMap = userExtraInfo.toHashMap().toMutableMap()
 
         datadog.addUserExtraInfo(extraInfoMap)
+        promise.resolve(null)
+    }
+
+    /**
+     * Clears the user information.
+     */
+    fun clearUserInfo(promise: Promise) {
+        datadog.clearUserInfo()
+        promise.resolve(null)
+    }
+
+    /**
+     * Set the account information.
+     * @param accountInfo The account object (use builtin attributes: 'id', 'name', and any custom
+     * attribute inside 'extraInfo').
+     */
+    fun setAccountInfo(accountInfo: ReadableMap, promise: Promise) {
+        val accountInfoMap = accountInfo.toHashMap().toMutableMap()
+        val id = accountInfoMap["id"] as? String
+        val name = accountInfoMap["name"] as? String
+        val extraInfo = (accountInfoMap["extraInfo"] as? Map<*, *>)?.filterKeys { it is String }
+            ?.mapKeys { it.key as String }
+            ?.mapValues { it.value } ?: emptyMap()
+
+        if (id != null) {
+            datadog.setAccountInfo(id, name, extraInfo)
+        }
+
+        promise.resolve(null)
+    }
+
+    /**
+     * Sets the account extra information.
+     * @param accountExtraInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    fun addAccountExtraInfo(
+        accountExtraInfo: ReadableMap, promise: Promise
+    ) {
+        val extraInfoMap = accountExtraInfo.toHashMap().toMutableMap()
+
+        datadog.addAccountExtraInfo(extraInfoMap)
+        promise.resolve(null)
+    }
+
+    /**
+     * Clears the account information.
+     */
+    fun clearAccountInfo(promise: Promise) {
+        datadog.clearAccountInfo()
         promise.resolve(null)
     }
 
@@ -145,7 +226,7 @@ class DdSdkImplementation(
      * @param config Configuration object, can take 'onlyOnce: Boolean'
      */
     fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap, promise: Promise) {
-        datadog.sendTelemetryLog(message, attributes, config)
+        ddTelemetry.sendTelemetryLog(message, attributes, config)
         promise.resolve(null)
     }
 
@@ -154,7 +235,7 @@ class DdSdkImplementation(
      * @param message Debug message.
      */
     fun telemetryDebug(message: String, promise: Promise) {
-        datadog.telemetryDebug(message)
+        ddTelemetry.telemetryDebug(message)
         promise.resolve(null)
     }
 
@@ -165,7 +246,7 @@ class DdSdkImplementation(
      * @param kind Error kind.
      */
     fun telemetryError(message: String, stack: String, kind: String, promise: Promise) {
-        datadog.telemetryError(message, stack, kind)
+        ddTelemetry.telemetryError(message, stack, kind)
         promise.resolve(null)
     }
 
@@ -240,13 +321,15 @@ class DdSdkImplementation(
         return frameRateProvider
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun buildFrameTimeCallback(
         ddSdkConfiguration: DdSdkConfiguration
     ): ((Double) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
-            buildVitalUpdateFrequency(ddSdkConfiguration.vitalsUpdateFrequency) !=
+            ddSdkConfiguration.rumConfiguration != null &&
+            buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration.vitalsUpdateFrequency) !=
                     VitalsUpdateFrequency.NEVER
-        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.longTaskThresholdMs != 0.0
+        val jsLongTasksMonitoringEnabled = ddSdkConfiguration.rumConfiguration != null && ddSdkConfiguration.rumConfiguration.longTaskThresholdMs != 0.0
 
         if (!jsLongTasksMonitoringEnabled && !jsRefreshRateMonitoringEnabled) {
             return null
@@ -254,19 +337,62 @@ class DdSdkImplementation(
 
         return {
             if (jsRefreshRateMonitoringEnabled && it > 0.0) {
+                val normalizedFrameTimeSeconds = normalizeFrameTime(it, appContext)
                 datadog.getRumMonitor()
                     ._getInternal()
-                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, it)
+                    ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, normalizedFrameTimeSeconds)
             }
             if (jsLongTasksMonitoringEnabled &&
                 it >
                 TimeUnit.MILLISECONDS.toNanos(
-                    ddSdkConfiguration.longTaskThresholdMs?.toLong() ?: 0L
+                    ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs?.toLong() ?: 0L
                 )
             ) {
                 datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
             }
         }
+    }
+
+    /**
+     * Normalizes frameTime values so when are turned into FPS metrics they are normalized on a range of zero to 60fps.
+     * @param frameTimeSeconds: the frame time to normalize. In seconds.
+     * @param context: The current app context
+     * @param fpsBudget: The maximum fps under which the frame Time will be normalized [0-fpsBudget]. Defaults to 60Hz.
+     * @param deviceDisplayFps: The maximum fps supported by the device. If not provided it will be set from the value obtained from the app context.
+     */
+    @Suppress("CyclomaticComplexMethod")
+    fun normalizeFrameTime(
+        frameTimeSeconds: Double,
+        context: Context,
+        fpsBudget: Double? = null,
+        deviceDisplayFps: Double? = null,
+    ) : Double {
+        val frameTimeMs = frameTimeSeconds * 1000.0
+        val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
+        val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
+        ?: 60.0
+
+        val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
+        val budgetFrameTimeMs = 1000.0 / frameBudgetHz
+
+        if (listOf(
+                maxDeviceDisplayHz, frameTimeMs, frameBudgetHz, budgetFrameTimeMs, maxDeviceFrameTimeMs
+            ).any { !it.isFinite() || it <= 0.0 }
+        ) return 1.0 / DEFAULT_REFRESH_HZ
+
+        var normalizedFrameTimeMs = frameTimeMs / (maxDeviceFrameTimeMs / budgetFrameTimeMs)
+
+        normalizedFrameTimeMs = max(normalizedFrameTimeMs, maxDeviceFrameTimeMs)
+
+        return normalizedFrameTimeMs / 1000.0 // in seconds
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun getMaxDisplayRefreshRate(context: Context?): Double {
+        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+
+        return display.supportedModes.maxOf { it.refreshRate.toDouble() }
     }
 
     // endregion
@@ -278,6 +404,7 @@ class DdSdkImplementation(
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
+        internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
     }
 }

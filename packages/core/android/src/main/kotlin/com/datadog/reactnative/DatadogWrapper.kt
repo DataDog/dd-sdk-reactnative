@@ -18,7 +18,7 @@ import com.facebook.react.bridge.ReadableMap
 import java.lang.IllegalArgumentException
 
 /**
- * Wrapper around [Datadog].
+ * Wrapper around [com.datadog.android.Datadog].
  */
 @Suppress("ComplexInterface", "TooManyFunctions")
 interface DatadogWrapper {
@@ -49,10 +49,8 @@ interface DatadogWrapper {
     /**
      * Initializes the Datadog SDK.
      * @param context your application context
-     * @param credentials your organization credentials
      * @param configuration the configuration for the SDK library
-     * @param trackingConsent as the initial state of the tracking consent flag.
-     * @see [Credentials]
+     * @param consent as the initial state of the tracking consent flag.
      * @see [Configuration]
      * @see [TrackingConsent]
      * @throws IllegalArgumentException if the env name is using illegal characters and your
@@ -62,50 +60,6 @@ interface DatadogWrapper {
         context: Context,
         configuration: Configuration,
         consent: TrackingConsent
-    )
-
-    /**
-     * Enables the RUM feature of the SDK.
-     *
-     * @param configuration the configuration for the RUM feature
-     */
-    fun enableRum(
-        configuration: RumConfiguration
-    )
-
-    /**
-     * Enables the Logs feature of the SDK.
-     *
-     * @param configuration the configuration for the Logs feature
-     */
-    fun enableLogs(
-        configuration: LogsConfiguration
-    )
-
-    /**
-     * Enables the Trace feature of the SDK.
-     *
-     * @param configuration the configuration for the Trace feature
-     */
-    fun enableTrace(
-        configuration: TraceConfiguration
-    )
-
-    /**
-     * Sets the user information.
-     *
-     * @param id (nullable) a unique user identifier (relevant to your business domain)
-     * @param name (nullable) the user name or alias
-     * @param email (nullable) the user email
-     * @param extraInfo additional information. An extra information can be
-     * nested up to 8 levels deep. Keys using more than 8 levels will be sanitized by SDK.
-     */
-    @Deprecated("Use setUserInfo instead; the user ID is now required.")
-    fun setUser(
-        id: String?,
-        name: String?,
-        email: String?,
-        extraInfo: Map<String, Any?>
     )
 
     /**
@@ -126,11 +80,58 @@ interface DatadogWrapper {
 
     /**
      * Sets the user information.
-     * @param extraUserInfo: The additional information. (To set the id, name or email please user setUserInfo).
+     * @param extraInfo: The additional information. (To set the id, name or email please user setUserInfo).
      */
     fun addUserExtraInfo(
         extraInfo: Map<String, Any?>
     )
+
+    /**
+     * Clears the user information.
+     */
+    fun clearUserInfo()
+
+    /**
+     * Sets the account information.
+     *
+     * @param id a unique account identifier (relevant to your business domain)
+     * @param name (nullable) the account name
+     * @param extraInfo additional information. An extra information can be
+     * nested up to 8 levels deep. Keys using more than 8 levels will be sanitized by SDK.
+     */
+    fun setAccountInfo(
+        id: String,
+        name: String?,
+        extraInfo: Map<String, Any?>
+    )
+
+    /**
+     * Sets the account information.
+     * @param extraInfo: The additional information. (To set the id or name please use setAccountInfo).
+     */
+    fun addAccountExtraInfo(
+        extraInfo: Map<String, Any?>
+    )
+
+    /**
+     * Clears the account information.
+     */
+    fun clearAccountInfo()
+
+
+    /** Adds a global attribute.
+     *
+     * @param key: Key that identifies the attribute.
+     * @param value: Value linked to the attribute.
+     */
+    fun addRumGlobalAttribute(key: String, value: Any?)
+
+    /**
+     * Removes a global attribute.
+     *
+     * @param key: Key that identifies the attribute.
+     */
+    fun removeRumGlobalAttribute(key: String)
 
     /**
      * Adds global attributes.
@@ -140,30 +141,16 @@ interface DatadogWrapper {
     fun addRumGlobalAttributes(attributes: Map<String, Any?>)
 
     /**
+     * Removes global attributes.
+     *
+     * @param keys Keys linked to the attributes to be removed
+     */
+    fun removeRumGlobalAttributes(keys: Array<String>)
+
+    /**
      * Sets tracking consent.
      */
     fun setTrackingConsent(trackingConsent: TrackingConsent)
-
-
-    /**
-     * Sends telemetry event with attributes.
-     */
-    fun sendTelemetryLog(message: String, attributes: ReadableMap, config: ReadableMap)
-
-    /**
-     * Sends telemetry debug event.
-     */
-    fun telemetryDebug(message: String)
-
-    /**
-     * Sends telemetry error.
-     */
-    fun telemetryError(message: String, stack: String?, kind: String?)
-
-    /**
-     * Sends telemetry error.
-     */
-    fun telemetryError(message: String, throwable: Throwable?)
 
     /**
      * Sends Webview events.

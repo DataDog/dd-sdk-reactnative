@@ -13,9 +13,7 @@ const MAX_LONG_TASK_THRESHOLD_MS = 5000;
  * Also makes sure it is a number, passing `0` if it is `false`, as the React Native
  * bridge cannot handle values with dual types.
  */
-export const adaptLongTaskThreshold = (
-    longTaskThreshold: number | false
-): number => {
+export const adaptLongTaskThreshold = (longTaskThreshold: number): number => {
     if (!longTaskThreshold) {
         return 0;
     }

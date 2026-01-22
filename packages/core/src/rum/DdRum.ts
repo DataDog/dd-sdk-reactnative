@@ -5,24 +5,34 @@
  */
 import type { GestureResponderEvent } from 'react-native';
 
+import { DdAttributes } from '../DdAttributes';
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeRumType } from '../nativeModulesTypes';
+import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
+import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
-import { DdSdk } from '../sdk/DdSdk';
+import { NativeDdSdk } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
-import { validateContext } from '../utils/argsUtils';
+import type { ErrorSource, FeatureOperationFailure } from '../types';
+import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../utils/time-provider/TimeProvider';
 
-import { DdAttributes } from './DdAttributes';
-import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ActionEventMapper } from './eventMappers/actionEventMapper';
-import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
+import { generateActionEventMapper } from './eventMappers/actionEventMapper';
 import type { ErrorEventMapper } from './eventMappers/errorEventMapper';
-import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { generateErrorEventMapper } from './eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from './eventMappers/resourceEventMapper';
+import { generateResourceEventMapper } from './eventMappers/resourceEventMapper';
+import {
+    clearCachedSessionId,
+    getCachedAccountId,
+    getCachedSessionId,
+    getCachedUserId,
+    setCachedSessionId
+} from './helper';
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
@@ -30,19 +40,15 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
-import {
-    clearCachedSessionId,
-    getCachedSessionId,
-    setCachedSessionId
-} from './sessionId/sessionIdHelper';
 import type {
-    ErrorSource,
     DdRumType,
-    RumActionType,
-    ResourceKind,
     FirstPartyHost,
-    PropagatorType
+    PropagatorType,
+    ResourceKind,
+    RumActionType
 } from './types';
+
+const RUM_MODULE = 'com.datadog.reactnative.rum';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
@@ -70,7 +76,7 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.startView(
                 key,
                 name,
-                validateContext(context),
+                encodeAttributes(context),
                 timestampMs
             )
         );
@@ -83,7 +89,7 @@ class DdRumWrapper implements DdRumType {
     ): Promise<void> => {
         InternalLog.log(`Stopping RUM View #${key}`, SdkVerbosity.DEBUG);
         return bufferVoidNativeCall(() =>
-            this.nativeRum.stopView(key, validateContext(context), timestampMs)
+            this.nativeRum.stopView(key, encodeAttributes(context), timestampMs)
         );
     };
 
@@ -102,7 +108,7 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.startAction(
                 type,
                 name,
-                validateContext(context),
+                encodeAttributes(context),
                 timestampMs
             )
         );
@@ -127,6 +133,58 @@ class DdRumWrapper implements DdRumType {
         return this.callNativeStopAction(...nativeCallArgs);
     };
 
+    startFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Starting feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.startFeatureOperation(name, operationKey, attributes)
+        );
+    }
+
+    succeedFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Succeding feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.succeedFeatureOperation(
+                name,
+                operationKey,
+                attributes
+            )
+        );
+    }
+
+    failFeatureOperation(
+        name: string,
+        operationKey: string | null,
+        reason: FeatureOperationFailure,
+        attributes: object
+    ): Promise<void> {
+        InternalLog.log(
+            `Failing feature operation “${name}” (${operationKey})`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.failFeatureOperation(
+                name,
+                operationKey,
+                reason,
+                attributes
+            )
+        );
+    }
+
     setTimeProvider = (timeProvider: TimeProvider): void => {
         this.timeProvider = timeProvider;
     };
@@ -149,8 +207,6 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
 
-        const validatedContext = validateContext(mappedEvent.context);
-
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG
@@ -159,7 +215,7 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.addAction(
                 mappedEvent.type,
                 mappedEvent.name,
-                validatedContext,
+                encodeAttributes(mappedEvent.context),
                 mappedEvent.timestampMs
             )
         );
@@ -182,7 +238,7 @@ class DdRumWrapper implements DdRumType {
                 key,
                 method,
                 url,
-                validateContext(context),
+                encodeAttributes(context),
                 timestampMs
             )
         );
@@ -226,8 +282,6 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
-        const validatedContext = validateContext(mappedEvent.context);
-
         InternalLog.log(
             `Stopping RUM Resource #${key} status:${statusCode}`,
             SdkVerbosity.DEBUG
@@ -238,7 +292,7 @@ class DdRumWrapper implements DdRumType {
                 mappedEvent.statusCode,
                 mappedEvent.kind,
                 mappedEvent.size,
-                validatedContext,
+                encodeAttributes(mappedEvent.context),
                 mappedEvent.timestampMs
             )
         );
@@ -265,14 +319,11 @@ class DdRumWrapper implements DdRumType {
             return generateEmptyPromise();
         }
         InternalLog.log(`Adding RUM Error “${message}”`, SdkVerbosity.DEBUG);
-
-        const updatedContext: any = validateContext(mappedEvent.context);
-
+        const updatedContext = encodeAttributes(mappedEvent.context);
         updatedContext[DdAttributes.errorSourceType] = 'react-native';
 
-        const _debugId = debugId;
-        if (_debugId) {
-            updatedContext[DdAttributes.debugId] = _debugId;
+        if (debugId) {
+            updatedContext[DdAttributes.debugId] = debugId;
         }
 
         return bufferVoidNativeCall(() =>
@@ -293,6 +344,50 @@ class DdRumWrapper implements DdRumType {
             SdkVerbosity.DEBUG
         );
         return bufferVoidNativeCall(() => this.nativeRum.addTiming(name));
+    };
+
+    addViewAttribute = (key: string, value: unknown): Promise<void> => {
+        InternalLog.log(
+            `Adding view attribute “${key}" with value “${JSON.stringify(
+                value
+            )}” to RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addViewAttribute(key, { value })
+        );
+    };
+
+    removeViewAttribute = (key: string): Promise<void> => {
+        InternalLog.log(
+            `Removing view attribute “${key}" from RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.removeViewAttribute(key)
+        );
+    };
+
+    addViewAttributes = (attributes: Attributes): Promise<void> => {
+        InternalLog.log(
+            `Adding view attributes "${JSON.stringify(
+                attributes
+            )}” to RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.addViewAttributes(attributes)
+        );
+    };
+
+    removeViewAttributes = (keys: string[]): Promise<void> => {
+        InternalLog.log(
+            `Removing view attributes “${keys}" from RUM View`,
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.removeViewAttributes(keys)
+        );
     };
 
     addViewLoadingTime = (overwrite: boolean): Promise<void> => {
@@ -329,7 +424,7 @@ class DdRumWrapper implements DdRumType {
     };
 
     async getCurrentSessionId(): Promise<string | undefined> {
-        if (!GlobalState.instance.isInitialized) {
+        if (!GlobalState.isInitialized) {
             return undefined;
         }
         const sessionId = await this.nativeRum.getCurrentSessionId();
@@ -348,7 +443,9 @@ class DdRumWrapper implements DdRumType {
             url,
             tracingSamplingRate,
             firstPartyHosts,
-            getCachedSessionId()
+            getCachedSessionId(),
+            getCachedUserId(),
+            getCachedAccountId()
         );
     };
 
@@ -359,7 +456,9 @@ class DdRumWrapper implements DdRumType {
         return getTracingContextForPropagators(
             propagators,
             tracingSamplingRate,
-            getCachedSessionId()
+            getCachedSessionId(),
+            getCachedUserId(),
+            getCachedAccountId()
         );
     };
 
@@ -422,13 +521,11 @@ class DdRumWrapper implements DdRumType {
             );
         }
 
-        const validatedContext = validateContext(mappedEvent.context);
-
         return bufferVoidNativeCall(() =>
             this.nativeRum.stopAction(
                 mappedEvent.type,
                 mappedEvent.name,
-                validatedContext,
+                encodeAttributes(mappedEvent.context),
                 mappedEvent.timestampMs
             )
         );
@@ -455,20 +552,20 @@ class DdRumWrapper implements DdRumType {
             return [
                 args[0],
                 args[1],
-                args[2] || {},
+                args[2] ?? {},
                 args[3] || this.timeProvider.now()
             ];
         }
         if (isOldStopActionAPI(args)) {
             if (this.lastActionData) {
-                DdSdk.telemetryDebug(
+                NativeDdSdk.telemetryDebug(
                     'DDdRum.stopAction called with the old signature'
                 );
                 const { type, name } = this.lastActionData;
                 return [
                     type,
                     name,
-                    args[0] || {},
+                    args[0] ?? {},
                     args[1] || this.timeProvider.now()
                 ];
             }
@@ -518,4 +615,4 @@ const isOldStopActionAPI = (
     return typeof args[0] === 'object' || typeof args[0] === 'undefined';
 };
 
-export const DdRum = new DdRumWrapper();
+export const DdRum = getGlobalInstance(RUM_MODULE, () => new DdRumWrapper());

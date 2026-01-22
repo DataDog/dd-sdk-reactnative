@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../../../../InternalLog';
-import { SdkVerbosity } from '../../../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../../../config/types/SdkVerbosity';
 
 const MISSING_RESOURCE_SIZE = -1;
 export const RESOURCE_SIZE_ERROR_MESSAGE =

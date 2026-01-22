@@ -49,6 +49,9 @@ internal class DdSdkNativeInitializationTest {
     lateinit var mockDatadog: DatadogWrapper
 
     @Mock
+    lateinit var mockDdTelemetry: DdTelemetry
+
+    @Mock
     lateinit var mockJSONFileReader: JSONFileReader
 
     @BeforeEach
@@ -64,6 +67,7 @@ internal class DdSdkNativeInitializationTest {
         testedNativeInitialization = DdSdkNativeInitialization(
             mockContext,
             mockDatadog,
+            mockDdTelemetry,
             mockJSONFileReader
         )
     }
@@ -85,42 +89,52 @@ internal class DdSdkNativeInitializationTest {
         // Then
         assertThat(configuration.clientToken).isEqualTo("fake-client-token")
         assertThat(configuration.env).isEqualTo("fake-env")
-        assertThat(configuration.applicationId).isEqualTo("fake-app-id")
-        assertThat(configuration.nativeCrashReportEnabled).isEqualTo(true)
-        assertThat(configuration.nativeLongTaskThresholdMs).isEqualTo(333.0)
-        assertThat(configuration.longTaskThresholdMs).isEqualTo(44.0)
-        assertThat(configuration.sampleRate).isEqualTo(80.0)
         assertThat(configuration.site).isEqualTo("US3")
         assertThat(configuration.trackingConsent).isEqualTo("NOT_GRANTED")
-        assertThat(configuration.telemetrySampleRate).isEqualTo(60.0)
-        assertThat(configuration.vitalsUpdateFrequency).isEqualTo("NEVER")
-        assertThat(configuration.trackFrustrations).isEqualTo(false)
         assertThat(configuration.uploadFrequency).isEqualTo("FREQUENT")
         assertThat(configuration.batchSize).isEqualTo("SMALL")
-        assertThat(configuration.trackBackgroundEvents).isEqualTo(true)
-        assertThat(configuration.customEndpoints?.rum).isEqualTo("https://rum.example.com")
-        assertThat(configuration.customEndpoints?.logs).isEqualTo("https://logs.example.com")
-        assertThat(configuration.customEndpoints?.trace).isEqualTo("https://trace.example.com")
-        assertThat(configuration.additionalConfig?.get("_dd.source")).isEqualTo("react-native")
-        assertThat(configuration.additionalConfig?.get("_dd.sdk_version")).isEqualTo(SDK_VERSION)
-        assertThat(configuration.configurationForTelemetry).isNull()
-        assertThat(configuration.nativeViewTracking).isEqualTo(true)
-        assertThat(configuration.nativeInteractionTracking).isEqualTo(true)
         assertThat(configuration.verbosity).isEqualTo("WARN")
-        assertThat(configuration.serviceName).isEqualTo("my.app")
-        assertThat(configuration.proxyConfig?.first?.type().toString()).isEqualTo("HTTP")
-        val address = configuration.proxyConfig?.first?.address()
+        assertThat(configuration.service).isEqualTo("my.app")
+        assertThat(configuration.additionalConfiguration?.get("_dd.source")).isEqualTo(
+            "react-native"
+        )
+        assertThat(configuration.additionalConfiguration?.get("_dd.sdk_version")).isEqualTo(
+            SDK_VERSION
+        )
+        assertThat(configuration.rumConfiguration?.applicationId).isEqualTo("fake-app-id")
+        assertThat(configuration.rumConfiguration?.longTaskThresholdMs).isEqualTo(44.0)
+        assertThat(configuration.rumConfiguration?.sessionSampleRate).isEqualTo(80.0)
+        assertThat(configuration.rumConfiguration?.telemetrySampleRate).isEqualTo(60.0)
+        assertThat(configuration.rumConfiguration?.vitalsUpdateFrequency).isEqualTo("NEVER")
+        assertThat(configuration.rumConfiguration?.trackFrustrations).isEqualTo(false)
+        assertThat(configuration.rumConfiguration?.nativeCrashReportEnabled).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.nativeLongTaskThresholdMs).isEqualTo(333.0)
+        assertThat(configuration.rumConfiguration?.nativeViewTracking).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.nativeInteractionTracking).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.trackBackgroundEvents).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.customEndpoint).isEqualTo(
+            "https://rum.example.com"
+        )
+        assertThat(configuration.logsConfiguration?.customEndpoint).isEqualTo(
+            "https://logs.example.com"
+        )
+        assertThat(configuration.traceConfiguration?.customEndpoint).isEqualTo(
+            "https://trace.example.com"
+        )
+        assertThat(configuration.configurationForTelemetry).isNull()
+        assertThat(configuration.proxyConfiguration?.first?.type().toString()).isEqualTo("HTTP")
+        val address = configuration.proxyConfiguration?.first?.address()
         assertThat(address).isNotNull
         (address as InetSocketAddress).let {
             assertThat(it.port).isEqualTo(4444)
             assertThat(it.address.hostAddress).isEqualTo("1.1.1.1")
         }
-        assertThat(configuration.proxyConfig?.second?.username).isEqualTo("proxyusername")
-        assertThat(configuration.proxyConfig?.second?.password).isEqualTo("proxypassword")
+        assertThat(configuration.proxyConfiguration?.second?.username).isEqualTo("proxyusername")
+        assertThat(configuration.proxyConfiguration?.second?.password).isEqualTo("proxypassword")
         assertThat(configuration.firstPartyHosts?.get("example.com").toString()).isEqualTo(
             "[B3MULTI, TRACECONTEXT]"
         )
-        assertThat(configuration.initialResourceThreshold).isEqualTo(0.5)
+        assertThat(configuration.rumConfiguration?.initialResourceThreshold).isEqualTo(0.5)
     }
 
     @Test
@@ -138,30 +152,36 @@ internal class DdSdkNativeInitializationTest {
         // Then
         assertThat(configuration.clientToken).isEqualTo("fake-client-token")
         assertThat(configuration.env).isEqualTo("fake-env")
-        assertThat(configuration.applicationId).isEqualTo("fake-app-id")
-        assertThat(configuration.nativeCrashReportEnabled).isEqualTo(false)
-        assertThat(configuration.nativeLongTaskThresholdMs).isEqualTo(200.0)
-        assertThat(configuration.longTaskThresholdMs).isEqualTo(0.0)
-        assertThat(configuration.sampleRate).isEqualTo(100.0)
+        assertThat(configuration.verbosity).isNull()
+        assertThat(configuration.service).isNull()
+        assertThat(configuration.proxyConfiguration).isNull()
+        assertThat(configuration.firstPartyHosts).isNull()
         assertThat(configuration.site).isEqualTo("US1")
-        assertThat(configuration.trackingConsent).isEqualTo("GRANTED")
-        assertThat(configuration.telemetrySampleRate).isEqualTo(20.0)
-        assertThat(configuration.vitalsUpdateFrequency).isEqualTo("AVERAGE")
-        assertThat(configuration.trackFrustrations).isEqualTo(true)
         assertThat(configuration.uploadFrequency).isEqualTo("AVERAGE")
         assertThat(configuration.batchSize).isEqualTo("MEDIUM")
-        assertThat(configuration.trackBackgroundEvents).isEqualTo(false)
-        assertThat(configuration.customEndpoints).isNull()
-        assertThat(configuration.additionalConfig?.get("_dd.source")).isEqualTo("react-native")
-        assertThat(configuration.additionalConfig?.get("_dd.sdk_version")).isEqualTo(SDK_VERSION)
+        assertThat(configuration.trackingConsent).isEqualTo("GRANTED")
+        assertThat(configuration.additionalConfiguration?.get("_dd.source")).isEqualTo(
+            "react-native"
+        )
+        assertThat(configuration.additionalConfiguration?.get("_dd.sdk_version")).isEqualTo(
+            SDK_VERSION
+        )
         assertThat(configuration.configurationForTelemetry).isNull()
-        assertThat(configuration.nativeViewTracking).isEqualTo(false)
-        assertThat(configuration.nativeInteractionTracking).isEqualTo(false)
-        assertThat(configuration.verbosity).isNull()
-        assertThat(configuration.serviceName).isNull()
-        assertThat(configuration.proxyConfig).isNull()
-        assertThat(configuration.firstPartyHosts).isNull()
-        assertThat(configuration.initialResourceThreshold).isEqualTo(0.1)
+        assertThat(configuration.rumConfiguration?.initialResourceThreshold).isEqualTo(0.1)
+        assertThat(configuration.rumConfiguration?.applicationId).isEqualTo("fake-app-id")
+        assertThat(configuration.rumConfiguration?.longTaskThresholdMs).isEqualTo(0.0)
+        assertThat(configuration.rumConfiguration?.sessionSampleRate).isEqualTo(100.0)
+        assertThat(configuration.rumConfiguration?.telemetrySampleRate).isEqualTo(20.0)
+        assertThat(configuration.rumConfiguration?.vitalsUpdateFrequency).isEqualTo("AVERAGE")
+        assertThat(configuration.rumConfiguration?.trackFrustrations).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.trackBackgroundEvents).isEqualTo(false)
+        assertThat(configuration.rumConfiguration?.customEndpoint).isNull()
+        assertThat(configuration.rumConfiguration?.nativeCrashReportEnabled).isEqualTo(false)
+        assertThat(configuration.rumConfiguration?.nativeLongTaskThresholdMs).isEqualTo(200.0)
+        assertThat(configuration.rumConfiguration?.nativeViewTracking).isEqualTo(false)
+        assertThat(configuration.rumConfiguration?.nativeInteractionTracking).isEqualTo(false)
+        assertThat(configuration.logsConfiguration?.customEndpoint).isNull()
+        assertThat(configuration.traceConfiguration?.customEndpoint).isNull()
     }
 
     @Test

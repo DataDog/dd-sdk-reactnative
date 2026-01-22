@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-@file:Suppress("TooManyFunctions")
+@file:Suppress("TooManyFunctions", "StringLiteralDuplication")
 
 package com.datadog.reactnative
 
@@ -12,46 +12,79 @@ import android.util.Log
 import com.datadog.android.trace.TracingHeaderType
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
 
 internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
+    val additionalConfiguration = getMap("additionalConfiguration")?.toHashMap()
+
+    val rumMap = getMap("rumConfiguration")
+    val logsMap = getMap("logsConfiguration")
+    val traceMap = getMap("traceConfiguration")
+    val telemetryMap = getMap("configurationForTelemetry")
+
+    val rumConfiguration: RumConfiguration? = rumMap?.let { rm ->
+        val applicationId = rm.getString("applicationId").orEmpty()
+
+        RumConfiguration(
+            applicationId = applicationId,
+            trackFrustrations = rm.getBooleanOrNull("trackFrustrations"),
+            longTaskThresholdMs = rm.getDoubleOrNull("longTaskThresholdMs") ?: 0.0,
+            sessionSampleRate = rm.getDoubleOrNull("sessionSampleRate"),
+            resourceTraceSampleRate = rm.getDoubleOrNull("resourceTraceSampleRate"),
+            vitalsUpdateFrequency = rm.getString("vitalsUpdateFrequency"),
+            trackBackgroundEvents = rm.getBooleanOrNull("trackBackgroundEvents"),
+            nativeCrashReportEnabled = rm.getBooleanOrNull("nativeCrashReportEnabled"),
+            nativeLongTaskThresholdMs = rm.getDoubleOrNull("nativeLongTaskThresholdMs"),
+            nativeViewTracking = rm.getBooleanOrNull("nativeViewTracking"),
+            nativeInteractionTracking = rm.getBooleanOrNull("nativeInteractionTracking"),
+            trackNonFatalAnrs = rm.getBooleanOrNull("trackNonFatalAnrs"),
+            initialResourceThreshold = rm.getDoubleOrNull("initialResourceThreshold"),
+            telemetrySampleRate = rm.getDoubleOrNull("telemetrySampleRate"),
+            customEndpoint = rm.getString("customEndpoint")
+        )
+    }
+
+    val logsConfiguration: LogsConfiguration? = logsMap?.let { lm ->
+        LogsConfiguration(
+            bundleLogsWithRum = lm.getBooleanOrNull("bundleLogsWithRum") ?: true,
+            bundleLogsWithTraces = lm.getBooleanOrNull("bundleLogsWithTraces") ?: true,
+            customEndpoint = lm.getString("customEndpoint")
+        )
+    }
+
+    val traceConfiguration: TraceConfiguration? = traceMap?.let { tm ->
+        TraceConfiguration(
+            customEndpoint = tm.getString("customEndpoint")
+        )
+    }
+
+    val configurationForTelemetry: ConfigurationForTelemetry? =
+        telemetryMap?.asConfigurationForTelemetry()
+
     return DdSdkConfiguration(
+        additionalConfiguration = additionalConfiguration?.mapValues { it.value },
         clientToken = getString("clientToken").orEmpty(),
         env = getString("env").orEmpty(),
-        applicationId = getString("applicationId").orEmpty(),
-        nativeCrashReportEnabled = getBoolean("nativeCrashReportEnabled"),
-        nativeLongTaskThresholdMs = getDouble("nativeLongTaskThresholdMs"),
-        longTaskThresholdMs = getDouble("longTaskThresholdMs"),
-        sampleRate = getDouble("sampleRate"),
         site = getString("site"),
+        service = getString("service"),
+        verbosity = getString("verbosity"),
         trackingConsent = getString("trackingConsent"),
-        telemetrySampleRate = getDouble("telemetrySampleRate"),
-        vitalsUpdateFrequency = getString("vitalsUpdateFrequency"),
-        trackFrustrations = getBoolean("trackFrustrations"),
         uploadFrequency = getString("uploadFrequency"),
         batchSize = getString("batchSize"),
-        trackBackgroundEvents = getBoolean("trackBackgroundEvents"),
-        customEndpoints = getMap("customEndpoints")?.asCustomEndpoints(),
-        additionalConfig = getMap("additionalConfiguration")?.toHashMap(),
-        configurationForTelemetry = getMap(
-            "configurationForTelemetry"
-        )?.asConfigurationForTelemetry(),
-        nativeViewTracking = getBoolean("nativeViewTracking"),
-        nativeInteractionTracking = getBoolean("nativeInteractionTracking"),
-        verbosity = getString("verbosity"),
-        proxyConfig = getMap("proxyConfig")?.asProxyConfig(),
-        serviceName = getString("serviceName"),
-        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
-        bundleLogsWithRum = getBoolean("bundleLogsWithRum"),
-        bundleLogsWithTraces = getBoolean("bundleLogsWithTraces"),
-        trackNonFatalAnrs = getBooleanOrNull("trackNonFatalAnrs"),
         batchProcessingLevel = getString("batchProcessingLevel"),
-        initialResourceThreshold = getDoubleOrNull("initialResourceThreshold")
+        proxyConfiguration = getMap("proxyConfiguration")?.asProxyConfig(),
+        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
+        rumConfiguration = rumConfiguration,
+        logsConfiguration = logsConfiguration,
+        traceConfiguration = traceConfiguration,
+        configurationForTelemetry = configurationForTelemetry
     )
 }
+
 
 internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetry {
     return ConfigurationForTelemetry(
@@ -61,14 +94,6 @@ internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetr
         trackNetworkRequests = getBoolean("trackNetworkRequests"),
         reactVersion = getString("reactVersion"),
         reactNativeVersion = getString("reactNativeVersion"),
-    )
-}
-
-internal fun ReadableMap.asCustomEndpoints(): CustomEndpoints {
-    return CustomEndpoints(
-        rum = getString("rum"),
-        logs = getString("logs"),
-        trace = getString("trace"),
     )
 }
 
@@ -144,41 +169,65 @@ internal object DefaultConfiguration {
 
 @Suppress("CyclomaticComplexMethod")
 internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
+    val rumConfiguration: RumConfiguration? = this.rumConfiguration?.let { rum ->
+        RumConfiguration(
+            applicationId = rum.applicationId ?: "",
+            trackFrustrations = rum.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
+            longTaskThresholdMs = rum.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,
+            sessionSampleRate = rum.sessionSampleRate ?: DefaultConfiguration.sessionSamplingRate,
+            resourceTraceSampleRate = rum.resourceTraceSampleRate,
+            vitalsUpdateFrequency = rum.vitalsUpdateFrequency ?: DefaultConfiguration.vitalsUpdateFrequency,
+            trackBackgroundEvents = rum.trackBackgroundEvents ?: DefaultConfiguration.trackBackgroundEvents,
+            nativeCrashReportEnabled = rum.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
+            nativeLongTaskThresholdMs = rum.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
+            nativeViewTracking = rum.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
+            nativeInteractionTracking = rum.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
+            trackNonFatalAnrs = rum.trackNonFatalAnrs,
+            initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
+            telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
+                ?: DefaultConfiguration.telemetrySampleRate,
+            customEndpoint = rum.customEndpoint
+        )
+    }
+
+    val logsConfiguration: LogsConfiguration? = this.logsConfiguration?.let { logs ->
+        LogsConfiguration(
+            bundleLogsWithRum = logs.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
+            bundleLogsWithTraces = logs.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces,
+            customEndpoint = logs.customEndpoint
+        )
+    }
+
+    val traceConfiguration: TraceConfiguration? = this.traceConfiguration?.let { trace ->
+        TraceConfiguration(
+            customEndpoint = trace.customEndpoint
+        )
+    }
+
+    val baseAdditionalConfig = this.additionalConfiguration?.toMutableMap() ?: mutableMapOf()
+    baseAdditionalConfig["_dd.source"] = "react-native"
+    baseAdditionalConfig["_dd.sdk_version"] = SDK_VERSION
+
     return DdSdkConfiguration(
-        this.clientToken,
-        this.env,
-        this.applicationId,
-        this.nativeCrashReportEnabled ?: DefaultConfiguration.nativeCrashReportEnabled,
-        this.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
-        this.longTaskThresholdMs ?: DefaultConfiguration.longTaskThresholdMs,
-        this.sessionSamplingRate ?: DefaultConfiguration.sessionSamplingRate,
-        this.site ?: DefaultConfiguration.site,
-        this.trackingConsent ?: DefaultConfiguration.trackingConsent,
-        this.telemetrySampleRate ?: DefaultConfiguration.telemetrySampleRate,
-        this.vitalsUpdateFrequency ?: DefaultConfiguration.vitalsUpdateFrequency,
-        this.trackFrustrations ?: DefaultConfiguration.trackFrustrations,
-        this.uploadFrequency ?: DefaultConfiguration.uploadFrequency,
-        this.batchSize ?: DefaultConfiguration.batchSize,
-        this.trackBackgroundEvents ?: DefaultConfiguration.trackBackgroundEvents,
-        this.customEndpoints,
-        mapOf(
-            "_dd.source" to "react-native",
-            "_dd.sdk_version" to SDK_VERSION
-        ),
-        null,
-        this.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
-        this.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
-        this.verbosity,
-        this.proxy?.asProxyConfig(),
-        this.serviceName,
-        this.firstPartyHosts?.asFirstPartyHosts(),
-        this.bundleLogsWithRum ?: DefaultConfiguration.bundleLogsWithRum,
-        this.bundleLogsWithTraces ?: DefaultConfiguration.bundleLogsWithTraces,
-        this.trackNonFatalAnrs,
-        this.batchProcessingLevel,
-        this.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold
+        additionalConfiguration = baseAdditionalConfig,
+        clientToken = this.clientToken,
+        env = this.env,
+        site = this.site?: DefaultConfiguration.site,
+        service = this.service,
+        verbosity = this.verbosity,
+        trackingConsent = this.trackingConsent ?: DefaultConfiguration.trackingConsent,
+        uploadFrequency = this.uploadFrequency ?: DefaultConfiguration.uploadFrequency,
+        batchSize = this.batchSize?: DefaultConfiguration.batchSize,
+        batchProcessingLevel = this.batchProcessingLevel,
+        proxyConfiguration = this.proxyConfiguration?.asProxyConfig(),
+        firstPartyHosts = this.firstPartyHosts?.asFirstPartyHosts(),
+        rumConfiguration = rumConfiguration,
+        logsConfiguration = logsConfiguration,
+        traceConfiguration = traceConfiguration,
+        configurationForTelemetry = null
     )
 }
+
 
 internal fun JSONProxyConfiguration.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
     return buildProxyConfig(type, address, port, username, password)
@@ -220,29 +269,97 @@ internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     }.toSet()
 }
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
+
     map.putString("clientToken", clientToken)
     map.putString("env", env)
-    map.putString("applicationId", applicationId)
-    nativeCrashReportEnabled?.let { map.putBoolean("nativeCrashReportEnabled", it) }
-    nativeLongTaskThresholdMs?.let { map.putDouble("nativeLongTaskThresholdMs", it) }
-    longTaskThresholdMs?.let { map.putDouble("longTaskThresholdMs", it) }
-    sampleRate?.let { map.putDouble("sampleRate", it) }
-    site?.let { map.putString("site", it) }
-    trackingConsent?.let { map.putString("trackingConsent", it) }
-    telemetrySampleRate?.let { map.putDouble("telemetrySampleRate", it) }
-    vitalsUpdateFrequency?.let { map.putString("vitalsUpdateFrequency", it) }
-    trackFrustrations?.let { map.putBoolean("trackFrustrations", it) }
-    uploadFrequency?.let { map.putString("uploadFrequency", it) }
-    batchSize?.let { map.putString("batchSize", it) }
-    trackBackgroundEvents?.let { map.putBoolean("trackBackgroundEvents", it) }
-    trackNonFatalAnrs?.let { map.putBoolean("trackNonFatalAnrs", it) }
-    additionalConfig?.let { map.putMap("additionalConfig", it.toWritableMap()) }
-    initialResourceThreshold?.let { map.putDouble("initialResourceThreshold", it)}
+    map.putString("site", site.toString())
+    service?.let { map.putString("service", it) }
+    verbosity?.let { map.putString("verbosity", it) }
+    map.putString("trackingConsent", trackingConsent.toString())
+    map.putString("uploadFrequency", uploadFrequency.toString())
+    map.putString("batchSize", batchSize.toString())
+    map.putString("batchProcessingLevel", batchProcessingLevel.toString())
+    additionalConfiguration?.let { map.putMap("additionalConfiguration", it.toWritableMap()) }
+    proxyConfiguration?.let { (proxy, authenticator) ->
+        val proxyMap = WritableNativeMap()
+        val addr = proxy.address()
+        if (addr is java.net.InetSocketAddress) {
+            proxyMap.putString("address", addr.hostString)
+            proxyMap.putInt("port", addr.port)
+        }
+        proxyMap.putString(
+            "type",
+            when (proxy.type()) {
+                Proxy.Type.HTTP -> "HTTP"
+                Proxy.Type.SOCKS -> "SOCKS"
+                else -> proxy.type().name
+            }
+        )
+        map.putMap("proxyConfiguration", proxyMap)
+    }
+    firstPartyHosts?.let { hosts ->
+        val hostsArray = WritableNativeArray()
+        hosts.forEach { (match, types) ->
+            val hostMap = WritableNativeMap()
+            hostMap.putString("match", match)
+            val propagatorsArray = WritableNativeArray()
+            types.forEach { type ->
+                propagatorsArray.pushString(type.toString())
+            }
+            hostMap.putArray("propagatorTypes", propagatorsArray)
+            hostsArray.pushMap(hostMap)
+        }
+        map.putArray("firstPartyHosts", hostsArray)
+    }
+    rumConfiguration?.let { rum ->
+        val rumMap = WritableNativeMap()
+        rumMap.putString("applicationId", rum.applicationId)
+        rum.trackFrustrations?.let { rumMap.putBoolean("trackFrustrations", it) }
+        rum.longTaskThresholdMs?.let { map.putDouble("longTaskThresholdMs", it) }
+        rum.sessionSampleRate?.let { rumMap.putDouble("sessionSampleRate", it) }
+        rum.resourceTraceSampleRate?.let { rumMap.putDouble("resourceTraceSampleRate", it) }
+        rum.vitalsUpdateFrequency?.let { rumMap.putString("vitalsUpdateFrequency", it) }
+        rum.trackBackgroundEvents?.let { rumMap.putBoolean("trackBackgroundEvents", it) }
+        rum.nativeCrashReportEnabled?.let { rumMap.putBoolean("nativeCrashReportEnabled", it) }
+        rum.nativeLongTaskThresholdMs?.let { rumMap.putDouble("nativeLongTaskThresholdMs", it) }
+        rum.nativeViewTracking?.let { rumMap.putBoolean("nativeViewTracking", it) }
+        rum.nativeInteractionTracking?.let { rumMap.putBoolean("nativeInteractionTracking", it) }
+        rum.trackNonFatalAnrs?.let { rumMap.putBoolean("trackNonFatalAnrs", it) }
+        rum.initialResourceThreshold?.let { rumMap.putDouble("initialResourceThreshold", it) }
+        rum.telemetrySampleRate?.let { rumMap.putDouble("telemetrySampleRate", it) }
+        rum.customEndpoint?.let { rumMap.putString("customEndpoint", it) }
+
+        map.putMap("rumConfiguration", rumMap)
+    }
+    logsConfiguration?.let { logs ->
+        val logsMap = WritableNativeMap()
+        logsMap.putBoolean("bundleLogsWithRum", logs.bundleLogsWithRum)
+        logsMap.putBoolean("bundleLogsWithTraces", logs.bundleLogsWithTraces)
+        logs.customEndpoint?.let { logsMap.putString("customEndpoint", it) }
+        map.putMap("logsConfiguration", logsMap)
+    }
+    traceConfiguration?.let { trace ->
+        val traceMap = WritableNativeMap()
+        trace.customEndpoint?.let { traceMap.putString("customEndpoint", it) }
+        map.putMap("traceConfiguration", traceMap)
+    }
+    configurationForTelemetry?.let { telemetry ->
+        val telemetryMap = WritableNativeMap()
+        telemetry.initializationType?.let { telemetryMap.putString("initializationType", it) }
+        telemetry.trackErrors?.let { telemetryMap.putBoolean("trackErrors", it) }
+        telemetry.trackInteractions?.let { telemetryMap.putBoolean("trackInteractions", it) }
+        telemetry.trackNetworkRequests?.let { telemetryMap.putBoolean("trackNetworkRequests", it) }
+        telemetry.reactVersion?.let { telemetryMap.putString("reactVersion", it) }
+        telemetry.reactNativeVersion?.let { telemetryMap.putString("reactNativeVersion", it) }
+        map.putMap("configurationForTelemetry", telemetryMap)
+    }
+
     return map
 }
+
 
 internal fun ConfigurationForTelemetry.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
@@ -252,14 +369,6 @@ internal fun ConfigurationForTelemetry.toReadableMap(): ReadableMap {
     trackNetworkRequests?.let { map.putBoolean("trackNetworkRequests", it) }
     reactVersion?.let { map.putString("reactVersion", it) }
     reactNativeVersion?.let { map.putString("reactNativeVersion", it) }
-    return map
-}
-
-internal fun CustomEndpoints.toReadableMap(): ReadableMap {
-    val map = WritableNativeMap()
-    rum?.let { map.putString("rum", it) }
-    logs?.let { map.putString("logs", it) }
-    trace?.let { map.putString("trace", it) }
     return map
 }
 

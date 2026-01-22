@@ -12,8 +12,13 @@ import mockBackHandler from 'react-native/Libraries/Utilities/__mocks__/BackHand
 import { AppState, BackHandler } from 'react-native';
 import React, { createRef } from 'react';
 
-import type { ViewNamePredicate } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
+import type {
+    ParamsTrackingPredicate,
+    ViewNamePredicate,
+    ViewTrackingPredicate
+} from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
+import { transformViewKey } from '../../../rum/instrumentation/utils';
 
 import { AppStateMockLegacy } from './__utils__/AppStateMockLegacy';
 import { AppStateMock } from './__utils__/AppStateMock';
@@ -82,9 +87,7 @@ beforeEach(() => {
     mocked(BackHandler.exitApp).mockClear();
 
     // @ts-ignore
-    DdRumReactNavigationTracking.registeredContainer = null;
-    // @ts-ignore
-    DdRumReactNavigationTracking.navigationStateChangeListener = null;
+    DdRumReactNavigationTracking._resetInternalStateForTesting();
 });
 
 // Unit tests
@@ -164,7 +167,9 @@ describe.each([
                 };
                 DdRumReactNavigationTracking.startTrackingViews(
                     navigationRef.current,
-                    predicate
+                    {
+                        viewNamePredicate: predicate
+                    }
                 );
 
                 // WHEN
@@ -196,7 +201,9 @@ describe.each([
 
                 DdRumReactNavigationTracking.startTrackingViews(
                     navigationRef.current,
-                    predicate
+                    {
+                        viewNamePredicate: predicate
+                    }
                 );
 
                 // WHEN
@@ -205,6 +212,126 @@ describe.each([
 
                 // THEN
                 expect(DdRum.startView).not.toHaveBeenCalled();
+            });
+
+            it('sends a related RUM ViewEvent when switching screens { viewTrackingPredicate returns true }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+
+                // eslint-disable-next-line func-names
+                const predicate: ViewTrackingPredicate = function (
+                    _route: Route<string, any | undefined>
+                ) {
+                    return true;
+                };
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    {
+                        viewTrackingPredicate: predicate
+                    }
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'Home'
+                );
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+            });
+
+            it('sends a related RUM ViewEvent when switching screens { viewTrackingPredicate returns true for Home screen only }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+
+                // eslint-disable-next-line func-names
+                const predicate: ViewTrackingPredicate = function (
+                    _route: Route<string, any | undefined>
+                ) {
+                    return _route.name === 'Home';
+                };
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    {
+                        viewTrackingPredicate: predicate
+                    }
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(1);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'Home'
+                );
+                expect(DdRum.startView).not.toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About'
+                );
+            });
+
+            it('sends a related RUM ViewEvent when switching screens { viewParamsPredicate returns params object }', async () => {
+                // GIVEN
+                const navigationRef = createRef<any>();
+                const { getByText } = render(
+                    <FakeNavigator1 navigationRef={navigationRef} />
+                );
+                const goToAboutButton = getByText('Go to About');
+                const testParams = {
+                    param1: true,
+                    param2: 'abc'
+                };
+
+                // eslint-disable-next-line func-names
+                const predicate: ParamsTrackingPredicate = function (
+                    _route: Route<string, any | undefined>
+                ) {
+                    return testParams;
+                };
+
+                DdRumReactNavigationTracking.startTrackingViews(
+                    navigationRef.current,
+                    {
+                        paramsTrackingPredicate: predicate
+                    }
+                );
+
+                // WHEN
+                expect(goToAboutButton).toBeTruthy();
+                fireEvent(goToAboutButton, 'press');
+
+                // THEN
+                expect(DdRum.startView).toHaveBeenCalledTimes(2);
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'Home',
+                    { params: testParams }
+                );
+                expect(DdRum.startView).toHaveBeenCalledWith(
+                    expect.any(String),
+                    'About',
+                    { params: testParams }
+                );
             });
 
             it('only registers once when startTrackingViews{ multiple times }', async () => {
@@ -229,7 +356,7 @@ describe.each([
                 expect(DdRum.startView).toHaveBeenCalledTimes(2);
             });
 
-            it('does nothing when startTrackingViews { undefined any ', async () => {
+            it('does nothing when startTrackingViews { undefined any }', async () => {
                 // WHEN
                 DdRumReactNavigationTracking.startTrackingViews(null);
 
@@ -373,11 +500,14 @@ describe.each([
                 // THEN
                 expect(DdRum.startView).toHaveBeenCalledTimes(4);
                 expect(DdRum.startView).toHaveBeenCalledWith(
-                    navigationRef2StartRoute.key,
+                    transformViewKey(navigationRef2StartRoute.key, 'Home'),
                     'Home'
                 );
                 expect(DdRum.startView).toHaveBeenCalledWith(
-                    navigationRef2.current?.getCurrentRoute()?.key,
+                    transformViewKey(
+                        navigationRef2.current?.getCurrentRoute()?.key,
+                        'About'
+                    ),
                     'About'
                 );
             });
@@ -474,12 +604,15 @@ describe.each([
 
                     // THEN
                     expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-                    expect(DdRum.stopView).toHaveBeenCalledWith(
-                        navigationRef.current?.getCurrentRoute()?.key
+
+                    const currentRoute = navigationRef.current?.getCurrentRoute();
+                    const transformedKey = transformViewKey(
+                        currentRoute?.key,
+                        currentRoute?.name
                     );
-                    expect(
-                        typeof navigationRef.current?.getCurrentRoute()?.key
-                    ).toBe('string');
+
+                    expect(DdRum.stopView).toHaveBeenCalledWith(transformedKey);
+                    expect(typeof transformedKey).toBe('string');
                 });
 
                 it('restarts last view when app goes into foreground', async () => {

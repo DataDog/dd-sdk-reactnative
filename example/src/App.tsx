@@ -6,8 +6,8 @@ import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
-import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
-import {DatadogProvider} from '@datadog/mobile-react-native'
+import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
+import {DatadogProvider } from '@datadog/mobile-react-native'
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
@@ -15,15 +15,65 @@ import { TrackingConsent } from '@datadog/mobile-react-native';
 
 const Tab = createBottomTabNavigator();
 
-const viewPredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
+// === Navigation Tracking custom predicates
+const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
   return "Custom RN " + trackedName;
 }
 
+const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(route: Route<string, any | undefined>) { 
+  if (route.name === "AlertModal") {
+    return false;
+  }
+
+  return true;
+}
+
+const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(route: Route<string, any | undefined>) { 
+  const filteredParams: any = {};
+  if (route.params?.creditCardNumber) {
+    filteredParams["creditCardNumber"] = "XXXX XXXX XXXX XXXX";
+  }
+
+  if (route.params?.username) {
+    filteredParams["username"] = route.params.username;
+  }
+
+  return filteredParams;
+}
+
+const navigationTrackingOptions: NavigationTrackingOptions = {
+  viewNamePredicate,
+  viewTrackingPredicate,
+  paramsTrackingPredicate,
+}
+// === Datadog Provider Configuration schemes ===
+
+// 1.- Direct configuration
+const configuration = getDatadogConfig(TrackingConsent.GRANTED)
+
+// 2.- File based configuration from .json
+// const configuration = new FileBasedConfiguration(require("../datadog-configuration.json"));
+
+// 3.- File based configuration from .json and custom mapper setup
+// const configuration = new FileBasedConfiguration( {
+//   configuration: require("../datadog-configuration.json").configuration, 
+//   errorEventMapper: (event) => event, 
+//   resourceEventMapper: (event) => event, 
+//   actionEventMapper: (event) => event});
+
+// 4.- File based configuration from the native side (using initFromNative)
+// see https://docs.datadoghq.com/real_user_monitoring/guide/initialize-your-native-sdk-before-react-native-starts
+
+// const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
+
 export default function App() {
+
   return (
-    <DatadogProvider configuration={getDatadogConfig(TrackingConsent.GRANTED)} onInitialization={onDatadogInitialization}>
+    <DatadogProvider configuration={configuration} onInitialization={onDatadogInitialization}>
       <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewPredicate)
+        DdRumReactNavigationTracking.startTrackingViews(
+          navigationRef.current,
+          navigationTrackingOptions)
       }}>
         <Tab.Navigator screenOptions={{
           tabBarLabelStyle: style.tabLabelStyle,

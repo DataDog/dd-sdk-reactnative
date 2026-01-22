@@ -7,9 +7,9 @@
 import React from 'react';
 
 import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
-import { DdSdk } from '../../../sdk/DdSdk';
-import { getErrorMessage } from '../../../utils/errorUtils';
+import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
+import { getErrorMessage } from '../../../sdk/AttributesEncoding/errorUtils';
+import { NativeDdSdk } from '../../../sdk/DdSdkInternal';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 
 import { DdBabelInteractionTracking } from './DdBabelInteractionTracking';
@@ -23,6 +23,8 @@ import { getJsxRuntimes } from './getJsxRuntime';
 /**
  * Provides RUM auto-instrumentation feature to track user interaction as RUM events.
  * For now we are only covering the "onPress" events.
+ *
+ * @deprecated since 3.0.0 – Use `@datadog/mobile-react-native-babel-plugin` instead.
  */
 export class DdRumUserInteractionTracking {
     private static isTracking = false;
@@ -61,8 +63,16 @@ export class DdRumUserInteractionTracking {
      * Starts tracking user interactions and sends a RUM Action event every time a new interaction was detected.
      * Please note that we are only considering as valid - for - tracking only the user interactions that have
      * a visible output (either an UI state change or a Resource request)
+     *
+     * @deprecated since version 3.0.0
      */
     static startTracking(options: DdEventsInterceptorOptions): void {
+        InternalLog.log(
+            '[DEPRECATED] Interaction tracking via the core React Native SDK has been deprecated since v3.0.0. ' +
+                'Please migrate to @datadog/mobile-react-native-babel-plugin: https://www.npmjs.com/package/@datadog/mobile-react-native-babel-plugin.',
+            SdkVerbosity.WARN
+        );
+
         // extra safety to avoid wrapping more than 1 time this function
         if (DdRumUserInteractionTracking.isTracking) {
             InternalLog.log(
@@ -72,7 +82,7 @@ export class DdRumUserInteractionTracking {
             return;
         }
 
-        DdSdk?.sendTelemetryLog(
+        NativeDdSdk?.sendTelemetryLog(
             BABEL_PLUGIN_TELEMETRY,
             DdBabelInteractionTracking.getTelemetryConfig(),
             { onlyOnce: true }
@@ -116,7 +126,7 @@ export class DdRumUserInteractionTracking {
                 };
             }
         } catch (e) {
-            DdSdk.telemetryDebug(getErrorMessage(e));
+            NativeDdSdk.telemetryDebug(getErrorMessage(e));
         }
 
         const originalMemo = React.memo;
@@ -158,6 +168,9 @@ export class DdRumUserInteractionTracking {
         );
     }
 
+    /**
+     * @deprecated since version 3.0.0
+     */
     static stopTracking() {
         React.createElement = this.originalCreateElement;
         React.memo = this.originalMemo;

@@ -4,14 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { buildConfigurationFromPartialConfiguration } from '../config/async/asyncInitializationHelper';
 import {
     BatchSize,
-    UploadFrequency,
-    buildConfigurationFromPartialConfiguration
-} from '../DdSdkReactNativeConfiguration';
-import { ProxyConfiguration, ProxyType } from '../ProxyConfiguration';
-import { SdkVerbosity } from '../SdkVerbosity';
-import { TrackingConsent } from '../TrackingConsent';
+    ProxyConfiguration,
+    ProxyType,
+    SdkVerbosity,
+    TrackingConsent,
+    UploadFrequency
+} from '../config/types';
+import { PropagatorType } from '../rum/types';
 
 describe('DdSdkReactNativeConfiguration', () => {
     describe('buildConfigurationFromPartialConfiguration', () => {
@@ -19,54 +21,77 @@ describe('DdSdkReactNativeConfiguration', () => {
             expect(
                 buildConfigurationFromPartialConfiguration(
                     {
-                        trackErrors: false,
-                        trackInteractions: false,
-                        trackResources: false
+                        rumConfiguration: {
+                            trackErrors: false,
+                            trackInteractions: false,
+                            trackResources: false
+                        },
+                        logsConfiguration: {}
                     },
                     {
-                        applicationId: 'fake-app-id',
                         clientToken: 'fake-client-token',
-                        env: 'fake-env'
+                        env: 'fake-env',
+                        rumConfiguration: {
+                            applicationId: 'fake-app-id'
+                        },
+                        logsConfiguration: {},
+                        traceConfiguration: {}
                     }
                 )
             ).toMatchInlineSnapshot(`
-                DdSdkReactNativeConfiguration {
-                  "actionEventMapper": null,
+                CoreConfiguration {
                   "additionalConfiguration": {},
-                  "applicationId": "fake-app-id",
+                  "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
-                  "customEndpoints": {},
                   "env": "fake-env",
-                  "errorEventMapper": null,
-                  "firstPartyHosts": [],
-                  "logEventMapper": null,
-                  "longTaskThresholdMs": 0,
-                  "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
-                  "nativeLongTaskThresholdMs": 200,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 20,
-                  "serviceName": undefined,
-                  "sessionSamplingRate": 100,
+                  "logsConfiguration": LogsConfiguration {
+                    "bundleLogsWithRum": true,
+                    "bundleLogsWithTraces": true,
+                    "customEndpoint": undefined,
+                    "logEventMapper": null,
+                  },
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RumConfiguration {
+                    "actionEventMapper": null,
+                    "actionNameAttribute": undefined,
+                    "appHangThreshold": undefined,
+                    "applicationId": "fake-app-id",
+                    "customEndpoint": undefined,
+                    "errorEventMapper": null,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": undefined,
+                    "longTaskThresholdMs": 0,
+                    "nativeCrashReportEnabled": false,
+                    "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 200,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 100,
+                    "sessionSampleRate": 100,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": false,
+                    "trackFrustrations": true,
+                    "trackInteractions": false,
+                    "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": undefined,
+                    "trackResources": false,
+                    "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": undefined,
                   "site": "US1",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackErrors": false,
-                  "trackFrustrations": true,
-                  "trackInteractions": false,
-                  "trackResources": false,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": undefined,
+                  },
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": true,
                   "verbosity": undefined,
-                  "vitalsUpdateFrequency": "AVERAGE",
+                  "version": undefined,
+                  "versionSuffix": undefined,
                 }
             `);
         });
@@ -75,110 +100,142 @@ describe('DdSdkReactNativeConfiguration', () => {
             expect(
                 buildConfigurationFromPartialConfiguration(
                     {
-                        trackErrors: true,
-                        trackInteractions: true,
-                        trackResources: true,
-                        firstPartyHosts: ['api.com'],
-                        resourceTracingSamplingRate: 100,
-                        logEventMapper: event => event,
-                        errorEventMapper: event => event,
-                        resourceEventMapper: event => event,
-                        actionEventMapper: event => event,
-                        actionNameAttribute: 'testID',
-                        useAccessibilityLabel: true
+                        rumConfiguration: {
+                            actionNameAttribute: 'testID',
+                            useAccessibilityLabel: true,
+                            trackErrors: true,
+                            trackInteractions: true,
+                            trackResources: true,
+                            resourceTraceSampleRate: 80,
+                            firstPartyHosts: [
+                                {
+                                    match: 'api.com',
+                                    propagatorTypes: [
+                                        PropagatorType.DATADOG,
+                                        PropagatorType.TRACECONTEXT
+                                    ]
+                                }
+                            ],
+
+                            errorEventMapper: event => event,
+                            resourceEventMapper: event => event,
+                            actionEventMapper: event => event
+                        },
+                        logsConfiguration: {
+                            logEventMapper: event => event
+                        }
                     },
                     {
-                        applicationId: 'fake-app-id',
+                        rumConfiguration: {
+                            applicationId: 'fake-app-id',
+                            sessionSampleRate: 80,
+                            nativeCrashReportEnabled: true,
+                            nativeLongTaskThresholdMs: 345,
+                            nativeViewTracking: true,
+                            nativeInteractionTracking: true,
+                            longTaskThresholdMs: 567,
+                            trackFrustrations: true,
+                            trackNonFatalAnrs: true,
+                            trackBackgroundEvents: true,
+                            customEndpoint: 'https://rum.example.com/',
+                            initialResourceThreshold: 0.123
+                        },
+                        logsConfiguration: {
+                            bundleLogsWithRum: true,
+                            bundleLogsWithTraces: true,
+                            customEndpoint: 'https://logs.example.com/'
+                        },
+                        traceConfiguration: {
+                            customEndpoint: 'https://trace.example.com/'
+                        },
                         clientToken: 'fake-client-token',
                         env: 'fake-env',
-                        sessionSamplingRate: 80,
                         site: 'EU',
                         verbosity: SdkVerbosity.DEBUG,
-                        nativeViewTracking: true,
-                        nativeInteractionTracking: true,
-                        proxyConfig: new ProxyConfiguration(
+                        proxyConfiguration: new ProxyConfiguration(
                             ProxyType.HTTPS,
                             'api.com',
                             443
                         ),
-                        serviceName: 'com.test.app',
+                        service: 'com.test.app',
                         version: '1.4.5',
                         versionSuffix: 'codepush-3',
                         additionalConfiguration: {
                             additionalField: 'fake-value'
                         },
                         trackingConsent: TrackingConsent.PENDING,
-                        nativeCrashReportEnabled: true,
-                        nativeLongTaskThresholdMs: 345,
-                        longTaskThresholdMs: 567,
-                        trackFrustrations: true,
                         uploadFrequency: UploadFrequency.FREQUENT,
-                        batchSize: BatchSize.LARGE,
-                        trackBackgroundEvents: true,
-                        customEndpoints: {
-                            rum: 'https://rum.example.com/',
-                            logs: 'https://logs.example.com/',
-                            trace: 'https://trace.example.com/'
-                        },
-                        bundleLogsWithRum: true,
-                        bundleLogsWithTraces: true,
-                        initialResourceThreshold: 0.123
+                        batchSize: BatchSize.LARGE
                     }
                 )
             ).toMatchInlineSnapshot(`
-                DdSdkReactNativeConfiguration {
-                  "actionEventMapper": [Function],
-                  "actionNameAttribute": "testID",
+                CoreConfiguration {
                   "additionalConfiguration": {
                     "additionalField": "fake-value",
                   },
-                  "applicationId": "fake-app-id",
+                  "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "LARGE",
-                  "bundleLogsWithRum": true,
-                  "bundleLogsWithTraces": true,
                   "clientToken": "fake-client-token",
-                  "customEndpoints": {
-                    "logs": "https://logs.example.com/",
-                    "rum": "https://rum.example.com/",
-                    "trace": "https://trace.example.com/",
-                  },
                   "env": "fake-env",
-                  "errorEventMapper": [Function],
-                  "firstPartyHosts": [
-                    "api.com",
-                  ],
-                  "initialResourceThreshold": 0.123,
-                  "logEventMapper": [Function],
-                  "longTaskThresholdMs": 567,
-                  "nativeCrashReportEnabled": true,
-                  "nativeInteractionTracking": true,
-                  "nativeLongTaskThresholdMs": 345,
-                  "nativeViewTracking": true,
-                  "proxyConfig": ProxyConfiguration {
+                  "logsConfiguration": LogsConfiguration {
+                    "bundleLogsWithRum": true,
+                    "bundleLogsWithTraces": true,
+                    "customEndpoint": "https://logs.example.com/",
+                    "logEventMapper": [Function],
+                  },
+                  "proxyConfiguration": ProxyConfiguration {
                     "address": "api.com",
                     "port": 443,
                     "type": "https",
                   },
-                  "resourceEventMapper": [Function],
-                  "resourceTracingSamplingRate": 100,
-                  "serviceName": "com.test.app",
-                  "sessionSamplingRate": 80,
+                  "rumConfiguration": RumConfiguration {
+                    "actionEventMapper": [Function],
+                    "actionNameAttribute": "testID",
+                    "appHangThreshold": undefined,
+                    "applicationId": "fake-app-id",
+                    "customEndpoint": "https://rum.example.com/",
+                    "errorEventMapper": [Function],
+                    "firstPartyHosts": [
+                      {
+                        "match": "api.com",
+                        "propagatorTypes": [
+                          "datadog",
+                          "tracecontext",
+                        ],
+                      },
+                    ],
+                    "initialResourceThreshold": 0.123,
+                    "longTaskThresholdMs": 567,
+                    "nativeCrashReportEnabled": true,
+                    "nativeInteractionTracking": true,
+                    "nativeLongTaskThresholdMs": 345,
+                    "nativeViewTracking": true,
+                    "resourceEventMapper": [Function],
+                    "resourceTraceSampleRate": 80,
+                    "sessionSampleRate": 80,
+                    "telemetrySampleRate": 20,
+                    "trackBackgroundEvents": true,
+                    "trackErrors": true,
+                    "trackFrustrations": true,
+                    "trackInteractions": true,
+                    "trackMemoryWarnings": true,
+                    "trackNonFatalAnrs": true,
+                    "trackResources": true,
+                    "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": true,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": "com.test.app",
                   "site": "EU",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": true,
-                  "trackErrors": true,
-                  "trackFrustrations": true,
-                  "trackInteractions": true,
-                  "trackResources": true,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": "https://trace.example.com/",
+                  },
                   "trackingConsent": "pending",
                   "uploadFrequency": "FREQUENT",
-                  "useAccessibilityLabel": true,
                   "verbosity": "debug",
                   "version": "1.4.5",
                   "versionSuffix": "codepush-3",
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });
@@ -187,74 +244,101 @@ describe('DdSdkReactNativeConfiguration', () => {
             expect(
                 buildConfigurationFromPartialConfiguration(
                     {
-                        trackErrors: false,
-                        trackInteractions: false,
-                        trackResources: false,
-                        resourceTracingSamplingRate: 0,
-                        useAccessibilityLabel: false
+                        rumConfiguration: {
+                            useAccessibilityLabel: false,
+                            trackErrors: false,
+                            trackInteractions: false,
+                            trackResources: false,
+                            resourceTraceSampleRate: 0,
+                            nativeCrashReportEnabled: false,
+                            nativeLongTaskThresholdMs: 0,
+                            actionNameAttribute: ''
+                        },
+                        logsConfiguration: {}
                     },
                     {
-                        applicationId: '',
+                        rumConfiguration: {
+                            applicationId: '',
+                            sessionSampleRate: 0,
+                            nativeViewTracking: false,
+                            nativeInteractionTracking: false,
+                            longTaskThresholdMs: false,
+                            trackFrustrations: false,
+                            trackBackgroundEvents: false,
+                            trackMemoryWarnings: false,
+                            trackNonFatalAnrs: false,
+                            telemetrySampleRate: 0,
+                            appHangThreshold: 0,
+                            initialResourceThreshold: 0
+                        },
+                        logsConfiguration: {
+                            bundleLogsWithRum: false,
+                            bundleLogsWithTraces: false
+                        },
+                        traceConfiguration: {},
                         clientToken: '',
                         env: '',
-                        sessionSamplingRate: 0,
                         site: '',
-                        nativeViewTracking: false,
-                        nativeInteractionTracking: false,
-                        serviceName: '',
+                        service: '',
                         version: '',
                         versionSuffix: '',
-                        additionalConfiguration: {},
-                        nativeCrashReportEnabled: false,
-                        nativeLongTaskThresholdMs: false,
-                        longTaskThresholdMs: false,
-                        trackFrustrations: false,
-                        trackBackgroundEvents: false,
-                        customEndpoints: {},
-                        bundleLogsWithRum: false,
-                        bundleLogsWithTraces: false
+                        additionalConfiguration: {}
                     }
                 )
             ).toMatchInlineSnapshot(`
-                DdSdkReactNativeConfiguration {
-                  "actionEventMapper": null,
+                CoreConfiguration {
                   "additionalConfiguration": {},
-                  "applicationId": "",
+                  "attributeEncoders": [],
                   "batchProcessingLevel": "MEDIUM",
                   "batchSize": "MEDIUM",
-                  "bundleLogsWithRum": false,
-                  "bundleLogsWithTraces": false,
                   "clientToken": "",
-                  "customEndpoints": {},
                   "env": "",
-                  "errorEventMapper": null,
-                  "firstPartyHosts": [],
-                  "logEventMapper": null,
-                  "longTaskThresholdMs": false,
-                  "nativeCrashReportEnabled": false,
-                  "nativeInteractionTracking": false,
-                  "nativeLongTaskThresholdMs": false,
-                  "nativeViewTracking": false,
-                  "proxyConfig": undefined,
-                  "resourceEventMapper": null,
-                  "resourceTracingSamplingRate": 0,
-                  "serviceName": "",
-                  "sessionSamplingRate": 0,
+                  "logsConfiguration": LogsConfiguration {
+                    "bundleLogsWithRum": false,
+                    "bundleLogsWithTraces": false,
+                    "customEndpoint": undefined,
+                    "logEventMapper": null,
+                  },
+                  "proxyConfiguration": undefined,
+                  "rumConfiguration": RumConfiguration {
+                    "actionEventMapper": null,
+                    "actionNameAttribute": "",
+                    "appHangThreshold": 0,
+                    "applicationId": "",
+                    "customEndpoint": undefined,
+                    "errorEventMapper": null,
+                    "firstPartyHosts": [],
+                    "initialResourceThreshold": 0,
+                    "longTaskThresholdMs": false,
+                    "nativeCrashReportEnabled": false,
+                    "nativeInteractionTracking": false,
+                    "nativeLongTaskThresholdMs": 0,
+                    "nativeViewTracking": false,
+                    "resourceEventMapper": null,
+                    "resourceTraceSampleRate": 0,
+                    "sessionSampleRate": 0,
+                    "telemetrySampleRate": 0,
+                    "trackBackgroundEvents": false,
+                    "trackErrors": false,
+                    "trackFrustrations": false,
+                    "trackInteractions": false,
+                    "trackMemoryWarnings": false,
+                    "trackNonFatalAnrs": false,
+                    "trackResources": false,
+                    "trackWatchdogTerminations": false,
+                    "useAccessibilityLabel": false,
+                    "vitalsUpdateFrequency": "AVERAGE",
+                  },
+                  "service": "",
                   "site": "",
-                  "telemetrySampleRate": 20,
-                  "trackBackgroundEvents": false,
-                  "trackErrors": false,
-                  "trackFrustrations": false,
-                  "trackInteractions": false,
-                  "trackResources": false,
-                  "trackWatchdogTerminations": false,
+                  "traceConfiguration": TraceConfiguration {
+                    "customEndpoint": undefined,
+                  },
                   "trackingConsent": "granted",
                   "uploadFrequency": "AVERAGE",
-                  "useAccessibilityLabel": false,
                   "verbosity": undefined,
                   "version": "",
                   "versionSuffix": "",
-                  "vitalsUpdateFrequency": "AVERAGE",
                 }
             `);
         });

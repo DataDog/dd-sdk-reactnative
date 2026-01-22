@@ -4,8 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { ErrorSource } from '../rum/types';
-import type { UserInfo } from '../sdk/UserInfoSingleton/types';
+import type { LogStatus, ErrorSource } from '../types';
 
 /**
  * The entry point to use Datadog's Logs feature.
@@ -74,24 +73,6 @@ export type NativeLogWithError = {
     context: object;
     fingerprint?: string;
 };
-
-export type LogStatus = 'debug' | 'info' | 'warn' | 'error';
-
-export type LogEvent = {
-    message: string;
-    context: object;
-    errorKind?: string;
-    errorMessage?: string;
-    stacktrace?: string;
-    fingerprint?: string;
-    readonly source?: ErrorSource;
-    // readonly date: number; // TODO: RUMM-2446 & RUMM-2447
-    readonly status: LogStatus;
-    readonly userInfo: UserInfo;
-    readonly attributes?: object;
-};
-
-export type LogEventMapper = (logEvent: LogEvent) => LogEvent | null;
 
 export type LogArguments = [message: string, context?: object];
 
