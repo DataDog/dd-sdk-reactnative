@@ -16,4 +16,4 @@ jobs:
               with:
                   node-version: '24.x'
             - run: yarn
-            - run: yarn run lerna publish from-package --yes
+            - run: yarn run lerna publish from-package --dist-tag v2 --yes
