@@ -40,7 +40,7 @@ public class DdSdkNativeInitialization: NSObject {
                 id: "datadog_react_native: RN  SDK was already initialized in native",
                 message: "RN SDK was already initialized in native"
             )
-
+            
             RUMMonitor.shared().currentSessionID { sessionId in
                 guard let id = sessionId else { return }
                 DdSdkSessionStartedListener.instance.rumSessionListener?(id, false)
@@ -85,17 +85,24 @@ public class DdSdkNativeInitialization: NSObject {
     }
 
     func enableFeatures(sdkConfiguration: DdSdkConfiguration) {
-        let rumConfig = buildRumConfiguration(configuration: sdkConfiguration)
-        RUM.enable(with: rumConfig)
+        
+        if (sdkConfiguration.rumConfiguration != nil) {
+            let rumConfig = buildRumConfiguration(configuration: sdkConfiguration)
+            RUM.enable(with: rumConfig)
+            
+            if sdkConfiguration.rumConfiguration?.nativeCrashReportEnabled ?? false {
+                CrashReporting.enable()
+            }
+        }
 
-        let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
-        Logs.enable(with: logsConfig)
+        if (sdkConfiguration.logsConfiguration != nil) {
+            let logsConfig = buildLogsConfiguration(configuration: sdkConfiguration)
+            Logs.enable(with: logsConfig)
+        }
 
-        let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
-        Trace.enable(with: traceConfig)
-
-        if sdkConfiguration.nativeCrashReportEnabled ?? false {
-            CrashReporting.enable()
+        if (sdkConfiguration.traceConfiguration != nil) {
+            let traceConfig = buildTraceConfiguration(configuration: sdkConfiguration)
+            Trace.enable(with: traceConfig)
         }
 
         #if os(iOS)
@@ -140,7 +147,7 @@ public class DdSdkNativeInitialization: NSObject {
         }
 
         var longTaskThreshold: TimeInterval? = nil
-        if let threshold = configuration.nativeLongTaskThresholdMs, threshold != 0 {
+        if let threshold = configuration.rumConfiguration?.nativeLongTaskThresholdMs, threshold != 0 {
             longTaskThreshold = threshold / 1_000
         }
 
@@ -160,7 +167,7 @@ public class DdSdkNativeInitialization: NSObject {
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,
                     sampleRate: Float(
-                        configuration.traceConfiguration?.resourceTraceSampleRate
+                        configuration.rumConfiguration?.resourceTraceSampleRate
                             ?? DefaultConfiguration.resourceTraceSampleRate)
                 )
             )
@@ -220,8 +227,12 @@ public class DdSdkNativeInitialization: NSObject {
     }
 
     func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {
+        guard let logsConfig = configuration.logsConfiguration else {
+            preconditionFailure("buildLogsConfiguration called without logsConfiguration")
+        }
+        
         var customLogsEndpointURL: URL? = nil
-        if let customLogsEndpoint = configuration.logsConfiguration?.customEndpoint as? NSString {
+        if let customLogsEndpoint = logsConfig.customEndpoint as? NSString {
             if customLogsEndpoint != "" {
                 customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
             }
@@ -231,8 +242,12 @@ public class DdSdkNativeInitialization: NSObject {
     }
 
     func buildTraceConfiguration(configuration: DdSdkConfiguration) -> Trace.Configuration {
+        guard let traceConfig = configuration.traceConfiguration else {
+            preconditionFailure("buildTraceConfiguration called without traceConfiguration")
+        }
+        
         var customTraceEndpointURL: URL? = nil
-        if let customTraceEndpoint = configuration.traceConfiguration?.customEndpoint as? NSString {
+        if let customTraceEndpoint = traceConfig.customEndpoint as? NSString {
             if customTraceEndpoint != "" {
                 customTraceEndpointURL = URL(
                     string: "\(customTraceEndpoint)/api/v2/spans" as String)

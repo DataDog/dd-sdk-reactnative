@@ -7,17 +7,15 @@
 import BigInt from 'big-integer';
 
 import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
+import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import type { FirstPartyHost } from '../../types';
 
+import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
-import { ResourceReporter } from './requestProxy/XHRProxy/DatadogRumResource/ResourceReporter';
-import { filterDevResource } from './requestProxy/XHRProxy/DatadogRumResource/internalDevResourceBlocklist';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
-export const MAX_TRACE_ID = BigInt.one.shiftLeft(64).minus(BigInt.one);
 const RUM_RESOURCE_TRACKING_MODULE =
     'com.datadog.reactnative.rum.resource_tracking';
 
@@ -41,10 +39,10 @@ class RumResourceTracking {
      * Starts tracking resources and sends a RUM Resource event every time a network request is detected.
      */
     startTracking({
-        tracingSamplingRate,
+        resourceTraceSampleRate,
         firstPartyHosts
     }: {
-        tracingSamplingRate: number;
+        resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
     }): void {
         // extra safety to avoid proxying the XHR class twice
@@ -56,12 +54,9 @@ class RumResourceTracking {
             return;
         }
 
-        this._requestProxy = new XHRProxy({
-            xhrType: XMLHttpRequest,
-            resourceReporter: new ResourceReporter([filterDevResource])
-        });
+        this._requestProxy = XHRProxy.createWithResourceReporter();
         this._requestProxy.onTrackingStart({
-            tracingSamplingRate,
+            tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
                 firstPartyHosts
             )
@@ -73,8 +68,8 @@ class RumResourceTracking {
         );
 
         this._isTracking = true;
-        this._maxSampledTraceId = RumResourceTracking.getMaxTraceId(
-            tracingSamplingRate
+        DistributedTracingSampling.setResourceTraceSampleRate(
+            resourceTraceSampleRate
         );
     }
 
@@ -87,10 +82,6 @@ class RumResourceTracking {
             this._requestProxy = null;
             this._maxSampledTraceId = null;
         }
-    }
-
-    private static getMaxTraceId(sampleRate: number): BigInt.BigInteger {
-        return BigInt(MAX_TRACE_ID.toJSNumber() * (sampleRate / 100.0));
     }
 }
 

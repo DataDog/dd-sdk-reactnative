@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { setCachedSessionId } from '../../rum/helper';
 import { DatadogDefaultEventEmitter } from '../DatadogEventEmitter/DatadogDefaultEventEmitter';
 import type { DatadogEventEmitter } from '../DatadogEventEmitter/DatadogEventEmitter';

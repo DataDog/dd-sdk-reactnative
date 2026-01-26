@@ -20,17 +20,45 @@ yarn add @datadog/mobile-react-navigation
 
 ### Track view navigation
 
-To track changes in navigation as RUM Views, set the `onReady` callback of your `NavigationContainer` component as follow. You can use the optional `ViewNamePredicate` parameter to replace the automatically detected View name with something more relevant to your use case.
-
-Returning `null` in the `ViewNamePredicate` prevents the new RUM View from being created. The previous RUM View remains active.
+To track changes in navigation as RUM Views, set the `onReady` callback of your `NavigationContainer` component as follow. You can use the optional `NavigationTrackingOptions` parameter to replace the default behaviour of the tracker regarding views, their names and their navigation parameters.
 
 ```js
 import * as React from 'react';
-import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
+import { DdRumReactNavigationTracking, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
 import { Route } from "@react-navigation/native";
 
+// Sets a custom name for a tracked view
 const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(route: Route<string, any | undefined>, trackedName: string) {
   return "My custom View Name"
+}
+
+// Decides if a view should be tracked or not
+const viewTrackingPredicate: ViewTrackingPredicate = function customViewTrackingPredicate(route: Route<string, any | undefined>) { 
+  if (route.name === "AlertModal") {
+    return false;
+  }
+
+  return true;
+}
+
+// Allows to define what navigation parameters should be tracked for a specific view
+const paramsTrackingPredicate: ParamsTrackingPredicate = function customParamsTrackingPredicate(route: Route<string, any | undefined>) { 
+  const filteredParams: any = {};
+  if (route.params?.creditCardNumber) {
+    filteredParams["creditCardNumber"] = "XXXX XXXX XXXX XXXX";
+  }
+
+  if (route.params?.username) {
+    filteredParams["username"] = route.params.username;
+  }
+
+  return filteredParams;
+}
+
+const navigationTrackingOptions: NavigationTrackingOptions = {
+  viewNamePredicate,
+  viewTrackingPredicate,
+  paramsTrackingPredicate,
 }
 
 function App() {
@@ -38,7 +66,7 @@ function App() {
   return (
     <View>
       <NavigationContainer ref={navigationRef} onReady={() => {
-        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, viewNamePredicate)
+        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, navigationTrackingOptions)
       }}>
         // …
       </NavigationContainer>
@@ -46,6 +74,13 @@ function App() {
   );
 }
 ```
+
+These predicates are optional, and when not set the default behavior will be used for each one of them. The default behaviors are as follows:
+
+- ViewNamePredicate - directly forwards the view given name to RUM.
+- ViewTrackingPredicate - tracks all views on RUM.
+- ParamsTrackingPredicate - does not forward any parameters to RUM.
+
 **Note**: Only one `NavigationContainer` can be tracked at the time. If you need to track another container, stop tracking the previous one first, using `DdRumReactNavigationTracking.stopTrackingViews()`.
 
 

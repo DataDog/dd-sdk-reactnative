@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 
 export function warn(text: string) {
     InternalLog.log(`[ATTRIBUTES] ${text}`, SdkVerbosity.WARN);

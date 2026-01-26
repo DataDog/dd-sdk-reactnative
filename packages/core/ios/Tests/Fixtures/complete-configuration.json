@@ -10,8 +10,6 @@
         "version": "2.3.1",
         "useAccessibilityLabel": true,
         "batchSize": "SMALL",
-        "nativeCrashReportEnabled": true,
-        "nativeLongTaskThresholdMs": 333,
         "uploadFrequency": "FREQUENT",
         "rumConfiguration": {
             "applicationId": "fake-app-id",
@@ -20,6 +18,8 @@
             "trackErrors": true,
             "nativeViewTracking": true,
             "longTaskThresholdMs": 44,
+            "nativeCrashReportEnabled": true,
+            "nativeLongTaskThresholdMs": 333,
             "nativeInteractionTracking": true,
             "actionNameAttribute": "action-name-attr",
             "customEndpoint": "https://rum.example.com",
@@ -27,6 +27,7 @@
             "initialResourceThreshold": 0.5,
             "telemetrySampleRate": 60,
             "sessionSampleRate": 80,
+            "resourceTraceSampleRate": 33,
             "trackBackgroundEvents": true,
             "trackFrustrations": false
         },
@@ -34,7 +35,6 @@
             "customEndpoint": "https://logs.example.com"
         },
         "traceConfiguration": {
-            "resourceTraceSampleRate": 33,
             "customEndpoint": "https://trace.example.com"
         },
         "firstPartyHosts": [

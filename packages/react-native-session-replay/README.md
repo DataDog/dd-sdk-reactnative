@@ -127,6 +127,21 @@ yarn android
 
 The `datadog-generate-sr-assets` CLI utility scans your codebase for SVG elements and pre-generates optimized assets that will be included in your native builds.
 
+#### CLI Options
+
+The `datadog-generate-sr-assets` command supports the following options:
+
+```sh
+npx datadog-generate-sr-assets [options]
+```
+
+| Option | Alias | Description | Example |
+|--------|-------|-------------|---------|
+| `--ignore <pattern>` | `-i` | Additional glob patterns to ignore during scanning. Can be specified multiple times. | `npx datadog-generate-sr-assets --ignore "**/legacy/**" --ignore "**/vendor/**"` |
+| `--verbose` | `-v` | Enable verbose output for debugging. | `npx datadog-generate-sr-assets --verbose` |
+| `--path <path>` | `-p` | Path to the root directory to scan. Defaults to the current working directory. | `npx datadog-generate-sr-assets --path ./src` |
+| `--followSymlinks` | | Follow symbolic links during directory traversal. Default: false (symlinks are ignored). | `npx datadog-generate-sr-assets --followSymlinks` |
+
 **Note for CI/CD**: If you use continuous integration for your builds, make sure to include these steps in your CI pipeline. The workflow should be: `yarn install` → `npx datadog-generate-sr-assets` → `pod install` (for iOS) → build your app. This ensures SVG assets are properly generated before the native build process.
 
 ### Development Workflow

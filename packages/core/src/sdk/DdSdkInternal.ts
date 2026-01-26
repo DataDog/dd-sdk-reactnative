@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import type { DdNativeSdkType } from '../nativeModulesTypes';
-import type { DdSdkNativeConfiguration } from '../types';
 
 import type { AttributeEncoder } from './AttributesEncoding/types';
 

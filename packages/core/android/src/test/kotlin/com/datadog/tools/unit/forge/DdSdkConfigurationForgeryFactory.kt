@@ -31,8 +31,6 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
             site = forge.aNullable { anElementFrom("US", "EU", "GOV") },
             service = forge.aNullable { forge.anAlphabeticalString() },
             verbosity = forge.aNullable { anElementFrom("debug", "info", "warn", "error") },
-            nativeCrashReportEnabled = forge.aNullable { aBool() },
-            nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
             trackingConsent = forge.aNullable {
                 anElementFrom("pending", "granted", "not_granted")
             },
@@ -64,10 +62,13 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 trackFrustrations = forge.aNullable { aBool() },
                 longTaskThresholdMs = forge.aNullable { aDouble(0.0, 100.0) },
                 sessionSampleRate = forge.aNullable { aDouble(0.0, 100.0) },
+                resourceTraceSampleRate = forge.aNullable { aDouble(0.0, 100.0) },
                 vitalsUpdateFrequency = forge.aNullable {
                     anElementFrom("RARE", "NEVER", "FREQUENT", "AVERAGE")
                 },
                 trackBackgroundEvents = forge.aNullable { forge.aBool() },
+                nativeCrashReportEnabled = forge.aNullable { aBool() },
+                nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
                 nativeViewTracking = forge.aNullable { aBool() },
                 nativeInteractionTracking = forge.aNullable { aBool() },
                 trackNonFatalAnrs = forge.aNullable { aBool() },
@@ -81,7 +82,6 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 customEndpoint = forge.aNullable { aString() }
             ),
             traceConfiguration = TraceConfiguration(
-                resourceTraceSampleRate = forge.aNullable { aDouble(0.0, 100.0) },
                 customEndpoint = forge.aNullable { aString() }
             ),
             configurationForTelemetry = ConfigurationForTelemetry(

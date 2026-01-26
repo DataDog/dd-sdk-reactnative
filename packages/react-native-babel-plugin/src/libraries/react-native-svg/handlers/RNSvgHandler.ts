@@ -106,9 +106,10 @@ export class RNSvgHandler implements SvgHandler {
         if (isJSXIdentifierOpen) {
             openingNode.name = convertAttributeCasing(openingNode.name);
             if (!svgElements.has(openingNode.name)) {
-                throw new Error(
-                    `RNSvgHandler[transformElement]: Failed to transform element: "${openingNode.name}" is not supported`
+                console.warn(
+                    `RNSvgHandler[transformElement]: Skipping unsupported element: "${openingNode.name}"`
                 );
+                return; // Skip unsupported elements instead of crashing
             }
         }
 
