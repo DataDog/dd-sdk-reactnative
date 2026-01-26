@@ -137,7 +137,7 @@ export class FlagsClient {
      * Evaluate a boolean feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      */
     getBooleanDetails = (
         key: string,
@@ -160,7 +160,7 @@ export class FlagsClient {
      * Evaluate a string feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      */
     getStringDetails = (
         key: string,
@@ -183,7 +183,7 @@ export class FlagsClient {
      * Evaluate a number feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      */
     getNumberDetails = (
         key: string,
@@ -206,7 +206,7 @@ export class FlagsClient {
      * Evaluate a JSON feature flag with detailed evaluation information.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      */
     getObjectDetails = <T extends JsonValue>(
         key: string,
@@ -221,7 +221,7 @@ export class FlagsClient {
      * Evaluate a boolean feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      *
      * @example
      * ```ts
@@ -236,7 +236,7 @@ export class FlagsClient {
      * Evaluate a string feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      *
      * @example
      * ```ts
@@ -251,7 +251,7 @@ export class FlagsClient {
      * Evaluate a number feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      *
      * @example
      * ```ts
@@ -266,7 +266,7 @@ export class FlagsClient {
      * Evaluate an object feature flag value.
      *
      * @param key The key of the flag to evaluate.
-     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have evaluation context set.
+     * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
      *
      * @example
      * ```ts

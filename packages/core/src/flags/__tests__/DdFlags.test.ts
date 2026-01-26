@@ -54,7 +54,7 @@ describe('DdFlags', () => {
         });
     });
 
-    it('should print an error when trying to retrieve a client before DdFlags.enable() was called', async () => {
+    it('should print an error when trying to retrieve a client before DdFlags.enable() has been called', async () => {
         DdFlags.getClient();
 
         expect(InternalLog.log).toHaveBeenCalledWith(
