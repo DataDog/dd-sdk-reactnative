@@ -14,7 +14,7 @@
     "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
     "repository": {
         "url": "https://github.com/DataDog/dd-sdk-reactnative",
-        "directory": "packages/react-native-openfeature-provider"
+        "directory": "packages/react-native-openfeature"
     },
     "bugs": {
         "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
@@ -25,7 +25,7 @@
         "src/**",
         "lib/**"
     ],
-    "types": "lib/typescript/react-native-openfeature-provider/src/index.d.ts",
+    "types": "lib/typescript/react-native-openfeature/src/index.d.ts",
     "react-native": "src/index",
     "source": "src/index",
     "module": "lib/module/index",

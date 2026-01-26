@@ -12,7 +12,7 @@
     "dependencies": {
         "@datadog/mobile-react-native": "workspace:packages/core",
         "@datadog/mobile-react-native-navigation": "workspace:packages/react-native-navigation",
-        "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature-provider",
+        "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature",
         "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
         "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",
         "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",

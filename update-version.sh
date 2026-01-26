@@ -28,7 +28,7 @@ yarn workspace @datadog/react-native-internal-testing-tools pack
 ./check-release-content.sh -p packages/react-native-apollo-client/package.tgz > packages/react-native-apollo-client/release-content.txt
 ./check-release-content.sh -p packages/react-native-babel-plugin/package.tgz > packages/react-native-babel-plugin/release-content.txt
 ./check-release-content.sh -p packages/react-native-session-replay/package.tgz > packages/react-native-session-replay/release-content.txt
-./check-release-content.sh -p packages/react-native-openfeature-provider/package.tgz > packages/react-native-openfeature-provider/release-content.txt
+./check-release-content.sh -p packages/react-native-openfeature/package.tgz > packages/react-native-openfeature/release-content.txt
 ./check-release-content.sh -p packages/react-native-internal-testing-tools/package.tgz > packages/internal-testing-tools/release-content.txt
 
 
