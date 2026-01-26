@@ -1,5 +1,5 @@
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 
 import type { EvaluationContext, FlagDetails } from './types';
 
