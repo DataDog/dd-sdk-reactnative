@@ -1,5 +1,5 @@
-import { DatadogProvider } from './provider';
-import type { DatadogProviderOptions } from './provider';
+import { DatadogOpenFeatureProvider } from './provider';
+import type { DatadogOpenFeatureProviderOptions } from './provider';
 
-export { DatadogProvider };
-export type { DatadogProviderOptions };
+export { DatadogOpenFeatureProvider };
+export type { DatadogOpenFeatureProviderOptions };

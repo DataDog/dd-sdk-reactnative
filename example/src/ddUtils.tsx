@@ -8,7 +8,7 @@ import {
     TrackingConsent,
     DdFlags,
 } from '@datadog/mobile-react-native';
-import { DatadogProvider as OpenFeatureDatadogProvider } from '@datadog/mobile-react-native-openfeature';
+import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
@@ -58,7 +58,7 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     // Enable the Flags feature.
     DdFlags.enable().then(() => {
         // Set the provider with OpenFeature.
-        const provider = new OpenFeatureDatadogProvider();
+        const provider = new DatadogOpenFeatureProvider();
         OpenFeature.setProvider(provider);
     })
 }

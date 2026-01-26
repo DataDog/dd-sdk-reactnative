@@ -11,7 +11,7 @@ import {
   RumConfiguration,
   DdFlags,
 } from '@datadog/mobile-react-native';
-import {DatadogProvider} from '@datadog/mobile-react-native-openfeature';
+import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
 import {
   OpenFeature,
   OpenFeatureProvider,
@@ -63,7 +63,7 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   await DdFlags.enable();
 
   // Set the provider with OpenFeature.
-  const provider = new DatadogProvider();
+  const provider = new DatadogOpenFeatureProvider();
   OpenFeature.setProvider(provider);
 
   // Datadog SDK usage examples.

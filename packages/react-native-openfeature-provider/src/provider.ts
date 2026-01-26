@@ -24,7 +24,7 @@ import type {
     ProviderEvents
 } from '@openfeature/web-sdk';
 
-export interface DatadogProviderOptions {
+export interface DatadogOpenFeatureProviderOptions {
     /**
      * The name of the Datadog Flags client to use.
      *
@@ -35,19 +35,19 @@ export interface DatadogProviderOptions {
     clientName?: string;
 }
 
-export class DatadogProvider implements Provider {
+export class DatadogOpenFeatureProvider implements Provider {
     readonly runsOn: Paradigm = 'client';
     readonly metadata: ProviderMetadata = {
         name: 'datadog-react-native'
     };
 
-    private options: DatadogProviderOptions;
+    private options: DatadogOpenFeatureProviderOptions;
     private flagsClient: FlagsClient;
 
     readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();
     private contextChangePromise = Promise.resolve();
 
-    constructor(options: DatadogProviderOptions = {}) {
+    constructor(options: DatadogOpenFeatureProviderOptions = {}) {
         options.clientName ??= 'default';
         this.options = options;
 

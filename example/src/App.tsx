@@ -8,7 +8,7 @@ import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
 import { DatadogProvider, DatadogProviderConfiguration, FileBasedConfiguration, RumConfiguration, DdFlags, TrackingConsent } from '@datadog/mobile-react-native'
-import { DatadogProvider as OpenFeatureDatadogProvider } from '@datadog/mobile-react-native-openfeature';
+import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature, OpenFeatureProvider } from '@openfeature/react-sdk';
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
@@ -76,7 +76,7 @@ const handleDatadogInitialization = async () => {
   await DdFlags.enable();
 
   // Set the provider with OpenFeature.
-  const provider = new OpenFeatureDatadogProvider();
+  const provider = new DatadogOpenFeatureProvider();
   OpenFeature.setProvider(provider);
 }
 
