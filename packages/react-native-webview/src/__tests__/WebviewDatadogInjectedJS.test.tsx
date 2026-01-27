@@ -3,13 +3,11 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-
 import { render } from '@testing-library/react-native';
 import { WebView as RNWebView } from 'react-native-webview';
 import React from 'react';
 
 import { WebView } from '../index';
-import { isNewArchitecture } from '../utils/env-utils';
 
 import { dedent } from './__utils__/string-utils';
 
@@ -28,7 +26,7 @@ jest.mock('react-native-webview', () => {
 const callfunction = jest.fn();
 const postMessageMock = jest.fn();
 
-window['ReactNativeWebView'] = {
+(window as any)['ReactNativeWebView'] = {
     postMessage: postMessageMock
 };
 
@@ -129,19 +127,18 @@ describe('Webview', () => {
         const realInjectedJs = dedent(
             mockedWebView.mock.calls[0][0].injectedJavaScript ?? ''
         );
-        const expected = dedent(`
-            try{
-              testInjectedJavaScript()
-            }
-            catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                source: 'DATADOG',
-                type: 'ERROR',
-                message: errorMsg
-              }));
-              true;
-            }`);
+        const expected = dedent(`try{
+  testInjectedJavaScript()
+}
+catch (error) {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    source: 'DATADOG',
+    type: 'ERROR',
+    message: errorMsg
+  }));
+  true;
+}`);
 
         expect(realInjectedJs).toBe(expected);
     });
@@ -167,51 +164,20 @@ describe('Webview', () => {
             mockedWebView.mock.calls[0][0]
                 .injectedJavaScriptBeforeContentLoaded ?? ''
         );
-        let expected;
+        const expected = dedent(`// #allowedHosts=["localhost","example.com"]
 
-        if (isNewArchitecture()) {
-            expected = dedent(`
-                window.DatadogEventBridge = {
-                  send(msg) {
-                    window.ReactNativeWebView.postMessage(JSON.stringify({
-                      source: 'DATADOG',
-                      type: 'NATIVE_EVENT',
-                      message: msg
-                    }));
-                    true;
-                  },
-                  getAllowedWebViewHosts() {
-                    return '["localhost","example.com"]'
-                  }
-                };
-                try{      
-                  testInjectedJavaScript()
-                }
-                catch (error) {
-                  const errorMsg = error instanceof Error ? error.message : String(error);
-                  window.ReactNativeWebView.postMessage(JSON.stringify({
-                    source: 'DATADOG',
-                    type: 'ERROR',
-                    message: errorMsg
-                  }));
-                  true;
-                }
-  `);
-        } else {
-            expected = dedent(`
-                try{
-                  testInjectedJavaScript()
-                }
-                catch (error) {
-                  const errorMsg = error instanceof Error ? error.message : String(error);
-                  window.ReactNativeWebView.postMessage(JSON.stringify({
-                    source: 'DATADOG',
-                    type: 'ERROR',
-                    message: errorMsg
-                  }));
-                  true;
-                }`);
-        }
+try{
+  testInjectedJavaScript()
+}
+catch (error) {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    source: 'DATADOG',
+    type: 'ERROR',
+    message: errorMsg
+  }));
+  true;
+}`);
 
         expect(realInjectedJs).toBe(expected);
     });

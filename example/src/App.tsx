@@ -6,13 +6,12 @@ import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
-import { DdRumReactNavigationTracking, ViewNamePredicate } from '@datadog/mobile-react-navigation';
-import {DatadogProvider, DatadogProviderConfiguration, FileBasedConfiguration, RumConfiguration} from '@datadog/mobile-react-native'
+import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
+import {DatadogProvider } from '@datadog/mobile-react-native'
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
 import { TrackingConsent } from '@datadog/mobile-react-native';
-import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation/src/rum/instrumentation/DdRumReactNavigationTracking';
 
 const Tab = createBottomTabNavigator();
 
@@ -66,7 +65,6 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 // see https://docs.datadoghq.com/real_user_monitoring/guide/initialize-your-native-sdk-before-react-native-starts
 
 // const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
-// configuration.rumConfiguration = new RumConfiguration("fake_value")
 
 export default function App() {
 

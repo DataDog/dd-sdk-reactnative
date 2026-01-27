@@ -8,7 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
-  RumConfiguration,
+  TrackingConsent,
   DdFlags,
 } from '@datadog/mobile-react-native';
 import React from 'react';
@@ -38,18 +38,22 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   const config = new CoreConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
+    TrackingConsent.GRANTED,
+    {
+      rumConfiguration: {
+        applicationId: APPLICATION_ID,
+        trackInteractions: true,
+        trackResources: true,
+        trackFrustrations: true,
+        trackErrors: true,
+        sessionSampleRate: 100,
+        telemetrySampleRate: 100,
+      }
+    }
   );
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
-  config.rumConfiguration = new RumConfiguration(
-    APPLICATION_ID,
-    true,
-    true,
-    true
-  )
-  config.rumConfiguration.sessionSampleRate = 100;
-  config.rumConfiguration.telemetrySampleRate = 100;
 
   await DdSdkReactNative.initialize(config);
   await DdRum.startView('main', 'Main');

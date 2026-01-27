@@ -46,7 +46,7 @@ export const createDatadogMetroSerializer = (
     const serializer = customSerializer || createDefaultMetroSerializer();
     return async (entryPoint, preModules, graph, options) => {
         // Skip for hot reload mode
-        if (graph.transformOptions.hot) {
+        if ((graph.transformOptions as any).hot) {
             return serializer(entryPoint, preModules, graph, options);
         }
 
@@ -109,7 +109,7 @@ export const createDefaultMetroSerializer = (): MetroSerializer => {
         // Modify the bundle through the datadogBundleCallback, if we are not in hot-reload mode
         if (
             (options as any).datadogBundleCallback &&
-            !graph.transformOptions.hot
+            !(graph.transformOptions as any).hot
         ) {
             bundle = (options as any).datadogBundleCallback(bundle);
         }
@@ -119,7 +119,7 @@ export const createDefaultMetroSerializer = (): MetroSerializer => {
         const { code } = bundleToString(bundle);
 
         // If we are in hot-reload mode, we skip sourcemaps generation, and only return the code.
-        if (graph.transformOptions.hot) {
+        if ((graph.transformOptions as any).hot) {
             return code;
         }
 

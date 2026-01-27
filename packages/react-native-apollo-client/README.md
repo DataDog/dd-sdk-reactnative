@@ -63,10 +63,17 @@ Use a `resourceEventMapper` in your Datadog configuration to remove sensitive da
 const datadogConfiguration = new DatadogProviderConfiguration(
     '<CLIENT_TOKEN>',
     '<ENVIRONMENT_NAME>',
-    '<RUM_APPLICATION_ID>',
-    true,
-    true,
-    true
+    TrackingConsent.GRANTED,
+    {
+        rumConfiguration: {
+            applicationId: '<RUM_APPLICATION_ID>',,
+            trackInteractions: true,
+            trackResources: true,
+            trackErrors: true,
+        },
+        logsConfiguration: {},
+        traceConfiguration: {}
+    }
 );
 
 datadogConfiguration.resourceEventMapper = event => {

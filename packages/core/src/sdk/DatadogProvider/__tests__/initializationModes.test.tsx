@@ -7,10 +7,11 @@
 import { fireEvent } from '@testing-library/react-native';
 import { NativeModules } from 'react-native';
 
-import { InitializationMode } from '../../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
+import { InitializationMode } from '../../../config/types';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
+import { PropagatorType } from '../../../rum/types';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import { GlobalState } from '../../GlobalState/GlobalState';
 import { BufferSingleton } from '../Buffer/BufferSingleton';
@@ -143,12 +144,19 @@ describe('DatadogProvider', () => {
                     rumConfiguration: {
                         trackErrors: true,
                         trackResources: true,
-                        trackInteractions: true
+                        trackInteractions: true,
+                        resourceTraceSampleRate: 100,
+                        firstPartyHosts: [
+                            {
+                                match: 'api.com',
+                                propagatorTypes: [
+                                    PropagatorType.DATADOG,
+                                    PropagatorType.TRACECONTEXT
+                                ]
+                            }
+                        ]
                     },
-                    firstPartyHosts: ['api.com'],
-                    traceConfiguration: {
-                        resourceTraceSampleRate: 100
-                    },
+                    traceConfiguration: {},
                     logsConfiguration: {}
                 }
             });
@@ -177,7 +185,8 @@ describe('DatadogProvider', () => {
 
             expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
             expect(
-                NativeModules.DdSdk.initialize.mock.calls[0][0].firstPartyHosts
+                NativeModules.DdSdk.initialize.mock.calls[0][0].rumConfiguration
+                    .firstPartyHosts
             ).toEqual([
                 {
                     match: 'api.com',

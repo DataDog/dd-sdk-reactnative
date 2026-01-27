@@ -29,70 +29,59 @@ export type DatadogMessageFormat = {
 };
 
 /**
- * Wraps the given JS Code in a try and catch block.
+ * Wraps the given JS Code in a try and catch block, including a
+ * comment with the given allowedHosts in JSON format
  * @param javascriptCode The JS Code to wrap in a try and catch block.
  * @returns the wrapped JS code.
  */
-export const wrapJsCodeInTryAndCatch = (
-    javascriptCode?: string
-): string | undefined =>
-    javascriptCode
-        ? `
-    try{
-      ${javascriptCode}
+export function wrapJsCodeWithAllowedHosts(
+    javascriptCode?: string,
+    allowedHosts?: string[]
+): string | undefined {
+    let jsCode = '';
+    const hosts = formatAllowedHosts(allowedHosts);
+    if (hosts) {
+        jsCode = `// #allowedHosts=${JSON.stringify(allowedHosts)}\n`;
     }
-    catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        source: 'DATADOG',
-        type: 'ERROR',
-        message: errorMsg
-      }));
-      true;
-    }`
+
+    return javascriptCode
+        ? `${jsCode}\n${wrapJsCodeInTryAndCatch(javascriptCode)}`
+        : jsCode.trim().length > 0
+        ? jsCode
         : undefined;
+}
 
-/**
- * Legacy JS code for bridging the WebView events to DataDog native SDKs for consumption.
- * @param allowedHosts The list of allowed hosts.
- * @param customJavaScriptCode Custom user JS code to inject along with the Datadog bridging logic.
- * @returns The JS code block as a string.
- */
-export const getWebViewEventBridgingJS = (
-    allowedHosts?: string[],
-    customJavaScriptCode?: string
-): string =>
-    `
-    window.DatadogEventBridge = {
-      send(msg) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          source: 'DATADOG',
-          type: 'NATIVE_EVENT',
-          message: msg
-        }));
-        true;
-      },
-      getAllowedWebViewHosts() {
-        return ${formatAllowedHosts(allowedHosts)}
-      }
-    };
-    try{      
-      ${customJavaScriptCode}
-    }
-    catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        source: 'DATADOG',
-        type: 'ERROR',
-        message: errorMsg
-      }));
-      true;
-    }
-  `;
+export function wrapJsCodeInTryAndCatch(
+    javascriptCode: string | undefined
+): string | undefined {
+    return javascriptCode
+        ? `try{
+  ${javascriptCode}
+}
+catch (error) {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    source: 'DATADOG',
+    type: 'ERROR',
+    message: errorMsg
+  }));
+  true;
+}`
+        : undefined;
+}
 
-function formatAllowedHosts(allowedHosts?: string[]): string {
+function formatAllowedHosts(allowedHosts?: string[]): string | undefined {
     try {
-        return `'${JSON.stringify(allowedHosts)}'`;
+        if (!allowedHosts) {
+            throw new Error('allowedHosts is undefined');
+        }
+        const jsonHosts = JSON.stringify(allowedHosts);
+        if (!jsonHosts) {
+            throw new Error(
+                "JSON.stringify returned 'undefined' for the given hosts"
+            );
+        }
+        return jsonHosts;
     } catch (e: any) {
         if (NativeDdSdk) {
             NativeDdSdk.telemetryError(
@@ -101,7 +90,10 @@ function formatAllowedHosts(allowedHosts?: string[]): string {
                 'AllowedHostsError'
             );
         }
-        return "'[]'";
+        console.warn(
+            `[@datadog/mobile-react-native-webview] Invalid 'allowedHosts' format: ${e}`
+        );
+        return undefined;
     }
 }
 

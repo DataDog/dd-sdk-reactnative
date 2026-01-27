@@ -18,6 +18,7 @@ import type {
     ViewTrackingPredicate
 } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
 import { DdRumReactNavigationTracking } from '../../../rum/instrumentation/DdRumReactNavigationTracking';
+import { transformViewKey } from '../../../rum/instrumentation/utils';
 
 import { AppStateMockLegacy } from './__utils__/AppStateMockLegacy';
 import { AppStateMock } from './__utils__/AppStateMock';
@@ -499,11 +500,14 @@ describe.each([
                 // THEN
                 expect(DdRum.startView).toHaveBeenCalledTimes(4);
                 expect(DdRum.startView).toHaveBeenCalledWith(
-                    navigationRef2StartRoute.key,
+                    transformViewKey(navigationRef2StartRoute.key, 'Home'),
                     'Home'
                 );
                 expect(DdRum.startView).toHaveBeenCalledWith(
-                    navigationRef2.current?.getCurrentRoute()?.key,
+                    transformViewKey(
+                        navigationRef2.current?.getCurrentRoute()?.key,
+                        'About'
+                    ),
                     'About'
                 );
             });
@@ -600,12 +604,15 @@ describe.each([
 
                     // THEN
                     expect(DdRum.stopView).toHaveBeenCalledTimes(1);
-                    expect(DdRum.stopView).toHaveBeenCalledWith(
-                        navigationRef.current?.getCurrentRoute()?.key
+
+                    const currentRoute = navigationRef.current?.getCurrentRoute();
+                    const transformedKey = transformViewKey(
+                        currentRoute?.key,
+                        currentRoute?.name
                     );
-                    expect(
-                        typeof navigationRef.current?.getCurrentRoute()?.key
-                    ).toBe('string');
+
+                    expect(DdRum.stopView).toHaveBeenCalledWith(transformedKey);
+                    expect(typeof transformedKey).toBe('string');
                 });
 
                 it('restarts last view when app goes into foreground', async () => {

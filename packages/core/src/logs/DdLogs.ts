@@ -6,7 +6,8 @@
 
 import { DdAttributes } from '../DdAttributes';
 import { DATADOG_MESSAGE_PREFIX, InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
+import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import type { ErrorSource, LogEventMapper } from '../types';
@@ -215,6 +216,11 @@ class DdLogsWrapper implements DdLogsType {
 
             if (fingerprint && fingerprint !== '') {
                 updatedContext[DdAttributes.errorFingerprint] = fingerprint;
+            }
+
+            const _debugId = debugId;
+            if (_debugId) {
+                updatedContext[DdAttributes.debugId] = _debugId;
             }
 
             return await this.nativeLogs[`${status}WithError`](

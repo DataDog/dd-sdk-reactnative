@@ -44,6 +44,7 @@ export type PluginOptions = {
     };
     // Internal option used by CLI - not meant for end users
     __internal_saveSvgMapToDisk?: boolean;
+    __internal_reactNativeSVG?: ReactNativeSVG;
 };
 
 export type PluginPassState = Babel.PluginPass & {

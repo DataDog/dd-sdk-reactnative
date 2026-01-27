@@ -7,10 +7,8 @@
 import type { CommonNativeWebViewProps } from 'react-native-webview/lib/WebViewTypes';
 import { requireNativeComponent } from 'react-native';
 
-import { isNewArchitecture } from '../utils/env-utils';
-
-const NativeDdWebView = !isNewArchitecture()
-    ? requireNativeComponent<CommonNativeWebViewProps>('DdReactNativeWebView')
-    : undefined;
+const NativeDdWebView = requireNativeComponent<CommonNativeWebViewProps>(
+    'DdReactNativeWebView'
+);
 
 export { NativeDdWebView };

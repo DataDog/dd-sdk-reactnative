@@ -18,9 +18,6 @@ import Foundation
 ///    - site: The Datadog site of your organization (e.g., `US1`, `US1_FED`, `US3`, `US5`, `EU1`).
 ///    - service: The custom service name reported for logs, traces, and RUM.
 ///    - verbosity: Verbosity level of the SDK’s internal logging (`DEBUG`, `INFO`, `WARN`, `ERROR`).
-///    - nativeCrashReportEnabled: Whether the SDK should track native (iOS / Android) crashes.
-///      Default is `false`.
-///    - nativeLongTaskThresholdMs: The threshold for reporting native long tasks in milliseconds.
 ///    - trackingConsent: User tracking consent (`pending`, `granted`, `not_granted`).
 ///    - uploadFrequency: The frequency at which batches of data are uploaded.
 ///    - batchSize: The preferred size of batches sent to Datadog.
@@ -39,8 +36,6 @@ public class DdSdkConfiguration: NSObject {
     public var site: DatadogSite
     public var service: NSString? = nil
     public var verbosity: NSString? = nil
-    public var nativeCrashReportEnabled: Bool? = nil
-    public var nativeLongTaskThresholdMs: Double? = nil
     public var trackingConsent: TrackingConsent
     public var uploadFrequency: Datadog.Configuration.UploadFrequency
     public var batchSize: Datadog.Configuration.BatchSize
@@ -59,8 +54,6 @@ public class DdSdkConfiguration: NSObject {
         site: DatadogSite,
         service: NSString?,
         verbosity: NSString? = nil,
-        nativeCrashReportEnabled: Bool? = nil,
-        nativeLongTaskThresholdMs: Double? = nil,
         trackingConsent: TrackingConsent,
         uploadFrequency: Datadog.Configuration.UploadFrequency,
         batchSize: Datadog.Configuration.BatchSize,
@@ -78,8 +71,6 @@ public class DdSdkConfiguration: NSObject {
         self.site = site
         self.service = service
         self.verbosity = verbosity
-        self.nativeCrashReportEnabled = nativeCrashReportEnabled
-        self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.trackingConsent = trackingConsent
         self.uploadFrequency = uploadFrequency
         self.batchSize = batchSize
@@ -103,6 +94,9 @@ public class DdSdkConfiguration: NSObject {
 ///    - vitalsUpdateFrequency: Frequency at which the SDK collects mobile vitals metrics.
 ///    - trackBackgroundEvents: Enables/disables tracking RUM events when no RUM View is active.
 ///      May increase the number of sessions and billing.
+///    - nativeCrashReportEnabled: Whether the SDK should track native (iOS / Android) crashes.
+///      Default is `false`.
+///    - nativeLongTaskThresholdMs: The threshold for reporting native long tasks in milliseconds.
 ///    - nativeViewTracking: Enables tracking of native iOS/Android UI views.
 ///    - nativeInteractionTracking: Enables tracking of native UI interactions.
 ///    - appHangThreshold: Threshold in seconds for reporting non-fatal app hangs (iOS only).
@@ -117,8 +111,11 @@ public class RumConfiguration: NSObject {
     public var trackFrustrations: Bool? = true
     public var longTaskThresholdMs: Double = 0.0
     public var sessionSampleRate: Double? = nil
+    public var resourceTraceSampleRate: Double? = nil
     public var vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency? = nil
     public var trackBackgroundEvents: Bool? = nil
+    public var nativeCrashReportEnabled: Bool? = nil
+    public var nativeLongTaskThresholdMs: Double? = nil
     public var nativeViewTracking: Bool? = nil
     public var nativeInteractionTracking: Bool? = nil
     public var appHangThreshold: Double? = nil
@@ -133,8 +130,11 @@ public class RumConfiguration: NSObject {
         trackFrustrations: Bool?,
         longTaskThresholdMs: Double,
         sessionSampleRate: Double?,
+        resourceTraceSampleRate: Double?,
         vitalsUpdateFrequency: RUM.Configuration.VitalsFrequency?,
         trackBackgroundEvents: Bool?,
+        nativeCrashReportEnabled: Bool? = nil,
+        nativeLongTaskThresholdMs: Double? = nil,
         nativeViewTracking: Bool?,
         nativeInteractionTracking: Bool?,
         appHangThreshold: Double?,
@@ -148,8 +148,11 @@ public class RumConfiguration: NSObject {
         self.trackFrustrations = trackFrustrations
         self.longTaskThresholdMs = longTaskThresholdMs
         self.sessionSampleRate = sessionSampleRate
+        self.resourceTraceSampleRate = resourceTraceSampleRate
         self.vitalsUpdateFrequency = vitalsUpdateFrequency
         self.trackBackgroundEvents = trackBackgroundEvents
+        self.nativeCrashReportEnabled = nativeCrashReportEnabled
+        self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.nativeViewTracking = nativeViewTracking
         self.nativeInteractionTracking = nativeInteractionTracking
         self.appHangThreshold = appHangThreshold
@@ -190,14 +193,11 @@ public class LogsConfiguration: NSObject {
 ///    - resourceTracingSamplingRate: Percentage (0–100) of network resource traces to sample.
 ///    - customEndpoint: A custom Trace intake endpoint to override the default Datadog intake.
 public class TraceConfiguration: NSObject {
-    public var resourceTraceSampleRate: Double? = nil
     public var customEndpoint: String? = nil
 
     init(
-        resourceTraceSampleRate: Double?,
         customEndpoint: String?
     ) {
-        self.resourceTraceSampleRate = resourceTraceSampleRate
         self.customEndpoint = customEndpoint
     }
 }

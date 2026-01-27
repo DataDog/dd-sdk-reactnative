@@ -26,10 +26,6 @@
                         "NOT_GRANTED"
                     ]
                 },
-                "useAccessibilityLabel": {
-                    "description": "Determines whether the accessibility labels can be used to name RUM actions. Defaults to `true`.",
-                    "type": "boolean"
-                },
                 "additionalConfiguration": {
                     "description": "Additional custom configuration passed as key/value pairs. This is forwarded to the native SDKs.",
                     "type": "object",
@@ -51,17 +47,6 @@
                         "LOW",
                         "MEDIUM",
                         "HIGH"
-                    ]
-                },
-                "nativeCrashReportEnabled": {
-                    "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
-                    "type": "boolean"
-                },
-                "nativeLongTaskThresholdMs": {
-                    "description": "The threshold for native long tasks reporting in milliseconds. Set to a number to enable reporting or `false` to disable.",
-                    "type": [
-                        "integer",
-                        "boolean"
                     ]
                 },
                 "proxyConfiguration": {
@@ -179,6 +164,10 @@
                             "description": "The RUM application ID.",
                             "type": "string"
                         },
+                        "useAccessibilityLabel": {
+                            "description": "Determines whether the accessibility labels can be used to name RUM actions. Defaults to `true`.",
+                            "type": "boolean"
+                        },
                         "trackInteractions": {
                             "description": "Track React Native components interactions.",
                             "type": "boolean"
@@ -218,9 +207,23 @@
                             "description": "Enables native interaction tracking.",
                             "type": "boolean"
                         },
+                        "nativeCrashReportEnabled": {
+                            "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
+                            "type": "boolean"
+                        },
+                        "nativeLongTaskThresholdMs": {
+                            "description": "The threshold for native long tasks reporting in milliseconds. Set to a number to enable reporting or `false` to disable.",
+                            "type": [
+                                "integer"
+                            ]
+                        },
                         "sessionSampleRate": {
                             "description": "Percentage of sampled RUM sessions. Range `0`-`100`. (default `100`).",
                             "type": "integer"
+                        },
+                        "resourceTraceSampleRate": {
+                            "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100` (default `100`).",
+                            "type": "number"
                         },
                         "trackBackgroundEvents": {
                             "description": "Enables tracking of RUM events when no RUM View is active.",
@@ -287,10 +290,6 @@
                     "description": "Traces-specific configuration options.",
                     "type": "object",
                     "properties": {
-                        "resourceTraceSampleRate": {
-                            "description": "Percentage of tracing integrations for network calls between your app and your backend. Range `0`-`100` (default `100`).",
-                            "type": "number"
-                        },
                         "customEndpoint": {
                             "description": "Target a custom server for Traces",
                             "type": "string"

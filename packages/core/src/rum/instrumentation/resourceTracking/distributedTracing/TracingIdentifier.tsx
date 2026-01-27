@@ -7,6 +7,8 @@
 import type { BigInteger } from 'big-integer';
 import BigInt from 'big-integer';
 
+export const MAX_TRACE_ID = BigInt.one.shiftLeft(64).minus(BigInt.one);
+
 /**
  * Available formats for representing the {@link TracingIdentifier} as a string.
  */
