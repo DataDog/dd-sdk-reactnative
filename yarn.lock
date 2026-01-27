@@ -2382,14 +2382,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature"
   dependencies:
-    "@datadog/mobile-react-native": ^2.13.2
+    "@datadog/mobile-react-native": ^3.0.0
     "@openfeature/core": ^1.8.0
     "@openfeature/web-sdk": ^1.5.0
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
   peerDependencies:
-    "@datadog/mobile-react-native": ^2.13.2
+    "@datadog/mobile-react-native": ^3.0.0
     "@openfeature/web-sdk": ^1.5.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
