@@ -6,7 +6,7 @@ This package provides an OpenFeature-compatible provider that wraps Datadog's Fe
 
 ## What is OpenFeature?
 
-OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers, making it easy to switch vendors or integrate multiple feature flag systems.
+OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers, so you can switch vendors or integrate multiple feature flag systems.
 
 ## Setup
 
@@ -28,7 +28,7 @@ yarn add @datadog/mobile-react-native @datadog/mobile-react-native-openfeature @
 
 ### Initialize the Datadog SDK and OpenFeature
 
-Initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
+Use the example code snippet below to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
 
 After completing this setup, your app should be ready for flag evaluation with OpenFeature.
 
@@ -67,7 +67,7 @@ import { OpenFeature } from '@openfeature/react-sdk';
 </DatadogProvider>
 ```
 
-> **Note**: sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure this.
+> **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure this.
 
 ### Using the OpenFeature React SDK
 
@@ -84,7 +84,7 @@ function AppWithProviders() {
         const user = { ... }; // Obtained from your authentication logic.
 
         OpenFeature.setContext({
-            // User or anonymous id for consistent feature flag evaluations.
+            // User or anonymous ID for consistent feature flag evaluations.
             targetingKey: user.id,
             // Properties for more granular targeting.
             region: user.country
