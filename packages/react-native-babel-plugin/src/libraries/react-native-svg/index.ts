@@ -42,13 +42,16 @@ export class ReactNativeSVG {
 
     localSvgMap: Record<string, { path: string; content?: string }> = {};
 
+    t: typeof Babel.types | null = null;
+
     constructor(
-        private t: typeof Babel.types,
         private rootDir: string,
         private assetsPath: string,
         private saveSvgMapToDisk: boolean = false
-    ) {
-        this.buildSvgMap();
+    ) {}
+
+    setApiTypes(t: typeof Babel.types) {
+        this.t = t;
     }
 
     /**
@@ -70,6 +73,10 @@ export class ReactNativeSVG {
      * after scanning.
      */
     buildSvgMap() {
+        if (!this.t) {
+            return;
+        }
+
         // If not saving to disk, try to load from existing svg-map.json first
         if (!this.saveSvgMapToDisk) {
             // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
@@ -126,6 +133,9 @@ export class ReactNativeSVG {
 
                 traverse(ast, {
                     ImportDeclaration: path => {
+                        if (!this.t) {
+                            return;
+                        }
                         const source = path.node.source.value;
                         if (!source.endsWith('.svg')) {
                             return;
@@ -145,6 +155,9 @@ export class ReactNativeSVG {
                         }
                     },
                     ExportNamedDeclaration: path => {
+                        if (!this.t) {
+                            return;
+                        }
                         const source = path.node.source?.value;
                         if (!source?.endsWith('.svg')) {
                             return;
@@ -213,6 +226,10 @@ export class ReactNativeSVG {
      *          or `undefined` if no transformation could be performed.
      */
     processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
+        if (!this.t) {
+            return;
+        }
+
         try {
             const dimensions: { width?: string; height?: string } = {};
 
@@ -236,41 +253,49 @@ export class ReactNativeSVG {
 
             const id = uuidv4();
 
-            const optimized = output.startsWith('http')
-                ? output
-                : optimize(output, {
-                      multipass: true,
-                      plugins: ['preset-default']
-                  }).data;
+            try {
+                const optimized = output.startsWith('http')
+                    ? output
+                    : optimize(output, {
+                          multipass: true,
+                          plugins: ['preset-default']
+                      }).data;
 
-            const hash = createHash('md5')
-                .update(optimized, 'utf8')
-                .digest('hex');
+                const hash = createHash('md5')
+                    .update(optimized, 'utf8')
+                    .digest('hex');
 
-            const wrapper = this.wrapElementForSessionReplay(
-                this.t,
-                path,
-                id,
-                hash,
-                dimensions
+                const wrapper = this.wrapElementForSessionReplay(
+                    this.t,
+                    path,
+                    id,
+                    hash,
+                    dimensions
+                );
+
+                path.replaceWith(wrapper);
+
+                path.node.extra = {
+                    __wrappedForSR: true
+                };
+
+                this.svgMap[id] = {
+                    file: optimized,
+                    ...dimensions
+                };
+
+                writeAssetToDisk(this.assetsPath, id, hash, optimized);
+
+                return { original: output, optimized };
+            } catch (err) {
+                console.warn(err);
+                return { original: null, optimized: null };
+            }
+        } catch (svgoError) {
+            console.warn(
+                'ReactNativeSVG[processItem]: Skipping SVG with dynamic expressions (cannot be optimized)'
             );
-            path.replaceWith(wrapper);
-
-            path.node.extra = {
-                __wrappedForSR: true
-            };
-
-            this.svgMap[id] = {
-                file: optimized,
-                ...dimensions
-            };
-
-            writeAssetToDisk(this.assetsPath, id, hash, optimized);
-
-            return { original: output, optimized };
-        } catch (err) {
-            console.warn(err);
-            return { original: null, optimized: null };
+            return;
         }
     }
 

@@ -7,7 +7,7 @@ import type { GestureResponderEvent } from 'react-native';
 
 import { DdAttributes } from '../DdAttributes';
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeRumType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
@@ -206,6 +206,7 @@ class DdRumWrapper implements DdRumType {
         if (!mappedEvent) {
             return generateEmptyPromise();
         }
+
         InternalLog.log(
             `Adding RUM Action “${name}” (${type})`,
             SdkVerbosity.DEBUG

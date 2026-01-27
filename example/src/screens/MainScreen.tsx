@@ -15,7 +15,6 @@ import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
-import { DdRum } from '../../../packages/core/src/rum/DdRum';
 
 const axios = require('../axiosConfig');
 

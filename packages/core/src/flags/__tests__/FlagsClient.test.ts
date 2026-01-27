@@ -7,7 +7,7 @@
 import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { DdFlags } from '../DdFlags';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({

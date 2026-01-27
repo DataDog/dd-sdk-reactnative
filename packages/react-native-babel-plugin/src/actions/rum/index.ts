@@ -92,13 +92,24 @@ export function handleJSXElementActionPaths(
         ? Object.keys(state.trackedComponents)
         : [];
 
-    // Some components need specific handlers present (inject no-op handlers if missing)
-    ensureMandatoryAttributes(
-        path,
-        componentName,
-        actionPathList,
-        actionPathNames
+    // Only inject mandatory attributes for native components, NOT options tracked components
+    // Options tracked components define their own handlers and should not have additional ones injected
+    const isOptionsTrackedComponent = options.components.tracked.find(
+        x => x.name === componentName
     );
+
+    if (
+        !isOptionsTrackedComponent &&
+        componentNameList.includes(componentName)
+    ) {
+        // Some native components need specific handlers present (inject no-op handlers if missing)
+        ensureMandatoryAttributes(
+            path,
+            componentName,
+            actionPathList,
+            actionPathNames
+        );
+    }
 
     // Optionally compute a content getter (children + label props)
     setContentAttribute(componentName, t, path, state, ddValues);
@@ -115,12 +126,16 @@ export function handleJSXElementActionPaths(
 
 /**
  * Ensures that all mandatory handler attributes exist on the element so that
- * they can be wrapped by RUM even if the user didn’t specify them.
+ * they can be wrapped by RUM even if the user didn't specify them.
  *
  * Example:
  *  Some inputs require `onFocus`/`onBlur` for reliable action boundaries.
  *  If missing, we inject `() => {}` as a placeholder and mark those paths
  *  as actionable so they get wrapped downstream.
+ *
+ * IMPORTANT: If the element has spread attributes (e.g., {...props}), we cannot
+ * safely inject handlers because we don't know at build time what props are being
+ * spread. In such cases, we skip injection to avoid overwriting existing handlers.
  *
  * @param path               JSXElement path.
  * @param componentName      Host component name for lookup in `tapElementsRequiredAttributesMap`.
@@ -133,6 +148,17 @@ export function ensureMandatoryAttributes(
     actionPathList: Babel.NodePath<Babel.types.JSXAttribute>[],
     actionPathNames: string[]
 ) {
+    // Check if there are any spread attributes
+    const hasSpreadAttributes = path.node.openingElement.attributes.some(
+        attr => attr.type === 'JSXSpreadAttribute'
+    );
+
+    // If spread attributes exist, we cannot safely inject handlers
+    // because we don't know what props are being spread at build time
+    if (hasSpreadAttributes) {
+        return;
+    }
+
     // Resolve any mandatory attributes for this component
     const requiredAttributes = tapElementsRequiredAttributesMap[componentName];
     if (requiredAttributes) {

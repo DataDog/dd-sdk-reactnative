@@ -3,15 +3,17 @@ import {
     DdLogs,
     DdSdkReactNative,
     CoreConfiguration,
-    RumConfiguration,
     SdkVerbosity,
     TrackingConsent,
+    BatchSize,
+    UploadFrequency,
     DdFlags,
 } from '@datadog/mobile-react-native';
 import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+import { BatchProcessingLevel } from '@datadog/mobile-react-native/src/config/types';
 
 // New SDK Setup - not available for react-native-navigation
 export function getDatadogConfig(trackingConsent: TrackingConsent) {
@@ -19,13 +21,34 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
         CLIENT_TOKEN,
         ENVIRONMENT,
         trackingConsent,
+        {
+            batchSize: BatchSize.SMALL,
+            uploadFrequency: UploadFrequency.FREQUENT,
+            batchProcessingLevel: BatchProcessingLevel.MEDIUM,
+            additionalConfiguration: {
+                customProperty: "sdk-example-app"
+            },
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            },
+            logsConfiguration: {
+                logEventMapper: (logEvent) => {
+                    logEvent.message = `[CUSTOM] ${logEvent.message}`;
+                    return logEvent;
+                }
+            },
+            traceConfiguration: {}
+        }
     );
 
     config.service = "com.datadoghq.reactnative.sample"
-    config.nativeCrashReportEnabled = true
     config.verbosity = SdkVerbosity.DEBUG;
-    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
-    config.rumConfiguration.sessionSampleRate = 100
+
     return config
 }
 
@@ -41,13 +64,21 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
     const config = new CoreConfiguration(
         CLIENT_TOKEN,
         ENVIRONMENT,
-        trackingConsent
+        trackingConsent,
+        {
+            rumConfiguration: {
+                applicationId: APPLICATION_ID,
+                trackInteractions: true,
+                trackResources: true,
+                trackErrors: true,
+                sessionSampleRate: 100,
+                nativeCrashReportEnabled: true
+            }
+        }
     )
-    config.nativeCrashReportEnabled = true
+
     config.verbosity = SdkVerbosity.DEBUG;
     config.service = "com.datadoghq.reactnative.sample"
-    config.rumConfiguration = new RumConfiguration(APPLICATION_ID, true, true, true);
-    config.rumConfiguration.sessionSampleRate = 100
 
     DdSdkReactNative.initialize(config).then(() => {
         DdLogs.info('The RN Sdk was properly initialized')

@@ -8,7 +8,7 @@ import {
   RumActionType,
   DdLogs,
   DdTrace,
-  RumConfiguration,
+  TrackingConsent,
   DdFlags,
 } from '@datadog/mobile-react-native';
 import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
@@ -41,20 +41,25 @@ import {
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 (async () => {
-  const config = new CoreConfiguration(CLIENT_TOKEN, ENVIRONMENT);
+  const config = new CoreConfiguration(
+    CLIENT_TOKEN,
+    ENVIRONMENT,
+    TrackingConsent.GRANTED,
+    {
+      rumConfiguration: {
+        applicationId: APPLICATION_ID,
+        trackInteractions: true,
+        trackResources: true,
+        trackFrustrations: true,
+        trackErrors: true,
+        sessionSampleRate: 100,
+        telemetrySampleRate: 100,
+      }
+    }
+  );
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
   config.batchSize = BatchSize.SMALL;
-
-  // Enable RUM.
-  config.rumConfiguration = new RumConfiguration(
-    APPLICATION_ID,
-    true,
-    true,
-    true,
-  );
-  config.rumConfiguration.sessionSampleRate = 100;
-  config.rumConfiguration.telemetrySampleRate = 100;
 
   // Initialize the Datadog SDK.
   await DdSdkReactNative.initialize(config);

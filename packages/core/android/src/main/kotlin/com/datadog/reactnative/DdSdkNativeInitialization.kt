@@ -46,12 +46,25 @@ class DdSdkNativeInitialization internal constructor(
 ) {
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
-        val rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
-        val logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
-        val traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
+        var rumConfiguration: RumConfiguration? = null
+        var logsConfiguration: LogsConfiguration? = null
+        var traceConfiguration: TraceConfiguration? = null
+
+        if (ddSdkConfiguration.rumConfiguration != null) {
+             rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.logsConfiguration != null) {
+            logsConfiguration = buildLogsConfiguration(ddSdkConfiguration)
+        }
+
+        if (ddSdkConfiguration.traceConfiguration != null) {
+            traceConfiguration = buildTraceConfiguration(ddSdkConfiguration)
+        }
 
         configureSdkVerbosity(ddSdkConfiguration)
+
         configureRumAndTracesForLogs(ddSdkConfiguration)
 
         if (datadog.isInitialized()) {
@@ -64,9 +77,17 @@ class DdSdkNativeInitialization internal constructor(
 
         datadog.initialize(appContext, sdkConfiguration, trackingConsent)
 
-        Rum.enable(rumConfiguration, Datadog.getInstance())
-        Logs.enable(logsConfiguration, Datadog.getInstance())
-        Trace.enable(traceConfiguration, Datadog.getInstance())
+        if (rumConfiguration != null) {
+            Rum.enable(rumConfiguration, Datadog.getInstance())
+        }
+
+        if (logsConfiguration != null) {
+            Logs.enable(logsConfiguration, Datadog.getInstance())
+        }
+
+        if (traceConfiguration != null) {
+            Trace.enable(traceConfiguration, Datadog.getInstance())
+        }
     }
 
     private fun configureRumAndTracesForLogs(configuration: DdSdkConfiguration) {
@@ -131,7 +152,7 @@ class DdSdkNativeInitialization internal constructor(
         val telemetrySampleRate = (configuration.rumConfiguration?.telemetrySampleRate as? Number)?.toFloat()
         telemetrySampleRate?.let { configBuilder.setTelemetrySampleRate(it) }
 
-        val longTask = (configuration.nativeLongTaskThresholdMs as? Number)?.toLong()
+        val longTask = (configuration.rumConfiguration?.nativeLongTaskThresholdMs as? Number)?.toLong()
         if (longTask != null) {
             configBuilder.trackLongTasks(longTask)
         }
@@ -179,14 +200,14 @@ class DdSdkNativeInitialization internal constructor(
                     event: TelemetryConfigurationEvent
                 ): TelemetryConfigurationEvent? {
                     event.telemetry.configuration.trackNativeErrors =
-                        configuration.nativeCrashReportEnabled
+                        configuration.rumConfiguration?.nativeCrashReportEnabled
                     // trackCrossPlatformLongTasks will be deprecated for trackLongTask
                     event.telemetry.configuration.trackCrossPlatformLongTasks =
                         configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackLongTask =
                         configuration.rumConfiguration?.longTaskThresholdMs != 0.0
                     event.telemetry.configuration.trackNativeLongTasks =
-                        configuration.nativeLongTaskThresholdMs != 0.0
+                        configuration.rumConfiguration?.nativeLongTaskThresholdMs != 0.0
 
                     event.telemetry.configuration.initializationType =
                         configuration.configurationForTelemetry?.initializationType
@@ -264,7 +285,7 @@ class DdSdkNativeInitialization internal constructor(
             } as Map<String, Any>? ?: emptyMap()
         )
 
-        configBuilder.setCrashReportsEnabled(configuration.nativeCrashReportEnabled ?: false)
+        configBuilder.setCrashReportsEnabled(configuration.rumConfiguration?.nativeCrashReportEnabled ?: false)
         configBuilder.useSite(buildSite(configuration.site))
         configBuilder.setUploadFrequency(
             buildUploadFrequency(configuration.uploadFrequency)

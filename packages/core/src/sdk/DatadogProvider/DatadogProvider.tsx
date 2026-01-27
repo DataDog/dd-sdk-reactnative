@@ -6,18 +6,14 @@
 import React from 'react';
 import type { PropsWithChildren } from 'react';
 
-import {
-    DatadogProviderConfiguration,
-    CoreConfiguration
-} from '../../DdSdkReactNativeConfiguration';
-import type {
-    PartialInitializationConfiguration,
-    AutoInstrumentationConfiguration
-} from '../../DdSdkReactNativeConfiguration';
 import { DdSdkReactNative } from '../../DdSdkReactNative';
 import { InternalLog } from '../../InternalLog';
-import { SdkVerbosity } from '../../SdkVerbosity';
-import type { FileBasedConfiguration } from '../FileBasedConfiguration/FileBasedConfiguration';
+import { DatadogProviderConfiguration } from '../../config/DatadogProviderConfiguration';
+import type { FileBasedConfiguration } from '../../config/FileBasedConfiguration';
+import type { AutoInstrumentationConfiguration } from '../../config/async/AutoInstrumentationConfiguration';
+import type { PartialInitializationConfiguration } from '../../config/async/PartialInitializationConfiguration';
+import { CoreConfiguration } from '../../config/features/CoreConfiguration';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 
 import { DatadogProviderState } from './DatadogProviderState';
 

@@ -1,18 +1,43 @@
 /*
- * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
- * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0. This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
 
 import { transform } from '@babel/core';
 
 import plugin from '../src/index';
+import type { PluginOptions } from '../src/types';
 
-function transformCode(code: string) {
+function transformCode(code: string, pluginOptions?: Partial<PluginOptions>) {
+    const defaultOptions: PluginOptions = {
+        actionNameAttribute: 'example-button-prop',
+        components: {
+            useContent: true,
+            useNamePrefix: true,
+            tracked: []
+        },
+        sessionReplay: {
+            svgTracking: false
+        }
+    };
+
+    const options = {
+        ...defaultOptions,
+        ...pluginOptions,
+        components: {
+            ...defaultOptions.components,
+            ...pluginOptions?.components
+        },
+        sessionReplay: {
+            ...defaultOptions.sessionReplay,
+            ...pluginOptions?.sessionReplay
+        }
+    };
+
     return transform(code, {
         filename: 'file.tsx',
         presets: ['@babel/preset-react', '@babel/preset-typescript'],
-        plugins: [[plugin, { actionNameAttribute: 'example-button-prop' }]],
+        plugins: [[plugin, options]],
         configFile: false
     })?.code;
 }
@@ -144,6 +169,280 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                 })();else return (() => {})();
               }
             });"
+        `);
+    });
+
+    it('should not add mandatory property (onFocus) on supported element (TextInput) when not present if there`s options tracked component with the same name', () => {
+        const options: Partial<PluginOptions> = {
+            components: {
+                useContent: true,
+                useNamePrefix: true,
+                tracked: [
+                    {
+                        name: 'TextInput',
+                        handlers: [{ event: 'onFocus', action: 'TAP' }]
+                    }
+                ]
+            }
+        };
+
+        const input = `
+            import { TextInput } from 'react-native';
+            <TextInput
+                placeholder="Enter username"
+                value={username}
+                onChangeText={setUsername}
+                style={styles.input}
+            />
+        `;
+        const output = transformCode(input, options);
+        expect(output).toMatchInlineSnapshot(`
+            "import { TextInput } from 'react-native';
+            /*#__PURE__*/React.createElement(TextInput, {
+              placeholder: "Enter username",
+              value: username,
+              onChangeText: setUsername,
+              style: styles.input
+            });"
+        `);
+    });
+
+    it('should not add property (onFocus) on supported element (TextInput) when spreading props', () => {
+        const input = `
+            import { TextInput } from 'react-native';
+            <TextInput {...props} />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { TextInput } from 'react-native';
+            /*#__PURE__*/React.createElement(TextInput, props);"
+        `);
+    });
+
+    it('should wrap existing (onFocus) on supported element (TextInput) when spreading props', () => {
+        const input = `
+            import { TextInput } from 'react-native';
+            <TextInput {...props} onFocus={() => console.log('Focused')}/>
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+            import { TextInput } from 'react-native';
+            /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
+              onFocus: () => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [],
+                  "componentName": "TextInput"
+                })();else return (() => console.log('Focused'))();
+              }
+            }));"
+        `);
+    });
+
+    it('should not add property (onFocus) on custom element (TextInput) when not present', () => {
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, null);"
+        `);
+    });
+
+    it('should not add property (onFocus) on custom element (TextInput - not tracked) when spreading props', () => {
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, props);"
+        `);
+    });
+
+    it('should not add property (onFocus) on custom element (TextInput - tracked) when spreading props', () => {
+        const options: Partial<PluginOptions> = {
+            components: {
+                useContent: true,
+                useNamePrefix: true,
+                tracked: [
+                    {
+                        name: 'TextInput',
+                        handlers: [{ event: 'onFocus', action: 'TAP' }]
+                    }
+                ]
+            }
+        };
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} />
+        `;
+        const output = transformCode(input, options);
+        expect(output).toMatchInlineSnapshot(`
+            "import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, props);"
+        `);
+    });
+
+    it('should not wrap existing (onFocus) on custom element (TextInput - not tracked) when spreading props', () => {
+        // Since it's a custom not-tracked component, the plugin doesn't know if this handler should be wraaped or not
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} onFocus={() => console.log('Focused')}/>
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+            import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
+              onFocus: () => console.log('Focused')
+            }));"
+        `);
+    });
+
+    it('should wrap existing (onFocus) on custom element (TextInput - tracked) when spreading props', () => {
+        // Since it's a custom tracked component, the plugin knows which handler to track
+        const options: Partial<PluginOptions> = {
+            components: {
+                useContent: true,
+                useNamePrefix: true,
+                tracked: [
+                    {
+                        name: 'TextInput',
+                        handlers: [{ event: 'onFocus', action: 'TAP' }]
+                    }
+                ]
+            }
+        };
+
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} onFocus={() => console.log('Focused')}/>
+        `;
+
+        const output = transformCode(input, options);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+            import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
+              onFocus: () => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [],
+                  "componentName": "TextInput"
+                })();else return (() => console.log('Focused'))();
+              }
+            }));"
+        `);
+    });
+
+    it('should wrap arrow function with one argument', () => {
+        const input = `
+            import { Pressable } from 'react-native';
+            <Pressable onPress={(event) => {
+                console.log('Testing: ', event);
+            }} />
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            import { Pressable } from 'react-native';
+            /*#__PURE__*/React.createElement(Pressable, {
+              onPress: event => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(event => {
+                  console.log('Testing: ', event);
+                }, "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [event],
+                  "componentName": "Pressable"
+                })(event);else return (event => {
+                  console.log('Testing: ', event);
+                })(event);
+              }
+            });"
+        `);
+    });
+
+    it('should not wrap existing (onFocus) on custom element (TextInput - tracked) when spreading props', () => {
+        // Since it's a custom not-tracked component, the plugin doesn't know if this handler should be wraaped or not
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} onFocus={() => console.log('Focused')}/>
+        `;
+        const output = transformCode(input);
+        expect(output).toMatchInlineSnapshot(`
+            "function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+            import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
+              onFocus: () => console.log('Focused')
+            }));"
+        `);
+    });
+
+    it('should wrap existing (onFocus) on custom element (TextInput - tracked) when spreading props', () => {
+        // Since it's a custom tracked component, the plugin knows which handler to track
+        const options: Partial<PluginOptions> = {
+            components: {
+                useContent: true,
+                useNamePrefix: true,
+                tracked: [
+                    {
+                        name: 'TextInput',
+                        handlers: [{ event: 'onFocus', action: 'TAP' }]
+                    }
+                ]
+            }
+        };
+
+        const input = `
+            import { TextInput } from './TextInput';
+            <TextInput {...props} onFocus={() => console.log('Focused')}/>
+        `;
+
+        const output = transformCode(input, options);
+        expect(output).toMatchInlineSnapshot(`
+            "import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+            import { TextInput } from './TextInput';
+            /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
+              onFocus: () => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
+                  "options": {
+                    "useContent": true,
+                    "useNamePrefix": true
+                  },
+                  "getContent": () => {
+                    return __ddExtractText(/*#__PURE__*/React.createElement(React.Fragment, null), []);
+                  },
+                  "handlerArgs": [],
+                  "componentName": "TextInput"
+                })();else return (() => console.log('Focused'))();
+              }
+            }));"
         `);
     });
 

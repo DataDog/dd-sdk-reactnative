@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../InternalLog';
-import { SdkVerbosity } from '../SdkVerbosity';
+import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getGlobalInstance } from '../utils/singletonUtils';
 

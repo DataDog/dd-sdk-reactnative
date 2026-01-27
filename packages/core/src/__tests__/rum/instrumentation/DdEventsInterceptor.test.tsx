@@ -5,8 +5,8 @@
  */
 
 import { InternalLog } from '../../../InternalLog';
-import { SdkVerbosity } from '../../../SdkVerbosity';
-import { DdRum } from '../../../index';
+import { SdkVerbosity } from '../../../config/types';
+import { DdRum } from '../../../rum/DdRum';
 import {
     DdEventsInterceptor,
     UNKNOWN_TARGET_NAME

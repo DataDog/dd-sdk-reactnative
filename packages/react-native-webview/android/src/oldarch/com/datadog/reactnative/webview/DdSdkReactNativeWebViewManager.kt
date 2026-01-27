@@ -26,23 +26,15 @@ class DdSdkReactNativeWebViewManager(
     private val reactContext: ReactContext
 ) : RNCWebViewManager() {
     // The name used to reference this custom View from React Native.
-    companion object {
-        const val VIEW_NAME = "DdReactNativeWebView"
+    override fun getName(): String {
+        return VIEW_NAME
     }
-
     /**
      * The instance of Datadog SDK Core.
      */
     @Volatile private var _datadogCore: SdkCore? = null
     val datadogCore: SdkCore?
         get() = _datadogCore
-
-    /**
-     * Whether WebView tracking has been enabled or not.
-     */
-    @Volatile private var _isWebViewTrackingEnabled: Boolean = false
-    val isWebViewTrackingEnabled: Boolean
-        get() = _isWebViewTrackingEnabled
 
     init {
         DatadogSDKWrapperStorage.addOnInitializedListener { core ->
@@ -92,21 +84,15 @@ class DdSdkReactNativeWebViewManager(
         sdkCore: SdkCore,
         allowedHosts: List<String>
     ) {
-        if (_isWebViewTrackingEnabled) {
-            return
-        }
-
         WebViewTracking.enable(
             webView,
             allowedHosts = allowedHosts,
             sdkCore = sdkCore
         )
-
-        _isWebViewTrackingEnabled = true
     }
 
-    // The name used to reference this custom View from React Native.
-    override fun getName(): String {
-        return VIEW_NAME
+    companion object {
+        // The name used to reference this custom View from React Native.
+        const val VIEW_NAME = "DdReactNativeWebView"
     }
 }
