@@ -29,7 +29,8 @@ import type { FlagsClient } from './flags/FlagsClient';
 import type {
     FlagsConfiguration,
     FlagDetails,
-    EvaluationContext
+    EvaluationContext,
+    PrimitiveValue
 } from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
@@ -105,5 +106,6 @@ export type {
     FlagsConfiguration,
     FlagsClient,
     EvaluationContext,
+    PrimitiveValue,
     FlagDetails
 };
