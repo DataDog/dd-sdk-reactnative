@@ -132,7 +132,7 @@ function App(): React.JSX.Element {
             flag.{'\n\n'}
             If it's different from "Default greeting", then it is coming from
             the feature flag evaluation.{'\n\n'}
-            Inspect <Text style={styles.highlight}>greetingFlag</Text> in{' '}
+            Evaluation reason is <Text style={styles.highlight}>{greetingFlag.reason}</Text>.{'\n\n'}Inspect <Text style={styles.highlight}>greetingFlag</Text> in{' '}
             <Text style={styles.highlight}>App.tsx</Text> for more evaluation
             details.
           </Section>
