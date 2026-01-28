@@ -31,7 +31,13 @@ import {
     VitalsUpdateFrequency
 } from './config/types';
 import { DdFlags } from './flags/DdFlags';
-import type { DdFlagsConfiguration, FlagDetails } from './flags/types';
+import type { FlagsClient } from './flags/FlagsClient';
+import type {
+    FlagsConfiguration,
+    FlagDetails,
+    EvaluationContext,
+    PrimitiveValue
+} from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -106,6 +112,9 @@ export type {
     RumConfigurationOptions,
     LogsConfigurationOptions,
     TraceConfigurationOptions,
-    DdFlagsConfiguration,
+    FlagsConfiguration,
+    FlagsClient,
+    EvaluationContext,
+    PrimitiveValue,
     FlagDetails
 };

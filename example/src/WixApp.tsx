@@ -14,6 +14,7 @@ import styles from './screens/styles';
 import { DdFlags } from '@datadog/mobile-react-native';
 import TraceScreen from './screens/TraceScreen';
 import { NavigationTrackingOptions, ParamsTrackingPredicate, ViewTrackingPredicate } from '@datadog/mobile-react-native-navigation/src/rum/instrumentation/DdRumReactNativeNavigationTracking';
+import { OpenFeatureProvider, useFlag } from '@openfeature/react-sdk';
 
 // === Navigation Tracking custom predicates
 const viewNamePredicate: ViewNamePredicate = function customViewNamePredicate(_event: ComponentDidAppearEvent, trackedName: string) {
@@ -62,45 +63,24 @@ function startReactNativeNavigation() {
 }
 
 function registerScreens() {
-    Navigation.registerComponent('Home', () => HomeScreen);
+    Navigation.registerComponent('Home', () => HomeScreenWithProviders);
     Navigation.registerComponent('Main', () => MainScreen);
     Navigation.registerComponent('Error', () => ErrorScreen);
     Navigation.registerComponent('Trace', () => TraceScreen);
     Navigation.registerComponent('About', () => AboutScreen);
 }
 
+const HomeScreenWithProviders = () => {
+    return (
+        <OpenFeatureProvider>
+            <HomeScreen />
+        </OpenFeatureProvider>
+    )
+}
+
 const HomeScreen = props => {
-    const [isInitialized, setIsInitialized] = React.useState(false);
-
-    React.useEffect(() => {
-      (async () => {
-        // This is a blocking async app initialization effect.
-        // It simulates the way most React Native applications are initialized.
-        await DdFlags.enable();
-        const client = DdFlags.getClient();
-
-        const userId = 'test-user-1';
-        const userAttributes = {
-          country: 'US',
-        };
-
-        await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
-
-        setIsInitialized(true);
-      })().catch(console.error);
-    }, []);
-
-    if (!isInitialized) {
-      return (
-        <View style={styles.defaultScreen}>
-            <ActivityIndicator />
-        </View>
-      )
-    }
-
-    // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
     const testFlagKey = 'rn-sdk-test-json-flag';
-    const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
+    const flag = useFlag(testFlagKey, {greeting: "Default greeting"});
 
     return (
         <View style={styles.defaultScreen}>
@@ -147,7 +127,7 @@ const HomeScreen = props => {
                     });
                 }}
             />
-            <Text style={{ marginTop: 20 }}>{testFlagKey}: {JSON.stringify(testFlag)}</Text>
+            <Text style={{ marginTop: 20 }}>{testFlagKey}: {JSON.stringify(flag.value)}</Text>
         </View>
     );
 };

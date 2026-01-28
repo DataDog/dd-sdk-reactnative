@@ -78,7 +78,7 @@ describe('FlagsClient', () => {
             clients: {}
         });
 
-        await DdFlags.enable({ enabled: true });
+        await DdFlags.enable();
     });
 
     describe('setEvaluationContext', () => {
@@ -94,16 +94,19 @@ describe('FlagsClient', () => {
             ).toHaveBeenCalledWith('default', 'test-user-1', { country: 'US' });
         });
 
-        it('should print an error if there is an error', async () => {
+        it('should throw an error if there is an error setting the evaluation context', async () => {
             NativeModules.DdFlags.setEvaluationContext.mockRejectedValueOnce(
                 new Error('NETWORK_ERROR')
             );
 
             const flagsClient = DdFlags.getClient();
-            await flagsClient.setEvaluationContext({
-                targetingKey: 'test-user-1',
-                attributes: { country: 'US' }
-            });
+
+            await expect(
+                flagsClient.setEvaluationContext({
+                    targetingKey: 'test-user-1',
+                    attributes: { country: 'US' }
+                })
+            ).rejects.toThrow('NETWORK_ERROR');
 
             expect(InternalLog.log).toHaveBeenCalledWith(
                 'Error setting flag evaluation context: NETWORK_ERROR',
@@ -141,26 +144,22 @@ describe('FlagsClient', () => {
             expect(booleanDetails).toMatchObject({
                 value: true,
                 variant: 'true',
-                reason: 'STATIC',
-                error: null
+                reason: 'STATIC'
             });
             expect(stringDetails).toMatchObject({
                 value: 'hello world',
                 variant: 'Hello World',
-                reason: 'STATIC',
-                error: null
+                reason: 'STATIC'
             });
             expect(numberDetails).toMatchObject({
                 value: 42,
                 variant: '42',
-                reason: 'STATIC',
-                error: null
+                reason: 'STATIC'
             });
             expect(objectDetails).toMatchObject({
                 value: { greeting: 'Greeting from the native side!' },
                 variant: 'Native Greeting',
-                reason: 'STATIC',
-                error: null
+                reason: 'STATIC'
             });
         });
 
@@ -175,13 +174,12 @@ describe('FlagsClient', () => {
 
             expect(details).toMatchObject({
                 value: false,
-                reason: null,
-                error: 'PROVIDER_NOT_READY'
+                reason: 'ERROR',
+                errorCode: 'PROVIDER_NOT_READY',
+                errorMessage: expect.stringContaining(
+                    'The evaluation context is not set'
+                )
             });
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                expect.stringContaining('The evaluation context is not set'),
-                SdkVerbosity.ERROR
-            );
         });
 
         it('should return FLAG_NOT_FOUND if flag is missing from context', async () => {
@@ -199,8 +197,8 @@ describe('FlagsClient', () => {
 
             expect(details).toMatchObject({
                 value: false,
-                reason: null,
-                error: 'FLAG_NOT_FOUND'
+                reason: 'ERROR',
+                errorCode: 'FLAG_NOT_FOUND'
             });
         });
 
@@ -229,34 +227,29 @@ describe('FlagsClient', () => {
             );
             const objectDetails = flagsClient.getObjectDetails(
                 'test-object-flag',
-                // @ts-expect-error - testing validation
                 'hello world'
             );
 
             // The default value is passed through.
             expect(booleanDetails).toMatchObject({
                 value: 'hello world',
-                error: 'TYPE_MISMATCH',
-                reason: null,
-                variant: null
+                errorCode: 'TYPE_MISMATCH',
+                reason: 'ERROR'
             });
             expect(stringDetails).toMatchObject({
                 value: true,
-                error: 'TYPE_MISMATCH',
-                reason: null,
-                variant: null
+                errorCode: 'TYPE_MISMATCH',
+                reason: 'ERROR'
             });
             expect(numberDetails).toMatchObject({
                 value: 'hello world',
-                error: 'TYPE_MISMATCH',
-                reason: null,
-                variant: null
+                errorCode: 'TYPE_MISMATCH',
+                reason: 'ERROR'
             });
-            expect(objectDetails).toMatchObject({
-                value: 'hello world',
-                error: 'TYPE_MISMATCH',
-                reason: null,
-                variant: null
+
+            // We don't do validation on the object value as it can hold any JSON value.
+            expect(objectDetails.value).toMatchObject({
+                greeting: 'Greeting from the native side!'
             });
         });
     });
@@ -319,7 +312,6 @@ describe('FlagsClient', () => {
             );
             const objectValue = flagsClient.getObjectValue(
                 'test-object-flag',
-                // @ts-expect-error - testing validation
                 'hello world'
             );
 
@@ -327,7 +319,11 @@ describe('FlagsClient', () => {
             expect(booleanValue).toBe('hello world');
             expect(stringValue).toBe(true);
             expect(numberValue).toBe('hello world');
-            expect(objectValue).toBe('hello world');
+
+            // We don't do validation on the object value as it can hold any JSON value.
+            expect(objectValue).toMatchObject({
+                greeting: 'Greeting from the native side!'
+            });
         });
     });
 });

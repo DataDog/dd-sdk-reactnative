@@ -6,7 +6,7 @@
 
 import type { FlagsClient } from './FlagsClient';
 
-export type DdFlagsType = {
+export interface DdFlagsType {
     /**
      * Enables the Datadog Flags feature in your application.
      *
@@ -35,7 +35,7 @@ export type DdFlagsType = {
      *
      * @param configuration Configuration options for the Datadog Flags feature.
      */
-    enable: (configuration?: DdFlagsConfiguration) => Promise<void>;
+    enable: (configuration?: FlagsConfiguration) => Promise<void>;
     /**
      * Returns a `FlagsClient` instance for further feature flag evaluation.
      *
@@ -46,25 +46,26 @@ export type DdFlagsType = {
      *
      * @example
      * ```ts
-     * // Reminder: you need to initialize the SDK and enable the Flags feature before retrieving the client.
      * const flagsClient = DdFlags.getClient();
-     * const flagValue = await flagsClient.getBooleanValue('new-feature', false);
+     *
+     * // Set the evaluation context.
+     * await flagsClient.setEvaluationContext({
+     *     targetingKey: 'user-123',
+     *     attributes: {
+     *         favoriteFruit: 'apple'
+     *     }
+     * });
+     *
+     * const flagValue = flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
     getClient: (clientName?: string) => FlagsClient;
-};
+}
 
 /**
  * Configuration options for the Datadog Flags feature.
- *
- * Use this type to customize the behavior of feature flag evaluation, including custom endpoints,
- * exposure tracking, and error handling modes.
  */
-export type DdFlagsConfiguration = {
-    /**
-     * Controls whether the feature flag evaluation feature is enabled.
-     */
-    enabled: boolean;
+export interface FlagsConfiguration {
     /**
      * Custom server URL for retrieving flag assignments.
      *
@@ -103,22 +104,31 @@ export type DdFlagsConfiguration = {
      * @default true
      */
     rumIntegrationEnabled?: boolean;
-};
+}
+
+export type PrimitiveValue = null | boolean | string | number;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+/**
+ * Represents a JSON node value.
+ */
+export type JsonValue = PrimitiveValue | JsonObject | JsonArray;
 
 /**
  * Context information used for feature flag targeting and evaluation.
  *
- * The evaluation context contains user or session information that determines which flag
- * variations are returned. This typically includes a unique identifier (targeting key) and
- * optional custom attributes for more granular targeting.
+ * Contains user or session information that determines which flag variations are returned.
+ * This typically includes a unique identifier (targeting key) and optional custom attributes
+ * for granular targeting.
  *
- * You can create an evaluation context and set it on the client before evaluating flags:
+ * Note: Evaluation context should be set before flag evaluations.
  *
+ * @example
  * ```ts
  * const context: EvaluationContext = {
  *     targetingKey: "user-123",
  *     attributes: {
- *         "email": "user@example.com",
+ *         "region": "US",
  *         "plan": "premium",
  *         "age": 25,
  *         "beta_tester": true
@@ -134,6 +144,8 @@ export interface EvaluationContext {
      *
      * This is typically a user ID, session ID, or device ID. The targeting key is used
      * by the feature flag service to determine which variation to serve.
+     *
+     * Pass an empty string if you don't have such an identifier.
      */
     targetingKey: string;
 
@@ -143,44 +155,28 @@ export interface EvaluationContext {
      * Attributes can include user properties, session data, or any other contextual information
      * needed for flag evaluation rules.
      *
-     * NOTE: Nested object values are not supported and will be omitted from the evaluation context.
+     * NOTE: Nested object values are not supported and will be dropped from the evaluation context.
      */
-    attributes?: Record<string, string | number | boolean | null | undefined>;
+    attributes?: Record<string, PrimitiveValue>;
 }
 
-export type ObjectValue = { [key: string]: unknown };
-
 /**
- * An error tha occurs during feature flag evaluation.
+ * An error that occurs during feature flag evaluation.
  *
  * Indicates why a flag evaluation may have failed or returned a default value.
  */
-export type FlagEvaluationError =
+type FlagErrorCode =
     | 'PROVIDER_NOT_READY'
     | 'FLAG_NOT_FOUND'
     | 'PARSE_ERROR'
-    | 'TYPE_MISMATCH';
+    | 'TYPE_MISMATCH'
+    | 'TARGETING_KEY_MISSING';
 
 /**
  * Detailed information about a feature flag evaluation.
  *
- * `FlagDetails` contains both the evaluated flag value and metadata about the evaluation,
+ * Contains both the evaluated flag value and metadata about the evaluation,
  * including the variant served, evaluation reason, and any errors that occurred.
- *
- * Use this type when you need access to evaluation metadata beyond just the flag value:
- *
- * ```ts
- * const details = await flagsClient.getBooleanDetails('new-feature', false);
- *
- * if (details.value) {
- *   // Feature is enabled
- *   console.log(`Using variant: ${details.variant ?? 'default'}`);
- * }
- *
- * if (details.error) {
- *   console.log(`Evaluation error: ${details.error}`);
- * }
- * ```
  */
 export interface FlagDetails<T> {
     /**
@@ -190,33 +186,31 @@ export interface FlagDetails<T> {
     /**
      * The evaluated flag value.
      *
-     * This is either the flag's assigned value or the default value if evaluation failed.
+     * Falls back to the default value if evaluation failed.
      */
     value: T;
     /**
+     * The reason why this evaluation result was returned.
+     */
+    reason: string;
+    /**
      * The variant key for the evaluated flag.
      *
-     * Variants identify which version of the flag was served. Returns `null` if the flag
-     * was not found or if the default value was used.
-     *
-     * ```ts
-     * const details = await flagsClient.getBooleanDetails('new-feature', false);
-     * console.log(`Served variant: ${details.variant ?? 'default'}`);
-     * ```
+     * Variants identify which version of the flag was served.
      */
-    variant: string | null;
+    variant?: string;
     /**
-     * The reason why this evaluation result was returned.
+     * The allocation key for the evaluated flag.
      *
-     * Provides context about how the flag was evaluated, such as "TARGETING_MATCH" or "DEFAULT".
-     * Returns `null` if the flag was not found.
+     * Useful for debugging targeting rules.
      */
-    reason: string | null;
+    allocationKey?: string;
     /**
-     * The error that occurred during evaluation, if any.
-     *
-     * Returns `null` if evaluation succeeded. Check this property to determine if the returned
-     * value is from a successful evaluation or a fallback to the default value.
+     * Code of the error that occurred during evaluation, if any.
      */
-    error: FlagEvaluationError | null;
+    errorCode?: FlagErrorCode;
+    /**
+     * Detailed explanation of the occurred error, if any.
+     */
+    errorMessage?: string;
 }

@@ -9,9 +9,10 @@ import {
   View, Text, Button, TouchableOpacity,
   TouchableWithoutFeedback, TouchableNativeFeedback, ActivityIndicator
 } from 'react-native';
+import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
+import { FeatureFlag } from '@openfeature/react-sdk';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
-import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
 
@@ -26,7 +27,6 @@ interface MainScreenState {
   resultTouchableNativeFeedback: string,
   trackingConsent: TrackingConsent,
   trackingConsentModalVisible: boolean
-  flagsInitialized: boolean
 }
 
 export default class MainScreen extends Component<any, MainScreenState> {
@@ -40,8 +40,7 @@ export default class MainScreen extends Component<any, MainScreenState> {
       resultButtonAction: "",
       resultTouchableOpacityAction: "",
       trackingConsent: TrackingConsent.PENDING,
-      trackingConsentModalVisible: false,
-      flagsInitialized: false
+      trackingConsentModalVisible: false
     } as MainScreenState;
     this.consentModal = React.createRef()
   }
@@ -95,7 +94,6 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   componentDidMount() {
     this.updateTrackingConsent()
-    this.initializeFlags();
     DdLogs.debug("[DATADOG SDK] Test React Native Debug Log");
   }
 
@@ -107,24 +105,6 @@ export default class MainScreen extends Component<any, MainScreenState> {
     })
   }
 
-  initializeFlags() {
-    (async () => {
-      // This is a blocking async app initialization effect.
-      // It simulates the way most React Native applications are initialized.
-      await DdFlags.enable();
-      const client = DdFlags.getClient();
-
-      const userId = 'test-user-1';
-      const userAttributes = {
-        country: 'US',
-      };
-
-      await client.setEvaluationContext({targetingKey: userId, attributes: userAttributes});
-
-      this.setState({ flagsInitialized: true })
-    })();
-  }
-
   setTrackingConsentModalVisible(visible: boolean) {
     if (visible) {
       this.consentModal.current.setConsent(this.state.trackingConsent)
@@ -133,18 +113,13 @@ export default class MainScreen extends Component<any, MainScreenState> {
   }
 
   render() {
-    if (!this.state.flagsInitialized) {
-      return <View style={styles.defaultScreen}>
-        <ActivityIndicator />
-      </View>
-    }
-
-    // TODO: [FFL-908] Use OpenFeature SDK instead of a manual client call.
-    const testFlagKey = 'rn-sdk-test-json-flag';
-    const testFlag = DdFlags.getClient().getObjectValue(testFlagKey, {greeting: "Default greeting"}); // https://app.datadoghq.com/feature-flags/bcf75cd6-96d8-4182-8871-0b66ad76127a?environmentId=d114cd9a-79ed-4c56-bcf3-bcac9293653b
-
     return <View style={styles.defaultScreen}>
-      <Text>{this.state.welcomeMessage}</Text>
+      <FeatureFlag flagKey="rn-sdk-test-boolean-flag" defaultValue={false} fallback={<Text>Welcome!</Text>}>
+        <Text>Greetings from the Feature Flags!</Text>
+      </FeatureFlag>
+
+      <Text style={{ marginTop: 10, textAlign: 'center' }}>The above greeting is being controlled by the{'\n'}`rn-sdk-test-boolean-flag` feature flag.</Text>
+
       <View style={{ marginTop: 40, alignItems: "center" }}>
         <Button
           title={`Tracking Consent: ${this.state.trackingConsent}`}
@@ -235,7 +210,6 @@ export default class MainScreen extends Component<any, MainScreenState> {
             <Text>Click me (error)</Text>
           </View>
         </TouchableNativeFeedback>
-        <Text style={{ marginTop: 20 }}>{testFlagKey}: {JSON.stringify(testFlag)}</Text>
       </View>
     </View>
   }
