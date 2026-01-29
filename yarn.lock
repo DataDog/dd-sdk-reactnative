@@ -2306,7 +2306,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
   peerDependencies:
     "@apollo/client": ">=3.0"
-    "@datadog/mobile-react-native": ^2.6.1
+    "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
@@ -2353,7 +2353,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
     react-native-code-push: 7.1.0
   peerDependencies:
-    "@datadog/mobile-react-native": ^2.0.1
+    "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
     react-native-code-push: ">=2.0.0"
@@ -2371,7 +2371,7 @@ __metadata:
     react-native-navigation: 7.31.1
     remx: 3.x.x
   peerDependencies:
-    "@datadog/mobile-react-native": ^2.0.1
+    "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
     react-native-navigation: ^7.5.0
@@ -2399,7 +2399,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
     react-native-webview: ^13.12.2
   peerDependencies:
-    "@datadog/mobile-react-native": ^2.0.1
+    "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
     react-native-webview: ">=11.0.0"
@@ -2433,7 +2433,7 @@ __metadata:
     react-native-gesture-handler: 1.10.3
     react-native-safe-area-context: 3.1.9
   peerDependencies:
-    "@datadog/mobile-react-native": ^2.0.1
+    "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown

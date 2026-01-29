@@ -52,7 +52,7 @@
         "react-native-webview": "^13.12.2"
     },
     "peerDependencies": {
-        "@datadog/mobile-react-native": "^2.0.1",
+        "@datadog/mobile-react-native": "^3.0.0",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0",
         "react-native-webview": ">=11.0.0"
