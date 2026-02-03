@@ -97,7 +97,11 @@ export class FlagsClient {
             });
     };
 
-    private getDetails = <T>(key: string, defaultValue: T): FlagDetails<T> => {
+    private getDetails = <T>(
+        key: string,
+        defaultValue: T,
+        type: 'boolean' | 'string' | 'number' | 'object'
+    ): FlagDetails<T> => {
         if (!this.evaluationContext) {
             return {
                 key,
@@ -117,6 +121,18 @@ export class FlagsClient {
                 value: defaultValue,
                 reason: 'ERROR',
                 errorCode: 'FLAG_NOT_FOUND'
+            };
+        }
+
+        // Validate the expected type against the actual flag value type.
+        const actualType = typeof flag.value;
+        if (actualType !== type) {
+            return {
+                key,
+                value: defaultValue,
+                reason: 'ERROR',
+                errorCode: 'TYPE_MISMATCH',
+                errorMessage: `Flag "${key}" returned a value of type "${typeof flag.value}". Use the corresponding method instead of the one expecting "${type}".`
             };
         }
 
@@ -143,17 +159,7 @@ export class FlagsClient {
         key: string,
         defaultValue: boolean
     ): FlagDetails<boolean> => {
-        if (typeof defaultValue !== 'boolean') {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH',
-                errorMessage: 'Provided `defaultValue` is not a boolean.'
-            };
-        }
-
-        return this.getDetails(key, defaultValue);
+        return this.getDetails(key, defaultValue, 'boolean');
     };
 
     /**
@@ -166,17 +172,7 @@ export class FlagsClient {
         key: string,
         defaultValue: string
     ): FlagDetails<string> => {
-        if (typeof defaultValue !== 'string') {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH',
-                errorMessage: 'Provided `defaultValue` is not a string.'
-            };
-        }
-
-        return this.getDetails(key, defaultValue);
+        return this.getDetails(key, defaultValue, 'string');
     };
 
     /**
@@ -189,21 +185,14 @@ export class FlagsClient {
         key: string,
         defaultValue: number
     ): FlagDetails<number> => {
-        if (typeof defaultValue !== 'number') {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH',
-                errorMessage: 'Provided `defaultValue` is not a number.'
-            };
-        }
-
-        return this.getDetails(key, defaultValue);
+        return this.getDetails(key, defaultValue, 'number');
     };
 
     /**
      * Evaluate a JSON feature flag with detailed evaluation information.
+     *
+     * Even though the `defaultValue` is typed as `JsonValue`, the flag value should be a valid JSON object.
+     * Please use other typed methods to evaluate flags with primitive values.
      *
      * @param key The key of the flag to evaluate.
      * @param defaultValue Fallback value for when flag evaluation fails, flag is not found, or the client does not have an evaluation context set.
@@ -212,9 +201,7 @@ export class FlagsClient {
         key: string,
         defaultValue: T
     ): FlagDetails<T> => {
-        // OpenFeature provider spec assumes `defaultValue` can be any JSON value (including primitves) so no validation here.
-
-        return this.getDetails(key, defaultValue);
+        return this.getDetails(key, defaultValue, 'object');
     };
 
     /**

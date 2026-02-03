@@ -123,6 +123,11 @@ export class DatadogOpenFeatureProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<T> {
+        // The OpenFeature spec states that the return value can be any valid JSON value.
+        // However, the Datadog Flags feature only supports JSON objects for the JSON feature flag type.
+        // Thus, the user should always expect the returned value to be an object instead of any arbitrary JSON value.
+        // Also, the user is responsible for providing a proper `defaultValue` that's an object.
+
         const details = this.flagsClient.getObjectDetails<T>(
             flagKey,
             defaultValue
