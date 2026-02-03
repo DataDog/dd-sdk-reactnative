@@ -10,7 +10,7 @@ OpenFeature is a vendor-neutral, community-driven specification and SDK for feat
 
 ## Setup
 
-**Note**: This package is an integration for the [OpenFeature React SDK][1]. Before starting using Datadog Feature Flags, install and set up the core [`@datadog/mobile-react-native`][3] SDK.
+**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to start using Datadog Feature Flags.
 
 To install with NPM, run:
 
@@ -65,7 +65,7 @@ import { OpenFeature } from '@openfeature/react-sdk';
 </DatadogProvider>
 ```
 
-After completing this setup, your app should be ready for flag evaluation with OpenFeature.
+After completing this setup, your app is ready for flag evaluation with OpenFeature.
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure this.
 
