@@ -18,10 +18,12 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
 
     internal let uiManager: RCTUIManager
     internal let fabricWrapper: RCTFabricWrapper
+    private let textExtractor: RCTTextExtractor
 
     internal init(uiManager: RCTUIManager, fabricWrapper: RCTFabricWrapper) {
         self.uiManager = uiManager
         self.fabricWrapper = fabricWrapper
+        self.textExtractor = RCTTextExtractor()
     }
 
     public func semantics(
@@ -30,9 +32,12 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         in context: SessionReplayViewTreeRecordingContext
     ) -> SessionReplayNodeSemantics? {
         guard
-            let textProperties = fabricWrapper.tryToExtractTextProperties(from: view) ?? tryToExtractTextProperties(view: view)
+            let textProperties = fabricWrapper.tryToExtractTextProperties(from: view)
+                ?? textExtractor.tryToExtractTextProperties(from: view, with: uiManager)
         else {
-            return view is RCTTextView ? SessionReplayInvisibleElement.constant : nil
+            // Check if this is an RCTTextView that we couldn't extract text from
+            // This check is done in Objective-C to avoid compile-time dependency on RCTTextView
+            return textExtractor.isRCTTextView(view) ? SessionReplayInvisibleElement.constant : nil
         }
 
         let builder = RCTTextViewWireframesBuilder(
@@ -51,73 +56,6 @@ internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
         ])
     }
 
-    internal func tryToExtractTextFromSubViews(
-        subviews: [RCTShadowView]?
-    ) -> String? {
-        guard let subviews = subviews else {
-            return nil
-        }
-
-        return subviews.compactMap { subview in
-            if let sub = subview as? RCTRawTextShadowView {
-                return sub.text
-            }
-            if let sub = subview as? RCTVirtualTextShadowView {
-                // We recursively get all subviews for nested Text components
-                return tryToExtractTextFromSubViews(subviews: sub.reactSubviews())
-            }
-            return nil
-        }.joined()
-    }
-
-    private func tryToExtractTextProperties(view: UIView) -> RCTTextPropertiesWrapper? {
-        guard let textView = view as? RCTTextView else {
-            return nil
-        }
-
-        var shadowView: RCTTextShadowView? = nil
-        let tag = textView.reactTag
-
-        let timeout: TimeInterval = 0.2
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        // We need to access the shadow view from the UIManager queue, but we're currently on the main thread.
-        // Calling `.sync` from the main thread to the UIManager queue is unsafe, because the UIManager queue
-        // may already be executing a layout operation that in turn requires the main thread (e.g. measuring a native view).
-        // That would create a circular dependency and deadlock the app.
-        // To avoid this, we dispatch the work asynchronously to the UIManager queue and wait with a timeout.
-        // This ensures we block only if absolutely necessary, and can fail gracefully if the queue is busy.
-        RCTGetUIManagerQueue().async {
-            shadowView = self.uiManager.shadowView(forReactTag: tag) as? RCTTextShadowView
-            semaphore.signal()
-        }
-        
-        let waitResult = semaphore.wait(timeout: .now() + timeout)
-        if waitResult == .timedOut {
-            return nil
-        }
-
-        guard let shadow = shadowView else {
-            return nil
-        }
-
-        let textProperties = RCTTextPropertiesWrapper()
-
-        // TODO: RUM-2173 check performance is ok
-        if let text = tryToExtractTextFromSubViews(subviews: shadow.reactSubviews()) {
-            textProperties.text = text
-        }
-
-        if let foregroundColor = shadow.textAttributes.foregroundColor {
-            textProperties.foregroundColor = foregroundColor
-        }
-
-        textProperties.alignment = shadow.textAttributes.alignment
-        textProperties.fontSize = shadow.textAttributes.fontSize
-        textProperties.contentRect = shadow.contentFrame
-
-        return textProperties
-    }
 }
 
 internal struct RCTTextViewWireframesBuilder: SessionReplayNodeWireframesBuilder {
