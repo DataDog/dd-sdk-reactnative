@@ -9,6 +9,7 @@ import {
   DdLogs,
   DdTrace,
   TrackingConsent,
+  LogsConfiguration,
 } from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
@@ -46,7 +47,9 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
         trackErrors: true,
         sessionSampleRate: 100,
         telemetrySampleRate: 100,
-      }
+      },
+      logsConfiguration: {},
+      traceConfiguration: {}
     }
   );
   config.verbosity = SdkVerbosity.DEBUG;

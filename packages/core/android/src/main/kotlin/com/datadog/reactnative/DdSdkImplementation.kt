@@ -48,6 +48,11 @@ class DdSdkImplementation(
         val nativeInitialization = DdSdkNativeInitialization(appContext, datadog, ddTelemetry)
         nativeInitialization.initialize(ddSdkConfiguration)
 
+        val activity = reactContext.currentActivity
+        if (ddSdkConfiguration.rumConfiguration != null && activity != null) {
+            datadog.getRumMonitor()._getInternal()?.enableJankStatsTracking(activity)
+        }
+
         this.frameRateProvider = createFrameRateProvider(ddSdkConfiguration)
 
         reactContext.addLifecycleEventListener(object : LifecycleEventListener {
