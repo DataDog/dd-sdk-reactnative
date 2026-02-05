@@ -46,6 +46,7 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
         trackErrors: true,
         sessionSampleRate: 100,
         telemetrySampleRate: 100,
+        nativeCrashReportEnabled: true
       }
     }
   );
