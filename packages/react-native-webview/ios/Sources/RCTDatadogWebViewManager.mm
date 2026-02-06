@@ -33,7 +33,21 @@ RCT_CUSTOM_VIEW_PROPERTY(allowedHosts, NSArray, RCTDatadogWebView)
 }
 
 + (BOOL)requiresMainQueueSetup {
-    return YES;
+    // Must return NO to prevent a deadlock on Fabric (New Architecture).
+    //
+    // When this returns YES, React Native's Paper interop layer calls
+    // dispatch_sync(dispatch_get_main_queue()) to create the module instance.
+    // If that happens while ComponentDescriptorRegistry's write lock is held
+    // (during lazy component descriptor registration), and the main thread is
+    // simultaneously blocked trying to acquire a read lock on the same mutex
+    // (from an animation frame update via RCTPropsAnimatedNode), a deadlock
+    // occurs.
+    //
+    // Returning NO is safe because init only allocates plain objects
+    // (NSMutableSet, RCTDatadogWebViewTracking) with no UIKit dependencies.
+    // All UI work (view creation, prop updates) is dispatched to the main
+    // thread by React Native's view management system.
+    return NO;
 }
 
 // MARK: - Initialization
