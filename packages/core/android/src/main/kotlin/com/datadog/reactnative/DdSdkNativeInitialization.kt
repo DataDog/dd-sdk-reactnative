@@ -30,6 +30,7 @@ import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.Trace
 import com.datadog.android.trace.TraceConfiguration
+import com.datadog.android.ndk.NdkCrashReports
 import com.google.gson.Gson
 import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
@@ -44,12 +45,14 @@ class DdSdkNativeInitialization internal constructor(
     private val ddTelemetry: DdTelemetry = DdTelemetry(),
     private val jsonFileReader: JSONFileReader = JSONFileReader()
 ) {
+    @Suppress("CyclomaticComplexMethod")
     internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
         var rumConfiguration: RumConfiguration? = null
         var logsConfiguration: LogsConfiguration? = null
         var traceConfiguration: TraceConfiguration? = null
+        val nativeCrashReportEnabled = ddSdkConfiguration.rumConfiguration?.nativeCrashReportEnabled ?: false
 
         if (ddSdkConfiguration.rumConfiguration != null) {
              rumConfiguration = buildRumConfiguration(ddSdkConfiguration)
@@ -87,6 +90,10 @@ class DdSdkNativeInitialization internal constructor(
 
         if (traceConfiguration != null) {
             Trace.enable(traceConfiguration, Datadog.getInstance())
+        }
+
+        if (nativeCrashReportEnabled) {
+            NdkCrashReports.enable()
         }
     }
 

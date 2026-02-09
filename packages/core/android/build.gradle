@@ -210,6 +210,7 @@ dependencies {
   implementation "com.datadoghq:dd-sdk-android-logs:3.5.0"
   implementation "com.datadoghq:dd-sdk-android-trace:3.5.0"
   implementation "com.datadoghq:dd-sdk-android-webview:3.5.0"
+  implementation "com.datadoghq:dd-sdk-android-ndk:3.5.0"
   implementation "com.datadoghq:dd-sdk-android-flags:3.5.0"
   implementation "com.google.code.gson:gson:2.10.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
