@@ -317,9 +317,6 @@ public class DdRumImplementation: NSObject {
                 ssl: ssl,
                 firstByte: firstByte,
                 download: download,
-                // no need to define the size here, because if it is missing,
-                // it will be taken from the command
-                responseSize: nil,
                 attributes: [:]
             )
         }
