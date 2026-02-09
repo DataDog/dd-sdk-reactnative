@@ -2382,7 +2382,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature"
   dependencies:
-    "@datadog/mobile-react-native": ^3.0.1
+    "@datadog/mobile-react-native": ^3.0.2
     "@openfeature/core": ^1.8.0
     "@openfeature/web-sdk": ^1.5.0
     "@testing-library/react-native": 7.0.2
