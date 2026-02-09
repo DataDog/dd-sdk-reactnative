@@ -33,7 +33,7 @@ RCT_CUSTOM_VIEW_PROPERTY(allowedHosts, NSArray, RCTDatadogWebView)
 }
 
 + (BOOL)requiresMainQueueSetup {
-    return YES;
+    return NO;
 }
 
 // MARK: - Initialization
