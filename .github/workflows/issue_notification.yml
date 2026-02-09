@@ -3,9 +3,9 @@ name: Github Issue Notification
 
 on:
   # # When a new issue is opened
-  # issues:
-  #   types:
-  #   - opened
+  issues:
+    types:
+    - opened
 
   # When manually triggering the workflow
   workflow_dispatch:
