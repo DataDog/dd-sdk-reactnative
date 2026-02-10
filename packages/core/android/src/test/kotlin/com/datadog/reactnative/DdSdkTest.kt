@@ -6,10 +6,13 @@
 
 package com.datadog.reactnative
 
+import android.content.Context
 import android.content.pm.PackageInfo
+import android.hardware.display.DisplayManager
 import android.os.Looper
 import android.util.Log
 import android.view.Choreographer
+import android.view.Display
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
@@ -71,6 +74,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Answers
 import org.mockito.Mock
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
@@ -3450,6 +3455,29 @@ internal class DdSdkTest {
             deviceDisplayFps = 60.0
         )
         assertThat(frameTimeSeconds).isEqualTo(0.016, Offset.offset(0.001))
+    }
+
+    @Test
+    fun `M getMaxDisplayRefreshRate returns default when supportedModes is empty`() {
+        // Given
+        val mockContext = mock(Context::class.java)
+        val mockDisplayManager = mock(DisplayManager::class.java)
+        val mockDisplay = mock(Display::class.java)
+
+        `when`(mockContext.getSystemService(Context.DISPLAY_SERVICE)).thenReturn(mockDisplayManager)
+        `when`(mockDisplayManager.getDisplay(Display.DEFAULT_DISPLAY)).thenReturn(mockDisplay)
+        `when`(mockDisplay.supportedModes).thenReturn(arrayOf())
+
+        // When
+        val result = testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = null,
+            deviceDisplayFps = null
+        )
+
+        // Then
+        assertThat(result).isEqualTo(0.016, Offset.offset(0.001))
     }
 
     // endregion
