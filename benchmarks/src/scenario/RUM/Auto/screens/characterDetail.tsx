@@ -33,9 +33,8 @@ function CharacterDetailScreen(): React.JSX.Element {
 
     const onShowEpisodes = async () => {
         try {
-            const episodeNames = await Promise.all(episodeURLs.map((url) =>
-                RickMortyService.fetchRequest(url).then(json => json.name)
-            ));
+            const episodeData = await RickMortyService.fetchEpisodesByIds(episodeURLs);
+            const episodeNames = episodeData.map(episode => episode.name);
             setEpisodes(episodeNames);
         } catch (_error) {
             Alert.alert("Something went wrong. Please try again later.");

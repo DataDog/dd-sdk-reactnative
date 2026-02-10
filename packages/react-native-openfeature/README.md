@@ -1,6 +1,6 @@
 # Datadog OpenFeature Provider for React Native
 
-Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags and send flag evaluation data to Datadog for monitoring analysis and experimentation.
+Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags and send evaluation data to Datadog for analysis and experimentation.
 
 This package provides an OpenFeature-compatible provider that wraps Datadog's Feature Flags SDK.
 
@@ -10,7 +10,7 @@ OpenFeature is a vendor-neutral, community-driven specification and SDK for feat
 
 ## Setup
 
-**Note**: This package is an integration for the [OpenFeature React SDK][1]. Before using it, install and set up the core [`mobile-react-native`][3] SDK.
+**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to start using Datadog Feature Flags.
 
 To install with NPM, run:
 
@@ -29,8 +29,6 @@ yarn add @datadog/mobile-react-native @datadog/mobile-react-native-openfeature @
 ### Initialize the Datadog SDK and OpenFeature
 
 Use the example code snippet below to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
-
-After completing this setup, your app should be ready for flag evaluation with OpenFeature.
 
 ```tsx
 import { CoreConfiguration, DatadogProvider, DdFlags } from '@datadog/mobile-react-native';
@@ -66,6 +64,8 @@ import { OpenFeature } from '@openfeature/react-sdk';
     {/* ... */}
 </DatadogProvider>
 ```
+
+After completing this setup, your app is ready for flag evaluation with OpenFeature.
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure this.
 

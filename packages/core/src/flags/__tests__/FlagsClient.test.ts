@@ -202,7 +202,7 @@ describe('FlagsClient', () => {
             });
         });
 
-        it('should return the default value if there is a type mismatch between default value and called method type', async () => {
+        it('should return TYPE_MISMATCH when using wrong typed accessor method', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
             const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
@@ -210,46 +210,42 @@ describe('FlagsClient', () => {
                 attributes: { country: 'US' }
             });
 
-            const booleanDetails = flagsClient.getBooleanDetails(
+            // Call getStringDetails on a boolean flag.
+            const booleanFlagAsString = flagsClient.getStringDetails(
                 'test-boolean-flag',
-                // @ts-expect-error - testing validation
-                'hello world'
+                'default'
             );
-            const stringDetails = flagsClient.getStringDetails(
+            // Call getBooleanDetails on a string flag.
+            const stringFlagAsBoolean = flagsClient.getBooleanDetails(
                 'test-string-flag',
-                // @ts-expect-error - testing validation
-                true
+                false
             );
-            const numberDetails = flagsClient.getNumberDetails(
+            // Call getStringDetails on a number flag.
+            const numberFlagAsString = flagsClient.getStringDetails(
                 'test-number-flag',
-                // @ts-expect-error - testing validation
-                'hello world'
-            );
-            const objectDetails = flagsClient.getObjectDetails(
-                'test-object-flag',
-                'hello world'
+                'default'
             );
 
-            // The default value is passed through.
-            expect(booleanDetails).toMatchObject({
-                value: 'hello world',
+            expect(booleanFlagAsString).toMatchObject({
+                key: 'test-boolean-flag',
+                value: 'default',
                 errorCode: 'TYPE_MISMATCH',
-                reason: 'ERROR'
+                reason: 'ERROR',
+                errorMessage: expect.stringContaining('boolean')
             });
-            expect(stringDetails).toMatchObject({
-                value: true,
+            expect(stringFlagAsBoolean).toMatchObject({
+                key: 'test-string-flag',
+                value: false,
                 errorCode: 'TYPE_MISMATCH',
-                reason: 'ERROR'
+                reason: 'ERROR',
+                errorMessage: expect.stringContaining('string')
             });
-            expect(numberDetails).toMatchObject({
-                value: 'hello world',
+            expect(numberFlagAsString).toMatchObject({
+                key: 'test-number-flag',
+                value: 'default',
                 errorCode: 'TYPE_MISMATCH',
-                reason: 'ERROR'
-            });
-
-            // We don't do validation on the object value as it can hold any JSON value.
-            expect(objectDetails.value).toMatchObject({
-                greeting: 'Greeting from the native side!'
+                reason: 'ERROR',
+                errorMessage: expect.stringContaining('number')
             });
         });
     });
@@ -287,7 +283,7 @@ describe('FlagsClient', () => {
             });
         });
 
-        it('should return the default value if there is a type mismatch between default value and called method type', async () => {
+        it('should return the default value when using wrong typed accessor method', async () => {
             // Flag values are mocked in the __mocks__/react-native.ts file.
             const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
@@ -295,35 +291,26 @@ describe('FlagsClient', () => {
                 attributes: { country: 'US' }
             });
 
-            const booleanValue = flagsClient.getBooleanValue(
+            // Call getStringValue on a boolean flag.
+            const booleanFlagAsString = flagsClient.getStringValue(
                 'test-boolean-flag',
-                // @ts-expect-error - testing validation
-                'hello world'
+                'default'
             );
-            const stringValue = flagsClient.getStringValue(
+            // Call getBooleanValue on a string flag.
+            const stringFlagAsBoolean = flagsClient.getBooleanValue(
                 'test-string-flag',
-                // @ts-expect-error - testing validation
-                true
+                false
             );
-            const numberValue = flagsClient.getNumberValue(
+            // Call getStringValue on a number flag.
+            const numberFlagAsString = flagsClient.getStringValue(
                 'test-number-flag',
-                // @ts-expect-error - testing validation
-                'hello world'
-            );
-            const objectValue = flagsClient.getObjectValue(
-                'test-object-flag',
-                'hello world'
+                'default'
             );
 
-            // The default value is passed through.
-            expect(booleanValue).toBe('hello world');
-            expect(stringValue).toBe(true);
-            expect(numberValue).toBe('hello world');
-
-            // We don't do validation on the object value as it can hold any JSON value.
-            expect(objectValue).toMatchObject({
-                greeting: 'Greeting from the native side!'
-            });
+            // The default value is returned due to TYPE_MISMATCH.
+            expect(booleanFlagAsString).toBe('default');
+            expect(stringFlagAsBoolean).toBe(false);
+            expect(numberFlagAsString).toBe('default');
         });
     });
 });
