@@ -5,6 +5,7 @@
  */
 
 import type {
+    DdNativeFlagsType,
     DdNativeSdkType,
     DdNativeLogsType
 } from '../src/nativeModulesTypes';
@@ -166,5 +167,12 @@ actualRN.NativeModules.DdRum = {
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['failFeatureOperation']>
 };
+
+const DdFlags: DdNativeFlagsType = {
+    enable: jest.fn(() => Promise.resolve()),
+    setEvaluationContext: jest.fn(() => Promise.resolve({})),
+    trackEvaluation: jest.fn(() => Promise.resolve())
+};
+actualRN.NativeModules.DdFlags = DdFlags;
 
 module.exports = actualRN;

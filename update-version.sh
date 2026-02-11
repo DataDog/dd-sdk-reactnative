@@ -19,6 +19,7 @@ yarn workspace @datadog/mobile-react-native-apollo-client pack
 yarn workspace @datadog/mobile-react-native-babel-plugin pack
 yarn workspace @datadog/mobile-react-native-session-replay pack
 yarn workspace @datadog/mobile-react-native-webview pack
+yarn workspace @datadog/mobile-react-native-openfeature pack
 yarn workspace @datadog/react-native-internal-testing-tools pack
 
 ./check-release-content.sh -p packages/core/package.tgz > packages/core/release-content.txt
@@ -27,6 +28,7 @@ yarn workspace @datadog/react-native-internal-testing-tools pack
 ./check-release-content.sh -p packages/react-native-apollo-client/package.tgz > packages/react-native-apollo-client/release-content.txt
 ./check-release-content.sh -p packages/react-native-babel-plugin/package.tgz > packages/react-native-babel-plugin/release-content.txt
 ./check-release-content.sh -p packages/react-native-session-replay/package.tgz > packages/react-native-session-replay/release-content.txt
+./check-release-content.sh -p packages/react-native-openfeature/package.tgz > packages/react-native-openfeature/release-content.txt
 ./check-release-content.sh -p packages/react-native-internal-testing-tools/package.tgz > packages/internal-testing-tools/release-content.txt
 
 

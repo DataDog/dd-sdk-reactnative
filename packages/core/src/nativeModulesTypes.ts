@@ -5,6 +5,7 @@
  */
 
 import type { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
+import type { Spec as NativeDdFlags } from './specs/NativeDdFlags';
 import type { Spec as NativeDdLogs } from './specs/NativeDdLogs';
 import type { Spec as NativeDdRum } from './specs/NativeDdRum';
 import type { Spec as NativeDdSdk } from './specs/NativeDdSdk';
@@ -24,6 +25,11 @@ export type DdNativeLogsType = NativeDdLogs;
  * The entry point to use Datadog's Trace feature.
  */
 export type DdNativeTraceType = NativeDdTrace;
+
+/**
+ * The entry point to use Datadog's Flags feature.
+ */
+export type DdNativeFlagsType = NativeDdFlags;
 
 /**
  * The entry point to initialize Datadog's features.

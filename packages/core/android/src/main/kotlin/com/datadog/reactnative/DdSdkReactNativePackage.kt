@@ -25,6 +25,7 @@ class DdSdkReactNativePackage : TurboReactPackage() {
             DdRumImplementation.NAME -> DdRum(reactContext, sdkWrapper)
             DdTraceImplementation.NAME -> DdTrace(reactContext)
             DdLogsImplementation.NAME -> DdLogs(reactContext, sdkWrapper)
+            DdFlagsImplementation.NAME -> DdFlags(reactContext)
             else -> null
         }
     }
@@ -36,7 +37,8 @@ class DdSdkReactNativePackage : TurboReactPackage() {
                 DdSdkImplementation.NAME,
                 DdRumImplementation.NAME,
                 DdTraceImplementation.NAME,
-                DdLogsImplementation.NAME
+                DdLogsImplementation.NAME,
+                DdFlagsImplementation.NAME
             ).associateWith {
                 ReactModuleInfo(
                     it,
