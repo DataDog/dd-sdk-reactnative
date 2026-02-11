@@ -397,7 +397,7 @@ class DdSdkImplementation(
         val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
         val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
 
-        return display.supportedModes.maxOf { it.refreshRate.toDouble() }
+        return display.supportedModes.maxOfOrNull { it.refreshRate.toDouble() } ?: DEFAULT_REFRESH_HZ
     }
 
     // endregion
