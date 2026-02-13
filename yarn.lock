@@ -2401,7 +2401,7 @@ __metadata:
   resolution: "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay"
   dependencies:
     "@testing-library/react-native": 7.0.2
-    chokidar: ^4.0.3
+    chokidar: ^5.0.0
     react-native-builder-bob: 0.26.0
   peerDependencies:
     react: ">=16.13.1"
@@ -7465,12 +7465,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "chokidar@npm:4.0.3"
+"chokidar@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "chokidar@npm:5.0.0"
   dependencies:
-    readdirp: ^4.0.1
-  checksum: a8765e452bbafd04f3f2fad79f04222dd65f43161488bb6014a41099e6ca18d166af613d59a90771908c1c823efa3f46ba36b86ac50b701c20c1b9908c5fe36e
+    readdirp: ^5.0.0
+  checksum: 48c0d510d84c228acae24dcf4418d55193ae0fd6cf2d114a3cf893ea68cca95f1876e1b02353a275b0b0b5f933f7c5b5bf126063211c0c8c30b213dd03328897
   languageName: node
   linkType: hard
 
@@ -16398,10 +16398,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readdirp@npm:^4.0.1":
-  version: 4.1.2
-  resolution: "readdirp@npm:4.1.2"
-  checksum: 3242ee125422cb7c0e12d51452e993f507e6ed3d8c490bc8bf3366c5cdd09167562224e429b13e9cb2b98d4b8b2b11dc100d3c73883aa92d657ade5a21ded004
+"readdirp@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "readdirp@npm:5.0.0"
+  checksum: 3c8ddf1a08fa0adf8f14685a373dd205ada0f2de980e7e77f9846026f331acbc6035040ba204d22b368a0dc8eb7bee2d737fb19f398d73c716c510ce3b2e5583
   languageName: node
   linkType: hard
 
