@@ -8330,7 +8330,7 @@ __metadata:
     babel-plugin-module-resolver: ^4.0.0
     patch-package: ^8.0.0
     postinstall-postinstall: ^2.1.0
-    react: 18.3.1
+    react: 19.2.4
     react-native: 0.76.9
     react-native-crash-tester: 0.2.3
     react-native-gesture-handler: 2.24.0
@@ -16302,6 +16302,13 @@ __metadata:
   version: 19.0.0
   resolution: "react@npm:19.0.0"
   checksum: 86de15d85b2465feb40297a90319c325cb07cf27191a361d47bcfe8c6126c973d660125aa67b8f4cbbe39f15a2f32efd0c814e98196d8e5b68c567ba40a399c6
+  languageName: node
+  linkType: hard
+
+"react@npm:19.2.4":
+  version: 19.2.4
+  resolution: "react@npm:19.2.4"
+  checksum: edf2b96619fab3a8b11714f16a0994a92c6b473aecf3269b63e4fa317d3073d40513c1f19cf4415ebbad94d35b48ff76ad768480db663037e2d929e8d60596b8
   languageName: node
   linkType: hard
 
