@@ -25,9 +25,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:^3.8.3":
-  version: 3.13.8
-  resolution: "@apollo/client@npm:3.13.8"
+"@apollo/client@npm:^3.13.9":
+  version: 3.14.0
+  resolution: "@apollo/client@npm:3.14.0"
   dependencies:
     "@graphql-typed-document-node/core": ^3.1.1
     "@wry/caches": ^1.0.0
@@ -57,7 +57,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 39f058c2681aaa1f95275d8e856976fb1e15f30bdac33758d3cf3c8dc08f111c1cdfa3a30a777ad1088b950cb94336197a81d136a43faa7470cbf2c9746f53ce
+  checksum: 682a8c8103c80940ee89e0f5d6a5dba3d47dd6915b7016f4d19bcebabbe8c6d0d52ca9ff9598d50d4bc0711f8ef66b4f9b8e832494244bcdf3b91377e489e293
   languageName: node
   linkType: hard
 
@@ -2300,12 +2300,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-apollo-client@workspace:packages/react-native-apollo-client"
   dependencies:
-    "@apollo/client": ^3.8.3
+    "@apollo/client": ^3.13.9
     "@testing-library/react-native": 7.0.2
-    graphql: ^16.8.0
+    graphql: ^16.12.0
     react-native-builder-bob: 0.26.0
   peerDependencies:
-    "@apollo/client": ">=3.0"
+    "@apollo/client": 3.13.9
     "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
@@ -10696,10 +10696,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:^16.8.0":
-  version: 16.11.0
-  resolution: "graphql@npm:16.11.0"
-  checksum: 65bc206edbe980f2759a8e4cf324873f75a66ab48263961472716e50127ae446739be20f926bb7f036a8d199bd4de072f684fd147c285bd6ba965d98cebb6200
+"graphql@npm:^16.12.0":
+  version: 16.12.0
+  resolution: "graphql@npm:16.12.0"
+  checksum: c0d2435425270c575091861c9fd82d7cebc1fb1bd5461e05c36521a988f69c5074461e27b89ab70851fabc72ec9d988235f288ba7bbeff67d08a973e8b9d6d3d
   languageName: node
   linkType: hard
 
