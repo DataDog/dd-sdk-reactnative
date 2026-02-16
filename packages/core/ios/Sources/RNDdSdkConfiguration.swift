@@ -5,7 +5,6 @@
  */
 
 import DatadogCore
-import DatadogFlags
 import DatadogInternal
 import DatadogRUM
 import Foundation
@@ -179,7 +178,7 @@ extension NSDictionary {
             reactNativeVersion: reactNativeVersion
         )
     }
-
+    
     func asProxyConfiguration() -> [AnyHashable: Any]? {
         guard let address = object(forKey: "address") as? String else {
             return nil

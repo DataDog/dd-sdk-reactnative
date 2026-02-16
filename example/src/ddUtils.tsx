@@ -7,10 +7,7 @@ import {
     TrackingConsent,
     BatchSize,
     UploadFrequency,
-    DdFlags,
 } from '@datadog/mobile-react-native';
-import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
-import { OpenFeature } from '@openfeature/react-sdk';
 
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 import { BatchProcessingLevel } from '@datadog/mobile-react-native/src/config/types';
@@ -85,11 +82,4 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
         DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
         DdSdkReactNative.addAttributes({campaign: "ad-network"})
     });
-
-    // Enable the Flags feature.
-    DdFlags.enable().then(() => {
-        // Set the provider with OpenFeature.
-        const provider = new DatadogOpenFeatureProvider();
-        OpenFeature.setProvider(provider);
-    })
 }

@@ -25,28 +25,6 @@ fun Map<*, *>.toReadableMap(): ReadableMap {
     return JavaOnlyMap.of(*keysAndValues.toTypedArray())
 }
 
-/**
- * Recursively converts the [Map] to a [ReadableMap], including nested maps and lists.
- */
-fun Map<*, *>.toReadableMapDeep(): ReadableMap {
-    val keysAndValues = mutableListOf<Any?>()
-
-    entries.forEach {
-        keysAndValues.add(it.key)
-        keysAndValues.add(
-            when (val value = it.value) {
-                is ReadableMap -> value
-                is ReadableArray -> value
-                is Map<*, *> -> value.toReadableMapDeep()
-                is List<*> -> value.toReadableArrayDeep()
-                else -> value
-            }
-        )
-    }
-
-    return JavaOnlyMap.of(*keysAndValues.toTypedArray())
-}
-
 fun Map<String, Set<TracingHeaderType>>.toFirstPartyHostsReadableArray(): ReadableArray {
     val list = mutableListOf<Any>()
 
@@ -68,22 +46,6 @@ fun Map<String, Set<TracingHeaderType>>.toFirstPartyHostsReadableArray(): Readab
 fun List<*>.toReadableArray(): ReadableArray {
     // this FB implementation is not backed by Android-specific .so library, so ok for unit tests
     return JavaOnlyArray.from(this)
-}
-
-/**
- * Recursively converts the [List] to a [ReadableArray], including nested maps and lists.
- */
-fun List<*>.toReadableArrayDeep(): ReadableArray {
-    val convertedList = this.map { value ->
-        when (value) {
-            is ReadableMap -> value
-            is ReadableArray -> value
-            is Map<*, *> -> value.toReadableMapDeep()
-            is List<*> -> value.toReadableArrayDeep()
-            else -> value
-        }
-    }
-    return JavaOnlyArray.from(convertedList)
 }
 
 fun Set<*>.toReadableArray(): ReadableArray {
