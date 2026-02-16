@@ -45,7 +45,9 @@ class DdFlagsWrapper implements DdFlagsType {
             );
         }
 
-        this.clients[clientName] ??= new FlagsClient(clientName);
+        if (!this.clients[clientName]) {
+            this.clients[clientName] = new FlagsClient(clientName);
+        }
 
         return this.clients[clientName];
     };
