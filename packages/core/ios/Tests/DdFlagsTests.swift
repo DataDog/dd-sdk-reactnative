@@ -98,7 +98,8 @@ class DdFlagsTests: XCTestCase {
             XCTFail("Should not resolve")
             expectation.fulfill()
         }, reject: { code, message, error in
-            XCTAssertEqual(message, "CLIENT_NOT_INITIALIZED")
+            XCTAssertEqual(code, "CLIENT_NOT_INITIALIZED")
+            XCTAssertNotNil(message)
             expectation.fulfill()
         })
 
@@ -117,7 +118,8 @@ class DdFlagsTests: XCTestCase {
             XCTFail("Should not resolve")
             expectation.fulfill()
         }, reject: { code, message, error in
-            XCTAssertEqual(message, "NETWORK_ERROR")
+            XCTAssertEqual(code, "NETWORK_ERROR")
+            XCTAssertNotNil(message)
             expectation.fulfill()
         })
 
@@ -164,7 +166,8 @@ class DdFlagsTests: XCTestCase {
             XCTFail("Should not resolve")
             expectation.fulfill()
         }, reject: { code, message, error in
-            XCTAssertEqual(message, "INVALID_FLAG_ASSIGNMENT")
+            XCTAssertEqual(code, "INVALID_FLAG_ASSIGNMENT")
+            XCTAssertNotNil(message)
             expectation.fulfill()
         })
 
