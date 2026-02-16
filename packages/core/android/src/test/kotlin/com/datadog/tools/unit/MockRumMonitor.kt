@@ -147,4 +147,7 @@ class MockRumMonitor : RumMonitor {
         failureReason: FailureReason,
         attributes: Map<String, Any?>
     ) {}
+
+    @ExperimentalRumApi
+    override fun reportAppFullyDisplayed() {}
 }

@@ -3,6 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+@file:Suppress("TooManyFunctions")
 
 package com.datadog.reactnative
 
@@ -15,53 +16,84 @@ import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Converts the [List] to a [WritableNativeArray].
  */
-internal fun List<*>.toWritableArray(): WritableArray {
-    return this.toWritableArray(
+internal fun List<*>.toWritableArray(): WritableArray =
+    this.toWritableArray(
         createWritableMap = { WritableNativeMap() },
-        createWritableArray = { WritableNativeArray() }
+        createWritableArray = { WritableNativeArray() },
     )
-}
 
 /**
  * Converts the [List] to a [WritableArray].
  * @param createWritableMap a function to provide a concrete instance of new WritableMap(s)
  * @param createWritableArray a function to provide a concrete instance of new WritableArray(s)
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun List<*>.toWritableArray(
     createWritableMap: () -> WritableMap,
-    createWritableArray: () -> WritableArray
+    createWritableArray: () -> WritableArray,
 ): WritableArray {
     val writableArray = createWritableArray()
 
     for (it in iterator()) {
         when (it) {
-            null -> writableArray.pushNull()
-            is Int -> writableArray.pushInt(it)
-            is Long -> writableArray.pushDouble(it.toDouble())
-            is Float -> writableArray.pushDouble(it.toDouble())
-            is Double -> writableArray.pushDouble(it)
-            is String -> writableArray.pushString(it)
-            is Boolean -> writableArray.pushBoolean(it)
-            is List<*> -> writableArray.pushArray(
-                it.toWritableArray(
-                    createWritableMap,
-                    createWritableArray
+            null -> {
+                writableArray.pushNull()
+            }
+
+            is Int -> {
+                writableArray.pushInt(it)
+            }
+
+            is Long -> {
+                writableArray.pushDouble(it.toDouble())
+            }
+
+            is Float -> {
+                writableArray.pushDouble(it.toDouble())
+            }
+
+            is Double -> {
+                writableArray.pushDouble(it)
+            }
+
+            is String -> {
+                writableArray.pushString(it)
+            }
+
+            is Boolean -> {
+                writableArray.pushBoolean(it)
+            }
+
+            is List<*> -> {
+                writableArray.pushArray(
+                    it.toWritableArray(
+                        createWritableMap,
+                        createWritableArray,
+                    ),
                 )
-            )
-            is Map<*, *> -> writableArray.pushMap(
-                it.toWritableMap(
-                    createWritableMap,
-                    createWritableArray
+            }
+
+            is Map<*, *> -> {
+                writableArray.pushMap(
+                    it.toWritableMap(
+                        createWritableMap,
+                        createWritableArray,
+                    ),
                 )
-            )
-            else -> Log.e(
-                javaClass.simpleName,
-                "toWritableArray(): Unhandled type ${it.javaClass.simpleName} has been ignored"
-            )
+            }
+
+            else -> {
+                Log.e(
+                    javaClass.simpleName,
+                    "toWritableArray(): Unhandled type ${it.javaClass.simpleName} has been ignored",
+                )
+            }
         }
     }
 
@@ -71,52 +103,81 @@ internal fun List<*>.toWritableArray(
 /**
  * Converts the [Map] to a [WritableNativeMap].
  */
-internal fun Map<*, *>.toWritableMap(): WritableMap {
-    return this.toWritableMap(
+internal fun Map<*, *>.toWritableMap(): WritableMap =
+    this.toWritableMap(
         createWritableMap = { WritableNativeMap() },
-        createWritableArray = { WritableNativeArray() }
+        createWritableArray = { WritableNativeArray() },
     )
-}
 
 /**
  * Converts the [Map] to a [WritableMap].
  * @param createWritableMap a function to provide a concrete instance for WritableMap(s)
  * @param createWritableArray a function to provide a concrete instance for WritableArray(s)
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun Map<*, *>.toWritableMap(
     createWritableMap: () -> WritableMap,
-    createWritableArray: () -> WritableArray
+    createWritableArray: () -> WritableArray,
 ): WritableMap {
     val map = createWritableMap()
 
     for ((k, v) in iterator()) {
         val key = (k as? String) ?: k.toString()
         when (v) {
-            null -> map.putNull(key)
-            is Int -> map.putInt(key, v)
-            is Long -> map.putDouble(key, v.toDouble())
-            is Float -> map.putDouble(key, v.toDouble())
-            is Double -> map.putDouble(key, v)
-            is String -> map.putString(key, v)
-            is Boolean -> map.putBoolean(key, v)
-            is List<*> -> map.putArray(
-                key,
-                v.toWritableArray(
-                    createWritableMap,
-                    createWritableArray
+            null -> {
+                map.putNull(key)
+            }
+
+            is Int -> {
+                map.putInt(key, v)
+            }
+
+            is Long -> {
+                map.putDouble(key, v.toDouble())
+            }
+
+            is Float -> {
+                map.putDouble(key, v.toDouble())
+            }
+
+            is Double -> {
+                map.putDouble(key, v)
+            }
+
+            is String -> {
+                map.putString(key, v)
+            }
+
+            is Boolean -> {
+                map.putBoolean(key, v)
+            }
+
+            is List<*> -> {
+                map.putArray(
+                    key,
+                    v.toWritableArray(
+                        createWritableMap,
+                        createWritableArray,
+                    ),
                 )
-            )
-            is Map<*, *> -> map.putMap(
-                key,
-                v.toWritableMap(
-                    createWritableMap,
-                    createWritableArray
+            }
+
+            is Map<*, *> -> {
+                map.putMap(
+                    key,
+                    v.toWritableMap(
+                        createWritableMap,
+                        createWritableArray,
+                    ),
                 )
-            )
-            else -> Log.e(
-                javaClass.simpleName,
-                "toWritableMap(): Unhandled type ${v.javaClass.simpleName} has been ignored"
-            )
+            }
+
+            else -> {
+                Log.e(
+                    javaClass.simpleName,
+                    "toWritableMap(): Unhandled type ${v.javaClass.simpleName} has been ignored",
+                )
+            }
         }
     }
 
@@ -128,20 +189,25 @@ internal fun Map<*, *>.toWritableMap(
  * such as [List], [Map] and the raw types.
  */
 internal fun ReadableMap.toMap(): Map<String, Any> {
-    val map = this.toHashMap()
-        .filterValues { it != null }
-        .mapValues { it.value!! }
-        .toMap(HashMap())
+    val map =
+        this
+            .toHashMap()
+            .filterValues { it != null }
+            .mapValues { it.value!! }
+            .toMap(HashMap())
     val iterator = map.keys.iterator()
 
-    fun updateMap(key: String, value: Any?) {
+    fun updateMap(
+        key: String,
+        value: Any?,
+    ) {
         if (value != null) {
             map[key] = value
         } else {
             map.remove(key)
             Log.e(
                 javaClass.simpleName,
-                "toMap(): Cannot convert nested object for key: $key"
+                "toMap(): Cannot convert nested object for key: $key",
             )
         }
     }
@@ -150,14 +216,21 @@ internal fun ReadableMap.toMap(): Map<String, Any> {
         val key = iterator.next()
         try {
             when (val type = getType(key)) {
-                ReadableType.Map -> updateMap(key, getMap(key)?.toMap())
-                ReadableType.Array -> updateMap(key, getArray(key)?.toList())
+                ReadableType.Map -> {
+                    updateMap(key, getMap(key)?.toMap())
+                }
+
+                ReadableType.Array -> {
+                    updateMap(key, getArray(key)?.toList())
+                }
+
                 ReadableType.Null, ReadableType.Boolean, ReadableType.Number, ReadableType.String -> {}
+
                 else -> {
                     map.remove(key)
                     Log.e(
                         javaClass.simpleName,
-                        "toMap(): Skipping unhandled type [${type.name}] for key: $key"
+                        "toMap(): Skipping unhandled type [${type.name}] for key: $key",
                     )
                 }
             }
@@ -166,7 +239,7 @@ internal fun ReadableMap.toMap(): Map<String, Any> {
             Log.e(
                 javaClass.simpleName,
                 "toMap(): Could not convert object for key: $key",
-                err
+                err,
             )
         }
     }
@@ -179,6 +252,7 @@ internal fun ReadableMap.toMap(): Map<String, Any> {
  * such as [List], [Map] and the raw types.
  * or [List], instead of [ReadableMap] and [ReadableArray] respectively).
  */
+@Suppress("CyclomaticComplexMethod")
 internal fun ReadableArray.toList(): List<*> {
     val list = mutableListOf<Any?>()
     for (i in 0 until size()) {
@@ -186,32 +260,48 @@ internal fun ReadableArray.toList(): List<*> {
         @Suppress("TooGenericExceptionCaught")
         try {
             when (val type = getType(i)) {
-                ReadableType.Null -> list.add(null)
-                ReadableType.Boolean -> list.add(getBoolean(i))
-                ReadableType.Number -> list.add(getDouble(i))
-                ReadableType.String -> list.add(getString(i))
+                ReadableType.Null -> {
+                    list.add(null)
+                }
+
+                ReadableType.Boolean -> {
+                    list.add(getBoolean(i))
+                }
+
+                ReadableType.Number -> {
+                    list.add(getDouble(i))
+                }
+
+                ReadableType.String -> {
+                    list.add(getString(i))
+                }
+
                 ReadableType.Map -> {
                     // getMap() return type is nullable in previous RN versions
                     @Suppress("USELESS_ELVIS")
                     val readableMap = getMap(i) ?: Arguments.createMap()
                     list.add(readableMap.toMap())
                 }
+
                 ReadableType.Array -> {
                     // getArray() return type is nullable in previous RN versions
                     @Suppress("USELESS_ELVIS")
                     val readableArray = getArray(i) ?: Arguments.createArray()
                     list.add(readableArray.toList())
                 }
-                else -> Log.e(
-                    javaClass.simpleName,
-                    "toList(): Unhandled ReadableType: ${type.name}."
-                )
+
+                else -> {
+                    Log.e(
+                        javaClass.simpleName,
+                        "toList(): Unhandled ReadableType: ${type.name}.",
+                    )
+                }
             }
         } catch (err: NullPointerException) {
             Log.e(
                 javaClass.simpleName,
                 "toList(): Could not convert object at index: $i.",
-                err
+                err,
             )
         }
     }
@@ -223,22 +313,116 @@ internal fun ReadableArray.toList(): List<*> {
  * Returns the boolean for the given key, or null if the entry is
  * not in the map.
  */
-internal fun ReadableMap.getBooleanOrNull(key: String): Boolean? {
-    return if (hasKey(key)) {
+internal fun ReadableMap.getBooleanOrNull(key: String): Boolean? =
+    if (hasKey(key)) {
         getBoolean(key)
     } else {
         null
     }
-}
 
 /**
  * Returns the double for the given key, or null if the entry is
  * not in the map.
  */
-internal fun ReadableMap.getDoubleOrNull(key: String): Double? {
-    return if (hasKey(key)) {
+internal fun ReadableMap.getDoubleOrNull(key: String): Double? =
+    if (hasKey(key)) {
         getDouble(key)
     } else {
         null
     }
+
+/**
+ * Converts a [JSONObject] to a [WritableMap].
+ */
+internal fun JSONObject.toWritableMap(): WritableMap = this.toMap().toWritableMap()
+
+/**
+ * Converts a [JSONObject] to a [Map].
+ */
+internal fun JSONObject.toMap(): Map<String, Any?> {
+    val map = mutableMapOf<String, Any?>()
+    val keys = this.keys()
+
+    while (keys.hasNext()) {
+        val key = keys.next()
+        val value = this.opt(key)
+
+        map[key] =
+            when (value) {
+                null, JSONObject.NULL -> null
+                is JSONObject -> value.toMap()
+                is JSONArray -> value.toList()
+                else -> value
+            }
+    }
+
+    return map
+}
+
+/**
+ * Converts a [JSONArray] to a [List].
+ */
+internal fun JSONArray.toList(): List<Any?> {
+    val list = mutableListOf<Any?>()
+
+    for (i in 0 until this.length()) {
+        val value = this.opt(i)
+
+        list.add(
+            when (value) {
+                null, JSONObject.NULL -> null
+                is JSONObject -> value.toMap()
+                is JSONArray -> value.toList()
+                else -> value
+            },
+        )
+    }
+
+    return list
+}
+
+/**
+ * Converts a [ReadableMap] to a [JSONObject].
+ */
+internal fun ReadableMap.toJSONObject(): JSONObject = this.toMap().toJSONObject()
+
+/**
+ * Converts a [Map] to a [JSONObject].
+ */
+@Suppress("UNCHECKED_CAST")
+internal fun Map<String, Any>.toJSONObject(): JSONObject {
+    val jsonObject = JSONObject()
+
+    for ((key, value) in this) {
+        jsonObject.put(
+            key,
+            when (value) {
+                is Map<*, *> -> (value as Map<String, Any>).toJSONObject()
+                is List<*> -> value.toJSONArray()
+                else -> value
+            },
+        )
+    }
+
+    return jsonObject
+}
+
+/**
+ * Converts a [List] to a [JSONArray].
+ */
+@Suppress("UNCHECKED_CAST")
+internal fun List<*>.toJSONArray(): JSONArray {
+    val jsonArray = JSONArray()
+
+    for (value in this) {
+        jsonArray.put(
+            when (value) {
+                is Map<*, *> -> (value as Map<String, Any>).toJSONObject()
+                is List<*> -> value.toJSONArray()
+                else -> value
+            },
+        )
+    }
+
+    return jsonArray
 }

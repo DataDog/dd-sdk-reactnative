@@ -7,11 +7,12 @@
 import React, { Component, RefObject } from 'react';
 import {
   View, Text, Button, TouchableOpacity,
-  TouchableWithoutFeedback, TouchableNativeFeedback
+  TouchableWithoutFeedback, TouchableNativeFeedback, ActivityIndicator
 } from 'react-native';
+import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
+import { FeatureFlag } from '@openfeature/react-sdk';
 import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
-import { DdLogs, DdSdkReactNative, TrackingConsent } from '@datadog/mobile-react-native';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
 
@@ -113,7 +114,12 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   render() {
     return <View style={styles.defaultScreen}>
-      <Text>{this.state.welcomeMessage}</Text>
+      <FeatureFlag flagKey="rn-sdk-test-boolean-flag" defaultValue={false} fallback={<Text>Welcome!</Text>}>
+        <Text>Greetings from the Feature Flags!</Text>
+      </FeatureFlag>
+
+      <Text style={{ marginTop: 10, textAlign: 'center' }}>The above greeting is being controlled by the{'\n'}`rn-sdk-test-boolean-flag` feature flag.</Text>
+
       <View style={{ marginTop: 40, alignItems: "center" }}>
         <Button
           title={`Tracking Consent: ${this.state.trackingConsent}`}
