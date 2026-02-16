@@ -57,7 +57,7 @@ public class DdFlagsImplementation: NSObject {
     public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         let client = getClient(name: clientName)
         guard let clientInternal = client as? FlagsClientInternal else {
-            reject(nil, "CLIENT_NOT_INITIALIZED", nil)
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
             return
         }
 
@@ -67,7 +67,7 @@ public class DdFlagsImplementation: NSObject {
             switch result {
             case .success:
                 guard let flagsSnapshot = clientInternal.getFlagAssignments() else {
-                    reject(nil, "CLIENT_NOT_INITIALIZED", nil)
+                    reject("CLIENT_NOT_INITIALIZED", "Failed to retrieve feature flags for client '\(clientName)'. Make sure the client has been properly initialized.", nil)
                     return
                 }
 
@@ -80,17 +80,22 @@ public class DdFlagsImplementation: NSObject {
                 resolve(serializedFlagsSnapshot)
             case .failure(let error):
                 var errorCode: String
+                var errorMessage: String
                 switch (error) {
                 case .clientNotInitialized:
                     errorCode = "CLIENT_NOT_INITIALIZED"
+                    errorMessage = "Failed to retrieve feature flags for client '\(clientName)'. Make sure the client has been properly initialized."
                 case .invalidConfiguration:
                     errorCode = "INVALID_CONFIGURATION"
+                    errorMessage = "The flags configuration for client '\(clientName)' is invalid. Check that all required parameters are provided."
                 case .invalidResponse:
                     errorCode = "INVALID_RESPONSE"
+                    errorMessage = "The flags service returned an invalid response for client '\(clientName)'."
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
+                    errorMessage = "A network error occurred while fetching feature flags for client '\(clientName)'."
                 }
-                reject(nil, errorCode, error)
+                reject(errorCode, errorMessage, error as NSError)
             }
         }
     }
@@ -98,11 +103,11 @@ public class DdFlagsImplementation: NSObject {
     @objc
     public func trackEvaluation(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         guard let client = getClient(name: clientName) as? FlagsClientInternal else {
-            reject(nil, "CLIENT_NOT_INITIALIZED", nil)
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
             return
         }
         guard let flagAssignment = rawFlag.asFlagAssignment() else {
-            reject(nil, "INVALID_FLAG_ASSIGNMENT", nil)
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse correct flag assignment from the provided raw flag data.", nil)
             return
         }
 

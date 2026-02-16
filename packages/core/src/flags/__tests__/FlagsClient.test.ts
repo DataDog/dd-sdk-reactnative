@@ -96,7 +96,9 @@ describe('FlagsClient', () => {
 
         it('should throw an error if there is an error setting the evaluation context', async () => {
             NativeModules.DdFlags.setEvaluationContext.mockRejectedValueOnce(
-                new Error('NETWORK_ERROR')
+                new Error(
+                    "A network error occurred while fetching feature flags for client 'default'."
+                )
             );
 
             const flagsClient = DdFlags.getClient();
@@ -106,11 +108,13 @@ describe('FlagsClient', () => {
                     targetingKey: 'test-user-1',
                     attributes: { country: 'US' }
                 })
-            ).rejects.toThrow('NETWORK_ERROR');
+            ).rejects.toThrow(
+                "A network error occurred while fetching feature flags for client 'default'."
+            );
 
             expect(InternalLog.log).toHaveBeenCalledWith(
-                'Error setting flag evaluation context: NETWORK_ERROR',
-                SdkVerbosity.ERROR
+                "Error setting flag evaluation context: A network error occurred while fetching feature flags for client 'default'.",
+                SdkVerbosity.WARN
             );
         });
     });
