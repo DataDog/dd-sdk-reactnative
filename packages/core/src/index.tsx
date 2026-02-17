@@ -30,6 +30,14 @@ import {
     UploadFrequency,
     VitalsUpdateFrequency
 } from './config/types';
+import { DdFlags } from './flags/DdFlags';
+import type { FlagsClient } from './flags/FlagsClient';
+import type {
+    FlagsConfiguration,
+    FlagDetails,
+    EvaluationContext,
+    PrimitiveValue
+} from './flags/types';
 import { DdLogs } from './logs/DdLogs';
 import { DdRum } from './rum/DdRum';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
@@ -61,6 +69,7 @@ export {
     FileBasedConfiguration,
     InitializationMode,
     DdLogs,
+    DdFlags,
     DdTrace,
     DdRum,
     RumActionType,
@@ -102,5 +111,10 @@ export type {
     CoreConfigurationOptions,
     RumConfigurationOptions,
     LogsConfigurationOptions,
-    TraceConfigurationOptions
+    TraceConfigurationOptions,
+    FlagsConfiguration,
+    FlagsClient,
+    EvaluationContext,
+    PrimitiveValue,
+    FlagDetails
 };

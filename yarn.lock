@@ -2378,6 +2378,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature":
+  version: 0.0.0-use.local
+  resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature"
+  dependencies:
+    "@datadog/mobile-react-native": ^3.0.3
+    "@openfeature/core": ^1.8.0
+    "@openfeature/web-sdk": ^1.5.0
+    "@testing-library/react-native": 7.0.2
+    react-native-builder-bob: 0.26.0
+    react-native-gesture-handler: 1.10.3
+  peerDependencies:
+    "@datadog/mobile-react-native": ^3.0.0
+    "@openfeature/web-sdk": ^1.5.0
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  languageName: unknown
+  linkType: soft
+
 "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay"
@@ -4017,6 +4035,42 @@ __metadata:
   dependencies:
     "@octokit/openapi-types": ^24.2.0
   checksum: fca3764548d5872535b9025c3b5fe6373fe588b287cb5b5259364796c1931bbe5e9ab8a86a5274ce43bb2b3e43b730067c3b86b6b1ade12a98cd59b2e8b3610d
+  languageName: node
+  linkType: hard
+
+"@openfeature/core@npm:^1.8.0":
+  version: 1.9.1
+  resolution: "@openfeature/core@npm:1.9.1"
+  checksum: e69eef52e5467eec5376847f1dd60737610d4e52e592e3957db210efb8d84c6c71d60604a0de14c148687e1caebb6981a85eb18fbf70c92c9d5177f7c76ff047
+  languageName: node
+  linkType: hard
+
+"@openfeature/react-sdk@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@openfeature/react-sdk@npm:1.1.0"
+  peerDependencies:
+    "@openfeature/web-sdk": ^1.5.0
+    react: ">=16.8.0"
+  checksum: a87854bd200a8eaa79a40708771111b39735616b30a212cc6cb615d899cba6b7e94747c2e5d57c1427bc05c74add24362e411b16a11ef87698f8ca7750bfd295
+  languageName: node
+  linkType: hard
+
+"@openfeature/react-sdk@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@openfeature/react-sdk@npm:1.2.0"
+  peerDependencies:
+    "@openfeature/web-sdk": ^1.5.0
+    react: ">=16.8.0"
+  checksum: eebacc1b787b6d6cdf449ea78dcfe97035a679fa55eab9c98f862a7b5e5dfa20b5b98e63127c29c053807dbf8aa7f68e9c8339bebfc3da05b84fb822e9d68ccc
+  languageName: node
+  linkType: hard
+
+"@openfeature/web-sdk@npm:^1.5.0":
+  version: 1.7.2
+  resolution: "@openfeature/web-sdk@npm:1.7.2"
+  peerDependencies:
+    "@openfeature/core": ^1.9.0
+  checksum: d759c927699e7aa18bcb5790e1c37d6492c128c069f071a51b600ad2118daf7e1cc4b959334f38eff142ae795fc3eeb1dd406ad4205cd7e3d3395a391f6431f6
   languageName: node
   linkType: hard
 
@@ -6165,6 +6219,8 @@ __metadata:
     "@babel/preset-env": ^7.25.3
     "@babel/runtime": ^7.26.10
     "@datadog/mobile-react-native": "workspace:packages/core"
+    "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature"
+    "@openfeature/react-sdk": ^1.1.0
     "@react-native-community/cli": 15.0.1
     "@react-native-community/cli-platform-android": 15.0.1
     "@react-native-community/cli-platform-ios": 15.0.1
@@ -8253,9 +8309,11 @@ __metadata:
     "@datadog/datadog-ci": ^4.4.0
     "@datadog/mobile-react-native": "workspace:packages/core"
     "@datadog/mobile-react-native-navigation": "workspace:packages/react-native-navigation"
+    "@datadog/mobile-react-native-openfeature": "workspace:packages/react-native-openfeature"
     "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay"
     "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview"
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation"
+    "@openfeature/react-sdk": ^1.2.0
     "@react-native-async-storage/async-storage": ^2.1.2
     "@react-native-community/cli": 15.0.1
     "@react-native-community/cli-platform-android": 15.0.1
