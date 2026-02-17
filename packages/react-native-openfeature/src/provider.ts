@@ -48,7 +48,10 @@ export class DatadogOpenFeatureProvider implements Provider {
     private contextChangePromise = Promise.resolve();
 
     constructor(options: DatadogOpenFeatureProviderOptions = {}) {
-        options.clientName ??= 'default';
+        if (!options.clientName) {
+            options.clientName = 'default';
+        }
+
         this.options = options;
 
         this.flagsClient = DdFlags.getClient(this.options.clientName);

@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-openfeature",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "A client-side React Native module to provide OpenFeature integration with Datadog Feature Flags",
     "keywords": [
         "datadog",
@@ -38,7 +38,7 @@
         "prepare": "rm -rf lib && yarn bob build"
     },
     "devDependencies": {
-        "@datadog/mobile-react-native": "^3.0.2",
+        "@datadog/mobile-react-native": "^3.0.3",
         "@openfeature/core": "^1.8.0",
         "@openfeature/web-sdk": "^1.5.0",
         "@testing-library/react-native": "7.0.2",

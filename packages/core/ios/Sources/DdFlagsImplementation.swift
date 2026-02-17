@@ -53,8 +53,9 @@ public class DdFlagsImplementation: NSObject {
         return client
     }
 
+    // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping ((Any?) -> Void), reject: @escaping ((String?, String?, NSError?) -> Void)) {
         let client = getClient(name: clientName)
         guard let clientInternal = client as? FlagsClientInternal else {
             reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
