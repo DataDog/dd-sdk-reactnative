@@ -69,7 +69,7 @@ export class FlagsClient {
             if (error instanceof Error) {
                 InternalLog.log(
                     `Error setting flag evaluation context: ${error.message}`,
-                    SdkVerbosity.ERROR
+                    SdkVerbosity.WARN
                 );
             }
 
