@@ -53,8 +53,9 @@ public class DdFlagsImplementation: NSObject {
         return client
     }
 
+    // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping ((Any?) -> Void), reject: @escaping ((String?, String?, NSError?) -> Void)) {
         let client = getClient(name: clientName)
         guard let clientInternal = client as? FlagsClientInternal else {
             reject(nil, "CLIENT_NOT_INITIALIZED", nil)
@@ -90,7 +91,7 @@ public class DdFlagsImplementation: NSObject {
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
                 }
-                reject(nil, errorCode, error)
+                reject(nil, errorCode, error as NSError)
             }
         }
     }
