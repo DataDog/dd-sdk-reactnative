@@ -6,7 +6,6 @@
 
 import Foundation
 import React
-import DatadogBenchmarks
 
 struct NativeTestConfig {
     let scenario: String
@@ -14,6 +13,7 @@ struct NativeTestConfig {
     let clientToken: String
     let applicationID: String
     let apiKey: String
+    let env: String
 
     init(from dict: NSDictionary) {
         self.scenario = dict["scenario"] as? String ?? ""
@@ -21,6 +21,7 @@ struct NativeTestConfig {
         self.clientToken = dict["clientToken"] as? String ?? ""
         self.applicationID = dict["applicationID"] as? String ?? ""
         self.apiKey = dict["apiKey"] as? String ?? ""
+        self.env = dict["env"] as? String ?? ""
     }
 }
 
@@ -44,6 +45,7 @@ public class BenchmarkVitalsImplementation: NSObject {
                                       applicationIdentifier: appId,
                                       applicationName: appName,
                                       applicationVersion: appVersion,
+                                      env: nativeConfig.env,
                                       sdkVersion: "",
                                       deviceModel: deviceModel,
                                       osName: osName,
