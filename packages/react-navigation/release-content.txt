@@ -78,6 +78,14 @@ package/lib/typescript/core/src/DdAttributes.d.ts
 package/lib/typescript/core/src/DdAttributes.d.ts.map
 package/lib/typescript/core/src/DdSdkReactNative.d.ts
 package/lib/typescript/core/src/DdSdkReactNative.d.ts.map
+package/lib/typescript/core/src/flags/DdFlags.d.ts
+package/lib/typescript/core/src/flags/DdFlags.d.ts.map
+package/lib/typescript/core/src/flags/FlagsClient.d.ts
+package/lib/typescript/core/src/flags/FlagsClient.d.ts.map
+package/lib/typescript/core/src/flags/internal.d.ts
+package/lib/typescript/core/src/flags/internal.d.ts.map
+package/lib/typescript/core/src/flags/types.d.ts
+package/lib/typescript/core/src/flags/types.d.ts.map
 package/lib/typescript/core/src/index.d.ts
 package/lib/typescript/core/src/index.d.ts.map
 package/lib/typescript/core/src/InternalLog.d.ts
@@ -226,6 +234,8 @@ package/lib/typescript/core/src/sdk/UserInfoSingleton/types.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/types.d.ts.map
 package/lib/typescript/core/src/sdk/UserInfoSingleton/UserInfoSingleton.d.ts
 package/lib/typescript/core/src/sdk/UserInfoSingleton/UserInfoSingleton.d.ts.map
+package/lib/typescript/core/src/specs/NativeDdFlags.d.ts
+package/lib/typescript/core/src/specs/NativeDdFlags.d.ts.map
 package/lib/typescript/core/src/specs/NativeDdLogs.d.ts
 package/lib/typescript/core/src/specs/NativeDdLogs.d.ts.map
 package/lib/typescript/core/src/specs/NativeDdRum.d.ts
