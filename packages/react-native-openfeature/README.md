@@ -2,11 +2,9 @@
 
 Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags and send evaluation data to Datadog for analysis and experimentation.
 
+OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers. This enables you to switch vendors or integrate multiple feature flag systems.
+
 This package provides an OpenFeature-compatible provider that wraps Datadog's Feature Flags SDK.
-
-## What is OpenFeature?
-
-OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers, so you can switch vendors or integrate multiple feature flag systems.
 
 ## Setup
 
@@ -28,7 +26,7 @@ yarn add @datadog/mobile-react-native @datadog/mobile-react-native-openfeature @
 
 ### Initialize the Datadog SDK and OpenFeature
 
-Use the example code snippet below to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
+Use the following example code snippet to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
 
 ```tsx
 import { CoreConfiguration, DatadogProvider, DdFlags } from '@datadog/mobile-react-native';
@@ -50,7 +48,7 @@ import { OpenFeature } from '@openfeature/react-sdk';
     OpenFeature.setProvider(provider);
 })();
 
-// Or, if using `<DatadogProvider />` for core SDK initialization.
+// Alternatively, if using `<DatadogProvider />` for core SDK initialization.
 
 <DatadogProvider
     configuration={coreConfiguration}
@@ -67,7 +65,7 @@ import { OpenFeature } from '@openfeature/react-sdk';
 
 After completing this setup, your app is ready for flag evaluation with OpenFeature.
 
-> **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure this.
+> **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 
 ### Using the OpenFeature React SDK
 
