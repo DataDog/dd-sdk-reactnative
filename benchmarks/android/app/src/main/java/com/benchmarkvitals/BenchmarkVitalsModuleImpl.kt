@@ -10,6 +10,7 @@ import android.content.Context
 import com.benchmarkrunner.BuildConfig
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
+import com.datadog.android.Datadog
 import com.datadog.benchmark.DatadogVitalsMeter
 import com.datadog.benchmark.DatadogExporterConfiguration
 
@@ -33,7 +34,7 @@ class BenchmarkVitalsModuleImpl(private val context: Context) {
       .setIntervalInSeconds(METER_INTERVAL_IN_SECONDS)
       .build()
 
-    vitalsMeter = DatadogVitalsMeter.create(exporterConfig)
+    vitalsMeter = DatadogVitalsMeter.create(exporterConfig, Datadog.getInstance())
     vitalsMeter.startMeasuring()
 
     promise.resolve(true)
