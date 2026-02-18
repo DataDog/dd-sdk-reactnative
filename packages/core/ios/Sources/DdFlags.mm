@@ -3,6 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+
 // Import this first to prevent require cycles
 #if __has_include("DatadogSDKReactNative-Swift.h")
 #import <DatadogSDKReactNative-Swift.h>
