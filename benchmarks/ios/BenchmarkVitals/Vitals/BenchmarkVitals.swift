@@ -16,7 +16,7 @@ internal final class Vitals {
 
     private lazy var meter: MeterSdk = provider.get(name: "vitals")
 
-    let queue = DispatchQueue(label: "com.datadoghq.benchmarks.vitals", target: .global(qos: .utility))
+    let queue = DispatchQueue(label: "com.datadoghq.benchmarks.rn.ios.vitals", target: .global(qos: .utility))
 
     init(provider: MeterProviderSdk) {
         self.provider = provider
@@ -25,7 +25,7 @@ internal final class Vitals {
     @discardableResult
     func observeMemory() -> ObservableInstrumentSdk {
         let memory = Memory(queue: queue)
-        return meter.gaugeBuilder(name: "ios.benchmark.memory").buildWithCallback { measurement in
+        return meter.gaugeBuilder(name: "rn.ios.benchmark.memory").buildWithCallback { measurement in
             // report the maximum memory footprint that was recorded during push interval
             if let value = memory.aggregation?.max {
                 measurement.record(value: value)
@@ -38,7 +38,7 @@ internal final class Vitals {
     @discardableResult
     func observeCPU() -> ObservableInstrumentSdk {
         let cpu = CPU(queue: queue)
-        return meter.gaugeBuilder(name: "ios.benchmark.cpu").buildWithCallback { measurement in
+        return meter.gaugeBuilder(name: "rn.ios.benchmark.cpu").buildWithCallback { measurement in
             // report the average cpu usage that was recorded during push interval
             if let value = cpu.aggregation?.avg {
                 measurement.record(value: value)
@@ -51,7 +51,7 @@ internal final class Vitals {
     @discardableResult
     func observeFPS() -> ObservableInstrumentSdk {
         let fps = FPS()
-        return meter.gaugeBuilder(name: "ios.benchmark.fps.min").ofLongs().buildWithCallback { measurement in
+        return meter.gaugeBuilder(name: "rn.ios.benchmark.fps.min").ofLongs().buildWithCallback { measurement in
             // report the minimum frame rate that was recorded during push interval
             if let value = fps.aggregation?.min {
                 measurement.record(value: value)
