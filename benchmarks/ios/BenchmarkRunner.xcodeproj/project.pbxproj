@@ -3,11 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		04066FD52DCCB9D200A9E317 /* DatadogBenchmarks in Frameworks */ = {isa = PBXBuildFile; productRef = 04066FD42DCCB9D200A9E317 /* DatadogBenchmarks */; };
 		041FA8A82DCCB7FA00BABC32 /* MetricExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 041FA8A62DCCB7FA00BABC32 /* MetricExporter.swift */; };
 		041FA8A92DCCB7FA00BABC32 /* BenchmarkVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 041FA8A52DCCB7FA00BABC32 /* BenchmarkVitals.swift */; };
 		041FA8AA2DCCB7FA00BABC32 /* Metrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 041FA8A72DCCB7FA00BABC32 /* Metrics.swift */; };
@@ -17,6 +16,7 @@
 		043403232DCB9CB200803AF8 /* BenchMarkVitalsImplementation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043403222DCB9CB200803AF8 /* BenchMarkVitalsImplementation.swift */; };
 		043403262DCB9CD700803AF8 /* BenchmarkVitals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 043403242DCB9CD700803AF8 /* BenchmarkVitals.mm */; };
 		04576C962DCBAF900078DCAB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 04576C952DCBAF900078DCAB /* main.m */; };
+		04726DD72F46402A008D1A48 /* TracerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04726DD62F46402A008D1A48 /* TracerProvider.swift */; };
 		0C80B921A6F3F58F76C31292 /* libPods-BenchmarkRunner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-BenchmarkRunner.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		20A397FC280595A8A9851556 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -25,7 +25,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		041FA8A12DCCB7FA00BABC32 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		041FA8A22DCCB7FA00BABC32 /* BenchmarkMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkMeter.swift; sourceTree = "<group>"; };
 		041FA8A32DCCB7FA00BABC32 /* BenchmarkProfiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkProfiler.swift; sourceTree = "<group>"; };
 		041FA8A42DCCB7FA00BABC32 /* Benchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Benchmarks.swift; sourceTree = "<group>"; };
@@ -36,6 +35,7 @@
 		043403242DCB9CD700803AF8 /* BenchmarkVitals.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BenchmarkVitals.mm; sourceTree = "<group>"; };
 		043403282DCBA1D100803AF8 /* BenchmarkVitals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BenchmarkVitals.h; sourceTree = "<group>"; };
 		04576C952DCBAF900078DCAB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		04726DD62F46402A008D1A48 /* TracerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracerProvider.swift; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* BenchmarkRunner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BenchmarkRunner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BenchmarkRunner/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BenchmarkRunner/Info.plist; sourceTree = "<group>"; };
@@ -54,7 +54,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-BenchmarkRunner.a in Frameworks */,
-				04066FD52DCCB9D200A9E317 /* DatadogBenchmarks in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,6 +63,7 @@
 		04066FD22DCCB97400A9E317 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				04726DD62F46402A008D1A48 /* TracerProvider.swift */,
 				041FA8A42DCCB7FA00BABC32 /* Benchmarks.swift */,
 				041FA8A62DCCB7FA00BABC32 /* MetricExporter.swift */,
 				041FA8A72DCCB7FA00BABC32 /* Metrics.swift */,
@@ -74,7 +74,6 @@
 		041FA8A02DCCB7EA00BABC32 /* Vitals */ = {
 			isa = PBXGroup;
 			children = (
-				041FA8A12DCCB7FA00BABC32 /* Package.swift */,
 				041FA8A52DCCB7FA00BABC32 /* BenchmarkVitals.swift */,
 				041FA8A22DCCB7FA00BABC32 /* BenchmarkMeter.swift */,
 				041FA8A32DCCB7FA00BABC32 /* BenchmarkProfiler.swift */,
@@ -201,9 +200,6 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-				04066FD32DCCB9D200A9E317 /* XCLocalSwiftPackageReference "Vitals" */,
-			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -251,9 +247,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -290,9 +290,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -316,6 +320,7 @@
 				043403232DCB9CB200803AF8 /* BenchMarkVitalsImplementation.swift in Sources */,
 				04576C962DCBAF900078DCAB /* main.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				04726DD72F46402A008D1A48 /* TracerProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -597,10 +602,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -669,10 +671,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -702,20 +701,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		04066FD32DCCB9D200A9E317 /* XCLocalSwiftPackageReference "Vitals" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = BenchmarkVitals/Vitals;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		04066FD42DCCB9D200A9E317 /* DatadogBenchmarks */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = DatadogBenchmarks;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

@@ -6,7 +6,6 @@
 
 import Foundation
 import DatadogInternal
-import DatadogBenchmarks
 import OpenTelemetryApi
 
 internal final class Profiler: DatadogInternal.BenchmarkProfiler {

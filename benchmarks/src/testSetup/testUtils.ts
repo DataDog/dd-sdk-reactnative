@@ -118,6 +118,7 @@ export const startCollectingVitals = async (testConfig: TestConfig, datadogConfi
         clientToken: datadogConfig.clientToken,
         applicationID: datadogConfig.applicationID,
         apiKey: datadogConfig.apiKey,
+        env: datadogConfig.env,
       };
 
     await BenchmarkVitals?.startCollectingVitals(nativeTestConfig);

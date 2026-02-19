@@ -48,4 +48,5 @@ export interface NativeTestConfig {
     clientToken?: string;
     applicationID?: string;
     apiKey?: string;
+    env?: string,
 }
