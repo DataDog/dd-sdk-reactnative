@@ -41,6 +41,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
             nativeLongTaskThresholdMs = rm.getDoubleOrNull("nativeLongTaskThresholdMs"),
             nativeViewTracking = rm.getBooleanOrNull("nativeViewTracking"),
             nativeInteractionTracking = rm.getBooleanOrNull("nativeInteractionTracking"),
+            firstPartyHosts = rm.getArray("firstPartyHosts")?.asFirstPartyHosts(),
             trackNonFatalAnrs = rm.getBooleanOrNull("trackNonFatalAnrs"),
             initialResourceThreshold = rm.getDoubleOrNull("initialResourceThreshold"),
             telemetrySampleRate = rm.getDoubleOrNull("telemetrySampleRate"),
@@ -77,7 +78,6 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
         batchSize = getString("batchSize"),
         batchProcessingLevel = getString("batchProcessingLevel"),
         proxyConfiguration = getMap("proxyConfiguration")?.asProxyConfig(),
-        firstPartyHosts = getArray("firstPartyHosts")?.asFirstPartyHosts(),
         rumConfiguration = rumConfiguration,
         logsConfiguration = logsConfiguration,
         traceConfiguration = traceConfiguration,
@@ -182,6 +182,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             nativeLongTaskThresholdMs = rum.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
             nativeViewTracking = rum.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
             nativeInteractionTracking = rum.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
+            firstPartyHosts = rum.firstPartyHosts?.asFirstPartyHosts(),
             trackNonFatalAnrs = rum.trackNonFatalAnrs,
             initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
@@ -220,7 +221,6 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
         batchSize = this.batchSize?: DefaultConfiguration.batchSize,
         batchProcessingLevel = this.batchProcessingLevel,
         proxyConfiguration = this.proxyConfiguration?.asProxyConfig(),
-        firstPartyHosts = this.firstPartyHosts?.asFirstPartyHosts(),
         rumConfiguration = rumConfiguration,
         logsConfiguration = logsConfiguration,
         traceConfiguration = traceConfiguration,
@@ -269,7 +269,7 @@ internal fun List<String>.asTracingHeaderTypes(): Set<TracingHeaderType> {
     }.toSet()
 }
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth")
 internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
     val map = WritableNativeMap()
 
@@ -300,25 +300,11 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         )
         map.putMap("proxyConfiguration", proxyMap)
     }
-    firstPartyHosts?.let { hosts ->
-        val hostsArray = WritableNativeArray()
-        hosts.forEach { (match, types) ->
-            val hostMap = WritableNativeMap()
-            hostMap.putString("match", match)
-            val propagatorsArray = WritableNativeArray()
-            types.forEach { type ->
-                propagatorsArray.pushString(type.toString())
-            }
-            hostMap.putArray("propagatorTypes", propagatorsArray)
-            hostsArray.pushMap(hostMap)
-        }
-        map.putArray("firstPartyHosts", hostsArray)
-    }
     rumConfiguration?.let { rum ->
         val rumMap = WritableNativeMap()
         rumMap.putString("applicationId", rum.applicationId)
         rum.trackFrustrations?.let { rumMap.putBoolean("trackFrustrations", it) }
-        rum.longTaskThresholdMs?.let { map.putDouble("longTaskThresholdMs", it) }
+        rum.longTaskThresholdMs?.let { rumMap.putDouble("longTaskThresholdMs", it) }
         rum.sessionSampleRate?.let { rumMap.putDouble("sessionSampleRate", it) }
         rum.resourceTraceSampleRate?.let { rumMap.putDouble("resourceTraceSampleRate", it) }
         rum.vitalsUpdateFrequency?.let { rumMap.putString("vitalsUpdateFrequency", it) }
@@ -328,6 +314,20 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         rum.nativeViewTracking?.let { rumMap.putBoolean("nativeViewTracking", it) }
         rum.nativeInteractionTracking?.let { rumMap.putBoolean("nativeInteractionTracking", it) }
         rum.trackNonFatalAnrs?.let { rumMap.putBoolean("trackNonFatalAnrs", it) }
+        rum.firstPartyHosts?.let { hosts ->
+            val hostsArray = WritableNativeArray()
+            hosts.forEach { (match, types) ->
+                val hostMap = WritableNativeMap()
+                hostMap.putString("match", match)
+                val propagatorsArray = WritableNativeArray()
+                types.forEach { type ->
+                    propagatorsArray.pushString(type.toString())
+                }
+                hostMap.putArray("propagatorTypes", propagatorsArray)
+                hostsArray.pushMap(hostMap)
+            }
+            rumMap.putArray("firstPartyHosts", hostsArray)
+        }
         rum.initialResourceThreshold?.let { rumMap.putDouble("initialResourceThreshold", it) }
         rum.telemetrySampleRate?.let { rumMap.putDouble("telemetrySampleRate", it) }
         rum.customEndpoint?.let { rumMap.putString("customEndpoint", it) }

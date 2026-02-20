@@ -1772,9 +1772,10 @@ internal class DdSdkTest {
         }
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -1845,9 +1846,10 @@ internal class DdSdkTest {
         }
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
@@ -1925,9 +1927,10 @@ internal class DdSdkTest {
         )
 
         // Given
-        val bridgeConfiguration = configuration.copy(
+        val rumConfiguration = configuration.rumConfiguration?.copy(
             firstPartyHosts = firstPartyHosts.toReadableArray().asFirstPartyHosts()
         )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
         val sdkConfigCaptor = argumentCaptor<Configuration>()
         val rumConfigCaptor = argumentCaptor<RumConfiguration>()
         val logsConfigCaptor = argumentCaptor<LogsConfiguration>()

@@ -10,6 +10,7 @@ import {
   DdTrace,
   TrackingConsent,
   DdFlags,
+  PropagatorType,
 } from '@datadog/mobile-react-native';
 import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
 import {
@@ -54,7 +55,11 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
         trackErrors: true,
         sessionSampleRate: 100,
         telemetrySampleRate: 100,
-        nativeCrashReportEnabled: true
+        nativeCrashReportEnabled: true,
+        firstPartyHosts: [{
+          match: "example.com",
+          propagatorTypes: [PropagatorType.B3MULTI, PropagatorType.TRACECONTEXT]
+        }]
       },
       logsConfiguration: {},
       traceConfiguration: {}

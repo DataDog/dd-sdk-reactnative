@@ -131,7 +131,8 @@ internal class DdSdkNativeInitializationTest {
         }
         assertThat(configuration.proxyConfiguration?.second?.username).isEqualTo("proxyusername")
         assertThat(configuration.proxyConfiguration?.second?.password).isEqualTo("proxypassword")
-        assertThat(configuration.firstPartyHosts?.get("example.com").toString()).isEqualTo(
+        val firstPartyHosts = configuration.rumConfiguration?.firstPartyHosts?.get("example.com")
+        assertThat(firstPartyHosts.toString()).isEqualTo(
             "[B3MULTI, TRACECONTEXT]"
         )
         assertThat(configuration.rumConfiguration?.initialResourceThreshold).isEqualTo(0.5)
@@ -155,7 +156,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.verbosity).isNull()
         assertThat(configuration.service).isNull()
         assertThat(configuration.proxyConfiguration).isNull()
-        assertThat(configuration.firstPartyHosts).isNull()
+
         assertThat(configuration.site).isEqualTo("US1")
         assertThat(configuration.uploadFrequency).isEqualTo("AVERAGE")
         assertThat(configuration.batchSize).isEqualTo("MEDIUM")
@@ -180,6 +181,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.rumConfiguration?.nativeLongTaskThresholdMs).isEqualTo(200.0)
         assertThat(configuration.rumConfiguration?.nativeViewTracking).isEqualTo(false)
         assertThat(configuration.rumConfiguration?.nativeInteractionTracking).isEqualTo(false)
+        assertThat(configuration.rumConfiguration?.firstPartyHosts).isNull()
         assertThat(configuration.logsConfiguration?.customEndpoint).isNull()
         assertThat(configuration.traceConfiguration?.customEndpoint).isNull()
     }

@@ -57,7 +57,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.proxyConfiguration?[kCFProxyUsernameKey] as? String, "proxyusername")
         XCTAssertEqual(configuration?.proxyConfiguration?[kCFProxyPasswordKey] as? String, "proxypassword")
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3multi, .tracecontext]]
-        XCTAssertEqual(configuration?.firstPartyHosts, expectedFirstPartyHosts)
+        XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, 0.5)
     }
 
@@ -95,7 +95,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.service, nil)
         XCTAssertNil(configuration?.proxyConfiguration)
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = [:]
-        XCTAssertEqual(configuration?.firstPartyHosts, expectedFirstPartyHosts)
+        XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, nil)
     }
 

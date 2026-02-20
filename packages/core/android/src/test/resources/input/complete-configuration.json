@@ -29,7 +29,16 @@
             "sessionSampleRate": 80,
             "resourceTraceSampleRate": 33,
             "trackBackgroundEvents": true,
-            "trackFrustrations": false
+            "trackFrustrations": false,
+            "firstPartyHosts": [
+              {
+                "match": "example.com",
+                "propagatorTypes": [
+                  "B3MULTI",
+                  "TRACECONTEXT"
+                ]
+              }
+            ]
         },
         "logsConfiguration": {
             "customEndpoint": "https://logs.example.com"
@@ -37,15 +46,6 @@
         "traceConfiguration": {
             "customEndpoint": "https://trace.example.com"
         },
-        "firstPartyHosts": [
-            {
-                "match": "example.com",
-                "propagatorTypes": [
-                    "B3MULTI",
-                    "TRACECONTEXT"
-                ]
-            }
-        ],
         "proxyConfiguration": {
             "address": "1.1.1.1",
             "port": 4444,

@@ -24,7 +24,6 @@ import java.net.Proxy
  * @param batchSize The preferred size for uploaded batches of data (can be 'SMALL', 'MEDIUM' (default), 'LARGE')
  * @param batchProcessingLevel The preferred number of batches of data that will be sent in a single upload (can be 'LOW', 'MEDIUM' (default), 'HIGH')
  * @param proxyConfiguration Configuration for proxying SDK data.
- * @param firstPartyHosts List of backend hosts to enable tracing with.
  * @param rumConfiguration Configuration for the RUM feature module, including RUM application ID and RUM-specific options.
  * @param logsConfiguration Configuration for the Logs feature module.
  * @param traceConfiguration Configuration for the Traces (APM) feature module.
@@ -42,7 +41,6 @@ data class DdSdkConfiguration(
     val batchSize: String? = null,
     val batchProcessingLevel: String? = null,
     val proxyConfiguration: Pair<Proxy, ProxyAuthenticator?>? = null,
-    val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
     val rumConfiguration: RumConfiguration? = null,
     val logsConfiguration: LogsConfiguration? = null,
     val traceConfiguration: TraceConfiguration? = null,
@@ -63,6 +61,7 @@ data class DdSdkConfiguration(
  * @param nativeLongTaskThresholdMs The threshold for native long tasks reporting in milliseconds.
  * @param nativeViewTracking Enables/Disables tracking RUM Views on the native level.
  * @param nativeInteractionTracking Enables/Disables tracking RUM Actions on the native level.
+ * @param firstPartyHosts List of backend hosts to enable tracing with.
  * @param trackNonFatalAnrs Enables tracking of non-fatal ANRs on Android.
  * @param initialResourceThreshold The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS).
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
@@ -80,6 +79,7 @@ data class RumConfiguration(
     val nativeLongTaskThresholdMs: Double? = null,
     val nativeViewTracking: Boolean? = null,
     val nativeInteractionTracking: Boolean? = null,
+    val firstPartyHosts: Map<String, Set<TracingHeaderType>>? = null,
     val trackNonFatalAnrs: Boolean? = null,
     val initialResourceThreshold: Double? = null,
     val telemetrySampleRate: Double? = null,
@@ -127,7 +127,6 @@ internal data class JSONDdSdkConfiguration(
     val version: String? = null,
     val versionSuffix: String? = null,
     val site: String? = null,
-    val firstPartyHosts: List<JSONFirstPartyHost>? = null,
     val rumConfiguration: JSONRumConfiguration? = null,
     val logsConfiguration: JSONLogsConfiguration? = null,
     val traceConfiguration: JSONTraceConfiguration? = null
@@ -140,6 +139,7 @@ internal data class JSONRumConfiguration(
     val trackResources: Boolean? = null,
     val trackErrors: Boolean? = null,
     val actionNameAttribute: String? = null,
+    val firstPartyHosts: List<JSONFirstPartyHost>? = null,
     val appHangThreshold: Double? = null,
     val initialResourceThreshold: Double? = null,
 

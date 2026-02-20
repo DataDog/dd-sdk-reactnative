@@ -23,7 +23,6 @@ import Foundation
 ///    - batchSize: The preferred size of batches sent to Datadog.
 ///    - batchProcessingLevel: Maximum number of batches processed sequentially before applying a delay.
 ///    - proxyConfiguration: Configuration for proxying SDK data (proxy type, address, port, etc.).
-///    - firstPartyHosts: List of backend hosts considered first-party for network tracing.
 ///    - rumConfiguration: Configuration for the RUM feature module.
 ///    - logsConfiguration: Configuration for the Logs feature module.
 ///    - traceConfiguration: Configuration for the Traces feature module.
@@ -41,7 +40,6 @@ public class DdSdkConfiguration: NSObject {
     public var batchSize: Datadog.Configuration.BatchSize
     public var batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel
     public var proxyConfiguration: [AnyHashable: Any]? = nil
-    public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
     public var rumConfiguration: RumConfiguration? = nil
     public var logsConfiguration: LogsConfiguration? = nil
     public var traceConfiguration: TraceConfiguration? = nil
@@ -59,7 +57,6 @@ public class DdSdkConfiguration: NSObject {
         batchSize: Datadog.Configuration.BatchSize,
         batchProcessingLevel: Datadog.Configuration.BatchProcessingLevel,
         proxyConfiguration: [AnyHashable: Any]?,
-        firstPartyHosts: [String: Set<TracingHeaderType>]?,
         rumConfiguration: RumConfiguration?,
         logsConfiguration: LogsConfiguration?,
         traceConfiguration: TraceConfiguration?,
@@ -76,7 +73,6 @@ public class DdSdkConfiguration: NSObject {
         self.batchSize = batchSize
         self.batchProcessingLevel = batchProcessingLevel
         self.proxyConfiguration = proxyConfiguration
-        self.firstPartyHosts = firstPartyHosts
         self.rumConfiguration = rumConfiguration
         self.logsConfiguration = logsConfiguration
         self.traceConfiguration = traceConfiguration
@@ -99,6 +95,7 @@ public class DdSdkConfiguration: NSObject {
 ///    - nativeLongTaskThresholdMs: The threshold for reporting native long tasks in milliseconds.
 ///    - nativeViewTracking: Enables tracking of native iOS/Android UI views.
 ///    - nativeInteractionTracking: Enables tracking of native UI interactions.
+///    - firstPartyHosts: List of backend hosts considered first-party for network tracing.
 ///    - appHangThreshold: Threshold in seconds for reporting non-fatal app hangs (iOS only).
 ///    - trackWatchdogTerminations: Whether the SDK should track application terminations
 ///      caused by the iOS watchdog.
@@ -118,6 +115,7 @@ public class RumConfiguration: NSObject {
     public var nativeLongTaskThresholdMs: Double? = nil
     public var nativeViewTracking: Bool? = nil
     public var nativeInteractionTracking: Bool? = nil
+    public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
     public var appHangThreshold: Double? = nil
     public var trackWatchdogTerminations: Bool
     public var initialResourceThreshold: Double? = nil
@@ -137,6 +135,7 @@ public class RumConfiguration: NSObject {
         nativeLongTaskThresholdMs: Double? = nil,
         nativeViewTracking: Bool?,
         nativeInteractionTracking: Bool?,
+        firstPartyHosts: [String: Set<TracingHeaderType>]?,
         appHangThreshold: Double?,
         trackWatchdogTerminations: Bool,
         initialResourceThreshold: Double?,
@@ -155,6 +154,7 @@ public class RumConfiguration: NSObject {
         self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.nativeViewTracking = nativeViewTracking
         self.nativeInteractionTracking = nativeInteractionTracking
+        self.firstPartyHosts = firstPartyHosts
         self.appHangThreshold = appHangThreshold
         self.trackWatchdogTerminations = trackWatchdogTerminations
         self.initialResourceThreshold = initialResourceThreshold
