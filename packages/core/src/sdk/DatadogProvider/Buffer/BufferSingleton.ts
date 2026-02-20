@@ -4,23 +4,32 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { getGlobalInstance } from '../../../utils/singletonUtils';
+
 import { BoundedBuffer } from './BoundedBuffer';
 import type { DatadogBuffer } from './DatadogBuffer';
 import { PassThroughBuffer } from './PassThroughBuffer';
 
-export class BufferSingleton {
-    private static bufferInstance: DatadogBuffer = new BoundedBuffer();
+const BUFFER_SINGLETON_MODULE = 'com.datadog.reactnative.buffer_singleton';
 
-    static getInstance = (): DatadogBuffer => {
+class _BufferSingleton {
+    private bufferInstance: DatadogBuffer = new BoundedBuffer();
+
+    getInstance = (): DatadogBuffer => {
         return BufferSingleton.bufferInstance;
     };
 
-    static onInitialization = () => {
-        BufferSingleton.bufferInstance.drain();
-        BufferSingleton.bufferInstance = new PassThroughBuffer();
+    onInitialization = () => {
+        this.bufferInstance.drain();
+        this.bufferInstance = new PassThroughBuffer();
     };
 
-    static reset = () => {
+    reset = () => {
         BufferSingleton.bufferInstance = new BoundedBuffer();
     };
 }
+
+export const BufferSingleton = getGlobalInstance(
+    BUFFER_SINGLETON_MODULE,
+    () => new _BufferSingleton()
+);
