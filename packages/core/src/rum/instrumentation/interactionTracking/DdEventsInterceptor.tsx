@@ -48,14 +48,15 @@ export class DdEventsInterceptor implements EventsInterceptor {
     }
 
     interceptOnPress(...args: any[]): void {
-        if (args.length > 0 && args[0] && args[0]._targetInst) {
+        const event = this.resolveNativeEvent(args);
+        if (event) {
             const currentTime = Date.now();
             const timestampDifference = Math.abs(
                 Date.now() - this.debouncingStartedTimestamp
             );
             if (timestampDifference > DEBOUNCE_EVENT_THRESHOLD_IN_MS) {
-                const targetNode = args[0]._targetInst;
-                this.handleTargetEvent(targetNode, args[0]);
+                const targetNode = event._targetInst;
+                this.handleTargetEvent(targetNode, event);
                 // we add an approximated 1 millisecond for the execution time of the `handleTargetEvent` function
                 this.debouncingStartedTimestamp =
                     currentTime + HANDLE_EVENT_APP_EXECUTION_TIME_IN_MS;
@@ -66,6 +67,27 @@ export class DdEventsInterceptor implements EventsInterceptor {
                 SdkVerbosity.DEBUG
             );
         }
+    }
+
+    /**
+     * Resolves the native GestureResponderEvent from the onPress arguments.
+     *
+     * Some third-party libraries (e.g. react-native-ui-lib) wrap the native
+     * event inside a props object: `onPress({...componentProps, event})`.
+     * This method checks for `_targetInst` on `args[0]` first (standard RN),
+     * then falls back to `args[0].event` for the wrapped pattern.
+     */
+    private resolveNativeEvent(args: any[]): any | null {
+        if (args.length === 0 || !args[0]) {
+            return null;
+        }
+        if (args[0]._targetInst) {
+            return args[0];
+        }
+        if (args[0].event && args[0].event._targetInst) {
+            return args[0].event;
+        }
+        return null;
     }
 
     private handleTargetEvent(targetNode: any, event: unknown) {

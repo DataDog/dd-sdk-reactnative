@@ -229,6 +229,95 @@ it('M send a RUM Action event W interceptOnPress { no accessibilityLabel, no ele
     expect(DdRum.addAction.mock.calls[0][1]).toBe(UNKNOWN_TARGET_NAME);
 });
 
+it('M send a RUM Action event W interceptOnPress { event nested in props wrapper (react-native-ui-lib pattern) } ', async () => {
+    // GIVEN
+    const fakeAccessibilityLabel = 'wrapped_target';
+    const fakeEvent = {
+        _targetInst: {
+            memoizedProps: {
+                accessibilityLabel: fakeAccessibilityLabel
+            }
+        }
+    };
+    const fakeArguments = {
+        onPress: jest.fn(),
+        someOtherProp: 'value',
+        event: fakeEvent
+    };
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1);
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeAccessibilityLabel);
+    expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeEvent);
+});
+
+it('M send a RUM Action event W interceptOnPress { event nested in props wrapper with dd-action-name } ', async () => {
+    // GIVEN
+    const fakeDdActionLabel = 'WrappedDdActionLabel';
+    const fakeEvent = {
+        _targetInst: {
+            memoizedProps: {
+                'dd-action-name': fakeDdActionLabel
+            }
+        }
+    };
+    const fakeArguments = {
+        onPress: jest.fn(),
+        event: fakeEvent
+    };
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(1);
+    expect(DdRum.addAction.mock.calls[0][0]).toBe(RumActionType.TAP);
+    expect(DdRum.addAction.mock.calls[0][1]).toBe(fakeDdActionLabel);
+    expect(DdRum.addAction.mock.calls[0][4]).toBe(fakeEvent);
+});
+
+it('M do nothing W interceptOnPress { props wrapper without nested event (incubator pattern) } ', async () => {
+    // GIVEN - react-native-ui-lib Incubator passes props without event
+    const fakeArguments = {
+        onPress: jest.fn(),
+        someOtherProp: 'value'
+    };
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0);
+    expect(InternalLog.log.mock.calls.length).toBe(1);
+    expect(InternalLog.log.mock.calls[0][0]).toBe(
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
+    );
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
+});
+
+it('M do nothing W interceptOnPress { props wrapper with event that has no _targetInst } ', async () => {
+    // GIVEN - event property exists but is not a valid native event
+    const fakeArguments = {
+        onPress: jest.fn(),
+        event: { nativeEvent: { pageX: 0, pageY: 0 } }
+    };
+
+    // WHEN
+    testedEventsInterceptor.interceptOnPress(fakeArguments);
+
+    // THEN
+    expect(DdRum.addAction.mock.calls.length).toBe(0);
+    expect(InternalLog.log.mock.calls.length).toBe(1);
+    expect(InternalLog.log.mock.calls[0][0]).toBe(
+        DdEventsInterceptor.ACTION_EVENT_DROPPED_DEBUG_MESSAGE
+    );
+    expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
+});
+
 it('M do nothing W interceptOnPress { invalid arguments - empty object } ', async () => {
     // GIVEN
     const fakeArguments = {};
