@@ -5,30 +5,33 @@
  */
 
 import { SdkVerbosity } from './config/types/SdkVerbosity';
+import { getGlobalInstance } from './utils/singletonUtils';
 
 export const DATADOG_MESSAGE_PREFIX = 'DATADOG:';
+
+const INTERNAL_LOG_MODULE = 'com.datadog.reactnative.internal_log';
 
 /**
  * /!\ DO NOT USE THIS IN YOUR APP /!\\
  *
  * This logger is only for debugging the Datadog SDK.
  */
-export class InternalLog {
-    private static levelMap = new Map<SdkVerbosity, number>([
+class _InternalLog {
+    private levelMap = new Map<SdkVerbosity, number>([
         [SdkVerbosity.DEBUG, 1],
         [SdkVerbosity.INFO, 2],
         [SdkVerbosity.WARN, 3],
         [SdkVerbosity.ERROR, 4]
     ]);
 
-    public static verbosity: SdkVerbosity | undefined = undefined;
+    public verbosity: SdkVerbosity | undefined = undefined;
 
-    public static log(message: string, verbosity: SdkVerbosity): void {
-        if (InternalLog.verbosity === undefined) {
+    public log(message: string, verbosity: SdkVerbosity): void {
+        if (this.verbosity === undefined) {
             return;
         }
         const requiredLevel = InternalLog.levelMap.get(verbosity);
-        const allowedLevel = InternalLog.levelMap.get(InternalLog.verbosity);
+        const allowedLevel = InternalLog.levelMap.get(this.verbosity);
         if (allowedLevel === undefined || requiredLevel === undefined) {
             return;
         }
@@ -50,3 +53,8 @@ export class InternalLog {
         }
     }
 }
+
+export const InternalLog = getGlobalInstance(
+    INTERNAL_LOG_MODULE,
+    () => new _InternalLog()
+);
