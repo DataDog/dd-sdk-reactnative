@@ -813,7 +813,8 @@ describe('DdSdkReactNative', () => {
                         propagatorTypes: ['datadog']
                     }
                 ],
-                trackFetchResources: true
+                trackFetchResources: true,
+                headerCaptureRules: undefined
             });
         });
 
