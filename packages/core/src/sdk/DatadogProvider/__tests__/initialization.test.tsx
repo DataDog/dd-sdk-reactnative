@@ -66,7 +66,7 @@ describe('DatadogProvider', () => {
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkNativeConfiguration {
                   "additionalConfiguration": {
-                    "_dd.react_native_version": "${reactNativeVersion}",
+                    "_dd.react_native_version": "0.76.9",
                     "_dd.source": "react-native",
                   },
                   "attributeEncoders": [],
@@ -92,6 +92,7 @@ describe('DatadogProvider', () => {
                     "customEndpoint": undefined,
                     "errorEventMapper": null,
                     "firstPartyHosts": [],
+                    "headerCaptureRules": undefined,
                     "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,

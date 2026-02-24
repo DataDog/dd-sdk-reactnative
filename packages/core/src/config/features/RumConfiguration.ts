@@ -10,6 +10,7 @@ import type { FirstPartyHost } from '../../rum/types';
 import { VitalsUpdateFrequency } from '../types';
 
 import type {
+    HeaderCaptureRule,
     RumConfigurationOptions,
     RumConfigurationType
 } from './RumConfiguration.type';
@@ -37,6 +38,10 @@ const DEFAULTS = {
     trackInteractions: false,
     trackMemoryWarnings: true,
     trackNonFatalAnrs: undefined,
+    headerCaptureRules: undefined as
+        | 'defaults'
+        | HeaderCaptureRule[]
+        | undefined,
     trackResources: false,
     trackWatchdogTerminations: false,
     useAccessibilityLabel: true,
@@ -111,6 +116,10 @@ export class RumConfiguration implements RumConfigurationType {
 
     // Track non-fatal ANRs enabled
     public trackNonFatalAnrs?: boolean = DEFAULTS.trackNonFatalAnrs;
+
+    // Header Capture Rules
+    public headerCaptureRules: 'defaults' | HeaderCaptureRule[] | undefined =
+        DEFAULTS.headerCaptureRules;
 
     // Track Watchdog Terminations enabled
     public trackWatchdogTerminations: boolean =

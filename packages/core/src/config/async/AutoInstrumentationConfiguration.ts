@@ -9,6 +9,7 @@ import type { ResourceEventMapper } from '../../rum/eventMappers/resourceEventMa
 import type { FirstPartyHost } from '../../rum/types';
 import type { LogEventMapper } from '../../types';
 import { LOGS_DEFAULTS } from '../features/LogsConfiguration';
+import type { HeaderCaptureRule } from '../features/RumConfiguration.type';
 import { RUM_DEFAULTS } from '../features/RumConfiguration';
 import type { TraceConfiguration } from '../features/TraceConfiguration';
 
@@ -24,6 +25,7 @@ export type AutoInstrumentationConfiguration = {
         readonly useAccessibilityLabel?: boolean;
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
+        readonly headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
         readonly nativeCrashReportEnabled?: boolean;
         readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
@@ -55,6 +57,7 @@ export type AutoInstrumentationParameters = {
         readonly errorEventMapper: ErrorEventMapper | null;
         readonly resourceEventMapper: ResourceEventMapper | null;
         readonly firstPartyHosts: FirstPartyHost[];
+        readonly headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
     };
     readonly logsConfiguration?: {
         readonly logEventMapper: LogEventMapper | null;
@@ -114,7 +117,8 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
                 RUM_DEFAULTS.nativeViewTracking,
             firstPartyHosts:
                 features.rumConfiguration.firstPartyHosts ||
-                RUM_DEFAULTS.getFirstPartyHosts()
+                RUM_DEFAULTS.getFirstPartyHosts(),
+            headerCaptureRules: features.rumConfiguration.headerCaptureRules
         },
         logsConfiguration: {
             logEventMapper:

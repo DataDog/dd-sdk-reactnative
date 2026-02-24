@@ -676,7 +676,8 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                headerCaptureRules: undefined
             });
         });
 
