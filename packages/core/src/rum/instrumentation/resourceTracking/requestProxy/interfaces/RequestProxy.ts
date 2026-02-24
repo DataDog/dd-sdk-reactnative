@@ -5,10 +5,12 @@
  */
 
 import type { PropagatorType } from '../../../../types';
+import type { CompiledHeaderCaptureConfig } from '../../headerCapture/types';
 
 export interface RequestProxyOptions {
     tracingSamplingRate: number;
     firstPartyHostsRegexMap: RegexMap;
+    headerCaptureConfig: CompiledHeaderCaptureConfig;
 }
 
 export type RegexMap = {

@@ -75,7 +75,7 @@ describe('DatadogProvider', () => {
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
-                    "reactNativeVersion": "0.76.9",
+                    "reactNativeVersion": "${reactNativeVersion}",
                     "reactVersion": "18.3.1",
                     "trackErrors": true,
                     "trackInteractions": true,
@@ -92,6 +92,7 @@ describe('DatadogProvider', () => {
                     "customEndpoint": undefined,
                     "errorEventMapper": null,
                     "firstPartyHosts": [],
+                    "headerCaptureRules": undefined,
                     "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
