@@ -897,6 +897,7 @@ package/src/__tests__/rum/instrumentation/DdEventsInterceptor.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumErrorTracking.test.tsx
 package/src/__tests__/rum/instrumentation/DdRumUserInteractionTracking.test.tsx
 package/src/__tests__/rum/instrumentation/ShallowObjectEqualityChecker.test.ts
+package/src/.tmp/debug_id
 package/src/config/__tests__/__fixtures__/configuration-all-fields.json
 package/src/config/__tests__/__fixtures__/malformed-configuration.json
 package/src/config/__tests__/FileBasedConfiguration.test.ts
