@@ -162,7 +162,7 @@ public class DdSdkNativeInitialization: NSObject {
         }
 
         var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
-        if let firstPartyHosts = configuration.firstPartyHosts {
+        if let firstPartyHosts = rumConfig.firstPartyHosts {
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
                 firstPartyHostsTracing: .traceWithHeaders(
                     hostsWithHeaders: firstPartyHosts,

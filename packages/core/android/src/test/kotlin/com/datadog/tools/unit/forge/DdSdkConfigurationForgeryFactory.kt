@@ -56,7 +56,6 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 )
             },
             proxyConfiguration = null,
-            firstPartyHosts = null,
             rumConfiguration = RumConfiguration(
                 applicationId = forge.getForgery<UUID>().toString(),
                 trackFrustrations = forge.aNullable { aBool() },
@@ -71,6 +70,7 @@ class DdSdkConfigurationForgeryFactory : ForgeryFactory<DdSdkConfiguration> {
                 nativeLongTaskThresholdMs = forge.aNullable { aDouble(100.0, 5000.0) },
                 nativeViewTracking = forge.aNullable { aBool() },
                 nativeInteractionTracking = forge.aNullable { aBool() },
+                firstPartyHosts = null,
                 trackNonFatalAnrs = forge.aNullable { aBool() },
                 initialResourceThreshold = forge.aNullable { aDouble(0.0, 2.0) },
                 telemetrySampleRate = forge.aNullable { aDouble(0.0, 100.0) },

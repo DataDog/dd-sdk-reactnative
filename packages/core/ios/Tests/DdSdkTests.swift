@@ -953,12 +953,12 @@ class DdSdkTests: XCTestCase {
     func testFirstPartyHosts() {
         let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
         rumConfiguration.resourceTraceSampleRate = 66
-        let configuration: DdSdkConfiguration = .mockAny(
-            firstPartyHosts: ([
-                ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
-                ["match": "datadog.com", "propagatorTypes": ["b3multi", "tracecontext"]],
-            ] as NSArray).asFirstPartyHosts(), rumConfiguration: rumConfiguration)
+        rumConfiguration.firstPartyHosts = ([
+            ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
+            ["match": "datadog.com", "propagatorTypes": ["b3multi", "tracecontext"]],
+        ] as NSArray).asFirstPartyHosts()
 
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
         let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
             configuration: configuration
         )
@@ -1740,6 +1740,7 @@ func makeDefaultRumConfiguration() -> RumConfiguration {
         nativeLongTaskThresholdMs: nil,
         nativeViewTracking: nil,
         nativeInteractionTracking: nil,
+        firstPartyHosts: nil,
         appHangThreshold: nil,
         trackWatchdogTerminations: false,
         initialResourceThreshold: nil,
@@ -1776,7 +1777,6 @@ extension DdSdkConfiguration {
         batchSize: NSString? = "MEDIUM",
         batchProcessingLevel: NSString? = "MEDIUM",
         proxyConfiguration: [AnyHashable: Any]? = nil,
-        firstPartyHosts: [String: Set<TracingHeaderType>]? = nil,
         rumConfiguration: RumConfiguration? = makeDefaultRumConfiguration(),
         logsConfiguration: LogsConfiguration? = makeDefaultLogsConfiguration(),
         traceConfiguration: TraceConfiguration? = makeDefaultTraceConfiguration(),
@@ -1794,7 +1794,6 @@ extension DdSdkConfiguration {
             batchSize: batchSize.asBatchSize(),
             batchProcessingLevel: batchProcessingLevel.asBatchProcessingLevel(),
             proxyConfiguration: proxyConfiguration,
-            firstPartyHosts: firstPartyHosts,
             rumConfiguration: rumConfiguration,
             logsConfiguration: logsConfiguration,
             traceConfiguration: traceConfiguration,

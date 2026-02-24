@@ -8,6 +8,7 @@ import {
     BatchSize,
     UploadFrequency,
     DdFlags,
+    PropagatorType,
 } from '@datadog/mobile-react-native';
 import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
@@ -34,7 +35,11 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
                 trackResources: true,
                 trackErrors: true,
                 sessionSampleRate: 100,
-                nativeCrashReportEnabled: true
+                nativeCrashReportEnabled: true,
+                firstPartyHosts: [{
+                    match: "example.com",
+                    propagatorTypes: [PropagatorType.B3MULTI, PropagatorType.TRACECONTEXT]
+                }]
             },
             logsConfiguration: {
                 logEventMapper: (logEvent) => {
@@ -72,7 +77,11 @@ export function initializeDatadog(trackingConsent: TrackingConsent) {
                 trackResources: true,
                 trackErrors: true,
                 sessionSampleRate: 100,
-                nativeCrashReportEnabled: true
+                nativeCrashReportEnabled: true,
+                firstPartyHosts: [{
+                    match: "example.com",
+                    propagatorTypes: [PropagatorType.B3MULTI, PropagatorType.TRACECONTEXT]
+                }]
             }
         }
     )

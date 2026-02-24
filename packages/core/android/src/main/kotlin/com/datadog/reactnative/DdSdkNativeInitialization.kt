@@ -306,8 +306,9 @@ class DdSdkNativeInitialization internal constructor(
             configBuilder.setProxy(proxy, authenticator)
         }
 
-        if (configuration.firstPartyHosts != null) {
-            configBuilder.setFirstPartyHostsWithHeaderType(configuration.firstPartyHosts)
+        val firstPartyHosts = configuration.rumConfiguration?.firstPartyHosts
+        if (firstPartyHosts != null) {
+            configBuilder.setFirstPartyHostsWithHeaderType(firstPartyHosts)
         }
 
         configBuilder.setBatchProcessingLevel(buildBatchProcessingLevel(configuration.batchProcessingLevel))

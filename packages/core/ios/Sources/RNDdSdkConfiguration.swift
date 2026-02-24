@@ -39,8 +39,6 @@ extension NSDictionary {
         let proxyConfigurationDict = self["proxyConfiguration"] as? NSDictionary
         let proxyConfiguration = proxyConfigurationDict?.asProxyConfiguration()
 
-        let firstPartyHostsArray = self["firstPartyHosts"] as? NSArray
-        let firstPartyHosts = firstPartyHostsArray?.asFirstPartyHosts()
 
         // MARK: - RUM configuration
 
@@ -62,6 +60,9 @@ extension NSDictionary {
             let nativeLongTaskThresholdMs = rumDict["nativeLongTaskThresholdMs"] as? Double
             let nativeViewTracking = rumDict["nativeViewTracking"] as? Bool
             let nativeInteractionTracking = rumDict["nativeInteractionTracking"] as? Bool
+            
+            let firstPartyHostsArray = rumDict["firstPartyHosts"] as? NSArray
+            let firstPartyHosts = firstPartyHostsArray?.asFirstPartyHosts()
 
             let appHangThreshold = rumDict["appHangThreshold"] as? Double
             let trackWatchdogTerminations = rumDict["trackWatchdogTerminations"] as? Bool
@@ -88,6 +89,7 @@ extension NSDictionary {
                 nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: nativeInteractionTracking
                     ?? DefaultConfiguration.nativeInteractionTracking,
+                firstPartyHosts: firstPartyHosts,
                 appHangThreshold: appHangThreshold,
                 trackWatchdogTerminations: trackWatchdogTerminations
                     ?? DefaultConfiguration.trackWatchdogTerminations,
@@ -154,7 +156,6 @@ extension NSDictionary {
             batchSize: batchSize,
             batchProcessingLevel: batchProcessingLevel,
             proxyConfiguration: proxyConfiguration,
-            firstPartyHosts: firstPartyHosts,
             rumConfiguration: rumConfiguration,
             logsConfiguration: logsConfiguration,
             traceConfiguration: traceConfiguration,
@@ -317,10 +318,6 @@ extension Dictionary where Key == String, Value == AnyObject {
         let proxyDict = configuration["proxyConfiguration"] as? NSDictionary
         let proxyConfiguration = proxyDict?.asProxyConfiguration()
 
-        let firstPartyHostsArray = configuration["firstPartyHosts"] as? NSArray
-        let firstPartyHosts =
-            firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
-
         // MARK: - RUM configuration
 
         let rumDict = configuration["rumConfiguration"] as? [String: Any?]
@@ -355,6 +352,10 @@ extension Dictionary where Key == String, Value == AnyObject {
                 if let v = nativeLongTaskRaw as? Int { return Double(v) }
                 return nil
             }()
+            
+            let firstPartyHostsArray = rum["firstPartyHosts"] as? NSArray
+            let firstPartyHosts =
+                firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
 
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
@@ -377,6 +378,7 @@ extension Dictionary where Key == String, Value == AnyObject {
                     ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: rum["nativeInteractionTracking"] as? Bool
                     ?? DefaultConfiguration.nativeInteractionTracking,
+                firstPartyHosts: firstPartyHosts,
                 appHangThreshold: rum["appHangThreshold"] as? Double,
                 trackWatchdogTerminations: rum["trackWatchdogTerminations"] as? Bool
                     ?? DefaultConfiguration.trackWatchdogTerminations,
@@ -438,7 +440,6 @@ extension Dictionary where Key == String, Value == AnyObject {
             batchSize: batchSize,
             batchProcessingLevel: batchProcessingLevel,
             proxyConfiguration: proxyConfiguration,
-            firstPartyHosts: firstPartyHosts,
             rumConfiguration: rumConfiguration,
             logsConfiguration: logsConfiguration,
             traceConfiguration: traceConfiguration,

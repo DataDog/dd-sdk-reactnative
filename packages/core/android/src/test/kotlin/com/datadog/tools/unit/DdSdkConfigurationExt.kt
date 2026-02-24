@@ -40,10 +40,6 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         map["proxyConfiguration"] = proxyPair.toReadableMap()
     }
 
-    firstPartyHosts?.let {
-        map["firstPartyHosts"] = it.toFirstPartyHostsReadableArray()
-    }
-
     additionalConfiguration?.let {
         map["additionalConfiguration"] = it.toReadableMap()
     }
@@ -65,6 +61,9 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         rum?.nativeViewTracking?.let { rumMap["nativeViewTracking"] = it }
         rum?.nativeInteractionTracking?.let { rumMap["nativeInteractionTracking"] = it }
         rum?.trackNonFatalAnrs?.let { rumMap["trackNonFatalAnrs"] = it }
+        rum?.firstPartyHosts?.let {
+            rumMap["firstPartyHosts"] = it.toFirstPartyHostsReadableArray()
+        }
         rumMap["initialResourceThreshold"] = rum?.initialResourceThreshold ?: 0.1
         rumMap["telemetrySampleRate"] = rum?.telemetrySampleRate ?: 20.0
         rum?.customEndpoint?.let { rumMap["customEndpoint"] = it }
