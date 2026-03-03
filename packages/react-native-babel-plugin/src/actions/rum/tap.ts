@@ -298,6 +298,19 @@ function handleMemoization(
                 ? callback
                 : t.callExpression(callback, callArgs);
 
+        // Update handlerArgs in argsObject to match the actual callback params
+        // instead of the default [...args] computed from the outer identifier
+        const handlerArgsProp = argsObject.properties.find(
+            prop =>
+                t.isObjectProperty(prop) &&
+                t.isStringLiteral(prop.key) &&
+                prop.key.value === 'handlerArgs'
+        );
+
+        if (handlerArgsProp && t.isObjectProperty(handlerArgsProp)) {
+            handlerArgsProp.value = t.arrayExpression(callArgs);
+        }
+
         const actionWrapper = getActionWrapperFunction(
             t,
             state,
