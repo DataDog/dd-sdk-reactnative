@@ -1201,7 +1201,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [event],
                   "componentName": "Pressable"
                 })(event);else return (event => {
                   console.log('Testing ', a, b, event);
@@ -1299,7 +1299,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [],
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
@@ -1348,7 +1348,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [],
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
@@ -1407,7 +1407,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [test],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -1461,7 +1461,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [test],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -1511,7 +1511,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [test],
                   "componentName": "Pressable"
                 })(test);else return funcN(test);
               }, [a, b]);
@@ -1594,7 +1594,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "getContent": () => {
                     return __ddExtractText(<></>, []);
                   },
-                  "handlerArgs": [...args],
+                  "handlerArgs": [],
                   "componentName": "Pressable"
                 })();else return funcN();
               }, []);
