@@ -39,7 +39,10 @@ const config = {
         extraNodeModules: modules.reduce((acc, name) => {
             acc[name] = path.join(__dirname, 'node_modules', name);
             return acc;
-        }, {})
+        }, {}),
+
+        unstable_enablePackageExports: true,
+        unstable_conditionNames: ['react-native', 'browser', 'require', 'default']
     }
 };
 
