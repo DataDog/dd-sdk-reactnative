@@ -111,12 +111,12 @@ export class DdBabelInteractionTracking {
             ? handlerArgs.find(x => typeof x === 'number') || 0
             : 0;
 
-        // Order: content → actionName → actionNameAttribute → accessibilityLabel
+        // Order: actionName → actionNameAttribute → accessibilityLabel → content
         const selectedContent =
-            tryContent() ||
             actionName ||
             Object.values(attrs)[0] ||
-            getAccessibilityLabel();
+            getAccessibilityLabel() ||
+            tryContent();
 
         if (!selectedContent) {
             return componentName;
