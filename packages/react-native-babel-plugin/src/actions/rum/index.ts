@@ -5,6 +5,7 @@
  */
 
 import type * as Babel from '@babel/core';
+import { addNamed } from '@babel/helper-module-imports';
 import {
     arrowFunctionExpression,
     blockStatement,
@@ -112,7 +113,10 @@ export function handleJSXElementActionPaths(
     }
 
     // Optionally compute a content getter (children + label props)
-    setContentAttribute(componentName, t, path, state, ddValues);
+    const programPath = path.findParent(p =>
+        p.isProgram()
+    ) as Babel.NodePath<Babel.types.Program>;
+    setContentAttribute(componentName, t, path, state, ddValues, programPath);
 
     // Wrap every actionable handler attribute with RUM
     for (const attrPath of actionPathList) {
@@ -190,9 +194,152 @@ export function ensureMandatoryAttributes(
 }
 
 /**
+ * Converts a JSX child AST node into a jsx()/jsxs() runtime call.
+ * This avoids emitting raw JSX in generated code, which is necessary because
+ * Babel presets (including the JSX transform) run before plugins — so any
+ * JSX nodes created by this plugin would survive untransformed into the bundle.
+ *
+ * Uses `@babel/helper-module-imports` to add `jsx`/`jsxs`/`Fragment` imports
+ * from `react/jsx-runtime`, matching the approach of `@babel/plugin-transform-react-jsx`.
+ */
+function jsxChildToRuntimeCall(
+    t: typeof Babel.types,
+    child: Babel.types.Node,
+    programPath: Babel.NodePath<Babel.types.Program>
+): Babel.types.Expression | null {
+    if (t.isJSXText(child)) {
+        const text = child.value.replace(/\n\s*/g, ' ').trim();
+        if (!text) {
+            return null;
+        }
+        return t.stringLiteral(text);
+    }
+
+    if (t.isJSXExpressionContainer(child)) {
+        if (t.isJSXEmptyExpression(child.expression)) {
+            return null;
+        }
+        return t.cloneNode(child.expression as Babel.types.Expression, true);
+    }
+
+    if (t.isJSXElement(child)) {
+        const opening = child.openingElement;
+        const elementName = getNodeName(t, opening.name);
+
+        // Build the element name as an identifier or member expression
+        let nameNode: Babel.types.Expression;
+        if (elementName && elementName.includes('.')) {
+            const parts = elementName.split('.');
+            nameNode = parts.reduce<Babel.types.Expression>(
+                (obj, prop) =>
+                    obj === null
+                        ? t.identifier(prop)
+                        : t.memberExpression(obj, t.identifier(prop)),
+                (null as unknown) as Babel.types.Expression
+            );
+        } else {
+            nameNode = t.identifier(elementName || 'unknown');
+        }
+
+        // Convert props to an object
+        const propEntries = opening.attributes
+            .filter((attr): attr is Babel.types.JSXAttribute =>
+                t.isJSXAttribute(attr)
+            )
+            .map(attr => {
+                const key = t.isJSXIdentifier(attr.name)
+                    ? t.identifier(attr.name.name)
+                    : t.stringLiteral(getNodeName(t, attr.name) || '');
+                let value: Babel.types.Expression;
+                if (!attr.value) {
+                    value = t.booleanLiteral(true);
+                } else if (t.isStringLiteral(attr.value)) {
+                    value = t.cloneNode(attr.value, true);
+                } else if (t.isJSXExpressionContainer(attr.value)) {
+                    value = t.cloneNode(
+                        attr.value.expression as Babel.types.Expression,
+                        true
+                    );
+                } else {
+                    value = t.nullLiteral();
+                }
+                return t.objectProperty(key, value);
+            });
+
+        // Recursively convert children
+        const childExprs = child.children
+            .map(c => jsxChildToRuntimeCall(t, c, programPath))
+            .filter((x): x is Babel.types.Expression => x !== null);
+
+        // Build the props object with children
+        if (childExprs.length === 1) {
+            propEntries.push(
+                t.objectProperty(t.identifier('children'), childExprs[0])
+            );
+        } else if (childExprs.length > 1) {
+            propEntries.push(
+                t.objectProperty(
+                    t.identifier('children'),
+                    t.arrayExpression(childExprs)
+                )
+            );
+        }
+
+        const propsObj =
+            propEntries.length > 0
+                ? t.objectExpression(propEntries)
+                : t.objectExpression([]);
+
+        // Use jsxs for multiple children, jsx for single/none
+        const runtimeFn =
+            childExprs.length > 1
+                ? addNamed(programPath, 'jsxs', 'react/jsx-runtime')
+                : addNamed(programPath, 'jsx', 'react/jsx-runtime');
+
+        return t.callExpression(t.cloneNode(runtimeFn), [nameNode, propsObj]);
+    }
+
+    if (t.isJSXFragment(child)) {
+        const childExprs = child.children
+            .map(c => jsxChildToRuntimeCall(t, c, programPath))
+            .filter((x): x is Babel.types.Expression => x !== null);
+
+        const fragmentId = addNamed(
+            programPath,
+            'Fragment',
+            'react/jsx-runtime'
+        );
+
+        const props =
+            childExprs.length === 1
+                ? t.objectExpression([
+                      t.objectProperty(t.identifier('children'), childExprs[0])
+                  ])
+                : t.objectExpression([
+                      t.objectProperty(
+                          t.identifier('children'),
+                          t.arrayExpression(childExprs)
+                      )
+                  ]);
+
+        const runtimeFn =
+            childExprs.length > 1
+                ? addNamed(programPath, 'jsxs', 'react/jsx-runtime')
+                : addNamed(programPath, 'jsx', 'react/jsx-runtime');
+
+        return t.callExpression(t.cloneNode(runtimeFn), [
+            t.cloneNode(fragmentId),
+            props
+        ]);
+    }
+
+    return null;
+}
+
+/**
  * Optionally attaches a `getContent` resolver into `ddValues` that, at runtime,
  * returns a string derived from:
- *   - the element's children (rendered via a JSX Fragment clone)
+ *   - the element's children (rendered via a React.createElement(Fragment) call)
  *   - common label-like props (`trackingLabel`, `title`, `label`, `text`, plus an optional custom prop)
  *
  * @param componentName  Host component name (controls whether content is used).
@@ -200,6 +347,7 @@ export function ensureMandatoryAttributes(
  * @param path           JSXElement path.
  * @param state          Plugin state with trackedComponents metadata.
  * @param ddValues       Mutable map of computed values attached to attributes via `node.extra.ddValues`.
+ * @param programPath   Program path for inserting jsx-runtime imports.
  */
 export function setContentAttribute(
     componentName: string,
@@ -211,7 +359,8 @@ export function setContentAttribute(
         | Babel.types.ArrayExpression
         | Babel.types.ArrowFunctionExpression
         | Babel.types.ObjectExpression
-    >
+    >,
+    programPath: Babel.NodePath<Babel.types.Program>
 ) {
     const componentData = state.trackedComponents?.[componentName];
     if (componentData?.useContent) {
@@ -249,19 +398,47 @@ export function setContentAttribute(
             }
         }
 
-        // Clone children into a fragment so the runtime can render/extract text
-        const fragment = t.jsxFragment(
-            t.jSXOpeningFragment(),
-            t.jSXClosingFragment(),
-            [...path.node.children.map(x => t.cloneNode(x, true))]
+        // Convert children to jsx()/jsxs() runtime calls instead of cloning
+        // raw JSX nodes. Babel presets (including the JSX transform) run before
+        // plugins, so any JSX nodes created here would survive untransformed.
+        const convertedChildren = path.node.children
+            .map(child => jsxChildToRuntimeCall(t, child, programPath))
+            .filter((x): x is Babel.types.Expression => x !== null);
+
+        const fragmentId = addNamed(
+            programPath,
+            'Fragment',
+            'react/jsx-runtime'
         );
 
-        // Mark to avoid wrapping descendants during traversal
-        fragment.extra = {
-            __wrappedForRum: true
-        };
+        const childrenProp =
+            convertedChildren.length === 1
+                ? t.objectProperty(
+                      t.identifier('children'),
+                      convertedChildren[0]
+                  )
+                : convertedChildren.length > 1
+                ? t.objectProperty(
+                      t.identifier('children'),
+                      t.arrayExpression(convertedChildren)
+                  )
+                : null;
 
-        // () => __ddExtractText(<>{children}</>, [candidates...])
+        const fragmentProps = childrenProp
+            ? t.objectExpression([childrenProp])
+            : t.objectExpression([]);
+
+        const runtimeFn =
+            convertedChildren.length > 1
+                ? addNamed(programPath, 'jsxs', 'react/jsx-runtime')
+                : addNamed(programPath, 'jsx', 'react/jsx-runtime');
+
+        const fragment = t.callExpression(t.cloneNode(runtimeFn), [
+            t.cloneNode(fragmentId),
+            fragmentProps
+        ]);
+
+        // () => __ddExtractText(jsxs(Fragment, { children: [...] }), [candidates...])
         const getContentNode = t.arrowFunctionExpression(
             [],
             t.blockStatement([
