@@ -11,11 +11,21 @@ import DatadogCore
 
 @objc
 public class DdLogsImplementation: NSObject {
-    private lazy var logger: LoggerProtocol = loggerProvider()
+    private var loggerInstance: LoggerProtocol?
+    private var logger: LoggerProtocol {
+        if loggerInstance == nil {
+            loggerInstance = loggerProvider()
+        }
+        return loggerInstance!
+    }
     private let loggerProvider: () -> LoggerProtocol
-    
+
     internal init(_ loggerProvider: @escaping () -> LoggerProtocol) {
         self.loggerProvider = loggerProvider
+        super.init()
+        DatadogSDKWrapper.shared.addOnSdkInitializedListener { [weak self] _ in
+            self?.loggerInstance = nil
+        }
     }
 
     @objc

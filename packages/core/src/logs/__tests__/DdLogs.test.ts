@@ -12,7 +12,7 @@ import { CoreConfiguration } from '../../config/features/CoreConfiguration';
 import { LogsConfiguration } from '../../config/features/LogsConfiguration';
 import { RumConfiguration } from '../../config/features/RumConfiguration';
 import { SdkVerbosity } from '../../config/types';
-import type { DdNativeLogsType } from '../../nativeModulesTypes';
+import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { ErrorSource } from '../../types';
 import type { LogEventMapper, LogEvent } from '../../types';
 import { DdLogs } from '../DdLogs';
@@ -31,6 +31,7 @@ describe('DdLogs', () => {
         beforeEach(() => {
             jest.clearAllMocks();
             DdLogs.unregisterLogEventMapper();
+            BufferSingleton.onInitialization();
         });
 
         it('registers event mapper and maps logs', async () => {
@@ -473,26 +474,6 @@ describe('DdLogs', () => {
             expect(NativeModules.DdLogs.info).toHaveBeenCalledWith(
                 'message',
                 {}
-            );
-        });
-    });
-
-    describe('when SDK is not initialized', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-            DdLogs.unregisterLogEventMapper();
-        });
-
-        it('does not crash and warns user', async () => {
-            (NativeModules.DdLogs.info as jest.MockedFunction<
-                DdNativeLogsType['debug']
-            >).mockRejectedValueOnce(
-                new Error('DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT')
-            );
-            const consoleSpy = jest.spyOn(console, 'warn');
-            await DdLogs.info('original message', {});
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'DATADOG: Dropping info log as the SDK is not initialized yet: "original message"'
             );
         });
     });

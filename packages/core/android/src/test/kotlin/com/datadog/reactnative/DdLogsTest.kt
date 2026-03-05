@@ -8,7 +8,6 @@ package com.datadog.reactnative
 
 import android.util.Log
 import com.datadog.android.log.Logger
-import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import fr.xgouchet.elmyr.Forge
@@ -25,11 +24,9 @@ import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
@@ -71,8 +68,7 @@ internal class DdLogsTest {
 
     @BeforeEach
     fun `set up`(forge: Forge) {
-        whenever(mockDatadog.isInitialized()) doReturn true
-        testedLogs = DdLogsImplementation(mockLogger, mockDatadog)
+        testedLogs = DdLogsImplementation(datadog = mockDatadog, logger = { mockLogger })
         fakeErrorKind = forge.aNullable { forge.aString() }
         fakeErrorMessage = forge.aNullable { forge.aString() }
         fakeStacktrace = forge.aNullable { forge.aString() }
@@ -272,129 +268,26 @@ internal class DdLogsTest {
     }
 
     @Test
-    fun `M not forward logs W SDK is not initialized`() {
+    fun `M recreate logger W SDK is initialized`() {
+        // Given
+        val mockLoggerFactory = mock<() -> Logger>()
+        whenever(mockLoggerFactory()).thenReturn(mockLogger)
+        val testedLogs = DdLogsImplementation(
+            datadog = mockDatadog,
+            logger = mockLoggerFactory
+        )
+
         // When
-        whenever(mockDatadog.isInitialized()) doReturn false
-        var newTestedLogs = DdLogsImplementation(mockLogger, mockDatadog)
-        newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.info(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.warn(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.error(fakeMessage, mockContext, mockPromise)
-        testedLogs.debugWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.infoWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.warnWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.errorWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
+        testedLogs.debug(fakeMessage, mockContext, mockPromise)
 
         // Then
-        verifyNoInteractions(mockLogger)
-        val exceptionCaptor = argumentCaptor<IllegalStateException>()
-        verify(mockPromise, times(8)).reject(exceptionCaptor.capture())
-        assertThat(exceptionCaptor.firstValue.message)
-            .isEqualTo("DD_INTERNAL_LOG_SENT_BEFORE_SDK_INIT")
+        verify(mockLoggerFactory, times(1)).invoke()
 
-        // When SDK is finally initialized
-        whenever(mockDatadog.isInitialized()) doReturn true
-        newTestedLogs.debug(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.info(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.warn(fakeMessage, mockContext, mockPromise)
-        newTestedLogs.error(fakeMessage, mockContext, mockPromise)
-        testedLogs.debugWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.infoWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.warnWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
-        testedLogs.errorWithError(
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            mockContext,
-            mockPromise
-        )
+        // When
+        DatadogSDKWrapperStorage.notifyOnInitializedListeners(mock())
 
         // Then
-        verify(mockLogger).i(fakeMessage, attributes = mockContext.toHashMap())
-        verify(mockLogger).d(fakeMessage, attributes = mockContext.toHashMap())
-        verify(mockLogger).w(fakeMessage, attributes = mockContext.toHashMap())
-        verify(mockLogger).e(fakeMessage, attributes = mockContext.toHashMap())
-        verify(mockLogger).log(
-            Log.DEBUG,
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            attributes = mockContext.toHashMap()
-        )
-        verify(mockLogger).log(
-            Log.INFO,
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            attributes = mockContext.toHashMap()
-        )
-        verify(mockLogger).log(
-            Log.WARN,
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            attributes = mockContext.toHashMap()
-        )
-        verify(mockLogger).log(
-            Log.ERROR,
-            fakeMessage,
-            fakeErrorKind,
-            fakeErrorMessage,
-            fakeStacktrace,
-            attributes = mockContext.toHashMap()
-        )
+        testedLogs.debug(fakeMessage, mockContext, mockPromise)
+        verify(mockLoggerFactory, times(2)).invoke()
     }
 }
