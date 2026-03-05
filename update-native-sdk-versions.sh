@@ -125,7 +125,7 @@ if [ "$first_version_row" = "$new_row" ]; then
     echo "Entry for version $core_version already exists in NATIVE_SDK_VERSIONS.md"
 else
     sed -i '' "2a\\
-$new_row\\
+$new_row
 " NATIVE_SDK_VERSIONS.md
     echo "Updated NATIVE_SDK_VERSIONS.md with entry for version $core_version"
 fi
