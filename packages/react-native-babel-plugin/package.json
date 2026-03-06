@@ -50,7 +50,7 @@
         "@babel/types": "^7.27.1",
         "fast-glob": "^3.3.3",
         "svgo": "^4.0.0",
-        "uuid": "^8.3.2"
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
         "@babel/cli": "^7.27.2",
