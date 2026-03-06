@@ -31,7 +31,7 @@
     RCTTextView* textView = (RCTTextView*)view;
     NSNumber* tag = textView.reactTag;
 
-    __block RCTTextShadowView* shadowView = nil;
+    __block RCTTextPropertiesWrapper* textProperties = nil;
     NSTimeInterval timeout = 0.2;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -41,8 +41,33 @@
     // That would create a circular dependency and deadlock the app.
     // To avoid this, we dispatch the work asynchronously to the UIManager queue and wait with a timeout.
     // This ensures we block only if absolutely necessary, and can fail gracefully if the queue is busy.
+    //
+    // All shadow view property reads (reactSubviews, textAttributes, layoutMetrics) must also happen
+    // on the UIManager queue. The UIManager queue can mutate or deallocate shadow views and their
+    // subviews at any time, so reading them on the main thread after the semaphore is signaled creates
+    // a race condition that causes SIGSEGV crashes in objc_msgSend.
     dispatch_async(uiManager.methodQueue, ^{
-        shadowView = (RCTTextShadowView*)[uiManager shadowViewForReactTag:tag];
+        RCTTextShadowView* shadowView = (RCTTextShadowView*)[uiManager shadowViewForReactTag:tag];
+
+        if (shadowView != nil && [shadowView isKindOfClass:[RCTTextShadowView class]]) {
+            RCTTextPropertiesWrapper* wrapper = [[RCTTextPropertiesWrapper alloc] init];
+
+            NSString* text = [self tryToExtractTextFromSubViews:shadowView.reactSubviews];
+            if (text != nil) {
+                wrapper.text = text;
+            }
+
+            if (shadowView.textAttributes.foregroundColor != nil) {
+                wrapper.foregroundColor = shadowView.textAttributes.foregroundColor;
+            }
+
+            wrapper.alignment = shadowView.textAttributes.alignment;
+            wrapper.fontSize = shadowView.textAttributes.fontSize;
+            wrapper.contentRect = shadowView.layoutMetrics.contentFrame;
+
+            textProperties = wrapper;
+        }
+
         dispatch_semaphore_signal(semaphore);
     });
 
@@ -52,27 +77,6 @@
     if (waitResult != 0) { // timeout
         return nil;
     }
-
-    if (shadowView == nil || ![shadowView isKindOfClass:[RCTTextShadowView class]]) {
-        return nil;
-    }
-
-    RCTTextPropertiesWrapper* textProperties = [[RCTTextPropertiesWrapper alloc] init];
-
-    // Extract text from subviews
-    NSString* text = [self tryToExtractTextFromSubViews:shadowView.reactSubviews];
-    if (text != nil) {
-        textProperties.text = text;
-    }
-
-    // Extract text attributes
-    if (shadowView.textAttributes.foregroundColor != nil) {
-        textProperties.foregroundColor = shadowView.textAttributes.foregroundColor;
-    }
-
-    textProperties.alignment = shadowView.textAttributes.alignment;
-    textProperties.fontSize = shadowView.textAttributes.fontSize;
-    textProperties.contentRect = shadowView.layoutMetrics.contentFrame;
 
     return textProperties;
 #else
