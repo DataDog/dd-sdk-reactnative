@@ -194,7 +194,7 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
+  compileOnly "com.squareup.okhttp3:okhttp:5.3.2"
  // dd-sdk-android-rum requires androidx.metrics:metrics-performance.
  // From 2.21.0, it uses 1.0.0-beta02, which requires Gradle 8.6.0.
  // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0.
