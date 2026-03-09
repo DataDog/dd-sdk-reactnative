@@ -47,9 +47,9 @@ This creates a `.env` file that you will need to fill with the required tokens a
 - `GITHUB_REPOSITORY` - Repository in format `owner/repo`
 
 **Optional variables** (override defaults):
-- `OPENAI_MODEL` - Model to use (default: `chatgpt-4o-latest`)
+- `OPENAI_MODEL` - Model to use (default: `gpt-5.2-chat-latest`)
 - `OPENAI_TEMPERATURE` - Response creativity 0.0-1.0 (default: `0.4`)
-- `OPENAI_MAX_RESPONSE_TOKENS` - Max response length (default: `500`)
+- `OPENAI_MAX_COMPLETION_TOKENS` - Max response length (default: `500`)
 
 ## Usage
 
@@ -80,9 +80,9 @@ The tool runs:
 - `OPENAI_SYSTEM_PROMPT` - OpenAI analysis prompt (stored as variable for easier updates)
 
 **Optional GitHub Variables** (override defaults if needed):
-- `OPENAI_MODEL` - Model to use (default: `chatgpt-4o-latest`)
+- `OPENAI_MODEL` - Model to use (default: `gpt-5.2-chat-latest`)
 - `OPENAI_TEMPERATURE` - Response creativity 0.0-1.0 (default: `0.4`)
-- `OPENAI_MAX_RESPONSE_TOKENS` - Max response length (default: `500`)
+- `OPENAI_MAX_COMPLETION_TOKENS` - Max response length (default: `500`)
 
 **Automatically Provided**:
 - `GITHUB_TOKEN` - Provided by GitHub Actions
