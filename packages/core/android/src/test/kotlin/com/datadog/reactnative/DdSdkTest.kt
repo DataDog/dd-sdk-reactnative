@@ -582,6 +582,60 @@ internal class DdSdkTest {
 
     // endregion
 
+    // region initialize / needsClearTextHttp
+
+    @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {needsClearTextHttp=true}`() {
+        // Given
+        val additionalConfig = (
+            fakeConfiguration.additionalConfiguration?.toMutableMap() ?: mutableMapOf()
+            ).also { it[DdSdkImplementation.DD_NEEDS_CLEAR_TEXT_HTTP] = true }
+        val bridgeConfiguration = fakeConfiguration.copy(additionalConfiguration = additionalConfig)
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", true)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
+    }
+
+    // endregion
+
     // region initialize / site
 
     @Test

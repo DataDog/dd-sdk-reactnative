@@ -405,6 +405,7 @@ class DdSdkImplementation(
         internal const val DEFAULT_APP_VERSION = "?"
         internal const val DD_VERSION = "_dd.version"
         internal const val DD_VERSION_SUFFIX = "_dd.version_suffix"
+        internal const val DD_NEEDS_CLEAR_TEXT_HTTP = "_dd.needsClearTextHttp"
         internal const val DD_DROP_RESOURCE = "_dd.resource.drop_resource"
         internal const val DD_DROP_ACTION = "_dd.action.drop_action"
         internal const val MONITOR_JS_ERROR_MESSAGE = "Error monitoring JS refresh rate"
