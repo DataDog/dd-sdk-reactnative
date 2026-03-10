@@ -21,6 +21,7 @@ import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
+import com.datadog.android._InternalProxy
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
@@ -312,6 +313,10 @@ class DdSdkNativeInitialization internal constructor(
         }
 
         configBuilder.setBatchProcessingLevel(buildBatchProcessingLevel(configuration.batchProcessingLevel))
+
+        if (additionalConfig?.get(DdSdkImplementation.DD_NEEDS_CLEAR_TEXT_HTTP) == true) {
+            _InternalProxy.allowClearTextHttp(configBuilder)
+        }
 
         return configBuilder.build()
     }
