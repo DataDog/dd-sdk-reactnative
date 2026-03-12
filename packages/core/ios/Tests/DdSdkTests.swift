@@ -1556,6 +1556,31 @@ class DdSdkTests: XCTestCase {
         XCTAssertNotNil(mappedEvent)
     }
 
+    func testResourceAttributesProviderMarksTrackedByRequestsAsDropped() throws {
+        let rumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.firstPartyHosts = ["example.com": [.datadog]]
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        let resourceAttributesProvider = try XCTUnwrap(
+            ddConfig.urlSessionTracking?.resourceAttributesProvider
+        )
+
+        // Request with x-datadog-tracked-by header should be marked for dropping
+        let trackedRequest = URLRequest.mockWith(headerFields: [InternalConfigurationAttributes.trackedByHeaderKey: InternalConfigurationAttributes.trackedByHeaderValue])
+        let trackedAttributes = resourceAttributesProvider(trackedRequest, nil, nil, nil)
+        XCTAssertNotNil(trackedAttributes)
+        XCTAssertEqual(trackedAttributes?[InternalConfigurationAttributes.dropResource] as? Bool, true)
+
+        // Request without the header should not be marked for dropping
+        let untrackedRequest = URLRequest.mockWith(headerFields: [:])
+        let untrackedAttributes = resourceAttributesProvider(untrackedRequest, nil, nil, nil)
+        XCTAssertNil(untrackedAttributes)
+    }
+
     func testDropsActionMarkedAsDropped() throws {
         let configuration: DdSdkConfiguration = .mockAny()
 

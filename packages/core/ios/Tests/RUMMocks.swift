@@ -513,3 +513,18 @@ extension RUMActionEvent: RandomMockable {
         )
     }
 }
+
+// MARK: - URLRequest Mocks
+
+extension URLRequest {
+    static func mockWith(
+        url: URL = URL(string: "https://example.com")!,
+        headerFields: [String: String] = [:]
+    ) -> URLRequest {
+        var request = URLRequest(url: url)
+        for (key, value) in headerFields {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+        return request
+    }
+}

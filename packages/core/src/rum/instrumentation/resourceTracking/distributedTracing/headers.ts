@@ -8,6 +8,8 @@
  */
 export const SAMPLING_PRIORITY_HEADER_KEY = 'x-datadog-sampling-priority';
 export const ORIGIN_HEADER_KEY = 'x-datadog-origin';
+export const TRACKED_BY_HEADER_KEY = 'x-datadog-tracked-by';
+export const TRACKED_BY_HEADER_VALUE = 'react-native';
 export const ORIGIN_RUM = 'rum';
 export const TRACE_ID_HEADER_KEY = 'x-datadog-trace-id';
 export const PARENT_ID_HEADER_KEY = 'x-datadog-parent-id';

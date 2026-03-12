@@ -33,7 +33,9 @@ import {
     ORIGIN_HEADER_KEY,
     TRACESTATE_HEADER_KEY,
     TAGS_HEADER_KEY,
-    BAGGAGE_HEADER_KEY
+    BAGGAGE_HEADER_KEY,
+    TRACKED_BY_HEADER_KEY,
+    TRACKED_BY_HEADER_VALUE
 } from '../../../distributedTracing/headers';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
@@ -449,6 +451,57 @@ describe('XHRProxy', () => {
             // THEN
             expect(xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)).toBe(
                 '0'
+            );
+        });
+
+        it('adds the x-datadog-tracked-by header for first party host requests', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders.get(TRACKED_BY_HEADER_KEY)).toBe(
+                TRACKED_BY_HEADER_VALUE
+            );
+        });
+
+        it('adds the x-datadog-tracked-by header for non-first party host requests', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open(method, url);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(xhr.requestHeaders.get(TRACKED_BY_HEADER_KEY)).toBe(
+                TRACKED_BY_HEADER_VALUE
             );
         });
 
