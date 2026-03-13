@@ -1644,3 +1644,79 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
         `);
     });
 });
+
+describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
+    function extractGetContent(output: string | null | undefined): string {
+        if (!output) return '';
+        const match = output.match(/"getContent": \(\) => \{[\s\S]*?return ([\s\S]*?);\s*\}/);
+        return match ? match[1] : '';
+    }
+
+    it('should quote hyphenated attribute names in getContent child elements to produce valid JS', () => {
+        const input = `
+            import { TouchableOpacity, View, Text } from 'react-native';
+
+            function MyComponent() {
+                return (
+                    <TouchableOpacity onPress={() => {}}>
+                        <View aria-hidden>
+                            <Text>Hello</Text>
+                        </View>
+                    </TouchableOpacity>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        const getContent = extractGetContent(output);
+        // Inside getContent, the generated _jsx call must use "aria-hidden" (quoted string)
+        // not aria-hidden (bare identifier) because aria-hidden is not a valid JS identifier.
+        // Bare identifiers with hyphens cause Hermes parse errors: ':' expected in property initialization
+        expect(getContent).toContain('"aria-hidden"');
+        expect(getContent).not.toMatch(/\baria-hidden\b(?!":)/);
+    });
+
+    it('should quote multiple hyphenated attribute names in getContent child elements', () => {
+        const input = `
+            import { TouchableOpacity, View, Text } from 'react-native';
+
+            function MyComponent() {
+                return (
+                    <TouchableOpacity onPress={() => {}}>
+                        <View aria-hidden aria-label="test" data-testid="my-view">
+                            <Text>Hello</Text>
+                        </View>
+                    </TouchableOpacity>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        const getContent = extractGetContent(output);
+        expect(getContent).toContain('"aria-hidden"');
+        expect(getContent).toContain('"aria-label"');
+        expect(getContent).toContain('"data-testid"');
+    });
+
+    it('should quote all attribute names consistently in getContent child elements', () => {
+        const input = `
+            import { TouchableOpacity, View, Text } from 'react-native';
+
+            function MyComponent() {
+                return (
+                    <TouchableOpacity onPress={() => {}}>
+                        <View style={{flex: 1}} accessible>
+                            <Text>Hello</Text>
+                        </View>
+                    </TouchableOpacity>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        const getContent = extractGetContent(output);
+        // All attribute names are quoted for consistency and safety
+        expect(getContent).toContain('"style"');
+        expect(getContent).toContain('"accessible"');
+    });
+});
