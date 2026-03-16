@@ -1647,8 +1647,12 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
 
 describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
     function extractGetContent(output: string | null | undefined): string {
-        if (!output) return '';
-        const match = output.match(/"getContent"\s*:\s*\(\)\s*=>\s*\{[\s\S]*?return\s+([\s\S]*?);\s*\}/);
+        if (!output) {
+            return '';
+        }
+        const match = output.match(
+            /"getContent"\s*:\s*\(\)\s*=>\s*\{[\s\S]*?return\s+([\s\S]*?);\s*\}/
+        );
         return match ? match[1] : '';
     }
 
