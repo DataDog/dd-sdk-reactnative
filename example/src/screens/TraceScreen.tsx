@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { View, Text, Button } from 'react-native';
 
 import styles from './styles';
-import { DdTrace } from '@datadog/mobile-react-native';
+import { DdTrace, InternalLog, SdkVerbosity } from '@datadog/mobile-react-native';
 
-const TraceScreen = props => {
+const TraceScreen = () => {
     const [spanIds, setSpanIds] = useState<string[]>([]);
 
     return (
@@ -17,6 +17,7 @@ const TraceScreen = props => {
                 title="Start Span"
                 onPress={async () => {
                     const newSpanId = await DdTrace.startSpan("span_operation_" +   Math.floor(100 + Math.random() * 900));
+                    InternalLog.log(`SpanId: ${newSpanId}`, SdkVerbosity.DEBUG);
                     spanIds.push(newSpanId);
                     setSpanIds(spanIds);
                 }}
