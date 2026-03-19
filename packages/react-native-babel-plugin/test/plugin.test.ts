@@ -1643,4 +1643,39 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
             }"
         `);
     });
+
+    it('should resolve member expression component names in getContent', () => {
+        const options: Partial<PluginOptions> = {
+            components: {
+                useContent: true,
+                useNamePrefix: true,
+                tracked: [
+                    {
+                        name: 'Card',
+                        handlers: [{ event: 'onPress', action: 'TAP' }]
+                    }
+                ]
+            }
+        };
+
+        const input = `
+            import { View, Text } from 'react-native';
+            function Card({ children, onPress }: any) {
+                return <View onPress={onPress}>{children}</View>;
+            }
+            Card.Title = ({ children }: any) => <Text>{children}</Text>;
+
+            function Screen() {
+                return (
+                    <Card onPress={() => {}}>
+                        <Card.Title>Welcome</Card.Title>
+                    </Card>
+                );
+            }
+        `;
+
+        const output = transformCode(input, options);
+        expect(output).not.toContain('(unknown,');
+        expect(output).toContain('Card.Title');
+    });
 });
