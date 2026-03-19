@@ -37,10 +37,7 @@ class DdTraceWrapper implements DdTraceType {
                 timestampMs
             )
         );
-        InternalLog.log(
-            `Starting span “${operation}” #${spanId}`,
-            SdkVerbosity.DEBUG
-        );
+        InternalLog.log(`Starting span “${operation}”`, SdkVerbosity.DEBUG);
         return spanId;
     };
 

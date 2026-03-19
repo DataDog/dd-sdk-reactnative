@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MainScreen from './screens/MainScreen';
 import ErrorScreen from './screens/ErrorScreen';
 import AboutScreen from './screens/AboutScreen';
+import TraceScreen from './screens/TraceScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
@@ -95,6 +96,7 @@ export default function App() {
             <Tab.Screen name="Home" component={MainScreen} />
             <Tab.Screen name="Error" component={ErrorScreen} />
             <Tab.Screen name="About" component={AboutScreen} />
+            <Tab.Screen name="Trace" component={TraceScreen} />
             <Tab.Screen name="Nested" component={NestedNavigator} />
           </Tab.Navigator>
         </NavigationContainer>
