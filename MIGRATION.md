@@ -101,7 +101,7 @@ const configuration = new DatadogProviderConfiguration(
 | `nativeCrashReportEnabled` | `RumConfiguration` | Moved. |
 | `nativeViewTracking` | `RumConfiguration` | Moved. |
 | `nativeInteractionTracking` | `RumConfiguration` | Moved. |
-| `firstPartyHosts` | `RumConfiguration` | Moved. |
+| `firstPartyHosts` | `RumConfiguration` | Moved. Format changed from `(string \| FirstPartyHost)[]` to `FirstPartyHost[]`. |
 | `telemetrySampleRate` | `RumConfiguration` | Moved. |
 | `nativeLongTaskThresholdMs` | `RumConfiguration` | Moved. |
 | `longTaskThresholdMs` | `RumConfiguration` | Moved. |
@@ -123,6 +123,46 @@ const configuration = new DatadogProviderConfiguration(
 | `trackInteractions` | `RumConfiguration` | Moved. |
 | `trackResources` | `RumConfiguration` | Moved. |
 | `trackErrors` | `RumConfiguration` | Moved. |
+
+### `firstPartyHosts` format change
+
+In v2, `firstPartyHosts` accepted an array of strings:
+
+```typescript
+const config = {
+    firstPartyHosts: ['example.com', 'api.myapp.com']
+};
+```
+
+In v3, `firstPartyHosts` has been moved to `rumConfiguration` and now requires an array of objects specifying the host and propagator types:
+
+```typescript
+import { PropagatorType } from '@datadog/mobile-react-native';
+
+const config = new CoreConfiguration(
+    CLIENT_TOKEN,
+    ENVIRONMENT,
+    TrackingConsent.GRANTED,
+    {
+        rumConfiguration: {
+            applicationId: APPLICATION_ID,
+            firstPartyHosts: [
+                {
+                    match: 'example.com',
+                    propagatorTypes: [
+                        PropagatorType.DATADOG,
+                        PropagatorType.TRACECONTEXT
+                    ]
+                },
+                {
+                    match: 'api.myapp.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]
+        }
+    }
+);
+```
 
 ### FileBasedConfiguration changes
 
