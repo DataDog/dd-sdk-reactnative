@@ -6,6 +6,7 @@
 
 import XCTest
 @testable import DatadogSDKReactNative
+@testable import DatadogInternal
 
 internal class AnyEncodableTests: XCTestCase {
     // MARK: - Casting attributes

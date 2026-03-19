@@ -601,7 +601,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
 
         if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
-            as? DatadogSDKReactNative.AnyEncodable,
+            as? AnyEncodable,
             let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
         {
             XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
@@ -664,7 +664,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
 
         if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
-            as? DatadogSDKReactNative.AnyEncodable,
+            as? AnyEncodable,
             let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
         {
             XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
@@ -718,7 +718,7 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(userInfo.extraInfo["extra-info-3"] as? Bool, true)
 
         if let extraInfo4Encodable = userInfo.extraInfo["extra-info-4"]
-            as? DatadogSDKReactNative.AnyEncodable,
+            as? AnyEncodable,
             let extraInfo4Dict = extraInfo4Encodable.value as? [String: Int]
         {
             XCTAssertEqual(extraInfo4Dict, ["nested-extra-info-1": 456])
