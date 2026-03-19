@@ -49,6 +49,11 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
         let end: Date?
     }
 
+    struct BodySize: Equatable {
+        let encoded: Int64
+        let decoded: Int64
+    }
+
     enum CalledMethod: Equatable {
         case startView(key: String, name: String?)
         case stopView(key: String)
@@ -73,7 +78,8 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
                                 ssl: Interval,
                                 firstByte: Interval,
                                 download: Interval,
-                                responseSize: Int64?)
+                                responseBodySize: BodySize?,
+                                requestBodySize: BodySize?)
         case addLongTasks(time: Date, duration: TimeInterval)
         case updatePerformanceMetric(time: Date, metric: DatadogRUM.PerformanceMetric, value: Double)
     }
@@ -175,6 +181,14 @@ public struct MockRUMMonitorInternal: RUMMonitorInternalProtocol {
         monitor.lastReceivedPerformanceMetrics[metric] = value
     }
 
+    public func setInternalViewAttribute(
+        at time: Date,
+        key: AttributeKey,
+        value: AttributeValue
+    ) {
+        // not implemented in mock
+    }
+
     public func addResourceMetrics(
         at time: Date,
         resourceKey: String,
@@ -185,7 +199,8 @@ public struct MockRUMMonitorInternal: RUMMonitorInternalProtocol {
         ssl: (start: Date, end: Date)?,
         firstByte: (start: Date, end: Date)?,
         download: (start: Date, end: Date)?,
-        responseSize: Int64?,
+        responseBodySize: (encoded: Int64, decoded: Int64)?,
+        requestBodySize: (encoded: Int64, decoded: Int64)?,
         attributes: [AttributeKey: AttributeValue]
     ) {
         monitor.calledMethods.append(
@@ -198,7 +213,8 @@ public struct MockRUMMonitorInternal: RUMMonitorInternalProtocol {
                 ssl: MockRUMMonitor.Interval(start: ssl?.start, end: ssl?.end),
                 firstByte: MockRUMMonitor.Interval(start: firstByte?.start, end: firstByte?.end),
                 download: MockRUMMonitor.Interval(start: download?.start, end: download?.end),
-                responseSize: responseSize
+                responseBodySize: responseBodySize.map { MockRUMMonitor.BodySize(encoded: $0.encoded, decoded: $0.decoded) },
+                requestBodySize: requestBodySize.map { MockRUMMonitor.BodySize(encoded: $0.encoded, decoded: $0.decoded) }
             )
         )
         monitor.receivedAttributes.append(attributes)

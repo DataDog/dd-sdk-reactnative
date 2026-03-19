@@ -221,7 +221,8 @@ internal class DdRumTests: XCTestCase {
                     start: nanoTimeToDate(timestampNs: 11),
                     end: nanoTimeToDate(timestampNs: 12)
                 ),
-                responseSize: nil
+                responseBodySize: nil,
+                requestBodySize: nil
             )
         )
 
