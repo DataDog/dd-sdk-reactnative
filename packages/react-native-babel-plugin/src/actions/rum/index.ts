@@ -237,8 +237,12 @@ function jsxChildToRuntimeCall(
                         : t.memberExpression(obj, t.identifier(prop)),
                 (null as unknown) as Babel.types.Expression
             );
+        } else if (elementName && t.isValidIdentifier(elementName)) {
+            nameNode = t.identifier(elementName);
+        } else if (elementName) {
+            nameNode = t.stringLiteral(elementName);
         } else {
-            nameNode = t.identifier(elementName || 'unknown');
+            nameNode = addNamed(programPath, 'Fragment', 'react/jsx-runtime');
         }
 
         // Convert props to an object

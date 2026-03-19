@@ -84,6 +84,28 @@ export function getNodeName(
         return node;
     }
 
+    if (t.isJSXMemberExpression(node)) {
+        if (t.isJSXIdentifier(node.object)) {
+            return `${node.object.name}.${node.property.name}`;
+        }
+
+        let nodeName = node.property.name;
+        let nodeTracker:
+            | Babel.types.JSXIdentifier
+            | Babel.types.JSXMemberExpression = node.object;
+
+        while (t.isJSXMemberExpression(nodeTracker)) {
+            nodeName = `${nodeTracker.property.name}.${nodeName}`;
+            nodeTracker = nodeTracker.object;
+        }
+
+        if (t.isJSXIdentifier(nodeTracker)) {
+            nodeName = `${nodeTracker.name}.${nodeName}`;
+        }
+
+        return nodeName;
+    }
+
     if (!('name' in node)) {
         return null;
     }
