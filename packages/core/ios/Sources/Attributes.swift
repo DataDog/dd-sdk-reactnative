@@ -99,6 +99,11 @@ internal struct InternalConfigurationAttributes {
     /// Expects `NSString?` value
     static let versionSuffix = "_dd.version_suffix"
     
+    /// Header key set by the JS layer to indicate the request origin.
+    static let trackedByHeaderKey = "x-datadog-tracked-by"
+    /// Header value set by the JS layer to indicate the request was tracked by React Native.
+    static let trackedByHeaderValue = "react-native"
+
     /// Custom attribute of the resource passed from bridge SDK.
     /// It flags the resource as dropped by the user so it can be dropped in the resource mapper.
     /// Expects `Bool` value.

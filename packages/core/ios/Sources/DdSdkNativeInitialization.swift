@@ -169,7 +169,14 @@ public class DdSdkNativeInitialization: NSObject {
                     sampleRate: Float(
                         configuration.rumConfiguration?.resourceTraceSampleRate
                             ?? DefaultConfiguration.resourceTraceSampleRate)
-                )
+                ),
+                resourceAttributesProvider: { request, _, _, _ in
+                    let trackedBy = request.value(forHTTPHeaderField: InternalConfigurationAttributes.trackedByHeaderKey)
+                    if trackedBy == InternalConfigurationAttributes.trackedByHeaderValue {
+                        return [InternalConfigurationAttributes.dropResource: true]
+                    }
+                    return nil
+                }
             )
         }
 

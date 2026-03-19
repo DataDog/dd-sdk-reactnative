@@ -13,7 +13,11 @@ import {
 import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracingAttributes';
 import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
 import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
-import { BAGGAGE_HEADER_KEY } from '../../distributedTracing/headers';
+import {
+    BAGGAGE_HEADER_KEY,
+    TRACKED_BY_HEADER_KEY,
+    TRACKED_BY_HEADER_VALUE
+} from '../../distributedTracing/headers';
 import {
     DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
@@ -161,6 +165,11 @@ const proxySend = (providers: XHRProxyProviders): void => {
             if (baggageHeader) {
                 this.setRequestHeader(DATADOG_BAGGAGE_HEADER, baggageHeader);
             }
+
+            this.setRequestHeader(
+                TRACKED_BY_HEADER_KEY,
+                TRACKED_BY_HEADER_VALUE
+            );
         }
 
         proxyOnReadyStateChange(this, providers);
