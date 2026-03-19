@@ -22,6 +22,12 @@ public protocol RUMMonitorInternalProtocol {
         attributes: [AttributeKey: AttributeValue]
     )
 
+    func setInternalViewAttribute(
+        at time: Date,
+        key: AttributeKey,
+        value: AttributeValue
+    )
+
     func addResourceMetrics(
         at time: Date,
         resourceKey: String,
@@ -32,7 +38,8 @@ public protocol RUMMonitorInternalProtocol {
         ssl: (start: Date, end: Date)?,
         firstByte: (start: Date, end: Date)?,
         download: (start: Date, end: Date)?,
-        responseSize: Int64?,
+        responseBodySize: (encoded: Int64, decoded: Int64)?,
+        requestBodySize: (encoded: Int64, decoded: Int64)?,
         attributes: [AttributeKey: AttributeValue]
     )
 }
