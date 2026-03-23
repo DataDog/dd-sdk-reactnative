@@ -49,6 +49,12 @@ export class NavigationBuffer extends DatadogBuffer {
     private innerBuffer: DatadogBuffer;
     private isNavigating = false;
     private callbackQueue: Array<() => void> = [];
+    // Snapshot of callbackQueue taken at prepareEndNavigation() time.
+    // Kept separate so that a back-to-back navigation that calls startNavigation()
+    // before flush() runs cannot mix its events into the pending flush for the
+    // previous view. flush() drains only this snapshot; new events from the
+    // subsequent navigation accumulate in the fresh callbackQueue.
+    private _pendingFlushQueue: Array<() => void> = [];
     private timeoutId: ReturnType<typeof setTimeout> | null = null;
     private _navigationStartTime: number | null = null;
 
@@ -105,7 +111,7 @@ export class NavigationBuffer extends DatadogBuffer {
     };
 
     drain = (): void => {
-        this.flushQueue();
+        this.drainAllQueues();
         this.innerBuffer.drain();
     };
 
@@ -140,6 +146,12 @@ export class NavigationBuffer extends DatadogBuffer {
             this.timeoutId = null;
         }
         this.isNavigating = false;
+        // Snapshot the current queue so flush() only drains events that belong
+        // to this navigation. Events arriving after this point (e.g. from a
+        // back-to-back navigation that re-enables buffering) go into the fresh
+        // callbackQueue and will not be included in the upcoming flush().
+        this._pendingFlushQueue = this.callbackQueue;
+        this.callbackQueue = [];
         // Note: _navigationStartTime is intentionally kept until flush() so the
         // caller can still read it after prepareEndNavigation() returns.
     };
@@ -152,7 +164,11 @@ export class NavigationBuffer extends DatadogBuffer {
      */
     flush = (): void => {
         this._navigationStartTime = null;
-        this.flushQueue();
+        const toFlush = this._pendingFlushQueue;
+        this._pendingFlushQueue = [];
+        for (const callback of toFlush) {
+            callback();
+        }
     };
 
     /**
@@ -167,13 +183,21 @@ export class NavigationBuffer extends DatadogBuffer {
         }
         this.isNavigating = false;
         this._navigationStartTime = null;
-        this.flushQueue();
+        // Drain both queues: _pendingFlushQueue may be non-empty if a
+        // prepareEndNavigation() was followed by a back-to-back navigation
+        // before flush() ran.
+        this.drainAllQueues();
     };
 
-    private flushQueue = (): void => {
-        const pending = this.callbackQueue;
+    private drainAllQueues = (): void => {
+        const pendingFlush = this._pendingFlushQueue;
+        this._pendingFlushQueue = [];
+        for (const callback of pendingFlush) {
+            callback();
+        }
+        const queued = this.callbackQueue;
         this.callbackQueue = [];
-        for (const callback of pending) {
+        for (const callback of queued) {
             callback();
         }
     };
