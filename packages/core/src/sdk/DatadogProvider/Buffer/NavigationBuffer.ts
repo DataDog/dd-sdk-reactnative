@@ -12,11 +12,6 @@ import { DatadogBuffer } from './DatadogBuffer';
  */
 export const NAVIGATION_BUFFER_TIMEOUT_MS = 500;
 
-// TODO: DEBUG LOGGING — remove before shipping
-const LOG = (msg: string, ...args: any[]) =>
-    // eslint-disable-next-line no-console
-    console.log(`[DD NavBuffer] ${new Date().toISOString()} ${msg}`, ...args);
-
 /**
  * An internal `DatadogBuffer` decorator that queues RUM events during a
  * navigation transition and flushes them once the new view is confirmed.
@@ -70,18 +65,12 @@ export class NavigationBuffer extends DatadogBuffer {
     constructor(innerBuffer: DatadogBuffer) {
         super();
         this.innerBuffer = innerBuffer;
-        LOG('constructed', { innerBuffer: innerBuffer.constructor.name });
     }
 
     addCallback = (callback: () => Promise<void>): Promise<void> => {
         if (!this.isNavigating) {
-            LOG('addCallback → passthrough');
             return this.innerBuffer.addCallback(callback);
         }
-        LOG(
-            'addCallback → QUEUED, queueLength now',
-            this.callbackQueue.length + 1
-        );
         this.callbackQueue.push(() => {
             this.innerBuffer.addCallback(callback);
         });
@@ -92,13 +81,8 @@ export class NavigationBuffer extends DatadogBuffer {
         callback: () => Promise<string>
     ): Promise<string> => {
         if (!this.isNavigating) {
-            LOG('addCallbackReturningId → passthrough');
             return this.innerBuffer.addCallbackReturningId(callback);
         }
-        LOG(
-            'addCallbackReturningId → QUEUED, queueLength now',
-            this.callbackQueue.length + 1
-        );
         return new Promise<string>(resolve => {
             this.callbackQueue.push(() => {
                 this.innerBuffer.addCallbackReturningId(callback).then(resolve);
@@ -111,15 +95,8 @@ export class NavigationBuffer extends DatadogBuffer {
         id: string
     ): Promise<void> => {
         if (!this.isNavigating) {
-            LOG('addCallbackWithId → passthrough, id:', id);
             return this.innerBuffer.addCallbackWithId(callback, id);
         }
-        LOG(
-            'addCallbackWithId → QUEUED, id:',
-            id,
-            'queueLength now',
-            this.callbackQueue.length + 1
-        );
         return new Promise<void>(resolve => {
             this.callbackQueue.push(() => {
                 this.innerBuffer.addCallbackWithId(callback, id).then(resolve);
@@ -128,12 +105,6 @@ export class NavigationBuffer extends DatadogBuffer {
     };
 
     drain = (): void => {
-        LOG(
-            'drain() called, queueLength:',
-            this.callbackQueue.length,
-            'isNavigating:',
-            this.isNavigating
-        );
         this.flushQueue();
         this.innerBuffer.drain();
     };
@@ -150,17 +121,8 @@ export class NavigationBuffer extends DatadogBuffer {
         }
         this.isNavigating = true;
         this.timeoutId = setTimeout(() => {
-            LOG(
-                `timeout fired after ${NAVIGATION_BUFFER_TIMEOUT_MS}ms — calling endNavigation`
-            );
             this.endNavigation();
         }, NAVIGATION_BUFFER_TIMEOUT_MS);
-        LOG('startNavigation()', {
-            wasAlreadyNavigating,
-            navigationStartTime: this._navigationStartTime,
-            queueLength: this.callbackQueue.length,
-            timeoutMs: NAVIGATION_BUFFER_TIMEOUT_MS
-        });
     };
 
     /**
@@ -178,12 +140,6 @@ export class NavigationBuffer extends DatadogBuffer {
             this.timeoutId = null;
         }
         this.isNavigating = false;
-        LOG(
-            'prepareEndNavigation() — stopped buffering, queue preserved, navigationStartTime:',
-            this._navigationStartTime,
-            'queueLength:',
-            this.callbackQueue.length
-        );
         // Note: _navigationStartTime is intentionally kept until flush() so the
         // caller can still read it after prepareEndNavigation() returns.
     };
@@ -195,21 +151,6 @@ export class NavigationBuffer extends DatadogBuffer {
      * Safe to call when the queue is empty (no-op).
      */
     flush = (): void => {
-        const now = Date.now();
-        const lag =
-            this._navigationStartTime !== null
-                ? now - this._navigationStartTime
-                : null;
-        LOG(
-            'flush() called — draining',
-            this.callbackQueue.length,
-            'queued events | navigationStartTime:',
-            this._navigationStartTime,
-            '| now:',
-            now,
-            '| lag since nav start:',
-            lag !== null ? `${lag}ms` : 'n/a'
-        );
         this._navigationStartTime = null;
         this.flushQueue();
     };
@@ -225,30 +166,13 @@ export class NavigationBuffer extends DatadogBuffer {
             this.timeoutId = null;
         }
         this.isNavigating = false;
-        const now = Date.now();
-        const lag =
-            this._navigationStartTime !== null
-                ? now - this._navigationStartTime
-                : null;
-        LOG(
-            'endNavigation() — draining',
-            this.callbackQueue.length,
-            'queued events | navigationStartTime:',
-            this._navigationStartTime,
-            '| now:',
-            now,
-            '| lag since nav start:',
-            lag !== null ? `${lag}ms` : 'n/a'
-        );
         this._navigationStartTime = null;
         this.flushQueue();
-        LOG('endNavigation() done');
     };
 
     private flushQueue = (): void => {
         const pending = this.callbackQueue;
         this.callbackQueue = [];
-        LOG('flushQueue() executing', pending.length, 'queued callbacks');
         for (const callback of pending) {
             callback();
         }

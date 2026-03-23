@@ -20,10 +20,6 @@ import { transformViewKey } from './utils';
 const REACT_NAVIGATION_TRACKING_MODULE =
     'com.datadog.reactnative.rum.react_navigation_tracking';
 
-// TODO: DEBUG LOGGING — remove before shipping
-const LOG = (msg: string, ...args: any[]) =>
-    console.log(`[DD NavTracking] ${msg}`, ...args);
-
 function getGlobalInstance<T>(key: string, objectConstructor: () => T): T {
     const symbol = Symbol.for(key);
     const g = (globalThis as unknown) as Record<PropertyKey, unknown>;
@@ -213,7 +209,6 @@ class RumReactNavigationTracking {
         this.useNavigationBuffer = useNavigationBuffer;
 
         if (navigationRef == null) {
-            LOG('startTrackingViews() — null navigationRef, aborting');
             InternalLog.log(
                 this.NULL_NAVIGATION_REF_ERROR_MESSAGE,
                 SdkVerbosity.ERROR
@@ -225,17 +220,11 @@ class RumReactNavigationTracking {
             this.registeredContainer != null &&
             this.registeredContainer !== navigationRef
         ) {
-            LOG(
-                'startTrackingViews() — another container already registered, ignoring'
-            );
             InternalLog.log(
                 this.NAVIGATION_REF_IN_USE_ERROR_MESSAGE,
                 SdkVerbosity.ERROR
             );
         } else if (this.registeredContainer == null) {
-            LOG(
-                'startTrackingViews() — registering new container, patching dispatch'
-            );
             if (viewNamePredicate) {
                 this.viewNamePredicate = viewNamePredicate;
             }
@@ -257,14 +246,8 @@ class RumReactNavigationTracking {
             if (this.useNavigationBuffer) {
                 this.unsafeActionListener = (event: any) => {
                     if (event.data?.noop) {
-                        LOG(
-                            '__unsafe_action__ fired but noop=true — skipping startNavigation()'
-                        );
                         return;
                     }
-                    LOG('__unsafe_action__ fired — calling startNavigation()', {
-                        actionType: event.data?.action?.type
-                    });
                     this.getNavBuffer()?.startNavigation();
                 };
                 navigationRef.addListener(
@@ -292,14 +275,9 @@ class RumReactNavigationTracking {
      * @param navigationRef the reference to the real NavigationContainer.
      */
     stopTrackingViews(navigationRef: NavigationContainerRef | null): void {
-        LOG('stopTrackingViews() called');
         this.navigationTimeline?.addStopTrackingEvent();
         this.previousRoute = undefined;
         if (navigationRef != null) {
-            // Remove __unsafe_action__ listener and force-flush buffer
-            LOG(
-                'stopTrackingViews() — removing __unsafe_action__ listener and calling endNavigation() force-flush'
-            );
             if (this.unsafeActionListener) {
                 navigationRef.removeListener(
                     '__unsafe_action__',
@@ -384,7 +362,6 @@ class RumReactNavigationTracking {
         stateEvent: StateEvent | undefined
     ) {
         if (route === undefined || route === null) {
-            LOG('handleRouteNavigation() — route is undefined/null, dropping');
             InternalLog.log(
                 this.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                 SdkVerbosity.WARN
@@ -397,13 +374,6 @@ class RumReactNavigationTracking {
         const key = route.key;
         const screenName = this.viewNamePredicate(route, route.name);
         const customKey = transformViewKey(key, screenName);
-
-        LOG('handleRouteNavigation()', {
-            routeName: route.name,
-            key,
-            screenName,
-            appStateStatus
-        });
 
         if (key != null && screenName != null) {
             // On iOS, the app can start in either "active", "background" or "unknown" state
@@ -429,26 +399,8 @@ class RumReactNavigationTracking {
                     // clears it, so we can backdate the view start to when navigation began.
                     const navigationStartTime =
                         navBuffer?.navigationStartTime ?? undefined;
-                    const onStateChangeTime = Date.now();
-                    const onStateChangeLag =
-                        navigationStartTime !== undefined
-                            ? onStateChangeTime - navigationStartTime
-                            : null;
                     navBuffer?.prepareEndNavigation();
 
-                    LOG(
-                        `handleRouteNavigation() — viewTrackingPredicate=true | navigationStartTime: ${
-                            navigationStartTime !== undefined
-                                ? new Date(navigationStartTime).toISOString()
-                                : 'n/a'
-                        } | onStateChange fired at: ${new Date(
-                            onStateChangeTime
-                        ).toISOString()} | gap (dispatch→onStateChange): ${
-                            onStateChangeLag !== null
-                                ? `${onStateChangeLag}ms`
-                                : 'n/a (no dispatch intercepted)'
-                        } | calling DdRum.startView(${customKey}, ${screenName})`
-                    );
                     const params = this.paramsTrackingPredicate(route);
                     const context = params ? { params } : undefined;
                     const startViewPromise =
@@ -465,39 +417,22 @@ class RumReactNavigationTracking {
 
                     startViewPromise
                         .then(() => {
-                            LOG(
-                                'handleRouteNavigation() — startView resolved → calling flush() to drain buffered events'
-                            );
                             navBuffer?.flush();
                         })
-                        .catch((err: any) => {
-                            LOG(
-                                'handleRouteNavigation() — startView REJECTED → calling flush() fail-safe',
-                                err
-                            );
+                        .catch(() => {
                             // Fail-safe: always release buffered events
                             navBuffer?.flush();
                         });
                 } else {
                     // view not tracked — drain buffer immediately (no startView to wait for)
-                    LOG(
-                        'handleRouteNavigation() — viewTrackingPredicate=false (view not tracked) → calling endNavigation() to drain buffer'
-                    );
                     this.getNavBuffer()?.endNavigation();
                 }
             } else {
                 // App is in background — no startView, drain buffer immediately
-                LOG(
-                    'handleRouteNavigation() — skipped (appState is background) → draining buffer'
-                );
                 this.getNavBuffer()?.endNavigation();
             }
         } else {
             // key or screenName is null — no startView, drain buffer immediately
-            LOG(
-                'handleRouteNavigation() — key or screenName is null, skipping startView',
-                { key, screenName }
-            );
             this.getNavBuffer()?.endNavigation();
         }
 
@@ -552,21 +487,12 @@ class RumReactNavigationTracking {
         if (this.navigationStateChangeListener == null) {
             this.navigationStateChangeListener = () => {
                 const route = this.registeredContainer?.getCurrentRoute();
-                LOG('navigationStateChangeListener fired', {
-                    routeName: route?.name,
-                    routeKey: route?.key,
-                    previousRouteKey: this.previousRouteKey
-                });
-
                 const newRouteStateEvent = this.navigationTimeline?.addNewRouteEvent(
                     this.previousRouteKey,
                     route?.key
                 );
 
                 if (route === undefined) {
-                    LOG(
-                        'navigationStateChangeListener — route undefined, dropping'
-                    );
                     InternalLog.log(
                         this.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
@@ -576,9 +502,6 @@ class RumReactNavigationTracking {
 
                 // Route already tracked
                 if (this.previousRoute === route) {
-                    LOG(
-                        'navigationStateChangeListener — same route as previousRoute, discarding'
-                    );
                     this.navigationTimeline?.addNavigationStateEvent(
                         'DISCARDED',
                         route.name,
@@ -591,9 +514,6 @@ class RumReactNavigationTracking {
                     return;
                 }
 
-                LOG(
-                    'navigationStateChangeListener — new route detected, forwarding to handleRouteNavigation'
-                );
                 this.handleRouteNavigation(
                     route,
                     AppState.currentState,
@@ -609,13 +529,8 @@ class RumReactNavigationTracking {
     private appStateListener: AppStateListener = (
         appStateStatus: AppStateStatus
     ) => {
-        LOG('appStateListener fired', {
-            appStateStatus,
-            previousAppState: this.previousAppState
-        });
         const currentRoute = this.registeredContainer?.getCurrentRoute();
         if (currentRoute === undefined || currentRoute === null) {
-            LOG('appStateListener — could not determine route, dropping');
             InternalLog.log(
                 `We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`,
                 SdkVerbosity.ERROR
