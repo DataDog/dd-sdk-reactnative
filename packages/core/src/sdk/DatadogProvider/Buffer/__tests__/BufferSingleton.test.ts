@@ -5,6 +5,7 @@
  */
 
 import { BufferSingleton } from '../BufferSingleton';
+import { NavigationBuffer } from '../NavigationBuffer';
 
 const flushPromises = () =>
     new Promise<void>(jest.requireActual('timers').setImmediate);
@@ -46,6 +47,56 @@ describe('BufferSingleton', () => {
             expect(callbackReturningId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledWith('callbackId');
+        });
+    });
+
+    describe('NavigationBuffer wiring', () => {
+        afterEach(() => {
+            BufferSingleton.reset();
+        });
+
+        it('getNavigationBuffer returns null before initialization', () => {
+            expect(BufferSingleton.getNavigationBuffer()).toBeNull();
+        });
+
+        it('getNavigationBuffer returns NavigationBuffer after initialization', () => {
+            BufferSingleton.onInitialization();
+            const navBuffer = BufferSingleton.getNavigationBuffer();
+            expect(navBuffer).toBeInstanceOf(NavigationBuffer);
+        });
+
+        it('getInstance returns the NavigationBuffer after initialization', () => {
+            BufferSingleton.onInitialization();
+            const instance = BufferSingleton.getInstance();
+            expect(instance).toBeInstanceOf(NavigationBuffer);
+        });
+
+        it('NavigationBuffer passes through callbacks after initialization (not navigating)', async () => {
+            BufferSingleton.onInitialization();
+            const cb = jest.fn().mockResolvedValue(undefined);
+            BufferSingleton.getInstance().addCallback(cb);
+            expect(cb).toHaveBeenCalledTimes(1);
+        });
+
+        it('NavigationBuffer holds callbacks during navigation after initialization', async () => {
+            BufferSingleton.onInitialization();
+            const navBuffer = BufferSingleton.getNavigationBuffer()!;
+            const cb = jest.fn().mockResolvedValue(undefined);
+
+            navBuffer.startNavigation();
+            BufferSingleton.getInstance().addCallback(cb);
+            expect(cb).not.toHaveBeenCalled();
+
+            navBuffer.endNavigation();
+            expect(cb).toHaveBeenCalledTimes(1);
+        });
+
+        it('reset clears navigationBuffer reference', () => {
+            BufferSingleton.onInitialization();
+            expect(BufferSingleton.getNavigationBuffer()).not.toBeNull();
+
+            BufferSingleton.reset();
+            expect(BufferSingleton.getNavigationBuffer()).toBeNull();
         });
     });
 });

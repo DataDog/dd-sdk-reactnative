@@ -8,23 +8,32 @@ import { getGlobalInstance } from '../../../utils/singletonUtils';
 
 import { BoundedBuffer } from './BoundedBuffer';
 import type { DatadogBuffer } from './DatadogBuffer';
+import { NavigationBuffer } from './NavigationBuffer';
 import { PassThroughBuffer } from './PassThroughBuffer';
 
+// IMPORTANT: Keep this key aligned with the react-navigation package
 const BUFFER_SINGLETON_MODULE = 'com.datadog.reactnative.buffer_singleton';
 
 class _BufferSingleton {
     private bufferInstance: DatadogBuffer = new BoundedBuffer();
+    private navigationBuffer: NavigationBuffer | null = null;
 
     getInstance = (): DatadogBuffer => {
         return BufferSingleton.bufferInstance;
     };
 
+    getNavigationBuffer = (): NavigationBuffer | null => {
+        return this.navigationBuffer;
+    };
+
     onInitialization = () => {
         this.bufferInstance.drain();
-        this.bufferInstance = new PassThroughBuffer();
+        this.navigationBuffer = new NavigationBuffer(new PassThroughBuffer());
+        this.bufferInstance = this.navigationBuffer;
     };
 
     reset = () => {
+        this.navigationBuffer = null;
         BufferSingleton.bufferInstance = new BoundedBuffer();
     };
 }
