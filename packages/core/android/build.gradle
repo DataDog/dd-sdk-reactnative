@@ -204,6 +204,21 @@ dependencies {
           exclude group: "androidx.metrics", module: "metrics-performance"
       }
       implementation "androidx.metrics:metrics-performance:1.0.0-beta01"
+      // dd-sdk-android requires androidx.core:core and androidx.core:core-ktx
+      // From 3.8.0, it uses 1.15.0, which requires compileSdk 35.
+      // However, React Native versions below 0.76.0 use compileSdk 34,
+      // so we pin 1.13.1 on those, since it's the last version compatible with compileSdk 34.
+      // Use dependency constraints (strictly) so this requirement propagates to consumers.
+      implementation("androidx.core:core") {
+          version {
+              strictly("1.13.1")
+          }
+      }
+      implementation("androidx.core:core-ktx") {
+          version {
+              strictly("1.13.1")
+          }
+      }
   } else {
       implementation "com.datadoghq:dd-sdk-android-rum:3.8.0"
   }
