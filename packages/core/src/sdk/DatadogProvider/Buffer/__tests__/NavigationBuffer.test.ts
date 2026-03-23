@@ -326,6 +326,55 @@ describe('NavigationBuffer', () => {
             await flushPromises();
             expect(cb).toHaveBeenCalledTimes(1);
         });
+
+        it('back-to-back nav: flush only drains events from the first navigation', async () => {
+            const buffer = new NavigationBuffer(new PassThroughBuffer());
+            const cbA1 = jest.fn().mockResolvedValue(undefined);
+            const cbA2 = jest.fn().mockResolvedValue(undefined);
+
+            // First navigation
+            buffer.startNavigation();
+            buffer.addCallback(cbA1);
+            buffer.prepareEndNavigation();
+
+            // Second navigation fires before flush() runs
+            buffer.startNavigation();
+            buffer.addCallback(cbA2);
+
+            // Flush for first navigation — only A1 should drain
+            buffer.flush();
+            await flushPromises();
+            expect(cbA1).toHaveBeenCalledTimes(1);
+            expect(cbA2).not.toHaveBeenCalled();
+
+            // Complete second navigation
+            buffer.prepareEndNavigation();
+            buffer.flush();
+            await flushPromises();
+            expect(cbA2).toHaveBeenCalledTimes(1);
+        });
+
+        it('endNavigation after prepareEndNavigation drains both pending and queued events', async () => {
+            const buffer = new NavigationBuffer(new PassThroughBuffer());
+            const cbA1 = jest.fn().mockResolvedValue(undefined);
+            const cbA2 = jest.fn().mockResolvedValue(undefined);
+
+            // First navigation
+            buffer.startNavigation();
+            buffer.addCallback(cbA1);
+            buffer.prepareEndNavigation();
+
+            // Second navigation starts before flush()
+            buffer.startNavigation();
+            buffer.addCallback(cbA2);
+
+            // Teardown / timeout path — endNavigation drains everything
+            buffer.endNavigation();
+            await flushPromises();
+
+            expect(cbA1).toHaveBeenCalledTimes(1);
+            expect(cbA2).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('ID linking across navigation hold', () => {
