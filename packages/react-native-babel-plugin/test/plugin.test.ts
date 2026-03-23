@@ -1651,7 +1651,7 @@ describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
             return '';
         }
         const match = output.match(
-            /"getContent"\s*:\s*\(\)\s*=>\s*\{[\s\S]*?return\s+([\s\S]*?);\s*\}/
+            /"getContent"\s*:\s*\(\)\s*=>\s*\{[\s\S]*?return\s+(__ddExtractText\([\s\S]*?\));\s*\}/
         );
         return match ? match[1] : '';
     }
@@ -1702,14 +1702,14 @@ describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
         expect(getContent).toContain('"data-testid"');
     });
 
-    it('should quote all attribute names consistently in getContent child elements', () => {
+    it('should use unquoted identifiers for valid JS names and quoted strings for hyphenated names', () => {
         const input = `
             import { TouchableOpacity, View, Text } from 'react-native';
 
             function MyComponent() {
                 return (
                     <TouchableOpacity onPress={() => {}}>
-                        <View style={{flex: 1}} accessible>
+                        <View style={{flex: 1}} accessible aria-label="test">
                             <Text>Hello</Text>
                         </View>
                     </TouchableOpacity>
@@ -1719,8 +1719,10 @@ describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
 
         const output = transformCode(input);
         const getContent = extractGetContent(output);
-        // All attribute names are quoted for consistency and safety
-        expect(getContent).toContain('"style"');
-        expect(getContent).toContain('"accessible"');
+        // Valid JS identifiers stay unquoted
+        expect(getContent).toContain('style');
+        expect(getContent).toContain('accessible');
+        // Hyphenated names must be quoted
+        expect(getContent).toContain('"aria-label"');
     });
 });

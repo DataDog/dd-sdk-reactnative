@@ -247,7 +247,11 @@ function jsxChildToRuntimeCall(
                 t.isJSXAttribute(attr)
             )
             .map(attr => {
-                const key = t.stringLiteral(getNodeName(t, attr.name) || '');
+                const key =
+                    t.isJSXIdentifier(attr.name) &&
+                    t.isValidIdentifier(attr.name.name)
+                        ? t.identifier(attr.name.name)
+                        : t.stringLiteral(getNodeName(t, attr.name) || '');
                 let value: Babel.types.Expression;
                 if (!attr.value) {
                     value = t.booleanLiteral(true);
