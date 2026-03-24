@@ -182,7 +182,7 @@ public class DdSdkNativeInitialization: NSObject {
 
         var customRUMEndpointURL: URL? = nil
         if let customEndpoint = rumConfig.customEndpoint, !customEndpoint.isEmpty {
-            customRUMEndpointURL = URL(string: "\(customEndpoint)/api/v2/rum")
+            customRUMEndpointURL = URL(string: "\(customEndpoint)")
         }
 
         var networkSettledResourcePredicate: TimeBasedTNSResourcePredicate? = nil
@@ -241,7 +241,7 @@ public class DdSdkNativeInitialization: NSObject {
         var customLogsEndpointURL: URL? = nil
         if let customLogsEndpoint = logsConfig.customEndpoint as? NSString {
             if customLogsEndpoint != "" {
-                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)/api/v2/logs" as String)
+                customLogsEndpointURL = URL(string: "\(customLogsEndpoint)" as String)
             }
         }
 
@@ -257,7 +257,7 @@ public class DdSdkNativeInitialization: NSObject {
         if let customTraceEndpoint = traceConfig.customEndpoint as? NSString {
             if customTraceEndpoint != "" {
                 customTraceEndpointURL = URL(
-                    string: "\(customTraceEndpoint)/api/v2/spans" as String)
+                    string: "\(customTraceEndpoint)" as String)
             }
         }
 
