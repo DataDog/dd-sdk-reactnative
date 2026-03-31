@@ -57,6 +57,7 @@ export class NavigationBuffer extends DatadogBuffer {
     private _pendingFlushQueue: Array<() => void> = [];
     private timeoutId: ReturnType<typeof setTimeout> | null = null;
     private _navigationStartTime: number | null = null;
+    private _pendingFlushStartTime: number | null = null;
 
     /**
      * The timestamp (ms since epoch) captured when startNavigation() was called.
@@ -91,7 +92,13 @@ export class NavigationBuffer extends DatadogBuffer {
         }
         return new Promise<string>(resolve => {
             this.callbackQueue.push(() => {
-                this.innerBuffer.addCallbackReturningId(callback).then(resolve);
+                try {
+                    this.innerBuffer
+                        .addCallbackReturningId(callback)
+                        .then(resolve, () => resolve(''));
+                } catch {
+                    resolve('');
+                }
             });
         });
     };
@@ -105,7 +112,13 @@ export class NavigationBuffer extends DatadogBuffer {
         }
         return new Promise<void>(resolve => {
             this.callbackQueue.push(() => {
-                this.innerBuffer.addCallbackWithId(callback, id).then(resolve);
+                try {
+                    this.innerBuffer
+                        .addCallbackWithId(callback, id)
+                        .then(resolve, () => resolve(undefined));
+                } catch {
+                    resolve(undefined);
+                }
             });
         });
     };
@@ -151,6 +164,7 @@ export class NavigationBuffer extends DatadogBuffer {
         // back-to-back navigation that re-enables buffering) go into the fresh
         // callbackQueue and will not be included in the upcoming flush().
         this._pendingFlushQueue = this.callbackQueue;
+        this._pendingFlushStartTime = this._navigationStartTime;
         this.callbackQueue = [];
         // Note: _navigationStartTime is intentionally kept until flush() so the
         // caller can still read it after prepareEndNavigation() returns.
@@ -163,7 +177,13 @@ export class NavigationBuffer extends DatadogBuffer {
      * Safe to call when the queue is empty (no-op).
      */
     flush = (): void => {
-        this._navigationStartTime = null;
+        // Only clear _navigationStartTime if no subsequent navigation has
+        // updated it since the snapshot was taken. This prevents nav-1's
+        // flush from wiping nav-2's timestamp in back-to-back navigations.
+        if (this._navigationStartTime === this._pendingFlushStartTime) {
+            this._navigationStartTime = null;
+        }
+        this._pendingFlushStartTime = null;
         const toFlush = this._pendingFlushQueue;
         this._pendingFlushQueue = [];
         for (const callback of toFlush) {
@@ -183,6 +203,7 @@ export class NavigationBuffer extends DatadogBuffer {
         }
         this.isNavigating = false;
         this._navigationStartTime = null;
+        this._pendingFlushStartTime = null;
         // Drain both queues: _pendingFlushQueue may be non-empty if a
         // prepareEndNavigation() was followed by a back-to-back navigation
         // before flush() ran.
