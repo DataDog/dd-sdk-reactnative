@@ -28,11 +28,21 @@ class _BufferSingleton {
 
     onInitialization = () => {
         this.bufferInstance.drain();
-        this.navigationBuffer = new NavigationBuffer(new PassThroughBuffer());
+        // Guard: do not recreate the navigation buffer if already initialized.
+        // This can happen if onInitialization is called multiple times (e.g. hot reload).
+        // Note: the NavigationBuffer wraps all SDK calls (not just RUM) by design --
+        // this is intentional per the RFC so that every native bridge call is buffered
+        // during navigation transitions.
+        if (!this.navigationBuffer) {
+            this.navigationBuffer = new NavigationBuffer(
+                new PassThroughBuffer()
+            );
+        }
         this.bufferInstance = this.navigationBuffer;
     };
 
     reset = () => {
+        this.navigationBuffer?.endNavigation();
         this.navigationBuffer = null;
         BufferSingleton.bufferInstance = new BoundedBuffer();
     };

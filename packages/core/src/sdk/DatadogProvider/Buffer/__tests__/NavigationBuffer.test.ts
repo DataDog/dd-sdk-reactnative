@@ -354,6 +354,61 @@ describe('NavigationBuffer', () => {
             expect(cbA2).toHaveBeenCalledTimes(1);
         });
 
+        describe('back-to-back navigation timestamp race (Issue #6)', () => {
+            beforeEach(() => {
+                jest.useFakeTimers();
+            });
+
+            afterEach(() => {
+                jest.useRealTimers();
+            });
+
+            it('flush does not clear navigationStartTime set by a subsequent startNavigation', () => {
+                const buffer = new NavigationBuffer(new PassThroughBuffer());
+
+                // Nav-1
+                jest.setSystemTime(1000);
+                buffer.startNavigation();
+                const nav1Time = buffer.navigationStartTime;
+                expect(nav1Time).toBe(1000);
+
+                buffer.prepareEndNavigation();
+
+                // Nav-2 starts before nav-1's flush()
+                jest.setSystemTime(2000);
+                buffer.startNavigation();
+                const nav2Time = buffer.navigationStartTime;
+                expect(nav2Time).toBe(2000);
+
+                // Nav-1's flush runs -- must NOT clear nav-2's timestamp
+                buffer.flush();
+
+                expect(buffer.navigationStartTime).toBe(nav2Time);
+            });
+
+            it('navigationStartTime is null after both navigations complete', () => {
+                const buffer = new NavigationBuffer(new PassThroughBuffer());
+
+                // Nav-1
+                jest.setSystemTime(1000);
+                buffer.startNavigation();
+                buffer.prepareEndNavigation();
+
+                // Nav-2
+                jest.setSystemTime(2000);
+                buffer.startNavigation();
+
+                // Nav-1 flush
+                buffer.flush();
+
+                // Nav-2 complete
+                buffer.prepareEndNavigation();
+                buffer.flush();
+
+                expect(buffer.navigationStartTime).toBeNull();
+            });
+        });
+
         it('endNavigation after prepareEndNavigation drains both pending and queued events', async () => {
             const buffer = new NavigationBuffer(new PassThroughBuffer());
             const cbA1 = jest.fn().mockResolvedValue(undefined);
@@ -391,6 +446,41 @@ describe('NavigationBuffer', () => {
 
             const resolvedId = await idPromise;
             expect(resolvedId).toBe('nativeId');
+        });
+    });
+
+    describe('safe fallback on inner rejection (Issues #8, #9)', () => {
+        it('addCallbackReturningId resolves with empty string when inner callback rejects', async () => {
+            const buffer = new NavigationBuffer(new PassThroughBuffer());
+
+            buffer.startNavigation();
+            const promise = buffer.addCallbackReturningId(() =>
+                Promise.reject(new Error('native failure'))
+            );
+
+            buffer.prepareEndNavigation();
+            buffer.flush();
+            await flushPromises();
+
+            // Follows BoundedBuffer contract: never rejects, resolves with '' on failure
+            await expect(promise).resolves.toBe('');
+        });
+
+        it('addCallbackWithId resolves with undefined when inner callback rejects', async () => {
+            const buffer = new NavigationBuffer(new PassThroughBuffer());
+
+            buffer.startNavigation();
+            const promise = buffer.addCallbackWithId(
+                () => Promise.reject(new Error('native failure')),
+                'someId'
+            );
+
+            buffer.prepareEndNavigation();
+            buffer.flush();
+            await flushPromises();
+
+            // Follows BoundedBuffer contract: never rejects, resolves with undefined on failure
+            await expect(promise).resolves.toBeUndefined();
         });
     });
 

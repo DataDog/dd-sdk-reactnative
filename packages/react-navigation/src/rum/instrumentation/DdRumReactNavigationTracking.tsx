@@ -395,8 +395,8 @@ class RumReactNavigationTracking {
                     // Then flush queued events AFTER startView resolves so they are
                     // attributed to the now-active view.
                     const navBuffer = this.getNavBuffer();
-                    // Capture the navigation start timestamp BEFORE prepareEndNavigation
-                    // clears it, so we can backdate the view start to when navigation began.
+                    // Capture the navigation start timestamp before marking the navigation
+                    // as ended, so we can backdate the view start to when navigation began.
                     const navigationStartTime =
                         navBuffer?.navigationStartTime ?? undefined;
                     navBuffer?.prepareEndNavigation();
@@ -497,6 +497,7 @@ class RumReactNavigationTracking {
                         this.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
                     );
+                    this.getNavBuffer()?.endNavigation();
                     return;
                 }
 
@@ -535,6 +536,7 @@ class RumReactNavigationTracking {
                 `We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`,
                 SdkVerbosity.ERROR
             );
+
             return;
         }
 

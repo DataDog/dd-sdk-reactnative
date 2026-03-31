@@ -861,11 +861,12 @@ describe('Navigation Buffer Integration', () => {
     const mockNavBuffer = mockNavigationBuffer;
 
     it('calls startNavigation when dispatch is called directly on the navigation ref', async () => {
-        // startNavigation is triggered by the patched dispatch on the
-        // navigation container ref. Screen-level navigation.navigate()
-        // uses an internal dispatch path that may not hit the container
-        // ref's dispatch. This test verifies the dispatch patch by
-        // calling dispatch directly on the container ref.
+        // startNavigation is triggered by the navigation container's
+        // __unsafe_action__ listener when an action is dispatched.
+        // Screen-level navigation.navigate() goes through the same event
+        // wiring, but may not call dispatch directly on the container ref.
+        // This test verifies the __unsafe_action__-based wiring by
+        // dispatching directly on the container ref.
         const navigationRef = createRef<any>();
         render(<FakeNavigator1v6 navigationRef={navigationRef} />);
 
@@ -916,9 +917,10 @@ describe('Navigation Buffer Integration', () => {
 
         fireEvent.press(getByText('Go to About'));
 
-        // endNavigation called synchronously since view is not tracked
-        // (startNavigation may not be called here because navigation.navigate()
-        // uses a screen-level dispatch that may bypass the container ref's patched dispatch)
+        // endNavigation is called synchronously since the view is not tracked.
+        // Here navigation.navigate() triggers screen-level navigation (via
+        // __unsafe_action__/navigation events), and we verify that the buffer
+        // still ends the navigation even if startNavigation is not invoked.
         expect(mockNavBuffer.endNavigation).toHaveBeenCalled();
     });
 
