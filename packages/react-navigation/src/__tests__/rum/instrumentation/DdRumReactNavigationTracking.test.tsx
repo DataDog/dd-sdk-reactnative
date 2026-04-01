@@ -1032,6 +1032,31 @@ describe('Navigation Buffer Integration', () => {
 
         expect(mockNavBuffer.flush).toHaveBeenCalled();
     });
+
+    it('does not call any buffer methods when useNavigationBuffer is false', async () => {
+        const navigationRef = createRef<any>();
+        const { getByText } = render(
+            <FakeNavigator1v6 navigationRef={navigationRef} />
+        );
+
+        DdRumReactNavigationTracking.startTrackingViews(navigationRef.current, {
+            useNavigationBuffer: false
+        });
+        (mockNavBuffer.startNavigation as jest.Mock).mockClear();
+        (mockNavBuffer.prepareEndNavigation as jest.Mock).mockClear();
+        (mockNavBuffer.flush as jest.Mock).mockClear();
+        (mockNavBuffer.endNavigation as jest.Mock).mockClear();
+
+        fireEvent.press(getByText('Go to About'));
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(mockNavBuffer.startNavigation).not.toHaveBeenCalled();
+        expect(mockNavBuffer.prepareEndNavigation).not.toHaveBeenCalled();
+        expect(mockNavBuffer.flush).not.toHaveBeenCalled();
+        expect(mockNavBuffer.endNavigation).not.toHaveBeenCalled();
+        // Navigation tracking still works — only the buffer is bypassed
+        expect(DdRum.startView).toHaveBeenCalled();
+    });
 });
 
 describe('Regression: Normal Event Flow', () => {
