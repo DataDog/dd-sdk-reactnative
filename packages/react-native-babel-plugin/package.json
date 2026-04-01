@@ -49,21 +49,21 @@
         "@babel/traverse": "^7.28.4",
         "@babel/types": "^7.27.1",
         "fast-glob": "^3.3.3",
-        "svgo": "^4.0.0",
+        "svgo": "^4.0.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
-        "@babel/cli": "^7.27.2",
-        "@babel/preset-env": "^7.27.2",
-        "@babel/preset-react": "^7.27.1",
-        "@babel/preset-typescript": "^7.27.1",
-        "@swc/core": "^1.11.31",
+        "@babel/cli": "^7.28.6",
+        "@babel/preset-env": "^7.29.2",
+        "@babel/preset-react": "^7.28.5",
+        "@babel/preset-typescript": "^7.28.5",
+        "@swc/core": "^1.13.21",
         "@swc/jest": "^0.2.38",
         "@types/jest": "^29.5.14",
         "jest": "^29.7.0",
         "react-native-builder-bob": "0.26.0",
         "tsc-alias": "^1.8.16",
-        "typescript": "5.0.4"
+        "typescript": "5.9.3"
     },
     "react-native-builder-bob": {
         "source": "src",
