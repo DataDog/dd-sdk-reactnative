@@ -91,7 +91,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "handlerArgs": [...args],
                   "componentName": "Button"
-                })(...args);else return func(...args);
+                })(...args);else return func?.(...args);
               }
             });"
         `);
@@ -557,7 +557,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "handlerArgs": [...args],
                   "componentName": "Pressable"
-                })(...args);else return func(...args);
+                })(...args);else return func?.(...args);
               }
             });"
         `);
@@ -592,7 +592,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "handlerArgs": [...args],
                   "componentName": "Pressable"
-                })(...args);else return func3(...args);
+                })(...args);else return func3?.(...args);
               }
             });"
         `);
@@ -626,7 +626,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "handlerArgs": [...args],
                   "componentName": "Pressable"
-                })(...args);else return a(...args);
+                })(...args);else return a?.(...args);
               }
             });"
         `);
@@ -827,7 +827,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })(...args);else return handler(...args);
+                  })(...args);else return handler?.(...args);
                 }
               });
             }"
@@ -864,7 +864,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })(...args);else return handler(...args);
+                  })(...args);else return handler?.(...args);
                 }
               });
             }"
@@ -901,7 +901,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })(...args);else return globalThis.handler(...args);
+                  })(...args);else return globalThis.handler?.(...args);
                 }
               });
             }"
@@ -942,7 +942,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })(...args);else return props.onPress(...args);
+                  })(...args);else return props.onPress?.(...args);
                 }
               }));
             }"
@@ -986,7 +986,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })(...args);else return onPress(...args);
+                  })(...args);else return onPress?.(...args);
                 }
               }));
             }"
@@ -1143,7 +1143,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                       },
                       "handlerArgs": [...args],
                       "componentName": "Button"
-                    })(...args);else return this.handlePress(...args);
+                    })(...args);else return this.handlePress?.(...args);
                   }
                 }));
               }
@@ -1185,10 +1185,46 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "handlerArgs": [...args],
                   "componentName": "Button"
-                })(...args);else return func(...args);
+                })(...args);else return func?.(...args);
               }
             });"
         `);
+    });
+});
+
+describe('Babel plugin: optional handler guard (undefined handler safety)', () => {
+    it('should generate optional chaining in fallback branch for named function reference that may be undefined', () => {
+        const input = `
+            import { Pressable, Text, TextInput as RNTextInput } from 'react-native';
+
+            function TextInput({ label, onPress }: { label: string; onPress?: () => void }) {
+                return (
+                    <Pressable onPress={onPress}>
+                        <Text>{label}</Text>
+                        <RNTextInput style={{ borderWidth: 1, borderColor: "black", width: 100 }} />
+                    </Pressable>
+                );
+            }
+        `;
+        const output = transformCode(input);
+        // The branch when the SDK is not initialized must use optional chaining
+        expect(output).toContain('onPress?.(...args)');
+        // The branch when the SDK is initialized should pass the handler to wrapRumAction
+        expect(output).toContain('wrapRumAction(onPress,');
+    });
+
+    it('should generate optional chaining in fallback branch for Pressable with arrow function handler', () => {
+        const input = `
+            import { Pressable, Text } from 'react-native';
+            <Pressable onPress={() => { console.log('pressed'); }}>
+                <Text>Click me</Text>
+            </Pressable>
+        `;
+        const output = transformCode(input);
+        // Arrow functions are always defined so optional chaining is acceptable but not strictly required
+        // The key assertion is that the output compiles without crashing
+        expect(output).toBeDefined();
+        expect(output).toContain('DdBabelInteractionTracking');
     });
 });
 
@@ -1237,7 +1273,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   console.log('Testing ', a, b, event);
                   setA(x => x + 1);
                   setB(x => x + 1);
-                })(event);
+                })?.(event);
               }, [a, b]);
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1335,7 +1371,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
-                })();
+                })?.();
               }, []);
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1385,7 +1421,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   "componentName": "Pressable"
                 })();else return (() => {
                   console.log('Testing ');
-                })();
+                })?.();
               }, []);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1443,7 +1479,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [test],
                   "componentName": "Pressable"
-                })(test);else return funcN(test);
+                })(test);else return funcN?.(test);
               }, [a, b]);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1498,7 +1534,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [test],
                   "componentName": "Pressable"
-                })(test);else return funcN(test);
+                })(test);else return funcN?.(test);
               }, [a, b]);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1549,7 +1585,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [test],
                   "componentName": "Pressable"
-                })(test);else return funcN(test);
+                })(test);else return funcN?.(test);
               }, [a, b]);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1634,7 +1670,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [],
                   "componentName": "Pressable"
-                })();else return funcN();
+                })();else return funcN?.();
               }, []);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",

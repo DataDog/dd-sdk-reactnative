@@ -113,9 +113,11 @@ export function handleTapAction(
                   expression,
                   getArgumentsFromParams(t, state, expression.params).callArgs
               )
-            : t.callExpression(expression, [
-                  t.spreadElement(t.identifier('args'))
-              ]);
+            : t.optionalCallExpression(
+                  expression,
+                  [t.spreadElement(t.identifier('args'))],
+                  true
+              );
     }
 
     state.hasValidTapAction = true;
@@ -296,7 +298,7 @@ function handleMemoization(
         const returnExpression =
             mode === 'delayed'
                 ? callback
-                : t.callExpression(callback, callArgs);
+                : t.optionalCallExpression(callback, callArgs, true);
 
         // Update handlerArgs in argsObject to match the actual callback params
         // instead of the default [...args] computed from the outer identifier
