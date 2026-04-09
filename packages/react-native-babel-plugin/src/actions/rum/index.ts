@@ -219,7 +219,48 @@ function jsxChildToRuntimeCall(
         if (t.isJSXEmptyExpression(child.expression)) {
             return null;
         }
-        return t.cloneNode(child.expression as Babel.types.Expression, true);
+        // Recursively process the inner expression to handle JSX inside
+        // ternaries, logical expressions, etc. Fall back to cloning if the
+        // expression type is not one we explicitly handle.
+        return (
+            jsxChildToRuntimeCall(t, child.expression, programPath) ||
+            t.cloneNode(child.expression as Babel.types.Expression, true)
+        );
+    }
+
+    // Handle ternary expressions like: condition ? <A/> : <B/>
+    if (t.isConditionalExpression(child)) {
+        const consequent = jsxChildToRuntimeCall(
+            t,
+            child.consequent,
+            programPath
+        );
+        const alternate = jsxChildToRuntimeCall(
+            t,
+            child.alternate,
+            programPath
+        );
+        if (consequent === null && alternate === null) {
+            return t.cloneNode(child, true);
+        }
+        return t.conditionalExpression(
+            t.cloneNode(child.test, true),
+            consequent || t.cloneNode(child.consequent, true),
+            alternate || t.cloneNode(child.alternate, true)
+        );
+    }
+
+    // Handle logical expressions like: condition && <A/>
+    if (t.isLogicalExpression(child)) {
+        const right = jsxChildToRuntimeCall(t, child.right, programPath);
+        if (right === null) {
+            return t.cloneNode(child, true);
+        }
+        return t.logicalExpression(
+            child.operator,
+            t.cloneNode(child.left, true),
+            right
+        );
     }
 
     if (t.isJSXElement(child)) {
