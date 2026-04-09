@@ -155,7 +155,7 @@ class BabelInteractionTracking {
                     });
             }
 
-            return func(...args);
+            return func?.(...args);
         };
     }
 }
