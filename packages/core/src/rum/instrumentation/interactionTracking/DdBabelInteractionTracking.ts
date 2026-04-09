@@ -172,7 +172,7 @@ export class DdBabelInteractionTracking {
                     });
             }
 
-            return func(...args);
+            return func?.(...args);
         };
     }
 }
