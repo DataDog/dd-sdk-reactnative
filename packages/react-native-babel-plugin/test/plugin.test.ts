@@ -1798,3 +1798,166 @@ describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
         expect(getContent).not.toContain('"accessible"');
     });
 });
+
+describe('Babel plugin: conditional expressions in getContent children', () => {
+    it('should convert JSX inside ternary children to jsx() runtime calls', () => {
+        const input = `
+            import { Pressable, Text } from 'react-native';
+
+            function App() {
+                const visible = true;
+                return (
+                    <Pressable onPress={() => {}}>
+                        {visible ? <Text>Visible</Text> : <Text>Invisible</Text>}
+                    </Pressable>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        // The getContent closure must not contain raw JSX — only jsx() calls
+        expect(output).not.toMatch(/<Text>/);
+        // Both branches of the ternary should be converted
+        expect(output).toMatchInlineSnapshot(`
+            "import { jsx as _jsx, jsx as _jsx2, Fragment as _Fragment, jsx as _jsx3 } from "react/jsx-runtime";
+            import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            import { Pressable, Text } from 'react-native';
+            function App() {
+              const visible = true;
+              return /*#__PURE__*/React.createElement(Pressable, {
+                onPress: () => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(_jsx3(_Fragment, {
+                        children: visible ? _jsx(Text, {
+                          children: "Visible"
+                        }) : _jsx2(Text, {
+                          children: "Invisible"
+                        })
+                      }), []);
+                    },
+                    "handlerArgs": [],
+                    "componentName": "Pressable"
+                  })();else return (() => {})();
+                }
+              }, visible ? /*#__PURE__*/React.createElement(Text, null, "Visible") : /*#__PURE__*/React.createElement(Text, null, "Invisible"));
+            }"
+        `);
+    });
+
+    it('should convert JSX inside logical AND children to jsx() runtime calls', () => {
+        const input = `
+            import { Pressable, Text } from 'react-native';
+
+            function App() {
+                const visible = true;
+                return (
+                    <Pressable onPress={() => {}}>
+                        {visible && <Text>Hello</Text>}
+                    </Pressable>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).not.toMatch(/<Text>/);
+        expect(output).toMatchInlineSnapshot(`
+            "import { jsx as _jsx, Fragment as _Fragment, jsx as _jsx2 } from "react/jsx-runtime";
+            import { DdBabelInteractionTracking, __ddExtractText } from "@datadog/mobile-react-native";
+            import { Pressable, Text } from 'react-native';
+            function App() {
+              const visible = true;
+              return /*#__PURE__*/React.createElement(Pressable, {
+                onPress: () => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
+                    "options": {
+                      "useContent": true,
+                      "useNamePrefix": true
+                    },
+                    "getContent": () => {
+                      return __ddExtractText(_jsx2(_Fragment, {
+                        children: visible && _jsx(Text, {
+                          children: "Hello"
+                        })
+                      }), []);
+                    },
+                    "handlerArgs": [],
+                    "componentName": "Pressable"
+                  })();else return (() => {})();
+                }
+              }, visible && /*#__PURE__*/React.createElement(Text, null, "Hello"));
+            }"
+        `);
+    });
+
+    it('should convert JSX inside nested ternary children to jsx() runtime calls', () => {
+        const input = `
+            import { Pressable, Text } from 'react-native';
+
+            function App() {
+                const state = 'a';
+                return (
+                    <Pressable onPress={() => {}}>
+                        {state === 'a' ? <Text>A</Text> : state === 'b' ? <Text>B</Text> : <Text>C</Text>}
+                    </Pressable>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).not.toMatch(/<Text>/);
+        // All three branches should be converted to _jsx calls
+        expect(output).toContain('_jsx(Text,');
+        expect(output).toContain('_jsx2(Text,');
+        expect(output).toContain('_jsx3(Text,');
+    });
+
+    it('should handle ternary with non-JSX branches in getContent', () => {
+        const input = `
+            import { Pressable, Text } from 'react-native';
+
+            function App() {
+                const visible = true;
+                return (
+                    <Pressable onPress={() => {}}>
+                        {visible ? <Text>Visible</Text> : null}
+                    </Pressable>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        expect(output).not.toMatch(/<Text>/);
+        // The JSX branch should be converted, null stays as-is
+        expect(output).toContain('_jsx(Text,');
+    });
+
+    it('should convert JSX inside useCallback ternary children to jsx() runtime calls', () => {
+        const input = `
+            import { useCallback, useState } from 'react';
+            import { Pressable, Text, View } from 'react-native';
+
+            export default function App() {
+                const [visible, setVisible] = useState(true);
+                const onPress = useCallback(() => setVisible(v => !v), []);
+
+                return (
+                    <View>
+                        <Pressable onPress={onPress}>
+                            {visible ? <Text>Visible</Text> : <Text>Invisible</Text>}
+                        </Pressable>
+                    </View>
+                );
+            }
+        `;
+
+        const output = transformCode(input);
+        // The getContent closure must not contain raw JSX
+        expect(output).not.toMatch(/<Text>/);
+        expect(output).toContain('_jsx(Text,');
+    });
+});
