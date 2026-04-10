@@ -28,8 +28,17 @@ export interface RUMResource {
     resourceContext?: XMLHttpRequest;
 }
 
+export type DdRumResourceGraphqlError = {
+    message: string;
+    code?: string;
+    locations?: Array<{ line: number; column: number }>;
+    path?: Array<string | number>;
+};
+
 export type DdRumResourceGraphqlAttributes = {
     operationType?: string;
     operationName?: string;
     variables?: string;
+    payload?: string;
+    errors?: DdRumResourceGraphqlError[];
 };

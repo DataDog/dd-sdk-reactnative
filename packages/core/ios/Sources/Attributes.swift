@@ -51,6 +51,31 @@ internal struct CrossPlatformAttributes {
     /// and send it within the RUM resource, so the RUM backend can issue corresponding APM span on behalf of the mobile app.
     /// Expects `String` value.
     static let spanID = "_dd.span_id"
+
+    /// Custom attribute passed when starting GraphQL RUM resources from a cross platform SDK.
+    /// It sets the GraphQL operation name if it was defined by the developer.
+    /// Expects `String` value.
+    static let graphqlOperationName = "_dd.graphql.operation_name"
+
+    /// Custom attribute passed when starting GraphQL RUM resources from a cross platform SDK.
+    /// It sets the GraphQL operation type.
+    /// Expects `String` value of either `query`, `mutation` or `subscription`.
+    static let graphqlOperationType = "_dd.graphql.operation_type"
+
+    /// Custom attribute passed when starting GraphQL RUM resources from a cross platform SDK.
+    /// It sets the GraphQL operation string (for example, the query, mutation, or subscription) when it is specified.
+    /// Expects `String` value.
+    static let graphqlPayload = "_dd.graphql.payload"
+
+    /// Custom attribute passed when starting GraphQL RUM resources from a cross platform SDK.
+    /// It sets the GraphQL variables as a JSON string if they were defined by the developer.
+    /// Expects `String` value.
+    static let graphqlVariables = "_dd.graphql.variables"
+
+    /// Custom attribute passed when completing GraphQL RUM resources that contain errors in the response.
+    /// It sets the GraphQL errors from the response body as a JSON string.
+    /// Expects `String` value.
+    static let graphqlErrors = "_dd.graphql.errors"
 }
 
 /// Internal attributes used to configure the proxy.

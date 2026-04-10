@@ -23,5 +23,12 @@ export const DdAttributes = {
      * The Debug ID establishes a unique connection between a bundle and its corresponding sourcemap.
      * Expects {@link String} value.
      */
-    debugId: '_dd.debug_id'
+    debugId: '_dd.debug_id',
+
+    /**
+     * Custom attribute passed when completing GraphQL RUM resources that contain errors in the response.
+     * It sets the GraphQL errors from the response body as JSON string.
+     * Expects {@link String} value (JSON serialized errors array).
+     */
+    graphqlErrors: '_dd.graphql.errors'
 };
