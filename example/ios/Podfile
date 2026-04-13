@@ -72,5 +72,27 @@ target 'ddSdkReactnativeExample' do
         Pod::UI.warn "Failed to modify Portability.h: #{e.message}"
       end
     end
+
+    # Workaround for fmt consteval errors with Xcode 26+ Clang:
+    # The fmt library's consteval usage is incompatible with newer Apple Clang.
+    # Patch base.h to disable consteval by adding a guard for the current Xcode.
+    fmt_base_header = File.join(installer.sandbox.pod_dir('fmt'), 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base_header)
+      content = File.read(fmt_base_header)
+      unless content.include?('Patched for Xcode 26')
+        if content.gsub!(
+          /^(#elif defined\(__cpp_consteval\)\n#\s*define FMT_USE_CONSTEVAL 1)$/,
+          "#elif defined(__apple_build_version__) && __apple_build_version__ >= 17000000L\n#  define FMT_USE_CONSTEVAL 0  // Patched for Xcode 26+ consteval compat\n\\1"
+        )
+          original_mode = File.stat(fmt_base_header).mode
+          File.chmod(original_mode | 0200, fmt_base_header)
+          File.write(fmt_base_header, content)
+          File.chmod(original_mode, fmt_base_header)
+        else
+          Pod::UI.warn "fmt consteval patch: expected pattern not found in #{fmt_base_header}. " \
+            "The fmt library may have changed — Xcode 26+ builds may fail."
+        end
+      end
+    end
   end
 end
