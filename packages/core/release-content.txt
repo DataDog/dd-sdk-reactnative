@@ -685,6 +685,7 @@ package/src/rum/instrumentation/interactionTracking/DdRumUserInteractionTracking
 package/src/rum/instrumentation/interactionTracking/EventsInterceptor.tsx
 package/src/rum/instrumentation/interactionTracking/NoOpEventsInterceptor.tsx
 package/src/rum/instrumentation/interactionTracking/ShallowObjectEqualityChecker.ts
+package/src/rum/instrumentation/interactionTracking/__tests__/DdBabelInteractionTracking.test.ts
 package/src/rum/instrumentation/interactionTracking/ddBabelUtils.ts
 package/src/rum/instrumentation/interactionTracking/getJsxRuntime.ts
 package/src/rum/instrumentation/resourceTracking/DdRumResourceTracking.tsx
