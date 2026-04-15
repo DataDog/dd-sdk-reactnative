@@ -14,10 +14,14 @@ function loadDebugId() {
     if (typeof globalThis === 'undefined') {
         return;
     }
+
+    const shouldWarn = process.env.NODE_ENV !== 'test' && __DEV__ !== true;
     try {
         const debugIds = (globalThis as any)._datadogDebugIds;
-        if (!debugIds || Object.keys(debugIds).length === 0) {
-            if (process.env.NODE_ENV !== 'test') {
+        const hasDebugId = debugIds && Object.keys(debugIds).length > 0;
+
+        if (!hasDebugId) {
+            if (shouldWarn) {
                 console.warn(
                     '[Datadog SDK] Debug ID not found. Are you using @datadog/mobile-react-native/metro config?'
                 );
@@ -27,7 +31,7 @@ function loadDebugId() {
 
         debugId = debugIds[Object.keys(debugIds)[0]];
     } catch (error) {
-        if (process.env.NODE_ENV !== 'test') {
+        if (shouldWarn) {
             console.warn(
                 '[Datadog SDK] Error while retrieving Debug ID. Are you using @datadog/mobile-react-native/metro config?'
             );
