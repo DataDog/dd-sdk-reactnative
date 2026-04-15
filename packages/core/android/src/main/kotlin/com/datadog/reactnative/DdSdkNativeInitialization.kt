@@ -47,7 +47,7 @@ class DdSdkNativeInitialization internal constructor(
     private val jsonFileReader: JSONFileReader = JSONFileReader()
 ) {
     @Suppress("CyclomaticComplexMethod")
-    internal fun initialize(ddSdkConfiguration: DdSdkConfiguration) {
+    internal fun initialize(ddSdkConfiguration: DdSdkConfiguration, isCalledFromJs: Boolean = true) {
         val sdkConfiguration = buildSdkConfiguration(ddSdkConfiguration)
         val trackingConsent = buildTrackingConsent(ddSdkConfiguration.trackingConsent)
         var rumConfiguration: RumConfiguration? = null
@@ -71,10 +71,16 @@ class DdSdkNativeInitialization internal constructor(
 
         configureRumAndTracesForLogs(ddSdkConfiguration)
 
-        if (datadog.isInitialized()) {
-            datadog.getRumMonitor().getCurrentSessionId {
-                it?.let { sessionId ->
-                    DdSdkSessionStartedListener.getInstance().onSessionStarted(sessionId, false)
+        if (isCalledFromJs) {
+            DdSdkSessionStartedListener.getInstance().onRnSdkInitialized()
+            /**
+             * Handles the case in which the SDK was already initialized with initFromNative.
+             */
+            if (datadog.isInitialized()) {
+                datadog.getRumMonitor().getCurrentSessionId {
+                    it?.let { sessionId ->
+                        DdSdkSessionStartedListener.getInstance().onSessionStarted(sessionId, false)
+                    }
                 }
             }
         }
@@ -413,7 +419,10 @@ class DdSdkNativeInitialization internal constructor(
         fun initFromNative(appContext: Context) {
             val nativeInitialization = DdSdkNativeInitialization(appContext.applicationContext)
             try {
-                nativeInitialization.initialize(nativeInitialization.getConfigurationFromJSONFile())
+                nativeInitialization.initialize(
+                    ddSdkConfiguration = nativeInitialization.getConfigurationFromJSONFile(),
+                    isCalledFromJs = false
+                )
             } catch (@Suppress("TooGenericExceptionCaught") error: Exception) {
                 Log.w(
                     DdSdkNativeInitialization::class.java.canonicalName,

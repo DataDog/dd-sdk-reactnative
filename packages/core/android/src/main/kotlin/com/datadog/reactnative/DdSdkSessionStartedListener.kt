@@ -38,16 +38,25 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     private var convertToNativeArray: ((array: Array<String>) -> NativeArray?)? = null
     private var exceptionHandler: ((error:Exception)->Unit)? = null
     private var isNewArchitecture: Boolean? = null
+    private var isRnSdkInitialized: Boolean = false
 
     override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
-        sendSessionStartedToJS(sessionId)
+        this.lastSessionId = sessionId
+        trySendSessionStartedToJS(sessionId)
     }
 
     fun setReactContext(reactContext: ReactContext) {
         this.reactContext = reactContext
-        if (hasValidBridge()) {
-            this.lastSessionId?.let { sendSessionStartedToJS(it) }
-        }
+        this.lastSessionId?.let { trySendSessionStartedToJS(it) }
+    }
+
+    // Called when the RN SDK is initialized from JS for the first time while the native
+    // SDK was already running. At this point DatadogInternalReactBridge is guaranteed to
+    // be registered, so it is safe to deliver any session ID that was stored before the
+    // React bridge was available.
+    fun onRnSdkInitialized() {
+        this.isRnSdkInitialized = true
+        this.lastSessionId?.let { trySendSessionStartedToJS(it) }
     }
 
     @TestOnly
@@ -65,12 +74,24 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         this.isNewArchitecture = isNewArch
     }
 
+    @TestOnly
+    fun setIsRnSdkInitialized(value: Boolean) {
+        this.isRnSdkInitialized = value
+    }
+
     private fun hasValidBridge(): Boolean {
         val context = reactContext ?: return false
         val instance = context.catalystInstance ?: return false
         return !isNewArchitecture() &&
                 !instance.isDestroyed &&
-                context.hasActiveReactInstance()
+                context.hasActiveReactInstance() &&
+                // IMPORTANT: a mandatory condition is that the RN SDK has been
+                // initialized from JS. Before that point, DatadogInternalReactBridge (a JS-side
+                // callable module) may not be registered yet. callFunction queues the call
+                // asynchronously on the JS thread, so the native try-catch in sendSessionIdWithBridge
+                // cannot intercept the resulting "module not registered" Invariant Violation and
+                // the error propagates through RN's global JS error handler and crashes the app.
+                isRnSdkInitialized
     }
 
     private fun isNewArchitecture(): Boolean {
@@ -81,8 +102,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         }
     }
 
-    private fun sendSessionStartedToJS(sessionId: String) {
-        this.lastSessionId = sessionId
+    private fun trySendSessionStartedToJS(sessionId: String) {
         if (hasValidBridge()) {
             sendSessionIdWithBridge(sessionId)
         } else {
