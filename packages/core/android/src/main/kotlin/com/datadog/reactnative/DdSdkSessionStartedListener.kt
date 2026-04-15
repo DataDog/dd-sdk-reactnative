@@ -16,11 +16,13 @@ import org.jetbrains.annotations.TestOnly
 
 internal class DdSdkSessionStartedListener private constructor(): RumSessionListener {
     companion object {
+        // JS-side callable module registered via BatchedBridge.registerCallableModule.
         private const val BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
         private const val BRIDGE_MODULE_METHOD = "__datadogOnMessageReceived"
 
         private var instance: DdSdkSessionStartedListener? = null
 
+        // Returns the shared listener instance, creating it on first call.
         fun getInstance(): DdSdkSessionStartedListener {
             if (instance == null) {
                 instance = DdSdkSessionStartedListener()
@@ -28,23 +30,32 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
             return instance!!
         }
 
+        // Resets the singleton — used in tests to start from a clean state.
         fun invalidate() {
             instance = null
         }
     }
 
-    private var reactContext: ReactContext? = null
+    // Cached so it can be delivered once the bridge becomes available.
     private var lastSessionId: String? = null
+
+    // Set from onHostResume; null until the React activity is first resumed.
+    private var reactContext: ReactContext? = null
+    // Overridable in tests — NativeArray cannot be instantiated without the native SO.
     private var convertToNativeArray: ((array: Array<String>) -> NativeArray?)? = null
+    // Overridable in tests to assert on bridge exceptions without crashing.
     private var exceptionHandler: ((error:Exception)->Unit)? = null
+    // Lazily resolved from BuildConfig; overridable in tests.
     private var isNewArchitecture: Boolean? = null
     private var isRnSdkInitialized: Boolean = false
 
+    // Stores the session ID and attempts immediate delivery.
     override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
         this.lastSessionId = sessionId
         trySendSessionStartedToJS(sessionId)
     }
 
+    // Called from onHostResume. Triggers catch-up delivery if the RN SDK is already initialized.
     fun setReactContext(reactContext: ReactContext) {
         this.reactContext = reactContext
         this.lastSessionId?.let { trySendSessionStartedToJS(it) }
@@ -79,21 +90,18 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         this.isRnSdkInitialized = value
     }
 
+    // Returns true only when it is safe to call callFunction on the JS thread.
     private fun hasValidBridge(): Boolean {
         val context = reactContext ?: return false
         val instance = context.catalystInstance ?: return false
         return !isNewArchitecture() &&
                 !instance.isDestroyed &&
                 context.hasActiveReactInstance() &&
-                // IMPORTANT: a mandatory condition is that the RN SDK has been
-                // initialized from JS. Before that point, DatadogInternalReactBridge (a JS-side
-                // callable module) may not be registered yet. callFunction queues the call
-                // asynchronously on the JS thread, so the native try-catch in sendSessionIdWithBridge
-                // cannot intercept the resulting "module not registered" Invariant Violation and
-                // the error propagates through RN's global JS error handler and crashes the app.
                 isRnSdkInitialized
     }
 
+    // Lazily cached — BuildConfig is a compile-time constant but reading it through the
+    // nullable override lets tests inject the value without reflection.
     private fun isNewArchitecture(): Boolean {
         isNewArchitecture?.let { return it }
         BuildConfig.IS_NEW_ARCHITECTURE_ENABLED.let {
@@ -102,6 +110,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         }
     }
 
+    // Routes delivery to the appropriate path based on arch and bridge readiness.
     private fun trySendSessionStartedToJS(sessionId: String) {
         if (hasValidBridge()) {
             sendSessionIdWithBridge(sessionId)
@@ -110,6 +119,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         }
     }
 
+    // Old-arch delivery path via BatchedBridge.
     @MainThread
     private fun sendSessionIdWithBridge(sessionId: String) {
         @Suppress("TooGenericExceptionCaught")
@@ -134,6 +144,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
         }
     }
 
+    // New-arch delivery path and fallback when the bridge is not active.
     @MainThread
     private fun sendSessionIdWithEventEmitter(sessionId: String) {
         val context = reactContext ?: return
