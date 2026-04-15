@@ -61,7 +61,7 @@ export class DdSdkInternalNativeBridge {
             return true;
         } catch (err) {
             this.errorHandler(
-                `An error occured while registering default listeners for event emitter: ${err}`
+                `An error occurred while registering default listeners for event emitter: ${err}`
             );
             return false;
         }
