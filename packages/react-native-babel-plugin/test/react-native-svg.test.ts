@@ -29,12 +29,12 @@ function transformSvg(code: string): string | undefined {
     let result: string | undefined;
 
     traverse(ast, {
-        JSXElement(path) {
-            if (t.isJSXIdentifier(path.node.openingElement.name)) {
-                const name = path.node.openingElement.name.name;
+        JSXElement(nodePath) {
+            if (t.isJSXIdentifier(nodePath.node.openingElement.name)) {
+                const name = nodePath.node.openingElement.name.name;
                 if (name === 'Svg') {
                     const dimensions: Record<string, string> = {};
-                    const handler = new RNSvgHandler(t, path, name);
+                    const handler = new RNSvgHandler(t, nodePath, name);
                     result = handler.transformSvgNode(dimensions);
                 }
             }
