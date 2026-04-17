@@ -11,7 +11,7 @@ import path from 'path';
 import { mergeSvgAssets } from './processing';
 import { debounce } from './utils';
 
-let watching = false;
+let watcher: chokidar.FSWatcher | null = null;
 
 const MERGE_DEBOUNCE_MS = 300;
 const WATCH_STABILITY_THRESHOLD_MS = 200;
@@ -38,9 +38,8 @@ export function withSessionReplayAssetBundler(metroConfig: any): any {
     }, MERGE_DEBOUNCE_MS);
 
     // Prevent potential multiple watchers if metro loads the config multiple times
-    if (!watching) {
-        watching = true;
-        chokidar
+    if (!watcher) {
+        watcher = chokidar
             .watch(assetsDir, {
                 // Skip events for files that already exist
                 ignoreInitial: true,
@@ -75,6 +74,14 @@ export function withSessionReplayAssetBundler(metroConfig: any): any {
                     event.type === 'transformer_load_done'
                 ) {
                     mergeSvgAssets(assetsDir);
+
+                    // Close the file watcher after bundling completes
+                    // This prevents the chokidar watcher from keeping the
+                    // Node process alive during release/CI builds
+                    if (watcher) {
+                        watcher.close();
+                        watcher = null;
+                    }
                 }
             }
         }
