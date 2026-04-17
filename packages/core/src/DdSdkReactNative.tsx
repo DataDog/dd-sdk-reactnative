@@ -131,11 +131,11 @@ export class DdSdkReactNative {
             // We rely on requestIdleCallback for RN >= 0.76 to make sure that the SDK initialization
             // happens after rendering has finished
             if ((globalThis as Record<string, unknown>).requestIdleCallback) {
-                return new Promise<void>(resolve => {
+                return new Promise<void>((resolve, reject) => {
                     ((globalThis as unknown) as {
                         requestIdleCallback: (cb: () => void) => void;
                     }).requestIdleCallback(() => {
-                        initNative().then(resolve);
+                        initNative().then(resolve, reject);
                     });
                 });
             }
