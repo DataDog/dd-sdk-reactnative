@@ -48,9 +48,10 @@ Pod::Spec.new do |s|
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
+    s.compiler_flags = "-DRCT_NEW_ARCH_ENABLED=1"
+
     xcconfig.merge!({
       "DEFINES_MODULE" => "YES",
-      "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1",
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
     })
 
