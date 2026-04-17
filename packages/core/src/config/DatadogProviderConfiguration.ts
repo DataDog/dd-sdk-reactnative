@@ -11,7 +11,9 @@ import { InitializationMode } from './types';
  */
 export class DatadogProviderConfiguration extends CoreConfiguration {
     /**
-     * If set to ASYNC, the initialization will be delayed until all animations are completed.
+     * If set to ASYNC, the native initialization will run when the
+     * main thread is idle (via `requestIdleCallback` on RN >= 0.76, or
+     * `InteractionManager.runAfterInteractions` on earlier versions)
      */
     public initializationMode: InitializationMode = InitializationMode.SYNC;
 }

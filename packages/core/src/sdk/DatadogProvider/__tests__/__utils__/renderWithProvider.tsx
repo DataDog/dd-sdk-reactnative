@@ -5,7 +5,7 @@
  */
 
 import { render } from '@testing-library/react-native';
-import { Animated, Button, InteractionManager, Text, View } from 'react-native';
+import { Animated, Button, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
 import { DatadogProviderConfiguration } from '../../../../config/DatadogProviderConfiguration';
@@ -109,14 +109,31 @@ export const renderWithProvider = (params?: {
 };
 
 /**
- * Mocks an animation for InteractionManager.runAfterInteractions. Returns
- * a function to be called to finish the animation
+ * Mocks requestIdleCallback so that scheduled callbacks only run when
+ * {@link flushIdleCallbacks} is called. Restores the original value on
+ * {@link restore}.
  */
-export const mockAnimation = () => {
-    const fakeAnimationHandle = InteractionManager.createInteractionHandle();
+export const mockIdleCallback = () => {
+    const callbacks: Array<() => void> = [];
+    const original = (globalThis as Record<string, unknown>)
+        .requestIdleCallback;
+
+    (globalThis as Record<string, unknown>).requestIdleCallback = (
+        cb: () => void
+    ) => {
+        callbacks.push(cb);
+        return callbacks.length;
+    };
 
     return {
-        finishAnimation: () =>
-            InteractionManager.clearInteractionHandle(fakeAnimationHandle)
+        flushIdleCallbacks: () => {
+            callbacks.splice(0).forEach(cb => cb());
+        },
+        restore: () => {
+            (globalThis as Record<
+                string,
+                unknown
+            >).requestIdleCallback = original;
+        }
     };
 };

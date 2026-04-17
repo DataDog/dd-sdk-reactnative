@@ -123,10 +123,26 @@ export class DdSdkReactNative {
             });
         }
         if (configuration.initializationMode === InitializationMode.ASYNC) {
-            return InteractionManager.runAfterInteractions(() => {
-                return DdSdkReactNative.initializeNativeSDK(configuration, {
+            const initNative = () =>
+                DdSdkReactNative.initializeNativeSDK(configuration, {
                     initializationModeForTelemetry: 'ASYNC'
                 });
+
+            // We rely on requestIdleCallback for RN >= 0.76 to make sure that the SDK initialization
+            // happens after rendering has finished
+            if ((globalThis as Record<string, unknown>).requestIdleCallback) {
+                return new Promise<void>(resolve => {
+                    ((globalThis as unknown) as {
+                        requestIdleCallback: (cb: () => void) => void;
+                    }).requestIdleCallback(() => {
+                        initNative().then(resolve);
+                    });
+                });
+            }
+
+            // On RN below 0.76 we use runAfterInteractions, which initializes the SDK after animations are done
+            return InteractionManager.runAfterInteractions(() => {
+                return initNative();
             });
         }
         // TODO: Remove when DdSdkReactNativeConfiguration is deprecated
