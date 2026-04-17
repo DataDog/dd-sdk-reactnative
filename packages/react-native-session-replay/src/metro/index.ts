@@ -11,7 +11,7 @@ import path from 'path';
 import { mergeSvgAssets } from './processing';
 import { debounce } from './utils';
 
-let watcher: chokidar.FSWatcher | null = null;
+let watcher: ReturnType<typeof chokidar.watch> | null = null;
 
 const MERGE_DEBOUNCE_MS = 300;
 const WATCH_STABILITY_THRESHOLD_MS = 200;
