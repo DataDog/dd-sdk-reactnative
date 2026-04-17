@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SessionReplayView.Privacy SVG Wrapper should wrap an SVG without explicit dimensions 1`] = `
+"import { SessionReplayView } from "@datadog/mobile-react-native-session-replay";
+/*#__PURE__*/React.createElement(SessionReplayView.Privacy, {
+  nativeID: "00000000-0000-0000-0000-000000000000",
+  collapsable: false,
+  pointerEvents: "box-none",
+  attributes: {
+    type: "svg",
+    hash: "fd87d9136a0280917b215dfeeef27092"
+  }
+}, /*#__PURE__*/React.createElement(Svg, {
+  viewBox: "0 0 100 100"
+}, /*#__PURE__*/React.createElement(Circle, {
+  cx: "50",
+  cy: "50",
+  r: "40",
+  fill: "blue"
+})));"
+`;
+
+exports[`SessionReplayView.Privacy SVG Wrapper should wrap an inline SVG with the correct props 1`] = `
+"import { SessionReplayView } from "@datadog/mobile-react-native-session-replay";
+globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__ = true;
+/*#__PURE__*/React.createElement(SessionReplayView.Privacy, {
+  nativeID: "00000000-0000-0000-0000-000000000000",
+  collapsable: false,
+  pointerEvents: "box-none",
+  attributes: {
+    type: "svg",
+    hash: "5682723a5f88d4aa4e8c946f82eef34b",
+    width: "24",
+    height: "24"
+  }
+}, /*#__PURE__*/React.createElement(Svg, {
+  width: "24",
+  height: "24"
+}, /*#__PURE__*/React.createElement(Path, {
+  d: "M12 2L2 12h10z",
+  fill: "black"
+})));"
+`;
