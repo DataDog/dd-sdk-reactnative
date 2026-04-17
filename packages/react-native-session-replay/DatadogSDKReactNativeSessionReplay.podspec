@@ -57,7 +57,12 @@ Pod::Spec.new do |s|
 
     s.pod_target_xcconfig = xcconfig
 
-    install_modules_dependencies(s)
+    # install_modules_dependencies is only available on RN >= 0.71
+    if respond_to?(:install_modules_dependencies, true)
+      install_modules_dependencies(s)
+    else
+      Pod::UI.warn "Using Datadog React Native Session Replay with new architecture on RN < 0.71 is discouraged and not officially supported."
+    end
   else
     s.pod_target_xcconfig = xcconfig
   end
