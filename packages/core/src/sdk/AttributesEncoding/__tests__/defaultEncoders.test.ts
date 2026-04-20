@@ -123,12 +123,36 @@ describe('default encoders', () => {
             expect(result).toHaveProperty('componentStack');
         });
 
+        it('does not cause infinite recursion', () => {
+            const error = new Error('stack overflow test');
+            errorEncoder.encode(error);
+            expect(warn).not.toHaveBeenCalledWith(
+                expect.stringContaining('Encoder error')
+            );
+        });
+
+        it('does not cause infinite recursion with nested Error cause', () => {
+            const inner = new Error('inner');
+            const outer: any = new Error('outer');
+            outer.cause = inner;
+            errorEncoder.encode(outer);
+            expect(warn).not.toHaveBeenCalledWith(
+                expect.stringContaining('Encoder error')
+            );
+        });
+
         it('encodes error with cause', () => {
             const cause = new Error('inner');
             const err: any = new Error('outer');
             err.cause = cause;
             const result = errorEncoder.encode(err) as Record<string, any>;
-            expect(result.cause).toBe(cause);
+            expect(result.cause).toEqual(
+                expect.objectContaining({
+                    name: 'Error',
+                    message: 'inner'
+                })
+            );
+            expect(result.cause.stack).toContain('Error: inner');
         });
     });
 

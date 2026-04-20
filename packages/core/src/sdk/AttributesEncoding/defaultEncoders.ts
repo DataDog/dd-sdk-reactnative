@@ -77,7 +77,17 @@ export const errorEncoder: AttributeEncoder<any> = {
                 ...DdSdk.attributeEncoders,
                 ...builtInEncoders
             ];
-            encodeAttributesInPlace(e, extraAttributes, [], allEncoders);
+
+            // We encode each enumerable property individually to avoid potential infinite recursion issues
+            // such as those caused by having nested errors
+            for (const [key, val] of Object.entries(e)) {
+                encodeAttributesInPlace(
+                    val,
+                    extraAttributes,
+                    [key],
+                    allEncoders
+                );
+            }
         }
 
         // Remove fields that are duplicated in the dedicated fields below
