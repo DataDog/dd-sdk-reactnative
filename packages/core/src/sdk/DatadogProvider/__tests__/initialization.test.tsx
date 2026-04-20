@@ -22,7 +22,7 @@ import {
 
 import {
     getDefaultConfiguration,
-    mockAnimation,
+    mockIdleCallback,
     renderWithProvider
 } from './__utils__/renderWithProvider';
 
@@ -190,20 +190,24 @@ describe('DatadogProvider', () => {
 
         it('runs after initialization when ASYNC initialization', async () => {
             const onInitialization = jest.fn();
-            const { finishAnimation } = mockAnimation();
-            const configuration = getDefaultConfiguration();
-            configuration.initializationMode = InitializationMode.ASYNC;
-            const { getByText } = renderWithProvider({
-                onInitialization,
-                configuration
-            });
-            getByText('I am a test application');
-            await flushPromises();
-            expect(onInitialization).not.toHaveBeenCalled();
+            const idle = mockIdleCallback();
+            try {
+                const configuration = getDefaultConfiguration();
+                configuration.initializationMode = InitializationMode.ASYNC;
+                const { getByText } = renderWithProvider({
+                    onInitialization,
+                    configuration
+                });
+                getByText('I am a test application');
+                await flushPromises();
+                expect(onInitialization).not.toHaveBeenCalled();
 
-            finishAnimation();
-            await flushPromises();
-            expect(onInitialization).toHaveBeenCalledTimes(1);
+                idle.flushIdleCallbacks();
+                await flushPromises();
+                expect(onInitialization).toHaveBeenCalledTimes(1);
+            } finally {
+                idle.restore();
+            }
         });
         it('runs after initialization when partial initialization', async () => {
             const onInitialization = jest.fn();

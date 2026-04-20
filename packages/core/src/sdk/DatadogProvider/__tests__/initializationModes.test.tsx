@@ -5,7 +5,7 @@
  */
 
 import { fireEvent } from '@testing-library/react-native';
-import { NativeModules } from 'react-native';
+import { InteractionManager, NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { InitializationMode } from '../../../config/types';
@@ -22,7 +22,7 @@ import {
 
 import {
     getDefaultConfiguration,
-    mockAnimation,
+    mockIdleCallback,
     renderWithProvider,
     renderWithProviderAndAnimation
 } from './__utils__/renderWithProvider';
@@ -70,70 +70,101 @@ describe('DatadogProvider', () => {
 
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
         });
-        it('initializes the SDK before animations are done', async () => {
-            const { finishAnimation } = mockAnimation();
-            renderWithProvider();
+        it('initializes the SDK without waiting for idle callback', async () => {
+            const idle = mockIdleCallback();
+            try {
+                const configuration = getDefaultConfiguration();
+                configuration.initializationMode = InitializationMode.SYNC;
+                renderWithProvider({ configuration });
 
-            await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
-            finishAnimation();
+                await flushPromises();
+
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+
+                idle.flushIdleCallbacks();
+                await flushPromises();
+
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            } finally {
+                idle.restore();
+            }
         });
     });
 
     describe('initializationMode ASYNC', () => {
-        beforeEach(() => {
-            jest.useFakeTimers();
-        });
-        afterEach(() => {
-            jest.useRealTimers();
-        });
-        it('starts auto-instrumentation after animations are done (with real Animation)', async () => {
-            const configuration = getDefaultConfiguration();
-            configuration.initializationMode = InitializationMode.ASYNC;
+        it('initializes the SDK when the idle callback fires', async () => {
+            const idle = mockIdleCallback();
+            try {
+                const configuration = getDefaultConfiguration();
+                configuration.initializationMode = InitializationMode.ASYNC;
 
-            const { getByText } = renderWithProviderAndAnimation({
-                configuration
-            });
-            await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
-            jest.advanceTimersByTime(700);
-            await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
-            const button = getByText('test button');
-            fireEvent(button, 'press', {
-                _targetInst: {
-                    props: {
-                        'dd-action-name': 'press button'
+                const { getByText } = renderWithProvider({ configuration });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
+
+                idle.flushIdleCallbacks();
+                await flushPromises();
+
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                const button = getByText('test button');
+                fireEvent(button, 'press', {
+                    _targetInst: {
+                        props: {
+                            'dd-action-name': 'press button'
+                        }
                     }
-                }
-            });
-            expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+                });
+                expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+            } finally {
+                idle.restore();
+            }
         });
 
-        it('starts auto-instrumentation after animations are done (with InteractionManager)', async () => {
-            jest.useRealTimers();
-            const configuration = getDefaultConfiguration();
-            configuration.initializationMode = InitializationMode.ASYNC;
+        it('defers initialization while animations are running', async () => {
+            const idle = mockIdleCallback();
+            try {
+                const configuration = getDefaultConfiguration();
+                configuration.initializationMode = InitializationMode.ASYNC;
 
-            const { finishAnimation } = mockAnimation();
-            const { getByText } = renderWithProvider({ configuration });
+                renderWithProviderAndAnimation({ configuration });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
 
-            await flushPromises();
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
+                idle.flushIdleCallbacks();
+                await flushPromises();
 
-            finishAnimation();
-            await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            } finally {
+                idle.restore();
+            }
+        });
 
-            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
-            const button = getByText('test button');
-            fireEvent(button, 'press', {
-                _targetInst: {
-                    props: {
-                        'dd-action-name': 'press button'
-                    }
-                }
-            });
-            expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+        it('falls back to InteractionManager when requestIdleCallback is unavailable', async () => {
+            const original = (globalThis as Record<string, unknown>)
+                .requestIdleCallback;
+            (globalThis as Record<
+                string,
+                unknown
+            >).requestIdleCallback = undefined;
+            try {
+                const configuration = getDefaultConfiguration();
+                configuration.initializationMode = InitializationMode.ASYNC;
+
+                const handle = InteractionManager.createInteractionHandle();
+                renderWithProvider({ configuration });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(0);
+
+                InteractionManager.clearInteractionHandle(handle);
+                await flushPromises();
+
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            } finally {
+                (globalThis as Record<
+                    string,
+                    unknown
+                >).requestIdleCallback = original;
+            }
         });
     });
 
