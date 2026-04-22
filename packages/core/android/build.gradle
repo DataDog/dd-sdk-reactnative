@@ -14,12 +14,12 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:7.3.1'
+    classpath 'com.android.tools.build:gradle:7.4.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath "org.jlleitschuh.gradle:ktlint-gradle:11.5.1"
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:11.6.1"
     classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8"
-    classpath 'com.github.bjoernq:unmockplugin:0.7.9'
+    classpath 'com.github.bjoernq:unmockplugin:0.9.0'
 // Uncomment here and in settings.gradle for getting rid of IDE errors for new architecture:
 //    classpath "com.facebook.react:react-native-gradle-plugin"
   }
@@ -194,16 +194,16 @@ dependencies {
     api "com.facebook.react:react-android:$reactNativeVersion"
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  compileOnly "com.squareup.okhttp3:okhttp:3.12.13"
+  compileOnly "com.squareup.okhttp3:okhttp:3.14.9"
  // dd-sdk-android-rum requires androidx.metrics:metrics-performance.
  // From 2.21.0, it uses 1.0.0-beta02, which requires Gradle 8.6.0.
  // This breaks builds if the React Native target is below 0.76.0. as it relies on Gradle 8.5.0.
  // To avoid this, we enforce 1.0.0-beta01 on RN < 0.76.0
  if (reactNativeMinorVersion < 76) {
-      implementation("com.datadoghq:dd-sdk-android-rum:3.8.0") {
+      implementation("com.datadoghq:dd-sdk-android-rum:3.9.0") {
           exclude group: "androidx.metrics", module: "metrics-performance"
       }
-      implementation "androidx.metrics:metrics-performance:1.0.0-beta01"
+      implementation "androidx.metrics:metrics-performance:1.0.0"
       // dd-sdk-android requires androidx.core:core and androidx.core:core-ktx
       // From 3.8.0, it uses 1.15.0, which requires compileSdk 35.
       // However, React Native versions below 0.76.0 use compileSdk 34,
@@ -220,29 +220,29 @@ dependencies {
           }
       }
   } else {
-      implementation "com.datadoghq:dd-sdk-android-rum:3.8.0"
+      implementation "com.datadoghq:dd-sdk-android-rum:3.9.0"
   }
-  implementation "com.datadoghq:dd-sdk-android-logs:3.8.0"
-  implementation "com.datadoghq:dd-sdk-android-trace:3.8.0"
-  implementation "com.datadoghq:dd-sdk-android-webview:3.8.0"
-  implementation "com.datadoghq:dd-sdk-android-ndk:3.8.0"
-  implementation "com.datadoghq:dd-sdk-android-flags:3.8.0"
-  implementation "com.google.code.gson:gson:2.11.0"
-  testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
-  testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
-  testImplementation "org.junit.jupiter:junit-jupiter-engine:5.6.2"
-  testImplementation "org.junit.jupiter:junit-jupiter-params:5.6.2"
-  testImplementation "org.mockito:mockito-junit-jupiter:3.4.6"
-  testImplementation "org.assertj:assertj-core:3.18.1"
-  testImplementation "com.github.xgouchet.Elmyr:core:1.3.1"
-  testImplementation "com.github.xgouchet.Elmyr:inject:1.3.1"
-  testImplementation "com.github.xgouchet.Elmyr:junit5:1.3.1"
-  testImplementation "com.github.xgouchet.Elmyr:jvm:1.3.1"
-  testImplementation "org.mockito.kotlin:mockito-kotlin:5.1.0"
+  implementation "com.datadoghq:dd-sdk-android-logs:3.9.0"
+  implementation "com.datadoghq:dd-sdk-android-trace:3.9.0"
+  implementation "com.datadoghq:dd-sdk-android-webview:3.9.0"
+  implementation "com.datadoghq:dd-sdk-android-ndk:3.9.0"
+  implementation "com.datadoghq:dd-sdk-android-flags:3.9.0"
+  implementation "com.google.code.gson:gson:2.13.2"
+  testImplementation "org.junit.platform:junit-platform-launcher:1.14.3"
+  testImplementation "org.junit.jupiter:junit-jupiter-api:5.14.3"
+  testImplementation "org.junit.jupiter:junit-jupiter-engine:5.14.3"
+  testImplementation "org.junit.jupiter:junit-jupiter-params:5.14.3"
+  testImplementation "org.mockito:mockito-junit-jupiter:3.12.4"
+  testImplementation "org.assertj:assertj-core:3.27.7"
+  testImplementation "com.github.xgouchet.Elmyr:core:1.3.4"
+  testImplementation "com.github.xgouchet.Elmyr:inject:1.3.4"
+  testImplementation "com.github.xgouchet.Elmyr:junit5:1.3.4"
+  testImplementation "com.github.xgouchet.Elmyr:jvm:1.3.4"
+  testImplementation "org.mockito.kotlin:mockito-kotlin:5.4.0"
   testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
   testImplementation("org.mockito:mockito-inline:5.2.0")
 
-  unmock 'org.robolectric:android-all:4.4_r1-robolectric-r2'
+  unmock 'org.robolectric:android-all:4.4_r1-robolectric-1'
   detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:1.23.8"
   detektPlugins "io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.8"
 }
