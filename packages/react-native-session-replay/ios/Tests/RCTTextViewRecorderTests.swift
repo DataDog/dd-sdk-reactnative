@@ -40,12 +40,14 @@ internal class RCTTextViewRecorderTests: XCTestCase {
                         sessionID: "session_id",
                         viewID: "view_id",
                         viewServerTimeOffset: nil,
+                        viewPath: nil,
                         date: Date(),
                         telemetry: NoOpTelemetry()
                        ),
         coordinateSpace: UIView(),
         ids: .init(),
         webViewCache: .init(),
+        heatmapCache: .init(),
         clip: .zero
     )
 
@@ -161,12 +163,14 @@ internal class RCTTextViewRecorderTests: XCTestCase {
                 sessionID: "session_id",
                 viewID: "view_id",
                 viewServerTimeOffset: nil,
+                viewPath: nil,
                 date: Date(),
                 telemetry: NoOpTelemetry()
             ),
             coordinateSpace: UIView(),
             ids: .init(),
             webViewCache: .init(),
+            heatmapCache: .init(),
             clip: .zero
         )
         let reactTag = NSNumber(value: 44)

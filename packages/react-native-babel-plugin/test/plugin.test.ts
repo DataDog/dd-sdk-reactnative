@@ -118,7 +118,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               value: username,
               onChangeText: setUsername,
               style: styles.input,
-              onFocus: () => {
+              onFocus: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('test');
                 }, "TAP", {
@@ -129,11 +129,11 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   "getContent": () => {
                     return __ddExtractText(_jsx(_Fragment, {}), []);
                   },
-                  "handlerArgs": [],
+                  "handlerArgs": [...args],
                   "componentName": "TextInput"
-                })();else return (() => {
+                })(...args);else return (() => {
                   console.log('test');
-                })();
+                })?.(...args);
               }
             });"
         `);
@@ -159,7 +159,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               value: username,
               onChangeText: setUsername,
               style: styles.input,
-              onFocus: () => {
+              onFocus: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
                   "options": {
                     "useContent": true,
@@ -168,9 +168,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   "getContent": () => {
                     return __ddExtractText(_jsx(_Fragment, {}), []);
                   },
-                  "handlerArgs": [],
+                  "handlerArgs": [...args],
                   "componentName": "TextInput"
-                })();else return (() => {})();
+                })(...args);else return (() => {})?.(...args);
               }
             });"
         `);
@@ -237,7 +237,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
             import { TextInput } from 'react-native';
             /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
-              onFocus: () => {
+              onFocus: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
                   "options": {
                     "useContent": true,
@@ -246,9 +246,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   "getContent": () => {
                     return __ddExtractText(_jsx(_Fragment, {}), []);
                   },
-                  "handlerArgs": [],
+                  "handlerArgs": [...args],
                   "componentName": "TextInput"
-                })();else return (() => console.log('Focused'))();
+                })(...args);else return (() => console.log('Focused'))?.(...args);
               }
             }));"
         `);
@@ -346,7 +346,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
             import { TextInput } from './TextInput';
             /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
-              onFocus: () => {
+              onFocus: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
                   "options": {
                     "useContent": true,
@@ -355,9 +355,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   "getContent": () => {
                     return __ddExtractText(_jsx(_Fragment, {}), []);
                   },
-                  "handlerArgs": [],
+                  "handlerArgs": [...args],
                   "componentName": "TextInput"
-                })();else return (() => console.log('Focused'))();
+                })(...args);else return (() => console.log('Focused'))?.(...args);
               }
             }));"
         `);
@@ -440,7 +440,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
             import { TextInput } from './TextInput';
             /*#__PURE__*/React.createElement(TextInput, _extends({}, props, {
-              onFocus: () => {
+              onFocus: (...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => console.log('Focused'), "TAP", {
                   "options": {
                     "useContent": true,
@@ -449,9 +449,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   "getContent": () => {
                     return __ddExtractText(_jsx(_Fragment, {}), []);
                   },
-                  "handlerArgs": [],
+                  "handlerArgs": [...args],
                   "componentName": "TextInput"
-                })();else return (() => console.log('Focused'))();
+                })(...args);else return (() => console.log('Focused'))?.(...args);
               }
             }));"
         `);
@@ -1019,7 +1019,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             }) {
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: () => {
+                onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => onPress(item.id), "TAP", {
                     "options": {
                       "useContent": true,
@@ -1028,9 +1028,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     "getContent": () => {
                       return __ddExtractText(_jsx(_Fragment, {}), []);
                     },
-                    "handlerArgs": [],
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })();else return (() => onPress(item.id))();
+                  })(...args);else return (() => onPress(item.id))?.(...args);
                 }
               }));
             }"
@@ -1075,7 +1075,7 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   }
                 }, /*#__PURE__*/React.createElement(Button, {
                   title: "Press Me",
-                  onPress: () => {
+                  onPress: (...args) => {
                     if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => this.handlePress(), "TAP", {
                       "options": {
                         "useContent": true,
@@ -1084,9 +1084,9 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                       "getContent": () => {
                         return __ddExtractText(_jsx(_Fragment, {}), ["Press Me"]);
                       },
-                      "handlerArgs": [],
+                      "handlerArgs": [...args],
                       "componentName": "Button"
-                    })();else return (() => this.handlePress())();
+                    })(...args);else return (() => this.handlePress())?.(...args);
                   }
                 }));
               }
@@ -1315,7 +1315,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
               }, [a, b]);
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: () => {
+                onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => handler('Test'), "TAP", {
                     "options": {
                       "useContent": true,
@@ -1324,9 +1324,9 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                     "getContent": () => {
                       return __ddExtractText(_jsx(_Fragment, {}), []);
                     },
-                    "handlerArgs": [],
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })();else return (() => handler('Test'))();
+                  })(...args);else return (() => handler('Test'))?.(...args);
                 }
               });
             }"
@@ -1356,7 +1356,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
             import { useCallback } from 'react';
             import { Pressable } from 'react-native';
             function MyComponent() {
-              const handler = useCallback(() => {
+              const handler = useCallback((...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('Testing ');
                 }, "TAP", {
@@ -1369,7 +1369,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [],
                   "componentName": "Pressable"
-                })();else return (() => {
+                })(...args);else return (() => {
                   console.log('Testing ');
                 })?.();
               }, []);
@@ -1406,7 +1406,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
             import { useCallback } from 'react';
             import { View, Pressable } from 'react-native';
             function MyComponent() {
-              const handler = useCallback(() => {
+              const handler = useCallback((...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {
                   console.log('Testing ');
                 }, "TAP", {
@@ -1419,7 +1419,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [],
                   "componentName": "Pressable"
-                })();else return (() => {
+                })(...args);else return (() => {
                   console.log('Testing ');
                 })?.();
               }, []);
@@ -1659,7 +1659,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
               console.log('Testing');
             };
             function MyComponent() {
-              const handler = React.useMemo(() => {
+              const handler = React.useMemo((...args) => {
                 if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(funcN, "TAP", {
                   "options": {
                     "useContent": true,
@@ -1670,7 +1670,7 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
                   },
                   "handlerArgs": [],
                   "componentName": "Pressable"
-                })();else return funcN?.();
+                })(...args);else return funcN?.();
               }, []);
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
@@ -1825,7 +1825,7 @@ describe('Babel plugin: conditional expressions in getContent children', () => {
             function App() {
               const visible = true;
               return /*#__PURE__*/React.createElement(Pressable, {
-                onPress: () => {
+                onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
                     "options": {
                       "useContent": true,
@@ -1840,9 +1840,9 @@ describe('Babel plugin: conditional expressions in getContent children', () => {
                         })
                       }), []);
                     },
-                    "handlerArgs": [],
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })();else return (() => {})();
+                  })(...args);else return (() => {})?.(...args);
                 }
               }, visible ? /*#__PURE__*/React.createElement(Text, null, "Visible") : /*#__PURE__*/React.createElement(Text, null, "Invisible"));
             }"
@@ -1872,7 +1872,7 @@ describe('Babel plugin: conditional expressions in getContent children', () => {
             function App() {
               const visible = true;
               return /*#__PURE__*/React.createElement(Pressable, {
-                onPress: () => {
+                onPress: (...args) => {
                   if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(() => {}, "TAP", {
                     "options": {
                       "useContent": true,
@@ -1885,9 +1885,9 @@ describe('Babel plugin: conditional expressions in getContent children', () => {
                         })
                       }), []);
                     },
-                    "handlerArgs": [],
+                    "handlerArgs": [...args],
                     "componentName": "Pressable"
-                  })();else return (() => {})();
+                  })(...args);else return (() => {})?.(...args);
                 }
               }, visible && /*#__PURE__*/React.createElement(Text, null, "Hello"));
             }"

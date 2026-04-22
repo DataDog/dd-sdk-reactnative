@@ -73,6 +73,7 @@ it('M intercept and send a RUM event W onPress { Button component }', async () =
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -105,6 +106,7 @@ it('M intercept and send a RUM event with elementType W onPress { Button compone
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'test_element_type',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -136,6 +138,7 @@ it('M intercept and send a RUM event W onPress { custom action name prop used }'
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_test_ID',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -166,6 +169,7 @@ it('M intercept only once W startTracking { called multiple times }', async () =
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -196,6 +200,7 @@ it('M intercept and send a RUM event W onPress { TouchableOpacity component }', 
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -228,6 +233,7 @@ it('M intercept and send a RUM event W onPress { TouchableHighlight component }'
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -260,6 +266,7 @@ it('M intercept and send a RUM event W onPress { TouchableNativeFeedback compone
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );
@@ -292,6 +299,7 @@ it('M intercept and send a RUM event W onPress { TouchableWithoutFeedback compon
     expect(DdRum.addAction).toBeCalledWith(
         'TAP',
         'click_me_button',
+        null,
         expect.anything(),
         expect.anything()
     );

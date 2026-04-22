@@ -95,12 +95,21 @@ export interface SessionReplayConfiguration {
      * Default: `true`.
      */
     startRecordingImmediately?: boolean;
+
+    /**
+     * Enables heatmap identifier computation (preview feature).
+     * When `true`, Session Replay computes a stable identifier for each
+     * view, enabling heatmap visualization for tap actions.
+     * Default: `false`.
+     */
+    enableHeatmaps?: boolean;
 }
 
 type InternalBaseSessionReplayConfiguration = {
     replaySampleRate: number;
     customEndpoint: string;
     startRecordingImmediately: boolean;
+    enableHeatmaps: boolean;
 };
 
 type InternalPrivacySessionReplayConfiguration = {
@@ -118,7 +127,8 @@ const DEFAULTS: InternalSessionReplayConfiguration = {
     imagePrivacyLevel: ImagePrivacyLevel.MASK_ALL,
     touchPrivacyLevel: TouchPrivacyLevel.HIDE,
     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_ALL,
-    startRecordingImmediately: true
+    startRecordingImmediately: true,
+    enableHeatmaps: false
 };
 
 export class SessionReplayWrapper {
@@ -135,7 +145,8 @@ export class SessionReplayWrapper {
         const {
             replaySampleRate,
             customEndpoint,
-            startRecordingImmediately
+            startRecordingImmediately,
+            enableHeatmaps
         } = configuration;
 
         const baseConfig: InternalBaseSessionReplayConfiguration = {
@@ -150,7 +161,11 @@ export class SessionReplayWrapper {
             startRecordingImmediately:
                 startRecordingImmediately !== undefined
                     ? startRecordingImmediately
-                    : DEFAULTS.startRecordingImmediately
+                    : DEFAULTS.startRecordingImmediately,
+            enableHeatmaps:
+                enableHeatmaps !== undefined
+                    ? enableHeatmaps
+                    : DEFAULTS.enableHeatmaps
         };
 
         const privacyConfig: InternalPrivacySessionReplayConfiguration = {
@@ -177,7 +192,8 @@ export class SessionReplayWrapper {
             imagePrivacyLevel,
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
-            startRecordingImmediately
+            startRecordingImmediately,
+            enableHeatmaps
         } = this.buildConfiguration(configuration);
 
         return this.nativeSessionReplay.enable(
@@ -186,7 +202,8 @@ export class SessionReplayWrapper {
             imagePrivacyLevel,
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
-            startRecordingImmediately
+            startRecordingImmediately,
+            enableHeatmaps
         );
     };
 

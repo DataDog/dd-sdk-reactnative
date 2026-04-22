@@ -1,26 +1,26 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.8.2):
-    - DatadogInternal (= 3.8.2)
-  - DatadogCrashReporting (3.8.2):
-    - DatadogInternal (= 3.8.2)
+  - DatadogCore (3.10.0):
+    - DatadogInternal (= 3.10.0)
+  - DatadogCrashReporting (3.10.0):
+    - DatadogInternal (= 3.10.0)
     - KSCrash/Filters (= 2.5.0)
     - KSCrash/Recording (= 2.5.0)
-  - DatadogFlags (3.8.2):
-    - DatadogInternal (= 3.8.2)
-  - DatadogInternal (3.8.2)
-  - DatadogLogs (3.8.2):
-    - DatadogInternal (= 3.8.2)
-  - DatadogRUM (3.8.2):
-    - DatadogInternal (= 3.8.2)
+  - DatadogFlags (3.10.0):
+    - DatadogInternal (= 3.10.0)
+  - DatadogInternal (3.10.0)
+  - DatadogLogs (3.10.0):
+    - DatadogInternal (= 3.10.0)
+  - DatadogRUM (3.10.0):
+    - DatadogInternal (= 3.10.0)
   - DatadogSDKReactNative (3.3.0):
-    - DatadogCore (= 3.8.2)
-    - DatadogCrashReporting (= 3.8.2)
-    - DatadogFlags (= 3.8.2)
-    - DatadogLogs (= 3.8.2)
-    - DatadogRUM (= 3.8.2)
-    - DatadogTrace (= 3.8.2)
-    - DatadogWebViewTracking (= 3.8.2)
+    - DatadogCore (= 3.10.0)
+    - DatadogCrashReporting (= 3.10.0)
+    - DatadogFlags (= 3.10.0)
+    - DatadogLogs (= 3.10.0)
+    - DatadogRUM (= 3.10.0)
+    - DatadogTrace (= 3.10.0)
+    - DatadogWebViewTracking (= 3.10.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -43,7 +43,7 @@ PODS:
     - Yoga
   - DatadogSDKReactNativeSessionReplay (3.3.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 3.8.2)
+    - DatadogSessionReplay (= 3.10.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -65,9 +65,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - DatadogSDKReactNativeWebView (3.3.0):
-    - DatadogInternal (= 3.8.2)
+    - DatadogInternal (= 3.10.0)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 3.8.2)
+    - DatadogWebViewTracking (= 3.10.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -88,13 +88,13 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSessionReplay (3.8.2):
-    - DatadogInternal (= 3.8.2)
-  - DatadogTrace (3.8.2):
-    - DatadogInternal (= 3.8.2)
+  - DatadogSessionReplay (3.10.0):
+    - DatadogInternal (= 3.10.0)
+  - DatadogTrace (3.10.0):
+    - DatadogInternal (= 3.10.0)
     - OpenTelemetry-Swift-Api (~> 2.3.0)
-  - DatadogWebViewTracking (3.8.2):
-    - DatadogInternal (= 3.8.2)
+  - DatadogWebViewTracking (3.10.0):
+    - DatadogInternal (= 3.10.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.78.2)
@@ -2088,18 +2088,18 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  DatadogCore: 4375353a93311e99153ab3bc2fba10fefb295749
-  DatadogCrashReporting: 4eedb27058432691a7e5f1bdcf3f72d8cc7c1a67
-  DatadogFlags: fc732c5fa26259de55e83a13254522b38072d9d1
-  DatadogInternal: a4640f67e249c9b4608e806cf1c8c10b17f66626
-  DatadogLogs: 55e2c1c403e92f952f8ce451854c81f476b04d89
-  DatadogRUM: 738b6b448df9af58ba0455451e628ac81040be04
-  DatadogSDKReactNative: 7aad7c64a0dbc84955e0d93d35194b1f062fbe53
-  DatadogSDKReactNativeSessionReplay: 19a01a7c1a6b33edcca8cd878b61e06e6d63a3fd
-  DatadogSDKReactNativeWebView: bba1f331858ce9cc34621337773b0f0516e78cef
-  DatadogSessionReplay: 4edcb9997acc8c378048932ffe0dd1e6bf2c18ca
-  DatadogTrace: faefc639bc2dd11a8ebbf9cbddf830b68eb62d1d
-  DatadogWebViewTracking: 50afac044e278ac0165c082b6b65dd8327fdefb4
+  DatadogCore: be0f6c233bef27eda40acade29763943cb88935f
+  DatadogCrashReporting: 151f72523ee117000fed4b5e792de2349d38b331
+  DatadogFlags: fbc1d17d2b83397c4f33817263a14b84a857ca1d
+  DatadogInternal: b81d08e4035de78140488b7422c239b17b89d251
+  DatadogLogs: 20381f731050c500c85d36f4799cf0f28a56915e
+  DatadogRUM: 4f863c5330d85d6b54bb372d830929ad3b5006ab
+  DatadogSDKReactNative: 2d03d9524f43e93a40a466b53982bd303b045e1a
+  DatadogSDKReactNativeSessionReplay: 9225e86628c76a06d11c80200e06f10738018e59
+  DatadogSDKReactNativeWebView: 25996d34b0b283c37d98e2e079e00b925d09edd1
+  DatadogSessionReplay: aef317ccd62a089691899bc7153177deec3c66d6
+  DatadogTrace: c51a2bde28197cb1bab50031c83a82e3a1dbcf30
+  DatadogWebViewTracking: 7775faa20f2044f2948c2eb246889ba5ceefbd6a
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: e32d34492c519a2194ec9d7f5e7a79d11b73f91c
@@ -2109,7 +2109,7 @@ SPEC CHECKSUMS:
   KSCrash: 80e1e24eaefbe5134934ae11ca8d7746586bc2ed
   OpenTelemetry-Swift-Api: 3d77582ab6837a63b65bf7d2eacc57d8f2595edd
   OpenTelemetry-Swift-Sdk: 69d60f0242e830366e359481edd575d6776eb983
-  RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
+  RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
   RCTDeprecation: be794de7dc6ed8f9f7fbf525f86e7651b8b68746
   RCTRequired: a83787b092ec554c2eb6019ff3f5b8d125472b3b
   RCTTypeSafety: 48ad3c858926b1c46f46a81a58822b476e178e2c

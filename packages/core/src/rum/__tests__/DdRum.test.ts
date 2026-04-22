@@ -6,6 +6,7 @@
  */
 
 import { NativeModules } from 'react-native';
+import type { GestureResponderEvent } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types';
@@ -1285,6 +1286,7 @@ describe('DdRum', () => {
                 expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                     expect.anything(),
                     expect.anything(),
+                    null,
                     context,
                     expect.anything()
                 );
@@ -1303,6 +1305,7 @@ describe('DdRum', () => {
                 expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                     expect.anything(),
                     expect.anything(),
+                    null,
                     {},
                     expect.anything()
                 );
@@ -1321,6 +1324,7 @@ describe('DdRum', () => {
                 expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                     expect.anything(),
                     expect.anything(),
+                    null,
                     { context },
                     expect.anything()
                 );
@@ -1704,6 +1708,32 @@ describe('DdRum', () => {
     });
 
     describe('DdRum.addAction', () => {
+        it('passes touch data from GestureResponderEvent to native module', async () => {
+            const event = ({
+                nativeEvent: {
+                    target: 42,
+                    locationX: 10,
+                    locationY: 20
+                }
+            } as unknown) as GestureResponderEvent;
+
+            await DdRum.addAction(
+                RumActionType.TAP,
+                'tap button',
+                {},
+                undefined,
+                event
+            );
+
+            expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
+                'TAP',
+                'tap button',
+                { reactTag: 42, x: 10, y: 20 },
+                {},
+                expect.anything()
+            );
+        });
+
         it('registers event mapper and maps action', async () => {
             const actionEventMapper: ActionEventMapper = action => {
                 action.context = { frustration: true };
@@ -1720,6 +1750,7 @@ describe('DdRum', () => {
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                 'CUSTOM',
                 'Click on button',
+                null,
                 {
                     frustration: true
                 },

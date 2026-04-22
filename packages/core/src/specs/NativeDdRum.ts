@@ -68,12 +68,14 @@ export interface Spec extends TurboModule {
      * Add a RUM Action.
      * @param type: The action type (tap, scroll, swipe, back, custom).
      * @param name: The action name.
+     * @param touch: The native touch data for tap actions, or null for other action types.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
     addAction(
         type: string,
         name: string,
+        touch: Object | null,
         context: Object,
         timestampMs: number
     ): Promise<void>;

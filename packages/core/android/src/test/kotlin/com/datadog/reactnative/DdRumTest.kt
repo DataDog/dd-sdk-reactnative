@@ -137,6 +137,7 @@ internal class DdRumTest {
         testedDdRum.addAction(
             type.name,
             name,
+            null,
             fakeContext.toReadableMap(),
             fakeTimestamp,
             mockPromise
@@ -157,7 +158,14 @@ internal class DdRumTest {
         }
 
         // When
-        testedDdRum.addAction(type, name, fakeContext.toReadableMap(), fakeTimestamp, mockPromise)
+        testedDdRum.addAction(
+            type,
+            name,
+            null,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
 
         // Then
         verify(mockRumMonitor).addAction(RumActionType.CUSTOM, name, updatedContext)

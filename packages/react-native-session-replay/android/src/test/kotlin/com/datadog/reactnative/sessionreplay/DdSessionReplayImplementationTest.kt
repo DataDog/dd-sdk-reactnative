@@ -131,6 +131,7 @@ internal class DdSessionReplayImplementationTest {
             customEndpoint,
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
+            false,
             mockPromise
         )
 
@@ -165,6 +166,7 @@ internal class DdSessionReplayImplementationTest {
                 textAndInputPrivacyLevel = textAndInputPrivacy
             ),
             startRecordingImmediately,
+            false,
             mockPromise
         )
 

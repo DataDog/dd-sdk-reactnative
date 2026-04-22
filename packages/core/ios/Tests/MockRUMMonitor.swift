@@ -82,6 +82,7 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
                                 requestBodySize: BodySize?)
         case addLongTasks(time: Date, duration: TimeInterval)
         case updatePerformanceMetric(time: Date, metric: DatadogRUM.PerformanceMetric, value: Double)
+        case addAction(time: Date, type: RUMActionType, name: String, heatmapAttributes: HeatmapAttributes?)
     }
 
     public var calledMethods = [CalledMethod]()
@@ -215,6 +216,24 @@ public struct MockRUMMonitorInternal: RUMMonitorInternalProtocol {
                 download: MockRUMMonitor.Interval(start: download?.start, end: download?.end),
                 responseBodySize: responseBodySize.map { MockRUMMonitor.BodySize(encoded: $0.encoded, decoded: $0.decoded) },
                 requestBodySize: requestBodySize.map { MockRUMMonitor.BodySize(encoded: $0.encoded, decoded: $0.decoded) }
+            )
+        )
+        monitor.receivedAttributes.append(attributes)
+    }
+    
+    public func addAction(
+        at time: Date,
+        type: RUMActionType,
+        name: String,
+        heatmapAttributes: HeatmapAttributes?,
+        attributes: [AttributeKey : any AttributeValue]
+    ) {
+        monitor.calledMethods.append(
+            .addAction(
+                time: time,
+                type: type,
+                name: name,
+                heatmapAttributes: heatmapAttributes
             )
         )
         monitor.receivedAttributes.append(attributes)

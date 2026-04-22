@@ -60,7 +60,7 @@ export function handleTapAction(
         : { fName: null, fNode: null };
 
     const handlerArgs =
-        isArrowFunc && expression?.params
+        isArrowFunc && expression?.params && expression.params.length > 0
             ? t.arrayExpression(
                   getArgumentsFromParams(t, state, expression.params).callArgs
               )
@@ -108,7 +108,9 @@ export function handleTapAction(
     if (handler && handler?.mode === 'delayed') {
         returnExpression = expression;
     } else {
-        returnExpression = isArrowFunc
+        const isArrowFuncWithParams =
+            isArrowFunc && expression.params.length > 0;
+        returnExpression = isArrowFuncWithParams
             ? t.callExpression(
                   expression,
                   getArgumentsFromParams(t, state, expression.params).callArgs
@@ -460,7 +462,10 @@ function getActionWrapperFunction(
     argsObject: Babel.types.ObjectExpression,
     mode?: string
 ) {
-    const params = expressionParams || [t.restElement(t.identifier('args'))];
+    const params =
+        expressionParams && expressionParams.length > 0
+            ? expressionParams
+            : [t.restElement(t.identifier('args'))];
 
     const {
         wrapperParams,
