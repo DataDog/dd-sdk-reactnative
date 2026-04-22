@@ -95,6 +95,7 @@ public class DdRumImplementation: NSObject {
     lazy var heatmapIdentifierRegistry: HeatmapIdentifierRegistry? = heatmapIdentifierRegistryProvider()
     private let mainDispatchQueue: DispatchQueueType
     private let uiManager: RCTUIManager
+    private let rootViewProvider: () -> UIView?
     private let heatmapIdentifierRegistryProvider: () -> HeatmapIdentifierRegistry?
     private let rumProvider: () -> RUMMonitorProtocol
     private let rumInternalProvider: () -> RUMMonitorInternalProtocol?
@@ -104,12 +105,14 @@ public class DdRumImplementation: NSObject {
     internal init(
         mainDispatchQueue: DispatchQueueType,
         uiManager: RCTUIManager,
+        rootViewProvider: @escaping () -> UIView?,
         heatmapIdentifierRegistryProvider: @escaping () -> HeatmapIdentifierRegistry?,
         rumProvider: @escaping () -> RUMMonitorProtocol,
         rumInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
     ) {
         self.mainDispatchQueue = mainDispatchQueue
         self.uiManager = uiManager
+        self.rootViewProvider = rootViewProvider
         self.heatmapIdentifierRegistryProvider = heatmapIdentifierRegistryProvider
         self.rumProvider = rumProvider
         self.rumInternalProvider = rumInternalProvider
@@ -120,6 +123,7 @@ public class DdRumImplementation: NSObject {
         self.init(
             mainDispatchQueue: DispatchQueue.main,
             uiManager: bridge.uiManager,
+            rootViewProvider: { UIWindow.reactRootView() },
             heatmapIdentifierRegistryProvider: { CoreRegistry.default.heatmapIdentifierRegistry },
             rumProvider: { RUMMonitor.shared() },
             rumInternalProvider: { RUMMonitor.shared()._internal }
@@ -156,7 +160,9 @@ public class DdRumImplementation: NSObject {
             let touch,
             let reactTag = touch["reactTag"] as? NSNumber,
             let x = touch["x"] as? NSNumber,
-            let y = touch["y"] as? NSNumber
+            let y = touch["y"] as? NSNumber,
+            let pageX = touch["pageX"] as? NSNumber,
+            let pageY = touch["pageY"] as? NSNumber
         {
             addAction(
                 at: Date(timeIntervalSince1970: timestampMs / 1_000),
@@ -164,6 +170,7 @@ public class DdRumImplementation: NSObject {
                 name: name,
                 reactTag: reactTag,
                 location: .init(x: CGFloat(truncating: x), y: CGFloat(truncating: y)),
+                pageLocation: .init(x: CGFloat(truncating: pageX), y: CGFloat(truncating: pageY)),
                 attributes: castAttributesToSwift(context)
             )
         } else {
@@ -362,10 +369,19 @@ public class DdRumImplementation: NSObject {
         name: String,
         reactTag: NSNumber,
         location: CGPoint,
+        pageLocation: CGPoint,
         attributes: [AttributeKey: AttributeValue]
     ) {
-        mainDispatchQueue.async { [uiManager, heatmapIdentifierRegistry, rumInternal] in
-            let heatmapAttributes: HeatmapAttributes? = uiManager.view(forReactTag: reactTag).flatMap { view in
+        mainDispatchQueue.async { [uiManager, rootViewProvider, heatmapIdentifierRegistry, rumInternal] in
+            var location = location
+            let view = uiManager.view(
+                forReactTag: reactTag,
+                location: &location,
+                pageLocation: pageLocation,
+                rootViewProvider: rootViewProvider
+            )
+
+            let heatmapAttributes: HeatmapAttributes? = view.flatMap { view in
                 guard let identifier = heatmapIdentifierRegistry?.heatmapIdentifier(for: ObjectIdentifier(view)) else {
                     return nil
                 }

@@ -1713,7 +1713,9 @@ describe('DdRum', () => {
                 nativeEvent: {
                     target: 42,
                     locationX: 10,
-                    locationY: 20
+                    locationY: 20,
+                    pageX: 100,
+                    pageY: 200
                 }
             } as unknown) as GestureResponderEvent;
 
@@ -1728,7 +1730,7 @@ describe('DdRum', () => {
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                 'TAP',
                 'tap button',
-                { reactTag: 42, x: 10, y: 20 },
+                { reactTag: 42, x: 10, y: 20, pageX: 100, pageY: 200 },
                 {},
                 expect.anything()
             );
