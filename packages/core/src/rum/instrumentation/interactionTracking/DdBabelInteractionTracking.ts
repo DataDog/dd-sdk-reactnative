@@ -142,7 +142,8 @@ class BabelInteractionTracking {
                         action,
                         targetName,
                         { '__dd.action_source': ActionSource.BABEL },
-                        this.timeProvider.now()
+                        this.timeProvider.now(),
+                        args[0]
                     )
                     .catch(e => {
                         if (e instanceof Error) {

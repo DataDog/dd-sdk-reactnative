@@ -8,6 +8,7 @@ import Foundation
 @_spi(Experimental)
 import DatadogRUM
 import DatadogInternal
+import React
 
 private extension RUMActionType {
     init(from string: String) {
@@ -91,24 +92,37 @@ public class DdRumImplementation: NSObject {
 
     lazy var nativeRUM: RUMMonitorProtocol = rumProvider()
     lazy var rumInternal: RUMMonitorInternalProtocol? = rumInternalProvider()
+    lazy var heatmapIdentifierRegistry: HeatmapIdentifierRegistry? = heatmapIdentifierRegistryProvider()
+    private let mainDispatchQueue: DispatchQueueType
+    private let uiManager: RCTUIManager
+    private let heatmapIdentifierRegistryProvider: () -> HeatmapIdentifierRegistry?
     private let rumProvider: () -> RUMMonitorProtocol
     private let rumInternalProvider: () -> RUMMonitorInternalProtocol?
 
     private typealias UserAction = (type: RUMActionType, name: String?)
 
     internal init(
-        _ rumProvider: @escaping () -> RUMMonitorProtocol,
-        _ rumInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
+        mainDispatchQueue: DispatchQueueType,
+        uiManager: RCTUIManager,
+        heatmapIdentifierRegistryProvider: @escaping () -> HeatmapIdentifierRegistry?,
+        rumProvider: @escaping () -> RUMMonitorProtocol,
+        rumInternalProvider: @escaping () -> RUMMonitorInternalProtocol?
     ) {
+        self.mainDispatchQueue = mainDispatchQueue
+        self.uiManager = uiManager
+        self.heatmapIdentifierRegistryProvider = heatmapIdentifierRegistryProvider
         self.rumProvider = rumProvider
         self.rumInternalProvider = rumInternalProvider
     }
 
     @objc
-    public override convenience init() {
+    public convenience init(bridge: RCTBridge) {
         self.init(
-            { RUMMonitor.shared() },
-            { RUMMonitor.shared()._internal }
+            mainDispatchQueue: DispatchQueue.main,
+            uiManager: bridge.uiManager,
+            heatmapIdentifierRegistryProvider: { CoreRegistry.default.heatmapIdentifierRegistry },
+            rumProvider: { RUMMonitor.shared() },
+            rumInternalProvider: { RUMMonitor.shared()._internal }
         )
     }
 
@@ -137,8 +151,24 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func addAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        nativeRUM.addAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
+    public func addAction(type: String, name: String, touch: NSDictionary?, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if
+            let touch,
+            let reactTag = touch["reactTag"] as? NSNumber,
+            let x = touch["x"] as? NSNumber,
+            let y = touch["y"] as? NSNumber
+        {
+            addAction(
+                at: Date(timeIntervalSince1970: timestampMs / 1_000),
+                type: RUMActionType(from: type),
+                name: name,
+                reactTag: reactTag,
+                location: .init(x: CGFloat(truncating: x), y: CGFloat(truncating: y)),
+                attributes: castAttributesToSwift(context)
+            )
+        } else {
+            nativeRUM.addAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
+        }
         resolve(nil)
     }
 
@@ -322,6 +352,35 @@ public class DdRumImplementation: NSObject {
                 responseBodySize: nil,
                 requestBodySize: nil,
                 attributes: [:]
+            )
+        }
+    }
+
+    private func addAction(
+        at time: Date,
+        type: RUMActionType,
+        name: String,
+        reactTag: NSNumber,
+        location: CGPoint,
+        attributes: [AttributeKey: AttributeValue]
+    ) {
+        mainDispatchQueue.async { [uiManager, heatmapIdentifierRegistry, rumInternal] in
+            let heatmapAttributes: HeatmapAttributes? = uiManager.view(forReactTag: reactTag).flatMap { view in
+                guard let identifier = heatmapIdentifierRegistry?.heatmapIdentifier(for: ObjectIdentifier(view)) else {
+                    return nil
+                }
+                return HeatmapAttributes(
+                    identifier: identifier,
+                    size: view.bounds.size,
+                    location: location
+                )
+            }
+            rumInternal?.addAction(
+                at: time,
+                type: type,
+                name: name,
+                heatmapAttributes: heatmapAttributes,
+                attributes: attributes
             )
         }
     }

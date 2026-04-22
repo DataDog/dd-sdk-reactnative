@@ -36,7 +36,8 @@ describe('SessionReplay', () => {
                 'MASK_ALL',
                 'HIDE',
                 'MASK_ALL',
-                true
+                true,
+                false
             );
         });
 
@@ -52,7 +53,8 @@ describe('SessionReplay', () => {
                 'MASK_ALL',
                 'HIDE',
                 'MASK_ALL',
-                true
+                true,
+                false
             );
         });
 
@@ -80,7 +82,8 @@ describe('SessionReplay', () => {
                     image,
                     touch,
                     textAndInput,
-                    true
+                    true,
+                    false
                 );
             }
         });
@@ -97,7 +100,8 @@ describe('SessionReplay', () => {
                 'MASK_ALL',
                 'HIDE',
                 'MASK_ALL',
-                true
+                true,
+                false
             );
         });
     });

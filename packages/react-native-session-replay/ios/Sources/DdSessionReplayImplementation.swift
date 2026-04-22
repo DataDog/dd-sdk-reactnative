@@ -50,6 +50,7 @@ public class DdSessionReplayImplementation: NSObject {
         touchPrivacyLevel: NSString,
         textAndInputPrivacyLevel: NSString,
         startRecordingImmediately: Bool,
+        enableHeatmaps: Bool,
         resolve:RCTPromiseResolveBlock,
         reject:RCTPromiseRejectBlock
     ) -> Void {
@@ -66,7 +67,11 @@ public class DdSessionReplayImplementation: NSObject {
             startRecordingImmediately: startRecordingImmediately,
             customEndpoint: customEndpointURL
         )
-        
+
+        if enableHeatmaps {
+            sessionReplayConfiguration.featureFlags[.heatmaps] = true
+        }
+
         var svgMap: [String: SVGData] = [:]
         
         if let bundle = Bundle.ddSessionReplayResources,

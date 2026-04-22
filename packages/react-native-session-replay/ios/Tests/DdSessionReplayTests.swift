@@ -70,6 +70,7 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: NSString(string: touchPrivacyLevel),
             textAndInputPrivacyLevel: NSString(string: textAndInputPrivacyLevel),
             startRecordingImmediately: true,
+            enableHeatmaps: false,
             resolve: mockResolve,
             reject: mockReject)
 
@@ -79,10 +80,11 @@ internal class DdSessionReplayTests: XCTestCase {
             imagePrivacyLevel: imagePrivacy,
             touchPrivacyLevel: touchPrivacy,
             textAndInputPrivacyLevel: textAndInputPrivacy,
-            startRecordingImmediately: true
+            startRecordingImmediately: true,
+            enableHeatmaps: false
         ))
     }
-    
+
     func testEnablesSessionReplayWithBadPrivacyLevels() {
         let sessionReplayMock = MockSessionReplay()
         let uiManagerMock = MockUIManager()
@@ -99,19 +101,21 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: "BAD_VALUE",
             textAndInputPrivacyLevel: "BAD_VALUE",
             startRecordingImmediately: true,
+            enableHeatmaps: false,
             resolve: mockResolve,
             reject: mockReject)
-        
+
         XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(
             replaySampleRate: 100.0,
             customEndpoint: nil,
             imagePrivacyLevel: .maskAll,
             touchPrivacyLevel: .hide,
             textAndInputPrivacyLevel: .maskAll,
-            startRecordingImmediately: true
+            startRecordingImmediately: true,
+            enableHeatmaps: false
         ))
     }
-    
+
     func testEnablesSessionReplayWithCustomEndpoint() {
         let sessionReplayMock = MockSessionReplay()
         let uiManagerMock = MockUIManager()
@@ -140,16 +144,18 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: NSString(string: touchPrivacyLevel),
             textAndInputPrivacyLevel: NSString(string: textAndInputPrivacyLevel),
             startRecordingImmediately: true,
+            enableHeatmaps: false,
             resolve: mockResolve,
             reject: mockReject)
-        
+
         XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(
             replaySampleRate: 100.0,
             customEndpoint: URL(string: "https://session-replay.example.com/api/v2/replay"),
             imagePrivacyLevel: imagePrivacy,
             touchPrivacyLevel: touchPrivacy,
             textAndInputPrivacyLevel: textAndInputPrivacy,
-            startRecordingImmediately: true
+            startRecordingImmediately: true,
+            enableHeatmaps: false
         ))
     }
 }
@@ -162,7 +168,8 @@ private class MockSessionReplay: SessionReplayProtocol {
             imagePrivacyLevel: ImagePrivacyLevel,
             touchPrivacyLevel: TouchPrivacyLevel,
             textAndInputPrivacyLevel: TextAndInputPrivacyLevel,
-            startRecordingImmediately: Bool
+            startRecordingImmediately: Bool,
+            enableHeatmaps: Bool
         )
         case startRecording
         case stopRecording
@@ -178,7 +185,8 @@ private class MockSessionReplay: SessionReplayProtocol {
                 imagePrivacyLevel: configuration.imagePrivacyLevel,
                 touchPrivacyLevel: configuration.touchPrivacyLevel,
                 textAndInputPrivacyLevel: configuration.textAndInputPrivacyLevel,
-                startRecordingImmediately: configuration.startRecordingImmediately
+                startRecordingImmediately: configuration.startRecordingImmediately,
+                enableHeatmaps: configuration.featureFlags[.heatmaps] ?? false
             )
         )
     }

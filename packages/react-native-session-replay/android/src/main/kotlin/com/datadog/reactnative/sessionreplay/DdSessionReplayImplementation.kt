@@ -31,13 +31,17 @@ class DdSessionReplayImplementation(
      * @param privacySettings Defines the way visual elements should be masked.
      * @param customEndpoint Custom server url for sending replay data.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
+     * @param enableHeatmaps Enables heatmap identifier computation.
+     * Currently unused on Android; reserved for heatmap support.
      */
     @SuppressLint("VisibleForTests")
+    @Suppress("LongParameterList", "UnusedParameter")
     fun enable(
         replaySampleRate: Double,
         customEndpoint: String,
         privacySettings: SessionReplayPrivacySettings,
         startRecordingImmediately: Boolean,
+        enableHeatmaps: Boolean,
         promise: Promise
     ) {
         val sdkCore = Datadog.getInstance() as FeatureSdkCore

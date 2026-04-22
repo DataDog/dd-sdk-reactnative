@@ -97,18 +97,22 @@ class DdRum(
      * Add a RUM Action.
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
+     * @param touch The native touch data for tap actions, or null for other action types.
+     * Currently unused on Android; reserved for heatmap support.
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
     fun addAction(
         type: String,
         name: String,
+        touch: ReadableMap?,
         context: ReadableMap,
         timestampMs: Double,
         promise: Promise
     ) {
-        implementation.addAction(type, name, context, timestampMs, promise)
+        implementation.addAction(type, name, touch, context, timestampMs, promise)
     }
 
     /**

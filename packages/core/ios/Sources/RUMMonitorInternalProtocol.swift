@@ -42,6 +42,14 @@ public protocol RUMMonitorInternalProtocol {
         requestBodySize: (encoded: Int64, decoded: Int64)?,
         attributes: [AttributeKey: AttributeValue]
     )
+
+    func addAction(
+        at time: Date,
+        type: RUMActionType,
+        name: String,
+        heatmapAttributes: HeatmapAttributes?,
+        attributes: [AttributeKey: AttributeValue]
+    )
 }
 
 extension DatadogInternalInterface: RUMMonitorInternalProtocol {}

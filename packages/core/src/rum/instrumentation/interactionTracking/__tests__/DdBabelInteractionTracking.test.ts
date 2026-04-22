@@ -66,4 +66,32 @@ describe('DdBabelInteractionTracking.wrapRumAction', () => {
         expect(func).toHaveBeenCalledWith('arg1', 'arg2');
         expect(result).toBe('result');
     });
+
+    it('should forward the first handler argument as actionContext to DdRum.addAction', () => {
+        const mockAddAction = jest.fn().mockResolvedValue(undefined);
+        DdBabelInteractionTracking.config = { trackInteractions: true };
+        DdBabelInteractionTracking.attachRumInstance({
+            addAction: mockAddAction
+        } as any);
+
+        const func = jest.fn();
+        const wrapped = DdBabelInteractionTracking.wrapRumAction(
+            func,
+            RumActionType.TAP,
+            mockTargetObject
+        );
+
+        const event = {
+            nativeEvent: { target: 42, locationX: 10, locationY: 20 }
+        };
+        wrapped(event);
+
+        expect(mockAddAction).toHaveBeenCalledWith(
+            RumActionType.TAP,
+            expect.any(String),
+            expect.anything(),
+            expect.any(Number),
+            event
+        );
+    });
 });

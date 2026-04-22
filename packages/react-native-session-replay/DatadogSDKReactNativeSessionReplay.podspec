@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
 
   # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogSessionReplay', '3.8.2'
+  s.dependency 'DatadogSessionReplay', '3.10.0'
   s.dependency 'DatadogSDKReactNative'
 
   s.test_spec 'Tests' do |test_spec|

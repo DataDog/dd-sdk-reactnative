@@ -885,6 +885,7 @@ describe('DdSdkReactNative', () => {
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledWith(
                 'CUSTOM',
                 'Click on button',
+                null,
                 {
                     body: 'content'
                 },

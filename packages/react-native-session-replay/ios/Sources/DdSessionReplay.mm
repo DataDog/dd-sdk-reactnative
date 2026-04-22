@@ -23,6 +23,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
                  withTouchPrivacyLevel:(NSString*)touchPrivacyLevel
                  withTextAndInputPrivacyLevel:(NSString*)textAndInputPrivacyLevel
                  withStartRecordingImmediately:(BOOL)startRecordingImmediately
+                 withEnableHeatmaps:(BOOL)enableHeatmaps
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -32,6 +33,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
           touchPrivacyLevel:touchPrivacyLevel
           textAndInputPrivacyLevel:textAndInputPrivacyLevel
           startRecordingImmediately:startRecordingImmediately
+          enableHeatmaps:enableHeatmaps
           resolve:resolve
           reject:reject];
 }
@@ -73,6 +75,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
         touchPrivacyLevel:(NSString *)touchPrivacyLevel
         textAndInputPrivacyLevel:(NSString *)textAndInputPrivacyLevel
         startRecordingImmediately:(BOOL)startRecordingImmediately
+        enableHeatmaps:(BOOL)enableHeatmaps
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject {
     [self.ddSessionReplayImplementation enableWithReplaySampleRate:replaySampleRate
@@ -81,6 +84,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
                                                  touchPrivacyLevel:touchPrivacyLevel
                                           textAndInputPrivacyLevel:textAndInputPrivacyLevel
                                          startRecordingImmediately:startRecordingImmediately
+                                                    enableHeatmaps:enableHeatmaps
                                                            resolve:resolve
                                                             reject:reject];
 }

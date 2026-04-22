@@ -52,6 +52,26 @@ const RUM_MODULE = 'com.datadog.reactnative.rum';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
+type TouchData = {
+    reactTag: number;
+    x: number;
+    y: number;
+};
+
+const touchDataFromEvent = (
+    event?: GestureResponderEvent
+): TouchData | null => {
+    const nativeEvent = event?.nativeEvent;
+    if (!nativeEvent) {
+        return null;
+    }
+    return {
+        reactTag: Number(nativeEvent.target),
+        x: nativeEvent.locationX,
+        y: nativeEvent.locationY
+    };
+};
+
 class DdRumWrapper implements DdRumType {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
@@ -215,6 +235,7 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.addAction(
                 mappedEvent.type,
                 mappedEvent.name,
+                touchDataFromEvent(mappedEvent.actionContext),
                 encodeAttributes(mappedEvent.context),
                 mappedEvent.timestampMs
             )

@@ -29,7 +29,10 @@ class DdSessionReplay(
      * @param touchPrivacyLevel Defines the way user touches should be masked.
      * @param textAndInputPrivacyLevel Defines the way text and input should be masked.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
+     * @param enableHeatmaps Enables heatmap identifier computation.
+     * Currently unused on Android; reserved for heatmap support.
      */
+    @Suppress("LongParameterList")
     @ReactMethod
     override fun enable(
         replaySampleRate: Double,
@@ -38,6 +41,7 @@ class DdSessionReplay(
         touchPrivacyLevel: String,
         textAndInputPrivacyLevel: String,
         startRecordingImmediately: Boolean,
+        enableHeatmaps: Boolean,
         promise: Promise
     ) {
         implementation.enable(
@@ -49,6 +53,7 @@ class DdSessionReplay(
                 textAndInputPrivacyLevel = textAndInputPrivacyLevel
             ),
             startRecordingImmediately,
+            enableHeatmaps,
             promise
         )
     }

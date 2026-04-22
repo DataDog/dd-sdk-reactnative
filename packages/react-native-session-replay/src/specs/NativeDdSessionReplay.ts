@@ -31,7 +31,8 @@ export interface Spec extends TurboModule {
         imagePrivacyLevel: string,
         touchPrivacyLevel: string,
         textAndInputPrivacyLevel: string,
-        startRecordingImmediately: boolean
+        startRecordingImmediately: boolean,
+        enableHeatmaps: boolean
     ): Promise<void>;
 
     /**

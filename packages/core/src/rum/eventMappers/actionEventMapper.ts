@@ -25,6 +25,7 @@ type NativeAction = {
     name: string;
     context: object;
     timestampMs: number;
+    actionContext?: GestureResponderEvent;
 };
 
 export type ActionEventMapper = (event: ActionEvent) => ActionEvent | null;

@@ -14,6 +14,7 @@
 
 @implementation DdRum
 
+@synthesize bridge = _bridge;
 RCT_EXPORT_MODULE()
 
 RCT_REMAP_METHOD(startView, withKey:(NSString*)key
@@ -57,12 +58,13 @@ RCT_REMAP_METHOD(stopAction, stopWithType:(NSString*)type
 
 RCT_REMAP_METHOD(addAction, addWithType:(NSString*)type
                  withName:(NSString*)name
+                 withTouch:(nullable NSDictionary*)touch
                  withContext:(NSDictionary*)context
                  withTimestampms:(double)timestampMs
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self addAction:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
+    [self addAction:type name:name touch:touch context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
 RCT_REMAP_METHOD(startResource, withKey:(NSString*)key
@@ -207,7 +209,7 @@ RCT_REMAP_METHOD(failFeatureOperation,
 - (DdRumImplementation*)ddRumImplementation
 {
     if (_ddRumImplementation == nil) {
-        _ddRumImplementation = [[DdRumImplementation alloc] init];
+        _ddRumImplementation = [[DdRumImplementation alloc] initWithBridge:_bridge];
     }
     return _ddRumImplementation;
 }
@@ -220,8 +222,8 @@ RCT_REMAP_METHOD(failFeatureOperation,
     return [RNQueue getSharedQueue];
 }
 
-- (void)addAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-    [self.ddRumImplementation addActionWithType:type name:name context:context timestampMs:timestampMs resolve:resolve reject:reject];
+- (void)addAction:(NSString *)type name:(NSString *)name touch:(nullable NSDictionary *)touch context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation addActionWithType:type name:name touch:touch context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
 - (void)addError:(NSString *)message source:(NSString *)source stacktrace:(NSString *)stacktrace context:(NSDictionary *)context timestampMs:(double)timestampMs fingerprint:(NSString *)fingerprint resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

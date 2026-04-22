@@ -39,7 +39,8 @@ export interface NativeSessionReplayType extends NativeDdSessionReplay {
         imagePrivacyLevel: ImagePrivacyLevel,
         touchPrivacyLevel: TouchPrivacyLevel,
         textAndInputPrivacyLevel: TextAndInputPrivacyLevel,
-        startRecordingImmediately: boolean
+        startRecordingImmediately: boolean,
+        enableHeatmaps: boolean
     ): Promise<void>;
 
     /**

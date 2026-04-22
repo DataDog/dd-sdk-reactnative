@@ -9,9 +9,12 @@ import XCTest
 @testable import DatadogRUM
 @testable import DatadogSDKReactNative
 @testable import DatadogInternal
+import React
 
 internal class DdRumTests: XCTestCase {
     private let mockNativeRUM = MockRUMMonitor()
+    private let mockUIManager = MockUIManager()
+    private let mockHeatmapIdentifierRegistry = MockHeatmapIdentifierRegistry()
     private var rum: DdRumImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
     
     private func mockResolve(args: Any?) {}
@@ -21,17 +24,29 @@ internal class DdRumTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        rum = DdRumImplementation({ self.mockNativeRUM }, { self.mockNativeRUM._internalMock })
+        rum = DdRumImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            uiManager: self.mockUIManager,
+            heatmapIdentifierRegistryProvider: { self.mockHeatmapIdentifierRegistry },
+            rumProvider: { self.mockNativeRUM },
+            rumInternalProvider: { self.mockNativeRUM._internalMock }
+        )
     }
 
     func testItInitializesNativeRumOnlyOnce() {
         // Given
         let expectation = self.expectation(description: "Initialize RUM once")
 
-        let rum = DdRumImplementation({ [unowned self] in
-            expectation.fulfill()
-            return self.mockNativeRUM
-        }, { nil })
+        let rum = DdRumImplementation(
+            mainDispatchQueue: DispatchQueueMock(),
+            uiManager: MockUIManager(),
+            heatmapIdentifierRegistryProvider: { nil },
+            rumProvider: { [unowned self] in
+                expectation.fulfill()
+                return self.mockNativeRUM
+            },
+            rumInternalProvider: { nil }
+        )
 
         // When
         (0..<10).forEach { _ in rum.addTiming(name: "foo", resolve: mockResolve, reject: mockReject) }
@@ -103,7 +118,7 @@ internal class DdRumTests: XCTestCase {
     }
 
     func testAddAction() throws {
-        rum.addAction(type: "scroll", name: "action name", context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
+        rum.addAction(type: "scroll", name: "action name", touch: nil, context: ["foo": 123], timestampMs: randomTimestamp, resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
         XCTAssertEqual(mockNativeRUM.calledMethods.last, .addUserAction(type: .scroll, name: "action name"))
@@ -112,6 +127,78 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(lastAttributes.count, 2)
         XCTAssertEqual(lastAttributes["foo"] as? Int64, 123)
         XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? Int64, Int64(randomTimestamp))
+    }
+
+    func testAddActionWithTouch() throws {
+        // Given
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
+        let reactTag = NSNumber(value: 42)
+        let identifier = HeatmapIdentifier(rawValue: "abc123")
+
+        mockUIManager.views[reactTag] = view
+        mockHeatmapIdentifierRegistry.identifiers[ObjectIdentifier(view)] = identifier
+
+        let touch: NSDictionary = [
+            "reactTag": 42,
+            "x": 10.0,
+            "y": 20.0
+        ]
+
+        // When
+        rum.addAction(
+            type: "tap",
+            name: "tap action",
+            touch: touch,
+            context: [:],
+            timestampMs: randomTimestamp,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        // Then
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(
+            mockNativeRUM.calledMethods.last,
+            .addAction(
+                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
+                type: .tap,
+                name: "tap action",
+                heatmapAttributes: HeatmapAttributes(
+                    identifier: identifier,
+                    size: CGSize(width: 200, height: 50),
+                    location: CGPoint(x: 10, y: 20)
+                )
+            )
+        )
+    }
+
+    func testAddActionWithTouchAndUnknownReactTag() throws {
+        let touch: NSDictionary = [
+            "reactTag": 999,
+            "x": 10.0,
+            "y": 20.0
+        ]
+        
+        rum.addAction(
+            type: "tap",
+            name: "tap action",
+            touch: touch,
+            context: [:],
+            timestampMs: randomTimestamp,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+        
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(
+            mockNativeRUM.calledMethods.last,
+            .addAction(
+                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
+                type: .tap,
+                name: "tap action",
+                heatmapAttributes: nil
+            )
+        )
     }
 
     func testStartResource() throws {
@@ -346,5 +433,26 @@ internal class DdRumTests: XCTestCase {
 
     private func nanoTimeToDate(timestampNs: Int64) -> Date {
         return Date(timeIntervalSince1970: TimeInterval(fromNs: timestampNs))
+    }
+}
+
+private class MockUIManager: RCTUIManager {
+    var views: [NSNumber: UIView] = [:]
+
+    override func view(forReactTag reactTag: NSNumber!) -> UIView? {
+        views[reactTag]
+    }
+}
+
+private final class MockHeatmapIdentifierRegistry: @unchecked Sendable, HeatmapIdentifierRegistry {
+    @ReadWriteLock
+    var identifiers: [ObjectIdentifier: HeatmapIdentifier] = [:]
+
+    func setHeatmapIdentifiers(_ heatmapIdentifiers: [ObjectIdentifier: HeatmapIdentifier]) {
+        identifiers = heatmapIdentifiers
+    }
+
+    func heatmapIdentifier(for objectIdentifier: ObjectIdentifier) -> HeatmapIdentifier? {
+        identifiers[objectIdentifier]
     }
 }
