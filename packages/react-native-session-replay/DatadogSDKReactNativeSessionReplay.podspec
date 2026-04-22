@@ -1,7 +1,6 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeSessionReplay"
@@ -49,17 +48,22 @@ Pod::Spec.new do |s|
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-    s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
+    s.compiler_flags = "-DRCT_NEW_ARCH_ENABLED=1"
 
     xcconfig.merge!({
       "DEFINES_MODULE" => "YES",
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
     })
-  end
 
-  s.pod_target_xcconfig = xcconfig
+    s.pod_target_xcconfig = xcconfig
 
-  if respond_to?(:install_modules_dependencies, true)
-    install_modules_dependencies(s)
+    # install_modules_dependencies is only available on RN >= 0.71
+    if respond_to?(:install_modules_dependencies, true)
+      install_modules_dependencies(s)
+    else
+      Pod::UI.warn "Using Datadog React Native Session Replay with new architecture on RN < 0.71 is discouraged and not officially supported."
+    end
+  else
+    s.pod_target_xcconfig = xcconfig
   end
 end
