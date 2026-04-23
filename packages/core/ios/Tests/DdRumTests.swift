@@ -14,9 +14,10 @@ import React
 internal class DdRumTests: XCTestCase {
     private let mockNativeRUM = MockRUMMonitor()
     private let mockUIManager = MockUIManager()
+    private let mockRootView = MockRootView()
     private let mockHeatmapIdentifierRegistry = MockHeatmapIdentifierRegistry()
     private var rum: DdRumImplementation! // swiftlint:disable:this implicitly_unwrapped_optional
-    
+
     private func mockResolve(args: Any?) {}
     private func mockReject(args: String?, arg: String?, err: Error?) {}
 
@@ -27,6 +28,7 @@ internal class DdRumTests: XCTestCase {
         rum = DdRumImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             uiManager: self.mockUIManager,
+            rootViewProvider: { self.mockRootView },
             heatmapIdentifierRegistryProvider: { self.mockHeatmapIdentifierRegistry },
             rumProvider: { self.mockNativeRUM },
             rumInternalProvider: { self.mockNativeRUM._internalMock }
@@ -40,6 +42,7 @@ internal class DdRumTests: XCTestCase {
         let rum = DdRumImplementation(
             mainDispatchQueue: DispatchQueueMock(),
             uiManager: MockUIManager(),
+            rootViewProvider: { nil },
             heatmapIdentifierRegistryProvider: { nil },
             rumProvider: { [unowned self] in
                 expectation.fulfill()
@@ -141,7 +144,9 @@ internal class DdRumTests: XCTestCase {
         let touch: NSDictionary = [
             "reactTag": 42,
             "x": 10.0,
-            "y": 20.0
+            "y": 20.0,
+            "pageX": 100.0,
+            "pageY": 200.0
         ]
 
         // When
@@ -172,13 +177,24 @@ internal class DdRumTests: XCTestCase {
         )
     }
 
-    func testAddActionWithTouchAndUnknownReactTag() throws {
+    func testAddActionFallsBackToHitTestWhenReactTagNotFound() throws {
+        // Given
+        let hitView = UIView(frame: CGRect(x: 50, y: 100, width: 200, height: 50))
+        mockRootView.addSubview(hitView)
+        mockRootView.hitTestResult = hitView
+
+        let identifier = HeatmapIdentifier(rawValue: "abc123")
+        mockHeatmapIdentifierRegistry.identifiers[ObjectIdentifier(hitView)] = identifier
+
         let touch: NSDictionary = [
             "reactTag": 999,
             "x": 10.0,
-            "y": 20.0
+            "y": 20.0,
+            "pageX": 130.0,
+            "pageY": 220.0
         ]
-        
+
+        // When
         rum.addAction(
             type: "tap",
             name: "tap action",
@@ -188,7 +204,49 @@ internal class DdRumTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
-        
+
+        // Then
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockRootView.receivedHitTestPoints, [CGPoint(x: 130, y: 220)])
+        XCTAssertEqual(
+            mockNativeRUM.calledMethods.last,
+            .addAction(
+                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
+                type: .tap,
+                name: "tap action",
+                heatmapAttributes: HeatmapAttributes(
+                    identifier: identifier,
+                    size: CGSize(width: 200, height: 50),
+                    location: CGPoint(x: 80, y: 120)
+                )
+            )
+        )
+    }
+
+    func testAddActionWithTouchWhenFallbackHitTestMisses() throws {
+        // Given
+        mockRootView.hitTestResult = nil
+
+        let touch: NSDictionary = [
+            "reactTag": 999,
+            "x": 10.0,
+            "y": 20.0,
+            "pageX": 100.0,
+            "pageY": 200.0
+        ]
+
+        // When
+        rum.addAction(
+            type: "tap",
+            name: "tap action",
+            touch: touch,
+            context: [:],
+            timestampMs: randomTimestamp,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        // Then
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
         XCTAssertEqual(
             mockNativeRUM.calledMethods.last,
@@ -441,6 +499,16 @@ private class MockUIManager: RCTUIManager {
 
     override func view(forReactTag reactTag: NSNumber!) -> UIView? {
         views[reactTag]
+    }
+}
+
+private class MockRootView: UIView {
+    var hitTestResult: UIView?
+    var receivedHitTestPoints: [CGPoint] = []
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        receivedHitTestPoints.append(point)
+        return hitTestResult
     }
 }
 

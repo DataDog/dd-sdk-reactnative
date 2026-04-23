@@ -56,6 +56,8 @@ type TouchData = {
     reactTag: number;
     x: number;
     y: number;
+    pageX: number;
+    pageY: number;
 };
 
 const touchDataFromEvent = (
@@ -68,7 +70,9 @@ const touchDataFromEvent = (
     return {
         reactTag: Number(nativeEvent.target),
         x: nativeEvent.locationX,
-        y: nativeEvent.locationY
+        y: nativeEvent.locationY,
+        pageX: nativeEvent.pageX,
+        pageY: nativeEvent.pageY
     };
 };
 
