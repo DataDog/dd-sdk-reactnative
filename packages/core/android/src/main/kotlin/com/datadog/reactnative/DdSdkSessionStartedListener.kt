@@ -125,21 +125,22 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
         @Suppress("TooGenericExceptionCaught")
         try {
             val args = arrayOf("RUMSessionStarted", sessionId)
-            val nativeArray = if (convertToNativeArray != null) {
-                convertToNativeArray?.invoke(args)
-            } else {
-                WritableNativeArray().apply {
-                    args.forEach { pushString(it) }
-                }
-            }
-
             reactContext?.catalystInstance?.callFunction(
                 BRIDGE_MODULE_NAME,
                 BRIDGE_MODULE_METHOD,
-                nativeArray
+                buildBridgeArgs(args)
             )
-        } catch(err: Exception) {
+        } catch (err: Exception) {
             exceptionHandler?.invoke(err)
+        }
+    }
+
+    private fun buildBridgeArgs(args: Array<String>): NativeArray? {
+        if (convertToNativeArray != null) {
+            return convertToNativeArray?.invoke(args)
+        }
+        return WritableNativeArray().apply {
+            args.forEach { pushString(it) }
         }
     }
 
