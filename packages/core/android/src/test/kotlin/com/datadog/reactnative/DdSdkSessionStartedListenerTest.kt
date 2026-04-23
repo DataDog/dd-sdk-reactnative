@@ -55,6 +55,7 @@ internal class DdSdkSessionStartedListenerTest {
     @BeforeEach
     fun `set up`() {
         DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitialized()
     }
 
     @Test

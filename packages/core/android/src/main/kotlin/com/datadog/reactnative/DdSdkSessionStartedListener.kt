@@ -22,6 +22,13 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
 
         private var instance: DdSdkSessionStartedListener? = null
 
+        // Process-level state — tracks whether JS initialize() has ever run since the
+        // app process started. Kept outside the instance on purpose: the listener
+        // singleton is recreated on every onHostPause/onHostDestroy via invalidate(),
+        // but the JS bridge module registration survives activity lifecycle events, so
+        // this flag must survive them too.
+        private var isRnSdkInitialized: Boolean = false
+
         // Returns the shared listener instance, creating it on first call.
         fun getInstance(): DdSdkSessionStartedListener {
             if (instance == null) {
@@ -30,10 +37,20 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
             return instance!!
         }
 
-        // Resets the singleton — used in tests to start from a clean state.
+        // Resets the singleton — used in tests and on host pause/destroy to release the
+        // React context reference. Does NOT reset isRnSdkInitialized, which tracks
+        // process-level JS-bridge registration state.
         fun invalidate() {
             instance = null
         }
+
+        @TestOnly
+        fun resetIsRnSdkInitialized() {
+            isRnSdkInitialized = false
+        }
+
+        @TestOnly
+        fun isRnSdkInitializedForTests(): Boolean = isRnSdkInitialized
     }
 
     // Cached so it can be delivered once the bridge becomes available.
@@ -47,7 +64,6 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
     private var exceptionHandler: ((error: Exception) -> Unit)? = null
     // Lazily resolved from BuildConfig; overridable in tests.
     private var isNewArchitecture: Boolean? = null
-    private var isRnSdkInitialized: Boolean = false
 
     // Stores the session ID and attempts immediate delivery.
     override fun onSessionStarted(sessionId: String, isDiscarded: Boolean) {
@@ -55,7 +71,8 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
         trySendSessionStartedToJS(sessionId)
     }
 
-    // Called from onHostResume. Triggers catch-up delivery if the RN SDK is already initialized.
+    // Called from onHostResume. Stores the React context and attempts catch-up delivery
+    // for any cached session ID using the currently available JS delivery path.
     fun setReactContext(reactContext: ReactContext) {
         this.reactContext = reactContext
         this.lastSessionId?.let { trySendSessionStartedToJS(it) }
@@ -66,7 +83,7 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
     // be registered, so it is safe to deliver any session ID that was stored before the
     // React bridge was available.
     fun onRnSdkInitialized() {
-        this.isRnSdkInitialized = true
+        isRnSdkInitialized = true
         this.lastSessionId?.let { trySendSessionStartedToJS(it) }
     }
 
@@ -87,7 +104,7 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
 
     @TestOnly
     fun setIsRnSdkInitialized(value: Boolean) {
-        this.isRnSdkInitialized = value
+        isRnSdkInitialized = value
     }
 
     // Returns true only when it is safe to call callFunction on the JS thread.
