@@ -73,9 +73,7 @@ class DdSdkNativeInitialization internal constructor(
 
         if (isCalledFromJs) {
             DdSdkSessionStartedListener.getInstance().onRnSdkInitialized()
-            /**
-             * Handles the case in which the SDK was already initialized with initFromNative.
-             */
+            // Handles the case in which the SDK was already initialized with initFromNative.
             if (datadog.isInitialized()) {
                 datadog.getRumMonitor().getCurrentSessionId {
                     it?.let { sessionId ->

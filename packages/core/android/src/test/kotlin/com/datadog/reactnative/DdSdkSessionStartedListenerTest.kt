@@ -136,33 +136,10 @@ internal class DdSdkSessionStartedListenerTest {
         // WHEN — JS initialize() runs, guaranteeing the callable module is registered
         instance.onRnSdkInitialized()
 
-        // THEN — catch-up delivery is now safe
-        verify(mockConvertToNativeArray).invoke(argWhere { it.first() == "TEST-SESSION-ID" })
-    }
-
-    @Test
-    fun `𝕄 session ID is delivered via bridge W { onRnSdkInitialized called after setReactContext }`() { // ktlint-disable-line max-line-length
-        // GIVEN
-        whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
-        whenever(mockReactContext.catalystInstance).thenReturn(mockCatalystInstance)
-        whenever(mockCatalystInstance.isDestroyed).thenReturn(false)
-        whenever(mockReactContext.fabricUIManager).thenReturn(null)
-
-        val instance = DdSdkSessionStartedListener.getInstance()
-
-        val mockConvertToNativeArray = mock<(array: Array<String>) -> NativeArray?>()
-        instance.setConvertToNativeArray(mockConvertToNativeArray)
-        instance.setIsNewArchitecture(false)
-
-        // WHEN
-        instance.onSessionStarted("TEST-SESSION-ID", false)
-        instance.setReactContext(mockReactContext)
-        verifyNoInteractions(mockConvertToNativeArray)
-
-        instance.onRnSdkInitialized()
-
-        // THEN
-        verify(mockConvertToNativeArray).invoke(argWhere { it.first() == "TEST-SESSION-ID" })
+        // THEN — catch-up delivery is now safe and matches __datadogOnMessageReceived(eventName, data)
+        verify(mockConvertToNativeArray).invoke(
+            argWhere { it.size == 2 && it[0] == "RUMSessionStarted" && it[1] == "TEST-SESSION-ID" }
+        )
     }
 
     @Test
@@ -192,6 +169,8 @@ internal class DdSdkSessionStartedListenerTest {
         instance.setReactContext(mockReactContext)
 
         // THEN
-        verify(mockConvertToNativeArray).invoke(argWhere { it.first() == "TEST-SESSION-ID" })
+        verify(mockConvertToNativeArray).invoke(
+            argWhere { it.size == 2 && it[0] == "RUMSessionStarted" && it[1] == "TEST-SESSION-ID" }
+        )
     }
 }

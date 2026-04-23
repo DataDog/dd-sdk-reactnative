@@ -14,7 +14,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.jetbrains.annotations.TestOnly
 
 
-internal class DdSdkSessionStartedListener private constructor(): RumSessionListener {
+internal class DdSdkSessionStartedListener private constructor() : RumSessionListener {
     companion object {
         // JS-side callable module registered via BatchedBridge.registerCallableModule.
         private const val BRIDGE_MODULE_NAME = "DatadogInternalReactBridge"
@@ -44,7 +44,7 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     // Overridable in tests — NativeArray cannot be instantiated without the native SO.
     private var convertToNativeArray: ((array: Array<String>) -> NativeArray?)? = null
     // Overridable in tests to assert on bridge exceptions without crashing.
-    private var exceptionHandler: ((error:Exception)->Unit)? = null
+    private var exceptionHandler: ((error: Exception) -> Unit)? = null
     // Lazily resolved from BuildConfig; overridable in tests.
     private var isNewArchitecture: Boolean? = null
     private var isRnSdkInitialized: Boolean = false
@@ -124,13 +124,12 @@ internal class DdSdkSessionStartedListener private constructor(): RumSessionList
     private fun sendSessionIdWithBridge(sessionId: String) {
         @Suppress("TooGenericExceptionCaught")
         try {
-            val args = arrayOf(sessionId)
+            val args = arrayOf("RUMSessionStarted", sessionId)
             val nativeArray = if (convertToNativeArray != null) {
                 convertToNativeArray?.invoke(args)
             } else {
                 WritableNativeArray().apply {
-                    pushString("RUMSessionStarted")
-                    pushString(sessionId)
+                    args.forEach { pushString(it) }
                 }
             }
 
