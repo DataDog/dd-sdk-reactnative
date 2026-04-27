@@ -515,4 +515,246 @@ describe('encodeAttributes', () => {
             expect(result.user).toBeUndefined();
         });
     });
+
+    // ------------------------------------------------------------------
+    // RUMS-5828: 128 attribute cap drops legitimate payloads
+    // ------------------------------------------------------------------
+    //
+    // These tests document the customer-expected behavior. They MUST fail
+    // today because the SDK enforces MAX_ATTRIBUTES = 128 in helpers.ts.
+    // They will pass once the cap is raised / removed / scoped to user
+    // attributes only — at which point they become a regression contract
+    // for the corrected behavior.
+    //
+    // Customer report: DdLogs.info(...) with a flat array of 22 small
+    // objects (6 props each = 132 leaves) is silently truncated. From the
+    // customer's perspective the cap mechanism IS the bug — these tests
+    // assert what the customer reasonably expects.
+    describe('RUMS-5828: 128 attribute cap drops legitimate payloads', () => {
+        it('preserves all 132 leaves of the customer-reported nested-array payload', () => {
+            // Customer minimal repro (Slack thread / Jira RUMS-5828):
+            //   DdLogs.info('!!! test', { basicTestArray: [{a..f}] x 22 })
+            // 22 items x 6 props = 132 flattened leaves.
+            const basicTestArray = Array.from({ length: 22 }, () => ({
+                a: 1,
+                b: 2,
+                c: 3,
+                d: 4,
+                e: 5,
+                f: 6
+            }));
+
+            const result = encodeAttributes({ basicTestArray });
+
+            // Customer expectation: the entire payload survives encoding.
+            // The single top-level `basicTestArray` attribute should be
+            // preserved with ALL 22 nested objects, each holding all 6
+            // properties. None of `a..f` should be dropped on any item.
+            expect(result.basicTestArray).toBeDefined();
+            expect(Array.isArray(result.basicTestArray)).toBe(true);
+            expect((result.basicTestArray as unknown[]).length).toBe(22);
+            for (let i = 0; i < 22; i++) {
+                expect((result.basicTestArray as any)[i]).toEqual({
+                    a: 1,
+                    b: 2,
+                    c: 3,
+                    d: 4,
+                    e: 5,
+                    f: 6
+                });
+            }
+
+            // No "Attribute limit" warning should fire for this payload —
+            // it represents a normal analytics event, not abusive input.
+            const limitWarnings = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' && msg.includes('Attribute limit')
+            );
+            expect(limitWarnings).toHaveLength(0);
+        });
+
+        it('preserves a flat 129-key input without dropping any attribute', () => {
+            // Boundary documentation: a flat input one over the current
+            // cap (129) should still be preserved end-to-end. Today the
+            // cap silently drops the 129th key (k128). When the cap is
+            // raised to 256 (or removed), this expectation holds.
+            const input: Record<string, number> = {};
+            for (let i = 0; i < 129; i++) {
+                input[`k${i}`] = i;
+            }
+
+            const result = encodeAttributes(input);
+
+            expect(Object.keys(result)).toHaveLength(129);
+            expect(result.k128).toBe(128);
+
+            const limitWarnings = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' && msg.includes('Attribute limit')
+            );
+            expect(limitWarnings).toHaveLength(0);
+        });
+
+        it('does not let internal _dd.* attributes consume the user-attribute budget', () => {
+            // attributesEncoding.ts:35 increments numOfAttributes on the
+            // _dd.* shortcut path, which means SDK-internal metadata
+            // shrinks the headroom for user attributes. Customer
+            // expectation: SDK-internal metadata is overhead the SDK
+            // controls, not part of the user's attribute budget.
+            const input: Record<string, unknown> = { '_dd.foo': 'bar' };
+            for (let i = 0; i < 128; i++) {
+                input[`k${i}`] = i;
+            }
+
+            const result = encodeAttributes(input);
+
+            // All 128 user attributes preserved, plus the _dd.foo metadata.
+            expect(result['_dd.foo']).toBe('bar');
+            for (let i = 0; i < 128; i++) {
+                expect(result[`k${i}`]).toBe(i);
+            }
+            expect(Object.keys(result)).toHaveLength(129);
+
+            const limitWarnings = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' && msg.includes('Attribute limit')
+            );
+            expect(limitWarnings).toHaveLength(0);
+        });
+    });
+
+    // ------------------------------------------------------------------
+    // RUMS-5828: current behavior pin (regression contract)
+    // ------------------------------------------------------------------
+    //
+    // These tests document the EXACT present-day buggy behavior so that
+    // any future change to the cap mechanism is intentional, not
+    // incidental. They pass today against MAX_ATTRIBUTES = 128 and SHOULD
+    // be deleted (or updated) at the same time as the fix that removes
+    // / raises / re-scopes the cap. They are paired with the failing
+    // tests above so reviewers can see both sides of the contract.
+    describe('RUMS-5828: current behavior pin (regression contract)', () => {
+        it('CURRENT BEHAVIOR: drops the entire basicTestArray for the 132-leaf customer payload', () => {
+            // Pins the present-day cascade where each of the 22 nested
+            // objects increments numOfAttributes via addEncodedAttribute,
+            // overflowing the 128 cap before the array wrapper itself
+            // can be written. Net effect: result is empty {}.
+            const basicTestArray = Array.from({ length: 22 }, () => ({
+                a: 1,
+                b: 2,
+                c: 3,
+                d: 4,
+                e: 5,
+                f: 6
+            }));
+
+            const result = encodeAttributes({ basicTestArray });
+
+            // The cap is hit before the outer array attribute is written,
+            // so even basicTestArray itself is dropped.
+            expect(Object.keys(result)).toHaveLength(0);
+            expect(result.basicTestArray).toBeUndefined();
+
+            // One aggregate "limit reached" warn + one warn for the
+            // outer basicTestArray drop + four inner-prop drop warns
+            // (path 'c', 'd', 'e', 'f' from item index 21 — recursion
+            // into a nested object uses an empty base path, so the
+            // dropped inner-prop warns reference single-segment keys).
+            const limitReachedWarns = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' &&
+                    msg.startsWith('Attribute limit of 128 reached')
+            );
+            expect(limitReachedWarns).toHaveLength(1);
+
+            const droppedAttrWarns = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' &&
+                    msg.startsWith('Dropped attribute at')
+            );
+            expect(droppedAttrWarns).toHaveLength(5);
+
+            // basicTestArray wrapper itself is dropped.
+            expect(
+                droppedAttrWarns.some(([msg]: [string]) =>
+                    msg.includes("'basicTestArray'")
+                )
+            ).toBe(true);
+            // Inner-prop drops (last 4 props of the 22nd item).
+            for (const k of ['c', 'd', 'e', 'f']) {
+                expect(
+                    droppedAttrWarns.some(([msg]: [string]) =>
+                        msg.includes(`'${k}'`)
+                    )
+                ).toBe(true);
+            }
+        });
+
+        it('CURRENT BEHAVIOR: a flat 128-key input passes unchanged with no warnings', () => {
+            const input: Record<string, number> = {};
+            for (let i = 0; i < 128; i++) {
+                input[`k${i}`] = i;
+            }
+
+            const result = encodeAttributes(input);
+
+            expect(Object.keys(result)).toHaveLength(128);
+            expect(result.k0).toBe(0);
+            expect(result.k127).toBe(127);
+            expect(warn).not.toHaveBeenCalled();
+        });
+
+        it('CURRENT BEHAVIOR: a flat 129-key input is capped at 128 with one limit warn and one drop warn', () => {
+            const input: Record<string, number> = {};
+            for (let i = 0; i < 129; i++) {
+                input[`k${i}`] = i;
+            }
+
+            const result = encodeAttributes(input);
+
+            expect(Object.keys(result)).toHaveLength(128);
+            expect(result.k127).toBe(127);
+            expect(result.k128).toBeUndefined();
+
+            const limitReachedWarns = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' &&
+                    msg.startsWith('Attribute limit of 128 reached')
+            );
+            expect(limitReachedWarns).toHaveLength(1);
+
+            const droppedAttrWarns = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' &&
+                    msg.startsWith('Dropped attribute at')
+            );
+            expect(droppedAttrWarns).toHaveLength(1);
+            expect(droppedAttrWarns[0][0]).toContain("'k128'");
+        });
+
+        it('CURRENT BEHAVIOR: _dd.* attributes consume one slot of the 128-attribute budget', () => {
+            // Pins the attributesEncoding.ts:35 increment on the _dd.*
+            // shortcut path — adding one _dd.* attribute drops one user
+            // attribute when the user side has 128 keys.
+            const input: Record<string, unknown> = { '_dd.foo': 'bar' };
+            for (let i = 0; i < 128; i++) {
+                input[`k${i}`] = i;
+            }
+
+            const result = encodeAttributes(input);
+
+            expect(Object.keys(result)).toHaveLength(128);
+            expect(result['_dd.foo']).toBe('bar');
+            // 127 user attributes preserved, last one (k127) dropped.
+            expect(result.k126).toBe(126);
+            expect(result.k127).toBeUndefined();
+
+            const limitReachedWarns = (warn as jest.Mock).mock.calls.filter(
+                ([msg]: [string]) =>
+                    typeof msg === 'string' &&
+                    msg.startsWith('Attribute limit of 128 reached')
+            );
+            expect(limitReachedWarns).toHaveLength(1);
+        });
+    });
 });
