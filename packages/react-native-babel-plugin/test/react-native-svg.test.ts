@@ -5,11 +5,17 @@
  */
 
 /* eslint quotes: ["off"] */
+import { transform } from '@babel/core';
 import * as parser from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
+import plugin from '../src/index';
 import { RNSvgHandler } from '../src/libraries/react-native-svg/handlers/RNSvgHandler';
+import { ReactNativeSVG } from '../src/libraries/react-native-svg';
 
 /**
  * Helper function to test SVG transformation
@@ -23,12 +29,12 @@ function transformSvg(code: string): string | undefined {
     let result: string | undefined;
 
     traverse(ast, {
-        JSXElement(path) {
-            if (t.isJSXIdentifier(path.node.openingElement.name)) {
-                const name = path.node.openingElement.name.name;
+        JSXElement(nodePath) {
+            if (t.isJSXIdentifier(nodePath.node.openingElement.name)) {
+                const name = nodePath.node.openingElement.name.name;
                 if (name === 'Svg') {
                     const dimensions: Record<string, string> = {};
-                    const handler = new RNSvgHandler(t, path, name);
+                    const handler = new RNSvgHandler(t, nodePath, name);
                     result = handler.transformSvgNode(dimensions);
                 }
             }
@@ -754,5 +760,70 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
                 `"<svg xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="50" height="50" /></svg>"`
             );
         });
+    });
+});
+
+jest.mock('uuid', () => ({
+    v4: () => '00000000-0000-0000-0000-000000000000'
+}));
+
+/**
+ * Helper to run the full babel plugin with SVG tracking enabled.
+ * Returns the transformed code string.
+ */
+function transformWithSvgTracking(code: string): string | undefined {
+    const tmpDir = path.join(os.tmpdir(), 'dd-svg-test-assets');
+    const reactNativeSVG = new ReactNativeSVG(process.cwd(), tmpDir);
+
+    return transform(code, {
+        filename: 'file.tsx',
+        presets: ['@babel/preset-react', '@babel/preset-typescript'],
+        plugins: [
+            [
+                plugin,
+                {
+                    sessionReplay: { svgTracking: true },
+                    __internal_reactNativeSVG: reactNativeSVG
+                }
+            ]
+        ],
+        configFile: false
+    })?.code as string | undefined;
+}
+
+describe('SessionReplayView.Privacy SVG Wrapper', () => {
+    const tmpDir = path.join(os.tmpdir(), 'dd-svg-test-assets');
+
+    afterAll(() => {
+        try {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
+        } catch {
+            /* ignore cleanup errors */
+        }
+    });
+
+    it('should wrap an inline SVG with the correct props', () => {
+        const input =
+            '<Svg width="24" height="24"><Path d="M12 2L2 12h10z" fill="black" /></Svg>';
+        const output = transformWithSvgTracking(input);
+
+        expect(output).toMatchSnapshot();
+    });
+
+    it('should wrap an SVG without explicit dimensions', () => {
+        const input =
+            '<Svg viewBox="0 0 100 100"><Circle cx="50" cy="50" r="40" fill="blue" /></Svg>';
+        const output = transformWithSvgTracking(input);
+
+        expect(output).toMatchSnapshot();
+    });
+
+    it('should not set a style prop on the wrapper', () => {
+        const input =
+            '<Svg width="24" height="24"><Path d="M12 2L2 12h10z" fill="black" /></Svg>';
+        const output = transformWithSvgTracking(input);
+
+        expect(output).not.toContain('flexShrink');
+        expect(output).not.toContain('style');
     });
 });

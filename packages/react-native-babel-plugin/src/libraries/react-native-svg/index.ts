@@ -315,7 +315,6 @@ export class ReactNativeSVG {
      *     width,
      *     height
      *   }}
-     *   style={{ flexShrink: 1 }}
      * >
      *   {originalElement}
      * </SessionReplayView.Privacy>
@@ -344,18 +343,6 @@ export class ReactNativeSVG {
         el.extra = {
             __wrappedForSR: true
         };
-
-        const styleProp = t.jsxAttribute(
-            t.jsxIdentifier('style'),
-            t.jsxExpressionContainer(
-                t.objectExpression([
-                    t.objectProperty(
-                        t.identifier('flexShrink'),
-                        t.numericLiteral(1)
-                    )
-                ])
-            )
-        );
 
         const props = [
             t.objectProperty(t.identifier('type'), t.stringLiteral('svg')),
@@ -394,8 +381,7 @@ export class ReactNativeSVG {
                 t.jsxIdentifier('pointerEvents'),
                 t.stringLiteral('box-none')
             ),
-            attributeProp,
-            styleProp
+            attributeProp
         ];
 
         const viewWrapper = t.jsxElement(
