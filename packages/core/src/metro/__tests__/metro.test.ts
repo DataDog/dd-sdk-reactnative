@@ -32,6 +32,19 @@ describe('Datadog Metro Plugin', () => {
     });
 
     describe('Datadog Metro Serializer', () => {
+        test('skips debug ID injection for web platform builds', async () => {
+            const serializer = createDatadogMetroSerializer();
+            const args = mockSerializerArgsForEmptyModule();
+            // Set platform to 'web'
+            (args[2] as any).transformOptions.platform = 'web';
+
+            const bundle = await serializer(...args);
+            const { code } = await convertSerializerOutput(bundle);
+            // Web builds should not contain debug ID injection
+            expect(code).not.toContain('debugId');
+            expect(code).not.toContain('_datadogDebugIds');
+        });
+
         test('generates bundle and source map with UUID v5 Debug ID', async () => {
             const codeSnippetHash = createHash('md5');
             codeSnippetHash.update(DEBUG_ID_CODE_SNIPPET);

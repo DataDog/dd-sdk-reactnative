@@ -68,6 +68,14 @@ export default declare(
                 Program: {
                     enter(path, state) {
                         const pluginState: PluginPassState = state;
+
+                        // Skip all transforms for web builds
+                        const platform = (state.file?.opts?.caller as any)
+                            ?.platform;
+                        if (platform === 'web') {
+                            return;
+                        }
+
                         const { path: p, name } = getFileInfo(this);
 
                         if (p?.includes('node_modules')) {
