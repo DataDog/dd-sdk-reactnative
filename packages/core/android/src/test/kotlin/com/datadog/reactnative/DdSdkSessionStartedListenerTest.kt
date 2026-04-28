@@ -8,6 +8,7 @@
 package com.datadog.reactnative
 
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
+import com.datadog.tools.unit.TestUiThreadExecutor
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.facebook.react.bridge.CatalystInstance
 import com.facebook.react.bridge.NativeArray
@@ -55,6 +56,7 @@ internal class DdSdkSessionStartedListenerTest {
     @BeforeEach
     fun `set up`() {
         DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.getInstance().setUiThreadExecutor(TestUiThreadExecutor())
         DdSdkSessionStartedListener.resetIsRnSdkInitialized()
     }
 

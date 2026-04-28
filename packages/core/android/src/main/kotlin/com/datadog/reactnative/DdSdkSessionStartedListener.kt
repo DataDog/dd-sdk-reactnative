@@ -9,7 +9,6 @@ import androidx.annotation.MainThread
 import com.datadog.android.rum.RumSessionListener
 import com.facebook.react.bridge.NativeArray
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.jetbrains.annotations.TestOnly
@@ -29,6 +28,11 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
         // but the JS bridge module registration survives activity lifecycle events, so
         // this flag must survive them too.
         private var isRnSdkInitialized: Boolean = false
+
+        // Routes UI-thread dispatch through an injectable abstraction so JVM unit tests
+        // can use TestUiThreadExecutor (synchronous, no main looper required) instead of
+        // the real UiThreadUtil.
+        private var uiThreadExecutor: UiThreadExecutor = ReactUiThreadExecutor()
 
         // Returns the shared listener instance, creating it on first call.
         fun getInstance(): DdSdkSessionStartedListener {
@@ -87,7 +91,7 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
     fun setReactContext(reactContext: ReactContext) {
         this.reactContext = reactContext
         val cached = this.lastSessionId ?: return
-        UiThreadUtil.runOnUiThread { trySendSessionStartedToJS(cached) }
+        uiThreadExecutor.runOnUiThread { trySendSessionStartedToJS(cached) }
     }
 
     // Called when the RN SDK is initialized from JS for the first time while the native
@@ -98,7 +102,7 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
     fun onRnSdkInitialized() {
         isRnSdkInitialized = true
         val cached = this.lastSessionId ?: return
-        UiThreadUtil.runOnUiThread { trySendSessionStartedToJS(cached) }
+        uiThreadExecutor.runOnUiThread { trySendSessionStartedToJS(cached) }
     }
 
     @TestOnly
@@ -119,6 +123,11 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
     @TestOnly
     fun setIsRnSdkInitialized(value: Boolean) {
         isRnSdkInitialized = value
+    }
+
+    @TestOnly
+    fun setUiThreadExecutor(executor: UiThreadExecutor) {
+        uiThreadExecutor = executor
     }
 
     // Returns true only when it is safe to call callFunction on the JS thread.
