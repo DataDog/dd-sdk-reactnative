@@ -51,6 +51,38 @@ describe('Babel plugin: initialization', () => {
     });
 });
 
+describe('Babel plugin: web platform', () => {
+    it('should skip all transforms for web platform builds', () => {
+        const input = `
+            import { Button } from 'react-native';
+            <Button color="red" onPress={func} />
+        `;
+        const output = transform(input, {
+            filename: 'file.tsx',
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        components: {
+                            useContent: true,
+                            useNamePrefix: true,
+                            tracked: []
+                        },
+                        sessionReplay: { svgTracking: false }
+                    }
+                ]
+            ],
+            configFile: false,
+            caller: { name: 'metro', platform: 'web' }
+        })?.code;
+        // Should not inject Datadog imports or wrappers
+        expect(output).not.toContain('DdBabelInteractionTracking');
+        expect(output).not.toContain('__DD_RN_BABEL_PLUGIN_ENABLED__');
+        expect(output).not.toContain('@datadog/mobile-react-native');
+    });
+});
+
 describe('Babel plugin: wrap interaction handlers for RUM', () => {
     it('should not wrap unsupported property (onClick) on supported element (Button)', () => {
         const input = `
