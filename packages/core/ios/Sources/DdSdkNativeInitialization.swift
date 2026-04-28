@@ -32,7 +32,7 @@ public class DdSdkNativeInitialization: NSObject {
         self.jsonFileReader = jsonFileReader
     }
 
-    internal func initialize(sdkConfiguration: DdSdkConfiguration) {
+    internal func initialize(sdkConfiguration: DdSdkConfiguration, isCalledFromJs: Bool = true) {
         if Datadog.isInitialized(instanceName: CoreRegistry.defaultInstanceName) {
             // Initializing the SDK twice results in Global.rum and Global.sharedTracer to be set to no-op instances
             consolePrint("Datadog SDK is already initialized, skipping initialization.", .debug)
@@ -40,24 +40,31 @@ public class DdSdkNativeInitialization: NSObject {
                 id: "datadog_react_native: RN  SDK was already initialized in native",
                 message: "RN SDK was already initialized in native"
             )
-            
-            RUMMonitor.shared().currentSessionID { sessionId in
-                guard let id = sessionId else { return }
-                DdSdkSessionStartedListener.instance.rumSessionListener?(id, false)
-            }
+        } else {
+            self.setVerbosityLevel(configuration: sdkConfiguration)
 
-            return
+            let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
+            DatadogSDKWrapper.shared.initialize(
+                coreConfiguration: coreConfiguration,
+                loggerConfiguration: DatadogLogs.Logger.Configuration(sdkConfiguration),
+                trackingConsent: sdkConfiguration.trackingConsent
+            )
+
+            self.enableFeatures(sdkConfiguration: sdkConfiguration)
         }
-        self.setVerbosityLevel(configuration: sdkConfiguration)
 
-        let coreConfiguration = self.buildSDKConfiguration(configuration: sdkConfiguration)
-        DatadogSDKWrapper.shared.initialize(
-            coreConfiguration: coreConfiguration,
-            loggerConfiguration: DatadogLogs.Logger.Configuration(sdkConfiguration),
-            trackingConsent: sdkConfiguration.trackingConsent
-        )
-
-        self.enableFeatures(sdkConfiguration: sdkConfiguration)
+        if isCalledFromJs {
+            DdSdkSessionStartedListener.instance.onRnSdkInitialized()
+            // Handles the case in which the SDK was already initialized via initFromNative.
+            // Replay the current session ID so the listener can deliver it now that the
+            // JS-side DatadogInternalReactBridge module is guaranteed to be registered.
+            if Datadog.isInitialized(instanceName: CoreRegistry.defaultInstanceName) {
+                RUMMonitor.shared().currentSessionID { sessionId in
+                    guard let id = sessionId else { return }
+                    DdSdkSessionStartedListener.instance.rumSessionListener?(id, false)
+                }
+            }
+        }
     }
 
     internal func getConfigurationFromJSONFile() -> DdSdkConfiguration? {
@@ -80,7 +87,7 @@ public class DdSdkNativeInitialization: NSObject {
     @objc
     public func initializeFromNative() {
         if let configuration = getConfigurationFromJSONFile() {
-            self.initialize(sdkConfiguration: configuration)
+            self.initialize(sdkConfiguration: configuration, isCalledFromJs: false)
         }
     }
 

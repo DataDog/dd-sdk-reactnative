@@ -29,6 +29,11 @@ public class DdSdkSessionStartedListener: NSObject {
     private static let BRIDGE_EVENT_NAME = "RUMSessionStarted"
     private static var _instance: DdSdkSessionStartedListener?
 
+    // Process-level state — survives instance invalidate() because the JS-side
+    // DatadogInternalReactBridge registration survives bridge-lifecycle resets
+    // for the lifetime of the JS runtime / process.
+    private static var isRnSdkInitialized: Bool = false
+
     private var rctBridge: RCTBridge?
     private var rctEventEmitter: RCTEventEmitter?
     private var lastSessionId: String?
@@ -57,11 +62,22 @@ public class DdSdkSessionStartedListener: NSObject {
         tryToSendSessionId()
     }
 
+    /// Called when the RN SDK is initialized from JS. At this point
+    /// DatadogInternalReactBridge (the JS-side callable module registered by
+    /// BatchedBridge.registerCallableModule) is guaranteed to be registered,
+    /// so it is safe to deliver any session ID that was buffered before the
+    /// bridge was usable.
+    @objc public func onRnSdkInitialized() {
+        Self.isRnSdkInitialized = true
+        tryToSendSessionId()
+    }
+
     func invalidate() {
         self.rctBridge = nil
         self.listener = nil
         self.hasListeners = false
         self.lastSessionId = nil
+        // isRnSdkInitialized is intentionally NOT reset — see field comment.
     }
 
     private func tryToSendSessionId() {
@@ -71,9 +87,12 @@ public class DdSdkSessionStartedListener: NSObject {
 
         if isBridgeless() {
             sendToJsWithListener(sessionId: sessionId)
-        } else {
+        } else if Self.isRnSdkInitialized {
             sendToJsWithBridge(sessionId: sessionId)
         }
+        // else: bridge path is gated until JS DdSdk.initialize() runs, so that
+        // DatadogInternalReactBridge is guaranteed to be registered. The cached
+        // lastSessionId will be replayed when onRnSdkInitialized() fires.
     }
 
     private func sendToJsWithBridge(sessionId: String) {
@@ -101,5 +120,13 @@ public class DdSdkSessionStartedListener: NSObject {
 
     private func isBridgeless() -> Bool {
         return self.rctBridge == nil
+    }
+
+    static func resetIsRnSdkInitializedForTests() {
+        isRnSdkInitialized = false
+    }
+
+    static func isRnSdkInitializedForTests() -> Bool {
+        return isRnSdkInitialized
     }
 }
