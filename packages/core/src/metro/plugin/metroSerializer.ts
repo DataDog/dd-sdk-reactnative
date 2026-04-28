@@ -45,8 +45,11 @@ export const createDatadogMetroSerializer = (
 ): DatadogMetroSerializer => {
     const serializer = customSerializer || createDefaultMetroSerializer();
     return async (entryPoint, preModules, graph, options) => {
-        // Skip for hot reload mode
-        if ((graph.transformOptions as any).hot) {
+        // Skip for hot reload mode and web builds
+        if (
+            (graph.transformOptions as any).hot ||
+            graph.transformOptions.platform === 'web'
+        ) {
             return serializer(entryPoint, preModules, graph, options);
         }
 
@@ -158,6 +161,7 @@ export const createDatadogBundleCallback = (
  * Adds Debug ID module for runtime injection, used for Expo.
  */
 export function unstable_beforeAssetSerializationPlugin({
+    graph,
     premodules,
     debugId
 }: {
@@ -165,7 +169,11 @@ export function unstable_beforeAssetSerializationPlugin({
     premodules: Module[];
     debugId?: string;
 }): Module[] {
-    if (!debugId || checkIfDebugIdModuleExists(premodules)) {
+    if (
+        graph.transformOptions.platform === 'web' ||
+        !debugId ||
+        checkIfDebugIdModuleExists(premodules)
+    ) {
         return premodules;
     }
     return [...addDebugIdModule(premodules, createDebugIdModule(debugId))];
