@@ -9,6 +9,7 @@ import androidx.annotation.MainThread
 import com.datadog.android.rum.RumSessionListener
 import com.facebook.react.bridge.NativeArray
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.jetbrains.annotations.TestOnly
@@ -71,20 +72,33 @@ internal class DdSdkSessionStartedListener private constructor() : RumSessionLis
         trySendSessionStartedToJS(sessionId)
     }
 
-    // Called from onHostResume. Stores the React context and attempts catch-up delivery
-    // for any cached session ID using the currently available JS delivery path.
+    // Stores the React context and schedules a catch-up delivery for any cached session
+    // ID on the UI thread. Called from:
+    //   - DdSdk#onHostResume (both architectures) via the lifecycle listener
+    //   - DdSdkImplementation#initialize (new-arch race fix — the TurboModule is lazy-
+    //     instantiated, so the first onHostResume may have fired before its lifecycle
+    //     listener was registered; setting the context here guarantees a non-null
+    //     target for onRnSdkInitialized's replay)
+    //
+    // Delivery is dispatched to the UI thread because sendSessionIdWithBridge and
+    // sendSessionIdWithEventEmitter are @MainThread. The field assignment stays
+    // synchronous so callers that rely on reactContext being set immediately after
+    // this call (e.g. a same-stack onRnSdkInitialized) see the new value.
     fun setReactContext(reactContext: ReactContext) {
         this.reactContext = reactContext
-        this.lastSessionId?.let { trySendSessionStartedToJS(it) }
+        val cached = this.lastSessionId ?: return
+        UiThreadUtil.runOnUiThread { trySendSessionStartedToJS(cached) }
     }
 
     // Called when the RN SDK is initialized from JS for the first time while the native
     // SDK was already running. At this point DatadogInternalReactBridge is guaranteed to
     // be registered, so it is safe to deliver any session ID that was stored before the
-    // React bridge was available.
+    // React bridge was available. Delivery is posted to the UI thread for the same
+    // reason as setReactContext.
     fun onRnSdkInitialized() {
         isRnSdkInitialized = true
-        this.lastSessionId?.let { trySendSessionStartedToJS(it) }
+        val cached = this.lastSessionId ?: return
+        UiThreadUtil.runOnUiThread { trySendSessionStartedToJS(cached) }
     }
 
     @TestOnly
