@@ -45,6 +45,15 @@ class DdSdkImplementation(
     fun initialize(configuration: ReadableMap, promise: Promise) {
         val ddSdkConfiguration = configuration.asDdSdkConfiguration()
 
+        // On new arch DdSdk is a lazy TurboModule — it's instantiated on the first JS-side
+        // method call (typically this initialize()), which usually lands AFTER the activity's
+        // first onHostResume. That means registerLifecycleEvents's listener missed the first
+        // resume, reactContext is still null on the session listener, and the replay inside
+        // nativeInitialization.initialize → onRnSdkInitialized has no emitter target. Setting
+        // the reactContext here — we are provably being dispatched through an active one —
+        // closes that race so the cached session ID is delivered on the first JS init.
+        DdSdkSessionStartedListener.getInstance().setReactContext(reactContext)
+
         val nativeInitialization = DdSdkNativeInitialization(appContext, datadog, ddTelemetry)
         nativeInitialization.initialize(ddSdkConfiguration)
 
