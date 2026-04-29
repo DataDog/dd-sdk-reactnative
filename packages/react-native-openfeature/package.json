@@ -39,15 +39,15 @@
     },
     "devDependencies": {
         "@datadog/mobile-react-native": "^3.4.0",
-        "@openfeature/core": "^1.8.0",
-        "@openfeature/web-sdk": "^1.5.0",
+        "@openfeature/core": "^1.9.2",
+        "@openfeature/web-sdk": "^1.7.3",
         "@testing-library/react-native": "7.0.2",
         "react-native-builder-bob": "0.26.0",
         "react-native-gesture-handler": "1.10.3"
     },
     "peerDependencies": {
         "@datadog/mobile-react-native": "^3.1.0",
-        "@openfeature/web-sdk": "^1.5.0",
+        "@openfeature/web-sdk": "^1.7.3",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0"
     },

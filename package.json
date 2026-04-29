@@ -1,130 +1,120 @@
 {
-    "name": "dd-sdk-reactnative",
-    "description": "A client-side React Native module to interact with Datadog",
-    "keywords": [
-        "datadog",
-        "react-native",
-        "ios",
-        "android"
-    ],
-    "author": "Datadog (https://github.com/DataDog)",
-    "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
-    "repository": "https://github.com/DataDog/dd-sdk-reactnative",
-    "bugs": {
-        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
-    },
-    "license": "Apache-2.0",
-    "private": true,
-    "workspaces": {
-        "packages": [
-            "packages/*",
-            "example",
-            "example-new-architecture",
-            "benchmarks"
-        ]
-    },
-    "scripts": {
-        "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna run prepare",
-        "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
-        "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
-        "example": "yarn --cwd example",
-        "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.25.2",
-        "@babel/plugin-transform-runtime": "^7.25.0",
-        "@babel/preset-env": "^7.25.3",
-        "@babel/runtime": "^7.26.10",
-        "@react-native/babel-preset": "0.76.9",
-        "@react-native/eslint-config": "0.76.9",
-        "@react-native/metro-config": "0.76.9",
-        "@react-native/typescript-config": "0.76.9",
-        "@testing-library/react-native": "7.0.2",
-        "@types/jest": "^29.5.0",
-        "@types/react": "^18.2.6",
-        "@types/react-native": "0.71.0",
-        "@types/react-test-renderer": "18.0.0",
-        "@typescript-eslint/eslint-plugin": "5.61.0",
-        "@typescript-eslint/parser": "5.61.0",
-        "dd-trace": "^5.28.0",
-        "eslint": "^8.19.0",
-        "eslint-config-prettier": "6.0.0",
-        "eslint-plugin-arca": "0.15.0",
-        "eslint-plugin-import": "2.29.1",
-        "eslint-plugin-prettier": "4.0.0",
-        "eslint-plugin-react": "7.22.0",
-        "eslint-plugin-react-hooks": "4.3.0",
-        "eslint-plugin-react-native": "3.10.0",
-        "genversion": "3.0.2",
-        "jest": "^29.7.0",
-        "lerna": "9.0.7",
-        "metro": "^0.83.1",
-        "pod-install": "0.1.14",
-        "prettier": "2.2.0",
-        "react": "18.3.1",
-        "react-native": "0.76.9",
-        "react-native-builder-bob": "0.26.0",
-        "react-native-gradle-plugin": "^0.71.19",
-        "react-native-webview": "13.12.2",
-        "react-test-renderer": "18.3.1",
-        "typescript": "5.0.4"
-    },
-    "peerDependencies": {
-        "react": "*",
-        "react-native": "*"
-    },
-    "engines": {
-        "node": ">=18"
-    },
-    "jest": {
-        "projects": [
-            "<rootDir>/packages/*"
-        ]
-    },
-    "packageManager": "yarn@3.4.1",
-    "resolutions": {
-        "@istanbuljs/load-nyc-config/js-yaml": "3.14.2",
-        "@yarnpkg/parsers/js-yaml": "3.14.2",
-        "cosmiconfig@npm:5.2.1/js-yaml": "3.14.2",
-        "front-matter@npm:4.0.2/js-yaml": "3.14.2",
-        "node-forge": "^1.4.0",
-        "cacache/glob": "^10.5.0",
-        "@npmcli/arborist": "^9.1.8",
-        "ejs": "3.1.10",
-        "shell-quote": "^1.7.3",
-        "cross-spawn": "7.0.5",
-        "fast-xml-parser": "4.5.5",
-        "axios": "1.15.0",
-        "basic-ftp": ">=5.2.2",
-        "tar": ">=7.5.8",
-        "ajv@^8.12.0": "8.18.0",
-        "minimatch@9.0.3": "9.0.7",
-        "minimatch@^3.0.2": "3.1.3",
-        "minimatch@^3.0.4": "3.1.3",
-        "minimatch@^3.0.5": "3.1.3",
-        "minimatch@^3.1.1": "3.1.3",
-        "minimatch@^3.1.2": "3.1.3",
-        "minimatch@^5.0.1": "5.1.8",
-        "minimatch@^9.0.4": "9.0.7",
-        "minimatch@^9.0.5": "9.0.7",
-        "minimatch@^10.0.3": "10.2.3",
-        "minimatch@^10.1.1": "10.2.3",
-        "lodash": "4.18.0",
-        "qs": ">=6.14.2",
-        "nanoid": "3.3.8",
-        "send": "0.19.0",
-        "serve-static": "1.16.0",
-        "formidable": "3.5.3",
-        "snyk": "^1.1298.3",
-        "form-data": "4.0.4",
-        "on-headers": "1.1.0",
-        "tmp": "0.2.4",
-        "jws": "^4.0.1",
-        "handlebars": ">=4.7.9",
-        "@xmldom/xmldom": ">=0.8.12",
-        "yaml": ">=2.8.3",
-        "brace-expansion@^2.0.1": "2.0.3",
-        "brace-expansion@^5.0.2": "5.0.5",
-        "brace-expansion@^5.0.5": "5.0.5"
-    }
+  "name": "dd-sdk-reactnative",
+  "description": "A client-side React Native module to interact with Datadog",
+  "keywords": [
+    "datadog",
+    "react-native",
+    "ios",
+    "android"
+  ],
+  "author": "Datadog (https://github.com/DataDog)",
+  "homepage": "https://github.com/DataDog/dd-sdk-reactnative#readme",
+  "repository": "https://github.com/DataDog/dd-sdk-reactnative",
+  "bugs": {
+    "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+  },
+  "license": "Apache-2.0",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "example",
+      "example-new-architecture",
+      "benchmarks"
+    ]
+  },
+  "scripts": {
+    "prepare": "genversion --es6 --semi packages/core/src/version.ts && lerna run prepare",
+    "test": "genversion --es6 --semi packages/core/src/version.ts && jest",
+    "lint": "genversion --es6 --semi packages/core/src/version.ts && eslint .",
+    "example": "yarn --cwd example",
+    "postinstall": "./packages/react-navigation/fix-react-navigation-import-in-dependencies.sh"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-runtime": "^7.25.0",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.26.10",
+    "@react-native/babel-preset": "0.76.9",
+    "@react-native/eslint-config": "0.76.9",
+    "@react-native/metro-config": "0.76.9",
+    "@react-native/typescript-config": "0.76.9",
+    "@testing-library/react-native": "7.0.2",
+    "@types/jest": "^29.5.0",
+    "@types/react": "^18.2.6",
+    "@types/react-native": "0.71.0",
+    "@types/react-test-renderer": "18.0.0",
+    "@typescript-eslint/eslint-plugin": "5.61.0",
+    "@typescript-eslint/parser": "5.61.0",
+    "dd-trace": "^5.28.0",
+    "eslint": "^8.19.0",
+    "eslint-config-prettier": "6.0.0",
+    "eslint-plugin-arca": "0.15.0",
+    "eslint-plugin-import": "2.29.1",
+    "eslint-plugin-prettier": "4.0.0",
+    "eslint-plugin-react": "7.22.0",
+    "eslint-plugin-react-hooks": "4.3.0",
+    "eslint-plugin-react-native": "3.10.0",
+    "genversion": "3.0.2",
+    "jest": "^29.7.0",
+    "lerna": "9.0.7",
+    "metro": "^0.83.1",
+    "pod-install": "0.1.14",
+    "prettier": "2.2.0",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-builder-bob": "0.26.0",
+    "react-native-gradle-plugin": "^0.71.19",
+    "react-native-webview": "13.12.2",
+    "react-test-renderer": "18.3.1",
+    "typescript": "5.0.4"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
+  },
+  "packageManager": "yarn@3.4.1",
+  "resolutions": {
+    "cosmiconfig@npm:5.2.1/js-yaml": "3.14.2",
+    "front-matter@npm:4.0.2/js-yaml": "3.14.2",
+    "cacache/glob": "^10.5.0",
+    "@npmcli/arborist": "^9.1.8",
+    "ejs": "3.1.10",
+    "cross-spawn": "7.0.5",
+    "fast-xml-parser": "4.5.5",
+    "axios": "1.15.0",
+    "ajv@^8.12.0": "8.18.0",
+    "minimatch@9.0.3": "9.0.7",
+    "minimatch@^3.0.2": "3.1.3",
+    "minimatch@^3.0.4": "3.1.3",
+    "minimatch@^3.0.5": "3.1.3",
+    "minimatch@^3.1.1": "3.1.3",
+    "minimatch@^3.1.2": "3.1.3",
+    "minimatch@^5.0.1": "5.1.8",
+    "minimatch@^9.0.4": "9.0.7",
+    "minimatch@^9.0.5": "9.0.7",
+    "minimatch@^10.0.3": "10.2.3",
+    "minimatch@^10.1.1": "10.2.3",
+    "lodash": "4.18.0",
+    "nanoid": "3.3.8",
+    "send": "0.19.0",
+    "serve-static": "1.16.0",
+    "formidable": "3.5.3",
+    "form-data": "4.0.4",
+    "on-headers": "1.1.0",
+    "tmp": "0.2.4",
+    "brace-expansion@^2.0.1": "2.0.3",
+    "brace-expansion@^5.0.2": "5.0.5",
+    "brace-expansion@^5.0.5": "5.0.5",
+    "@babel/types": "^7.29.0",
+    "@babel/core": "^7.29.0"
+  }
 }
