@@ -5,6 +5,7 @@
  */
 
 import XCTest
+@testable import DatadogCore
 @testable import DatadogSDKReactNative
 @testable import DatadogInternal
 
@@ -13,12 +14,19 @@ class DdSdkNativeInitializationTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitializedForTests()
     }
 
     override func tearDown() {
+        DatadogSDKWrapper.shared.setCoreInstance(core: nil)
+        DatadogSDKWrapper.shared.onCoreInitializedListeners = []
+        Datadog.internalFlushAndDeinitialize()
+        DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitializedForTests()
         super.tearDown()
     }
-    
+
     func testReturnsConfigurationWithAllData() {
         let mockJSONFileReader = MockJSONFileReader(mockResourceFilePath: "Fixtures/complete-configuration")
         let nativeInitialization = DdSdkNativeInitialization(
@@ -115,6 +123,42 @@ class DdSdkNativeInitializationTests: XCTestCase {
         
         XCTAssertNil(nativeInitialization.getConfigurationFromJSONFile())
         XCTAssertEqual(self.consoleMessage, "Error parsing datadog-configuration.json file: 🔥 Datadog SDK usage error: JSON configuration file is missing top-level \"configuration\" key.")
+    }
+
+    func testInitializeWithIsCalledFromJsTrueMarksRnSdkInitialized() {
+        // GIVEN
+        let nativeInitialization = DdSdkNativeInitialization()
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN
+        nativeInitialization.initialize(sdkConfiguration: .mockAny(), isCalledFromJs: true)
+
+        // THEN
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+    }
+
+    func testInitializeWithIsCalledFromJsFalseDoesNotMarkRnSdkInitialized() {
+        // GIVEN
+        let nativeInitialization = DdSdkNativeInitialization()
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN
+        nativeInitialization.initialize(sdkConfiguration: .mockAny(), isCalledFromJs: false)
+
+        // THEN
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+    }
+
+    func testInitializeDefaultsToIsCalledFromJsTrue() {
+        // GIVEN
+        let nativeInitialization = DdSdkNativeInitialization()
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN — default value of isCalledFromJs is true (matches the JS-init path)
+        nativeInitialization.initialize(sdkConfiguration: .mockAny())
+
+        // THEN
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
     }
 }
 

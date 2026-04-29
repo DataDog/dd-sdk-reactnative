@@ -7,6 +7,7 @@
 package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
+import com.datadog.android.rum.RumMonitor
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.facebook.react.bridge.ReactApplicationContext
@@ -24,8 +25,12 @@ import org.mockito.Answers
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
@@ -66,6 +71,9 @@ internal class DdSdkNativeInitializationTest {
             mockDatadog,
             mockJSONFileReader
         )
+
+        DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitialized()
     }
 
     // region getConfigurationFromJSONFile
@@ -180,4 +188,64 @@ internal class DdSdkNativeInitializationTest {
     }
 
     // endregion
+
+    // region initialize()
+
+    @Test
+    fun `𝕄 mark RN SDK initialized and catch up session 𝕎 initialize() { isCalledFromJs=true, datadog already initialized }`() { // ktlint-disable-line max-line-length
+        // Given
+        val mockRumMonitor: RumMonitor = mock()
+        whenever(mockDatadog.isInitialized()) doReturn true
+        whenever(mockDatadog.getRumMonitor()) doReturn mockRumMonitor
+
+        // When
+        testedNativeInitialization.initialize(
+            ddSdkConfiguration = minimalConfiguration(),
+            isCalledFromJs = true
+        )
+
+        // Then
+        assertThat(DdSdkSessionStartedListener.isRnSdkInitializedForTests()).isTrue()
+        verify(mockRumMonitor).getCurrentSessionId(any())
+    }
+
+    @Test
+    fun `𝕄 mark RN SDK initialized without catch up 𝕎 initialize() { isCalledFromJs=true, datadog not initialized }`() { // ktlint-disable-line max-line-length
+        // Given
+        whenever(mockDatadog.isInitialized()) doReturn false
+
+        // When
+        testedNativeInitialization.initialize(
+            ddSdkConfiguration = minimalConfiguration(),
+            isCalledFromJs = true
+        )
+
+        // Then
+        assertThat(DdSdkSessionStartedListener.isRnSdkInitializedForTests()).isTrue()
+        verify(mockDatadog, never()).getRumMonitor()
+    }
+
+    @Test
+    fun `𝕄 not mark RN SDK initialized or catch up 𝕎 initialize() { isCalledFromJs=false }`() {
+        // Given
+        whenever(mockDatadog.isInitialized()) doReturn true
+
+        // When
+        testedNativeInitialization.initialize(
+            ddSdkConfiguration = minimalConfiguration(),
+            isCalledFromJs = false
+        )
+
+        // Then
+        assertThat(DdSdkSessionStartedListener.isRnSdkInitializedForTests()).isFalse()
+        verify(mockDatadog, never()).getRumMonitor()
+    }
+
+    // endregion
+
+    private fun minimalConfiguration(): DdSdkConfiguration = DdSdkConfiguration(
+        clientToken = "fake-client-token",
+        env = "fake-env",
+        applicationId = "fake-app-id"
+    )
 }

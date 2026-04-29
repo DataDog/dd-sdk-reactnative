@@ -13,9 +13,13 @@ class DdSdkSessionStartedListenerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitializedForTests()
     }
 
     override func tearDown() {
+        DdSdkSessionStartedListener.invalidate()
+        DdSdkSessionStartedListener.resetIsRnSdkInitializedForTests()
         super.tearDown()
     }
 
@@ -52,5 +56,63 @@ class DdSdkSessionStartedListenerTests: XCTestCase {
 
         // THEN
         XCTAssertNotNil(rumSessionListener)
+    }
+
+    func testIsRnSdkInitializedDefaultsToFalse() {
+        // THEN
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+    }
+
+    func testOnRnSdkInitializedFlipsFlag() {
+        // GIVEN
+        let instance = DdSdkSessionStartedListener.instance
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN
+        instance.onRnSdkInitialized()
+
+        // THEN
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+    }
+
+    func testInvalidateDoesNotResetIsRnSdkInitialized() {
+        // GIVEN
+        let instance = DdSdkSessionStartedListener.instance
+        instance.onRnSdkInitialized()
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN
+        DdSdkSessionStartedListener.invalidate()
+
+        // THEN
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+    }
+
+    func testBridgelessListenerPathIsUnaffectedByIsRnSdkInitialized() {
+        // GIVEN — bridgeless mode (rctBridge == nil), flag still false
+        let instance = DdSdkSessionStartedListener.instance
+        var deliveredSessionIds: [String] = []
+        instance.setListenerCallback { sessionId in
+            deliveredSessionIds.append(sessionId)
+        }
+        instance.setHasListeners(true)
+
+        // WHEN — native session starts before any JS init
+        instance.rumSessionListener?("TEST-SESSION-ID", false)
+
+        // THEN — bridgeless path delivers regardless of the flag
+        XCTAssertEqual(deliveredSessionIds, ["TEST-SESSION-ID"])
+    }
+
+    func testResetIsRnSdkInitializedForTestsResetsFlag() {
+        // GIVEN
+        DdSdkSessionStartedListener.instance.onRnSdkInitialized()
+        XCTAssertTrue(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
+
+        // WHEN
+        DdSdkSessionStartedListener.resetIsRnSdkInitializedForTests()
+
+        // THEN
+        XCTAssertFalse(DdSdkSessionStartedListener.isRnSdkInitializedForTests())
     }
 }
