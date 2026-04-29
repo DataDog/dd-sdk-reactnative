@@ -94,6 +94,6 @@
         }
     },
     "dependencies": {
-        "chokidar": "^4.0.3"
+        "chokidar": "^5.0.0"
     }
 }
