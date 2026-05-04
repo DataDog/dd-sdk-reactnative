@@ -37,6 +37,7 @@ import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.trace.TracingHeaderType
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.MockRumMonitor
+import com.datadog.tools.unit.TestJsThreadExecutor
 import com.datadog.tools.unit.TestUiThreadExecutor
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.setStaticValue
@@ -165,15 +166,12 @@ internal class DdSdkTest {
                 0
             )
         ) doReturn mockPackageInfo
-        whenever(mockReactContext.runOnJSQueueThread(any())).thenAnswer { answer ->
-            answer.getArgument<Runnable>(0).run()
-            true
-        }
         testedBridgeSdk = DdSdkImplementation(
             mockReactContext,
             mockDatadog,
             mockDdTelemetry,
-            TestUiThreadExecutor()
+            TestUiThreadExecutor(),
+            TestJsThreadExecutor()
         )
 
         DatadogSDKWrapperStorage.onInitializedListeners.clear()
