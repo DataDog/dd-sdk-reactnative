@@ -49,7 +49,7 @@
         "@babel/traverse": "^7.28.4",
         "@babel/types": "^7.27.1",
         "fast-glob": "^3.3.3",
-        "svgo": "^4.0.0",
+        "svgo": "^4.0.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
