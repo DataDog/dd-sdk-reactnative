@@ -938,6 +938,66 @@ internal class DdSdkTest {
     }
 
     @Test
+    fun `𝕄 initialize native SDK 𝕎 initialize() {site=us2_fed}`(
+        forge: Forge
+    ) {
+        // Given
+        val site = forge.randomizeCase("us2_fed")
+        val rumConfiguration = fakeConfiguration.rumConfiguration?.copy(
+            nativeCrashReportEnabled = true
+        )
+        fakeConfiguration = fakeConfiguration.copy(site = site, rumConfiguration = rumConfiguration)
+        val sdkConfigCaptor = argumentCaptor<Configuration>()
+        val rumConfigCaptor = argumentCaptor<RumConfiguration>()
+        val logsConfigCaptor = argumentCaptor<LogsConfiguration>()
+        val traceConfigCaptor = argumentCaptor<TraceConfiguration>()
+
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            inOrder(mockDatadog) {
+                verify(mockDatadog).initialize(
+                    same(mockContext),
+                    sdkConfigCaptor.capture(),
+                    any()
+                )
+                rumMock.verify { Rum.enable(rumConfigCaptor.capture(), any()) }
+                traceMock.verify { Trace.enable(traceConfigCaptor.capture(), any()) }
+                logsMock.verify { Logs.enable(logsConfigCaptor.capture(), any()) }
+            }
+            assertThat(sdkConfigCaptor.firstValue)
+                .hasField("coreConfig") {
+                    it.hasFieldEqualTo("needsClearTextHttp", false)
+                    it.hasFieldEqualTo("firstPartyHostsWithHeaderTypes", emptyMap<String, String>())
+                    it.hasFieldEqualTo("site", DatadogSite.US2_FED)
+                }
+                .hasFieldEqualTo("clientToken", fakeConfiguration.clientToken)
+                .hasFieldEqualTo("env", fakeConfiguration.env)
+                .hasFieldEqualTo("variant", "")
+                .hasFieldEqualTo(
+                    "additionalConfig",
+                    fakeConfiguration.additionalConfiguration?.filterValues { it != null }.orEmpty()
+                )
+            assertThat(rumConfigCaptor.firstValue)
+                .hasFieldEqualTo("applicationId", fakeConfiguration.rumConfiguration?.applicationId)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
+    }
+
+    @Test
     fun `𝕄 initialize native SDK 𝕎 initialize() {site=eu1}`(
         forge: Forge
     ) {

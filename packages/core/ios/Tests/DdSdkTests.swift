@@ -381,6 +381,16 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.site, .us1_fed)
     }
 
+    func testBuildConfigurationUS2FEDEndpoint() {
+        let configuration: DdSdkConfiguration = .mockAny(site: "US2_FED")
+
+        let ddConfig = DdSdkNativeInitialization().buildSDKConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.site, .us2_fed)
+    }
+
     func testBuildConfigurationGOVEndpoint() {
         let configuration: DdSdkConfiguration = .mockAny(site: "GOV")
 
