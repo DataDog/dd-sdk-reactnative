@@ -84,7 +84,7 @@ class RickMortyService {
         return match ? match[1] : null;
     }
 
-    private async fetchByIds(endpoint: string, urls: string[], resourceType: string): Promise<any[]> {
+    private async fetchByIds(endpoint: string, urls: string[], _resourceType: string): Promise<any[]> {
         const ids = urls.map(url => this.extractIdFromUrl(url)).filter(Boolean);
         if (ids.length === 0) return [];
 
