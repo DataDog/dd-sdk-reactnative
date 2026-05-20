@@ -1298,6 +1298,24 @@ describe('DdSdkReactNative', () => {
                 }
             });
         });
+
+        it('calls SDK method when addUserExtraInfo without prior setUserInfo', async () => {
+            // GIVEN
+            const extraInfo = { testId: 'abc123' };
+
+            // WHEN
+            await DdSdkReactNative.addUserExtraInfo(extraInfo);
+
+            // THEN
+            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledWith(
+                extraInfo
+            );
+            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+                extraInfo: {
+                    testId: 'abc123'
+                }
+            });
+        });
     });
 
     describe('clearUserInfo', () => {
@@ -1320,9 +1338,9 @@ describe('DdSdkReactNative', () => {
             // THEN
             expect(NativeDdSdk.clearUserInfo).toHaveBeenCalledTimes(1);
             expect(NativeDdSdk.setUserInfo).toHaveBeenCalled();
-            expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
-                undefined
-            );
+            expect(
+                UserInfoSingleton.getInstance().getUserInfo()
+            ).toBeUndefined();
         });
     });
 

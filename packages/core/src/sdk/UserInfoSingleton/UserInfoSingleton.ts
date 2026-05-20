@@ -11,9 +11,22 @@ import type { UserInfo } from './types';
 class UserInfoProvider {
     private userInfo: UserInfo | undefined = undefined;
 
-    setUserInfo = (userInfo: UserInfo) => {
+    setUserInfo = (userInfo: UserInfo & { id: string }) => {
+        if (typeof userInfo.id !== 'string' || userInfo.id.length === 0) {
+            return;
+        }
         this.userInfo = userInfo;
-        setCachedUserId(this.userInfo.id);
+        setCachedUserId(userInfo.id);
+    };
+
+    addUserExtraInfo = (extraInfo: Record<string, unknown>) => {
+        this.userInfo = {
+            ...this.userInfo,
+            extraInfo: {
+                ...this.userInfo?.extraInfo,
+                ...extraInfo
+            }
+        };
     };
 
     getUserInfo = (): UserInfo | undefined => {

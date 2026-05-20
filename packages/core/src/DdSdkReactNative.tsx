@@ -41,6 +41,7 @@ import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { NativeDdSdk } from './sdk/DdSdkInternal';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
+import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
@@ -258,12 +259,17 @@ export class DdSdkReactNative {
      * @param extraInfo: Additional information.
      * @returns a Promise.
      */
-    static setUserInfo = async (userInfo: {
-        id: string;
-        name?: string;
-        email?: string;
-        extraInfo?: Record<string, unknown>;
-    }): Promise<void> => {
+    static setUserInfo = async (
+        userInfo: UserInfo & { id: string }
+    ): Promise<void> => {
+        if (typeof userInfo.id !== 'string' || userInfo.id.length === 0) {
+            InternalLog.log(
+                'setUserInfo requires a valid user ID. Please provide a non-empty string as the id field.',
+                SdkVerbosity.WARN
+            );
+            return;
+        }
+
         InternalLog.log(
             `Setting user ${JSON.stringify(userInfo)}`,
             SdkVerbosity.DEBUG
@@ -296,25 +302,8 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        const userInfo = UserInfoSingleton.getInstance().getUserInfo();
-        if (!userInfo) {
-            InternalLog.log(
-                'Skipped adding User Extra Info: User Info is currently undefined. A user ID must be set before adding extra info. Please call setUserInfo() first.',
-                SdkVerbosity.WARN
-            );
-
-            return;
-        }
-        const updatedUserInfo = {
-            ...userInfo,
-            extraInfo: {
-                ...userInfo.extraInfo,
-                ...extraUserInfo
-            }
-        };
-
         await NativeDdSdk.addUserExtraInfo(extraUserInfo);
-        UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
+        UserInfoSingleton.getInstance().addUserExtraInfo(extraUserInfo);
     };
 
     /**

@@ -53,7 +53,7 @@ export type DdSdkType = {
      * @param email: The user email.
      * @param extraInfo: Additional information.
      */
-    setUserInfo(userInfo: UserInfo): Promise<void>;
+    setUserInfo(userInfo: UserInfo & { id: string }): Promise<void>;
 
     /**
      * Clears the user information.
@@ -128,7 +128,7 @@ export type DdTraceType = {
 // Core
 
 export type UserInfo = {
-    id: string;
+    id?: string;
     name?: string;
     email?: string;
     extraInfo?: object;
