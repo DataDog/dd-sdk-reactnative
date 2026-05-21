@@ -20,6 +20,7 @@ package/android/src/main/kotlin/com/datadog/reactnative/DdTraceImplementation.kt
 package/android/src/main/kotlin/com/datadog/reactnative/FrameRateProvider.kt
 package/android/src/main/kotlin/com/datadog/reactnative/GlobalState.kt
 package/android/src/main/kotlin/com/datadog/reactnative/JSONFileReader.kt
+package/android/src/main/kotlin/com/datadog/reactnative/JsThreadExecutor.kt
 package/android/src/main/kotlin/com/datadog/reactnative/NoOpViewTrackingStrategy.kt
 package/android/src/main/kotlin/com/datadog/reactnative/ProxyAuthenticator.kt
 package/android/src/main/kotlin/com/datadog/reactnative/SdkVersion.kt
@@ -58,6 +59,7 @@ package/android/src/test/kotlin/com/datadog/tools/unit/MapExt.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/MockRumMonitor.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/ReflectUtils.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/RemoveFinalModifierJava.java
+package/android/src/test/kotlin/com/datadog/tools/unit/TestJsThreadExecutor.kt
 package/android/src/test/kotlin/com/datadog/tools/unit/TestUiThreadExecutor.kt
 package/android/src/test/resources/input/complete-configuration.json
 package/android/src/test/resources/input/malformed-configuration.json
