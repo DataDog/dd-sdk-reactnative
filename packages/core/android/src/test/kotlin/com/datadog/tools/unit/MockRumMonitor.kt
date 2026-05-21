@@ -14,6 +14,8 @@ import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum._RumInternalProxy
 import com.datadog.android.rum.featureoperations.FailureReason
+import com.datadog.android.rum.operations.FailureReason as OperationFailureReason
+import com.datadog.android.rum.operations.OperationOptions
 
 class MockRumMonitor : RumMonitor {
     override var debug = false
@@ -145,6 +147,29 @@ class MockRumMonitor : RumMonitor {
         name: String,
         operationKey: String?,
         failureReason: FailureReason,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun startOperation(
+        name: String,
+        operationKey: String?,
+        options: OperationOptions,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun succeedOperation(
+        name: String,
+        operationKey: String?,
+        attributes: Map<String, Any?>
+    ) {}
+
+    @ExperimentalRumApi
+    override fun failOperation(
+        name: String,
+        operationKey: String?,
+        failureReason: OperationFailureReason,
         attributes: Map<String, Any?>
     ) {}
 

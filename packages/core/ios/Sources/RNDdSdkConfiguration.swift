@@ -515,6 +515,8 @@ extension NSString? {
             return .us5
         case "us1_fed", "gov":
             return .us1_fed
+        case "us2_fed":
+            return .us2_fed
         case "ap1":
             return .ap1
         case "ap2":

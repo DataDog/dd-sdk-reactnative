@@ -1,26 +1,26 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.10.0):
-    - DatadogInternal (= 3.10.0)
-  - DatadogCrashReporting (3.10.0):
-    - DatadogInternal (= 3.10.0)
+  - DatadogCore (3.11.0):
+    - DatadogInternal (= 3.11.0)
+  - DatadogCrashReporting (3.11.0):
+    - DatadogInternal (= 3.11.0)
     - KSCrash/Filters (= 2.5.0)
     - KSCrash/Recording (= 2.5.0)
-  - DatadogFlags (3.10.0):
-    - DatadogInternal (= 3.10.0)
-  - DatadogInternal (3.10.0)
-  - DatadogLogs (3.10.0):
-    - DatadogInternal (= 3.10.0)
-  - DatadogRUM (3.10.0):
-    - DatadogInternal (= 3.10.0)
+  - DatadogFlags (3.11.0):
+    - DatadogInternal (= 3.11.0)
+  - DatadogInternal (3.11.0)
+  - DatadogLogs (3.11.0):
+    - DatadogInternal (= 3.11.0)
+  - DatadogRUM (3.11.0):
+    - DatadogInternal (= 3.11.0)
   - DatadogSDKReactNative (3.4.0):
-    - DatadogCore (= 3.10.0)
-    - DatadogCrashReporting (= 3.10.0)
-    - DatadogFlags (= 3.10.0)
-    - DatadogLogs (= 3.10.0)
-    - DatadogRUM (= 3.10.0)
-    - DatadogTrace (= 3.10.0)
-    - DatadogWebViewTracking (= 3.10.0)
+    - DatadogCore (= 3.11.0)
+    - DatadogCrashReporting (= 3.11.0)
+    - DatadogFlags (= 3.11.0)
+    - DatadogLogs (= 3.11.0)
+    - DatadogRUM (= 3.11.0)
+    - DatadogTrace (= 3.11.0)
+    - DatadogWebViewTracking (= 3.11.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -42,13 +42,13 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - DatadogSDKReactNative/Tests (3.4.0):
-    - DatadogCore (= 3.10.0)
-    - DatadogCrashReporting (= 3.10.0)
-    - DatadogFlags (= 3.10.0)
-    - DatadogLogs (= 3.10.0)
-    - DatadogRUM (= 3.10.0)
-    - DatadogTrace (= 3.10.0)
-    - DatadogWebViewTracking (= 3.10.0)
+    - DatadogCore (= 3.11.0)
+    - DatadogCrashReporting (= 3.11.0)
+    - DatadogFlags (= 3.11.0)
+    - DatadogLogs (= 3.11.0)
+    - DatadogRUM (= 3.11.0)
+    - DatadogTrace (= 3.11.0)
+    - DatadogWebViewTracking (= 3.11.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -69,11 +69,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogTrace (3.10.0):
-    - DatadogInternal (= 3.10.0)
+  - DatadogTrace (3.11.0):
+    - DatadogInternal (= 3.11.0)
     - OpenTelemetry-Swift-Api (~> 2.3.0)
-  - DatadogWebViewTracking (3.10.0):
-    - DatadogInternal (= 3.10.0)
+  - DatadogWebViewTracking (3.11.0):
+    - DatadogInternal (= 3.11.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
@@ -1866,15 +1866,15 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogCore: be0f6c233bef27eda40acade29763943cb88935f
-  DatadogCrashReporting: 151f72523ee117000fed4b5e792de2349d38b331
-  DatadogFlags: fbc1d17d2b83397c4f33817263a14b84a857ca1d
-  DatadogInternal: b81d08e4035de78140488b7422c239b17b89d251
-  DatadogLogs: 20381f731050c500c85d36f4799cf0f28a56915e
-  DatadogRUM: 4f863c5330d85d6b54bb372d830929ad3b5006ab
-  DatadogSDKReactNative: 0871c12fc0fa3a6a78d9c8dd0f65f15bd9950b7e
-  DatadogTrace: c51a2bde28197cb1bab50031c83a82e3a1dbcf30
-  DatadogWebViewTracking: 7775faa20f2044f2948c2eb246889ba5ceefbd6a
+  DatadogCore: 106d2aa8bef1a3dfb2a75723240f78cb5f8310fd
+  DatadogCrashReporting: eace5202ae63d92835718cf4a86489fdaef681a3
+  DatadogFlags: 0587c5b5db34874ce22264abc5e03102b53d3656
+  DatadogInternal: 00709affd9889ca9e8fd96e85e39ad865e651c32
+  DatadogLogs: ef98708261f8f7ba82d15360f9951d43f578163b
+  DatadogRUM: 67d130164f4a7663e05a3d02803be9e9dd1abbb7
+  DatadogSDKReactNative: d38fa020d47398ca682357e0837cdc54adf65669
+  DatadogTrace: 17f50647107755fba79fc2298bf4cb282e0efb1f
+  DatadogWebViewTracking: 1290fce6010bf65b5e0e0ffa9048b448782e469c
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45
