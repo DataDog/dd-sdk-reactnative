@@ -41,6 +41,7 @@ import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 import { NativeDdSdk } from './sdk/DdSdkInternal';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
+import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
@@ -251,19 +252,23 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Sets the user information.
-     * @param id: A mandatory unique user identifier (relevant to your business domain).
-     * @param name: The user name or alias.
-     * @param email: The user email.
-     * @param extraInfo: Additional information.
+     * Sets the user information. Requires a user ID — setting user properties
+     * like name or email implies a known user, so an ID must be provided.
+     * To add custom attributes without setting a user ID, use {@link addUserExtraInfo} instead.
+     * @param userInfo: The user object (id is required, name, email and extraInfo are optional).
      * @returns a Promise.
      */
-    static setUserInfo = async (userInfo: {
-        id: string;
-        name?: string;
-        email?: string;
-        extraInfo?: Record<string, unknown>;
-    }): Promise<void> => {
+    static setUserInfo = async (
+        userInfo: UserInfo & { id: string }
+    ): Promise<void> => {
+        if (typeof userInfo.id !== 'string' || userInfo.id.length === 0) {
+            InternalLog.log(
+                'setUserInfo requires a valid user ID. Please provide a non-empty string as the id field.',
+                SdkVerbosity.WARN
+            );
+            return;
+        }
+
         InternalLog.log(
             `Setting user ${JSON.stringify(userInfo)}`,
             SdkVerbosity.DEBUG
@@ -296,25 +301,8 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        const userInfo = UserInfoSingleton.getInstance().getUserInfo();
-        if (!userInfo) {
-            InternalLog.log(
-                'Skipped adding User Extra Info: User Info is currently undefined. A user ID must be set before adding extra info. Please call setUserInfo() first.',
-                SdkVerbosity.WARN
-            );
-
-            return;
-        }
-        const updatedUserInfo = {
-            ...userInfo,
-            extraInfo: {
-                ...userInfo.extraInfo,
-                ...extraUserInfo
-            }
-        };
-
         await NativeDdSdk.addUserExtraInfo(extraUserInfo);
-        UserInfoSingleton.getInstance().setUserInfo(updatedUserInfo);
+        UserInfoSingleton.getInstance().addUserExtraInfo(extraUserInfo);
     };
 
     /**

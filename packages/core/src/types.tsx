@@ -47,13 +47,12 @@ export type DdSdkType = {
     removeAttributes(keys: string[]): Promise<void>;
 
     /**
-     * Sets the user information.
-     * @param id: A unique user identifier (relevant to your business domain)
-     * @param name: The user name or alias.
-     * @param email: The user email.
-     * @param extraInfo: Additional information.
+     * Sets the user information. Requires a user ID — setting user properties
+     * like name or email implies a known user, so an ID must be provided.
+     * To add custom attributes without setting a user ID, use {@link addUserExtraInfo} instead.
+     * @param userInfo: The user object (id is required, name, email and extraInfo are optional).
      */
-    setUserInfo(userInfo: UserInfo): Promise<void>;
+    setUserInfo(userInfo: UserInfo & { id: string }): Promise<void>;
 
     /**
      * Clears the user information.
@@ -128,7 +127,7 @@ export type DdTraceType = {
 // Core
 
 export type UserInfo = {
-    id: string;
+    id?: string;
     name?: string;
     email?: string;
     extraInfo?: object;
