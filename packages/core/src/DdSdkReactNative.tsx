@@ -252,11 +252,10 @@ export class DdSdkReactNative {
     };
 
     /**
-     * Sets the user information.
-     * @param id: A mandatory unique user identifier (relevant to your business domain).
-     * @param name: The user name or alias.
-     * @param email: The user email.
-     * @param extraInfo: Additional information.
+     * Sets the user information. Requires a user ID — setting user properties
+     * like name or email implies a known user, so an ID must be provided.
+     * To add custom attributes without setting a user ID, use {@link addUserExtraInfo} instead.
+     * @param userInfo: The user object (id is required, name, email and extraInfo are optional).
      * @returns a Promise.
      */
     static setUserInfo = async (
