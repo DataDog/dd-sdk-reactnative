@@ -56,6 +56,7 @@ interface XHRProxyProviders {
  */
 export class XHRProxy extends RequestProxy {
     private providers: XHRProxyProviders;
+    private context: RequestProxyOptions | null = null;
     private static originalXhrOpen: typeof XMLHttpRequest.prototype.open;
     private static originalXhrSend: typeof XMLHttpRequest.prototype.send;
     private static originalXhrSetRequestHeader: typeof XMLHttpRequest.prototype.setRequestHeader;
@@ -69,6 +70,7 @@ export class XHRProxy extends RequestProxy {
         XHRProxy.originalXhrOpen = this.providers.xhrType.prototype.open;
         XHRProxy.originalXhrSend = this.providers.xhrType.prototype.send;
         XHRProxy.originalXhrSetRequestHeader = this.providers.xhrType.prototype.setRequestHeader;
+        this.context = context;
         proxyRequests(this.providers, context);
     };
 
@@ -77,6 +79,15 @@ export class XHRProxy extends RequestProxy {
         this.providers.xhrType.prototype.send = XHRProxy.originalXhrSend;
         this.providers.xhrType.prototype.setRequestHeader =
             XHRProxy.originalXhrSetRequestHeader;
+        this.context = null;
+    };
+
+    onTrackingUpdate = (options: RequestProxyOptions) => {
+        if (this.context === null) {
+            return;
+        }
+        this.context.tracingSamplingRate = options.tracingSamplingRate;
+        this.context.firstPartyHostsRegexMap = options.firstPartyHostsRegexMap;
     };
 }
 
@@ -94,8 +105,6 @@ const proxyOpen = (
     context: RequestProxyOptions
 ): void => {
     const originalXhrOpen = xhrType.prototype.open;
-    const firstPartyHostsRegexMap = context.firstPartyHostsRegexMap;
-    const tracingSamplingRate = context.tracingSamplingRate;
 
     xhrType.prototype.open = function open(
         this: DdRumXhr,
@@ -113,8 +122,8 @@ const proxyOpen = (
             graphql: {},
             tracingAttributes: getTracingAttributes({
                 hostname,
-                firstPartyHostsRegexMap,
-                tracingSamplingRate,
+                firstPartyHostsRegexMap: context.firstPartyHostsRegexMap,
+                tracingSamplingRate: context.tracingSamplingRate,
                 rumSessionId: getCachedSessionId()
             }),
             baggageHeaderEntries: new Set<string>()

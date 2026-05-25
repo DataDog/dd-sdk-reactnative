@@ -469,6 +469,7 @@ export type PartialInitializationConfiguration = {
     readonly bundleLogsWithTraces?: boolean;
     readonly batchProcessingLevel?: BatchProcessingLevel;
     readonly initialResourceThreshold?: number;
+    readonly resourceTracingSamplingRate?: number;
 };
 
 const setConfigurationAttribute = <

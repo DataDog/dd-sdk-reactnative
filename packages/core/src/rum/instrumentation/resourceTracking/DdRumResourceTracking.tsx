@@ -58,6 +58,31 @@ export class DdRumResourceTracking {
         DdRumResourceTracking.isTracking = true;
     }
 
+    /**
+     * Applies a new tracing sampling rate and/or first-party hosts to the
+     * already-installed request proxy. Used by deferred-initialization flows
+     * (DatadogProvider.initialize) where tracking is started at provider mount
+     * with default features, and the final values are only known later.
+     * No-op if tracking has not started.
+     */
+    static updateTrackingContext({
+        tracingSamplingRate,
+        firstPartyHosts
+    }: {
+        tracingSamplingRate: number;
+        firstPartyHosts: FirstPartyHost[];
+    }): void {
+        if (!DdRumResourceTracking.isTracking || !this.requestProxy) {
+            return;
+        }
+        this.requestProxy.onTrackingUpdate({
+            tracingSamplingRate,
+            firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
+                firstPartyHosts
+            )
+        });
+    }
+
     static stopTracking(): void {
         if (DdRumResourceTracking.isTracking) {
             DdRumResourceTracking.isTracking = false;
