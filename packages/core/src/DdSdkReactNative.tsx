@@ -185,13 +185,27 @@ export class DdSdkReactNative {
             return new Promise(resolve => resolve());
         }
 
-        return DdSdkReactNative.initializeNativeSDK(
-            buildConfigurationFromPartialConfiguration(
-                DdSdkReactNative.features,
-                configuration
-            ),
-            { initializationModeForTelemetry: 'PARTIAL' }
+        const builtConfiguration = buildConfigurationFromPartialConfiguration(
+            DdSdkReactNative.features,
+            configuration
         );
+
+        // The XHRProxy was installed at provider mount with the features'
+        // defaults; re-apply the resolved values so a resourceTraceSampleRate
+        // (or firstPartyHosts) supplied via DatadogProvider.initialize takes
+        // effect on subsequent fetch/XHR calls.
+        DdRumResourceTracking.updateTrackingContext({
+            resourceTraceSampleRate:
+                builtConfiguration.rumConfiguration?.resourceTraceSampleRate ??
+                RUM_DEFAULTS.resourceTraceSampleRate,
+            firstPartyHosts:
+                builtConfiguration.rumConfiguration?.firstPartyHosts ??
+                RUM_DEFAULTS.getFirstPartyHosts()
+        });
+
+        return DdSdkReactNative.initializeNativeSDK(builtConfiguration, {
+            initializationModeForTelemetry: 'PARTIAL'
+        });
     };
 
     /**

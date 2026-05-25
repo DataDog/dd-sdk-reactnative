@@ -9,6 +9,7 @@ import { NativeModules } from 'react-native';
 import { BufferSingleton } from '../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { PropagatorType } from '../../../types';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
+import { SAMPLING_PRIORITY_HEADER_KEY } from '../distributedTracing/headers';
 
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
@@ -89,5 +90,109 @@ describe('DdRumResourceTracking', () => {
         // THEN
         expect(DdRum.startResource).not.toHaveBeenCalled();
         expect(DdRum.stopResource).not.toHaveBeenCalled();
+    });
+
+    describe('updateTrackingContext', () => {
+        beforeEach(() => {
+            DdRumResourceTracking.stopTracking();
+        });
+
+        afterEach(() => {
+            DdRumResourceTracking.stopTracking();
+        });
+
+        it('is a no-op when called before startTracking', async () => {
+            // GIVEN tracking was never started
+
+            // WHEN
+            DdRumResourceTracking.updateTrackingContext({
+                resourceTraceSampleRate: 100,
+                firstPartyHosts: [
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ]
+            });
+
+            executeRequest('https://api.example.com/v2/user');
+            await flushPromises();
+
+            // THEN: no XHR proxy was installed; no resource events captured
+            expect(DdRum.startResource).not.toHaveBeenCalled();
+            expect(DdRum.stopResource).not.toHaveBeenCalled();
+        });
+
+        it('applies the updated sampling rate to subsequent requests', () => {
+            // GIVEN tracking installed with rate=0
+            DdRumResourceTracking.startTracking({
+                resourceTraceSampleRate: 0,
+                firstPartyHosts: [
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ]
+            });
+
+            // pre-update request gets sampling priority '0'
+            const xhrBeforeUpdate = new XMLHttpRequestMock();
+            xhrBeforeUpdate.open('GET', 'https://api.example.com/v2/user');
+            xhrBeforeUpdate.send();
+            expect(
+                xhrBeforeUpdate.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)
+            ).toBe('0');
+
+            // WHEN
+            DdRumResourceTracking.updateTrackingContext({
+                resourceTraceSampleRate: 100,
+                firstPartyHosts: [
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ]
+            });
+
+            // THEN: post-update request uses the new rate
+            const xhrAfterUpdate = new XMLHttpRequestMock();
+            xhrAfterUpdate.open('GET', 'https://api.example.com/v2/user');
+            xhrAfterUpdate.send();
+            expect(
+                xhrAfterUpdate.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)
+            ).toBe('1');
+        });
+
+        it('is a no-op after tracking has been stopped', async () => {
+            // GIVEN
+            DdRumResourceTracking.startTracking({
+                resourceTraceSampleRate: 100,
+                firstPartyHosts: [
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ]
+            });
+            DdRumResourceTracking.stopTracking();
+
+            // WHEN
+            DdRumResourceTracking.updateTrackingContext({
+                resourceTraceSampleRate: 100,
+                firstPartyHosts: [
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ]
+            });
+
+            executeRequest('https://api.example.com/v2/user');
+            await flushPromises();
+
+            // THEN: tracking remains stopped, nothing captured
+            expect(DdRum.startResource).not.toHaveBeenCalled();
+            expect(DdRum.stopResource).not.toHaveBeenCalled();
+        });
     });
 });

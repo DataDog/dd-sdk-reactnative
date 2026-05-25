@@ -73,6 +73,37 @@ class RumResourceTracking {
         );
     }
 
+    /**
+     * Applies a new resource trace sample rate and/or first-party hosts to
+     * the already-installed request proxy. Used by deferred-initialization
+     * flows (DatadogProvider.initialize) where tracking is started at provider
+     * mount with default features, and the final values are only known later.
+     * No-op if tracking has not started.
+     */
+    updateTrackingContext({
+        resourceTraceSampleRate,
+        firstPartyHosts
+    }: {
+        resourceTraceSampleRate: number;
+        firstPartyHosts: FirstPartyHost[];
+    }): void {
+        if (!this._isTracking || !this._requestProxy) {
+            return;
+        }
+        this._requestProxy.onTrackingUpdate({
+            tracingSamplingRate: resourceTraceSampleRate,
+            firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
+                firstPartyHosts
+            )
+        });
+        // Keep the distributed-tracing sampler's max-trace-id in sync; the
+        // shouldSampleTrace path consults this for rates strictly between 0
+        // and 100.
+        DistributedTracingSampling.setResourceTraceSampleRate(
+            resourceTraceSampleRate
+        );
+    }
+
     stopTracking(): void {
         if (this._isTracking) {
             this._isTracking = false;

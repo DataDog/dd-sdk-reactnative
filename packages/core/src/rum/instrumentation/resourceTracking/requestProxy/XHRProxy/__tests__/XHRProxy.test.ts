@@ -455,6 +455,74 @@ describe('XHRProxy', () => {
             );
         });
 
+        it('applies a tracingSamplingRate updated via onTrackingUpdate to subsequent XHRs (regression: RUMS-5973)', async () => {
+            // GIVEN
+            const method = 'GET';
+            const url = 'https://api.example.com/v2/user';
+            const firstPartyHostsRegexMap = firstPartyHostsRegexMapBuilder([
+                {
+                    match: 'api.example.com',
+                    propagatorTypes: [PropagatorType.DATADOG]
+                }
+            ]);
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 0,
+                firstPartyHostsRegexMap
+            });
+
+            // WHEN: an XHR is opened with the initial rate of 0
+            const xhrBeforeUpdate = new XMLHttpRequestMock();
+            xhrBeforeUpdate.open(method, url);
+            xhrBeforeUpdate.send();
+            xhrBeforeUpdate.notifyResponseArrived();
+            xhrBeforeUpdate.complete(200, 'ok');
+            await flushPromises();
+
+            // AND: the tracking context is updated to 100
+            xhrProxy.onTrackingUpdate({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap
+            });
+
+            // AND: a second XHR is opened
+            const xhrAfterUpdate = new XMLHttpRequestMock();
+            xhrAfterUpdate.open(method, url);
+            xhrAfterUpdate.send();
+            xhrAfterUpdate.notifyResponseArrived();
+            xhrAfterUpdate.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN: the pre-update request keeps priority 0, the post-update one is sampled at 100%
+            expect(
+                xhrBeforeUpdate.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)
+            ).toBe('0');
+            expect(
+                xhrAfterUpdate.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)
+            ).toBe('1');
+        });
+
+        it('ignores onTrackingUpdate when tracking has not started', () => {
+            // GIVEN: tracking was never started, so XMLHttpRequest is not proxied
+
+            // WHEN
+            xhrProxy.onTrackingUpdate({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
+                    {
+                        match: 'api.example.com',
+                        propagatorTypes: [PropagatorType.DATADOG]
+                    }
+                ])
+            });
+
+            // THEN: no throw, and a subsequent open is not instrumented
+            const xhr = new XMLHttpRequestMock();
+            xhr.open('GET', 'https://api.example.com/v2/user');
+            expect(
+                xhr.requestHeaders.get(SAMPLING_PRIORITY_HEADER_KEY)
+            ).toBeUndefined();
+        });
+
         it('adds the x-datadog-tracked-by header for first party host requests', async () => {
             // GIVEN
             const method = 'GET';

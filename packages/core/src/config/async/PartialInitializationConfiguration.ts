@@ -46,6 +46,7 @@ export type PartialInitializationConfiguration = {
         readonly customEndpoint?: string;
         readonly trackNonFatalAnrs?: boolean;
         readonly appHangThreshold?: number;
+        readonly resourceTraceSampleRate?: number;
     };
     readonly logsConfiguration?: {
         readonly bundleLogsWithRum?: boolean;
