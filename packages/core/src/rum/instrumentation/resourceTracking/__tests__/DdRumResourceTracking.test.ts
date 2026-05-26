@@ -106,13 +106,7 @@ describe('DdRumResourceTracking', () => {
 
             // WHEN
             DdRumResourceTracking.updateTrackingContext({
-                resourceTraceSampleRate: 100,
-                firstPartyHosts: [
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ]
+                resourceTraceSampleRate: 100
             });
 
             executeRequest('https://api.example.com/v2/user');
@@ -145,13 +139,7 @@ describe('DdRumResourceTracking', () => {
 
             // WHEN
             DdRumResourceTracking.updateTrackingContext({
-                resourceTraceSampleRate: 100,
-                firstPartyHosts: [
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ]
+                resourceTraceSampleRate: 100
             });
 
             // THEN: post-update request uses the new rate
@@ -178,13 +166,7 @@ describe('DdRumResourceTracking', () => {
 
             // WHEN
             DdRumResourceTracking.updateTrackingContext({
-                resourceTraceSampleRate: 100,
-                firstPartyHosts: [
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ]
+                resourceTraceSampleRate: 100
             });
 
             executeRequest('https://api.example.com/v2/user');

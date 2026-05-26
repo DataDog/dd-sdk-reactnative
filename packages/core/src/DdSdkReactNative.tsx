@@ -191,16 +191,13 @@ export class DdSdkReactNative {
         );
 
         // The XHRProxy was installed at provider mount with the features'
-        // defaults; re-apply the resolved values so a resourceTraceSampleRate
-        // (or firstPartyHosts) supplied via DatadogProvider.initialize takes
-        // effect on subsequent fetch/XHR calls.
+        // default resourceTraceSampleRate; re-apply the resolved value so a
+        // resourceTraceSampleRate supplied via DatadogProvider.initialize
+        // takes effect on subsequent fetch/XHR calls.
         DdRumResourceTracking.updateTrackingContext({
             resourceTraceSampleRate:
                 builtConfiguration.rumConfiguration?.resourceTraceSampleRate ??
-                RUM_DEFAULTS.resourceTraceSampleRate,
-            firstPartyHosts:
-                builtConfiguration.rumConfiguration?.firstPartyHosts ??
-                RUM_DEFAULTS.getFirstPartyHosts()
+                RUM_DEFAULTS.resourceTraceSampleRate
         });
 
         return DdSdkReactNative.initializeNativeSDK(builtConfiguration, {

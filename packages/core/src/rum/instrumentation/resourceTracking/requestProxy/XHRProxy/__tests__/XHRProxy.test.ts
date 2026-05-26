@@ -480,8 +480,7 @@ describe('XHRProxy', () => {
 
             // AND: the tracking context is updated to 100
             xhrProxy.onTrackingUpdate({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegexMap
+                tracingSamplingRate: 100
             });
 
             // AND: a second XHR is opened
@@ -506,13 +505,7 @@ describe('XHRProxy', () => {
 
             // WHEN
             xhrProxy.onTrackingUpdate({
-                tracingSamplingRate: 100,
-                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([
-                    {
-                        match: 'api.example.com',
-                        propagatorTypes: [PropagatorType.DATADOG]
-                    }
-                ])
+                tracingSamplingRate: 100
             });
 
             // THEN: no throw, and a subsequent open is not instrumented

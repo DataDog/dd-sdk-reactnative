@@ -101,12 +101,11 @@ export class XHRProxy extends RequestProxy {
         this.context = null;
     };
 
-    onTrackingUpdate = (options: RequestProxyOptions) => {
+    onTrackingUpdate = (options: { tracingSamplingRate: number }) => {
         if (this.context === null) {
             return;
         }
         this.context.tracingSamplingRate = options.tracingSamplingRate;
-        this.context.firstPartyHostsRegexMap = options.firstPartyHostsRegexMap;
     };
 }
 
