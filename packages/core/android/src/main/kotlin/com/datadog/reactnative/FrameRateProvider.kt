@@ -10,11 +10,11 @@ import android.view.Choreographer
 
 internal class FrameRateProvider(
     reactFrameRateCallback: ((Double) -> Unit),
-    uiThreadExecutor: UiThreadExecutor
+    jsThreadExecutor: JsThreadExecutor
 ) {
     private val frameCallback: FpsFrameCallback = FpsFrameCallback(
         reactFrameRateCallback,
-        uiThreadExecutor
+        jsThreadExecutor
     )
 
     fun start() {
@@ -29,7 +29,7 @@ internal class FrameRateProvider(
 
 internal class FpsFrameCallback(
     private val reactFrameRateCallback: ((Double) -> Unit),
-    private val uiThreadExecutor: UiThreadExecutor
+    private val jsThreadExecutor: JsThreadExecutor
 ) : Choreographer.FrameCallback {
 
     private var choreographer: Choreographer? = null
@@ -43,16 +43,24 @@ internal class FpsFrameCallback(
         choreographer?.postFrameCallback(this)
     }
 
+    @Suppress("SwallowedException")
     fun start() {
-        uiThreadExecutor.runOnUiThread {
-            choreographer = Choreographer.getInstance()
-            choreographer?.postFrameCallback(this@FpsFrameCallback)
+        // Choreographer is thread-local: we register on the JS thread so frame callbacks
+        // measure JS frame timings, matching the iOS CADisplayLink-on-JS-RunLoop approach.
+        jsThreadExecutor.runOnJsThread {
+            try {
+                val instance = Choreographer.getInstance()
+                instance.removeFrameCallback(this@FpsFrameCallback)
+                choreographer = instance
+                instance.postFrameCallback(this@FpsFrameCallback)
+            } catch (e: IllegalStateException) {
+                // Choreographer requires a Looper; guard defensively in case the JS thread lacks one.
+            }
         }
     }
 
     fun stop() {
-        uiThreadExecutor.runOnUiThread {
-            choreographer = Choreographer.getInstance()
+        jsThreadExecutor.runOnJsThread {
             choreographer?.removeFrameCallback(this@FpsFrameCallback)
         }
     }
