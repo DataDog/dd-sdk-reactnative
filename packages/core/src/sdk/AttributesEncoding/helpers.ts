@@ -7,7 +7,7 @@
 import type { AttributeEncoder, Encodable } from './types';
 import { formatPathForLog, isPlainObject, warn } from './utils';
 
-const MAX_ATTRIBUTES = 128;
+const MAX_ATTRIBUTES = 256;
 
 export interface EncodeContext {
     numOfAttributes: number;
@@ -152,25 +152,16 @@ function addEncodedAttribute(
     value: Encodable,
     context: EncodeContext
 ): void {
-    if (context.numOfAttributes >= MAX_ATTRIBUTES) {
-        // Only warn once to avoid log spam
-        if (!context.limitReachedWarned) {
-            warn(
-                `Attribute limit of ${MAX_ATTRIBUTES} reached; further attributes will be dropped.`
-            );
-            context.limitReachedWarned = true;
-        }
-
-        // Optional: warn for specific dropped attribute (if desired)
-        warn(
-            `Dropped attribute at '${formatPathForLog(
-                path
-            )}' because limit of ${MAX_ATTRIBUTES} attributes was reached. All further attributes will be dropped.`
-        );
-
-        return;
-    }
-
     out[path.join('.')] = value;
     context.numOfAttributes++;
+
+    if (
+        context.numOfAttributes > MAX_ATTRIBUTES &&
+        !context.limitReachedWarned
+    ) {
+        warn(
+            `Attribute limit of ${MAX_ATTRIBUTES} exceeded; the backend may drop some attributes.`
+        );
+        context.limitReachedWarned = true;
+    }
 }

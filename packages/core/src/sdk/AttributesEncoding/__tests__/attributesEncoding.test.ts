@@ -216,7 +216,7 @@ describe('encodeAttributes', () => {
         );
     });
 
-    it('does not modify original object when attribute limit is reached', () => {
+    it('does not modify original object when encoding many attributes', () => {
         const input: Record<string, string> = {};
         for (let i = 0; i < 200; i++) {
             input[`k${i}`] = `v${i}`;
@@ -224,7 +224,7 @@ describe('encodeAttributes', () => {
         const snapshot = { ...input };
 
         const result = encodeAttributes(input);
-        expect(Object.keys(result)).toHaveLength(128);
+        expect(Object.keys(result)).toHaveLength(200);
         expect(input).toEqual(snapshot); // original still has 200 keys
     });
 
@@ -380,31 +380,30 @@ describe('encodeAttributes', () => {
         );
     });
 
-    it('drops attributes after reaching the 128 limit and warns once', () => {
-        // Prepare 200 simple attributes — max=128
+    it('warns once when the 256 attribute limit is exceeded, but does not drop attributes', () => {
+        // Prepare 300 simple attributes — exceeds max=256
         const input: Record<string, number> = {};
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 300; i++) {
             input[`key${i}`] = i;
         }
 
         const result = encodeAttributes(input);
 
-        // Check that only 128 attributes remain
-        expect(Object.keys(result)).toHaveLength(128);
+        // All 300 attributes are preserved — no hard cap
+        expect(Object.keys(result)).toHaveLength(300);
 
-        // Check the first ones are preserved
+        // All attributes are present
         expect(result).toHaveProperty('key0', 0);
-        expect(result).toHaveProperty('key127', 127);
+        expect(result).toHaveProperty('key255', 255);
+        expect(result).toHaveProperty('key256', 256);
+        expect(result).toHaveProperty('key299', 299);
 
-        // Check later ones were dropped
-        expect(result).not.toHaveProperty('key128');
-
-        // Check that a warning was shown at least once
+        // A single warning is emitted when the limit is exceeded
         expect(warn).toHaveBeenCalledWith(
             expect.stringContaining('Attribute limit')
         );
 
-        // Check there is only one "limit reached" warning (even if multiple attributes were dropped)
+        // Exactly one "limit exceeded" warning (not one per extra attribute)
         const limitWarnings = (warn as jest.Mock).mock.calls.filter(([msg]) =>
             msg.includes('Attribute limit')
         );
