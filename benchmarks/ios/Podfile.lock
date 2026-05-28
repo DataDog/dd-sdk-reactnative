@@ -10,7 +10,7 @@ PODS:
     - DatadogInternal (= 2.30.2)
   - DatadogRUM (2.30.2):
     - DatadogInternal (= 2.30.2)
-  - DatadogSDKReactNative (2.14.7):
+  - DatadogSDKReactNative (2.14.8):
     - DatadogCore (= 2.30.2)
     - DatadogCrashReporting (= 2.30.2)
     - DatadogLogs (= 2.30.2)
@@ -37,7 +37,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeSessionReplay (2.14.7):
+  - DatadogSDKReactNativeSessionReplay (2.14.8):
     - DatadogSDKReactNative
     - DatadogSessionReplay (= 2.30.2)
     - DoubleConversion
@@ -60,7 +60,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeWebView (2.14.7):
+  - DatadogSDKReactNativeWebView (2.14.8):
     - DatadogInternal (= 2.30.2)
     - DatadogSDKReactNative
     - DatadogWebViewTracking (= 2.30.2)
@@ -2075,9 +2075,9 @@ SPEC CHECKSUMS:
   DatadogInternal: bd8672d506a7e67936ed5f7ca612169e49029b44
   DatadogLogs: d683aa9e0c9339f5ae679ead70bbdbe41cdc32f6
   DatadogRUM: 8b794aa458e6323ea9b1cef3f820fd3d092cbe27
-  DatadogSDKReactNative: 304e71b458a8559681e7d3c5825e26c7db4fd86d
-  DatadogSDKReactNativeSessionReplay: 60a1e0c810e4195c5af2761e1c8811df7ae84580
-  DatadogSDKReactNativeWebView: 88b517db1d9a234c0ded360a7f7990a53334439d
+  DatadogSDKReactNative: 0de5d18e5c8a0c4163e1c6cad761abb939c51042
+  DatadogSDKReactNativeSessionReplay: a0191ca5982f0bb5a1385a6a03883791b62c99a8
+  DatadogSDKReactNativeWebView: c31bb3e6d58b18730be46b6b53968d83723766f6
   DatadogSessionReplay: 56a91d799fe34967c5ae79a222364e37d67020f5
   DatadogTrace: 3ba194791267efa09634234749111cac95abd3e5
   DatadogWebViewTracking: 8287d5ad06e992de5e46dd72a17e05c7513344be
@@ -2089,7 +2089,7 @@ SPEC CHECKSUMS:
   hermes-engine: 2771b98fb813fdc6f92edd7c9c0035ecabf9fee7
   OpenTelemetrySwiftApi: aaee576ed961e0c348af78df58b61300e95bd104
   PLCrashReporter: db59ef96fa3d25f3650040d02ec2798cffee75f2
-  RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
+  RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: be794de7dc6ed8f9f7fbf525f86e7651b8b68746
   RCTRequired: a83787b092ec554c2eb6019ff3f5b8d125472b3b
   RCTTypeSafety: 48ad3c858926b1c46f46a81a58822b476e178e2c
