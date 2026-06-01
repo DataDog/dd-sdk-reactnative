@@ -11,9 +11,10 @@ import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
 import com.facebook.react.bridge.ReactContext
+import java.util.Locale
 
 internal class LegacyTextViewUtils(
-    private val reactContext: ReactContext,
+    reactContext: ReactContext,
     private val logger: InternalLogger,
     drawableUtils: DrawableUtils,
 ) : TextViewUtils(reactContext, drawableUtils) {
@@ -35,15 +36,16 @@ internal class LegacyTextViewUtils(
     }
 
     private fun resolveTextSize(view: TextView, pixelsDensity: Float): Long {
+        val density = pixelsDensity.coerceAtLeast(1f)
         val spanned = view.text as? Spanned
         if (spanned != null) {
             val span = spanned.getSpans(0, spanned.length, AbsoluteSizeSpan::class.java)
                 ?.firstOrNull()
             if (span != null) {
-                return if (span.dip) span.size.toLong() else (span.size / pixelsDensity).toLong()
+                return if (span.dip) span.size.toLong() else (span.size / density).toLong()
             }
         }
-        return (view.textSize / pixelsDensity).toLong()
+        return (view.textSize / density).toLong()
     }
 
     private fun resolveTextColor(view: TextView): String {
@@ -63,7 +65,7 @@ internal class LegacyTextViewUtils(
     }
 
     private fun resolveFontFamilyFromTypeface(view: TextView): String {
-        resolveFontFamilyFromSpans(view)?.let { return resolveFontFamily(it) }
+        resolveFontFamilyFromSpans(view)?.let { return resolveFontFamily(it.lowercase(Locale.US)) }
 
         // Fallback for non-RN views. Typeface.familyName requires API 28, so we use identity
         // comparison against the standard singletons instead.
