@@ -19,4 +19,7 @@ export type RegexMap = {
 export abstract class RequestProxy {
     abstract onTrackingStart: (context: RequestProxyOptions) => void;
     abstract onTrackingStop: () => void;
+    abstract onTrackingUpdate: (context: {
+        tracingSamplingRate: number;
+    }) => void;
 }
