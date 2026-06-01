@@ -9,7 +9,6 @@ import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.reactnative.sessionreplay.BuildConfig
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
-import com.datadog.reactnative.sessionreplay.utils.ReflectionUtils
 import com.facebook.react.bridge.ReactContext
 
 internal abstract class TextViewUtils(private val reactContext: ReactContext, private val drawableUtils: DrawableUtils) {
@@ -162,7 +161,7 @@ internal abstract class TextViewUtils(private val reactContext: ReactContext, pr
         fun create(reactContext: ReactContext, logger: InternalLogger): TextViewUtils {
             return when (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
                 true -> FabricTextViewUtils(reactContext, logger, ReactViewBackgroundDrawableUtils())
-                false -> LegacyTextViewUtils(reactContext, logger, ReflectionUtils(), ReactViewBackgroundDrawableUtils())
+                false -> LegacyTextViewUtils(reactContext, logger, ReactViewBackgroundDrawableUtils())
             }
         }
     }
