@@ -1,16 +1,16 @@
 package com.datadog.reactnative.sessionreplay.utils.text
 
+import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.widget.TextView
-import androidx.annotation.VisibleForTesting
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.UIManagerModule
 
 internal class LegacyTextViewUtils(
     private val reactContext: ReactContext,
@@ -24,7 +24,7 @@ internal class LegacyTextViewUtils(
         view: TextView,
     ): MobileSegment.TextStyle {
         val family = resolveFontFamilyFromTypeface(view)
-        val sizeSp = (view.textSize / pixelsDensity).toLong()
+        val sizeSp = resolveTextSize(view, pixelsDensity)
         val color = resolveTextColor(view)
 
         return MobileSegment.TextStyle(
@@ -34,14 +34,31 @@ internal class LegacyTextViewUtils(
         )
     }
 
-    private fun resolveTextColor(view: TextView): String {
-        val spanned = view.text as? Spanned ?: return formatAsRgba(view.currentTextColor)
+    private fun resolveTextSize(view: TextView, pixelsDensity: Float): Long {
+        val spanned = view.text as? Spanned
+        if (spanned != null) {
+            val span = spanned.getSpans(0, spanned.length, AbsoluteSizeSpan::class.java)
+                ?.firstOrNull()
+            if (span != null) {
+                return if (span.dip) span.size.toLong() else (span.size / pixelsDensity).toLong()
+            }
+        }
+        return (view.textSize / pixelsDensity).toLong()
+    }
 
-        val span = spanned.getSpans(0, spanned.length, ForegroundColorSpan::class.java).firstOrNull()
+    private fun resolveTextColor(view: TextView): String {
+        val spanned = view.text as? Spanned ?: return formatAsRgba(RN_DEFAULT_TEXT_COLOR)
+
+        val span = spanned.getSpans(0, spanned.length, ForegroundColorSpan::class.java)
+            ?.firstOrNull()
+        // If no ForegroundColorSpan is present, RN has not set an explicit color — fall back to
+        // RN's default (opaque black). view.currentTextColor is not used because RN old arch never
+        // calls setTextColor(); color is always applied via spans, so currentTextColor reflects
+        // the Android theme default rather than the actual rendered color.
         return if (span != null) {
             formatAsRgba(span.foregroundColor)
         } else {
-            formatAsRgba(view.currentTextColor)
+            formatAsRgba(RN_DEFAULT_TEXT_COLOR)
         }
     }
 
@@ -95,6 +112,11 @@ internal class LegacyTextViewUtils(
     }
 
     companion object {
+        // RN old arch applies color exclusively via ForegroundColorSpan and never calls
+        // setTextColor(), so view.currentTextColor returns the Android theme default rather than
+        // the actual rendered color. When no span is present, fall back to RN's own default.
+        internal val RN_DEFAULT_TEXT_COLOR = Color.BLACK
+
         private const val CUSTOM_STYLE_SPAN_CLASS_NAME =
             "com.facebook.react.views.text.internal.span.CustomStyleSpan"
         private const val GET_FONT_FAMILY_METHOD = "getFontFamily"
@@ -106,19 +128,4 @@ internal class LegacyTextViewUtils(
             "Unable to resolve font family from CustomStyleSpan via reflection"
     }
 
-    // Kept for backward-compat callers and tests.
-    @VisibleForTesting
-    internal fun getUiManagerModule(): UIManagerModule? {
-        return try {
-            reactContext.getNativeModule(UIManagerModule::class.java)
-        } catch (e: IllegalStateException) {
-            logger.log(
-                level = InternalLogger.Level.WARN,
-                targets = listOf(InternalLogger.Target.MAINTAINER, InternalLogger.Target.TELEMETRY),
-                messageBuilder = { RESOLVE_UIMANAGERMODULE_ERROR },
-                throwable = e,
-            )
-            return null
-        }
-    }
 }
