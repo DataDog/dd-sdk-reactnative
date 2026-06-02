@@ -9,7 +9,6 @@ import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.reactnative.sessionreplay.BuildConfig
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
-import com.datadog.reactnative.sessionreplay.utils.ReflectionUtils
 import com.facebook.react.bridge.ReactContext
 
 internal abstract class TextViewUtils(private val reactContext: ReactContext, private val drawableUtils: DrawableUtils) {
@@ -142,10 +141,6 @@ internal abstract class TextViewUtils(private val reactContext: ReactContext, pr
 
     @VisibleForTesting
     companion object {
-        internal const val TEXT_ATTRIBUTES_FIELD_NAME = "mTextAttributes"
-        internal const val FONT_FAMILY_FIELD_NAME = "mFontFamily"
-        internal const val COLOR_FIELD_NAME = "mColor"
-        internal const val IS_COLOR_SET_FIELD_NAME = "mIsColorSet"
         internal const val SPANNED_FIELD_NAME = "mSpanned"
 
         private const val ROBOTO_TYPEFACE_NAME = "roboto"
@@ -153,8 +148,6 @@ internal abstract class TextViewUtils(private val reactContext: ReactContext, pr
         private const val SANS_SERIF_FAMILY_NAME = "roboto, sans-serif"
         internal const val MONOSPACE_FAMILY_NAME = "monospace"
 
-
-        internal const val RESOLVE_UIMANAGERMODULE_ERROR = "Unable to resolve UIManagerModule"
         internal const val RESOLVE_FABRICFIELD_ERROR = "Unable to resolve field from fabric view"
         internal const val NULL_FABRICFIELD_ERROR = "Null value found when trying to resolve field from fabric view"
 
@@ -162,7 +155,7 @@ internal abstract class TextViewUtils(private val reactContext: ReactContext, pr
         fun create(reactContext: ReactContext, logger: InternalLogger): TextViewUtils {
             return when (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
                 true -> FabricTextViewUtils(reactContext, logger, ReactViewBackgroundDrawableUtils())
-                false -> LegacyTextViewUtils(reactContext, logger, ReflectionUtils(), ReactViewBackgroundDrawableUtils())
+                false -> LegacyTextViewUtils(reactContext, logger, ReactViewBackgroundDrawableUtils())
             }
         }
     }

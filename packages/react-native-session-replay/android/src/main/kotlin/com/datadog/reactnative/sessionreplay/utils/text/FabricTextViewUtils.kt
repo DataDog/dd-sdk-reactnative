@@ -39,8 +39,8 @@ internal class FabricTextViewUtils(private val reactContext: ReactContext, priva
     }
 
     private fun getFontSize(view: TextView, pixelsDensity: Float): Long {
-        val fontSize = (view.textSize / pixelsDensity).toLong()
-        return fontSize
+        val density = pixelsDensity.coerceAtLeast(1f)
+        return (view.textSize / density).toLong()
     }
 
     private fun getFontFamily(textWireframe: MobileSegment.Wireframe.TextWireframe): String {

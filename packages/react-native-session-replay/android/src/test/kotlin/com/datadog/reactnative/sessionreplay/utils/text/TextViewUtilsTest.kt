@@ -9,6 +9,8 @@ package com.datadog.reactnative.sessionreplay.utils.text
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.text.Spannable
+import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.util.DisplayMetrics
 import android.widget.TextView
@@ -16,23 +18,12 @@ import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.android.sessionreplay.recorder.SystemInformation
-import com.datadog.reactnative.sessionreplay.ShadowNodeWrapper
-import com.datadog.reactnative.sessionreplay.ShadowNodeWrapper.Companion.UI_IMPLEMENTATION_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
-import com.datadog.reactnative.sessionreplay.utils.ReflectionUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
-import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.COLOR_FIELD_NAME
-import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.FONT_FAMILY_FIELD_NAME
-import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.IS_COLOR_SET_FIELD_NAME
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.MONOSPACE_FAMILY_NAME
-import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.TEXT_ATTRIBUTES_FIELD_NAME
 import com.datadog.reactnative.tools.unit.forge.ForgeConfigurator
-import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.ReactShadowNode
-import com.facebook.react.uimanager.UIImplementation
-import com.facebook.react.uimanager.UIManagerModule
-import com.facebook.react.views.text.TextAttributes
+import com.facebook.react.views.text.internal.span.CustomStyleSpan
 import com.facebook.react.views.view.ReactViewBackgroundDrawable
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.Forgery
@@ -67,12 +58,6 @@ internal class TextViewUtilsTest {
     lateinit var mockReactContext: ReactContext
 
     @Mock
-    lateinit var mockUiManagerModule: UIManagerModule
-
-    @Mock
-    lateinit var mockWireframe: MobileSegment.Wireframe.TextWireframe
-
-    @Mock
     lateinit var mockTextView: TextView
 
     @Mock
@@ -81,20 +66,8 @@ internal class TextViewUtilsTest {
     @Mock
     lateinit var mockDrawableUtils: DrawableUtils
 
-    @Mock
-    lateinit var mockShadowNodeWrapper: ShadowNodeWrapper
-
-    @Mock
-    lateinit var mockReflectionUtils: ReflectionUtils
-
     @Forgery
     private lateinit var fakeWireframe: MobileSegment.Wireframe.TextWireframe
-
-    @Mock
-    private lateinit var mockUiImplementation: UIImplementation
-
-    @Mock
-    private lateinit var mockShadowNode: ReactShadowNode<out ReactShadowNode<*>>
 
     @Mock
     private lateinit var mockLogger: InternalLogger
@@ -124,34 +97,19 @@ internal class TextViewUtilsTest {
         whenever(mockSystemInformation.screenDensity).thenReturn(0f)
         whenever(mockMappingContext.systemInformation).thenReturn(mockSystemInformation)
         whenever(mockTextView.text).thenReturn(forge.aString())
-        whenever(mockTextView.typeface).thenReturn(Typeface.SANS_SERIF)
+        // Typeface static constants (SANS_SERIF, MONOSPACE, SERIF) are all null in the JVM test
+        // environment (Android framework statics are not initialised). Use a non-null Mockito mock
+        // for the default typeface so it falls through to the "else → roboto/sans-serif" branch.
+        whenever(mockTextView.typeface).thenReturn(mock(Typeface::class.java))
+        whenever(mockTextView.currentTextColor).thenReturn(0xFF000000.toInt())
+        whenever(mockTextView.textSize).thenReturn(16f)
 
-        whenever(mockReactContext.getNativeModule(UIManagerModule::class.java))
-            .thenReturn(mockUiManagerModule)
-
-        whenever(
-            mockReflectionUtils.getDeclaredField(
-                eq(mockUiManagerModule),
-                eq(UI_IMPLEMENTATION_FIELD_NAME)
-            )
-        ).thenReturn(mockUiImplementation)
-
-        whenever(
-            mockUiImplementation.resolveShadowNode(
-                eq(mockTextView.id)
-            )
-        ).thenReturn(mockShadowNode)
-
-        whenever(mockReactContext.runOnNativeModulesQueueThread(any())).thenAnswer {
-            (it.arguments[0] as Runnable).run()
-        }
         whenever(mockReactContext.hasActiveReactInstance()).thenReturn(true)
 
         val realUtils =
             LegacyTextViewUtils(
                 mockReactContext,
                 mockLogger,
-                mockReflectionUtils,
                 mockDrawableUtils
             )
 
@@ -210,16 +168,22 @@ internal class TextViewUtilsTest {
     // region addReactNativeProperties
 
     @Test
-    fun `M get original wireframe W addReactNativeProperties() { no react properties }`() {
+    fun `M resolve text style from view W addReactNativeProperties() { no background drawable }`() {
         // Given
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockUiImplementation.resolveShadowNode(any())).thenReturn(null)
+        whenever(mockTextView.currentTextColor).thenReturn(0xFF000000.toInt())
+        whenever(mockTextView.textSize).thenReturn(16f)
+        // Use a non-null Typeface mock so it falls to the default "roboto, sans-serif" branch.
+        // (Typeface.SANS_SERIF is null on JVM, same as MONOSPACE, which would match the wrong branch.)
+        whenever(mockTextView.typeface).thenReturn(mock(Typeface::class.java))
 
         // When
-        val result = testedUtils.addReactNativeProperties(mockWireframe, mockTextView, 0f)
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 1f)
 
-        // Then
-        assertThat(result).isEqualTo(mockWireframe)
+        // Then — text properties are always resolved directly from the view
+        assertThat(result.textStyle.color).isEqualTo(formatAsRgba(0xFF000000.toInt()))
+        assertThat(result.textStyle.size).isEqualTo(16L)
+        assertThat(result.textStyle.family).isEqualTo("roboto, sans-serif")
     }
 
     @Test
@@ -269,135 +233,220 @@ internal class TextViewUtilsTest {
     }
 
     @Test
-    fun `M resolve font family W addReactNativeProperties()`() {
-        // Given
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, FONT_FAMILY_FIELD_NAME))
-            .thenReturn(MONOSPACE_FAMILY_NAME)
-
+    fun `M resolve monospace font family W addReactNativeProperties() { typeface fallback }`() {
+        // Given — non-RN fallback path: no CustomStyleSpan in text (plain String), typeface comparison used.
+        // In the JVM test environment Typeface.MONOSPACE is null, so view.typeface == null matches
+        // the MONOSPACE branch via null == null comparison.
         whenever(mockTextView.background).thenReturn(null)
-
-        // When
-        val result =
-            testedUtils
-                .addReactNativeProperties(fakeWireframe, mockTextView, 0f)
-
-        // Then
-        assertThat(result.textStyle.family)
-            .isEqualTo(MONOSPACE_FAMILY_NAME)
-    }
-
-    @Test
-    fun `M fallback W addReactNativeProperties() { cannot resolve fontFamily }`() {
-        // Given
-        whenever(mockTextView.background).thenReturn(null)
-        whenever(mockShadowNodeWrapper.getDeclaredShadowNodeField(FONT_FAMILY_FIELD_NAME))
-            .thenReturn(null)
+        whenever(mockTextView.typeface).thenReturn(Typeface.MONOSPACE)
+        // @BeforeEach sets view.text to a plain String (not Spanned) → resolveFontFamilyFromSpans returns null
 
         // When
         val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
-        assertThat(result.textStyle.family).isEqualTo(fakeWireframe.textStyle.family)
+        assertThat(result.textStyle.family).isEqualTo(MONOSPACE_FAMILY_NAME)
     }
 
     @Test
-    fun `M resolve font size W addReactNativeProperties()`(
-        @Mock mockTextAttributes: TextAttributes,
-        @IntForgery fakeTextSize: Int
+    fun `M resolve monospace font family W addReactNativeProperties() { CustomStyleSpan }`() {
+        // Given — RN old arch stores font family in CustomStyleSpan on the Spanned text.
+        // CustomStyleSpan requires an AssetManager so we mock it; getFontFamily() is stubbed
+        // so the real reflection call in production code exercises the right return value.
+        val mockCustomStyleSpan = mock(CustomStyleSpan::class.java)
+        whenever(mockCustomStyleSpan.fontFamily).thenReturn("monospace")
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(CustomStyleSpan::class.java)))
+            .thenReturn(arrayOf(mockCustomStyleSpan))
+        whenever(mockTextView.background).thenReturn(null)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
+
+        // When
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.family).isEqualTo(MONOSPACE_FAMILY_NAME)
+    }
+
+    @Test
+    fun `M resolve serif font family W addReactNativeProperties() { CustomStyleSpan }`() {
+        // Given
+        val mockCustomStyleSpan = mock(CustomStyleSpan::class.java)
+        whenever(mockCustomStyleSpan.fontFamily).thenReturn("serif")
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(CustomStyleSpan::class.java)))
+            .thenReturn(arrayOf(mockCustomStyleSpan))
+        whenever(mockTextView.background).thenReturn(null)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
+
+        // When
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.family).isEqualTo("serif")
+    }
+
+    @Test
+    fun `M fall back to sans-serif W addReactNativeProperties() { null fontFamily span }`() {
+        // Given — CustomStyleSpan present but fontFamily is null → falls through to typeface check.
+        val mockCustomStyleSpan = mock(CustomStyleSpan::class.java)
+        whenever(mockCustomStyleSpan.fontFamily).thenReturn(null)
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(CustomStyleSpan::class.java)))
+            .thenReturn(arrayOf(mockCustomStyleSpan))
+        whenever(mockTextView.background).thenReturn(null)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
+        whenever(mockTextView.typeface).thenReturn(mock(Typeface::class.java))
+
+        // When
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.family).isEqualTo("roboto, sans-serif")
+    }
+
+    @Test
+    fun `M resolve sans-serif font family W addReactNativeProperties() { default typeface }`() {
+        // Given
+        whenever(mockTextView.background).thenReturn(null)
+        // Use a non-null Typeface mock (SANS_SERIF is null on JVM; MONOSPACE is also null, so
+        // comparing null==null would incorrectly match the MONOSPACE branch).
+        whenever(mockTextView.typeface).thenReturn(mock(Typeface::class.java))
+
+        // When
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.family).isEqualTo("roboto, sans-serif")
+    }
+
+    @Test
+    fun `M resolve font size from view W addReactNativeProperties()`(
+        @IntForgery(min = 10, max = 100) fakeTextSizePx: Int
     ) {
-        // Given
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, TEXT_ATTRIBUTES_FIELD_NAME))
-            .thenReturn(mockTextAttributes)
+        // Given — fallback path: no AbsoluteSizeSpan in text, size read from view.textSize
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockTextAttributes.effectiveFontSize).thenReturn(fakeTextSize)
+        whenever(mockTextView.textSize).thenReturn(fakeTextSizePx.toFloat())
 
-        // When
-        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        // When — pixelDensity = 1f so size should equal fakeTextSizePx
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 1f)
 
         // Then
-        assertThat(result.textStyle.size).isEqualTo(fakeTextSize.toLong())
+        assertThat(result.textStyle.size).isEqualTo(fakeTextSizePx.toLong())
     }
 
     @Test
-    fun `M fallback W addReactNativeProperties() { cannot resolve fontSize }`(
-        @Mock mockTextAttributes: TextAttributes
+    fun `M resolve font size from AbsoluteSizeSpan W addReactNativeProperties() { size in pixels }`(
+        @IntForgery(min = 10, max = 100) fakeTextSizePx: Int
     ) {
-        // Given
+        // Given — RN 0.69 old arch applies font size as AbsoluteSizeSpan (dip=false, size in px).
+        val mockSizeSpan = mock(AbsoluteSizeSpan::class.java)
+        whenever(mockSizeSpan.dip).thenReturn(false)
+        whenever(mockSizeSpan.size).thenReturn(fakeTextSizePx)
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(AbsoluteSizeSpan::class.java)))
+            .thenReturn(arrayOf(mockSizeSpan))
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockShadowNodeWrapper.getDeclaredShadowNodeField(TEXT_ATTRIBUTES_FIELD_NAME))
-            .thenReturn(null)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
 
-        // When
-        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        // When — density=2f, size in px → sp = fakeTextSizePx / 2
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 2f)
 
         // Then
-        assertThat(result.textStyle.size).isEqualTo(fakeWireframe.textStyle.size)
+        assertThat(result.textStyle.size).isEqualTo((fakeTextSizePx / 2).toLong())
     }
 
     @Test
-    fun `M resolve font color W addReactNativeProperties() { color is defined by developer }`(
-        @IntForgery fakeTextColor: Int
+    fun `M resolve font size from AbsoluteSizeSpan W addReactNativeProperties() { size in dip }`(
+        @IntForgery(min = 10, max = 100) fakeTextSizeDip: Int
     ) {
-        // Given
+        // Given — AbsoluteSizeSpan with dip=true: size is already density-independent, used as-is.
+        val mockSizeSpan = mock(AbsoluteSizeSpan::class.java)
+        whenever(mockSizeSpan.dip).thenReturn(true)
+        whenever(mockSizeSpan.size).thenReturn(fakeTextSizeDip)
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(AbsoluteSizeSpan::class.java)))
+            .thenReturn(arrayOf(mockSizeSpan))
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
-            .thenReturn(true)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, COLOR_FIELD_NAME))
-            .thenReturn(fakeTextColor)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
 
-        // When
-        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        // When — density irrelevant when dip=true
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 2f)
 
         // Then
-        assertThat(result.textStyle.color).isEqualTo(formatAsRgba(fakeTextColor))
+        assertThat(result.textStyle.size).isEqualTo(fakeTextSizeDip.toLong())
     }
 
     @Test
-    fun `M resolve font color W addReactNativeProperties() { color is not defined by developer }`(
-        @IntForgery fakeTextColor: Int
+    fun `M resolve color from ForegroundColorSpan W addReactNativeProperties() { Spanned }`(
+        @IntForgery fakeSpanColor: Int
     ) {
-        // Given
+        // Given — RN old arch encodes color as ForegroundColorSpan, not via setTextColor().
+        val mockColorSpan = mock(ForegroundColorSpan::class.java)
+        whenever(mockColorSpan.foregroundColor).thenReturn(fakeSpanColor)
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockSpanned.getSpans(anyInt(), anyInt(), eq(ForegroundColorSpan::class.java)))
+            .thenReturn(arrayOf(mockColorSpan))
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
-            .thenReturn(false)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, COLOR_FIELD_NAME))
-            .thenReturn(fakeTextColor)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
 
         // When
         val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
-        assertThat(result.textStyle.color).isEqualTo("#000000FF")
+        assertThat(result.textStyle.color).isEqualTo(formatAsRgba(fakeSpanColor))
     }
 
     @Test
-    fun `M fallback W addReactNativeProperties() { cannot resolve fontColor }`() {
-        // Given
+    fun `M fall back to RN default color W addReactNativeProperties() { no color span }`() {
+        // Given — plain String text (not Spanned): no ForegroundColorSpan present.
+        // RN old arch never calls setTextColor(), so view.currentTextColor is the Android theme
+        // default, not the actual rendered color. We fall back to RN's own default (opaque black).
         whenever(mockTextView.background).thenReturn(null)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, IS_COLOR_SET_FIELD_NAME))
-            .thenReturn(true)
-        whenever(mockShadowNodeWrapper.getDeclaredShadowNodeField(COLOR_FIELD_NAME))
-            .thenReturn(null)
+        // mockTextView.text already returns a plain String from the @BeforeEach setup
 
         // When
         val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
-        assertThat(result.textStyle.color).isEqualTo(fakeWireframe.textStyle.color)
+        assertThat(result.textStyle.color).isEqualTo(
+            formatAsRgba(LegacyTextViewUtils.RN_DEFAULT_TEXT_COLOR)
+        )
     }
 
     @Test
-    fun `M return legacy textStyle W addReactNativeProperties() { no valid react context }`() {
+    fun `M fall back to RN default color W addReactNativeProperties() { Spanned no color span }`() {
+        // Given — Spanned text (e.g. has CustomStyleSpan) but no ForegroundColorSpan.
+        val mockSpanned = mock(Spanned::class.java)
+        whenever(mockSpanned.length).thenReturn(10)
+        whenever(mockTextView.background).thenReturn(null)
+        whenever(mockTextView.text).thenReturn(mockSpanned)
+
+        // When
+        val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+
+        // Then
+        assertThat(result.textStyle.color).isEqualTo(
+            formatAsRgba(LegacyTextViewUtils.RN_DEFAULT_TEXT_COLOR)
+        )
+    }
+
+    @Test
+    fun `M return original wireframe W addReactNativeProperties() { no valid react context }`() {
         // Given
         whenever(mockReactContext.hasActiveReactInstance()).thenReturn(false)
-        whenever(mockReflectionUtils.getDeclaredField(mockShadowNode, FONT_FAMILY_FIELD_NAME))
-            .thenReturn(MONOSPACE_FAMILY_NAME)
 
         // When
         val result = testedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
 
         // Then
-        assertThat(result.textStyle.family).isNotEqualTo(MONOSPACE_FAMILY_NAME)
+        assertThat(result).isEqualTo(fakeWireframe)
     }
 
     @Test
@@ -415,22 +464,6 @@ internal class TextViewUtilsTest {
 
         val result = fabricTestedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
         assertThat(result.textStyle.color).isEqualTo("#ffffffff")
-    }
-
-    // endregion
-
-    // region getUiManagerModule
-    @Test
-    fun `M return null W getUiManagerModule() { cannot get uiManagerModule }`() {
-        // Given
-        whenever(mockReactContext.getNativeModule(any<Class<NativeModule>>()))
-            .thenThrow(IllegalStateException())
-
-        // When
-        val uiManagerModule = testedUtils.getUiManagerModule()
-
-        // Then
-        assertThat(uiManagerModule).isNull()
     }
 
     // endregion
