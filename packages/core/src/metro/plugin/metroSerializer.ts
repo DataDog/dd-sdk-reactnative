@@ -45,10 +45,11 @@ export const createDatadogMetroSerializer = (
 ): DatadogMetroSerializer => {
     const serializer = customSerializer || createDefaultMetroSerializer();
     return async (entryPoint, preModules, graph, options) => {
-        // Skip for hot reload mode and web builds
+        // Skip for hot reload mode, web builds and modulesOnly bundles
         if (
             (graph.transformOptions as any).hot ||
-            graph.transformOptions.platform === 'web'
+            graph.transformOptions.platform === 'web' ||
+            (options as any).modulesOnly
         ) {
             return serializer(entryPoint, preModules, graph, options);
         }
