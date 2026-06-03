@@ -45,6 +45,17 @@ describe('Datadog Metro Plugin', () => {
             expect(code).not.toContain('_datadogDebugIds');
         });
 
+        test('skips debug ID injection for modulesOnly bundles (lazy/split chunks)', async () => {
+            const serializer = createDatadogMetroSerializer();
+            const args = mockSerializerArgsForEmptyModule();
+            (args[3] as any).modulesOnly = true;
+
+            const bundle = await serializer(...args);
+            const { code } = await convertSerializerOutput(bundle);
+            expect(code).not.toContain('debugId');
+            expect(code).not.toContain('_datadogDebugIds');
+        });
+
         test('generates bundle and source map with UUID v5 Debug ID', async () => {
             const codeSnippetHash = createHash('md5');
             codeSnippetHash.update(DEBUG_ID_CODE_SNIPPET);
