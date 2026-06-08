@@ -4,13 +4,13 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-/** Maximum byte length for any single header value. */
+/** Maximum character length (UTF-16 code units) for any single header value. */
 export const MAX_HEADER_VALUE_BYTES = 128;
 
 /** Maximum combined header count (request + response). */
 export const MAX_HEADER_COUNT = 100;
 
-/** Maximum total bytes across all header names and values. */
+/** Maximum total character count (UTF-16 code units) across all header names and values. */
 export const MAX_TOTAL_BYTES = 2048;
 
 /**

@@ -45,8 +45,7 @@ type HeaderCaptureRule =
 
 The optional `forURLs` field scopes the rule to specific URL patterns. Supports hostname-only (`api.example.com`), hostname + path prefix (`api.example.com/v2`), or wildcard (`*`) to match all URLs. This is the same format used by `firstPartyHosts`. Omitting `forURLs` is equivalent to `['*']`.
 
-When multiple rules match a URL, their header sets are **merged additively** (union of all matching headers).
-
+When multiple rules match a URL, their header sets are **merged additively** (union of all matching headers). If at least one scoped rule matches, catch-all rules (omitted `forURLs` / `['*']`) are ignored for that URL.
 ### Default headers
 
 When using `'defaults'` (or `{ type: 'defaults' }`), the SDK captures:
@@ -77,10 +76,9 @@ When no headers are captured (disabled mode, no matching URL rules, or empty res
 
 To prevent runaway event sizes, the SDK enforces the following hard limits after all filtering:
 
-- **Per-value cap:** 128 bytes per header value (values exceeding this are truncated)
+- **Per-value cap:** 128 characters per header value (values exceeding this are truncated)
 - **Header count cap:** 100 headers total (request + response combined)
-- **Total size cap:** 2 048 bytes across all header names and values
-
+- **Total size cap:** 2 048 characters across all header names and values
 ### Duplicate headers
 
 - **Response headers:** If a response contains duplicate header names, the **last value wins**.
