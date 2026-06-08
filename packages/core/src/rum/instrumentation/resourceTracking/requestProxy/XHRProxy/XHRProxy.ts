@@ -227,6 +227,11 @@ const proxyOnReadyStateChange = (
                 );
             }
 
+            // Discard accumulated request headers on aborted/network-error requests (status 0)
+            if (xhrProxy.status === 0) {
+                xhrProxy._datadog_xhr.capturedRequestHeaders = undefined;
+            }
+
             // Filter accumulated request headers by mode now that URL is final
             if (xhrProxy._datadog_xhr.capturedRequestHeaders !== undefined) {
                 xhrProxy._datadog_xhr.capturedRequestHeaders = filterRequestHeadersByMode(
