@@ -4,107 +4,124 @@ The Datadog React Native SDK can capture HTTP request and response headers on RU
 
 ## Configuration
 
-Header capture is **disabled by default**. Enable it via the `trackResourceHeaders` option in your RUM configuration:
+Header capture is **disabled by default**. Enable it via the `headerCaptureRules` option in your RUM configuration:
 
 ```typescript
-// Capture a predefined set of caching/content headers
-trackResourceHeaders: 'defaults'
+// Capture a predefined set of caching/content headers across all URLs
+headerCaptureRules: 'defaults'
 
-// Capture specific headers for specific URLs
-trackResourceHeaders: {
-    custom: [
-        {
-            match: 'api.example.com',
-            requestHeaderNames: ['x-request-id'],
-            responseHeaderNames: ['etag', 'cache-control']
-        }
-    ]
-}
+// Composable rules — mix defaults and custom header/URL targets
+headerCaptureRules: [
+    { type: 'defaults' },
+    {
+        type: 'matchResponseHeaders',
+        headers: ['x-request-id', 'x-trace-id'],
+        forURLs: ['api.example.com']
+    }
+]
 
-// Disabled (default behavior)
-trackResourceHeaders: 'disabled'
+// Disabled (default behavior — omit the option entirely)
+// headerCaptureRules: undefined
 ```
 
-### Custom Rules
+### Rule types
 
-Each rule specifies a URL pattern and the header names to capture:
+`headerCaptureRules` accepts either the string shortcut `'defaults'` or an array of `HeaderCaptureRule` objects. Each rule is discriminated by its `type` field:
+
+| `type` | Headers captured |
+|---|---|
+| `'defaults'` | A predefined set of caching and content headers (request + response) |
+| `'matchHeaders'` | The specified header names from both request and response |
+| `'matchRequestHeaders'` | The specified header names from requests only |
+| `'matchResponseHeaders'` | The specified header names from responses only |
 
 ```typescript
-type HeaderCaptureRule = {
-    match: string;                    // URL pattern (same format as firstPartyHosts)
-    requestHeaderNames?: string[];    // Request headers to capture
-    responseHeaderNames?: string[];   // Response headers to capture
-};
+type HeaderCaptureRule =
+    | { type: 'defaults'; forURLs?: string[] }
+    | { type: 'matchHeaders'; headers: string[]; forURLs?: string[] }
+    | { type: 'matchRequestHeaders'; headers: string[]; forURLs?: string[] }
+    | { type: 'matchResponseHeaders'; headers: string[]; forURLs?: string[] }
 ```
 
-The `match` field supports hostname-only (`api.example.com`), hostname+path prefix (`api.example.com/v2`), or wildcard (`*`) to match all URLs. This is the same format used by `firstPartyHosts`.
+The optional `forURLs` field scopes the rule to specific URL patterns. Supports hostname-only (`api.example.com`), hostname + path prefix (`api.example.com/v2`), or wildcard (`*`) to match all URLs. This is the same format used by `firstPartyHosts`. Omitting `forURLs` is equivalent to `['*']`.
 
-When multiple rules could match a URL, **the first matching rule wins**.
+When multiple rules match a URL, their header sets are **merged additively** (union of all matching headers).
 
-### Default Headers
+### Default headers
 
-When using `'defaults'` mode, the SDK captures:
+When using `'defaults'` (or `{ type: 'defaults' }`), the SDK captures:
 
 **10 response headers:**
-`cache-control`, `etag`, `age`, `expires`, `content-type`, `content-encoding`, `content-length`, `vary`, `server-timing`, `x-cache`
+`Cache-Control`, `ETag`, `Age`, `Expires`, `Content-Type`, `Content-Encoding`, `Content-Length`, `Vary`, `Server-Timing`, `X-Cache`
 
 **2 request headers:**
-`cache-control`, `content-type`
+`Cache-Control`, `Content-Type`
 
-## Output Format
+## Output format
 
 Captured headers appear as context attributes on `stopResource` events:
 
 - `_dd.request_headers` — `Record<string, string>` of captured request headers
 - `_dd.response_headers` — `Record<string, string>` of captured response headers
 
-When no headers are captured (disabled mode, no matching URL rules, or empty result), these attributes are **omitted entirely** rather than set to empty objects.
+When no headers are captured (disabled mode, no matching URL rules, or empty result after filtering), these attributes are **omitted entirely** rather than set to empty objects.
 
-## Constraints and Behavior Details
+### Header name casing
 
-### Header Name Normalization
+- **Default headers** use RFC Title-Case: `Cache-Control`, `ETag`, `Content-Type`, etc.
+- **Custom headers** (`matchHeaders`, `matchRequestHeaders`, `matchResponseHeaders`) use the casing exactly as specified in the `headers` array of the rule. Request headers additionally preserve the casing used in the original `setRequestHeader` call.
 
-All header names in the output are **lowercased**, regardless of how the server or application originally cased them. `Content-Type` and `content-type` both appear as `content-type` in the captured output.
+## Constraints and behavior details
 
-### Duplicate Headers
+### Size limits
 
-- **Response headers:** If a response contains duplicate header names (e.g., multiple `Set-Cookie`), the **last value wins**.
+To prevent runaway event sizes, the SDK enforces the following hard limits after all filtering:
+
+- **Per-value cap:** 128 bytes per header value (values exceeding this are truncated)
+- **Header count cap:** 100 headers total (request + response combined)
+- **Total size cap:** 2 048 bytes across all header names and values
+
+### Duplicate headers
+
+- **Response headers:** If a response contains duplicate header names, the **last value wins**.
 - **Request headers:** If `setRequestHeader` is called multiple times with the same header name, the **last value wins**.
 
-### Whitespace Handling
+### Whitespace handling
 
 Leading and trailing whitespace is **trimmed** from header values. For example, `"  text/html  "` becomes `"text/html"`.
 
-### Malformed Response Headers
+### Malformed response headers
 
 Lines from `getAllResponseHeaders()` that lack a colon separator, have an empty name, or are otherwise malformed are **silently skipped**. The SDK never throws on malformed header input.
 
-### Null or Empty Responses
+### Null or empty responses
 
-If `getAllResponseHeaders()` returns `null` or an empty string (e.g., due to a network error or CORS restriction), the result is an empty object. Since empty results are omitted, no `_dd.response_headers` attribute will appear on the event.
+If `getAllResponseHeaders()` returns `null` or an empty string (e.g. due to a network error or CORS restriction), the result is treated as an empty set. Since empty results are omitted, no `_dd.response_headers` attribute will appear on the event.
 
-### Aborted Requests
+### Aborted requests
 
-Response header capture is **skipped entirely** on aborted requests (XHR status 0). Request headers that were accumulated before the abort are also discarded.
+Response header capture is **skipped entirely** on aborted requests (XHR status 0). Request headers accumulated before the abort are also discarded.
 
-### Security Filtering
+## Security filtering
 
-The SDK enforces two layers of security filtering that **cannot be overridden** by configuration:
+Two layers of non-overridable filtering are always applied, regardless of configuration. Security filtering runs **before** any URL rule matching.
 
-#### Sensitive Header Blocklist
+### Sensitive header blocklist
 
-Headers matching the following pattern are **always blocked**, even if explicitly listed in a custom rule:
+Headers whose names match the following pattern are **always blocked**, even if explicitly listed in a custom rule:
 
 ```
 /(?:token|cookie|secret|authorization|password|credential|bearer|
 (?:api|secret|access|app).?key|forwarded|real.?ip|connecting.?ip|client.?ip)/i
 ```
 
-This blocks headers like `Authorization`, `Cookie`, `Set-Cookie`, `x-access-token`, `x-amz-security-token`, `x-api-key`, `X-Forwarded-For`, `X-Real-IP`, and any header containing `password`, `secret`, `credential`, or `bearer` in its name.
+This blocks headers such as `Authorization`, `Cookie`, `Set-Cookie`, `X-Access-Token`, `X-Amz-Security-Token`, `X-Api-Key`, `X-Forwarded-For`, `X-Real-IP`, and any header whose name contains `password`, `secret`, `credential`, or `bearer`.
 
-The match is **case-insensitive** and applies to partial name matches (a header named `x-custom-token-id` would be blocked because it contains `token`).
+The match is **case-insensitive** and applies to **partial name matches** — a header named `x-custom-token-id` would be blocked because it contains `token`.
 
-#### SDK Tracing Header Exclusion
+Sensitive headers are filtered at capture time and are **never stored in memory**, even briefly.
+
+### SDK tracing header exclusion
 
 The 12 headers injected by the SDK's distributed tracing system are **always excluded** from capture:
 
@@ -123,20 +140,12 @@ The 12 headers injected by the SDK's distributed tracing system are **always exc
 | `x-b3-spanid` | B3 Multi |
 | `x-b3-sampled` | B3 Multi |
 
-#### Filter Order
-
-Security filtering is applied **before** URL rule matching. The pipeline is: capture raw header -> security filter (blocklist + tracing exclusion) -> mode/rule filter (defaults set or custom rule).
-
-### Request Header Capture Timing
-
-Request headers are filtered by the security blocklist **at capture time** — sensitive headers are never stored in memory, even briefly. However, URL-based rule filtering is applied **at request completion** (when the final URL is known), since the URL may change between `setRequestHeader` calls and request completion.
-
-### Configuration Lifecycle
+## Configuration lifecycle
 
 - The compiled header capture configuration is **snapshotted per request** at `open()` time. In-flight requests are unaffected by configuration changes.
 - Configuration changes take effect on the **next request** — no SDK restart required.
-- When disabled, no interception hooks are installed for header capture — **zero overhead** on the network hot path.
+- When `headerCaptureRules` is omitted, the capture path is not entered at all — **zero overhead** on the network hot path.
 
-### Fetch Support
+## Fetch support
 
 React Native's `fetch` API uses `XMLHttpRequest` under the hood. All fetch requests go through the same XHR interception pipeline and benefit from header capture identically to direct XHR usage.
