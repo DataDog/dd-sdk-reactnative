@@ -232,6 +232,8 @@ describe('compileHeaderCaptureConfig', () => {
             expect(urlRegex.test('https://api.example.com/any')).toBe(true);
             expect(urlRegex.test('https://api.example.com')).toBe(true);
             expect(urlRegex.test('https://other.com/api')).toBe(false);
+            // Dots in the hostname are escaped (literal), not wildcards
+            expect(urlRegex.test('https://apiXexampleYcom/any')).toBe(false);
             expect(isScoped).toBe(true);
         });
 
@@ -249,6 +251,10 @@ describe('compileHeaderCaptureConfig', () => {
                 true
             );
             expect(urlRegex.test('https://api.example.com/v1/users')).toBe(
+                false
+            );
+            // Dots in hostname and path are escaped (literal), not wildcards
+            expect(urlRegex.test('https://apiXexampleYcom/v2/users')).toBe(
                 false
             );
         });
@@ -269,20 +275,25 @@ describe('compileHeaderCaptureConfig', () => {
             );
         });
 
-        it('forURLs with invalid pattern skips the rule with WARN log', () => {
+        it('forURLs with special regex characters treats them as literal hostname characters', () => {
+            // Metacharacters like '[' are escaped by escapeRegExp so they become literal matches
             const result = compileHeaderCaptureConfig([
                 {
                     type: 'matchResponseHeaders',
                     headers: ['etag'],
-                    forURLs: ['[invalid']
+                    forURLs: ['[special].example.com']
                 }
             ]);
-            // With only one rule that gets skipped, all rules fail -> null
-            expect(result).toBeNull();
-            expect(mockLog).toHaveBeenCalledWith(
-                expect.any(String),
-                SdkVerbosity.WARN
-            );
+            expect(result).not.toBeNull();
+            expect(result![0].isScoped).toBe(true);
+            // The pattern is treated literally: it matches the host '[special].example.com'
+            expect(
+                result![0].urlRegex.test('https://[special].example.com/path')
+            ).toBe(true);
+            // It does NOT match hosts that would match the unescaped regex interpretation
+            expect(
+                result![0].urlRegex.test('https://xspecialx.example.com/path')
+            ).toBe(false);
         });
 
         it('forURLs with multiple patterns produces combined regex', () => {
@@ -299,6 +310,9 @@ describe('compileHeaderCaptureConfig', () => {
             expect(urlRegex.test('https://api.example.com/v2')).toBe(true);
             expect(urlRegex.test('https://cdn.example.com/assets')).toBe(true);
             expect(urlRegex.test('https://other.com')).toBe(false);
+            // Dots in hostnames are escaped (literal), not wildcards
+            expect(urlRegex.test('https://apiXexampleYcom/v2')).toBe(false);
+            expect(urlRegex.test('https://cdnXexampleYcom/assets')).toBe(false);
         });
     });
 
