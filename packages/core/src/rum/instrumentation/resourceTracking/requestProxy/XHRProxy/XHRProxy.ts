@@ -170,6 +170,11 @@ const proxyOnReadyStateChange = (
 
     xhrProxy.onreadystatechange = function onreadystatechange() {
         if (xhrProxy.readyState === xhrType.DONE) {
+            // If aborted/network-error (status 0), discard any accumulated request headers
+            if (xhrProxy.status === 0) {
+                xhrProxy._datadog_xhr.capturedRequestHeaders = undefined;
+            }
+
             // Capture response headers (only if capture enabled and not aborted/network-error)
             if (
                 requestContext.headerCaptureConfig != null &&
