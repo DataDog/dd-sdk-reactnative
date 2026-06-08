@@ -129,7 +129,9 @@ export type MatchResponseHeadersRule = {
  * A composable header capture rule.
  *
  * Discriminated union on the `type` field. Multiple rules can be combined
- * in an array -- matching rules are merged additively (union of headers).
+ * in an array. Matching rules are merged additively (union of headers).
+ * If at least one scoped rule (explicit `forURLs` patterns) matches a URL,
+ * catch-all rules (omitted `forURLs` / `['*']`) are ignored for that URL.
  */
 export type HeaderCaptureRule =
     | DefaultsRule
@@ -177,9 +179,13 @@ export interface RumConfigurationOptions {
      * - **Omitted** (default): No headers are captured.
      * - `'defaults'`: Shortcut equivalent to `[{ type: 'defaults' }]`.
      *   Captures a predefined set of caching and content headers.
-     * - `HeaderCaptureRule[]`: An array of composable rules. Multiple rules
-     *   are merged additively -- matching rules contribute their headers.
+     * - `HeaderCaptureRule[]`: An array of composable rules. Matching rules are
+     *   merged additively (union of headers). If at least one scoped rule (explicit
+     *   `forURLs` patterns) matches a URL, catch-all rules (omitted `forURLs` / `['*']`)
+     *   are ignored for that URL.
      *
+     * Requires `trackResources: true` to take effect.
+     */
      * Requires `trackResources: true` to take effect.
      */
     headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
