@@ -40,16 +40,6 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     const hostname = slashIndex === -1 ? match : match.slice(0, slashIndex);
     const pathPrefix = slashIndex === -1 ? '' : match.slice(slashIndex);
 
-    // Validate that the raw hostname is a valid literal string (no unmatched regex metacharacters
-    // like `[` without closing `]`). We do this by attempting to compile the raw hostname as
-    // a regex fragment. If it throws, the match string is invalid — return null before escaping.
-    try {
-        // eslint-disable-next-line no-new
-        new RegExp(hostname);
-    } catch (_e) {
-        return null;
-    }
-
     const escapedHost = escapeRegExp(hostname);
     // If a path prefix is given, escape it and match as prefix.
     // If hostname-only, require end-of-host (port or end of authority).

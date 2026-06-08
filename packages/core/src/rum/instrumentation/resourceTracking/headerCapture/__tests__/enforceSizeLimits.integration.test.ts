@@ -17,6 +17,7 @@ import {
     CANONICAL_REQUEST_HEADERS,
     CANONICAL_RESPONSE_HEADERS
 } from '../captureHeaders';
+import * as enforceSizeLimitsModule from '../enforceSizeLimits';
 import { MAX_HEADER_VALUE_BYTES } from '../enforceSizeLimits';
 import type { CompiledHeaderCaptureConfig } from '../types';
 
@@ -100,7 +101,6 @@ describe('enforceSizeLimits integration', () => {
 
     it('disabled config (null): enforceSizeLimits is never invoked', async () => {
         // GIVEN
-        const enforceSizeLimitsModule = require('../enforceSizeLimits');
         const spy = jest.spyOn(enforceSizeLimitsModule, 'enforceSizeLimits');
 
         const method = 'GET';
