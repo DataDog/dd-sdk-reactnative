@@ -6,6 +6,7 @@
 
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types/SdkVerbosity';
+import { utf8ByteLength } from '../../../../../utils/stringUtils';
 import {
     DD_RUM_ACCOUNT_ID_TAG,
     DD_RUM_SESSION_ID_TAG,
@@ -136,40 +137,6 @@ export function formatBaggageHeader(entries: Set<string>): string | null {
     }
 
     return headerValue;
-}
-
-/**
- * Returns the number of bytes needed to encode a string in UTF-8.
- *
- * Useful as a lightweight alternative to Node.js `Buffer.byteLength()`
- * for older environments that do not support it.
- *
- * @param text - The input string.
- * @returns The UTF-8 byte length of the string.
- */
-function utf8ByteLength(text: string): number {
-    let byteLength = text.length;
-    for (let i = text.length - 1; i >= 0; i--) {
-        const code = text.charCodeAt(i);
-
-        // 2-byte characters (U+0080 to U+07FF)
-        if (code > 0x7f && code <= 0x7ff) {
-            byteLength++;
-        }
-        // 3-byte characters (U+0800 to U+FFFF)
-        else if (code > 0x7ff && code <= 0xffff) {
-            byteLength += 2;
-        }
-
-        // Handle surrogate pairs (4-byte characters, e.g. emoji)
-        // These characters already count as 2 in the initial length
-        // Encountering the low surrogate already accounts for the full 4 bytes
-        // (2 from the initial length + 2 for the 3-byte characters logic above)
-        if (code >= 0xdc00 && code <= 0xdfff) {
-            i--; // prevents double counting the same character by skipping high surrogate
-        }
-    }
-    return byteLength;
 }
 
 /**

@@ -66,7 +66,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('has requestHeaderNames equal to DEFAULT_REQUEST_HEADERS', () => {
             const result = compileHeaderCaptureConfig('defaults');
             expect(result).not.toBeNull();
-            expect(result![0].requestHeaderNames).toEqual(
+            expect(result?.[0].requestHeaderNames).toEqual(
                 new Set(DEFAULT_REQUEST_HEADERS)
             );
         });
@@ -74,7 +74,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('has responseHeaderNames equal to DEFAULT_RESPONSE_HEADERS', () => {
             const result = compileHeaderCaptureConfig('defaults');
             expect(result).not.toBeNull();
-            expect(result![0].responseHeaderNames).toEqual(
+            expect(result?.[0].responseHeaderNames).toEqual(
                 new Set(DEFAULT_RESPONSE_HEADERS)
             );
         });
@@ -82,7 +82,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('has urlRegex matching any URL', () => {
             const result = compileHeaderCaptureConfig('defaults');
             expect(result).not.toBeNull();
-            expect(result![0].urlRegex.test('https://anything.com/path')).toBe(
+            expect(result?.[0].urlRegex.test('https://anything.com/path')).toBe(
                 true
             );
         });
@@ -90,7 +90,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('has isScoped equal to false', () => {
             const result = compileHeaderCaptureConfig('defaults');
             expect(result).not.toBeNull();
-            expect(result![0].isScoped).toBe(false);
+            expect(result?.[0].isScoped).toBe(false);
         });
     });
 
@@ -99,7 +99,7 @@ describe('compileHeaderCaptureConfig', () => {
             const result = compileHeaderCaptureConfig([{ type: 'defaults' }]);
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderNames).toEqual(
                 new Set(DEFAULT_REQUEST_HEADERS)
             );
@@ -116,7 +116,7 @@ describe('compileHeaderCaptureConfig', () => {
             ]);
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderNames).toEqual(
                 new Set(['content-type', 'x-custom'])
             );
@@ -134,7 +134,7 @@ describe('compileHeaderCaptureConfig', () => {
             ]);
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderNames).toEqual(
                 new Set(['x-request-id', 'authorization'])
             );
@@ -150,7 +150,7 @@ describe('compileHeaderCaptureConfig', () => {
             ]);
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderNames).toEqual(new Set());
             expect(rule.responseHeaderNames).toEqual(
                 new Set(['etag', 'x-ratelimit-remaining'])
@@ -165,10 +165,10 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            expect(result![0].requestHeaderNames).toEqual(
+            expect(result?.[0].requestHeaderNames).toEqual(
                 new Set(['x-request-id', 'authorization', 'cache-control'])
             );
-            expect(result![0].responseHeaderNames).toEqual(
+            expect(result?.[0].responseHeaderNames).toEqual(
                 new Set(['x-request-id', 'authorization', 'cache-control'])
             );
         });
@@ -176,7 +176,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('{ type: "defaults" } in array produces rule with isScoped: false', () => {
             const result = compileHeaderCaptureConfig([{ type: 'defaults' }]);
             expect(result).not.toBeNull();
-            expect(result![0].isScoped).toBe(false);
+            expect(result?.[0].isScoped).toBe(false);
         });
 
         it('matchHeaders with specific forURLs produces rule with isScoped: true', () => {
@@ -188,7 +188,7 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            expect(result![0].isScoped).toBe(true);
+            expect(result?.[0].isScoped).toBe(true);
         });
     });
 
@@ -198,7 +198,7 @@ describe('compileHeaderCaptureConfig', () => {
                 { type: 'matchResponseHeaders', headers: ['etag'] }
             ]);
             expect(result).not.toBeNull();
-            const { urlRegex, isScoped } = result![0];
+            const { urlRegex, isScoped } = (result ?? [])[0];
             expect(urlRegex.test('https://anything.com/path')).toBe(true);
             expect(urlRegex.test('http://other.io')).toBe(true);
             expect(isScoped).toBe(false);
@@ -213,7 +213,7 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            const { urlRegex, isScoped } = result![0];
+            const { urlRegex, isScoped } = (result ?? [])[0];
             expect(urlRegex.test('https://anything.com/path')).toBe(true);
             expect(urlRegex.test('')).toBe(true);
             expect(isScoped).toBe(false);
@@ -228,7 +228,7 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            const { urlRegex, isScoped } = result![0];
+            const { urlRegex, isScoped } = (result ?? [])[0];
             expect(urlRegex.test('https://api.example.com/any')).toBe(true);
             expect(urlRegex.test('https://api.example.com')).toBe(true);
             expect(urlRegex.test('https://other.com/api')).toBe(false);
@@ -246,7 +246,7 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            const { urlRegex } = result![0];
+            const { urlRegex } = (result ?? [])[0];
             expect(urlRegex.test('https://api.example.com/v2/users')).toBe(
                 true
             );
@@ -285,14 +285,15 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            expect(result![0].isScoped).toBe(true);
+            const rule0 = (result ?? [])[0];
+            expect(rule0.isScoped).toBe(true);
             // The pattern is treated literally: it matches the host '[special].example.com'
             expect(
-                result![0].urlRegex.test('https://[special].example.com/path')
+                rule0.urlRegex.test('https://[special].example.com/path')
             ).toBe(true);
             // It does NOT match hosts that would match the unescaped regex interpretation
             expect(
-                result![0].urlRegex.test('https://xspecialx.example.com/path')
+                rule0.urlRegex.test('https://xspecialx.example.com/path')
             ).toBe(false);
         });
 
@@ -306,7 +307,7 @@ describe('compileHeaderCaptureConfig', () => {
             ]);
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
-            const { urlRegex } = result![0];
+            const { urlRegex } = (result ?? [])[0];
             expect(urlRegex.test('https://api.example.com/v2')).toBe(true);
             expect(urlRegex.test('https://cdn.example.com/assets')).toBe(true);
             expect(urlRegex.test('https://other.com')).toBe(false);
@@ -351,7 +352,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('"defaults" shortcut produces canonical casing maps', () => {
             const result = compileHeaderCaptureConfig('defaults');
             expect(result).not.toBeNull();
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderCasing).toEqual(
                 new Map(CANONICAL_REQUEST_HEADERS)
             );
@@ -363,7 +364,7 @@ describe('compileHeaderCaptureConfig', () => {
         it('{ type: "defaults" } rule produces canonical casing maps', () => {
             const result = compileHeaderCaptureConfig([{ type: 'defaults' }]);
             expect(result).not.toBeNull();
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderCasing).toEqual(
                 new Map(CANONICAL_REQUEST_HEADERS)
             );
@@ -380,7 +381,7 @@ describe('compileHeaderCaptureConfig', () => {
                 }
             ]);
             expect(result).not.toBeNull();
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderCasing).toEqual(
                 new Map([
                     ['content-type', 'Content-Type'],
@@ -400,7 +401,7 @@ describe('compileHeaderCaptureConfig', () => {
                 { type: 'matchRequestHeaders', headers: ['X-Api-Key'] }
             ]);
             expect(result).not.toBeNull();
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderCasing).toEqual(
                 new Map([['x-api-key', 'X-Api-Key']])
             );
@@ -412,7 +413,7 @@ describe('compileHeaderCaptureConfig', () => {
                 { type: 'matchResponseHeaders', headers: ['X-RateLimit'] }
             ]);
             expect(result).not.toBeNull();
-            const rule = result![0];
+            const rule = (result ?? [])[0];
             expect(rule.requestHeaderCasing).toEqual(new Map());
             expect(rule.responseHeaderCasing).toEqual(
                 new Map([['x-ratelimit', 'X-RateLimit']])
@@ -431,12 +432,12 @@ describe('compileHeaderCaptureConfig', () => {
             expect(result).toHaveLength(2);
 
             // Defaults rule has canonical Title-Case
-            expect(result![0].responseHeaderCasing.get('content-type')).toBe(
+            expect(result?.[0].responseHeaderCasing.get('content-type')).toBe(
                 'Content-Type'
             );
 
             // Custom rule preserves user-provided lowercase
-            expect(result![1].responseHeaderCasing.get('content-type')).toBe(
+            expect(result?.[1].responseHeaderCasing.get('content-type')).toBe(
                 'content-type'
             );
         });

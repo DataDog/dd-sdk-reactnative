@@ -172,7 +172,7 @@ const proxyOnReadyStateChange = (
         if (xhrProxy.readyState === xhrType.DONE) {
             // If aborted/network-error (status 0), discard any accumulated request headers
             if (xhrProxy.status === 0) {
-                xhrProxy._datadog_xhr.capturedRequestHeaders = undefined;
+                requestContext.capturedRequestHeaders = undefined;
             }
 
             // Capture response headers (only if capture enabled and not aborted/network-error)
@@ -189,7 +189,7 @@ const proxyOnReadyStateChange = (
 
             // Discard accumulated request headers on aborted/network-error requests (status 0)
             if (xhrProxy.status === 0) {
-                xhrProxy._datadog_xhr.capturedRequestHeaders = undefined;
+                requestContext.capturedRequestHeaders = undefined;
             }
 
             // Filter accumulated request headers by mode now that URL is final
@@ -320,7 +320,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
         });
 
         if (processedHeader.type === 'send') {
-            originalXhrSetRequestHeader.apply(this, [
+            const result = originalXhrSetRequestHeader.apply(this, [
                 processedHeader.header,
                 processedHeader.value
             ]);
@@ -335,6 +335,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                     value
                 );
             }
+            return result;
         }
     };
 };

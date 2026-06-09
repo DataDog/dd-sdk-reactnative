@@ -50,14 +50,14 @@ describe('enforceSizeLimits', () => {
         it('truncates header values longer than 128 bytes', () => {
             const longValue = 'a'.repeat(200);
             const result = enforceSizeLimits({ x: longValue }, undefined);
-            expect(result.requestHeaders!['x']).toBe('a'.repeat(128));
-            expect(result.requestHeaders!['x'].length).toBe(128);
+            expect(result.requestHeaders?.['x']).toBe('a'.repeat(128));
+            expect(result.requestHeaders?.['x'].length).toBe(128);
         });
 
         it('does not truncate values exactly at 128 bytes', () => {
             const exactValue = 'a'.repeat(128);
             const result = enforceSizeLimits({ x: exactValue }, undefined);
-            expect(result.requestHeaders!['x']).toBe(exactValue);
+            expect(result.requestHeaders?.['x']).toBe(exactValue);
         });
 
         it('truncates response header values as well', () => {
@@ -65,7 +65,7 @@ describe('enforceSizeLimits', () => {
             const result = enforceSizeLimits(undefined, {
                 y: longValue
             });
-            expect(result.responseHeaders!['y']).toBe('b'.repeat(128));
+            expect(result.responseHeaders?.['y']).toBe('b'.repeat(128));
         });
     });
 
@@ -79,8 +79,8 @@ describe('enforceSizeLimits', () => {
             }
             const result = enforceSizeLimits(req, res);
             expect(
-                Object.keys(result.requestHeaders!).length +
-                    Object.keys(result.responseHeaders!).length
+                Object.keys(result.requestHeaders ?? {}).length +
+                    Object.keys(result.responseHeaders ?? {}).length
             ).toBe(100);
         });
 
@@ -92,8 +92,8 @@ describe('enforceSizeLimits', () => {
                 res[`rs${i}`] = 'v';
             }
             const result = enforceSizeLimits(req, res);
-            expect(Object.keys(result.requestHeaders!).length).toBe(60);
-            expect(Object.keys(result.responseHeaders!).length).toBe(40);
+            expect(Object.keys(result.requestHeaders ?? {}).length).toBe(60);
+            expect(Object.keys(result.responseHeaders ?? {}).length).toBe(40);
         });
 
         it('caps request-only headers to 100', () => {
@@ -102,7 +102,7 @@ describe('enforceSizeLimits', () => {
                 req[`h${i}`] = 'v';
             }
             const result = enforceSizeLimits(req, undefined);
-            expect(Object.keys(result.requestHeaders!).length).toBe(100);
+            expect(Object.keys(result.requestHeaders ?? {}).length).toBe(100);
             expect(result.responseHeaders).toBeUndefined();
         });
 
@@ -113,7 +113,7 @@ describe('enforceSizeLimits', () => {
             }
             const res: Record<string, string> = { a: 'b' };
             const result = enforceSizeLimits(req, res);
-            expect(Object.keys(result.requestHeaders!).length).toBe(100);
+            expect(Object.keys(result.requestHeaders ?? {}).length).toBe(100);
             expect(result.responseHeaders).toBeUndefined();
         });
     });
@@ -130,7 +130,7 @@ describe('enforceSizeLimits', () => {
             }
             const result = enforceSizeLimits(req, res);
             // Request headers should be preserved; response headers dropped from end
-            expect(Object.keys(result.requestHeaders!).length).toBe(10);
+            expect(Object.keys(result.requestHeaders ?? {}).length).toBe(10);
             // Some response headers should be dropped
             const totalBytes = computeTotalBytes(
                 result.requestHeaders,
@@ -153,7 +153,9 @@ describe('enforceSizeLimits', () => {
             );
             expect(totalBytes).toBeLessThanOrEqual(2048);
             // Some request headers should be dropped
-            expect(Object.keys(result.requestHeaders!).length).toBeLessThan(25);
+            expect(
+                Object.keys(result.requestHeaders ?? {}).length
+            ).toBeLessThan(25);
         });
 
         it('returns undefined for response when all response headers dropped for budget', () => {
@@ -197,9 +199,9 @@ describe('enforceSizeLimits', () => {
                 req[`h${i}`] = 'z'.repeat(500);
             }
             const result = enforceSizeLimits(req, undefined);
-            expect(Object.keys(result.requestHeaders!).length).toBe(10);
+            expect(Object.keys(result.requestHeaders ?? {}).length).toBe(10);
             // All values truncated to 128
-            for (const value of Object.values(result.requestHeaders!)) {
+            for (const value of Object.values(result.requestHeaders ?? {})) {
                 expect(value.length).toBeLessThanOrEqual(128);
             }
         });
