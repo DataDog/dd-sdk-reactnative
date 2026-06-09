@@ -247,7 +247,7 @@ const compileRules = (
 export const compileHeaderCaptureConfig = (
     config: 'defaults' | HeaderCaptureRule[] | undefined
 ): CompiledHeaderCaptureConfig => {
-    if (config === undefined) {
+    if (config == null) {
         return null;
     }
 
