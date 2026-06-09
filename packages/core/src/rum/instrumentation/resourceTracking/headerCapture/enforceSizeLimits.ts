@@ -57,7 +57,7 @@ const toUndefinedIfEmpty = (
  * 4. Drop headers from end until total bytes <= MAX_TOTAL_BYTES
  * 5. Return undefined (not {}) for empty records
  *
- * Pure function -- no side effects, no logging.
+ * Pure function with no stateful side effects (emits DEBUG logs when limits are hit).
  */
 export const enforceSizeLimits = (
     requestHeaders: Record<string, string> | undefined,
