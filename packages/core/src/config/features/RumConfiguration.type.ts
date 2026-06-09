@@ -62,7 +62,7 @@ export type DefaultsRule = {
  * Captures the specified headers from both request and response.
  *
  * Use this when the same header names should be captured regardless
- * of direction (e.g. 'content-type', 'authorization').
+ * of direction (e.g. 'content-type', 'x-request-id').
  * Optionally scoped to specific URLs via `forURLs`.
  */
 export type MatchHeadersRule = {
@@ -84,7 +84,7 @@ export type MatchHeadersRule = {
  * Captures the specified headers from requests only.
  *
  * Use this when you need to capture request-specific headers
- * (e.g. 'authorization', 'x-api-key') without capturing response headers.
+ * (e.g. 'x-request-id', 'if-none-match') without capturing response headers.
  * Optionally scoped to specific URLs via `forURLs`.
  */
 export type MatchRequestHeadersRule = {
@@ -177,15 +177,13 @@ export interface RumConfigurationOptions {
      * Controls which resource headers the SDK captures on network requests.
      *
      * - **Omitted** (default): No headers are captured.
-     * - `'defaults'`: Shortcut equivalent to `[{ type: 'defaults' }]`.
-     *   Captures a predefined set of caching and content headers.
-     * - `HeaderCaptureRule[]`: An array of composable rules. Matching rules are
-     *   merged additively (union of headers). If at least one scoped rule (explicit
-     *   `forURLs` patterns) matches a URL, catch-all rules (omitted `forURLs` / `['*']`)
-     *   are ignored for that URL.
+     * - `'defaults'`: Captures a predefined set of caching and content headers
+     *   across all URLs.
+     * - `HeaderCaptureRule[]`: An array of composable rules. When multiple rules
+     *   match a URL their header sets are merged. If at least one scoped rule
+     *   (with explicit `forURLs` patterns) matches, catch-all rules (no `forURLs`
+     *   or `['*']`) are ignored for that URL.
      *
-     * Requires `trackResources: true` to take effect.
-     */
      * Requires `trackResources: true` to take effect.
      */
     headerCaptureRules?: 'defaults' | HeaderCaptureRule[];

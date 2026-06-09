@@ -4,14 +4,32 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-/** Maximum character length (UTF-16 code units) for any single header value. */
+/** Maximum UTF-8 byte length for any single header value. */
+import { utf8ByteLength } from '../../../../utils/stringUtils';
+
 export const MAX_HEADER_VALUE_BYTES = 128;
 
 /** Maximum combined header count (request + response). */
 export const MAX_HEADER_COUNT = 100;
 
-/** Maximum total character count (UTF-16 code units) across all header names and values. */
+/** Maximum total UTF-8 bytes across all header names and values. */
 export const MAX_TOTAL_BYTES = 2048;
+
+/**
+ * Truncates a string so its UTF-8 byte length does not exceed maxBytes.
+ * Slices by character and re-checks, because multi-byte chars mean
+ * character count < byte count.
+ */
+const truncateToBytes = (str: string, maxBytes: number): string => {
+    if (utf8ByteLength(str) <= maxBytes) {
+        return str;
+    }
+    let result = str;
+    while (result.length > 0 && utf8ByteLength(result) > maxBytes) {
+        result = result.slice(0, result.length - 1);
+    }
+    return result;
+};
 
 /**
  * Converts a non-empty record to undefined-or-record.
@@ -25,7 +43,7 @@ const toUndefinedIfEmpty = (
 
 /**
  * Enforces per-value truncation, header count cap, and total size budget
- * on captured header records.
+ * on captured header records. All limits are in UTF-8 bytes.
  *
  * Processing order:
  * 1. Short-circuit if both inputs undefined
@@ -48,29 +66,19 @@ export const enforceSizeLimits = (
         return { requestHeaders: undefined, responseHeaders: undefined };
     }
 
-    // Step 2: Truncate values
+    // Step 2: Truncate values to MAX_HEADER_VALUE_BYTES (UTF-8 bytes)
     const reqEntries = requestHeaders
         ? Object.entries(requestHeaders).map(([name, value]): [
               string,
               string
-          ] => [
-              name,
-              value.length > MAX_HEADER_VALUE_BYTES
-                  ? value.slice(0, MAX_HEADER_VALUE_BYTES)
-                  : value
-          ])
+          ] => [name, truncateToBytes(value, MAX_HEADER_VALUE_BYTES)])
         : [];
 
     const resEntries = responseHeaders
         ? Object.entries(responseHeaders).map(([name, value]): [
               string,
               string
-          ] => [
-              name,
-              value.length > MAX_HEADER_VALUE_BYTES
-                  ? value.slice(0, MAX_HEADER_VALUE_BYTES)
-                  : value
-          ])
+          ] => [name, truncateToBytes(value, MAX_HEADER_VALUE_BYTES)])
         : [];
 
     // Step 3: Count cap -- request headers take priority
@@ -85,25 +93,31 @@ export const enforceSizeLimits = (
         cappedResEntries = resEntries.slice(0, remainingSlots);
     }
 
-    // Step 4: Total size budget -- drop from end (response first, then request)
+    // Step 4: Total byte budget -- drop from end (response first, then request)
     let totalBytes = 0;
     for (const [name, value] of cappedReqEntries) {
-        totalBytes += name.length + value.length;
+        totalBytes += utf8ByteLength(name) + utf8ByteLength(value);
     }
     for (const [name, value] of cappedResEntries) {
-        totalBytes += name.length + value.length;
+        totalBytes += utf8ByteLength(name) + utf8ByteLength(value);
     }
 
     if (totalBytes > MAX_TOTAL_BYTES) {
         // Drop response headers from end first
         while (cappedResEntries.length > 0 && totalBytes > MAX_TOTAL_BYTES) {
-            const [name, value] = cappedResEntries.pop()!;
-            totalBytes -= name.length + value.length;
+            const entry = cappedResEntries.pop();
+            if (entry === undefined) {
+                break;
+            }
+            totalBytes -= utf8ByteLength(entry[0]) + utf8ByteLength(entry[1]);
         }
         // Then drop request headers from end
         while (cappedReqEntries.length > 0 && totalBytes > MAX_TOTAL_BYTES) {
-            const [name, value] = cappedReqEntries.pop()!;
-            totalBytes -= name.length + value.length;
+            const entry = cappedReqEntries.pop();
+            if (entry === undefined) {
+                break;
+            }
+            totalBytes -= utf8ByteLength(entry[0]) + utf8ByteLength(entry[1]);
         }
     }
 

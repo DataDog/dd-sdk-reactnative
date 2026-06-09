@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../config/types';
@@ -65,7 +66,7 @@ describe('DatadogProvider', () => {
             expect(receivedConfiguration).toMatchInlineSnapshot(`
                 DdSdkNativeConfiguration {
                   "additionalConfiguration": {
-                    "_dd.react_native_version": "0.76.9",
+                    "_dd.react_native_version": "${reactNativeVersion}",
                     "_dd.source": "react-native",
                   },
                   "attributeEncoders": [],
@@ -74,7 +75,7 @@ describe('DatadogProvider', () => {
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
-                    "reactNativeVersion": "0.76.9",
+                    "reactNativeVersion": "${reactNativeVersion}",
                     "reactVersion": "18.3.1",
                     "trackErrors": true,
                     "trackInteractions": true,

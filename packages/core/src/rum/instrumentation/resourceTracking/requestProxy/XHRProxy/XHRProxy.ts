@@ -388,8 +388,11 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
             // Intercept User Baggage Header entries to apply them later
             this._datadog_xhr.baggageHeaderEntries?.add(value);
         } else {
-            // eslint-disable-next-line prefer-rest-params
-            originalXhrSetRequestHeader.apply(this, arguments as any);
+            const result = originalXhrSetRequestHeader.apply(
+                this,
+                // eslint-disable-next-line prefer-rest-params
+                arguments as any
+            );
             // Accumulate for header capture (only user-set, non-Datadog headers)
             if (this._datadog_xhr?.capturedRequestHeaders !== undefined) {
                 accumulateRequestHeader(
@@ -398,6 +401,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                     value
                 );
             }
+            return result;
         }
     };
 };

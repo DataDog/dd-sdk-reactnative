@@ -2333,7 +2333,7 @@ describe('XHRProxy', () => {
 
                 // THEN - Application successfully read the response
                 expect(applicationReadResponse).toBe(responseBody);
-                const parsedByApp = JSON.parse(applicationReadResponse!);
+                const parsedByApp = JSON.parse(applicationReadResponse ?? '');
                 expect(parsedByApp.errors).toHaveLength(1);
                 expect(parsedByApp.errors[0].message).toBe('User not found');
 
@@ -2547,7 +2547,7 @@ describe('XHRProxy', () => {
 
                 // THEN - Application got complete response with all error details
                 expect(applicationReadResponse).toBe(responseBody);
-                const parsedByApp = JSON.parse(applicationReadResponse!);
+                const parsedByApp = JSON.parse(applicationReadResponse ?? '');
                 expect(parsedByApp.errors).toHaveLength(2);
                 expect(parsedByApp.errors[0].extensions.details).toBe(
                     'filtered'

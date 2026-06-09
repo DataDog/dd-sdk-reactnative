@@ -42,8 +42,8 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
 
     const escapedHost = escapeRegExp(hostname);
     // If a path prefix is given, escape it and match as prefix.
-    // If hostname-only, require end-of-host (port or end of authority).
-    const pathSuffix = pathPrefix ? escapeRegExp(pathPrefix) : '(/|$)';
+    // If hostname-only, accept /, ?, # or end-of-string as valid URL terminators.
+    const pathSuffix = pathPrefix ? escapeRegExp(pathPrefix) : '(/|\\?|#|$)';
 
     try {
         // Regex matches full URL strings: scheme + optional subdomains + host + optional port + path
