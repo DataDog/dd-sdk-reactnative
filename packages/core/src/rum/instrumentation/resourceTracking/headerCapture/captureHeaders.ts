@@ -4,12 +4,17 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../../InternalLog';
+import { SdkVerbosity } from '../../../../config/types';
+
 import { isHeaderAllowed } from './isHeaderAllowed';
 import { parseResponseHeaders } from './parseResponseHeaders';
 import type {
     CompiledHeaderCaptureConfig,
     CompiledHeaderCaptureRule
 } from './types';
+
+const TAG = '[DatadogRUM][HeaderCapture]';
 
 /**
  * Default response header names captured in 'defaults' mode.
@@ -220,6 +225,15 @@ export const accumulateRequestHeader = (
             }
         }
         accumulator[headerName] = headerValue;
+        InternalLog.log(
+            `${TAG} Accumulated request header "${headerName}"`,
+            SdkVerbosity.DEBUG
+        );
+    } else {
+        InternalLog.log(
+            `${TAG} Request header "${headerName}" blocked by security filter`,
+            SdkVerbosity.DEBUG
+        );
     }
 };
 
@@ -252,22 +266,37 @@ export const captureResponseHeaders = (
     }
 
     const allHeaders = parseResponseHeaders(rawHeaders);
-    if (Object.keys(allHeaders).length === 0) {
+    const allCount = Object.keys(allHeaders).length;
+    if (allCount === 0) {
+        InternalLog.log(
+            `${TAG} No response headers to capture for ${url}`,
+            SdkVerbosity.DEBUG
+        );
         return undefined;
     }
 
     // Security filter first — defense in depth
     const securityFiltered: Record<string, string> = {};
-    let hasSecurityFiltered = false;
+    const blocked: string[] = [];
 
     for (const [name, value] of Object.entries(allHeaders)) {
         if (isHeaderAllowed(name)) {
             securityFiltered[name] = value;
-            hasSecurityFiltered = true;
+        } else {
+            blocked.push(name);
         }
     }
 
-    if (!hasSecurityFiltered) {
+    if (blocked.length > 0) {
+        InternalLog.log(
+            `${TAG} Response headers blocked by security filter for ${url}: [${blocked.join(
+                ', '
+            )}]`,
+            SdkVerbosity.DEBUG
+        );
+    }
+
+    if (Object.keys(securityFiltered).length === 0) {
         return undefined;
     }
 
@@ -279,11 +308,37 @@ export const captureResponseHeaders = (
     );
 
     if (allowedHeaders.size === 0) {
+        InternalLog.log(
+            `${TAG} No rules matched ${url} for response headers — nothing captured`,
+            SdkVerbosity.DEBUG
+        );
         return undefined;
     }
 
     const casingMap = mergeCasingMaps(config, url, 'responseHeaderCasing');
-    return filterWithCasing(securityFiltered, allowedHeaders, casingMap);
+    const result = filterWithCasing(
+        securityFiltered,
+        allowedHeaders,
+        casingMap
+    );
+
+    if (result === undefined) {
+        InternalLog.log(
+            `${TAG} No response headers survived rule filtering for ${url}`,
+            SdkVerbosity.DEBUG
+        );
+    } else {
+        InternalLog.log(
+            `${TAG} Captured ${
+                Object.keys(result).length
+            }/${allCount} response headers for ${url}: [${Object.keys(
+                result
+            ).join(', ')}]`,
+            SdkVerbosity.DEBUG
+        );
+    }
+
+    return result;
 };
 
 /**
@@ -312,6 +367,8 @@ export const filterRequestHeadersByMode = (
         return undefined;
     }
 
+    const accumulatedCount = Object.keys(headers).length;
+
     // Merge all matching rules' request header sets (union)
     const allowedHeaders = mergeMatchingHeaderNames(
         config,
@@ -320,9 +377,31 @@ export const filterRequestHeadersByMode = (
     );
 
     if (allowedHeaders.size === 0) {
+        InternalLog.log(
+            `${TAG} No rules matched ${url} for request headers — nothing captured`,
+            SdkVerbosity.DEBUG
+        );
         return undefined;
     }
 
     const casingMap = mergeCasingMaps(config, url, 'requestHeaderCasing');
-    return filterWithCasing(headers, allowedHeaders, casingMap);
+    const result = filterWithCasing(headers, allowedHeaders, casingMap);
+
+    if (result === undefined) {
+        InternalLog.log(
+            `${TAG} No request headers survived rule filtering for ${url} (accumulated: ${accumulatedCount})`,
+            SdkVerbosity.DEBUG
+        );
+    } else {
+        InternalLog.log(
+            `${TAG} Captured ${
+                Object.keys(result).length
+            }/${accumulatedCount} request headers for ${url}: [${Object.keys(
+                result
+            ).join(', ')}]`,
+            SdkVerbosity.DEBUG
+        );
+    }
+
+    return result;
 };

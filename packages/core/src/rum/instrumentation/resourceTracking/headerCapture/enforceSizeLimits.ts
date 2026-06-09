@@ -4,8 +4,13 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-/** Maximum UTF-8 byte length for any single header value. */
+import { InternalLog } from '../../../../InternalLog';
+import { SdkVerbosity } from '../../../../config/types';
 import { utf8ByteLength } from '../../../../utils/stringUtils';
+
+const TAG = '[DatadogRUM][HeaderCapture]';
+
+/** Maximum UTF-8 byte length for any single header value. */
 
 export const MAX_HEADER_VALUE_BYTES = 128;
 
@@ -71,14 +76,36 @@ export const enforceSizeLimits = (
         ? Object.entries(requestHeaders).map(([name, value]): [
               string,
               string
-          ] => [name, truncateToBytes(value, MAX_HEADER_VALUE_BYTES)])
+          ] => {
+              const truncated = truncateToBytes(value, MAX_HEADER_VALUE_BYTES);
+              if (truncated.length < value.length) {
+                  InternalLog.log(
+                      `${TAG} Truncated request header "${name}" value from ${utf8ByteLength(
+                          value
+                      )} to ${MAX_HEADER_VALUE_BYTES} bytes`,
+                      SdkVerbosity.DEBUG
+                  );
+              }
+              return [name, truncated];
+          })
         : [];
 
     const resEntries = responseHeaders
         ? Object.entries(responseHeaders).map(([name, value]): [
               string,
               string
-          ] => [name, truncateToBytes(value, MAX_HEADER_VALUE_BYTES)])
+          ] => {
+              const truncated = truncateToBytes(value, MAX_HEADER_VALUE_BYTES);
+              if (truncated.length < value.length) {
+                  InternalLog.log(
+                      `${TAG} Truncated response header "${name}" value from ${utf8ByteLength(
+                          value
+                      )} to ${MAX_HEADER_VALUE_BYTES} bytes`,
+                      SdkVerbosity.DEBUG
+                  );
+              }
+              return [name, truncated];
+          })
         : [];
 
     // Step 3: Count cap -- request headers take priority
@@ -91,6 +118,10 @@ export const enforceSizeLimits = (
         cappedReqEntries = reqEntries.slice(0, reqSlots);
         const remainingSlots = MAX_HEADER_COUNT - cappedReqEntries.length;
         cappedResEntries = resEntries.slice(0, remainingSlots);
+        InternalLog.log(
+            `${TAG} Header count cap hit (${totalCount} > ${MAX_HEADER_COUNT}): keeping ${cappedReqEntries.length} request + ${cappedResEntries.length} response headers`,
+            SdkVerbosity.DEBUG
+        );
     }
 
     // Step 4: Total byte budget -- drop from end (response first, then request)
@@ -103,12 +134,20 @@ export const enforceSizeLimits = (
     }
 
     if (totalBytes > MAX_TOTAL_BYTES) {
+        InternalLog.log(
+            `${TAG} Total byte budget exceeded (${totalBytes} > ${MAX_TOTAL_BYTES}): dropping headers from end`,
+            SdkVerbosity.DEBUG
+        );
         // Drop response headers from end first
         while (cappedResEntries.length > 0 && totalBytes > MAX_TOTAL_BYTES) {
             const entry = cappedResEntries.pop();
             if (entry === undefined) {
                 break;
             }
+            InternalLog.log(
+                `${TAG} Dropped response header "${entry[0]}" to fit byte budget`,
+                SdkVerbosity.DEBUG
+            );
             totalBytes -= utf8ByteLength(entry[0]) + utf8ByteLength(entry[1]);
         }
         // Then drop request headers from end
@@ -117,6 +156,10 @@ export const enforceSizeLimits = (
             if (entry === undefined) {
                 break;
             }
+            InternalLog.log(
+                `${TAG} Dropped request header "${entry[0]}" to fit byte budget`,
+                SdkVerbosity.DEBUG
+            );
             totalBytes -= utf8ByteLength(entry[0]) + utf8ByteLength(entry[1]);
         }
     }
