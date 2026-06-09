@@ -552,7 +552,7 @@ export class DdSdkReactNative {
             });
         }
 
-        if (!trackResources && headerCaptureRules !== undefined) {
+        if (!trackResources && headerCaptureRules != null) {
             InternalLog.log(
                 'headerCaptureRules is set but trackResources is false. Header capture will be disabled.',
                 SdkVerbosity.WARN
