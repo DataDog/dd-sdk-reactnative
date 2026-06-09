@@ -22,18 +22,38 @@ export const MAX_TOTAL_BYTES = 2048;
 
 /**
  * Truncates a string so its UTF-8 byte length does not exceed maxBytes.
- * Slices by character and re-checks, because multi-byte chars mean
- * character count < byte count.
+ * Single forward pass — O(n). Mirrors the surrogate-pair logic in utf8ByteLength.
  */
 const truncateToBytes = (str: string, maxBytes: number): string => {
-    if (utf8ByteLength(str) <= maxBytes) {
-        return str;
+    let bytes = 0;
+    for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+        let charBytes: number;
+        let advance = 1;
+        if (code < 0x80) {
+            charBytes = 1;
+        } else if (code < 0x800) {
+            charBytes = 2;
+        } else if (code >= 0xd800 && code <= 0xdbff) {
+            const next = i + 1 < str.length ? str.charCodeAt(i + 1) : 0;
+            if (next >= 0xdc00 && next <= 0xdfff) {
+                charBytes = 4;
+                advance = 2;
+            } else {
+                charBytes = 3; // lone high surrogate
+            }
+        } else if (code >= 0xdc00 && code <= 0xdfff) {
+            charBytes = 3; // lone low surrogate
+        } else {
+            charBytes = 3;
+        }
+        if (bytes + charBytes > maxBytes) {
+            return str.slice(0, i);
+        }
+        bytes += charBytes;
+        i += advance - 1; // -1 because the for-loop will also increment i
     }
-    let result = str;
-    while (result.length > 0 && utf8ByteLength(result) > maxBytes) {
-        result = result.slice(0, result.length - 1);
-    }
-    return result;
+    return str;
 };
 
 /**
