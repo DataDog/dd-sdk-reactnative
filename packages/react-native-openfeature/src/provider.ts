@@ -160,6 +160,7 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
         reason,
         variant,
         allocationKey,
+        extraLogging,
         errorCode,
         errorMessage
     } = details;
@@ -167,11 +168,22 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
     const parsedErrorCode =
         errorCode && (ErrorCode[errorCode as ErrorCode] || ErrorCode.GENERAL);
 
+    // Build flagMetadata: extraLogging primitives first, allocationKey last (wins on collision).
+    let flagMetadata: Record<string, PrimitiveValue> | undefined;
+    const hasExtraLogging =
+        extraLogging && Object.keys(extraLogging).length > 0;
+    if (allocationKey || hasExtraLogging) {
+        flagMetadata = { ...extraLogging };
+        if (allocationKey) {
+            flagMetadata.allocationKey = allocationKey;
+        }
+    }
+
     const result: ResolutionDetails<T> = {
         value,
         reason,
         variant,
-        flagMetadata: allocationKey ? { allocationKey } : undefined,
+        flagMetadata: flagMetadata || undefined,
         errorCode: parsedErrorCode,
         errorMessage
     };

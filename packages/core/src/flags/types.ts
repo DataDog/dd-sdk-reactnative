@@ -205,6 +205,12 @@ export interface FlagDetails<T> {
      */
     allocationKey?: string;
     /**
+     * Extra logging metadata from the flag assignment.
+     * Contains only primitive values (boolean, string, number, null).
+     * Useful for debugging and analytics.
+     */
+    extraLogging?: Record<string, PrimitiveValue>;
+    /**
      * Code of the error that occurred during evaluation, if any.
      */
     errorCode?: FlagErrorCode;

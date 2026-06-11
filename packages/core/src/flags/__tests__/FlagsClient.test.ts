@@ -58,6 +58,34 @@ jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
         variationType: '',
         variationValue: '',
         extraLogging: {}
+    },
+    'test-flag-with-extra-logging': {
+        key: 'test-flag-with-extra-logging',
+        value: true,
+        allocationKey: 'alloc-abc',
+        variationKey: 'true',
+        reason: 'TARGETED',
+        doLog: true,
+        variationType: '',
+        variationValue: '',
+        extraLogging: {
+            campaignId: 'camp-123',
+            score: 42,
+            eligible: true,
+            allocationKey: 'should-be-skipped',
+            nestedObj: { foo: 'bar' }
+        }
+    },
+    'test-flag-empty-extra-logging': {
+        key: 'test-flag-empty-extra-logging',
+        value: 'green',
+        allocationKey: '',
+        variationKey: 'green',
+        reason: 'STATIC',
+        doLog: true,
+        variationType: '',
+        variationValue: '',
+        extraLogging: {}
     }
 });
 
@@ -204,6 +232,44 @@ describe('FlagsClient', () => {
                 reason: 'ERROR',
                 errorCode: 'FLAG_NOT_FOUND'
             });
+        });
+
+        it('should include extraLogging primitives (excluding allocationKey key) in details', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+
+            const details = flagsClient.getBooleanDetails(
+                'test-flag-with-extra-logging',
+                false
+            );
+
+            expect(details.extraLogging).toEqual({
+                campaignId: 'camp-123',
+                score: 42,
+                eligible: true
+                // 'allocationKey' key is excluded (typed field wins)
+                // nestedObj is excluded (non-primitive)
+            });
+            // allocationKey field itself is still populated
+            expect(details.allocationKey).toBe('alloc-abc');
+        });
+
+        it('should return undefined extraLogging when extraLogging cache entry is empty', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+
+            const details = flagsClient.getStringDetails(
+                'test-flag-empty-extra-logging',
+                'default'
+            );
+
+            expect(details.extraLogging).toBeUndefined();
         });
 
         it('should return TYPE_MISMATCH when using wrong typed accessor method', async () => {
