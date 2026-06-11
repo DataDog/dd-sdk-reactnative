@@ -4,9 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeModules } from 'react-native';
-
 import { DdFlags } from '@datadog/mobile-react-native';
+import { NativeModules } from 'react-native';
 
 import { DatadogOpenFeatureProvider } from '../provider';
 

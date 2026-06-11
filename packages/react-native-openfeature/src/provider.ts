@@ -169,11 +169,19 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
         errorCode && (ErrorCode[errorCode as ErrorCode] || ErrorCode.GENERAL);
 
     // Build flagMetadata: extraLogging primitives first, allocationKey last (wins on collision).
-    let flagMetadata: Record<string, PrimitiveValue> | undefined;
+    // OpenFeature FlagMetadata does not support null values, so null entries are omitted.
+    let flagMetadata: Record<string, string | number | boolean> | undefined;
     const hasExtraLogging =
         extraLogging && Object.keys(extraLogging).length > 0;
     if (allocationKey || hasExtraLogging) {
-        flagMetadata = { ...extraLogging };
+        flagMetadata = {};
+        if (extraLogging) {
+            for (const [k, v] of Object.entries(extraLogging)) {
+                if (v !== null) {
+                    flagMetadata[k] = v;
+                }
+            }
+        }
         if (allocationKey) {
             flagMetadata.allocationKey = allocationKey;
         }

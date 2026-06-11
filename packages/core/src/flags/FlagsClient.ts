@@ -10,7 +10,12 @@ import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
-import type { JsonValue, EvaluationContext, FlagDetails, PrimitiveValue } from './types';
+import type {
+    JsonValue,
+    EvaluationContext,
+    FlagDetails,
+    PrimitiveValue
+} from './types';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -269,11 +274,15 @@ export class FlagsClient {
 const buildExtraLogging = (
     raw: Record<string, unknown>
 ): Record<string, PrimitiveValue> | undefined => {
-    if (!raw || Object.keys(raw).length === 0) return undefined;
+    if (!raw || Object.keys(raw).length === 0) {
+        return undefined;
+    }
 
     const result: Record<string, PrimitiveValue> = {};
     for (const [key, value] of Object.entries(raw)) {
-        if (key === 'allocationKey') continue; // typed field wins
+        if (key === 'allocationKey') {
+            continue; // typed field wins
+        }
         if (
             typeof value === 'boolean' ||
             typeof value === 'string' ||
