@@ -26,9 +26,12 @@ import java.util.Locale
  * The entry point to use Datadog's Flags feature.
  */
 class DdFlagsImplementation(
-    private val sdkCore: SdkCore = Datadog.getInstance(),
+    private val sdkCoreOverride: SdkCore? = null,
 ) {
     private val clients: MutableMap<String, FlagsClient> = mutableMapOf()
+
+    private val sdkCore: SdkCore
+        get() = sdkCoreOverride ?: Datadog.getInstance()
 
     /**
      * Enable the Flags feature with the provided configuration.
