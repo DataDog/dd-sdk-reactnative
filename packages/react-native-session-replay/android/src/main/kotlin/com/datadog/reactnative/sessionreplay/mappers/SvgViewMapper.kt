@@ -1,11 +1,18 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
 package com.datadog.reactnative.sessionreplay.mappers
 
 import ReactViewBackgroundDrawableUtils
-import android.view.View
+import android.view.ViewGroup
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.sessionreplay.model.MobileSegment
 import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.android.sessionreplay.recorder.mapper.BaseWireframeMapper
+import com.datadog.android.sessionreplay.recorder.mapper.TraverseAllChildrenMapper
 import com.datadog.android.sessionreplay.utils.AsyncJobStatusCallback
 import com.datadog.android.sessionreplay.utils.DefaultColorStringFormatter
 import com.datadog.android.sessionreplay.utils.DefaultViewBoundsResolver
@@ -17,7 +24,7 @@ import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.views.DdPrivacyView
 import java.util.Collections
 
-internal open class SvgViewMapper<T: View>(
+internal open class SvgViewMapper<T: ViewGroup>(
     private val internalCallback: ReactNativeInternalCallback,
     private val drawableUtils: DrawableUtils =
         ReactViewBackgroundDrawableUtils()
@@ -26,7 +33,7 @@ internal open class SvgViewMapper<T: View>(
     colorStringFormatter = DefaultColorStringFormatter,
     viewBoundsResolver = DefaultViewBoundsResolver,
     drawableToColorMapper = DrawableToColorMapper.getDefault()
-) {
+), TraverseAllChildrenMapper<T> {
     private val queuedResourceIds = Collections.synchronizedSet(HashSet<String>())
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -53,7 +60,17 @@ internal open class SvgViewMapper<T: View>(
         val wireframes = mutableListOf<MobileSegment.Wireframe>()
 
         if (view is DdPrivacyView) {
-            val hash = view.attributes?.get("hash") ?: return wireframes
+            val hash = view.attributes?.get("hash") ?: return listOf(
+                MobileSegment.Wireframe.ShapeWireframe(
+                    resolveViewId(view),
+                    viewGlobalBounds.x,
+                    viewGlobalBounds.y,
+                    viewGlobalBounds.width,
+                    viewGlobalBounds.height,
+                    shapeStyle = shapeStyle,
+                    border = border
+                )
+            )
             val width = view.attributes?.get("width")
             val height = view.attributes?.get("height")
 
@@ -89,8 +106,9 @@ internal open class SvgViewMapper<T: View>(
                     border = border
                 ))
 
+            val imageWireframeId = viewIdentifierResolver.resolveChildUniqueIdentifier(view, "svg") ?: return wireframes
             val imgWireframe = MobileSegment.Wireframe.ImageWireframe(
-                resolveViewId(subView),
+                imageWireframeId,
                 imageBounds.x,
                 imageBounds.y,
                 imageBounds.width,
