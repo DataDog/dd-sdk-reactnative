@@ -172,7 +172,7 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
     // OpenFeature FlagMetadata does not support null values, so null entries are omitted.
     let flagMetadata: Record<string, string | number | boolean> | undefined;
     const hasExtraLogging =
-        extraLogging && Object.keys(extraLogging).length > 0;
+        extraLogging && Object.values(extraLogging).some(v => v !== null);
     if (allocationKey || hasExtraLogging) {
         flagMetadata = {};
         if (extraLogging) {

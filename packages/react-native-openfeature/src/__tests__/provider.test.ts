@@ -63,6 +63,19 @@ jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
         variationType: '',
         variationValue: '',
         extraLogging: {}
+    },
+    'flag-null-only-extra-logging': {
+        key: 'flag-null-only-extra-logging',
+        value: 42,
+        allocationKey: '',
+        variationKey: '42',
+        reason: 'STATIC',
+        doLog: true,
+        variationType: '',
+        variationValue: '',
+        extraLogging: {
+            nullField: null
+        }
     }
 });
 
@@ -134,6 +147,17 @@ describe('DatadogOpenFeatureProvider', () => {
         it('should return undefined flagMetadata when extraLogging is empty and allocationKey is absent', () => {
             const result = provider.resolveNumberEvaluation(
                 'flag-empty-extra-logging',
+                0,
+                {},
+                {} as any
+            );
+
+            expect(result.flagMetadata).toBeUndefined();
+        });
+
+        it('should return undefined flagMetadata when extraLogging has only null values and allocationKey is absent', () => {
+            const result = provider.resolveNumberEvaluation(
+                'flag-null-only-extra-logging',
                 0,
                 {},
                 {} as any
