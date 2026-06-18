@@ -93,7 +93,7 @@ public class DdLogsImplementation: NSObject {
 }
 
 internal extension DatadogLogs.Logger.Configuration {
-    /// Creates a Logger configuration from briged configuration dictionary.
+    /// Creates a Logger configuration from bridged configuration dictionary.
     ///
     /// - Parameter sdkConfiguration: The configuration from the bridge.
     init(_ sdkConfiguration: DdSdkConfiguration) {
