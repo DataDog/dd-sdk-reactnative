@@ -11,8 +11,6 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.uimanager.ViewManager
-import com.reactnativecommunity.webview.RNCWebViewModule
-import com.reactnativecommunity.webview.RNCWebViewModuleImpl
 
 class DdSdkReactNativeWebViewPackage : TurboReactPackage() {
     override fun createViewManagers(

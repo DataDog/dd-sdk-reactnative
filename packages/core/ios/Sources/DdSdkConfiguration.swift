@@ -190,7 +190,6 @@ public class LogsConfiguration: NSObject {
 /// A configuration object for Datadog Tracing (APM) features.
 ///
 /// - Parameters:
-///    - resourceTracingSamplingRate: Percentage (0–100) of network resource traces to sample.
 ///    - customEndpoint: A custom Trace intake endpoint to override the default Datadog intake.
 public class TraceConfiguration: NSObject {
     public var customEndpoint: String? = nil

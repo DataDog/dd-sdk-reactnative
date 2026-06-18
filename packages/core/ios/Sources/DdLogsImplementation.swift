@@ -95,7 +95,7 @@ public class DdLogsImplementation: NSObject {
 internal extension DatadogLogs.Logger.Configuration {
     /// Creates a Logger configuration from briged configuration dictionary.
     ///
-    /// - Parameter dictionnary: The configuration from the bridge.
+    /// - Parameter sdkConfiguration: The configuration from the bridge.
     init(_ sdkConfiguration: DdSdkConfiguration) {
         self.init(
             networkInfoEnabled: true,
