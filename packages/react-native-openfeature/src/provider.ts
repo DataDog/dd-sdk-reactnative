@@ -8,7 +8,8 @@ import { DdFlags } from '@datadog/mobile-react-native';
 import type {
     FlagDetails,
     FlagsClient,
-    EvaluationContext as DdEvaluationContext
+    EvaluationContext as DdEvaluationContext,
+    PrimitiveValue
 } from '@datadog/mobile-react-native';
 import { OpenFeatureEventEmitter, ErrorCode } from '@openfeature/web-sdk';
 import type {
@@ -19,7 +20,6 @@ import type {
     Provider,
     ProviderMetadata,
     ResolutionDetails,
-    PrimitiveValue,
     ProviderEventEmitter,
     ProviderEvents
 } from '@openfeature/web-sdk';
@@ -160,7 +160,6 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
         reason,
         variant,
         allocationKey,
-        extraLogging,
         errorCode,
         errorMessage
     } = details;
@@ -168,30 +167,11 @@ const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
     const parsedErrorCode =
         errorCode && (ErrorCode[errorCode as ErrorCode] || ErrorCode.GENERAL);
 
-    // Build flagMetadata: extraLogging primitives first, allocationKey last (wins on collision).
-    // OpenFeature FlagMetadata does not support null values, so null entries are omitted.
-    let flagMetadata: Record<string, string | number | boolean> | undefined;
-    const hasExtraLogging =
-        extraLogging && Object.values(extraLogging).some(v => v !== null);
-    if (allocationKey || hasExtraLogging) {
-        flagMetadata = {};
-        if (extraLogging) {
-            for (const [k, v] of Object.entries(extraLogging)) {
-                if (v !== null) {
-                    flagMetadata[k] = v;
-                }
-            }
-        }
-        if (allocationKey) {
-            flagMetadata.allocationKey = allocationKey;
-        }
-    }
-
     const result: ResolutionDetails<T> = {
         value,
         reason,
         variant,
-        flagMetadata: flagMetadata || undefined,
+        flagMetadata: allocationKey ? { allocationKey } : undefined,
         errorCode: parsedErrorCode,
         errorMessage
     };
