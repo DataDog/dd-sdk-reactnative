@@ -134,5 +134,16 @@ export interface Spec extends TurboModule {
     removeListeners: (count: number) => void;
 }
 
-// eslint-disable-next-line import/no-default-export
-export default TurboModuleRegistry.get<Spec>('DdSdk');
+let cachedModule: Spec | null | undefined;
+
+/**
+ * Lazily resolves the native TurboModule on first call and caches the result.
+ * Resolving lazily (instead of at module load) keeps this package importable on
+ * platforms where the native module is absent (e.g. Vega).
+ */
+export const getNativeDdSdk = (): Spec | null => {
+    if (cachedModule === undefined) {
+        cachedModule = TurboModuleRegistry.get<Spec>('DdSdk');
+    }
+    return cachedModule;
+};

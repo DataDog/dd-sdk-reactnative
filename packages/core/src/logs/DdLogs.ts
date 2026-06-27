@@ -14,6 +14,8 @@ import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNative
 import type { ErrorSource, LogEventMapper } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
+import { getNativeDdLogs } from '../specs/NativeDdLogs';
+
 import { generateEventMapper } from './eventMapper';
 import type {
     DdLogsType,
@@ -44,9 +46,7 @@ const isLogWithError = (
 };
 
 class DdLogsWrapper implements DdLogsType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeLogs: DdNativeLogsType = require('../specs/NativeDdLogs')
-        .default;
+    private nativeLogs: DdNativeLogsType = getNativeDdLogs() as DdNativeLogsType;
     private logEventMapper = generateEventMapper(undefined);
 
     debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {

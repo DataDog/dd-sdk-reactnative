@@ -9,10 +9,10 @@ import { DdBabelInteractionTracking } from '../DdBabelInteractionTracking';
 
 jest.mock('../../../../specs/NativeDdSdk', () => ({
     __esModule: true,
-    default: {
+    getNativeDdSdk: jest.fn().mockReturnValue({
         sendTelemetryLog: jest.fn(),
         telemetryError: jest.fn()
-    }
+    })
 }));
 
 jest.mock('../../../../utils/time-provider/DefaultTimeProvider', () => ({
