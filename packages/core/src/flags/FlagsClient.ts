@@ -8,14 +8,14 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
+import { getNativeDdFlags } from '../specs/NativeDdFlags';
+
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
 import type { JsonValue, EvaluationContext, FlagDetails } from './types';
 
 export class FlagsClient {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
-        .default;
+    private nativeFlags: DdNativeFlagsType = getNativeDdFlags() as DdNativeFlagsType;
 
     private clientName: string;
 
