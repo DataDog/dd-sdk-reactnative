@@ -7,6 +7,7 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
+import { getNativeDdFlags } from '../specs/NativeDdFlags';
 
 // Imported directly (not via the module index): context matching is an internal helper,
 // used here only to detect a runtime context an offline precomputed configuration cannot honor.
@@ -16,6 +17,7 @@ import type {
     ParsedFlagsConfiguration,
     ParsedPrecomputedConfiguration
 } from './configuration';
+
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
 import type { JsonValue, EvaluationContext, FlagDetails } from './types';
@@ -64,9 +66,7 @@ type LoadedConfigurationState =
       };
 
 export class FlagsClient {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
-        .default;
+    private nativeFlags: DdNativeFlagsType = getNativeDdFlags() as DdNativeFlagsType;
 
     private clientName: string;
 
