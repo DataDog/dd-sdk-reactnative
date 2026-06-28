@@ -52,6 +52,9 @@ buck-out/
 
 # bob build files
 lib/
+dist/
+CMakeUserPresets.json
+buildinfo.json
 
 # fastlane
 #
