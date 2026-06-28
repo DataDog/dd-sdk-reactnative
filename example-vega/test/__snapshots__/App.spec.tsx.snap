@@ -1,0 +1,776 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Template App Snapshot tests App screen after navigating to Network 1`] = `
+<View
+  accessibilityIgnoresInvertColors={true}
+  style={
+    Object {
+      "flex": 1,
+    }
+  }
+>
+  <Image
+    source={
+      Object {
+        "testUri": "../../../src/assets/background.png",
+      }
+    }
+    style={
+      Array [
+        Object {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        },
+        Object {
+          "height": undefined,
+          "width": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      Object {
+        "flex": 1,
+        "flexDirection": "row",
+        "padding": 40,
+      }
+    }
+  >
+    <RCTScrollView
+      style={
+        Object {
+          "flex": 2,
+          "paddingLeft": 60,
+          "paddingRight": 40,
+        }
+      }
+    >
+      <View>
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 50,
+              "fontWeight": "bold",
+              "marginBottom": 10,
+            }
+          }
+        >
+          Network Requests
+        </Text>
+        <View
+          accessibilityState={
+            Object {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            Object {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            Object {
+              "backgroundColor": "rgba(255, 255, 255, 0.08)",
+              "borderColor": "transparent",
+              "borderRadius": 10,
+              "borderWidth": 2,
+              "marginBottom": 12,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="endpoint-0"
+        >
+          <Text
+            style={
+              Object {
+                "color": "white",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "marginBottom": 4,
+              }
+            }
+          >
+            GET httpbin/get
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#888888",
+                "fontSize": 18,
+              }
+            }
+          >
+            https://httpbin.org/get
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            Object {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            Object {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            Object {
+              "backgroundColor": "rgba(255, 255, 255, 0.08)",
+              "borderColor": "transparent",
+              "borderRadius": 10,
+              "borderWidth": 2,
+              "marginBottom": 12,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="endpoint-1"
+        >
+          <Text
+            style={
+              Object {
+                "color": "white",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "marginBottom": 4,
+              }
+            }
+          >
+            GET httpbin/json
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#888888",
+                "fontSize": 18,
+              }
+            }
+          >
+            https://httpbin.org/json
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            Object {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            Object {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            Object {
+              "backgroundColor": "rgba(255, 255, 255, 0.08)",
+              "borderColor": "transparent",
+              "borderRadius": 10,
+              "borderWidth": 2,
+              "marginBottom": 12,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="endpoint-2"
+        >
+          <Text
+            style={
+              Object {
+                "color": "white",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "marginBottom": 4,
+              }
+            }
+          >
+            GET httpbin/status/200
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#888888",
+                "fontSize": 18,
+              }
+            }
+          >
+            https://httpbin.org/status/200
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            Object {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            Object {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            Object {
+              "backgroundColor": "rgba(255, 255, 255, 0.08)",
+              "borderColor": "transparent",
+              "borderRadius": 10,
+              "borderWidth": 2,
+              "marginBottom": 12,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="endpoint-3"
+        >
+          <Text
+            style={
+              Object {
+                "color": "white",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "marginBottom": 4,
+              }
+            }
+          >
+            GET httpbin/status/404
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#888888",
+                "fontSize": 18,
+              }
+            }
+          >
+            https://httpbin.org/status/404
+          </Text>
+        </View>
+        <View
+          style={
+            Object {
+              "marginTop": 10,
+            }
+          }
+        >
+          <View
+            accessibilityState={
+              Object {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              Object {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              Object {
+                "alignItems": "center",
+                "backgroundColor": "rgba(255, 255, 255, 0.05)",
+                "borderColor": "#ff9900",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 10,
+                "opacity": 1,
+                "paddingHorizontal": 20,
+                "paddingVertical": 12,
+              }
+            }
+            testID="runAll"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "fontSize": 22,
+                    "fontWeight": "bold",
+                  },
+                  Object {
+                    "color": "#ff9900",
+                  },
+                ]
+              }
+            >
+              Run All Requests
+            </Text>
+          </View>
+          <View
+            accessibilityState={
+              Object {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              Object {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              Object {
+                "alignItems": "center",
+                "backgroundColor": "rgba(255, 255, 255, 0.05)",
+                "borderColor": "#aaaaaa",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 10,
+                "opacity": 1,
+                "paddingHorizontal": 20,
+                "paddingVertical": 12,
+              }
+            }
+            testID="backHome"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "fontSize": 22,
+                    "fontWeight": "bold",
+                  },
+                  Object {
+                    "color": "#aaaaaa",
+                  },
+                ]
+              }
+            >
+              Back to Home
+            </Text>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+    <View
+      style={
+        Object {
+          "backgroundColor": "rgba(0, 0, 0, 0.4)",
+          "borderRadius": 10,
+          "flex": 3,
+          "padding": 20,
+        }
+      }
+    >
+      <Text
+        style={
+          Object {
+            "color": "white",
+            "fontSize": 30,
+            "fontWeight": "bold",
+            "marginBottom": 15,
+          }
+        }
+      >
+        Results
+      </Text>
+      <RCTScrollView
+        style={
+          Object {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <Text
+            style={
+              Object {
+                "color": "#888888",
+                "fontSize": 22,
+                "fontStyle": "italic",
+              }
+            }
+          >
+            No requests yet. Select an endpoint to start.
+          </Text>
+        </View>
+      </RCTScrollView>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Template App Snapshot tests Initial App screen 1`] = `
+<View
+  accessibilityIgnoresInvertColors={true}
+  style={
+    Object {
+      "flex": 1,
+    }
+  }
+>
+  <Image
+    source={
+      Object {
+        "testUri": "../../../src/assets/background.png",
+      }
+    }
+    style={
+      Array [
+        Object {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        },
+        Object {
+          "height": undefined,
+          "width": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      Object {
+        "alignItems": "center",
+        "flex": 1,
+        "flexDirection": "row",
+        "paddingHorizontal": 100,
+      }
+    }
+  >
+    <View
+      style={
+        Object {
+          "alignItems": "flex-start",
+          "flex": 1,
+          "paddingLeft": 100,
+        }
+      }
+    >
+      <Image
+        source={
+          Object {
+            "testUri": "../../../src/assets/vega.png",
+          }
+        }
+      />
+      <Text
+        style={
+          Object {
+            "color": "white",
+            "fontSize": 60,
+            "fontWeight": "bold",
+            "marginTop": 20,
+          }
+        }
+      >
+        Datadog SDK - Vega
+      </Text>
+      <Text
+        style={
+          Object {
+            "color": "#cccccc",
+            "fontSize": 30,
+            "marginTop": 10,
+          }
+        }
+      >
+        Select a screen to test SDK functionality
+      </Text>
+      <View
+        style={
+          Object {
+            "backgroundColor": "rgba(0, 0, 0, 0.4)",
+            "borderRadius": 10,
+            "marginTop": 20,
+            "padding": 20,
+          }
+        }
+      >
+        <Text
+          style={
+            Object {
+              "color": "#ff9900",
+              "fontSize": 20,
+              "fontWeight": "bold",
+              "marginTop": 5,
+            }
+          }
+        >
+          Platform
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 20,
+              "marginBottom": 5,
+            }
+          }
+        >
+          Amazon Vega OS (Kepler)
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "#ff9900",
+              "fontSize": 20,
+              "fontWeight": "bold",
+              "marginTop": 5,
+            }
+          }
+        >
+          SDK
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 20,
+              "marginBottom": 5,
+            }
+          }
+        >
+          @datadog/mobile-react-native-vega
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        Object {
+          "flex": 1,
+          "justifyContent": "center",
+        }
+      }
+    >
+      <View
+        accessibilityState={
+          Object {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          Object {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          Object {
+            "backgroundColor": "rgba(255, 255, 255, 0.08)",
+            "borderColor": "transparent",
+            "borderRadius": 10,
+            "borderWidth": 2,
+            "marginBottom": 16,
+            "opacity": 1,
+            "padding": 24,
+          }
+        }
+        testID="networkLink"
+      >
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 30,
+              "fontWeight": "bold",
+              "marginBottom": 6,
+            }
+          }
+        >
+          Network Requests
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "#aaaaaa",
+              "fontSize": 20,
+            }
+          }
+        >
+          Make HTTP requests and inspect RUM resource tracking
+        </Text>
+      </View>
+      <View
+        accessibilityState={
+          Object {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          Object {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          Object {
+            "backgroundColor": "rgba(255, 255, 255, 0.08)",
+            "borderColor": "transparent",
+            "borderRadius": 10,
+            "borderWidth": 2,
+            "marginBottom": 16,
+            "opacity": 1,
+            "padding": 24,
+          }
+        }
+        testID="rumViewsLink"
+      >
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 30,
+              "fontWeight": "bold",
+              "marginBottom": 6,
+            }
+          }
+        >
+          RUM Views
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "#aaaaaa",
+              "fontSize": 20,
+            }
+          }
+        >
+          Start and stop RUM views to test view lifecycle tracking
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;

@@ -19,6 +19,7 @@
     "packages": [
       "packages/*",
       "example",
+      "example-vega",
       "example-new-architecture",
       "benchmarks"
     ]

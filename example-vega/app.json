@@ -1,0 +1,5 @@
+{
+  "//": "The declared app name must follow this pattern to be KRL-compatible",
+  "name": "com.datadog.example.vega.main",
+  "displayName": "ExampleVega"
+}

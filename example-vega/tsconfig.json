@@ -1,0 +1,18 @@
+{
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "jest",
+      "node",
+      "@amazon-devices/react-native-kepler"
+    ] /* Override "jest", "react-native" from @tsconfig/react-native */,
+    "baseUrl": ".",
+    "paths": {
+      "@datadog/mobile-react-native-vega": [
+        "../packages/react-native-vega/src"
+      ],
+      "@datadog/mobile-react-native": ["../packages/core/src"],
+      "@datadog/mobile-react-native/*": ["../packages/core/src/*"]
+    }
+  }
+}
