@@ -1,0 +1,13 @@
+schema-version = 1
+
+[package]
+title = "Basic UI React Native Application for project examplevega"
+version = "0.1.0"
+id = "com.datadog.example.vega"
+
+[components]
+[[components.interactive]]
+id = "com.datadog.example.vega.main"
+runtime-module = "/com.amazon.kepler.keplerscript.runtime.loader_2@IKeplerScript_2_0"
+launch-type = "singleton"
+categories = ["com.amazon.category.main"]
