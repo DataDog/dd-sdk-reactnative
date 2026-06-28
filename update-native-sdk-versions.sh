@@ -88,14 +88,21 @@ extract_and_validate_version podspec_files[@] "dependency 'Datadog.*' *, *'" "s/
 # Get Android version
 extract_and_validate_version build_gradle_files[@] "com.datadoghq:dd-sdk-android" 's/.*:\([0-9.]*\).*/\1/' "Android" android_version
 
+# Get Vega C++ SDK version if the Vega package is present
+vega_cpp_version=""
+vega_cmake_file="packages/react-native-vega/CMakeLists.txt"
+if [ -f "$vega_cmake_file" ]; then
+    vega_cpp_version=$(sed -n 's/.*GIT_TAG[[:space:]]\{1,\}\([^[:space:]]*\).*/\1/p' "$vega_cmake_file" | head -n 1)
+fi
+
 # Check if NATIVE_SDK_VERSIONS.md exists, create it otherwise
 if [ ! -f "NATIVE_SDK_VERSIONS.md" ]; then
-    echo "| React Native | iOS Bridge / iOS SDK | Android Bridge / Android SDK |" > NATIVE_SDK_VERSIONS.md
-    echo "|-------------|---------------------|----------------------------|" >> NATIVE_SDK_VERSIONS.md
+    echo "| React Native | iOS Bridge / iOS SDK | Android Bridge / Android SDK | C++ SDK (Vega) |" > NATIVE_SDK_VERSIONS.md
+    echo "|-------------|---------------------|-----------------------------|----------------|" >> NATIVE_SDK_VERSIONS.md
     echo "Creating new NATIVE_SDK_VERSIONS.md file with header"
 fi
 
-# Add the new version triad to NATIVE_SDK_VERSIONS.md
+# Add the new version row to NATIVE_SDK_VERSIONS.md
 should_exit=0
 if [ -z "$core_version" ]; then
     echo "Error: missing core version"
@@ -117,7 +124,7 @@ if [ $should_exit -eq 1 ]; then
     exit 1
 fi
 
-new_row="| $core_version | $ios_version | $android_version |"
+new_row="| $core_version | $ios_version | $android_version | $vega_cpp_version |"
 
 first_version_row=$(sed -n '3p' NATIVE_SDK_VERSIONS.md)
 
