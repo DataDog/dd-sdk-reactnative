@@ -139,7 +139,7 @@ If optional reuse is not callable today, implement it as an RN-local native port
 | Dynamic context        | Rules-based config stores new context immediately with no network and no stale blackout.                        | Native `setEvaluationContext()` mutates context only; `evaluate()` re-evaluates against same active rules.                    |
 | Precomputed safety     | Precomputed config tied to one context must not serve another context.                                          | Native evaluates precomputed only when stored context matches; mismatch returns default/error/debug state.                    |
 | Evaluation output      | Rules path must produce metadata compatible with logging.                                                       | Native result includes value, variant, reason, error code, allocation key, `doLog`, and `extraLogging`.                       |
-| Logging side effects   | RN should keep existing native logging consistency.                                                             | Native evaluation optionally triggers native exposure/evaluation/RUM hooks through existing bridge/native paths or POC fakes. |
+| Logging side effects   | RN should keep existing native logging consistency.                                                             | Native evaluation triggers best-effort adapters into existing native Flags SDK evaluation hooks and reports counters in debug state. |
 | Persistence            | Mobile startup from last-known values is a target recipe.                                                       | Native save/load of last good wire from SDK-owned storage path; cache policy remains minimal.                                 |
 | Failure behavior       | Invalid wire, unsupported kind, refresh failure, stale serving are explicit states.                             | Native debug state reports invalid wire, unsupported kind, stale retained config, and last fetch error.                       |
 
@@ -157,13 +157,17 @@ Covered:
 -   Dynamic context changes with no network request.
 -   Native UFC evaluation with canonical fixture coverage for `STATIC`, `SPLIT`, `TARGETING_MATCH`, and `ERROR` / `TARGETING_KEY_MISSING`.
 -   Evaluation metadata required for exposure logging, evaluation aggregation, and RUM: variant, allocation key, `doLog`, split serial id where present, configuration kind/etag, and `extraLogging`.
+-   Best-effort native side-effect adapters that convert successful native evaluation results into the shipped Flags SDK assignment shape:
+    -   Android: `_FlagsInternalProxy.trackFlagSnapshotEvaluation(...)`.
+    -   iOS: `FlagsClientInternal.sendFlagEvaluation(...)`.
+-   Provider debug state includes evaluation side-effect counters: attempted, tracked, skipped, failed, last status, and last error.
 
 Not covered:
 
 -   Precomputed context mismatch protection.
 -   Native HTTP fetch side effects, auth, ETag, `304`, compression, request builders.
 -   Native persistence/offline boot.
--   Wiring evaluation side effects into the shipped native Flags SDK paths.
+-   Production-grade side-effect dedup/reset policy for rules evaluation; the current adapter proves call-in feasibility and leaves dedup/cache semantics to the native SDK extraction.
 
 ## Architecture Decision For The POC
 
@@ -292,29 +296,9 @@ iOS:
 
 The POC can place these inside the RN repo, but the package/module boundary should make later extraction into the iOS and Android SDKs straightforward.
 
-## Minimal POC Wire Format
+## Minimal RFC Wire Format
 
-Use a deliberately small versioned shape that mirrors the RFC, not a full UFC schema:
-
-```json
-{
-    "version": 2,
-    "precomputed": {
-        "response": "{\"flags\":{\"checkout.enabled\":{\"value\":true,\"variant\":\"on\",\"allocationKey\":\"a1\",\"doLog\":true}}}",
-        "context": {
-            "targetingKey": "user-1",
-            "attributes": { "plan": "pro" }
-        },
-        "fetchedAt": 1780000000000,
-        "etag": "precomputed-v1"
-    },
-    "server": {
-        "response": "{\"flags\":{\"checkout.enabled\":{\"enabled\":true,\"rules\":[...]}}}",
-        "fetchedAt": 1780000000000,
-        "etag": "rules-v1"
-    }
-}
-```
+Use a deliberately small versioned shape that mirrors the RFC wire fields without embedding ad hoc flag JSON in tests. The bridge and native tests should read `native-ffe/rules-configuration-wire.json`, generated from the vendored `ffe-system-test-data/ufc-config.json` bytes with `ffe-system-test-data` as the etag. RN-local JSON fixtures should only cover SDK-specific envelopes such as `native-ffe/evaluation-context-user-123.json` and `native-ffe/evaluation-side-effects/*.json`.
 
 Rules evaluation must be native and fixture-backed, not a toy predicate engine. The first implementation can be limited to the UFC v1 behavior covered by `ffe-system-test-data`, but Kotlin and Swift should both implement the same evaluator surface:
 
@@ -490,17 +474,17 @@ Goal: preserve native logging architecture for RN.
 Tasks:
 
 -   Add evaluation result metadata required by RFC: `variant`, `allocationKey`, `doLog`, `extraLogging`.
--   Add POC `FlagsEvaluationSideEffects` interface.
--   Android fake should model exposure dedup and evaluation aggregation hooks.
--   iOS fake should model NSCache/message-bus/RUM hook shape.
+-   Add native `NativeFfeEvaluationSideEffects` adapters beside the RN bridge, outside the pure evaluator core.
+-   Android adapter converts the evaluation result into `UnparsedFlag` and calls `_FlagsInternalProxy.trackFlagSnapshotEvaluation(...)`.
+-   iOS adapter converts the evaluation result into `FlagAssignment` and calls `FlagsClientInternal.sendFlagEvaluation(...)`.
 -   RN evaluation should not implement exposure batching in JS.
--   Use existing native `trackEvaluation` path if practical; otherwise expose fake counters in debug state.
+-   Expose best-effort tracking counters in provider debug state so the POC can show whether native side effects were attempted, tracked, skipped, or failed.
 
 Acceptance:
 
--   Evaluating a `doLog=true` flag invokes native side effect once per context/flag assignment key.
--   Changing context changes dedup key.
--   Changing configuration etag clears dedup cache.
+-   Evaluating a successful `doLog=true` flag with a targeting key invokes the shipped native Flags side-effect hook.
+-   Error/default evaluations skip side effects.
+-   Missing native Flags initialization does not fail evaluation; it increments failed counters and logs through native SDK logging.
 -   RN only calls evaluate; native owns the side effect.
 
 ### Phase 9: Example App Flow

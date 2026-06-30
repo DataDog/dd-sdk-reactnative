@@ -20,10 +20,14 @@ internal class NativeFfeCoreTest {
         // When
         val configuration = testedCore.configurationFromString(flagsConfigurationWire)
         val serialized = testedCore.configurationToString(configuration.toMap())
+        val embeddedUfcConfig = JSONObject(flagsConfigurationWire)
+            .getJSONObject("server")
+            .getString("response")
 
         // Then
         assertThat(configuration.kind).isEqualTo("rules")
         assertThat(configuration.etag).isEqualTo("ffe-system-test-data")
+        assertThat(embeddedUfcConfig).isEqualTo(canonicalUfcConfig)
         assertThat(serialized).isEqualTo(flagsConfigurationWire)
     }
 
@@ -150,43 +154,16 @@ internal class NativeFfeCoreTest {
         return EvaluationCase(
             flag = caseJson.getString("flag"),
             variationType = caseJson.getString("variationType"),
-            defaultValue = caseJson.get("defaultValue").toFixtureValue(),
-            targetingKey = caseJson.optionalString("targetingKey"),
-            attributes = (caseJson.optJSONObject("attributes") ?: JSONObject()).toFixtureMap(),
-            expectedValue = resultJson.get("value").toFixtureValue(),
+            defaultValue = caseJson.get("defaultValue").toNativeFfeFixtureValue(),
+            targetingKey = caseJson.optionalNativeFfeString("targetingKey"),
+            attributes = (caseJson.optJSONObject("attributes") ?: JSONObject()).toNativeFfeFixtureMap(),
+            expectedValue = resultJson.get("value").toNativeFfeFixtureValue(),
             expectedReason = resultJson.getString("reason"),
         )
     }
 
     private fun readFixture(relativePath: String): String {
-        return javaClass.classLoader
-            ?.getResource("ffe-system-test-data/$relativePath")
-            ?.readText()
-            ?: error("Missing FFE fixture: $relativePath")
-    }
-
-    private fun JSONObject.optionalString(key: String): String? {
-        if (!has(key) || isNull(key)) {
-            return null
-        }
-        return getString(key)
-    }
-
-    private fun JSONObject.toFixtureMap(): Map<String, Any?> {
-        return keys().asSequence().associateWith { key -> get(key).toFixtureValue() }
-    }
-
-    private fun JSONArray.toFixtureList(): List<Any?> {
-        return (0 until length()).map { index -> get(index).toFixtureValue() }
-    }
-
-    private fun Any?.toFixtureValue(): Any? {
-        return when (this) {
-            JSONObject.NULL -> null
-            is JSONObject -> toFixtureMap()
-            is JSONArray -> toFixtureList()
-            else -> this
-        }
+        return readNativeFfeFixture(javaClass, "ffe-system-test-data/$relativePath")
     }
 
     private data class EvaluationCase(
@@ -203,20 +180,17 @@ internal class NativeFfeCoreTest {
         const val NUMERIC_TOLERANCE = 0.0000001
 
         val flagsConfigurationWire: String by lazy {
-            val ufcConfig = NativeFfeCoreTest::class.java.classLoader
-                ?.getResource("ffe-system-test-data/ufc-config.json")
-                ?.readText()
-                ?: error("Missing FFE fixture: ufc-config.json")
+            readNativeFfeFixture(
+                NativeFfeCoreTest::class.java,
+                "native-ffe/rules-configuration-wire.json"
+            )
+        }
 
-            JSONObject()
-                .put("version", 2)
-                .put(
-                    "server",
-                    JSONObject()
-                        .put("etag", "ffe-system-test-data")
-                        .put("response", ufcConfig)
-                )
-                .toString()
+        val canonicalUfcConfig: String by lazy {
+            readNativeFfeFixture(
+                NativeFfeCoreTest::class.java,
+                "ffe-system-test-data/ufc-config.json"
+            )
         }
     }
 }

@@ -91,6 +91,14 @@ export type FlagsProviderDebugState = {
     evaluationCount: number;
     lastEvent?: 'provider_ready' | 'configuration_changed' | 'provider_error';
     lastError?: string;
+    evaluationSideEffects?: {
+        attemptedCount: number;
+        trackedCount: number;
+        skippedCount: number;
+        failedCount: number;
+        lastStatus?: 'tracked' | 'skipped' | 'failed';
+        lastError?: string;
+    };
 };
 
 /**

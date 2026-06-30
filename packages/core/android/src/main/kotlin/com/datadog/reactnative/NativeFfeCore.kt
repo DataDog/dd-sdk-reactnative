@@ -109,6 +109,8 @@ internal class NativeFfeCore {
         ).filterValues { it != null }
     }
 
+    fun evaluationContext(): Map<String, Any?> = currentContext.toMap()
+
     private fun resolveEvaluation(
         flagKey: String,
         defaultValue: Any?,

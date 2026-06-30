@@ -33,6 +33,7 @@ public class DdSdkImplementation: NSObject {
     var RUMMonitorProvider: () -> RUMMonitorProtocol?
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     private let nativeFfeCore = NativeFfeCore()
+    private let nativeFfeSideEffects = NativeFfeEvaluationSideEffects()
 
     #if os(iOS)
         var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
@@ -331,10 +332,12 @@ public class DdSdkImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         resolveFfePromise(resolve: resolve, reject: reject) {
-            self.nativeFfeCore.resolveBooleanEvaluation(
-                flagKey: flagKey as String,
-                defaultValue: defaultValue
-            )
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveBooleanEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue
+                )
+            }
         }
     }
 
@@ -344,10 +347,12 @@ public class DdSdkImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         resolveFfePromise(resolve: resolve, reject: reject) {
-            self.nativeFfeCore.resolveStringEvaluation(
-                flagKey: flagKey as String,
-                defaultValue: defaultValue as String
-            )
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveStringEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue as String
+                )
+            }
         }
     }
 
@@ -357,10 +362,12 @@ public class DdSdkImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         resolveFfePromise(resolve: resolve, reject: reject) {
-            self.nativeFfeCore.resolveNumberEvaluation(
-                flagKey: flagKey as String,
-                defaultValue: defaultValue
-            )
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveNumberEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue
+                )
+            }
         }
     }
 
@@ -370,10 +377,12 @@ public class DdSdkImplementation: NSObject {
         reject: RCTPromiseRejectBlock
     ) {
         resolveFfePromise(resolve: resolve, reject: reject) {
-            self.nativeFfeCore.resolveObjectEvaluation(
-                flagKey: flagKey as String,
-                defaultValue: defaultValue as? [String: Any] ?? [:]
-            )
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveObjectEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue as? [String: Any] ?? [:]
+                )
+            }
         }
     }
 
@@ -382,7 +391,9 @@ public class DdSdkImplementation: NSObject {
         resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
     ) {
         resolveFfePromise(resolve: resolve, reject: reject) {
-            self.nativeFfeCore.debugState()
+            var state = self.nativeFfeCore.debugState()
+            state["evaluationSideEffects"] = self.nativeFfeSideEffects.debugState()
+            return state
         }
     }
 
@@ -466,6 +477,15 @@ public class DdSdkImplementation: NSObject {
         } catch {
             reject("FEATURE_FLAGS_CONFIGURATION_ERROR", error.localizedDescription, error)
         }
+    }
+
+    private func resolveNativeFfeEvaluation(_ block: () -> [String: Any]) -> [String: Any] {
+        let result = block()
+        nativeFfeSideEffects.trackEvaluation(
+            result: result,
+            context: nativeFfeCore.evaluationContext()
+        )
+        return result
     }
 
     // Normalizes frameTime values so when they are turned into FPS metrics they are normalized on a range between 0 and fpsBudget. If fpsBudget is not provided it will default to 60hz.

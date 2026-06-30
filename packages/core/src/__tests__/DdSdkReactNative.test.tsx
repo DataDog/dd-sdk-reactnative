@@ -8,6 +8,8 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../DdSdkReactNative';
+import flagsEvaluationContext from '../flags/__fixtures__/native-ffe/evaluation-context-user-123.json';
+import rulesConfigurationWire from '../flags/__fixtures__/native-ffe/rules-configuration-wire.json';
 import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import { CoreConfiguration } from '../config/features/CoreConfiguration';
 import { LogsConfiguration } from '../config/features/LogsConfiguration';
@@ -1381,28 +1383,7 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('flags configuration building blocks', () => {
-        const flagsWire = JSON.stringify({
-            version: 2,
-            server: {
-                response: JSON.stringify({
-                    flags: {
-                        'checkout.enabled': {
-                            key: 'checkout.enabled',
-                            enabled: true,
-                            variationType: 'BOOLEAN',
-                            variations: {
-                                on: {
-                                    key: 'on',
-                                    value: true
-                                }
-                            },
-                            allocations: []
-                        }
-                    }
-                }),
-                etag: 'rules-v1'
-            }
-        });
+        const flagsWire = JSON.stringify(rulesConfigurationWire);
 
         it('parses and serializes a native flags configuration wire', async () => {
             // WHEN
@@ -1424,7 +1405,7 @@ describe('DdSdkReactNative', () => {
                 __ddNativeFfeConfiguration: true,
                 version: 2,
                 kind: 'rules',
-                etag: 'rules-v1'
+                etag: 'ffe-system-test-data'
             });
             expect(serialized).toBe(flagsWire);
         });
@@ -1434,12 +1415,7 @@ describe('DdSdkReactNative', () => {
             const configuration = await DdSdkReactNative.configurationFromString(
                 flagsWire
             );
-            const context = {
-                targetingKey: 'user-123',
-                attributes: {
-                    plan: 'pro'
-                }
-            };
+            const context = flagsEvaluationContext;
 
             // WHEN
             const configState = await DdSdkReactNative.setConfiguration(
@@ -1501,7 +1477,14 @@ describe('DdSdkReactNative', () => {
             expect(debugState).toMatchObject({
                 status: 'ready',
                 activeConfigurationKind: 'rules',
-                activeEtag: 'rules-v1'
+                activeEtag: 'ffe-system-test-data',
+                evaluationSideEffects: {
+                    attemptedCount: 0,
+                    trackedCount: 0,
+                    skippedCount: 0,
+                    failedCount: 0,
+                    lastStatus: 'skipped'
+                }
             });
         });
     });

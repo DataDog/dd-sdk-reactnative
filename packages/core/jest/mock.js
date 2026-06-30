@@ -13,11 +13,18 @@ const actualDatadog = jest.requireActual('@datadog/mobile-react-native');
 const mockFlagsDebugState = {
     status: 'ready',
     activeConfigurationKind: 'rules',
-    activeEtag: 'rules-v1',
+    activeEtag: 'ffe-system-test-data',
     configurationSetCount: 1,
     fetchCount: 0,
     evaluationCount: 0,
-    lastEvent: 'provider_ready'
+    lastEvent: 'provider_ready',
+    evaluationSideEffects: {
+        attemptedCount: 0,
+        trackedCount: 0,
+        skippedCount: 0,
+        failedCount: 0,
+        lastStatus: 'skipped'
+    }
 };
 
 const mockConfigurationFromString = wire => {

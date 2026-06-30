@@ -120,6 +120,10 @@ internal final class NativeFfeCore {
         ])
     }
 
+    func evaluationContext() -> [String: Any] {
+        currentContext
+    }
+
     private func resolveEvaluation(
         flagKey: String,
         defaultValue: Any,

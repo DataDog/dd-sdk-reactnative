@@ -37,6 +37,7 @@ class DdSdkImplementation(
     internal val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
     private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
+    private val nativeFfeSideEffects: NativeFfeEvaluationSideEffects = NativeFfeEvaluationSideEffects()
 
     // region DdSdk
 
@@ -309,31 +310,42 @@ class DdSdkImplementation(
 
     fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
         resolveFfePromise(promise) {
-            nativeFfeCore.resolveBooleanEvaluation(flagKey, defaultValue).toWritableMap()
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveBooleanEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
         }
     }
 
     fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
         resolveFfePromise(promise) {
-            nativeFfeCore.resolveStringEvaluation(flagKey, defaultValue).toWritableMap()
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveStringEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
         }
     }
 
     fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
         resolveFfePromise(promise) {
-            nativeFfeCore.resolveNumberEvaluation(flagKey, defaultValue).toWritableMap()
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveNumberEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
         }
     }
 
     fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
-            nativeFfeCore.resolveObjectEvaluation(flagKey, defaultValue.toMap()).toWritableMap()
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveObjectEvaluation(flagKey, defaultValue.toMap())
+            }.toWritableMap()
         }
     }
 
     fun getProviderDebugState(promise: Promise) {
         resolveFfePromise(promise) {
-            nativeFfeCore.debugState().toWritableMap()
+            (
+                nativeFfeCore.debugState() +
+                    mapOf("evaluationSideEffects" to nativeFfeSideEffects.debugState())
+            ).toWritableMap()
         }
     }
 
@@ -377,6 +389,14 @@ class DdSdkImplementation(
         } catch (error: Exception) {
             promise.reject(FFE_ERROR_CODE, error.message, error)
         }
+    }
+
+    private inline fun resolveNativeFfeEvaluation(
+        block: () -> Map<String, Any?>
+    ): Map<String, Any?> {
+        val result = block()
+        nativeFfeSideEffects.trackEvaluation(result, nativeFfeCore.evaluationContext())
+        return result
     }
 
     private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
