@@ -59,6 +59,17 @@ export type FlagsEvaluationContext = {
     attributes?: Record<string, unknown>;
 };
 
+export type FlagsFetchOptions = {
+    endpoint: string;
+    clientToken?: string;
+    sdkKey?: string;
+    site?: string;
+    headers?: Record<string, string>;
+    flagQueryParams?: Record<string, unknown>;
+    evaluationContext?: FlagsEvaluationContext;
+    previousConfigurationWire?: FlagsConfigurationWire;
+};
+
 export type FlagValue =
     | boolean
     | string
@@ -90,6 +101,12 @@ export type FlagsProviderDebugState = {
     fetchCount: number;
     evaluationCount: number;
     lastEvent?: 'provider_ready' | 'configuration_changed' | 'provider_error';
+    lastFetchRequest?: {
+        url: string;
+        method: string;
+        headers: Record<string, string>;
+        statusCode?: number;
+    };
     lastError?: string;
     evaluationSideEffects?: {
         attemptedCount: number;
@@ -476,6 +493,30 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
         return NativeDdSdk.configurationToString(configuration);
+    };
+
+    static fetchRulesConfiguration = (
+        options: FlagsFetchOptions
+    ): Promise<NativeFlagsConfiguration> => {
+        InternalLog.log(
+            'Fetching native rules flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.fetchRulesConfiguration(
+            options
+        ) as Promise<NativeFlagsConfiguration>;
+    };
+
+    static fetchPrecomputedConfiguration = (
+        options: FlagsFetchOptions
+    ): Promise<NativeFlagsConfiguration> => {
+        InternalLog.log(
+            'Fetching native precomputed flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.fetchPrecomputedConfiguration(
+            options
+        ) as Promise<NativeFlagsConfiguration>;
     };
 
     static setConfiguration = (

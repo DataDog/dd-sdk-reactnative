@@ -71,6 +71,8 @@ beforeEach(async () => {
     NativeModules.DdSdk.setTrackingConsent.mockClear();
     NativeModules.DdSdk.configurationFromString.mockClear();
     NativeModules.DdSdk.configurationToString.mockClear();
+    NativeModules.DdSdk.fetchRulesConfiguration.mockClear();
+    NativeModules.DdSdk.fetchPrecomputedConfiguration.mockClear();
     NativeModules.DdSdk.setConfiguration.mockClear();
     NativeModules.DdSdk.setEvaluationContext.mockClear();
     NativeModules.DdSdk.resolveBooleanEvaluation.mockClear();
@@ -1478,6 +1480,15 @@ describe('DdSdkReactNative', () => {
                 status: 'ready',
                 activeConfigurationKind: 'rules',
                 activeEtag: 'ffe-system-test-data',
+                fetchCount: 1,
+                lastFetchRequest: {
+                    url: 'https://mock.datadog.test/config',
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json'
+                    },
+                    statusCode: 200
+                },
                 evaluationSideEffects: {
                     attemptedCount: 0,
                     trackedCount: 0,
@@ -1485,6 +1496,51 @@ describe('DdSdkReactNative', () => {
                     failedCount: 0,
                     lastStatus: 'skipped'
                 }
+            });
+        });
+
+        it('fetches configurations natively without setting active state', async () => {
+            // GIVEN
+            const options = {
+                endpoint: 'https://mock.datadog.test/config',
+                clientToken: 'client-token',
+                headers: {
+                    'X-Test': 'true'
+                },
+                previousConfigurationWire: flagsWire
+            };
+
+            // WHEN
+            const rulesConfiguration = await DdSdkReactNative.fetchRulesConfiguration(
+                options
+            );
+            const precomputedOptions = {
+                endpoint: options.endpoint,
+                clientToken: options.clientToken,
+                headers: options.headers,
+                evaluationContext: flagsEvaluationContext
+            };
+            const precomputedConfiguration = await DdSdkReactNative.fetchPrecomputedConfiguration(
+                precomputedOptions
+            );
+
+            // THEN
+            expect(NativeDdSdk.fetchRulesConfiguration).toHaveBeenCalledWith(
+                options
+            );
+            expect(
+                NativeDdSdk.fetchPrecomputedConfiguration
+            ).toHaveBeenCalledWith(precomputedOptions);
+            expect(NativeDdSdk.setConfiguration).not.toHaveBeenCalled();
+            expect(rulesConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'rules',
+                etag: 'ffe-system-test-data'
+            });
+            expect(precomputedConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'precomputed',
+                etag: 'mock-fetch'
             });
         });
     });

@@ -37,6 +37,7 @@ class DdSdkImplementation(
     internal val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
     private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
+    private val nativeFfeConfigurationFetcher: NativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
     private val nativeFfeSideEffects: NativeFfeEvaluationSideEffects = NativeFfeEvaluationSideEffects()
 
     // region DdSdk
@@ -296,6 +297,26 @@ class DdSdkImplementation(
         }
     }
 
+    fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.fetchConfiguration(
+                FFE_KIND_RULES,
+                options.toMap(),
+                nativeFfeConfigurationFetcher,
+            ).toMap().toWritableMap()
+        }
+    }
+
+    fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.fetchConfiguration(
+                FFE_KIND_PRECOMPUTED,
+                options.toMap(),
+                nativeFfeConfigurationFetcher,
+            ).toMap().toWritableMap()
+        }
+    }
+
     fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.setConfiguration(configuration.toMap()).toWritableMap()
@@ -507,5 +528,7 @@ class DdSdkImplementation(
         internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
         internal const val FFE_ERROR_CODE = "FEATURE_FLAGS_CONFIGURATION_ERROR"
+        internal const val FFE_KIND_RULES = "rules"
+        internal const val FFE_KIND_PRECOMPUTED = "precomputed"
     }
 }

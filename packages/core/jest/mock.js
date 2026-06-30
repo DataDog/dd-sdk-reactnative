@@ -15,9 +15,17 @@ const mockFlagsDebugState = {
     activeConfigurationKind: 'rules',
     activeEtag: 'ffe-system-test-data',
     configurationSetCount: 1,
-    fetchCount: 0,
+    fetchCount: 1,
     evaluationCount: 0,
     lastEvent: 'provider_ready',
+    lastFetchRequest: {
+        url: 'https://mock.datadog.test/config',
+        method: 'GET',
+        headers: {
+            Accept: 'application/json'
+        },
+        statusCode: 200
+    },
     evaluationSideEffects: {
         attemptedCount: 0,
         trackedCount: 0,
@@ -43,6 +51,19 @@ const mockConfigurationFromString = wire => {
         etag: parsed.server?.etag ?? parsed.precomputed?.etag,
         wire
     };
+};
+
+const mockFetchConfiguration = (kind, options) => {
+    return mockConfigurationFromString(
+        options.previousConfigurationWire ??
+            JSON.stringify({
+                version: 2,
+                [kind === 'rules' ? 'server' : 'precomputed']: {
+                    response: '{}',
+                    etag: 'mock-fetch'
+                }
+            })
+    );
 };
 
 /**
@@ -120,6 +141,22 @@ module.exports = {
             .mockImplementation(
                 configuration =>
                     new Promise(resolve => resolve(configuration.wire ?? '{}'))
+            ),
+        fetchRulesConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('rules', options))
+                    )
+            ),
+        fetchPrecomputedConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('precomputed', options))
+                    )
             ),
         setConfiguration: jest
             .fn()
@@ -306,6 +343,22 @@ module.exports = {
             .mockImplementation(
                 configuration =>
                     new Promise(resolve => resolve(configuration.wire ?? '{}'))
+            ),
+        fetchRulesConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('rules', options))
+                    )
+            ),
+        fetchPrecomputedConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('precomputed', options))
+                    )
             ),
         setConfiguration: jest
             .fn()

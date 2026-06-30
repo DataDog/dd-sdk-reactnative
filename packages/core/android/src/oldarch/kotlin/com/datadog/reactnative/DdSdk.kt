@@ -232,6 +232,16 @@ class DdSdk(
     }
 
     @ReactMethod
+    fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchRulesConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchPrecomputedConfiguration(options, promise)
+    }
+
+    @ReactMethod
     fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         implementation.setConfiguration(configuration, promise)
     }

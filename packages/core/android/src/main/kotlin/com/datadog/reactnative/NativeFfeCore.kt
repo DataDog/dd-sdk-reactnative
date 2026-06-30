@@ -19,6 +19,7 @@ internal class NativeFfeCore {
     private var fetchCount: Int = 0
     private var evaluationCount: Int = 0
     private var lastEvent: String? = null
+    private var lastFetchRequest: Map<String, Any?>? = null
     private var lastError: String? = null
 
     fun configurationFromString(wire: String): NativeFlagsConfiguration {
@@ -53,6 +54,27 @@ internal class NativeFfeCore {
     fun configurationToString(configuration: Map<String, Any?>): String {
         return configuration[KEY_WIRE] as? String
             ?: throw IllegalArgumentException("FlagsConfiguration is missing wire")
+    }
+
+    fun fetchConfiguration(
+        kind: String,
+        options: Map<String, Any?>,
+        fetcher: NativeFfeConfigurationFetcher,
+    ): NativeFlagsConfiguration {
+        fetchCount += 1
+        return try {
+            val fetched = fetcher.fetch(kind, options)
+            lastFetchRequest = fetched.request.toDebugMap(fetched.statusCode)
+            lastError = null
+            configurationFromString(fetched.wire)
+        } catch (error: NativeFfeConfigurationFetchException) {
+            lastFetchRequest = error.request.toDebugMap()
+            markProviderError(error)
+            throw error
+        } catch (error: Exception) {
+            markProviderError(error)
+            throw error
+        }
     }
 
     fun setConfiguration(configuration: Map<String, Any?>): Map<String, Any?> {
@@ -105,6 +127,7 @@ internal class NativeFfeCore {
             "fetchCount" to fetchCount,
             "evaluationCount" to evaluationCount,
             "lastEvent" to lastEvent,
+            "lastFetchRequest" to lastFetchRequest,
             "lastError" to lastError,
         ).filterValues { it != null }
     }
@@ -339,6 +362,12 @@ internal class NativeFfeCore {
                 ((digest[2].toLong() and BYTE_MASK) shl 8) or
                 (digest[3].toLong() and BYTE_MASK)
         return (firstFourBytes % totalShards).toInt()
+    }
+
+    private fun markProviderError(error: Exception) {
+        status = if (activeConfiguration == null) STATUS_ERROR else STATUS_STALE
+        lastError = error.message
+        lastEvent = EVENT_PROVIDER_ERROR
     }
 
     data class NativeFlagsConfiguration(

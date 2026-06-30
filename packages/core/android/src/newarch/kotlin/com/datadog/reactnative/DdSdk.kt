@@ -201,6 +201,16 @@ class DdSdk(
     }
 
     @ReactMethod
+    override fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchRulesConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    override fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchPrecomputedConfiguration(options, promise)
+    }
+
+    @ReactMethod
     override fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         implementation.setConfiguration(configuration, promise)
     }

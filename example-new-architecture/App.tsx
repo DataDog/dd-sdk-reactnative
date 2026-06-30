@@ -22,6 +22,7 @@ import React, {Suspense} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -40,6 +41,21 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 // @ts-ignore
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+
+const NATIVE_FFE_STAGING_RULES_ENDPOINT =
+  'https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based';
+const NATIVE_FFE_STAGING_CLIENT_TOKEN =
+  'pub542a31cc0f5b23136420667ca212045a';
+const NATIVE_FFE_USER = {
+  id: 'user-123',
+  favoriteFruit: 'apple',
+};
+const NATIVE_FFE_EVALUATION_CONTEXT = {
+  targetingKey: NATIVE_FFE_USER.id,
+  attributes: {
+    favoriteFruit: NATIVE_FFE_USER.favoriteFruit,
+  },
+};
 
 (async () => {
   const config = new CoreConfiguration(
@@ -94,14 +110,9 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 function AppWithProviders() {
   React.useEffect(() => {
-    const user = {
-      id: 'user-123',
-      favoriteFruit: 'apple',
-    };
-
     OpenFeature.setContext({
-      targetingKey: user.id,
-      favoriteFruit: user.favoriteFruit,
+      targetingKey: NATIVE_FFE_USER.id,
+      favoriteFruit: NATIVE_FFE_USER.favoriteFruit,
     });
   }, []);
 
@@ -150,6 +161,8 @@ function App(): React.JSX.Element {
             details.
           </Section>
 
+          <NativeFfeFetchPanel isDarkMode={isDarkMode} />
+
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.
@@ -167,6 +180,136 @@ function App(): React.JSX.Element {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+type NativeFfeFetchState = {
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  summary: string;
+  details?: string;
+};
+
+function NativeFfeFetchPanel({
+  isDarkMode,
+}: {
+  isDarkMode: boolean;
+}): React.JSX.Element {
+  const [fetchState, setFetchState] = React.useState<NativeFfeFetchState>({
+    status: 'idle',
+    summary: 'Native fetch has not run yet.',
+  });
+  const loading = fetchState.status === 'loading';
+
+  const fetchNativeRulesConfiguration = React.useCallback(async () => {
+    setFetchState({
+      status: 'loading',
+      summary: 'Fetching staging rules configuration from native...',
+    });
+
+    try {
+      const fetchedConfiguration = await DdSdkReactNative.fetchRulesConfiguration({
+        endpoint: NATIVE_FFE_STAGING_RULES_ENDPOINT,
+        headers: {
+          'Fastly-Client': '1',
+          'dd-client-token': NATIVE_FFE_STAGING_CLIENT_TOKEN,
+        },
+        flagQueryParams: {
+          dd_env: 'staging',
+        },
+      });
+      const serializedWire = await DdSdkReactNative.configurationToString(
+        fetchedConfiguration,
+      );
+      const parsedConfiguration = await DdSdkReactNative.configurationFromString(
+        serializedWire,
+      );
+      const configurationState = await DdSdkReactNative.setConfiguration(
+        parsedConfiguration,
+      );
+      const contextState = await DdSdkReactNative.setEvaluationContext(
+        NATIVE_FFE_EVALUATION_CONTEXT,
+      );
+      const debugState = await DdSdkReactNative.getProviderDebugState();
+
+      setFetchState({
+        status: 'ready',
+        summary: `Fetched ${parsedConfiguration.kind} configuration ${
+          parsedConfiguration.etag ?? 'without etag'
+        }.`,
+        details: JSON.stringify(
+          {
+            fetchedConfiguration: {
+              kind: fetchedConfiguration.kind,
+              version: fetchedConfiguration.version,
+              etag: fetchedConfiguration.etag,
+            },
+            serializedWireBytes: serializedWire.length,
+            configurationState,
+            contextState,
+            debugState,
+          },
+          null,
+          2,
+        ),
+      });
+    } catch (error) {
+      setFetchState({
+        status: 'error',
+        summary:
+          error instanceof Error
+            ? error.message
+            : 'Native staging rules fetch failed.',
+      });
+    }
+  }, []);
+
+  return (
+    <View style={styles.sectionContainer}>
+      <Text
+        style={[
+          styles.sectionTitle,
+          {
+            color: isDarkMode ? Colors.white : Colors.black,
+          },
+        ]}>
+        Native FFE fetch
+      </Text>
+      <Text
+        style={[
+          styles.sectionDescription,
+          {
+            color: isDarkMode ? Colors.light : Colors.dark,
+          },
+        ]}>
+        {fetchState.summary}
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        disabled={loading}
+        onPress={fetchNativeRulesConfiguration}
+        style={({pressed}) => [
+          styles.nativeFfeButton,
+          loading && styles.nativeFfeButtonDisabled,
+          pressed && !loading && styles.nativeFfeButtonPressed,
+        ]}>
+        <Text style={styles.nativeFfeButtonText}>
+          {loading ? 'Fetching...' : 'Fetch staging rules'}
+        </Text>
+      </Pressable>
+      {fetchState.details ? (
+        <Text
+          selectable
+          style={[
+            styles.nativeFfeDetails,
+            {
+              color: isDarkMode ? Colors.light : Colors.dark,
+              backgroundColor: isDarkMode ? Colors.black : '#f3f4f6',
+            },
+          ]}>
+          {fetchState.details}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -216,6 +359,35 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  nativeFfeButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#2563eb',
+    borderRadius: 6,
+    marginTop: 16,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  nativeFfeButtonDisabled: {
+    opacity: 0.6,
+  },
+  nativeFfeButtonPressed: {
+    backgroundColor: '#1d4ed8',
+  },
+  nativeFfeButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  nativeFfeDetails: {
+    borderRadius: 6,
+    fontFamily: 'Menlo',
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 12,
+    padding: 12,
   },
 });
 

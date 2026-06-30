@@ -149,6 +149,20 @@ RCT_REMAP_METHOD(configurationToString, configurationToStringWithConfiguration:(
     [self configurationToString:configuration resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(fetchRulesConfiguration, fetchRulesConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self fetchRulesConfiguration:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(fetchPrecomputedConfiguration, fetchPrecomputedConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self fetchPrecomputedConfiguration:options resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(setConfiguration, setNativeFlagsConfiguration:(NSDictionary*)configuration
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -311,6 +325,14 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)configurationToString:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation configurationToStringWithConfiguration:configuration resolve:resolve reject:reject];
+}
+
+- (void)fetchRulesConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation fetchRulesConfigurationWithOptions:options resolve:resolve reject:reject];
+}
+
+- (void)fetchPrecomputedConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation fetchPrecomputedConfigurationWithOptions:options resolve:resolve reject:reject];
 }
 
 - (void)setConfiguration:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

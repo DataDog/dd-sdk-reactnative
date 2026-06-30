@@ -17,6 +17,7 @@ internal final class NativeFfeCore {
     private var fetchCount = 0
     private var evaluationCount = 0
     private var lastEvent: String?
+    private var lastFetchRequest: [String: Any]?
     private var lastError: String?
 
     func configurationFromString(_ wire: String) throws -> NativeFlagsConfiguration {
@@ -65,6 +66,27 @@ internal final class NativeFfeCore {
             throw NativeFfeCoreError.invalidConfigurationWire("FlagsConfiguration is missing wire")
         }
         return wire
+    }
+
+    func fetchConfiguration(
+        kind: String,
+        options: [String: Any],
+        fetcher: NativeFfeConfigurationFetcher
+    ) throws -> NativeFlagsConfiguration {
+        fetchCount += 1
+        do {
+            let fetched = try fetcher.fetch(kind: kind, options: options)
+            lastFetchRequest = fetched.request.toDebugMap(statusCode: fetched.statusCode)
+            lastError = nil
+            return try configurationFromString(fetched.wire)
+        } catch let error as NativeFfeConfigurationFetchError {
+            lastFetchRequest = error.request.toDebugMap()
+            markProviderError(error)
+            throw error
+        } catch {
+            markProviderError(error)
+            throw error
+        }
     }
 
     func setConfiguration(_ configuration: [String: Any]) -> [String: Any] {
@@ -116,6 +138,7 @@ internal final class NativeFfeCore {
             ("fetchCount", fetchCount),
             ("evaluationCount", evaluationCount),
             ("lastEvent", lastEvent),
+            ("lastFetchRequest", lastFetchRequest),
             ("lastError", lastError),
         ])
     }
@@ -429,6 +452,12 @@ internal final class NativeFfeCore {
         }
         let firstFourBytes = md5FirstFourBytes("\(salt)-\(targetingKey)")
         return Int(firstFourBytes % UInt32(totalShards))
+    }
+
+    private func markProviderError(_ error: Error) {
+        status = activeConfiguration == nil ? Status.error : Status.stale
+        lastError = error.localizedDescription
+        lastEvent = Event.providerError
     }
 
     private func parseOptionalResponse(_ value: Any?) throws -> [String: Any]? {

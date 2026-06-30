@@ -139,6 +139,18 @@ export interface Spec extends TurboModule {
     configurationToString(configuration: Object): Promise<string>;
 
     /**
+     * Fetches a rules-based portable flags configuration without mutating
+     * active provider state.
+     */
+    fetchRulesConfiguration(options: Object): Promise<Object>;
+
+    /**
+     * Fetches a precomputed portable flags configuration without mutating
+     * active provider state.
+     */
+    fetchPrecomputedConfiguration(options: Object): Promise<Object>;
+
+    /**
      * Sets or replaces the active native flags configuration.
      */
     setConfiguration(configuration: Object): Promise<Object>;

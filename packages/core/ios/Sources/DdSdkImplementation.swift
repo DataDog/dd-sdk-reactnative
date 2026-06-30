@@ -33,6 +33,7 @@ public class DdSdkImplementation: NSObject {
     var RUMMonitorProvider: () -> RUMMonitorProtocol?
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     private let nativeFfeCore = NativeFfeCore()
+    private let nativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
     private let nativeFfeSideEffects = NativeFfeEvaluationSideEffects()
 
     #if os(iOS)
@@ -308,6 +309,32 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
+    public func fetchRulesConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.fetchConfiguration(
+                kind: Constants.ffeKindRules,
+                options: options as? [String: Any] ?? [:],
+                fetcher: self.nativeFfeConfigurationFetcher
+            ).toMap()
+        }
+    }
+
+    @objc
+    public func fetchPrecomputedConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.fetchConfiguration(
+                kind: Constants.ffeKindPrecomputed,
+                options: options as? [String: Any] ?? [:],
+                fetcher: self.nativeFfeConfigurationFetcher
+            ).toMap()
+        }
+    }
+
+    @objc
     public func setConfiguration(
         configuration: NSDictionary, resolve: RCTPromiseResolveBlock,
         reject: RCTPromiseRejectBlock
@@ -511,4 +538,9 @@ public class DdSdkImplementation: NSObject {
 
         return normalizedFrameTimeMs / 1000.0  // in seconds
     }
+}
+
+private enum Constants {
+    static let ffeKindRules = "rules"
+    static let ffeKindPrecomputed = "precomputed"
 }
