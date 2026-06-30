@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("CyclomaticComplexMethod", "TooGenericExceptionCaught")
+
 package com.datadog.reactnative
 
 import com.datadog.android.Datadog

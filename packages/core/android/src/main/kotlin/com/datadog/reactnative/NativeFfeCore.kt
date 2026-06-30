@@ -4,6 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress(
+    "ComplexCondition",
+    "CyclomaticComplexMethod",
+    "LabeledExpression",
+    "StringLiteralDuplication",
+    "TooGenericExceptionCaught",
+    "TooManyFunctions"
+)
+
 package com.datadog.reactnative
 
 import java.security.MessageDigest

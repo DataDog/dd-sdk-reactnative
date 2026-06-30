@@ -289,18 +289,27 @@ class DdSdkImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Parses a serialized flags configuration wire payload into the bridge representation.
+     */
     fun configurationFromString(wire: String, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.configurationFromString(wire).toMap().toWritableMap()
         }
     }
 
+    /**
+     * Serializes a bridge flags configuration back to its wire payload.
+     */
     fun configurationToString(configuration: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.configurationToString(configuration.toMap())
         }
     }
 
+    /**
+     * Fetches a rules-based flags configuration and returns it as a bridge configuration.
+     */
     fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.fetchConfiguration(
@@ -311,6 +320,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Fetches a precomputed flags configuration and returns it as a bridge configuration.
+     */
     fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.fetchConfiguration(
@@ -321,6 +333,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Persists a flags configuration in the requested native storage slot.
+     */
     fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.saveConfiguration(
@@ -331,6 +346,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Loads a persisted flags configuration from the requested native storage slot.
+     */
     fun loadConfiguration(options: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.loadConfiguration(
@@ -340,18 +358,27 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Activates a flags configuration for subsequent native evaluations.
+     */
     fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.setConfiguration(configuration.toMap()).toWritableMap()
         }
     }
 
+    /**
+     * Updates the evaluation context used by subsequent native flag evaluations.
+     */
     fun setEvaluationContext(context: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             nativeFfeCore.setEvaluationContext(context.toMap()).toWritableMap()
         }
     }
 
+    /**
+     * Resolves a boolean flag evaluation through the active native configuration.
+     */
     fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
         resolveFfePromise(promise) {
             resolveNativeFfeEvaluation {
@@ -360,6 +387,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Resolves a string flag evaluation through the active native configuration.
+     */
     fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
         resolveFfePromise(promise) {
             resolveNativeFfeEvaluation {
@@ -368,6 +398,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Resolves a numeric flag evaluation through the active native configuration.
+     */
     fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
         resolveFfePromise(promise) {
             resolveNativeFfeEvaluation {
@@ -376,6 +409,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Resolves a JSON/object flag evaluation through the active native configuration.
+     */
     fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
         resolveFfePromise(promise) {
             resolveNativeFfeEvaluation {
@@ -384,6 +420,9 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Returns native flags provider counters and last-operation state for the bridge.
+     */
     fun getProviderDebugState(promise: Promise) {
         resolveFfePromise(promise) {
             (
@@ -424,6 +463,7 @@ class DdSdkImplementation(
         )
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private inline fun resolveFfePromise(
         promise: Promise,
         block: () -> Any?

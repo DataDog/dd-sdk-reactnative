@@ -207,6 +207,7 @@ private fun nativeFfeStoragePayload(key: String, wire: String, updatedAtMs: Long
         .toString()
 }
 
+@Suppress("FunctionMaxLength")
 private fun nativeFfeStoredConfigurationFromPayload(
     expectedKey: String,
     payloadString: String,

@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+@file:Suppress("LabeledExpression", "TooGenericExceptionCaught")
+
 package com.datadog.reactnative
 
 import java.net.HttpURLConnection
