@@ -8,8 +8,6 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../DdSdkReactNative';
-import flagsEvaluationContext from '../flags/__fixtures__/native-ffe/evaluation-context-user-123.json';
-import rulesConfigurationWire from '../flags/__fixtures__/native-ffe/rules-configuration-wire.json';
 import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import { CoreConfiguration } from '../config/features/CoreConfiguration';
 import { LogsConfiguration } from '../config/features/LogsConfiguration';
@@ -32,6 +30,20 @@ import { ErrorSource } from '../types';
 import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
+
+const flagsEvaluationContext = {
+    targetingKey: 'user-123',
+    attributes: {
+        plan: 'pro'
+    }
+};
+const rulesConfigurationWire = {
+    version: 2,
+    server: {
+        response: '{}',
+        etag: 'ffe-system-test-data'
+    }
+};
 
 jest.mock(
     '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',

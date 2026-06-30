@@ -36,14 +36,17 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-// @ts-ignore
-import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
-import nativeFfeRulesConfigurationWire from '../packages/core/src/flags/__fixtures__/native-ffe/rules-configuration-wire.json';
+// @ts-ignore local ignored credentials file
+import * as ddCredentials from './ddCredentials';
+import nativeFfeRulesConfigurationWire from './fixtures/native-ffe/offline-rules-configuration-wire.json';
 
+const APPLICATION_ID = ddCredentials.APPLICATION_ID;
+const CLIENT_TOKEN = ddCredentials.CLIENT_TOKEN;
+const ENVIRONMENT = ddCredentials.ENVIRONMENT;
+const NATIVE_FFE_CLIENT_TOKEN =
+  ddCredentials.NATIVE_FFE_CLIENT_TOKEN ?? CLIENT_TOKEN;
 const NATIVE_FFE_STAGING_RULES_ENDPOINT =
   'https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based';
-const NATIVE_FFE_STAGING_CLIENT_TOKEN =
-  'pub542a31cc0f5b23136420667ca212045a';
 const NATIVE_FFE_STORAGE_OPTIONS = {
   slot: 'default',
 };
@@ -93,14 +96,19 @@ const datadogInitialization = (async () => {
         sessionSampleRate: 100,
         telemetrySampleRate: 100,
         nativeCrashReportEnabled: true,
-        firstPartyHosts: [{
-          match: "example.com",
-          propagatorTypes: [PropagatorType.B3MULTI, PropagatorType.TRACECONTEXT]
-        }]
+        firstPartyHosts: [
+          {
+            match: 'example.com',
+            propagatorTypes: [
+              PropagatorType.B3MULTI,
+              PropagatorType.TRACECONTEXT,
+            ],
+          },
+        ],
       },
       logsConfiguration: {},
-      traceConfiguration: {}
-    }
+      traceConfiguration: {},
+    },
   );
   config.verbosity = SdkVerbosity.DEBUG;
   config.uploadFrequency = UploadFrequency.FREQUENT;
@@ -134,10 +142,15 @@ function App(): React.JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        style={backgroundStyle}
+      >
         <Header />
 
-        <View style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}>
+        <View
+          style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}
+        >
           <NativeFfeFlowPanel isDarkMode={isDarkMode} />
 
           <Section title="Step One">
@@ -192,9 +205,7 @@ function NativeFfeFlowPanel({
       const bundledState = await DdSdkReactNative.setConfiguration(
         bundledConfiguration,
       );
-      await DdSdkReactNative.setEvaluationContext(
-        NATIVE_FFE_ANONYMOUS_CONTEXT,
-      );
+      await DdSdkReactNative.setEvaluationContext(NATIVE_FFE_ANONYMOUS_CONTEXT);
       const anonymousResult = await DdSdkReactNative.resolveBooleanEvaluation(
         NATIVE_FFE_DEMO_FLAG,
         true,
@@ -207,17 +218,19 @@ function NativeFfeFlowPanel({
         true,
       );
       const beforeFetchState = await DdSdkReactNative.getProviderDebugState();
-      const fetchedConfiguration = await DdSdkReactNative.fetchRulesConfiguration({
-        endpoint: NATIVE_FFE_STAGING_RULES_ENDPOINT,
-        headers: {
-          'Fastly-Client': '1',
-          'dd-client-token': NATIVE_FFE_STAGING_CLIENT_TOKEN,
+      const fetchedConfiguration = await DdSdkReactNative.fetchRulesConfiguration(
+        {
+          endpoint: NATIVE_FFE_STAGING_RULES_ENDPOINT,
+          headers: {
+            'Fastly-Client': '1',
+            'dd-client-token': NATIVE_FFE_CLIENT_TOKEN,
+          },
+          flagQueryParams: {
+            dd_env: 'staging',
+          },
+          previousConfigurationWire: NATIVE_FFE_BUNDLED_RULES_WIRE,
         },
-        flagQueryParams: {
-          dd_env: 'staging',
-        },
-        previousConfigurationWire: NATIVE_FFE_BUNDLED_RULES_WIRE,
-      });
+      );
       const afterFetchState = await DdSdkReactNative.getProviderDebugState();
       const serializedWire = await DdSdkReactNative.configurationToString(
         fetchedConfiguration,
@@ -236,9 +249,7 @@ function NativeFfeFlowPanel({
       const loadedState = await DdSdkReactNative.setConfiguration(
         loadedConfiguration,
       );
-      await DdSdkReactNative.setEvaluationContext(
-        NATIVE_FFE_STAGING_CONTEXT,
-      );
+      await DdSdkReactNative.setEvaluationContext(NATIVE_FFE_STAGING_CONTEXT);
       const stagingResults = {
         boolean: await DdSdkReactNative.resolveBooleanEvaluation(
           NATIVE_FFE_STAGING_FLAGS.boolean,
@@ -323,9 +334,7 @@ function NativeFfeFlowPanel({
       setFlowState({
         status: 'error',
         summary:
-          error instanceof Error
-            ? error.message
-            : 'Native FF&E flow failed.',
+          error instanceof Error ? error.message : 'Native FF&E flow failed.',
       });
     }
   }, []);
@@ -347,7 +356,8 @@ function NativeFfeFlowPanel({
           {
             color: isDarkMode ? Colors.white : Colors.black,
           },
-        ]}>
+        ]}
+      >
         Native FFE flow
       </Text>
       <Text
@@ -356,7 +366,8 @@ function NativeFfeFlowPanel({
           {
             color: isDarkMode ? Colors.light : Colors.dark,
           },
-        ]}>
+        ]}
+      >
         {flowState.summary}
       </Text>
       <Pressable
@@ -367,7 +378,8 @@ function NativeFfeFlowPanel({
           styles.nativeFfeButton,
           loading && styles.nativeFfeButtonDisabled,
           pressed && !loading && styles.nativeFfeButtonPressed,
-        ]}>
+        ]}
+      >
         <Text style={styles.nativeFfeButtonText}>
           {loading ? 'Running...' : 'Run native flow'}
         </Text>
@@ -381,7 +393,8 @@ function NativeFfeFlowPanel({
               color: isDarkMode ? Colors.light : Colors.dark,
               backgroundColor: isDarkMode ? Colors.black : '#f3f4f6',
             },
-          ]}>
+          ]}
+        >
           {flowState.details}
         </Text>
       ) : null}
@@ -440,7 +453,8 @@ function Section({children, title}: SectionProps): React.JSX.Element {
           {
             color: isDarkMode ? Colors.white : Colors.black,
           },
-        ]}>
+        ]}
+      >
         {title}
       </Text>
       <Text
@@ -449,7 +463,8 @@ function Section({children, title}: SectionProps): React.JSX.Element {
           {
             color: isDarkMode ? Colors.light : Colors.dark,
           },
-        ]}>
+        ]}
+      >
         {children}
       </Text>
     </View>

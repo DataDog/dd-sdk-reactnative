@@ -17,6 +17,21 @@ internal fun readNativeFfeFixture(owner: Class<*>, relativePath: String): String
         ?: error("Missing FFE fixture: $relativePath")
 }
 
+internal fun nativeFfeRulesConfigurationWire(
+    response: String,
+    etag: String = "ffe-system-test-data",
+): String {
+    return JSONObject()
+        .put("version", 2)
+        .put(
+            "server",
+            JSONObject()
+                .put("response", response)
+                .put("etag", etag)
+        )
+        .toString()
+}
+
 internal fun listNativeFfeFixtureFiles(owner: Class<*>, relativeDirectory: String): List<String> {
     val resource = owner.classLoader
         ?.getResource(relativeDirectory)

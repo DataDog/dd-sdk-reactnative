@@ -8,6 +8,21 @@ import Foundation
 import XCTest
 
 enum NativeFfeTestFixtures {
+    static func rulesConfigurationWire(
+        response: String,
+        etag: String = "ffe-system-test-data"
+    ) throws -> String {
+        let wire: [String: Any] = [
+            "version": 2,
+            "server": [
+                "response": response,
+                "etag": etag,
+            ],
+        ]
+        let data = try JSONSerialization.data(withJSONObject: wire, options: [.sortedKeys])
+        return try XCTUnwrap(String(data: data, encoding: .utf8))
+    }
+
     static func jsonObject(_ relativePath: String) throws -> [String: Any] {
         let fixture = try readString(relativePath)
         let data = try XCTUnwrap(fixture.data(using: .utf8))
@@ -35,6 +50,7 @@ enum NativeFfeTestFixtures {
     static func readString(_ relativePath: String) throws -> String {
         let bundle = Bundle(for: BundleToken.self)
         let candidates = [
+            "Fixtures/\(relativePath)",
             "__fixtures__/\(relativePath)",
             relativePath,
         ]
@@ -47,14 +63,22 @@ enum NativeFfeTestFixtures {
             }
         }
 
-        let localFixture = packageFixtureRoot()
+        for fixtureRoot in localFixtureRoots() {
+            let localFixture = fixtureRoot.appendingPathComponent(relativePath)
+            if FileManager.default.fileExists(atPath: localFixture.path) {
+                return try String(contentsOf: localFixture, encoding: .utf8)
+            }
+        }
+
+        let fallbackFixture = localFixtureRoots().last!
             .appendingPathComponent(relativePath)
-        return try String(contentsOf: localFixture, encoding: .utf8)
+        return try String(contentsOf: fallbackFixture, encoding: .utf8)
     }
 
     private static func bundleDirectoryCandidates(_ relativeDirectory: String) -> [URL] {
         let bundle = Bundle(for: BundleToken.self)
         return [
+            bundle.resourceURL?.appendingPathComponent("Fixtures").appendingPathComponent(relativeDirectory),
             bundle.resourceURL?.appendingPathComponent("__fixtures__").appendingPathComponent(relativeDirectory),
             bundle.resourceURL?.appendingPathComponent(relativeDirectory),
         ].compactMap { $0 }
@@ -70,13 +94,20 @@ enum NativeFfeTestFixtures {
         .sorted()
     }
 
-    private static func packageFixtureRoot() -> URL {
+    private static func localFixtureRoots() -> [URL] {
         let sourceFile = URL(fileURLWithPath: #filePath)
         let packageRoot = sourceFile
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        return packageRoot.appendingPathComponent("src/flags/__fixtures__")
+        return [
+            packageRoot.appendingPathComponent("ios/Tests/Fixtures"),
+            packageRoot.appendingPathComponent("src/flags/__fixtures__"),
+        ]
+    }
+
+    private static func packageFixtureRoot() -> URL {
+        localFixtureRoots().last!
     }
 
     private final class BundleToken {}

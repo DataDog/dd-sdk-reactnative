@@ -140,10 +140,7 @@ internal class NativeFfeConfigurationFetcherTest {
         const val FETCHED_AT_MS = 1780000000000L
 
         val rulesConfigurationWire: String by lazy {
-            readNativeFfeFixture(
-                NativeFfeConfigurationFetcherTest::class.java,
-                "native-ffe/rules-configuration-wire.json"
-            )
+            nativeFfeRulesConfigurationWire(canonicalUfcConfig)
         }
 
         val canonicalUfcConfig: String by lazy {

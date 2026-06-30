@@ -5,6 +5,7 @@ include:
 
 variables:
     GIT_DEPTH: 5
+    GIT_SUBMODULE_STRATEGY: recursive
     DEVELOP_BRANCH: 'develop'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'

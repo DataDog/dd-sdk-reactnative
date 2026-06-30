@@ -416,7 +416,7 @@ final class NativeFfeCoreTests: XCTestCase {
     }
 
     private static let flagsConfigurationWire: String = {
-        try! NativeFfeTestFixtures.readString("native-ffe/rules-configuration-wire.json")
+        try! NativeFfeTestFixtures.rulesConfigurationWire(response: canonicalUfcConfig)
     }()
 
     private static let canonicalUfcConfig: String = {

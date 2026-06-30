@@ -348,10 +348,7 @@ internal class NativeFfeCoreTest {
         const val STORED_AT_MS = 1780000000000L
 
         val flagsConfigurationWire: String by lazy {
-            readNativeFfeFixture(
-                NativeFfeCoreTest::class.java,
-                "native-ffe/rules-configuration-wire.json"
-            )
+            nativeFfeRulesConfigurationWire(canonicalUfcConfig)
         }
 
         val canonicalUfcConfig: String by lazy {
