@@ -164,14 +164,44 @@ internal final class NativeFfeCore {
         for allocationValue in allocations {
             guard let allocation = dictionaryValue(allocationValue),
                 allocationIsActive(allocation),
-                rulesMatch(arrayValue(allocation["rules"]), subjectAttributes: subjectAttributes),
-                let split = firstMatchingSplit(arrayValue(allocation["splits"]), targetingKey: targetingKey),
+                rulesMatch(arrayValue(allocation["rules"]), subjectAttributes: subjectAttributes)
+            else {
+                continue
+            }
+
+            let split: [String: Any]
+            do {
+                guard let selectedSplit = try firstMatchingSplit(
+                    arrayValue(allocation["splits"]),
+                    targetingKey: targetingKey
+                ) else {
+                    continue
+                }
+                split = selectedSplit
+            } catch NativeFfeCoreError.targetingKeyMissing {
+                return defaultResult(
+                    flagKey: flagKey,
+                    defaultValue: defaultValue,
+                    reason: "ERROR",
+                    errorCode: "TARGETING_KEY_MISSING"
+                )
+            } catch {
+                return defaultResult(
+                    flagKey: flagKey,
+                    defaultValue: defaultValue,
+                    reason: "ERROR",
+                    errorCode: "GENERAL"
+                )
+            }
+
+            guard
                 let variationKey = stringValue(split["variationKey"]),
                 let variation = dictionaryValue(variations[variationKey])
             else {
                 continue
             }
 
+            let reason = evaluationReason(rules: arrayValue(allocation["rules"]), split: split)
             let extraLogging =
                 dictionaryValue(split["extraLogging"])
                 ?? dictionaryValue(allocation["extraLogging"])
@@ -180,16 +210,20 @@ internal final class NativeFfeCore {
                 ("flagKey", flagKey),
                 ("value", bridgeValue(variation["value"])),
                 ("variant", stringValue(variation["key"]) ?? variationKey),
-                ("reason", "TARGETING_MATCH"),
+                ("reason", reason),
                 (
                     "flagMetadata",
                     buildMap([
+                        ("__dd_allocation_key", stringValue(allocation["key"])),
+                        ("__dd_do_log", boolValue(allocation["doLog"]) ?? false),
+                        ("__dd_split_serial_id", intValue(split["serialId"])),
                         ("allocationKey", stringValue(allocation["key"])),
                         ("doLog", boolValue(allocation["doLog"]) ?? false),
                         ("extraLogging", extraLogging),
                         ("configurationKind", configuration.kind),
                         ("configurationEtag", configuration.etag),
                         ("splitSerialId", intValue(split["serialId"])),
+                        ("variationType", expectedType),
                     ])
                 ),
             ])
@@ -330,7 +364,7 @@ internal final class NativeFfeCore {
         }
     }
 
-    private func firstMatchingSplit(_ splits: [Any], targetingKey: String?) -> [String: Any]? {
+    private func firstMatchingSplit(_ splits: [Any], targetingKey: String?) throws -> [String: Any]? {
         for splitValue in splits {
             guard let split = dictionaryValue(splitValue) else {
                 continue
@@ -339,11 +373,24 @@ internal final class NativeFfeCore {
             if shards.isEmpty {
                 return split
             }
-            if let targetingKey, shardsMatch(shards, targetingKey: targetingKey) {
+            guard let targetingKey else {
+                throw NativeFfeCoreError.targetingKeyMissing
+            }
+            if shardsMatch(shards, targetingKey: targetingKey) {
                 return split
             }
         }
         return nil
+    }
+
+    private func evaluationReason(rules: [Any], split: [String: Any]) -> String {
+        if !rules.isEmpty {
+            return "TARGETING_MATCH"
+        }
+        if !arrayValue(split["shards"]).isEmpty {
+            return "SPLIT"
+        }
+        return "STATIC"
     }
 
     private func shardsMatch(_ shards: [Any], targetingKey: String) -> Bool {
@@ -556,11 +603,14 @@ internal struct NativeFlagsConfiguration {
 
 internal enum NativeFfeCoreError: LocalizedError {
     case invalidConfigurationWire(String)
+    case targetingKeyMissing
 
     var errorDescription: String? {
         switch self {
         case .invalidConfigurationWire(let message):
             return message
+        case .targetingKeyMissing:
+            return "Targeting key is required for sharded flag evaluation"
         }
     }
 }

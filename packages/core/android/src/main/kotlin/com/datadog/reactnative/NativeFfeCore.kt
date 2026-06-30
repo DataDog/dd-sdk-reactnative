@@ -142,23 +142,35 @@ internal class NativeFfeCore {
             if (!rulesMatch(allocation.optJSONArray("rules"), subjectAttributes)) {
                 continue
             }
-            val split = firstMatchingSplit(allocation.optJSONArray("splits"), targetingKey) ?: continue
+            val split = try {
+                firstMatchingSplit(allocation.optJSONArray("splits"), targetingKey)
+            } catch (_: TargetingKeyMissingException) {
+                return defaultResult(flagKey, defaultValue, "ERROR", "TARGETING_KEY_MISSING")
+            } ?: continue
             val variationKey = split.optString("variationKey")
             val variation = variations.optJSONObject(variationKey) ?: continue
             val value = variation.get("value").toBridgeValue()
+            val reason = evaluationReason(allocation.optJSONArray("rules"), split)
+            val extraLogging = split.optJSONObject("extraLogging")
+                ?: allocation.optJSONObject("extraLogging")
+                ?: JSONObject()
 
             return mapOf(
                 "flagKey" to flagKey,
                 "value" to value,
                 "variant" to variation.optString("key", variationKey),
-                "reason" to "TARGETING_MATCH",
+                "reason" to reason,
                 "flagMetadata" to mapOf(
+                    "__dd_allocation_key" to allocation.optString("key"),
+                    "__dd_do_log" to allocation.optBoolean("doLog", false),
+                    "__dd_split_serial_id" to split.optionalInt("serialId"),
                     "allocationKey" to allocation.optString("key"),
                     "doLog" to allocation.optBoolean("doLog", false),
-                    "extraLogging" to (split.optJSONObject("extraLogging")?.toMap() ?: emptyMap<String, Any?>()),
+                    "extraLogging" to extraLogging.toMap(),
                     "configurationKind" to configuration.kind,
                     "configurationEtag" to configuration.etag,
                     "splitSerialId" to split.optionalInt("serialId"),
+                    "variationType" to expectedType,
                 ).filterValues { it != null },
             )
         }
@@ -272,11 +284,26 @@ internal class NativeFfeCore {
             if (shards == null || shards.length() == 0) {
                 return split
             }
-            if (targetingKey != null && shardsMatch(shards, targetingKey)) {
+            if (targetingKey == null) {
+                throw TargetingKeyMissingException()
+            }
+            if (shardsMatch(shards, targetingKey)) {
                 return split
             }
         }
         return null
+    }
+
+    private fun evaluationReason(rules: JSONArray?, split: JSONObject): String {
+        if (rules != null && rules.length() > 0) {
+            return "TARGETING_MATCH"
+        }
+        val shards = split.optJSONArray("shards")
+        return if (shards != null && shards.length() > 0) {
+            "SPLIT"
+        } else {
+            "STATIC"
+        }
     }
 
     private fun shardsMatch(shards: JSONArray, targetingKey: String): Boolean {
@@ -363,6 +390,8 @@ internal class NativeFfeCore {
             else -> this
         }
     }
+
+    private class TargetingKeyMissingException : Exception()
 
     private companion object {
         const val SUPPORTED_WIRE_VERSION = 2

@@ -36,7 +36,7 @@ Use the current JavaScript implementation and shared fixture repository as the r
     -   Canonical UFC input: `ufc-config.json`
     -   Canonical evaluation cases: `evaluation-cases/*.json`
 
-The POC should either add `ffe-system-test-data` as a pinned git submodule or fetch it in a deterministic test setup. Do not copy fixture JSON into the RN repo unless review explicitly chooses that tradeoff.
+For this RN-first milestone, copy the canonical JSON files into `packages/core/src/flags/__fixtures__/ffe-system-test-data/` using the same directory layout as the shared repo. This keeps tests off inline JSON and gives Kotlin, Swift, and JS the same fixture names and schemas. Treat these files as a temporary vendored snapshot; before extraction into the iOS/Android SDK repos, decide whether to replace the snapshot with a pinned `ffe-system-test-data` submodule.
 
 Current RN dependencies already bring in shipped native Flags SDKs:
 
@@ -143,29 +143,27 @@ If optional reuse is not callable today, implement it as an RN-local native port
 | Persistence            | Mobile startup from last-known values is a target recipe.                                                       | Native save/load of last good wire from SDK-owned storage path; cache policy remains minimal.                                 |
 | Failure behavior       | Invalid wire, unsupported kind, refresh failure, stale serving are explicit states.                             | Native debug state reports invalid wire, unsupported kind, stale retained config, and last fetch error.                       |
 
-## Current Counter POC Coverage
+## Current Native Flag-Provider Coverage
 
-The current counter/JSON POC is useful but insufficient.
+The current native flag-provider slice is designed to replace the earlier add-numbers/counter bridge exercise.
 
 Covered:
 
 -   New RN bridge methods through old and new architecture.
 -   Native-owned mutable state across calls.
--   JS-to-native JSON request and native-to-JS JSON response.
--   A tiny native-side evaluation step.
+-   JS-to-native JSON request and native-to-JS JSON response using RFC-shaped configuration, context, and evaluation result objects.
+-   `ConfigurationWire` parse/serialize round trips.
+-   `setConfiguration()` lifecycle and provider debug state.
+-   Dynamic context changes with no network request.
+-   Native UFC evaluation with canonical fixture coverage for `STATIC`, `SPLIT`, `TARGETING_MATCH`, and `ERROR` / `TARGETING_KEY_MISSING`.
+-   Evaluation metadata required for exposure logging, evaluation aggregation, and RUM: variant, allocation key, `doLog`, split serial id where present, configuration kind/etag, and `extraLogging`.
 
 Not covered:
 
--   `ConfigurationWire` shape and opaque `FlagsConfiguration`.
--   `configurationFromString()` / `configurationToString()`.
--   `setConfiguration()` lifecycle and provider events.
--   Dynamic context behavior with no network request.
 -   Precomputed context mismatch protection.
 -   Native HTTP fetch side effects, auth, ETag, `304`, compression, request builders.
 -   Native persistence/offline boot.
--   Evaluation metadata required for exposure logging, evaluation aggregation, and RUM.
-
-The next POC should replace the counter semantics with a small native flag-provider simulator.
+-   Wiring evaluation side effects into the shipped native Flags SDK paths.
 
 ## Architecture Decision For The POC
 
@@ -337,14 +335,15 @@ Structure `RulesFlagEvaluator` behind an interface so the POC implementation can
 
 ## Execution Phases
 
-### Phase 0: Convert The Existing Toy POC Into A Flag POC
+### Phase 0: Establish The Native Flag Provider Bridge
 
-Goal: replace counter semantics with flag configuration semantics while preserving compile proof.
+Goal: expose RFC-shaped flag configuration semantics while preserving compile proof.
 
 Tasks:
 
--   Replace counter-specific names with POC FFE names.
+-   Replace counter-specific methods with API names close to the RFC surface: `configurationFromString`, `configurationToString`, `setConfiguration`, `setEvaluationContext`, typed `resolve*Evaluation`, and provider debug state.
 -   Keep JSON round trips, but use `ConfigurationWire`, context, and evaluation result objects.
+-   Move test payloads into canonical JSON fixtures; do not embed UFC config or evaluation cases inline in Kotlin, Swift, or JS tests.
 -   Add JS tests proving RN serializes request objects and parses native JSON responses.
 
 Acceptance:
@@ -570,7 +569,7 @@ Debug state is part of validation, not just demo UI. Tests should assert `config
 
 Correctness is fixture-driven first, then integration-driven:
 
--   Add `ffe-system-test-data` as a pinned submodule or deterministic test dependency.
+-   Load the vendored `packages/core/src/flags/__fixtures__/ffe-system-test-data` snapshot for this RN milestone; before SDK extraction, replace or validate it against a pinned `ffe-system-test-data` submodule.
 -   Load `ufc-config.json` into Kotlin and Swift evaluator tests.
 -   Iterate every `evaluation-cases/*.json` file on both platforms.
 -   For every case, evaluate `flag`, `variationType`, `defaultValue`, `targetingKey`, and `attributes`.
