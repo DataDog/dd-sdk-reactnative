@@ -9,7 +9,6 @@ import {
   DdLogs,
   DdTrace,
   TrackingConsent,
-  DdFlags,
   PropagatorType,
 } from '@datadog/mobile-react-native';
 import type {
@@ -17,16 +16,9 @@ import type {
   FlagsProviderDebugState,
   NativeFlagsConfiguration,
 } from '@datadog/mobile-react-native';
-import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
-import {
-  OpenFeature,
-  OpenFeatureProvider,
-  useObjectFlagDetails,
-} from '@openfeature/react-sdk';
-import React, {Suspense} from 'react';
+import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -54,10 +46,6 @@ const NATIVE_FFE_STAGING_CLIENT_TOKEN =
   'pub542a31cc0f5b23136420667ca212045a';
 const NATIVE_FFE_STORAGE_OPTIONS = {
   slot: 'default',
-};
-const NATIVE_FFE_USER = {
-  id: 'user-123',
-  favoriteFruit: 'apple',
 };
 const NATIVE_FFE_BUNDLED_RULES_WIRE = JSON.stringify(
   nativeFfeRulesConfigurationWire,
@@ -90,7 +78,7 @@ const NATIVE_FFE_STAGING_FLAGS = {
   object: 'ffe-dogfooding-json-flag',
 };
 
-(async () => {
+const datadogInitialization = (async () => {
   const config = new CoreConfiguration(
     CLIENT_TOKEN,
     ENVIRONMENT,
@@ -121,13 +109,6 @@ const NATIVE_FFE_STAGING_FLAGS = {
   // Initialize the Datadog SDK.
   await DdSdkReactNative.initialize(config);
 
-  // Enable Datadog Flags feature.
-  await DdFlags.enable();
-
-  // Set the provider with OpenFeature.
-  const provider = new DatadogOpenFeatureProvider();
-  OpenFeature.setProvider(provider);
-
   // Datadog SDK usage examples.
   await DdRum.startView('main', 'Main');
   setTimeout(async () => {
@@ -141,33 +122,7 @@ const NATIVE_FFE_STAGING_FLAGS = {
   await DdTrace.finishSpan(spanId);
 })();
 
-function AppWithProviders() {
-  React.useEffect(() => {
-    OpenFeature.setContext({
-      targetingKey: NATIVE_FFE_USER.id,
-      favoriteFruit: NATIVE_FFE_USER.favoriteFruit,
-    });
-  }, []);
-
-  return (
-    <Suspense
-      fallback={
-        <SafeAreaView style={{height: '100%', justifyContent: 'center'}}>
-          <ActivityIndicator />
-        </SafeAreaView>
-      }>
-      <OpenFeatureProvider suspendUntilReady>
-        <App />
-      </OpenFeatureProvider>
-    </Suspense>
-  );
-}
-
 function App(): React.JSX.Element {
-  const greetingFlag = useObjectFlagDetails('rn-sdk-test-json-flag', {
-    greeting: 'Default greeting',
-  });
-
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -183,17 +138,6 @@ function App(): React.JSX.Element {
         <Header />
 
         <View style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}>
-          <Section title={greetingFlag.value.greeting}>
-            The title of this section is based on the{' '}
-            <Text style={styles.highlight}>{greetingFlag.flagKey}</Text> feature
-            flag.{'\n\n'}
-            If it's different from "Default greeting", then it is coming from
-            the feature flag evaluation.{'\n\n'}
-            Evaluation reason is <Text style={styles.highlight}>{greetingFlag.reason}</Text>.{'\n\n'}Inspect <Text style={styles.highlight}>greetingFlag</Text> in{' '}
-            <Text style={styles.highlight}>App.tsx</Text> for more evaluation
-            details.
-          </Section>
-
           <NativeFfeFlowPanel isDarkMode={isDarkMode} />
 
           <Section title="Step One">
@@ -240,6 +184,8 @@ function NativeFfeFlowPanel({
     });
 
     try {
+      await datadogInitialization;
+
       const bundledConfiguration = await DdSdkReactNative.configurationFromString(
         NATIVE_FFE_BUNDLED_RULES_WIRE,
       );
@@ -383,6 +329,15 @@ function NativeFfeFlowPanel({
       });
     }
   }, []);
+
+  const autoRunStarted = React.useRef(false);
+  React.useEffect(() => {
+    if (autoRunStarted.current) {
+      return;
+    }
+    autoRunStarted.current = true;
+    void runNativeFfeFlow();
+  }, [runNativeFfeFlow]);
 
   return (
     <View style={styles.sectionContainer}>
@@ -549,4 +504,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AppWithProviders;
+export default App;

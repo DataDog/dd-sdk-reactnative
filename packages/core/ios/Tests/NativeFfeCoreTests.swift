@@ -91,6 +91,47 @@ final class NativeFfeCoreTests: XCTestCase {
         XCTAssertNotNil(dataStore.values["flags-configuration-default"])
     }
 
+    func testFetchRulesConfigurationDoesNotSendInternalKindQueryParam() throws {
+        let testedCore = NativeFfeCore()
+        let transport = NativeFfeFakeTransport()
+        let fetcher = NativeFfeConfigurationFetcher(transport: transport) {
+            self.storedAtMs
+        }
+        transport.response = NativeFfeHTTPResponse(
+            statusCode: 200,
+            headers: ["ETag": "rules-v2"],
+            body: Self.canonicalUfcConfig
+        )
+
+        let fetchedConfiguration = try testedCore.fetchConfiguration(
+            kind: "rules",
+            options: [
+                "endpoint": "https://config.example.test/flags?existing=1",
+                "headers": [
+                    "Fastly-Client": "1",
+                    "dd-client-token": "client-token",
+                ],
+                "flagQueryParams": [
+                    "dd_env": "staging",
+                ],
+                "previousConfigurationWire": Self.flagsConfigurationWire,
+            ],
+            fetcher: fetcher
+        )
+
+        let request = try XCTUnwrap(transport.request)
+        XCTAssertEqual(fetchedConfiguration.kind, "rules")
+        XCTAssertEqual(fetchedConfiguration.etag, "rules-v2")
+        XCTAssertTrue(request.url.hasPrefix("https://config.example.test/flags?existing=1&"))
+        XCTAssertTrue(request.url.contains("dd_env=staging"))
+        XCTAssertFalse(request.url.contains("kind=rules"))
+        XCTAssertEqual(request.method, "GET")
+        XCTAssertEqual(request.headers["Accept"], "application/json")
+        XCTAssertEqual(request.headers["Fastly-Client"], "1")
+        XCTAssertEqual(request.headers["dd-client-token"], "client-token")
+        XCTAssertEqual(request.headers["If-None-Match"], "ffe-system-test-data")
+    }
+
     func testReturnStaticReasonWithCanonicalNumericFlagCase() throws {
         let testedCore = try configuredCore()
         let evaluationCase = try Self.evaluationCase("test-case-numeric-flag.json")
@@ -407,4 +448,14 @@ private final class NativeFfeFakeDataStore: DataStore {
     }
 
     func flush() {}
+}
+
+private final class NativeFfeFakeTransport: NativeFfeConfigurationTransport {
+    var request: NativeFfeHTTPRequest?
+    var response: NativeFfeHTTPResponse!
+
+    func execute(_ request: NativeFfeHTTPRequest) throws -> NativeFfeHTTPResponse {
+        self.request = request
+        return response
+    }
 }

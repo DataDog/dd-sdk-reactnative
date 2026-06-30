@@ -149,7 +149,7 @@ private data class NativeFfeFetchOptions(
     }
 
     private fun buildUrl(): String {
-        val queryParams = linkedMapOf<String, Any?>("kind" to kind)
+        val queryParams = linkedMapOf<String, Any?>()
         queryParams.putAll(flagQueryParams)
         if (kind == NATIVE_FFE_KIND_PRECOMPUTED && evaluationContext.isNotEmpty()) {
             queryParams["evaluationContext"] = evaluationContext.toNativeFfeJSONObject().toString()

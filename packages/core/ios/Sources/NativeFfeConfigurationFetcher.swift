@@ -201,7 +201,6 @@ private struct NativeFfeFetchOptions {
         }
 
         var queryItems = components.queryItems ?? []
-        queryItems.append(URLQueryItem(name: "kind", value: kind))
         for (key, value) in flagQueryParams where !(value is NSNull) {
             queryItems.append(URLQueryItem(name: key, value: try queryString(value)))
         }

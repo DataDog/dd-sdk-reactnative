@@ -48,8 +48,8 @@ internal class NativeFfeConfigurationFetcherTest {
         assertThat(request?.method).isEqualTo("GET")
         assertThat(request?.url)
             .startsWith("https://config.example.test/flags?existing=1&")
-            .contains("kind=rules")
             .contains("project=rn")
+            .doesNotContain("kind=rules")
         assertThat(request?.headers)
             .containsEntry("Accept", "application/json")
             .containsEntry("DD-Client-Token", "client-token")
@@ -122,8 +122,8 @@ internal class NativeFfeConfigurationFetcherTest {
         assertThat(fetchedConfiguration.kind).isEqualTo("precomputed")
         assertThat(fetchedConfiguration.etag).isEqualTo("precomputed-v1")
         assertThat(fakeTransport.request?.url)
-            .contains("kind=precomputed")
             .contains("evaluationContext=")
+            .doesNotContain("kind=precomputed")
     }
 
     private class FakeTransport : NativeFfeConfigurationTransport {
