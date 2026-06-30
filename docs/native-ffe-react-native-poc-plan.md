@@ -36,7 +36,7 @@ Use the current JavaScript implementation and shared fixture repository as the r
     -   Canonical UFC input: `ufc-config.json`
     -   Canonical evaluation cases: `evaluation-cases/*.json`
 
-For this RN-first milestone, copy the canonical JSON files into `packages/core/src/flags/__fixtures__/ffe-system-test-data/` using the same directory layout as the shared repo. This keeps tests off inline JSON and gives Kotlin, Swift, and JS the same fixture names and schemas. Treat these files as a temporary vendored snapshot; before extraction into the iOS/Android SDK repos, decide whether to replace the snapshot with a pinned `ffe-system-test-data` submodule.
+For this RN-first milestone, pin the canonical fixture repository as a git submodule at `packages/core/src/flags/__fixtures__/ffe-system-test-data/` using the same directory layout as the shared repo. This keeps tests off inline JSON and gives Kotlin, Swift, and JS the same fixture names and schemas. The current branch pins `ffe-system-test-data` at `6c7f63b8f89b8d636d4686c7c2a3b9481c41e485`, the commit immediately before the bad regex/shard-bound fixture merge, so this RN repo is aligned with the intended shared corpus without copying fixture payloads.
 
 Current RN dependencies already bring in shipped native Flags SDKs:
 
@@ -306,7 +306,7 @@ The POC can place these inside the RN repo, but the package/module boundary shou
 
 ## Minimal RFC Wire Format
 
-Use a deliberately small versioned shape that mirrors the RFC wire fields without embedding ad hoc flag JSON in tests. The bridge and native tests should read `native-ffe/rules-configuration-wire.json`, generated from the vendored `ffe-system-test-data/ufc-config.json` bytes with `ffe-system-test-data` as the etag. RN-local JSON fixtures should only cover SDK-specific envelopes such as `native-ffe/evaluation-context-user-123.json` and `native-ffe/evaluation-side-effects/*.json`.
+Use a deliberately small versioned shape that mirrors the RFC wire fields without embedding ad hoc flag JSON in tests. The bridge and native tests should read `native-ffe/rules-configuration-wire.json`, generated from the pinned submodule's `ffe-system-test-data/ufc-config.json` bytes with `ffe-system-test-data` as the etag. RN-local JSON fixtures should only cover SDK-specific envelopes such as `native-ffe/evaluation-context-user-123.json` and `native-ffe/evaluation-side-effects/*.json`.
 
 Rules evaluation must be native and fixture-backed, not a toy predicate engine. The first implementation can be limited to the UFC v1 behavior covered by `ffe-system-test-data`, but Kotlin and Swift should both implement the same evaluator surface:
 
@@ -405,6 +405,8 @@ Tasks:
 -   Implement `RulesFlagEvaluator` in Kotlin.
 -   Implement `RulesFlagEvaluator` in Swift.
 -   Load UFC v1 JSON into native typed structures.
+-   Parse and validate the UFC once during `configurationFromString`; evaluation must use the parsed native model and must not deserialize JSON on every flag evaluation.
+-   Preserve the original `ConfigurationWire` string for bridge round trips, persistence, and offline initialization.
 -   Implement rule matching, allocation windows, type validation, MD5 sharding, variation selection, reasons, and error codes.
 -   Include evaluation metadata needed by exposure logging.
 -   Add a fixture runner that loads `ffe-system-test-data/ufc-config.json` and every `ffe-system-test-data/evaluation-cases/*.json`.
@@ -570,7 +572,7 @@ dd-client-token: pub542a31cc0f5b23136420667ca212045a
 
 Correctness is fixture-driven first, then integration-driven:
 
--   Load the vendored `packages/core/src/flags/__fixtures__/ffe-system-test-data` snapshot for this RN milestone; before SDK extraction, replace or validate it against a pinned `ffe-system-test-data` submodule.
+-   Load the pinned `packages/core/src/flags/__fixtures__/ffe-system-test-data` submodule for this RN milestone; keep the submodule SHA explicit in review notes so iOS, Android, and RN all validate against the same corpus.
 -   Load `ufc-config.json` into Kotlin and Swift evaluator tests.
 -   Iterate every `evaluation-cases/*.json` file on both platforms.
 -   For every case, evaluate `flag`, `variationType`, `defaultValue`, `targetingKey`, and `attributes`.
@@ -585,8 +587,9 @@ If a behavior is missing from `ffe-system-test-data`, add it there first when it
 
 ### 3. Reference Implementation Validation
 
-Use `openfeature-js-client` Node as the research and parity reference:
+Use the Go evaluator and `openfeature-js-client` Node implementation as research and parity references:
 
+-   Keep the native implementation close to `DataDog/dd-trace-go/openfeature/evaluator.go` for evaluation order, rule matching, sharding, and reason mapping where that implementation and the shared fixtures agree.
 -   Port behavior from `evaluate`, `evaluateForSubject`, `matchesRule`, `matchesShard`, and `MD5Sharder`.
 -   Keep an implementation note beside the native evaluator describing any intentional deviation from Node behavior.
 -   For risky cases, run the same fixture through Node, Kotlin, and Swift and compare the normalized result tuple: `value`, `reason`, `errorCode`, `variant`, `allocationKey`, `doLog`, `splitSerialId`.
@@ -652,7 +655,7 @@ Known local caveat: the current workstation reports an Xcode/CoreSimulator misma
 
 ## Recommended Next Step
 
-The current branch has implemented the first native-first slice through configuration parsing, dynamic context, rules/precomputed evaluation, native fetch, native SDK data-store-backed persistence with app-private fallback, shared JSON fixture coverage on Kotlin and Swift, example-app wiring, and existing native Flags SDK side-effect reuse. The next implementation slice should finish the remaining extraction-oriented pieces: a review note that records the confirmed native reuse points above, broader fixture iteration across the full shared corpus instead of the current representative cases, and a later cleanup of RN-local fallbacks when this code moves downstream.
+The current branch has implemented the first native-first slice through configuration parsing, parsed native UFC models, dynamic context, rules/precomputed evaluation, native fetch, native SDK data-store-backed persistence with app-private fallback, full shared-corpus fixture coverage on Kotlin and Swift, example-app wiring, and existing native Flags SDK side-effect reuse. The next implementation slice should finish the remaining extraction-oriented pieces: a review note that records the confirmed native reuse points above, broader example-app validation, and a later cleanup of RN-local fallbacks when this code moves downstream.
 
 The minimum demo sequence remains:
 
