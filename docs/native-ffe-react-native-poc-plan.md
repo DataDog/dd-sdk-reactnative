@@ -132,7 +132,7 @@ Optional reuse, only if callable from currently released SDKs without source cha
 
 If optional reuse is not callable today, implement it as an RN-local native port with the same shape expected from the future extracted SDK library. Do not block the RN POC on making those APIs public in the iOS/Android SDK repos first.
 
-Current storage finding: released iOS and Android Flags SDKs persist precomputed flag state on disk through native SDK data-store abstractions. iOS uses `FeatureScope.flagsDataStore` over Datadog `DataStore`, keyed by flags client name. Android uses `FlagsPersistenceManager` over `DataStoreHandler`, with a `flags-state-{instanceName}` key. The rules-based `ConfigurationWire` has no released save/load API yet, so the RN-local implementation should persist the downloaded rules configuration on native disk with equivalent semantics: versioned payload, per-client/slot keying, native-owned I/O, and explicit `loadConfiguration -> setConfiguration` activation. When the Kotlin/Swift libraries move into the native SDK repos, replace the RN-local file store with the SDK feature data store.
+Current storage finding: released iOS and Android Flags SDKs persist precomputed flag state on disk through native SDK data-store abstractions. iOS uses `FeatureScope.flagsDataStore` over Datadog `DataStore`, keyed by flags client name. Android uses `FlagsPersistenceManager` over `DataStoreHandler`, with a `flags-state-{instanceName}` key. The rules-based `ConfigurationWire` has no released save/load API yet, so the RN-local implementation should persist the downloaded rules configuration on native disk with equivalent semantics: versioned payload, per-client/slot keying, native-owned I/O, and explicit `loadConfiguration -> setConfiguration` activation. The current branch now prefers the existing native SDK feature data-store namespace when available: iOS writes through `CoreRegistry.default.scope(for: flags).dataStore`, and Android writes through the Flags `FeatureScope.dataStore` obtained from `FeatureSdkCore`. The app-private file store remains only as an RN-local fallback for uninitialized SDK/test scenarios.
 
 ## RFC Requirements To Exercise
 
@@ -464,7 +464,7 @@ Goal: prove mobile offline startup from native-owned storage.
 
 Tasks:
 
--   Add native save/load of wire string to an SDK-owned POC storage path.
+-   Add native save/load of wire string to the existing SDK feature data-store path when available.
 -   Keep policy minimal: one last-good config only.
 -   Load persisted wire before any network call.
 -   Refresh in background by explicit caller sequence: `load -> setConfiguration -> fetch -> setConfiguration`.
@@ -473,7 +473,7 @@ Acceptance:
 
 -   Cold-start path evaluates from persisted config.
 -   Refresh failure keeps prior config and marks stale/debug error.
--   Storage is native-owned, not JS AsyncStorage.
+-   Storage is native-owned, not JS AsyncStorage; adapter tests prove the Datadog feature data-store path and fallback behavior.
 
 ### Phase 8: Evaluation Side Effects
 
@@ -599,6 +599,7 @@ Required for each phase:
 -   Android fixture tests for the Kotlin evaluator.
 -   iOS unit tests for native core.
 -   iOS fixture tests for the Swift evaluator.
+-   iOS side-effect adapter tests for the existing native Flags tracking request shape.
 -   Android new-architecture example build.
 -   iOS codegen generation and iOS build when local Xcode simulator/device support is available.
 
@@ -611,9 +612,10 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID
 yarn --cwd example-new-architecture tsc --noEmit
 cd example-new-architecture/ios && GIT_CONFIG_GLOBAL=/dev/null bundle exec pod install
 cd example-new-architecture/ios && xcodebuild -workspace DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+cd example-new-architecture/ios && xcodebuild test -workspace DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative-Unit-Tests -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -only-testing:DatadogSDKReactNative-Unit-Tests/NativeFfeCoreTests -only-testing:DatadogSDKReactNative-Unit-Tests/NativeFfeEvaluationSideEffectsTests
 ```
 
-Known local caveat: the current workstation reports an Xcode/CoreSimulator mismatch warning for iOS simulator support. The RN package build has been validated with the Mac Catalyst destination above.
+Known local caveat: the current workstation reports an Xcode/CoreSimulator mismatch warning for iOS simulator support. The RN package build and selected native FF&E iOS tests have been validated with the Mac Catalyst destinations above.
 
 ## What This POC Should Prove
 
@@ -650,7 +652,7 @@ Known local caveat: the current workstation reports an Xcode/CoreSimulator misma
 
 ## Recommended Next Step
 
-The current branch has implemented the first native-first slice through configuration parsing, dynamic context, rules/precomputed evaluation, native fetch, native disk persistence, JSON fixture coverage, example-app wiring, and existing native Flags SDK side-effect reuse. The next implementation slice should finish the remaining extraction-oriented pieces: broader Swift fixture automation, a review note that records the confirmed native reuse points above, and a later swap from the RN-local file store to the native SDK data-store abstractions when this code moves downstream.
+The current branch has implemented the first native-first slice through configuration parsing, dynamic context, rules/precomputed evaluation, native fetch, native SDK data-store-backed persistence with app-private fallback, shared JSON fixture coverage on Kotlin and Swift, example-app wiring, and existing native Flags SDK side-effect reuse. The next implementation slice should finish the remaining extraction-oriented pieces: a review note that records the confirmed native reuse points above, broader fixture iteration across the full shared corpus instead of the current representative cases, and a later cleanup of RN-local fallbacks when this code moves downstream.
 
 The minimum demo sequence remains:
 

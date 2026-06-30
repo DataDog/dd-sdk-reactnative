@@ -34,7 +34,9 @@ public class DdSdkImplementation: NSObject {
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     private let nativeFfeCore = NativeFfeCore()
     private let nativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
-    private let nativeFfeConfigurationStore = FileNativeFfeConfigurationStore()
+    private let nativeFfeConfigurationStore = DatadogDataStoreNativeFfeConfigurationStore(
+        fallbackStore: FileNativeFfeConfigurationStore()
+    )
     private let nativeFfeSideEffects = NativeFfeEvaluationSideEffects()
 
     #if os(iOS)

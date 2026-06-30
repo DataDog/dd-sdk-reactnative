@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
 
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/**/*.{swift,json}'
-    test_spec.resources = 'ios/Tests/Fixtures'
+    test_spec.resources = ['ios/Tests/Fixtures', 'src/flags/__fixtures__']
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
   end
 

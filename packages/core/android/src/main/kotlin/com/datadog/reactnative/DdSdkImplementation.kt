@@ -39,7 +39,9 @@ class DdSdkImplementation(
     private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
     private val nativeFfeConfigurationFetcher: NativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
     private val nativeFfeConfigurationStore: NativeFfeConfigurationStore =
-        FileNativeFfeConfigurationStore(appContext)
+        DatadogDataStoreNativeFfeConfigurationStore(
+            fallbackStore = FileNativeFfeConfigurationStore(appContext)
+        )
     private val nativeFfeSideEffects: NativeFfeEvaluationSideEffects = NativeFfeEvaluationSideEffects()
 
     // region DdSdk

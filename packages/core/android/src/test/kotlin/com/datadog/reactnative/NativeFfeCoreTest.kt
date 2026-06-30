@@ -6,6 +6,12 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.api.storage.datastore.DataStoreHandler
+import com.datadog.android.api.storage.datastore.DataStoreReadCallback
+import com.datadog.android.api.storage.datastore.DataStoreWriteCallback
+import com.datadog.android.core.internal.persistence.Deserializer
+import com.datadog.android.core.persistence.Serializer
+import com.datadog.android.core.persistence.datastore.DataStoreContent
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
@@ -68,6 +74,40 @@ internal class NativeFfeCoreTest {
         assertThat(activatedState)
             .containsEntry("activeConfigurationKind", "rules")
             .containsEntry("configurationLoadCount", 1)
+    }
+
+    @Test
+    fun `M save and load configuration W Datadog Flags data store`() {
+        // Given
+        val dataStore = FakeDataStoreHandler()
+        val store = DatadogDataStoreNativeFfeConfigurationStore(
+            dataStoreProvider = { dataStore },
+            clockMs = { STORED_AT_MS },
+        )
+        val configuration = testedCore.configurationFromString(flagsConfigurationWire)
+
+        // When
+        val saveState = testedCore.saveConfiguration(
+            configuration.toMap(),
+            mapOf("slot" to "default"),
+            store,
+        )
+        val loadedConfiguration = testedCore.loadConfiguration(
+            mapOf("slot" to "default"),
+            store,
+        )
+
+        // Then
+        assertThat(testedCore.configurationToString(loadedConfiguration.toMap()))
+            .isEqualTo(flagsConfigurationWire)
+        @Suppress("UNCHECKED_CAST")
+        val lastSave = saveState["lastStorage"] as Map<String, Any?>
+        assertThat(lastSave)
+            .containsEntry("operation", "save")
+            .containsEntry("status", "stored")
+            .containsEntry("key", "flags-configuration-default")
+            .containsEntry("updatedAtMs", STORED_AT_MS)
+        assertThat(dataStore.values).containsKey("flags-configuration-default")
     }
 
     @Test
@@ -232,5 +272,48 @@ internal class NativeFfeCoreTest {
                 "ffe-system-test-data/ufc-config.json"
             )
         }
+    }
+}
+
+private class FakeDataStoreHandler : DataStoreHandler {
+    val values = mutableMapOf<String, Pair<Int, String>>()
+
+    override fun <T : Any> setValue(
+        key: String,
+        data: T,
+        version: Int,
+        callback: DataStoreWriteCallback?,
+        serializer: Serializer<T>,
+    ) {
+        values[key] = version to (serializer.serialize(data) ?: "")
+        callback?.onSuccess()
+    }
+
+    override fun <T : Any> value(
+        key: String,
+        version: Int?,
+        callback: DataStoreReadCallback<T>,
+        deserializer: Deserializer<String, T>,
+    ) {
+        val stored = values[key] ?: return callback.onFailure()
+        if (version != null && stored.first != version) {
+            callback.onFailure()
+            return
+        }
+        callback.onSuccess(
+            DataStoreContent(
+                stored.first,
+                deserializer.deserialize(stored.second),
+            )
+        )
+    }
+
+    override fun removeValue(key: String, callback: DataStoreWriteCallback?) {
+        values.remove(key)
+        callback?.onSuccess()
+    }
+
+    override fun clearAllData() {
+        values.clear()
     }
 }
