@@ -32,6 +32,7 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     var RUMMonitorProvider: () -> RUMMonitorProtocol?
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+    private let nativeFfeCore = NativeFfeCore()
 
     #if os(iOS)
         var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
@@ -286,6 +287,105 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
 
+    @objc
+    public func configurationFromString(
+        wire: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.configurationFromString(wire as String).toMap()
+        }
+    }
+
+    @objc
+    public func configurationToString(
+        configuration: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.configurationToString(configuration as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func setConfiguration(
+        configuration: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.setConfiguration(configuration as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func setEvaluationContext(
+        context: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.setEvaluationContext(context as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func resolveBooleanEvaluation(
+        flagKey: NSString, defaultValue: Bool, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.resolveBooleanEvaluation(
+                flagKey: flagKey as String,
+                defaultValue: defaultValue
+            )
+        }
+    }
+
+    @objc
+    public func resolveStringEvaluation(
+        flagKey: NSString, defaultValue: NSString, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.resolveStringEvaluation(
+                flagKey: flagKey as String,
+                defaultValue: defaultValue as String
+            )
+        }
+    }
+
+    @objc
+    public func resolveNumberEvaluation(
+        flagKey: NSString, defaultValue: Double, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.resolveNumberEvaluation(
+                flagKey: flagKey as String,
+                defaultValue: defaultValue
+            )
+        }
+    }
+
+    @objc
+    public func resolveObjectEvaluation(
+        flagKey: NSString, defaultValue: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.resolveObjectEvaluation(
+                flagKey: flagKey as String,
+                defaultValue: defaultValue as? [String: Any] ?? [:]
+            )
+        }
+    }
+
+    @objc
+    public func getProviderDebugState(
+        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.debugState()
+        }
+    }
+
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
         DdTelemetry.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType
@@ -354,6 +454,18 @@ public class DdSdkImplementation: NSObject {
         }
 
         return frameTimeCallback
+    }
+
+    private func resolveFfePromise(
+        resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock,
+        block: () throws -> Any?
+    ) {
+        do {
+            resolve(try block())
+        } catch {
+            reject("FEATURE_FLAGS_CONFIGURATION_ERROR", error.localizedDescription, error)
+        }
     }
 
     // Normalizes frameTime values so when they are turned into FPS metrics they are normalized on a range between 0 and fpsBudget. If fpsBudget is not provided it will default to 60hz.

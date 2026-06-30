@@ -108,6 +108,14 @@ export {
     __ddExtractText
 };
 export type {
+    FlagEvaluationResult,
+    FlagsConfigurationWire,
+    FlagsEvaluationContext,
+    FlagsProviderDebugState,
+    FlagValue,
+    NativeFlagsConfiguration
+} from './DdSdkReactNative';
+export type {
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,

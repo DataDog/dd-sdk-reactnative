@@ -67,6 +67,15 @@ beforeEach(async () => {
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.addAttributes.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
+    NativeModules.DdSdk.configurationFromString.mockClear();
+    NativeModules.DdSdk.configurationToString.mockClear();
+    NativeModules.DdSdk.setConfiguration.mockClear();
+    NativeModules.DdSdk.setEvaluationContext.mockClear();
+    NativeModules.DdSdk.resolveBooleanEvaluation.mockClear();
+    NativeModules.DdSdk.resolveStringEvaluation.mockClear();
+    NativeModules.DdSdk.resolveNumberEvaluation.mockClear();
+    NativeModules.DdSdk.resolveObjectEvaluation.mockClear();
+    NativeModules.DdSdk.getProviderDebugState.mockClear();
     NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
     (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
@@ -1368,6 +1377,132 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             expect(NativeDdSdk.clearAllData).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('flags configuration building blocks', () => {
+        const flagsWire = JSON.stringify({
+            version: 2,
+            server: {
+                response: JSON.stringify({
+                    flags: {
+                        'checkout.enabled': {
+                            key: 'checkout.enabled',
+                            enabled: true,
+                            variationType: 'BOOLEAN',
+                            variations: {
+                                on: {
+                                    key: 'on',
+                                    value: true
+                                }
+                            },
+                            allocations: []
+                        }
+                    }
+                }),
+                etag: 'rules-v1'
+            }
+        });
+
+        it('parses and serializes a native flags configuration wire', async () => {
+            // WHEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const serialized = await DdSdkReactNative.configurationToString(
+                configuration
+            );
+
+            // THEN
+            expect(NativeDdSdk.configurationFromString).toHaveBeenCalledWith(
+                flagsWire
+            );
+            expect(NativeDdSdk.configurationToString).toHaveBeenCalledWith(
+                configuration
+            );
+            expect(configuration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                version: 2,
+                kind: 'rules',
+                etag: 'rules-v1'
+            });
+            expect(serialized).toBe(flagsWire);
+        });
+
+        it('sets configuration and context before resolving evaluations', async () => {
+            // GIVEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const context = {
+                targetingKey: 'user-123',
+                attributes: {
+                    plan: 'pro'
+                }
+            };
+
+            // WHEN
+            const configState = await DdSdkReactNative.setConfiguration(
+                configuration
+            );
+            const contextState = await DdSdkReactNative.setEvaluationContext(
+                context
+            );
+            const booleanResult = await DdSdkReactNative.resolveBooleanEvaluation(
+                'checkout.enabled',
+                false
+            );
+            const stringResult = await DdSdkReactNative.resolveStringEvaluation(
+                'checkout.copy',
+                'default'
+            );
+            const numberResult = await DdSdkReactNative.resolveNumberEvaluation(
+                'checkout.limit',
+                0
+            );
+            const objectResult = await DdSdkReactNative.resolveObjectEvaluation(
+                'checkout.config',
+                { mode: 'default' }
+            );
+            const debugState = await DdSdkReactNative.getProviderDebugState();
+
+            // THEN
+            expect(NativeDdSdk.setConfiguration).toHaveBeenCalledWith(
+                configuration
+            );
+            expect(NativeDdSdk.setEvaluationContext).toHaveBeenCalledWith(
+                context
+            );
+            expect(NativeDdSdk.resolveBooleanEvaluation).toHaveBeenCalledWith(
+                'checkout.enabled',
+                false
+            );
+            expect(NativeDdSdk.resolveStringEvaluation).toHaveBeenCalledWith(
+                'checkout.copy',
+                'default'
+            );
+            expect(NativeDdSdk.resolveNumberEvaluation).toHaveBeenCalledWith(
+                'checkout.limit',
+                0
+            );
+            expect(
+                NativeDdSdk.resolveObjectEvaluation
+            ).toHaveBeenCalledWith('checkout.config', { mode: 'default' });
+            expect(configState.status).toBe('ready');
+            expect(contextState.currentContext).toStrictEqual(context);
+            expect(booleanResult).toStrictEqual({
+                flagKey: 'checkout.enabled',
+                value: false,
+                reason: 'DEFAULT'
+            });
+            expect(stringResult.value).toBe('default');
+            expect(numberResult.value).toBe(0);
+            expect(objectResult.value).toStrictEqual({ mode: 'default' });
+            expect(debugState).toMatchObject({
+                status: 'ready',
+                activeConfigurationKind: 'rules',
+                activeEtag: 'rules-v1'
+            });
         });
     });
 

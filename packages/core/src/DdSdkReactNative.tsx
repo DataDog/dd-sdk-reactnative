@@ -45,6 +45,54 @@ import type { UserInfo } from './sdk/UserInfoSingleton/types';
 import { adaptLongTaskThreshold } from './utils/longTasksUtils';
 import { version as sdkVersion } from './version';
 
+export type FlagsConfigurationWire = string;
+
+export type NativeFlagsConfiguration = {
+    readonly __ddNativeFfeConfiguration: true;
+    readonly version: number;
+    readonly kind: 'precomputed' | 'rules' | 'mixed';
+    readonly etag?: string;
+};
+
+export type FlagsEvaluationContext = {
+    targetingKey?: string;
+    attributes?: Record<string, unknown>;
+};
+
+export type FlagValue =
+    | boolean
+    | string
+    | number
+    | Record<string, unknown>
+    | null;
+
+export type FlagEvaluationResult<T extends FlagValue = FlagValue> = {
+    flagKey: string;
+    value: T;
+    variant?: string;
+    reason: string;
+    errorCode?: string;
+    flagMetadata?: {
+        allocationKey?: string;
+        doLog?: boolean;
+        extraLogging?: Record<string, unknown>;
+        configurationKind?: 'precomputed' | 'rules';
+        configurationEtag?: string;
+    };
+};
+
+export type FlagsProviderDebugState = {
+    status: 'not_ready' | 'ready' | 'stale' | 'error';
+    activeConfigurationKind?: 'precomputed' | 'rules' | 'mixed';
+    activeEtag?: string;
+    currentContext?: FlagsEvaluationContext;
+    configurationSetCount: number;
+    fetchCount: number;
+    evaluationCount: number;
+    lastEvent?: 'provider_ready' | 'configuration_changed' | 'provider_error';
+    lastError?: string;
+};
+
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
  */
@@ -398,6 +446,96 @@ export class DdSdkReactNative {
     static clearAllData = (): Promise<void> => {
         InternalLog.log('Clearing all data', SdkVerbosity.DEBUG);
         return NativeDdSdk.clearAllData();
+    };
+
+    static configurationFromString = (
+        wire: FlagsConfigurationWire
+    ): Promise<NativeFlagsConfiguration> => {
+        InternalLog.log(
+            'Parsing native flags configuration wire',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.configurationFromString(
+            wire
+        ) as Promise<NativeFlagsConfiguration>;
+    };
+
+    static configurationToString = (
+        configuration: NativeFlagsConfiguration
+    ): Promise<FlagsConfigurationWire> => {
+        InternalLog.log(
+            'Serializing native flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.configurationToString(configuration);
+    };
+
+    static setConfiguration = (
+        configuration: NativeFlagsConfiguration
+    ): Promise<FlagsProviderDebugState> => {
+        InternalLog.log(
+            'Setting native flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.setConfiguration(
+            configuration
+        ) as Promise<FlagsProviderDebugState>;
+    };
+
+    static setEvaluationContext = (
+        context: FlagsEvaluationContext
+    ): Promise<FlagsProviderDebugState> => {
+        InternalLog.log(
+            'Setting native flags evaluation context',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.setEvaluationContext(
+            context
+        ) as Promise<FlagsProviderDebugState>;
+    };
+
+    static resolveBooleanEvaluation = (
+        flagKey: string,
+        defaultValue: boolean
+    ): Promise<FlagEvaluationResult<boolean>> => {
+        return NativeDdSdk.resolveBooleanEvaluation(
+            flagKey,
+            defaultValue
+        ) as Promise<FlagEvaluationResult<boolean>>;
+    };
+
+    static resolveStringEvaluation = (
+        flagKey: string,
+        defaultValue: string
+    ): Promise<FlagEvaluationResult<string>> => {
+        return NativeDdSdk.resolveStringEvaluation(
+            flagKey,
+            defaultValue
+        ) as Promise<FlagEvaluationResult<string>>;
+    };
+
+    static resolveNumberEvaluation = (
+        flagKey: string,
+        defaultValue: number
+    ): Promise<FlagEvaluationResult<number>> => {
+        return NativeDdSdk.resolveNumberEvaluation(
+            flagKey,
+            defaultValue
+        ) as Promise<FlagEvaluationResult<number>>;
+    };
+
+    static resolveObjectEvaluation = <T extends Record<string, unknown>>(
+        flagKey: string,
+        defaultValue: T
+    ): Promise<FlagEvaluationResult<T>> => {
+        return NativeDdSdk.resolveObjectEvaluation(
+            flagKey,
+            defaultValue
+        ) as Promise<FlagEvaluationResult<T>>;
+    };
+
+    static getProviderDebugState = (): Promise<FlagsProviderDebugState> => {
+        return NativeDdSdk.getProviderDebugState() as Promise<FlagsProviderDebugState>;
     };
 
     private static buildConfiguration = (

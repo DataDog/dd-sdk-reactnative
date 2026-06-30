@@ -36,6 +36,7 @@ class DdSdkImplementation(
     internal val appContext: Context = reactContext.applicationContext
     internal val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
+    private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
 
     // region DdSdk
 
@@ -282,6 +283,60 @@ class DdSdkImplementation(
         promise.resolve(null)
     }
 
+    fun configurationFromString(wire: String, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.configurationFromString(wire).toMap().toWritableMap()
+        }
+    }
+
+    fun configurationToString(configuration: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.configurationToString(configuration.toMap())
+        }
+    }
+
+    fun setConfiguration(configuration: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.setConfiguration(configuration.toMap()).toWritableMap()
+        }
+    }
+
+    fun setEvaluationContext(context: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.setEvaluationContext(context.toMap()).toWritableMap()
+        }
+    }
+
+    fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.resolveBooleanEvaluation(flagKey, defaultValue).toWritableMap()
+        }
+    }
+
+    fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.resolveStringEvaluation(flagKey, defaultValue).toWritableMap()
+        }
+    }
+
+    fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.resolveNumberEvaluation(flagKey, defaultValue).toWritableMap()
+        }
+    }
+
+    fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.resolveObjectEvaluation(flagKey, defaultValue.toMap()).toWritableMap()
+        }
+    }
+
+    fun getProviderDebugState(promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.debugState().toWritableMap()
+        }
+    }
+
     // endregion
 
     // region Internal
@@ -311,6 +366,17 @@ class DdSdkImplementation(
             DdSdkSynthetics.testId,
             DdSdkSynthetics.resultId
         )
+    }
+
+    private inline fun resolveFfePromise(
+        promise: Promise,
+        block: () -> Any?
+    ) {
+        try {
+            promise.resolve(block())
+        } catch (error: Exception) {
+            promise.reject(FFE_ERROR_CODE, error.message, error)
+        }
     }
 
     private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
@@ -420,5 +486,6 @@ class DdSdkImplementation(
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
         internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
+        internal const val FFE_ERROR_CODE = "FEATURE_FLAGS_CONFIGURATION_ERROR"
     }
 }
