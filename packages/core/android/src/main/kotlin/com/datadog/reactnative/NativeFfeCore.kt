@@ -51,6 +51,7 @@ internal class NativeFfeCore {
             etag = etag,
             serverResponse = serverResponse,
             precomputedResponse = precomputedResponse,
+            serverFlags = serverResponse?.flagsObject()?.toNativeFlags(),
         )
     }
 
@@ -191,59 +192,55 @@ internal class NativeFfeCore {
         evaluationCount += 1
         val configuration = activeConfiguration
             ?: return defaultResult(flagKey, defaultValue, "ERROR", "PROVIDER_NOT_READY")
-        val flags = configuration.serverResponse?.flagsObject()
+        val flags = configuration.serverFlags
             ?: return defaultResult(flagKey, defaultValue, "ERROR", "PROVIDER_NOT_READY")
-        val flag = flags.optJSONObject(flagKey)
+        val flag = flags[flagKey]
             ?: return defaultResult(flagKey, defaultValue, "ERROR", "FLAG_NOT_FOUND")
 
-        if (!flag.optBoolean("enabled", false)) {
+        if (!flag.enabled) {
             return defaultResult(flagKey, defaultValue, "DISABLED", null)
         }
-        if (!typeMatches(expectedType, flag.optString("variationType"))) {
+        if (!typeMatches(expectedType, flag.variationType)) {
             return defaultResult(flagKey, defaultValue, "ERROR", "TYPE_MISMATCH")
+        }
+        if (flag.unsupported) {
+            return defaultResult(flagKey, defaultValue, "DEFAULT", null)
         }
 
         val subjectAttributes = subjectAttributes()
         val targetingKey = currentContext["targetingKey"]?.toString()
-        val allocations = flag.optJSONArray("allocations")
-        val variations = flag.optJSONObject("variations") ?: JSONObject()
 
-        for (index in 0 until (allocations?.length() ?: 0)) {
-            val allocation = allocations?.optJSONObject(index) ?: continue
-            if (!allocationIsActive(allocation)) {
+        for (allocation in flag.allocations) {
+            if (!allocation.isActive()) {
                 continue
             }
-            if (!rulesMatch(allocation.optJSONArray("rules"), subjectAttributes)) {
+            if (!rulesMatch(allocation.rules, subjectAttributes)) {
                 continue
             }
             val split = try {
-                firstMatchingSplit(allocation.optJSONArray("splits"), targetingKey)
+                firstMatchingSplit(allocation.splits, targetingKey)
             } catch (_: TargetingKeyMissingException) {
                 return defaultResult(flagKey, defaultValue, "ERROR", "TARGETING_KEY_MISSING")
             } ?: continue
-            val variationKey = split.optString("variationKey")
-            val variation = variations.optJSONObject(variationKey) ?: continue
-            val value = variation.get("value").toBridgeValue()
-            val reason = evaluationReason(allocation.optJSONArray("rules"), split)
-            val extraLogging = split.optJSONObject("extraLogging")
-                ?: allocation.optJSONObject("extraLogging")
-                ?: JSONObject()
+            val variation = flag.variations[split.variationKey] ?: continue
+            val reason = evaluationReason(allocation, split)
+            val extraLogging = split.extraLogging ?: allocation.extraLogging ?: emptyMap<String, Any?>()
 
             return mapOf(
                 "flagKey" to flagKey,
-                "value" to value,
-                "variant" to variation.optString("key", variationKey),
+                "value" to variation.value,
+                "variant" to variation.key,
                 "reason" to reason,
                 "flagMetadata" to mapOf(
-                    "__dd_allocation_key" to allocation.optString("key"),
-                    "__dd_do_log" to allocation.optBoolean("doLog", false),
-                    "__dd_split_serial_id" to split.optionalInt("serialId"),
-                    "allocationKey" to allocation.optString("key"),
-                    "doLog" to allocation.optBoolean("doLog", false),
-                    "extraLogging" to extraLogging.toMap(),
+                    "__dd_allocation_key" to allocation.key,
+                    "__dd_do_log" to allocation.doLog,
+                    "__dd_split_serial_id" to split.serialId,
+                    "allocationKey" to allocation.key,
+                    "doLog" to allocation.doLog,
+                    "extraLogging" to extraLogging,
                     "configurationKind" to configuration.kind,
                     "configurationEtag" to configuration.etag,
-                    "splitSerialId" to split.optionalInt("serialId"),
+                    "splitSerialId" to split.serialId,
                     "variationType" to expectedType,
                 ).filterValues { it != null },
             )
@@ -293,102 +290,83 @@ internal class NativeFfeCore {
         return attributes
     }
 
-    private fun allocationIsActive(allocation: JSONObject): Boolean {
+    private fun NativeAllocation.isActive(): Boolean {
         val now = Instant.now()
-        val startAt = allocation.optString("startAt").takeIf { it.isNotBlank() }
-        val endAt = allocation.optString("endAt").takeIf { it.isNotBlank() }
-        return try {
-            val afterStart = startAt == null || !now.isBefore(Instant.parse(startAt))
-            val beforeEnd = endAt == null || now.isBefore(Instant.parse(endAt))
-            afterStart && beforeEnd
-        } catch (_: Exception) {
-            false
-        }
+        return !hasInvalidDate &&
+            (startAt == null || !now.isBefore(startAt)) &&
+            (endAt == null || now.isBefore(endAt))
     }
 
-    private fun rulesMatch(rules: JSONArray?, subjectAttributes: Map<String, Any?>): Boolean {
-        if (rules == null || rules.length() == 0) {
+    private fun rulesMatch(rules: List<NativeRule>, subjectAttributes: Map<String, Any?>): Boolean {
+        if (rules.isEmpty()) {
             return true
         }
-        for (index in 0 until rules.length()) {
-            val rule = rules.optJSONObject(index) ?: continue
-            val conditions = rule.optJSONArray("conditions") ?: JSONArray()
-            var allMatch = true
-            for (conditionIndex in 0 until conditions.length()) {
-                val condition = conditions.optJSONObject(conditionIndex) ?: continue
-                if (!conditionMatches(condition, subjectAttributes)) {
-                    allMatch = false
-                    break
-                }
-            }
-            if (allMatch) {
+        for (rule in rules) {
+            if (rule.conditions.all { conditionMatches(it, subjectAttributes) }) {
                 return true
             }
         }
         return false
     }
 
-    private fun conditionMatches(condition: JSONObject, subjectAttributes: Map<String, Any?>): Boolean {
-        val attribute = condition.optString("attribute")
+    private fun conditionMatches(condition: NativeCondition, subjectAttributes: Map<String, Any?>): Boolean {
+        val attribute = condition.attribute
         val value = subjectAttributes[attribute]
-        return when (condition.optString("operator")) {
+        return when (condition.operator) {
             "IS_NULL" -> {
-                val expectsNull = condition.optBoolean("value")
+                val expectsNull = condition.value as? Boolean ?: false
                 if (expectsNull) value == null else value != null
             }
-            "MATCHES" -> value?.toString()?.let { Regex(condition.optString("value")).containsMatchIn(it) } ?: false
-            "NOT_MATCHES" -> value?.toString()?.let { !Regex(condition.optString("value")).containsMatchIn(it) } ?: false
-            "ONE_OF" -> value?.toString()?.let { condition.optJSONArray("value")?.containsString(it) } ?: false
-            "NOT_ONE_OF" -> value?.toString()?.let { condition.optJSONArray("value")?.containsString(it) == false } ?: false
-            "GTE" -> value.asDouble()?.let { it >= condition.optDouble("value") } ?: false
-            "GT" -> value.asDouble()?.let { it > condition.optDouble("value") } ?: false
-            "LTE" -> value.asDouble()?.let { it <= condition.optDouble("value") } ?: false
-            "LT" -> value.asDouble()?.let { it < condition.optDouble("value") } ?: false
+            "MATCHES" -> regexMatches(condition.value.toString(), value?.toString())
+            "NOT_MATCHES" -> value?.toString()?.let { !regexMatches(condition.value.toString(), it) } ?: false
+            "ONE_OF" -> value?.toString()?.let { condition.value.containsString(it) } ?: false
+            "NOT_ONE_OF" -> value?.toString()?.let { !condition.value.containsString(it) } ?: false
+            "GTE" -> value.asDouble()?.let { it >= (condition.value.asDouble() ?: 0.0) } ?: false
+            "GT" -> value.asDouble()?.let { it > (condition.value.asDouble() ?: 0.0) } ?: false
+            "LTE" -> value.asDouble()?.let { it <= (condition.value.asDouble() ?: 0.0) } ?: false
+            "LT" -> value.asDouble()?.let { it < (condition.value.asDouble() ?: 0.0) } ?: false
             else -> false
         }
     }
 
-    private fun firstMatchingSplit(splits: JSONArray?, targetingKey: String?): JSONObject? {
-        if (splits == null) {
-            return null
-        }
-        for (index in 0 until splits.length()) {
-            val split = splits.optJSONObject(index) ?: continue
-            val shards = split.optJSONArray("shards")
-            if (shards == null || shards.length() == 0) {
+    private fun firstMatchingSplit(splits: List<NativeSplit>, targetingKey: String?): NativeSplit? {
+        for (split in splits) {
+            if (split.shards.isEmpty()) {
                 return split
             }
             if (targetingKey == null) {
                 throw TargetingKeyMissingException()
             }
-            if (shardsMatch(shards, targetingKey)) {
+            if (shardsMatch(split.shards, targetingKey)) {
                 return split
             }
         }
         return null
     }
 
-    private fun evaluationReason(rules: JSONArray?, split: JSONObject): String {
-        if (rules != null && rules.length() > 0) {
+    private fun evaluationReason(allocation: NativeAllocation, split: NativeSplit): String {
+        if (allocation.rules.isNotEmpty()) {
             return "TARGETING_MATCH"
         }
-        val shards = split.optJSONArray("shards")
-        return if (shards != null && shards.length() > 0) {
+        if (allocation.startAt != null || allocation.endAt != null) {
+            return "DEFAULT"
+        }
+        return if (split.shards.isNotEmpty()) {
             "SPLIT"
         } else {
             "STATIC"
         }
     }
 
-    private fun shardsMatch(shards: JSONArray, targetingKey: String): Boolean {
-        for (index in 0 until shards.length()) {
-            val shard = shards.optJSONObject(index) ?: return false
-            val assignedShard = assignedShard(shard.optString("salt"), targetingKey, shard.optInt("totalShards"))
-            val ranges = shard.optJSONArray("ranges") ?: return false
+    private fun shardsMatch(shards: List<NativeShard>, targetingKey: String): Boolean {
+        for (shard in shards) {
+            val totalShards = shard.totalShards
+            val assignedShard = assignedShard(shard.salt, targetingKey, totalShards)
             var inAnyRange = false
-            for (rangeIndex in 0 until ranges.length()) {
-                val range = ranges.optJSONObject(rangeIndex) ?: continue
-                if (assignedShard >= range.optInt("start") && assignedShard < range.optInt("end")) {
+            for (range in shard.ranges) {
+                val start = range.start
+                val end = range.end
+                if (assignedShard >= start && assignedShard < end) {
                     inAnyRange = true
                     break
                 }
@@ -400,7 +378,7 @@ internal class NativeFfeCore {
         return true
     }
 
-    private fun assignedShard(salt: String, targetingKey: String, totalShards: Int): Int {
+    private fun assignedShard(salt: String, targetingKey: String, totalShards: Long): Long {
         if (totalShards <= 0) {
             return -1
         }
@@ -410,7 +388,22 @@ internal class NativeFfeCore {
                 ((digest[1].toLong() and BYTE_MASK) shl 16) or
                 ((digest[2].toLong() and BYTE_MASK) shl 8) or
                 (digest[3].toLong() and BYTE_MASK)
-        return (firstFourBytes % totalShards).toInt()
+        return firstFourBytes % totalShards
+    }
+
+    private fun regexMatches(pattern: String, value: String?): Boolean {
+        if (value == null) {
+            return false
+        }
+        return try {
+            Regex(pattern.toJavaRegexPattern()).containsMatchIn(value)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun String.toJavaRegexPattern(): String {
+        return replace("[:alnum:]", "\\p{Alnum}")
     }
 
     private fun markProviderError(error: Exception) {
@@ -442,6 +435,7 @@ internal class NativeFfeCore {
         val etag: String?,
         val serverResponse: JSONObject?,
         val precomputedResponse: JSONObject?,
+        val serverFlags: Map<String, NativeFlag>?,
     ) {
         fun toMap(): Map<String, Any?> {
             return mapOf(
@@ -452,6 +446,203 @@ internal class NativeFfeCore {
                 "etag" to etag,
             ).filterValues { it != null }
         }
+    }
+
+    data class NativeFlag(
+        val key: String,
+        val enabled: Boolean,
+        val variationType: String,
+        val variations: Map<String, NativeVariation>,
+        val allocations: List<NativeAllocation>,
+        val unsupported: Boolean,
+    )
+
+    data class NativeVariation(
+        val key: String,
+        val value: Any?,
+    )
+
+    data class NativeAllocation(
+        val key: String?,
+        val rules: List<NativeRule>,
+        val splits: List<NativeSplit>,
+        val doLog: Boolean,
+        val extraLogging: Map<String, Any?>?,
+        val startAt: Instant?,
+        val endAt: Instant?,
+        val hasInvalidDate: Boolean,
+    )
+
+    data class NativeRule(
+        val conditions: List<NativeCondition>,
+    )
+
+    data class NativeCondition(
+        val attribute: String,
+        val operator: String,
+        val value: Any?,
+    )
+
+    data class NativeSplit(
+        val variationKey: String,
+        val shards: List<NativeShard>,
+        val serialId: Int?,
+        val extraLogging: Map<String, Any?>?,
+    )
+
+    data class NativeShard(
+        val salt: String,
+        val totalShards: Long,
+        val ranges: List<NativeShardRange>,
+    )
+
+    data class NativeShardRange(
+        val start: Long,
+        val end: Long,
+    )
+
+    private fun JSONObject.toNativeFlags(): Map<String, NativeFlag> {
+        return keys().asSequence().mapNotNull { key ->
+            optJSONObject(key)?.toNativeFlag(key)?.let { key to it }
+        }.toMap()
+    }
+
+    private fun JSONObject.toNativeFlag(fallbackKey: String): NativeFlag {
+        val variations = optJSONObject("variations")?.toNativeVariations() ?: emptyMap()
+        val allocationsValue = opt("allocations")
+        val allocations = optJSONArray("allocations")?.toNativeAllocations() ?: emptyList()
+        val unsupported = allocationsValue != null && allocationsValue !is JSONArray ||
+            allocations.any { allocation -> allocation.rules.any { rule -> rule.hasUnsupportedOperator() } }
+        return NativeFlag(
+            key = optString("key").takeIf { it.isNotBlank() } ?: fallbackKey,
+            enabled = optBoolean("enabled", false),
+            variationType = optString("variationType"),
+            variations = variations,
+            allocations = allocations,
+            unsupported = unsupported,
+        )
+    }
+
+    private fun JSONObject.toNativeVariations(): Map<String, NativeVariation> {
+        return keys().asSequence().mapNotNull { key ->
+            val variation = optJSONObject(key) ?: return@mapNotNull null
+            key to NativeVariation(
+                key = variation.optString("key").takeIf { it.isNotBlank() } ?: key,
+                value = variation.opt("value").toBridgeValue(),
+            )
+        }.toMap()
+    }
+
+    private fun JSONArray.toNativeAllocations(): List<NativeAllocation> {
+        return (0 until length()).mapNotNull { index -> optJSONObject(index)?.toNativeAllocation() }
+    }
+
+    private fun JSONObject.toNativeAllocation(): NativeAllocation {
+        val startAt = optString("startAt").takeIf { it.isNotBlank() }
+        val endAt = optString("endAt").takeIf { it.isNotBlank() }
+        val parsedStartAt = startAt?.toInstantOrNull()
+        val parsedEndAt = endAt?.toInstantOrNull()
+        return NativeAllocation(
+            key = optString("key").takeIf { it.isNotBlank() },
+            rules = optJSONArray("rules")?.toNativeRules() ?: emptyList(),
+            splits = optJSONArray("splits")?.toNativeSplits() ?: emptyList(),
+            doLog = optBoolean("doLog", false),
+            extraLogging = optJSONObject("extraLogging")?.toMap(),
+            startAt = parsedStartAt,
+            endAt = parsedEndAt,
+            hasInvalidDate = (startAt != null && parsedStartAt == null) || (endAt != null && parsedEndAt == null),
+        )
+    }
+
+    private fun JSONArray.toNativeRules(): List<NativeRule> {
+        return (0 until length()).mapNotNull { index -> optJSONObject(index)?.toNativeRule() }
+    }
+
+    private fun JSONObject.toNativeRule(): NativeRule {
+        return NativeRule(
+            conditions = optJSONArray("conditions")?.toNativeConditions() ?: emptyList(),
+        )
+    }
+
+    private fun JSONArray.toNativeConditions(): List<NativeCondition> {
+        return (0 until length()).mapNotNull { index -> optJSONObject(index)?.toNativeCondition() }
+    }
+
+    private fun JSONObject.toNativeCondition(): NativeCondition? {
+        val operator = optString("operator")
+        return NativeCondition(
+            attribute = optString("attribute"),
+            operator = operator,
+            value = opt("value").toBridgeValue(),
+        )
+    }
+
+    private fun NativeRule.hasUnsupportedOperator(): Boolean {
+        return conditions.any { it.operator !in KNOWN_CONDITION_OPERATORS }
+    }
+
+    private fun JSONArray.toNativeSplits(): List<NativeSplit> {
+        return (0 until length()).mapNotNull { index -> optJSONObject(index)?.toNativeSplit() }
+    }
+
+    private fun JSONObject.toNativeSplit(): NativeSplit? {
+        val shards = optJSONArray("shards") ?: return null
+        val nativeShards = shards.toNativeShards() ?: return null
+        return NativeSplit(
+            variationKey = optString("variationKey"),
+            shards = nativeShards,
+            serialId = optionalInt("serialId"),
+            extraLogging = optJSONObject("extraLogging")?.toMap(),
+        )
+    }
+
+    private fun JSONArray.toNativeShards(): List<NativeShard>? {
+        return (0 until length()).map { index ->
+            optJSONObject(index)?.toNativeShard() ?: return null
+        }
+    }
+
+    private fun JSONObject.toNativeShard(): NativeShard? {
+        val totalShards = optionalLong("totalShards") ?: return null
+        if (totalShards <= 0 || totalShards > MAX_UNSIGNED_INT) {
+            return null
+        }
+        val ranges = optJSONArray("ranges")?.toNativeShardRanges(totalShards) ?: return null
+        return NativeShard(
+            salt = optString("salt"),
+            totalShards = totalShards,
+            ranges = ranges,
+        )
+    }
+
+    private fun JSONArray.toNativeShardRanges(totalShards: Long): List<NativeShardRange>? {
+        return (0 until length()).map { index ->
+            val range = optJSONObject(index) ?: return null
+            val start = range.optionalLong("start") ?: return null
+            val end = range.optionalLong("end") ?: return null
+            if (start < 0 || end < 0 || start >= end || end > totalShards) {
+                return null
+            }
+            NativeShardRange(start, end)
+        }
+    }
+
+    private fun String.toInstantOrNull(): Instant? {
+        return try {
+            Instant.parse(this)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun Any?.containsString(expected: String): Boolean {
+        if (this is List<*>) {
+            return any { it?.toString() == expected }
+        }
+        if (this is JSONArray) {
+            return containsString(expected)
+        }
+        return false
     }
 
     private fun JSONArray.containsString(expected: String): Boolean {
@@ -468,6 +659,17 @@ internal class NativeFfeCore {
             return null
         }
         return optInt(key)
+    }
+
+    private fun JSONObject.optionalLong(key: String): Long? {
+        if (!has(key) || isNull(key)) {
+            return null
+        }
+        return when (val value = opt(key)) {
+            is Number -> value.toLong()
+            is String -> value.toLongOrNull()
+            else -> null
+        }
     }
 
     private fun Any?.asDouble(): Double? {
@@ -512,5 +714,17 @@ internal class NativeFfeCore {
         const val EXPECTED_NUMBER = "number"
         const val EXPECTED_OBJECT = "object"
         const val BYTE_MASK = 0xffL
+        const val MAX_UNSIGNED_INT = 4_294_967_295L
+        val KNOWN_CONDITION_OPERATORS = setOf(
+            "IS_NULL",
+            "MATCHES",
+            "NOT_MATCHES",
+            "ONE_OF",
+            "NOT_ONE_OF",
+            "GTE",
+            "GT",
+            "LTE",
+            "LT",
+        )
     }
 }

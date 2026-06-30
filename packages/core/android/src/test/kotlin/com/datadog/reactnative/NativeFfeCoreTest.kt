@@ -173,6 +173,30 @@ internal class NativeFfeCoreTest {
         assertThat(result["errorCode"]).isEqualTo("TARGETING_KEY_MISSING")
     }
 
+    @Test
+    fun `M match shared evaluation corpus W canonical UFC rules configuration`() {
+        // Given
+        setConfiguration()
+        val failures = mutableListOf<String>()
+
+        evaluationCaseFileNames().forEach { fileName ->
+            evaluationCases(fileName).forEach { evaluationCase ->
+                try {
+                    setEvaluationContext(evaluationCase)
+                    val result = resolveEvaluation(evaluationCase)
+                    evaluationMismatch(result, evaluationCase)?.let { failures += it }
+                } catch (failure: AssertionError) {
+                    failures += "${evaluationCase.source}: ${failure.message}"
+                } catch (failure: Exception) {
+                    failures += "${evaluationCase.source}: ${failure.message}"
+                }
+            }
+        }
+
+        // Then
+        assertThat(failures).isEmpty()
+    }
+
     private fun setConfiguration() {
         val configuration = testedCore.configurationFromString(flagsConfigurationWire)
         testedCore.setConfiguration(configuration.toMap())
@@ -217,20 +241,77 @@ internal class NativeFfeCoreTest {
         assertThat(result["flagKey"]).isEqualTo(evaluationCase.flag)
         assertThat(result["reason"]).isEqualTo(evaluationCase.expectedReason)
         assertJsonValue(result["value"], evaluationCase.expectedValue)
+        if (evaluationCase.expectedErrorCode != null) {
+            assertThat(result["errorCode"]).isEqualTo(evaluationCase.expectedErrorCode)
+        }
+    }
+
+    private fun evaluationMismatch(result: Map<String, Any?>, evaluationCase: EvaluationCase): String? {
+        if (result["flagKey"] != evaluationCase.flag) {
+            return "${evaluationCase.source}: flagKey expected ${evaluationCase.flag}, got ${result["flagKey"]}"
+        }
+        if (result["reason"] != evaluationCase.expectedReason) {
+            return "${evaluationCase.source}: reason expected ${evaluationCase.expectedReason}, got ${result["reason"]}"
+        }
+        if (!jsonValuesEqual(result["value"], evaluationCase.expectedValue)) {
+            return "${evaluationCase.source}: value expected ${evaluationCase.expectedValue}, got ${result["value"]}"
+        }
+        if (evaluationCase.expectedErrorCode != null && result["errorCode"] != evaluationCase.expectedErrorCode) {
+            return "${evaluationCase.source}: errorCode expected ${evaluationCase.expectedErrorCode}, got ${result["errorCode"]}"
+        }
+        return null
     }
 
     private fun assertJsonValue(actual: Any?, expected: Any?) {
         if (actual is Number && expected is Number) {
             assertThat(actual.toDouble()).isCloseTo(expected.toDouble(), Offset.offset(NUMERIC_TOLERANCE))
         } else {
-            assertThat(actual).isEqualTo(expected)
+            assertThat(jsonValuesEqual(actual, expected))
+                .withFailMessage("Expected <%s>, got <%s>", expected, actual)
+                .isTrue()
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun jsonValuesEqual(actual: Any?, expected: Any?): Boolean {
+        if (actual == null || expected == null) {
+            return actual == null && expected == null
+        }
+        if (actual is Number && expected is Number) {
+            return kotlin.math.abs(actual.toDouble() - expected.toDouble()) <= NUMERIC_TOLERANCE
+        }
+        if (actual is List<*> && expected is List<*>) {
+            return actual.size == expected.size &&
+                actual.indices.all { jsonValuesEqual(actual[it], expected[it]) }
+        }
+        if (actual is Map<*, *> && expected is Map<*, *>) {
+            val actualMap = actual as Map<String, Any?>
+            val expectedMap = expected as Map<String, Any?>
+            return actualMap.keys == expectedMap.keys &&
+                actualMap.keys.all { jsonValuesEqual(actualMap[it], expectedMap[it]) }
+        }
+        return actual == expected
+    }
+
     private fun evaluationCase(fileName: String, caseIndex: Int = 0): EvaluationCase {
-        val caseJson = JSONArray(readFixture("evaluation-cases/$fileName")).getJSONObject(caseIndex)
+        return evaluationCases(fileName)[caseIndex]
+    }
+
+    private fun evaluationCases(fileName: String): List<EvaluationCase> {
+        val casesJson = JSONArray(readFixture("evaluation-cases/$fileName"))
+        return (0 until casesJson.length()).map { caseIndex ->
+            evaluationCase(fileName, caseIndex, casesJson.getJSONObject(caseIndex))
+        }
+    }
+
+    private fun evaluationCase(
+        fileName: String,
+        caseIndex: Int,
+        caseJson: JSONObject,
+    ): EvaluationCase {
         val resultJson = caseJson.getJSONObject("result")
         return EvaluationCase(
+            source = "$fileName[$caseIndex]",
             flag = caseJson.getString("flag"),
             variationType = caseJson.getString("variationType"),
             defaultValue = caseJson.get("defaultValue").toNativeFfeFixtureValue(),
@@ -238,7 +319,12 @@ internal class NativeFfeCoreTest {
             attributes = (caseJson.optJSONObject("attributes") ?: JSONObject()).toNativeFfeFixtureMap(),
             expectedValue = resultJson.get("value").toNativeFfeFixtureValue(),
             expectedReason = resultJson.getString("reason"),
+            expectedErrorCode = resultJson.optionalNativeFfeString("errorCode"),
         )
+    }
+
+    private fun evaluationCaseFileNames(): List<String> {
+        return listNativeFfeFixtureFiles(javaClass, "ffe-system-test-data/evaluation-cases")
     }
 
     private fun readFixture(relativePath: String): String {
@@ -246,6 +332,7 @@ internal class NativeFfeCoreTest {
     }
 
     private data class EvaluationCase(
+        val source: String,
         val flag: String,
         val variationType: String,
         val defaultValue: Any?,
@@ -253,6 +340,7 @@ internal class NativeFfeCoreTest {
         val attributes: Map<String, Any?>,
         val expectedValue: Any?,
         val expectedReason: String,
+        val expectedErrorCode: String?,
     )
 
     private companion object {

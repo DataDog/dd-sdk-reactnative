@@ -60,7 +60,8 @@ internal final class NativeFfeCore {
             kind: kind,
             etag: etag,
             serverResponse: serverResponse,
-            precomputedResponse: precomputedResponse
+            precomputedResponse: precomputedResponse,
+            serverFlags: flagsObject(serverResponse).map(nativeFlags)
         )
     }
 
@@ -208,8 +209,8 @@ internal final class NativeFfeCore {
         evaluationCount += 1
 
         guard let configuration = activeConfiguration,
-            let flags = flagsObject(configuration.serverResponse),
-            let flag = dictionaryValue(flags[flagKey])
+            let flags = configuration.serverFlags,
+            let flag = flags[flagKey]
         else {
             return defaultResult(
                 flagKey: flagKey,
@@ -219,7 +220,7 @@ internal final class NativeFfeCore {
             )
         }
 
-        if boolValue(flag["enabled"]) != true {
+        if !flag.enabled {
             return defaultResult(
                 flagKey: flagKey,
                 defaultValue: defaultValue,
@@ -227,7 +228,7 @@ internal final class NativeFfeCore {
                 errorCode: nil
             )
         }
-        if !typeMatches(expectedType: expectedType, variationType: stringValue(flag["variationType"])) {
+        if !typeMatches(expectedType: expectedType, variationType: flag.variationType) {
             return defaultResult(
                 flagKey: flagKey,
                 defaultValue: defaultValue,
@@ -235,24 +236,29 @@ internal final class NativeFfeCore {
                 errorCode: "TYPE_MISMATCH"
             )
         }
+        if flag.unsupported {
+            return defaultResult(
+                flagKey: flagKey,
+                defaultValue: defaultValue,
+                reason: "DEFAULT",
+                errorCode: nil
+            )
+        }
 
         let subjectAttributes = subjectAttributes()
         let targetingKey = stringValue(currentContext["targetingKey"])
-        let allocations = arrayValue(flag["allocations"])
-        let variations = dictionaryValue(flag["variations"]) ?? [:]
 
-        for allocationValue in allocations {
-            guard let allocation = dictionaryValue(allocationValue),
-                allocationIsActive(allocation),
-                rulesMatch(arrayValue(allocation["rules"]), subjectAttributes: subjectAttributes)
+        for allocation in flag.allocations {
+            guard allocationIsActive(allocation),
+                rulesMatch(allocation.rules, subjectAttributes: subjectAttributes)
             else {
                 continue
             }
 
-            let split: [String: Any]
+            let split: NativeSplit
             do {
                 guard let selectedSplit = try firstMatchingSplit(
-                    arrayValue(allocation["splits"]),
+                    allocation.splits,
                     targetingKey: targetingKey
                 ) else {
                     continue
@@ -274,35 +280,29 @@ internal final class NativeFfeCore {
                 )
             }
 
-            guard
-                let variationKey = stringValue(split["variationKey"]),
-                let variation = dictionaryValue(variations[variationKey])
-            else {
+            guard let variation = flag.variations[split.variationKey] else {
                 continue
             }
 
-            let reason = evaluationReason(rules: arrayValue(allocation["rules"]), split: split)
-            let extraLogging =
-                dictionaryValue(split["extraLogging"])
-                ?? dictionaryValue(allocation["extraLogging"])
-                ?? [:]
+            let reason = evaluationReason(allocation: allocation, split: split)
+            let extraLogging = split.extraLogging ?? allocation.extraLogging ?? [:]
             return buildMap([
                 ("flagKey", flagKey),
-                ("value", bridgeValue(variation["value"])),
-                ("variant", stringValue(variation["key"]) ?? variationKey),
+                ("value", bridgeValue(variation.value)),
+                ("variant", variation.key),
                 ("reason", reason),
                 (
                     "flagMetadata",
                     buildMap([
-                        ("__dd_allocation_key", stringValue(allocation["key"])),
-                        ("__dd_do_log", boolValue(allocation["doLog"]) ?? false),
-                        ("__dd_split_serial_id", intValue(split["serialId"])),
-                        ("allocationKey", stringValue(allocation["key"])),
-                        ("doLog", boolValue(allocation["doLog"]) ?? false),
+                        ("__dd_allocation_key", allocation.key),
+                        ("__dd_do_log", allocation.doLog),
+                        ("__dd_split_serial_id", split.serialId),
+                        ("allocationKey", allocation.key),
+                        ("doLog", allocation.doLog),
                         ("extraLogging", extraLogging),
                         ("configurationKind", configuration.kind),
                         ("configurationEtag", configuration.etag),
-                        ("splitSerialId", intValue(split["serialId"])),
+                        ("splitSerialId", split.serialId),
                         ("variationType", expectedType),
                     ])
                 ),
@@ -369,39 +369,24 @@ internal final class NativeFfeCore {
         return attributes
     }
 
-    private func allocationIsActive(_ allocation: [String: Any]) -> Bool {
+    private func allocationIsActive(_ allocation: NativeAllocation) -> Bool {
         let now = Date()
-        let startAt = nonEmptyString(allocation["startAt"])
-        let endAt = nonEmptyString(allocation["endAt"])
-        let start = startAt.flatMap(parseDate)
-        let end = endAt.flatMap(parseDate)
-
-        if startAt != nil && start == nil {
+        if allocation.hasInvalidDate {
             return false
         }
-        if endAt != nil && end == nil {
-            return false
-        }
-
-        return (start == nil || now >= start!) && (end == nil || now < end!)
+        return (allocation.startAt == nil || now >= allocation.startAt!)
+            && (allocation.endAt == nil || now < allocation.endAt!)
     }
 
     private func rulesMatch(
-        _ rules: [Any],
+        _ rules: [NativeRule],
         subjectAttributes: [String: Any]
     ) -> Bool {
         if rules.isEmpty {
             return true
         }
-        for ruleValue in rules {
-            let conditions = dictionaryValue(ruleValue).flatMap { arrayValue($0["conditions"]) } ?? []
-            let allMatch = conditions.allSatisfy { conditionValue in
-                guard let condition = dictionaryValue(conditionValue) else {
-                    return true
-                }
-                return conditionMatches(condition, subjectAttributes: subjectAttributes)
-            }
-            if allMatch {
+        for rule in rules {
+            if rule.conditions.allSatisfy({ conditionMatches($0, subjectAttributes: subjectAttributes) }) {
                 return true
             }
         }
@@ -409,88 +394,78 @@ internal final class NativeFfeCore {
     }
 
     private func conditionMatches(
-        _ condition: [String: Any],
+        _ condition: NativeCondition,
         subjectAttributes: [String: Any]
     ) -> Bool {
-        guard let attribute = stringValue(condition["attribute"]) else {
-            return false
-        }
-        let value = subjectAttributes[attribute]
+        let value = subjectAttributes[condition.attribute]
 
-        switch stringValue(condition["operator"]) {
+        switch condition.operator {
         case "IS_NULL":
-            let expectsNull = boolValue(condition["value"]) ?? false
-            return expectsNull ? value == nil : value != nil
+            let expectsNull = boolValue(condition.value) ?? false
+            return expectsNull ? isNull(value) : !isNull(value)
         case "MATCHES":
-            return regexMatches(pattern: stringValue(condition["value"]), value: stringValue(value))
+            return regexMatches(pattern: stringValue(condition.value), value: stringValue(value))
         case "NOT_MATCHES":
-            return !regexMatches(pattern: stringValue(condition["value"]), value: stringValue(value))
+            guard let subjectValue = stringValue(value) else {
+                return false
+            }
+            return !regexMatches(pattern: stringValue(condition.value), value: subjectValue)
         case "ONE_OF":
-            return stringValue(value).map { containsString(arrayValue(condition["value"]), expected: $0) }
+            return stringValue(value).map { containsString(arrayValue(condition.value), expected: $0) }
                 ?? false
         case "NOT_ONE_OF":
-            return stringValue(value).map { !containsString(arrayValue(condition["value"]), expected: $0) }
+            return stringValue(value).map { !containsString(arrayValue(condition.value), expected: $0) }
                 ?? false
         case "GTE":
-            return doubleValue(value).map { $0 >= (doubleValue(condition["value"]) ?? 0) } ?? false
+            return doubleValue(value).map { $0 >= (doubleValue(condition.value) ?? 0) } ?? false
         case "GT":
-            return doubleValue(value).map { $0 > (doubleValue(condition["value"]) ?? 0) } ?? false
+            return doubleValue(value).map { $0 > (doubleValue(condition.value) ?? 0) } ?? false
         case "LTE":
-            return doubleValue(value).map { $0 <= (doubleValue(condition["value"]) ?? 0) } ?? false
+            return doubleValue(value).map { $0 <= (doubleValue(condition.value) ?? 0) } ?? false
         case "LT":
-            return doubleValue(value).map { $0 < (doubleValue(condition["value"]) ?? 0) } ?? false
+            return doubleValue(value).map { $0 < (doubleValue(condition.value) ?? 0) } ?? false
         default:
             return false
         }
     }
 
-    private func firstMatchingSplit(_ splits: [Any], targetingKey: String?) throws -> [String: Any]? {
-        for splitValue in splits {
-            guard let split = dictionaryValue(splitValue) else {
-                continue
-            }
-            let shards = arrayValue(split["shards"])
-            if shards.isEmpty {
+    private func firstMatchingSplit(_ splits: [NativeSplit], targetingKey: String?) throws -> NativeSplit? {
+        for split in splits {
+            if split.shards.isEmpty {
                 return split
             }
             guard let targetingKey else {
                 throw NativeFfeCoreError.targetingKeyMissing
             }
-            if shardsMatch(shards, targetingKey: targetingKey) {
+            if shardsMatch(split.shards, targetingKey: targetingKey) {
                 return split
             }
         }
         return nil
     }
 
-    private func evaluationReason(rules: [Any], split: [String: Any]) -> String {
-        if !rules.isEmpty {
+    private func evaluationReason(allocation: NativeAllocation, split: NativeSplit) -> String {
+        if !allocation.rules.isEmpty {
             return "TARGETING_MATCH"
         }
-        if !arrayValue(split["shards"]).isEmpty {
+        if allocation.startAt != nil || allocation.endAt != nil {
+            return "DEFAULT"
+        }
+        if !split.shards.isEmpty {
             return "SPLIT"
         }
         return "STATIC"
     }
 
-    private func shardsMatch(_ shards: [Any], targetingKey: String) -> Bool {
-        for shardValue in shards {
-            guard let shard = dictionaryValue(shardValue),
-                let salt = stringValue(shard["salt"]),
-                let totalShards = intValue(shard["totalShards"])
-            else {
-                return false
-            }
-            let assigned = assignedShard(salt: salt, targetingKey: targetingKey, totalShards: totalShards)
-            let ranges = arrayValue(shard["ranges"])
-            let inAnyRange = ranges.contains { rangeValue in
-                guard let range = dictionaryValue(rangeValue),
-                    let start = intValue(range["start"]),
-                    let end = intValue(range["end"])
-                else {
-                    return false
-                }
-                return assigned >= start && assigned < end
+    private func shardsMatch(_ shards: [NativeShard], targetingKey: String) -> Bool {
+        for shard in shards {
+            let assigned = assignedShard(
+                salt: shard.salt,
+                targetingKey: targetingKey,
+                totalShards: shard.totalShards
+            )
+            let inAnyRange = shard.ranges.contains { range in
+                assigned >= range.start && assigned < range.end
             }
             if !inAnyRange {
                 return false
@@ -499,12 +474,9 @@ internal final class NativeFfeCore {
         return true
     }
 
-    private func assignedShard(salt: String, targetingKey: String, totalShards: Int) -> Int {
-        guard totalShards > 0 else {
-            return -1
-        }
+    private func assignedShard(salt: String, targetingKey: String, totalShards: UInt32) -> UInt32 {
         let firstFourBytes = md5FirstFourBytes("\(salt)-\(targetingKey)")
-        return Int(firstFourBytes % UInt32(totalShards))
+        return firstFourBytes % totalShards
     }
 
     private func markProviderError(_ error: Error) {
@@ -517,6 +489,145 @@ internal final class NativeFfeCore {
         stringValue(options["slot"])
             ?? stringValue(options["clientName"])
             ?? Constants.defaultStorageSlot
+    }
+
+    private func nativeFlags(_ flags: [String: Any]) -> [String: NativeFlag] {
+        flags.compactMapValues { value in
+            dictionaryValue(value).map(nativeFlag)
+        }
+    }
+
+    private func nativeFlag(_ flag: [String: Any]) -> NativeFlag {
+        let allocations = arrayValue(flag["allocations"]).compactMap(nativeAllocation)
+        let malformedAllocations = flag["allocations"] != nil && arrayValueOrNil(flag["allocations"]) == nil
+        let unsupportedOperator = allocations.contains { allocation in
+            allocation.rules.contains { rule in
+                rule.conditions.contains { !KnownConditionOperators.values.contains($0.operator) }
+            }
+        }
+        return NativeFlag(
+            key: stringValue(flag["key"]) ?? "",
+            enabled: boolValue(flag["enabled"]) ?? false,
+            variationType: stringValue(flag["variationType"]) ?? "",
+            variations: dictionaryValue(flag["variations"]).map(nativeVariations) ?? [:],
+            allocations: allocations,
+            unsupported: malformedAllocations || unsupportedOperator
+        )
+    }
+
+    private func nativeVariations(_ variations: [String: Any]) -> [String: NativeVariation] {
+        variations.compactMapValues { value in
+            guard let variation = dictionaryValue(value) else {
+                return nil
+            }
+            return NativeVariation(
+                key: stringValue(variation["key"]) ?? "",
+                value: bridgeValue(variation["value"])
+            )
+        }
+    }
+
+    private func nativeAllocation(_ value: Any) -> NativeAllocation? {
+        guard let allocation = dictionaryValue(value) else {
+            return nil
+        }
+        let startAt = nonEmptyString(allocation["startAt"])
+        let endAt = nonEmptyString(allocation["endAt"])
+        let parsedStartAt = startAt.flatMap(parseDate)
+        let parsedEndAt = endAt.flatMap(parseDate)
+        return NativeAllocation(
+            key: stringValue(allocation["key"]),
+            rules: arrayValue(allocation["rules"]).compactMap(nativeRule),
+            splits: arrayValue(allocation["splits"]).compactMap(nativeSplit),
+            doLog: boolValue(allocation["doLog"]) ?? false,
+            extraLogging: dictionaryValue(allocation["extraLogging"]),
+            startAt: parsedStartAt,
+            endAt: parsedEndAt,
+            hasInvalidDate: (startAt != nil && parsedStartAt == nil) || (endAt != nil && parsedEndAt == nil)
+        )
+    }
+
+    private func nativeRule(_ value: Any) -> NativeRule? {
+        guard let rule = dictionaryValue(value) else {
+            return nil
+        }
+        return NativeRule(
+            conditions: arrayValue(rule["conditions"]).compactMap(nativeCondition)
+        )
+    }
+
+    private func nativeCondition(_ value: Any) -> NativeCondition? {
+        guard let condition = dictionaryValue(value),
+            let attribute = stringValue(condition["attribute"]),
+            let conditionOperator = stringValue(condition["operator"])
+        else {
+            return nil
+        }
+        return NativeCondition(
+            attribute: attribute,
+            operator: conditionOperator,
+            value: bridgeValue(condition["value"])
+        )
+    }
+
+    private func nativeSplit(_ value: Any) -> NativeSplit? {
+        guard let split = dictionaryValue(value),
+            let shardsValue = split["shards"],
+            let shardsArray = arrayValueOrNil(shardsValue)
+        else {
+            return nil
+        }
+        guard let shards = nativeShards(shardsArray) else {
+            return nil
+        }
+        return NativeSplit(
+            variationKey: stringValue(split["variationKey"]) ?? "",
+            shards: shards,
+            serialId: intValue(split["serialId"]),
+            extraLogging: dictionaryValue(split["extraLogging"])
+        )
+    }
+
+    private func nativeShards(_ shards: [Any]) -> [NativeShard]? {
+        var nativeShards: [NativeShard] = []
+        for value in shards {
+            guard let nativeShard = nativeShard(value) else {
+                return nil
+            }
+            nativeShards.append(nativeShard)
+        }
+        return nativeShards
+    }
+
+    private func nativeShard(_ value: Any) -> NativeShard? {
+        guard let shard = dictionaryValue(value),
+            let salt = stringValue(shard["salt"]),
+            let totalShards = uint32Value(shard["totalShards"]),
+            totalShards > 0,
+            let ranges = nativeShardRanges(arrayValue(shard["ranges"]), totalShards: totalShards)
+        else {
+            return nil
+        }
+        return NativeShard(salt: salt, totalShards: totalShards, ranges: ranges)
+    }
+
+    private func nativeShardRanges(
+        _ ranges: [Any],
+        totalShards: UInt32
+    ) -> [NativeShardRange]? {
+        var nativeRanges: [NativeShardRange] = []
+        for value in ranges {
+            guard let range = dictionaryValue(value),
+                let start = uint32Value(range["start"]),
+                let end = uint32Value(range["end"]),
+                start < end,
+                end <= totalShards
+            else {
+                return nil
+            }
+            nativeRanges.append(NativeShardRange(start: start, end: end))
+        }
+        return nativeRanges
     }
 
     private func parseOptionalResponse(_ value: Any?) throws -> [String: Any]? {
@@ -596,13 +707,17 @@ internal final class NativeFfeCore {
     }
 
     private func arrayValue(_ value: Any?) -> [Any] {
+        arrayValueOrNil(value) ?? []
+    }
+
+    private func arrayValueOrNil(_ value: Any?) -> [Any]? {
         if let array = value as? [Any] {
             return array
         }
         if let array = value as? NSArray {
-            return array as? [Any] ?? []
+            return array as? [Any]
         }
-        return []
+        return nil
     }
 
     private func stringValue(_ value: Any?) -> String? {
@@ -612,7 +727,15 @@ internal final class NativeFfeCore {
         if let string = value as? String {
             return string
         }
+        if let number = value as? NSNumber,
+            CFGetTypeID(number) == CFBooleanGetTypeID() {
+            return number.boolValue ? "true" : "false"
+        }
         return String(describing: value)
+    }
+
+    private func isNull(_ value: Any?) -> Bool {
+        value == nil || value is NSNull
     }
 
     private func nonEmptyString(_ value: Any?) -> String? {
@@ -628,6 +751,19 @@ internal final class NativeFfeCore {
         }
         if let string = value as? String {
             return Int(string)
+        }
+        return nil
+    }
+
+    private func uint32Value(_ value: Any?) -> UInt32? {
+        if let int = intValue(value), int >= 0 {
+            return UInt32(exactly: int)
+        }
+        if let number = value as? NSNumber {
+            return UInt32(exactly: number.uint64Value)
+        }
+        if let string = value as? String {
+            return UInt32(string)
         }
         return nil
     }
@@ -678,6 +814,7 @@ internal struct NativeFlagsConfiguration {
     let etag: String?
     let serverResponse: [String: Any]?
     let precomputedResponse: [String: Any]?
+    let serverFlags: [String: NativeFlag]?
 
     func toMap() -> [String: Any] {
         var map: [String: Any] = [
@@ -691,6 +828,59 @@ internal struct NativeFlagsConfiguration {
         }
         return map
     }
+}
+
+internal struct NativeFlag {
+    let key: String
+    let enabled: Bool
+    let variationType: String
+    let variations: [String: NativeVariation]
+    let allocations: [NativeAllocation]
+    let unsupported: Bool
+}
+
+internal struct NativeVariation {
+    let key: String
+    let value: Any?
+}
+
+internal struct NativeAllocation {
+    let key: String?
+    let rules: [NativeRule]
+    let splits: [NativeSplit]
+    let doLog: Bool
+    let extraLogging: [String: Any]?
+    let startAt: Date?
+    let endAt: Date?
+    let hasInvalidDate: Bool
+}
+
+internal struct NativeRule {
+    let conditions: [NativeCondition]
+}
+
+internal struct NativeCondition {
+    let attribute: String
+    let `operator`: String
+    let value: Any?
+}
+
+internal struct NativeSplit {
+    let variationKey: String
+    let shards: [NativeShard]
+    let serialId: Int?
+    let extraLogging: [String: Any]?
+}
+
+internal struct NativeShard {
+    let salt: String
+    let totalShards: UInt32
+    let ranges: [NativeShardRange]
+}
+
+internal struct NativeShardRange {
+    let start: UInt32
+    let end: UInt32
 }
 
 internal enum NativeFfeCoreError: LocalizedError {
@@ -769,6 +959,20 @@ private enum ExpectedType {
     static let string = "string"
     static let number = "number"
     static let object = "object"
+}
+
+private enum KnownConditionOperators {
+    static let values: Set<String> = [
+        "IS_NULL",
+        "MATCHES",
+        "NOT_MATCHES",
+        "ONE_OF",
+        "NOT_ONE_OF",
+        "GTE",
+        "GT",
+        "LTE",
+        "LT",
+    ]
 }
 
 private extension NativeFfeStoredConfiguration {

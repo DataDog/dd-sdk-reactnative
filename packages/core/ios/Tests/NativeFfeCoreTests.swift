@@ -142,6 +142,25 @@ final class NativeFfeCoreTests: XCTestCase {
         XCTAssertEqual(result["errorCode"] as? String, "TARGETING_KEY_MISSING")
     }
 
+    func testMatchSharedEvaluationCorpusWithCanonicalUfcRulesConfiguration() throws {
+        let testedCore = try configuredCore()
+        var failures: [String] = []
+
+        for evaluationCase in try Self.allEvaluationCases() {
+            do {
+                _ = testedCore.setEvaluationContext(evaluationCase.context)
+                let result = try resolveEvaluation(evaluationCase, with: testedCore)
+                if let mismatch = evaluationMismatch(result, evaluationCase) {
+                    failures.append(mismatch)
+                }
+            } catch {
+                failures.append("\(evaluationCase.source): \(error.localizedDescription)")
+            }
+        }
+
+        XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n"))
+    }
+
     private func configuredCore() throws -> NativeFfeCore {
         let testedCore = NativeFfeCore()
         let configuration = try testedCore.configurationFromString(Self.flagsConfigurationWire)
@@ -189,6 +208,26 @@ final class NativeFfeCoreTests: XCTestCase {
         XCTAssertEqual(result["flagKey"] as? String, evaluationCase.flag, file: file, line: line)
         XCTAssertEqual(result["reason"] as? String, evaluationCase.expectedReason, file: file, line: line)
         assertJsonValue(result["value"], evaluationCase.expectedValue, file: file, line: line)
+        if let expectedErrorCode = evaluationCase.expectedErrorCode {
+            XCTAssertEqual(result["errorCode"] as? String, expectedErrorCode, file: file, line: line)
+        }
+    }
+
+    private func evaluationMismatch(_ result: [String: Any], _ evaluationCase: EvaluationCase) -> String? {
+        if result["flagKey"] as? String != evaluationCase.flag {
+            return "\(evaluationCase.source): flagKey expected \(evaluationCase.flag), got \(String(describing: result["flagKey"]))"
+        }
+        if result["reason"] as? String != evaluationCase.expectedReason {
+            return "\(evaluationCase.source): reason expected \(evaluationCase.expectedReason), got \(String(describing: result["reason"]))"
+        }
+        if !jsonValuesEqual(result["value"], evaluationCase.expectedValue) {
+            return "\(evaluationCase.source): value expected \(String(describing: evaluationCase.expectedValue)), got \(String(describing: result["value"]))"
+        }
+        if let expectedErrorCode = evaluationCase.expectedErrorCode,
+            result["errorCode"] as? String != expectedErrorCode {
+            return "\(evaluationCase.source): errorCode expected \(String(describing: evaluationCase.expectedErrorCode)), got \(String(describing: result["errorCode"]))"
+        }
+        return nil
     }
 
     private func assertJsonValue(
@@ -261,6 +300,7 @@ final class NativeFfeCoreTests: XCTestCase {
     }
 
     private struct EvaluationCase {
+        let source: String
         let flag: String
         let variationType: String
         let defaultValue: Any
@@ -268,6 +308,7 @@ final class NativeFfeCoreTests: XCTestCase {
         let attributes: [String: Any]
         let expectedValue: Any
         let expectedReason: String
+        let expectedErrorCode: String?
 
         var context: [String: Any] {
             var context: [String: Any] = [
@@ -284,20 +325,41 @@ final class NativeFfeCoreTests: XCTestCase {
         _ fileName: String,
         caseIndex: Int = 0
     ) throws -> EvaluationCase {
+        try evaluationCases(fileName)[caseIndex]
+    }
+
+    private static func evaluationCases(_ fileName: String) throws -> [EvaluationCase] {
         let cases = try NativeFfeTestFixtures.jsonArray(
             "ffe-system-test-data/evaluation-cases/\(fileName)"
         )
-        let caseJson = try XCTUnwrap(cases[caseIndex] as? [String: Any])
+        return try cases.enumerated().map { index, value in
+            let caseJson = try XCTUnwrap(value as? [String: Any])
+            return try evaluationCase(fileName, caseIndex: index, caseJson: caseJson)
+        }
+    }
+
+    private static func evaluationCase(
+        _ fileName: String,
+        caseIndex: Int,
+        caseJson: [String: Any]
+    ) throws -> EvaluationCase {
         let resultJson = try XCTUnwrap(caseJson["result"] as? [String: Any])
         return EvaluationCase(
+            source: "\(fileName)[\(caseIndex)]",
             flag: try XCTUnwrap(caseJson["flag"] as? String),
             variationType: try XCTUnwrap(caseJson["variationType"] as? String),
             defaultValue: try XCTUnwrap(caseJson["defaultValue"]),
             targetingKey: optionalString(caseJson["targetingKey"]),
             attributes: (caseJson["attributes"] as? [String: Any]) ?? [:],
             expectedValue: try XCTUnwrap(resultJson["value"]),
-            expectedReason: try XCTUnwrap(resultJson["reason"] as? String)
+            expectedReason: try XCTUnwrap(resultJson["reason"] as? String),
+            expectedErrorCode: optionalString(resultJson["errorCode"])
         )
+    }
+
+    private static func allEvaluationCases() throws -> [EvaluationCase] {
+        try NativeFfeTestFixtures.fileNames(in: "ffe-system-test-data/evaluation-cases")
+            .flatMap { try evaluationCases($0) }
     }
 
     private static func optionalString(_ value: Any?) -> String? {

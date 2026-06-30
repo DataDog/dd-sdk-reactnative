@@ -20,6 +20,18 @@ enum NativeFfeTestFixtures {
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [Any])
     }
 
+    static func fileNames(in relativeDirectory: String) throws -> [String] {
+        for directory in bundleDirectoryCandidates(relativeDirectory) {
+            if FileManager.default.fileExists(atPath: directory.path) {
+                return try jsonFileNames(in: directory)
+            }
+        }
+
+        let localDirectory = packageFixtureRoot()
+            .appendingPathComponent(relativeDirectory)
+        return try jsonFileNames(in: localDirectory)
+    }
+
     static func readString(_ relativePath: String) throws -> String {
         let bundle = Bundle(for: BundleToken.self)
         let candidates = [
@@ -35,15 +47,36 @@ enum NativeFfeTestFixtures {
             }
         }
 
+        let localFixture = packageFixtureRoot()
+            .appendingPathComponent(relativePath)
+        return try String(contentsOf: localFixture, encoding: .utf8)
+    }
+
+    private static func bundleDirectoryCandidates(_ relativeDirectory: String) -> [URL] {
+        let bundle = Bundle(for: BundleToken.self)
+        return [
+            bundle.resourceURL?.appendingPathComponent("__fixtures__").appendingPathComponent(relativeDirectory),
+            bundle.resourceURL?.appendingPathComponent(relativeDirectory),
+        ].compactMap { $0 }
+    }
+
+    private static func jsonFileNames(in directory: URL) throws -> [String] {
+        try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.pathExtension == "json" }
+        .map(\.lastPathComponent)
+        .sorted()
+    }
+
+    private static func packageFixtureRoot() -> URL {
         let sourceFile = URL(fileURLWithPath: #filePath)
         let packageRoot = sourceFile
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let localFixture = packageRoot
-            .appendingPathComponent("src/flags/__fixtures__")
-            .appendingPathComponent(relativePath)
-        return try String(contentsOf: localFixture, encoding: .utf8)
+        return packageRoot.appendingPathComponent("src/flags/__fixtures__")
     }
 
     private final class BundleToken {}

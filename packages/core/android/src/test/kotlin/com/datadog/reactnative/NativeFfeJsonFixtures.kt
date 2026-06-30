@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative
 
+import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,6 +15,18 @@ internal fun readNativeFfeFixture(owner: Class<*>, relativePath: String): String
         ?.getResource(relativePath)
         ?.readText()
         ?: error("Missing FFE fixture: $relativePath")
+}
+
+internal fun listNativeFfeFixtureFiles(owner: Class<*>, relativeDirectory: String): List<String> {
+    val resource = owner.classLoader
+        ?.getResource(relativeDirectory)
+        ?: error("Missing FFE fixture directory: $relativeDirectory")
+    val directory = File(resource.toURI())
+    return directory
+        .listFiles { file -> file.isFile && file.extension == "json" }
+        ?.map { it.name }
+        ?.sorted()
+        ?: error("Missing FFE fixture files: $relativeDirectory")
 }
 
 internal fun JSONObject.optionalNativeFfeString(key: String): String? {
