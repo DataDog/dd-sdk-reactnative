@@ -83,11 +83,11 @@ const NATIVE_FFE_STAGING_CONTEXT = {
   },
 };
 const NATIVE_FFE_STAGING_FLAGS = {
-  boolean: 'checkout.enabled',
-  string: 'checkout.copy',
-  integer: 'checkout.limit',
-  float: 'checkout.ratio',
-  object: 'checkout.config',
+  boolean: 'ffe-dogfooding-boolean-flag',
+  string: 'ffe-dogfooding-string-flag',
+  integer: 'ffe-dogfooding-integer-flag',
+  float: 'ffe-dogfooding-float-flag',
+  object: 'ffe-dogfooding-json-flag',
 };
 
 (async () => {
