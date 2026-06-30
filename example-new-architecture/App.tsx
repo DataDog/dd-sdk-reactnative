@@ -12,6 +12,11 @@ import {
   DdFlags,
   PropagatorType,
 } from '@datadog/mobile-react-native';
+import type {
+  FlagEvaluationResult,
+  FlagsProviderDebugState,
+  NativeFlagsConfiguration,
+} from '@datadog/mobile-react-native';
 import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
 import {
   OpenFeature,
@@ -41,6 +46,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 // @ts-ignore
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
+import nativeFfeRulesConfigurationWire from '../packages/core/src/flags/__fixtures__/native-ffe/rules-configuration-wire.json';
 
 const NATIVE_FFE_STAGING_RULES_ENDPOINT =
   'https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based';
@@ -53,11 +59,35 @@ const NATIVE_FFE_USER = {
   id: 'user-123',
   favoriteFruit: 'apple',
 };
-const NATIVE_FFE_EVALUATION_CONTEXT = {
-  targetingKey: NATIVE_FFE_USER.id,
+const NATIVE_FFE_BUNDLED_RULES_WIRE = JSON.stringify(
+  nativeFfeRulesConfigurationWire,
+);
+const NATIVE_FFE_DEMO_FLAG = 'boolean-false-assignment';
+const NATIVE_FFE_ANONYMOUS_CONTEXT = {
+  targetingKey: 'anonymous-user',
   attributes: {
-    favoriteFruit: NATIVE_FFE_USER.favoriteFruit,
+    should_disable_feature: true,
   },
+};
+const NATIVE_FFE_AUTHENTICATED_CONTEXT = {
+  targetingKey: 'authenticated-user',
+  attributes: {
+    should_disable_feature: false,
+  },
+};
+const NATIVE_FFE_STAGING_CONTEXT = {
+  targetingKey: 'test_subject4',
+  attributes: {
+    attr1: 'value1',
+    companyId: '1',
+  },
+};
+const NATIVE_FFE_STAGING_FLAGS = {
+  boolean: 'checkout.enabled',
+  string: 'checkout.copy',
+  integer: 'checkout.limit',
+  float: 'checkout.ratio',
+  object: 'checkout.config',
 };
 
 (async () => {
@@ -164,7 +194,7 @@ function App(): React.JSX.Element {
             details.
           </Section>
 
-          <NativeFfeFetchPanel isDarkMode={isDarkMode} />
+          <NativeFfeFlowPanel isDarkMode={isDarkMode} />
 
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
@@ -186,30 +216,51 @@ function App(): React.JSX.Element {
   );
 }
 
-type NativeFfeFetchState = {
+type NativeFfeFlowState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   summary: string;
   details?: string;
 };
 
-function NativeFfeFetchPanel({
+function NativeFfeFlowPanel({
   isDarkMode,
 }: {
   isDarkMode: boolean;
 }): React.JSX.Element {
-  const [fetchState, setFetchState] = React.useState<NativeFfeFetchState>({
+  const [flowState, setFlowState] = React.useState<NativeFfeFlowState>({
     status: 'idle',
-    summary: 'Native fetch has not run yet.',
+    summary: 'Native FF&E flow has not run yet.',
   });
-  const loading = fetchState.status === 'loading';
+  const loading = flowState.status === 'loading';
 
-  const fetchNativeRulesConfiguration = React.useCallback(async () => {
-    setFetchState({
+  const runNativeFfeFlow = React.useCallback(async () => {
+    setFlowState({
       status: 'loading',
-      summary: 'Fetching staging rules configuration from native...',
+      summary: 'Running native FF&E flow...',
     });
 
     try {
+      const bundledConfiguration = await DdSdkReactNative.configurationFromString(
+        NATIVE_FFE_BUNDLED_RULES_WIRE,
+      );
+      const bundledState = await DdSdkReactNative.setConfiguration(
+        bundledConfiguration,
+      );
+      await DdSdkReactNative.setEvaluationContext(
+        NATIVE_FFE_ANONYMOUS_CONTEXT,
+      );
+      const anonymousResult = await DdSdkReactNative.resolveBooleanEvaluation(
+        NATIVE_FFE_DEMO_FLAG,
+        true,
+      );
+      await DdSdkReactNative.setEvaluationContext(
+        NATIVE_FFE_AUTHENTICATED_CONTEXT,
+      );
+      const authenticatedResult = await DdSdkReactNative.resolveBooleanEvaluation(
+        NATIVE_FFE_DEMO_FLAG,
+        true,
+      );
+      const beforeFetchState = await DdSdkReactNative.getProviderDebugState();
       const fetchedConfiguration = await DdSdkReactNative.fetchRulesConfiguration({
         endpoint: NATIVE_FFE_STAGING_RULES_ENDPOINT,
         headers: {
@@ -219,7 +270,9 @@ function NativeFfeFetchPanel({
         flagQueryParams: {
           dd_env: 'staging',
         },
+        previousConfigurationWire: NATIVE_FFE_BUNDLED_RULES_WIRE,
       });
+      const afterFetchState = await DdSdkReactNative.getProviderDebugState();
       const serializedWire = await DdSdkReactNative.configurationToString(
         fetchedConfiguration,
       );
@@ -233,48 +286,100 @@ function NativeFfeFetchPanel({
       const loadedConfiguration = await DdSdkReactNative.loadConfiguration(
         NATIVE_FFE_STORAGE_OPTIONS,
       );
-      const configurationState = await DdSdkReactNative.setConfiguration(
+      const afterLoadState = await DdSdkReactNative.getProviderDebugState();
+      const loadedState = await DdSdkReactNative.setConfiguration(
         loadedConfiguration,
       );
-      const contextState = await DdSdkReactNative.setEvaluationContext(
-        NATIVE_FFE_EVALUATION_CONTEXT,
+      await DdSdkReactNative.setEvaluationContext(
+        NATIVE_FFE_STAGING_CONTEXT,
       );
+      const stagingResults = {
+        boolean: await DdSdkReactNative.resolveBooleanEvaluation(
+          NATIVE_FFE_STAGING_FLAGS.boolean,
+          false,
+        ),
+        string: await DdSdkReactNative.resolveStringEvaluation(
+          NATIVE_FFE_STAGING_FLAGS.string,
+          'Fallback title',
+        ),
+        integer: await DdSdkReactNative.resolveNumberEvaluation(
+          NATIVE_FFE_STAGING_FLAGS.integer,
+          0,
+        ),
+        float: await DdSdkReactNative.resolveNumberEvaluation(
+          NATIVE_FFE_STAGING_FLAGS.float,
+          0,
+        ),
+        object: await DdSdkReactNative.resolveObjectEvaluation(
+          NATIVE_FFE_STAGING_FLAGS.object,
+          {},
+        ),
+      };
       const debugState = await DdSdkReactNative.getProviderDebugState();
 
-      setFetchState({
+      setFlowState({
         status: 'ready',
-        summary: `Fetched, saved, loaded, and activated ${
-          loadedConfiguration.kind
-        } configuration ${loadedConfiguration.etag ?? 'without etag'}.`,
+        summary: `Offline ${anonymousResult.value} -> ${
+          authenticatedResult.value
+        }; fetch count ${beforeFetchState.fetchCount} -> ${
+          afterFetchState.fetchCount
+        }; evaluated ${Object.keys(stagingResults).length} staging flags.`,
         details: JSON.stringify(
           {
-            fetchedConfiguration: {
-              kind: fetchedConfiguration.kind,
-              version: fetchedConfiguration.version,
-              etag: fetchedConfiguration.etag,
+            offlineInit: {
+              bundledConfiguration: summarizeConfiguration(
+                bundledConfiguration,
+              ),
+              setState: summarizeDebugState(bundledState),
+              anonymousResult: summarizeEvaluation(anonymousResult),
+              authenticatedResult: summarizeEvaluation(authenticatedResult),
+              fetchCountAfterContextChange: beforeFetchState.fetchCount,
             },
-            serializedWireBytes: serializedWire.length,
-            saveState,
-            loadedConfiguration: {
-              kind: loadedConfiguration.kind,
-              version: loadedConfiguration.version,
-              etag: loadedConfiguration.etag,
+            nativeFetch: {
+              activeBeforeFetch: summarizeDebugState(beforeFetchState),
+              fetchedConfiguration: summarizeConfiguration(
+                fetchedConfiguration,
+              ),
+              activeAfterFetch: summarizeDebugState(afterFetchState),
+              activeStateUnchanged:
+                beforeFetchState.activeEtag === afterFetchState.activeEtag &&
+                beforeFetchState.configurationSetCount ===
+                  afterFetchState.configurationSetCount,
+              serializedWireBytes: serializedWire.length,
             },
-            configurationState,
-            contextState,
-            debugState,
+            nativePersistence: {
+              saveState: summarizeDebugState(saveState),
+              loadedConfiguration: summarizeConfiguration(loadedConfiguration),
+              stateAfterLoad: summarizeDebugState(afterLoadState),
+              loadDidNotActivate:
+                afterLoadState.activeEtag === afterFetchState.activeEtag &&
+                afterLoadState.configurationSetCount ===
+                  afterFetchState.configurationSetCount,
+            },
+            explicitActivation: {
+              setState: summarizeDebugState(loadedState),
+              stagingContext: NATIVE_FFE_STAGING_CONTEXT,
+              stagingResults: {
+                boolean: summarizeEvaluation(stagingResults.boolean),
+                string: summarizeEvaluation(stagingResults.string),
+                integer: summarizeEvaluation(stagingResults.integer),
+                float: summarizeEvaluation(stagingResults.float),
+                object: summarizeEvaluation(stagingResults.object),
+              },
+            },
+            finalDebugState: summarizeDebugState(debugState),
           },
           null,
           2,
         ),
       });
     } catch (error) {
-      setFetchState({
+      setFlowState({
         status: 'error',
         summary:
           error instanceof Error
             ? error.message
-            : 'Native staging rules fetch failed.',
+            : 'Native FF&E flow failed.',
       });
     }
   }, []);
@@ -288,7 +393,7 @@ function NativeFfeFetchPanel({
             color: isDarkMode ? Colors.white : Colors.black,
           },
         ]}>
-        Native FFE fetch
+        Native FFE flow
       </Text>
       <Text
         style={[
@@ -297,22 +402,22 @@ function NativeFfeFetchPanel({
             color: isDarkMode ? Colors.light : Colors.dark,
           },
         ]}>
-        {fetchState.summary}
+        {flowState.summary}
       </Text>
       <Pressable
         accessibilityRole="button"
         disabled={loading}
-        onPress={fetchNativeRulesConfiguration}
+        onPress={runNativeFfeFlow}
         style={({pressed}) => [
           styles.nativeFfeButton,
           loading && styles.nativeFfeButtonDisabled,
           pressed && !loading && styles.nativeFfeButtonPressed,
         ]}>
         <Text style={styles.nativeFfeButtonText}>
-          {loading ? 'Fetching...' : 'Fetch staging rules'}
+          {loading ? 'Running...' : 'Run native flow'}
         </Text>
       </Pressable>
-      {fetchState.details ? (
+      {flowState.details ? (
         <Text
           selectable
           style={[
@@ -322,11 +427,48 @@ function NativeFfeFetchPanel({
               backgroundColor: isDarkMode ? Colors.black : '#f3f4f6',
             },
           ]}>
-          {fetchState.details}
+          {flowState.details}
         </Text>
       ) : null}
     </View>
   );
+}
+
+function summarizeConfiguration(configuration: NativeFlagsConfiguration) {
+  return {
+    kind: configuration.kind,
+    version: configuration.version,
+    etag: configuration.etag,
+  };
+}
+
+function summarizeEvaluation(result: FlagEvaluationResult) {
+  return {
+    flagKey: result.flagKey,
+    value: result.value,
+    variant: result.variant,
+    reason: result.reason,
+    errorCode: result.errorCode,
+    flagMetadata: result.flagMetadata,
+  };
+}
+
+function summarizeDebugState(state: FlagsProviderDebugState) {
+  return {
+    status: state.status,
+    activeConfigurationKind: state.activeConfigurationKind,
+    activeEtag: state.activeEtag,
+    configurationSetCount: state.configurationSetCount,
+    configurationSaveCount: state.configurationSaveCount,
+    configurationLoadCount: state.configurationLoadCount,
+    fetchCount: state.fetchCount,
+    evaluationCount: state.evaluationCount,
+    lastEvent: state.lastEvent,
+    lastFetchRequest: state.lastFetchRequest,
+    lastStorage: state.lastStorage,
+    lastError: state.lastError,
+    evaluationSideEffects: state.evaluationSideEffects,
+  };
 }
 
 type SectionProps = PropsWithChildren<{
