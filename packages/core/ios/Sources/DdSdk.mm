@@ -163,6 +163,21 @@ RCT_REMAP_METHOD(fetchPrecomputedConfiguration, fetchPrecomputedConfigurationWit
     [self fetchPrecomputedConfiguration:options resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(saveConfiguration, saveConfigurationWithConfiguration:(NSDictionary*)configuration
+                 options:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self saveConfiguration:configuration options:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(loadConfiguration, loadConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self loadConfiguration:options resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(setConfiguration, setNativeFlagsConfiguration:(NSDictionary*)configuration
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
@@ -333,6 +348,14 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)fetchPrecomputedConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation fetchPrecomputedConfigurationWithOptions:options resolve:resolve reject:reject];
+}
+
+- (void)saveConfiguration:(NSDictionary *)configuration options:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation saveConfigurationWithConfiguration:configuration options:options resolve:resolve reject:reject];
+}
+
+- (void)loadConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation loadConfigurationWithOptions:options resolve:resolve reject:reject];
 }
 
 - (void)setConfiguration:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

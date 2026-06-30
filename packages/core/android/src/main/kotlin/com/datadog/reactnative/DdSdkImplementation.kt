@@ -38,6 +38,8 @@ class DdSdkImplementation(
     private var frameRateProvider: FrameRateProvider? = null
     private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
     private val nativeFfeConfigurationFetcher: NativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
+    private val nativeFfeConfigurationStore: NativeFfeConfigurationStore =
+        FileNativeFfeConfigurationStore(appContext)
     private val nativeFfeSideEffects: NativeFfeEvaluationSideEffects = NativeFfeEvaluationSideEffects()
 
     // region DdSdk
@@ -313,6 +315,25 @@ class DdSdkImplementation(
                 FFE_KIND_PRECOMPUTED,
                 options.toMap(),
                 nativeFfeConfigurationFetcher,
+            ).toMap().toWritableMap()
+        }
+    }
+
+    fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.saveConfiguration(
+                configuration.toMap(),
+                options.toMap(),
+                nativeFfeConfigurationStore,
+            ).toWritableMap()
+        }
+    }
+
+    fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.loadConfiguration(
+                options.toMap(),
+                nativeFfeConfigurationStore,
             ).toMap().toWritableMap()
         }
     }

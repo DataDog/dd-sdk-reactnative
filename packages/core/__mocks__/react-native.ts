@@ -20,6 +20,8 @@ const mockFlagsDebugState = {
     activeConfigurationKind: 'rules',
     activeEtag: 'ffe-system-test-data',
     configurationSetCount: 1,
+    configurationSaveCount: 0,
+    configurationLoadCount: 0,
     fetchCount: 1,
     evaluationCount: 0,
     lastEvent: 'provider_ready',
@@ -139,6 +141,37 @@ actualRN.NativeModules.DdSdk = {
                 resolve(mockFetchConfiguration('precomputed', options))
             )
     ) as jest.MockedFunction<DdNativeSdkType['fetchPrecomputedConfiguration']>,
+    saveConfiguration: jest.fn().mockImplementation(
+        (configuration: { wire?: string }, options: { slot?: string }) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    ...mockFlagsDebugState,
+                    configurationSaveCount: 1,
+                    lastStorage: {
+                        operation: 'save',
+                        status: 'stored',
+                        key: `flags-configuration-${options.slot ?? 'default'}`,
+                        wireBytes: (configuration.wire ?? '').length
+                    }
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['saveConfiguration']>,
+    loadConfiguration: jest.fn().mockImplementation(
+        () =>
+            new Promise<object>(resolve =>
+                resolve(
+                    mockConfigurationFromString(
+                        JSON.stringify({
+                            version: 2,
+                            server: {
+                                response: '{}',
+                                etag: 'stored'
+                            }
+                        })
+                    )
+                )
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['loadConfiguration']>,
     setConfiguration: jest.fn().mockImplementation(
         () => new Promise<object>(resolve => resolve(mockFlagsDebugState))
     ) as jest.MockedFunction<DdNativeSdkType['setConfiguration']>,

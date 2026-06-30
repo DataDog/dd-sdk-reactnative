@@ -151,6 +151,18 @@ export interface Spec extends TurboModule {
     fetchPrecomputedConfiguration(options: Object): Promise<Object>;
 
     /**
+     * Persists a portable flags configuration to native disk storage without
+     * mutating active provider state.
+     */
+    saveConfiguration(configuration: Object, options: Object): Promise<Object>;
+
+    /**
+     * Loads a portable flags configuration from native disk storage without
+     * mutating active provider state.
+     */
+    loadConfiguration(options: Object): Promise<Object>;
+
+    /**
      * Sets or replaces the active native flags configuration.
      */
     setConfiguration(configuration: Object): Promise<Object>;

@@ -34,6 +34,7 @@ public class DdSdkImplementation: NSObject {
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
     private let nativeFfeCore = NativeFfeCore()
     private let nativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
+    private let nativeFfeConfigurationStore = FileNativeFfeConfigurationStore()
     private let nativeFfeSideEffects = NativeFfeEvaluationSideEffects()
 
     #if os(iOS)
@@ -330,6 +331,32 @@ public class DdSdkImplementation: NSObject {
                 kind: Constants.ffeKindPrecomputed,
                 options: options as? [String: Any] ?? [:],
                 fetcher: self.nativeFfeConfigurationFetcher
+            ).toMap()
+        }
+    }
+
+    @objc
+    public func saveConfiguration(
+        configuration: NSDictionary, options: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.saveConfiguration(
+                configuration as? [String: Any] ?? [:],
+                options: options as? [String: Any] ?? [:],
+                store: self.nativeFfeConfigurationStore
+            )
+        }
+    }
+
+    @objc
+    public func loadConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.loadConfiguration(
+                options: options as? [String: Any] ?? [:],
+                store: self.nativeFfeConfigurationStore
             ).toMap()
         }
     }

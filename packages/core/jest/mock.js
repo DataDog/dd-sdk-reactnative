@@ -15,6 +15,8 @@ const mockFlagsDebugState = {
     activeConfigurationKind: 'rules',
     activeEtag: 'ffe-system-test-data',
     configurationSetCount: 1,
+    configurationSaveCount: 0,
+    configurationLoadCount: 0,
     fetchCount: 1,
     evaluationCount: 0,
     lastEvent: 'provider_ready',
@@ -156,6 +158,41 @@ module.exports = {
                 options =>
                     new Promise(resolve =>
                         resolve(mockFetchConfiguration('precomputed', options))
+                    )
+            ),
+        saveConfiguration: jest
+            .fn()
+            .mockImplementation(
+                (configuration, options) =>
+                    new Promise(resolve =>
+                        resolve({
+                            ...mockFlagsDebugState,
+                            configurationSaveCount: 1,
+                            lastStorage: {
+                                operation: 'save',
+                                status: 'stored',
+                                key: `flags-configuration-${options.slot ?? 'default'}`,
+                                wireBytes: (configuration.wire ?? '').length
+                            }
+                        })
+                    )
+            ),
+        loadConfiguration: jest
+            .fn()
+            .mockImplementation(
+                () =>
+                    new Promise(resolve =>
+                        resolve(
+                            mockConfigurationFromString(
+                                JSON.stringify({
+                                    version: 2,
+                                    server: {
+                                        response: '{}',
+                                        etag: 'stored'
+                                    }
+                                })
+                            )
+                        )
                     )
             ),
         setConfiguration: jest
@@ -358,6 +395,41 @@ module.exports = {
                 options =>
                     new Promise(resolve =>
                         resolve(mockFetchConfiguration('precomputed', options))
+                    )
+            ),
+        saveConfiguration: jest
+            .fn()
+            .mockImplementation(
+                (configuration, options) =>
+                    new Promise(resolve =>
+                        resolve({
+                            ...mockFlagsDebugState,
+                            configurationSaveCount: 1,
+                            lastStorage: {
+                                operation: 'save',
+                                status: 'stored',
+                                key: `flags-configuration-${options.slot ?? 'default'}`,
+                                wireBytes: (configuration.wire ?? '').length
+                            }
+                        })
+                    )
+            ),
+        loadConfiguration: jest
+            .fn()
+            .mockImplementation(
+                () =>
+                    new Promise(resolve =>
+                        resolve(
+                            mockConfigurationFromString(
+                                JSON.stringify({
+                                    version: 2,
+                                    server: {
+                                        response: '{}',
+                                        etag: 'stored'
+                                    }
+                                })
+                            )
+                        )
                     )
             ),
         setConfiguration: jest

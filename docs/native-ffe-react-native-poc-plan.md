@@ -101,14 +101,20 @@ Keep the hard dependency on existing iOS/Android SDKs focused on customer-visibl
 Must call into existing native SDKs:
 
 -   Exposure emission through the existing Flags pipelines.
-    -   Android candidate: `_FlagsInternalProxy.trackFlagSnapshotEvaluation(...)`, which delegates to the native Flags evaluation path.
+    -   Android path: `_FlagsInternalProxy.trackFlagSnapshotEvaluation(...)` delegates to `DatadogFlagsClient.trackFlagSnapshotEvaluation`, which enters the same native `trackResolution` path as shipped Android flag resolution.
     -   iOS candidate: `FlagsClientInternal.sendFlagEvaluation(...)`, which calls the native exposure logger, evaluation logger, and RUM reporter.
 -   Flag evaluation emission in EVP through the existing native evaluator/event aggregation pipeline.
-    -   Android candidates visible in the shipped AAR include `EvaluationEventsProcessor`, `EvaluationEventWriter`, and the internal aggregation model.
-    -   iOS candidates visible in the shipped Pod include `EvaluationLogger` and `EvaluationAggregator`.
+    -   Android path: `DatadogFlagsClient.trackResolution` calls `writeEvaluationEvent(...)` when `trackEvaluations` is enabled, reusing the shipped evaluation feature and writer pipeline.
+    -   iOS path: `FlagsClient.trackEvaluation(...)` calls `evaluationLogger.logEvaluation(...)`, reusing the shipped evaluation aggregation pipeline.
 -   RUM feature-flag annotation / correlation.
-    -   Android candidate: native Flags `RumEvaluationLogger` / `DefaultRumEvaluationLogger` path.
-    -   iOS candidate: `rumFlagEvaluationReporter.sendFlagEvaluation(...)` underneath `FlagsClient.trackEvaluation(...)`.
+    -   Android path: `DatadogFlagsClient.trackResolution` calls `RumEvaluationLogger.logEvaluation(...)` when RUM integration is enabled; `DefaultRumEvaluationLogger` sends a native `RumFlagEvaluationMessage`.
+    -   iOS path: `rumFlagEvaluationReporter.sendFlagEvaluation(...)` underneath `FlagsClient.trackEvaluation(...)`, consumed by Datadog RUM's flag evaluation receiver.
+
+Validated reuse evidence for the RN-local native side-effect adapter:
+
+-   Android shipped AAR bytecode confirms `trackFlagSnapshotEvaluation -> trackResolution -> writeExposureEvent`, `RumEvaluationLogger.logEvaluation`, and `writeEvaluationEvent`.
+-   iOS shipped Pod source confirms `sendFlagEvaluation -> trackEvaluation -> exposureLogger.logExposure`, `evaluationLogger.logEvaluation`, and `rumFlagEvaluationReporter.sendFlagEvaluation`.
+-   The RN-local evaluator should therefore call the existing native Flags tracking hook once per successful `doLog`/trackable evaluation and must not add a parallel direct RUM annotation call that could double-count.
 
 Also preserve through native SDKs, either directly or as inputs to side-effect adapters:
 
@@ -126,6 +132,8 @@ Optional reuse, only if callable from currently released SDKs without source cha
 
 If optional reuse is not callable today, implement it as an RN-local native port with the same shape expected from the future extracted SDK library. Do not block the RN POC on making those APIs public in the iOS/Android SDK repos first.
 
+Current storage finding: released iOS and Android Flags SDKs persist precomputed flag state on disk through native SDK data-store abstractions. iOS uses `FeatureScope.flagsDataStore` over Datadog `DataStore`, keyed by flags client name. Android uses `FlagsPersistenceManager` over `DataStoreHandler`, with a `flags-state-{instanceName}` key. The rules-based `ConfigurationWire` has no released save/load API yet, so the RN-local implementation should persist the downloaded rules configuration on native disk with equivalent semantics: versioned payload, per-client/slot keying, native-owned I/O, and explicit `loadConfiguration -> setConfiguration` activation. When the Kotlin/Swift libraries move into the native SDK repos, replace the RN-local file store with the SDK feature data store.
+
 ## RFC Requirements To Exercise
 
 | RFC area               | Requirement                                                                                                     | POC coverage target                                                                                                           |
@@ -139,8 +147,8 @@ If optional reuse is not callable today, implement it as an RN-local native port
 | Dynamic context        | Rules-based config stores new context immediately with no network and no stale blackout.                        | Native `setEvaluationContext()` mutates context only; `evaluate()` re-evaluates against same active rules.                    |
 | Precomputed safety     | Precomputed config tied to one context must not serve another context.                                          | Native evaluates precomputed only when stored context matches; mismatch returns default/error/debug state.                    |
 | Evaluation output      | Rules path must produce metadata compatible with logging.                                                       | Native result includes value, variant, reason, error code, allocation key, `doLog`, and `extraLogging`.                       |
-| Logging side effects   | RN should keep existing native logging consistency.                                                             | Native evaluation triggers best-effort adapters into existing native Flags SDK evaluation hooks and reports counters in debug state. |
-| Persistence            | Mobile startup from last-known values is a target recipe.                                                       | Native save/load of last good wire from SDK-owned storage path; cache policy remains minimal.                                 |
+| Logging side effects   | RN should keep existing native logging consistency.                                                             | Native evaluation triggers the existing native Flags SDK tracking hook and reports attempted/tracked/skipped/failed counters in debug state. |
+| Persistence            | Mobile startup from last-known values is a target recipe.                                                       | Native `saveConfiguration()` / `loadConfiguration()` persist last-good wire on disk; caller still explicitly activates via `setConfiguration()`. |
 | Failure behavior       | Invalid wire, unsupported kind, refresh failure, stale serving are explicit states.                             | Native debug state reports invalid wire, unsupported kind, stale retained config, and last fetch error.                       |
 
 ## Current Native Flag-Provider Coverage
@@ -523,11 +531,11 @@ Maintain a traceability table in the PR or test output that maps every goal to c
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Offline initialization              | `configurationFromString -> setConfiguration -> evaluate` succeeds from a bundled or persisted wire.   |
 | Dynamic context                     | `setEvaluationContext` changes evaluation results under rules config without incrementing fetch count. |
-| Native-owned fetch                  | Native fetch records request URL, headers, auth, ETag, and status, but active config is unchanged.     |
+| Native-owned fetch                  | Native fetch records request URL, headers, auth, ETag, query params, and status, but active config is unchanged. |
 | Explicit config replacement         | Fetched config changes behavior only after `setConfiguration`.                                         |
 | Conditional fetch                   | `If-None-Match` is sent and `304` returns prior wire without state mutation.                           |
-| Native-owned persistence            | Cold start loads native-stored last-good wire without JS storage.                                      |
-| Native-owned evaluation side effect | `doLog=true` evaluation invokes native side-effect fake or existing native tracking hook.              |
+| Native-owned persistence            | Cold start loads native-stored last-good wire without JS storage, then explicitly activates it.        |
+| Native-owned evaluation side effect | `doLog=true` evaluation invokes the existing native Flags tracking hook, which reuses exposure, EVP, and RUM annotation paths. |
 | RN remains adapter-only             | Most logic is unit-tested through native core classes without React Native.                            |
 | JSON bridge shape                   | JS serializes requests and parses native JSON responses for config, context, fetch, and evaluation.    |
 
@@ -541,13 +549,22 @@ load bundled rules wire
   -> evaluate again with no fetch
   -> native fetch updated config
   -> prove active state is unchanged
-  -> set fetched config
+  -> save fetched config to native disk
+  -> load fetched config from native disk
+  -> set loaded config
   -> evaluate changed result
-  -> save wire
-  -> load wire on cold start
+  -> load wire on cold start without JS storage
 ```
 
-Debug state is part of validation, not just demo UI. Tests should assert `configurationSetCount`, `fetchCount`, `evaluationCount`, active `etag`, current context, last provider event, and last fetch request.
+Debug state is part of validation, not just demo UI. Tests should assert `configurationSetCount`, `configurationSaveCount`, `configurationLoadCount`, `fetchCount`, `evaluationCount`, active `etag`, current context, last provider event, last fetch request, and last storage operation.
+
+The example app fetch panel should use the staging Fastly route while this is being shared with the team:
+
+```text
+GET https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based?dd_env=staging
+Fastly-Client: 1
+dd-client-token: pub542a31cc0f5b23136420667ca212045a
+```
 
 ### 2. Correctness Validation
 
@@ -588,16 +605,15 @@ Required for each phase:
 Target commands:
 
 ```bash
-yarn jest packages/core/src/__tests__/DdSdkReactNative.test.tsx --runInBand
-yarn eslint <changed JS/TS files>
+yarn --cwd packages/core test DdSdkReactNative.test.tsx --runInBand
 yarn --cwd packages/core prepare
-cd packages/core/android && JAVA_HOME=/Users/leo.romanovsky/.sdkman/candidates/java/current ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ANDROID_SDK_ROOT=/opt/homebrew/share/android-commandlinetools ./gradlew testDebugUnitTest --tests "com.datadog.reactnative.DdSdkTest"
-cd example-new-architecture/android && JAVA_HOME=/Users/leo.romanovsky/.sdkman/candidates/java/current ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ANDROID_SDK_ROOT=/opt/homebrew/share/android-commandlinetools ./gradlew :app:assembleDebug
+JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew testDebugUnitTest --tests "com.datadog.reactnative.NativeFfeCoreTest" --tests "com.datadog.reactnative.NativeFfeConfigurationFetcherTest"
+yarn --cwd example-new-architecture tsc --noEmit
 cd example-new-architecture/ios && GIT_CONFIG_GLOBAL=/dev/null bundle exec pod install
-cd example-new-architecture/ios && xcodebuild -workspace DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+cd example-new-architecture/ios && xcodebuild -workspace DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-Known local caveat: the current workstation reports an Xcode/CoreSimulator mismatch for iOS simulator builds. iOS codegen can still be generated and inspected, but a full iOS build requires local Xcode/device support to be fixed.
+Known local caveat: the current workstation reports an Xcode/CoreSimulator mismatch warning for iOS simulator support. The RN package build has been validated with the Mac Catalyst destination above.
 
 ## What This POC Should Prove
 
@@ -634,7 +650,9 @@ Known local caveat: the current workstation reports an Xcode/CoreSimulator misma
 
 ## Recommended Next Step
 
-Implement Phases 1 through 5 first. That gives a native-first proof of the most important architecture claim:
+The current branch has implemented the first native-first slice through configuration parsing, dynamic context, rules/precomputed evaluation, native fetch, native disk persistence, JSON fixture coverage, example-app wiring, and existing native Flags SDK side-effect reuse. The next implementation slice should finish the remaining extraction-oriented pieces: broader Swift fixture automation, a review note that records the confirmed native reuse points above, and a later swap from the RN-local file store to the native SDK data-store abstractions when this code moves downstream.
+
+The minimum demo sequence remains:
 
 ```text
 configurationFromString(wire)
@@ -643,6 +661,11 @@ configurationFromString(wire)
   -> evaluate(flag)
   -> setEvaluationContext(authenticated)
   -> evaluate(flag)
+  -> fetchRulesConfiguration({ dd_env: "staging" })
+  -> confirm fetch did not mutate active configuration
+  -> saveConfiguration(fetchedConfiguration)
+  -> loadConfiguration()
+  -> confirm load did not mutate active configuration
+  -> setConfiguration(loadedConfiguration)
+  -> evaluate(flag)
 ```
-
-Only after native configuration, evaluator parity, and dynamic context are proven should the POC add native fetch and persistence. Otherwise the discussion can get distracted by endpoint/auth/cache details before the native ownership boundary is proven.

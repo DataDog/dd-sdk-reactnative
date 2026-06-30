@@ -242,6 +242,16 @@ class DdSdk(
     }
 
     @ReactMethod
+    fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        implementation.saveConfiguration(configuration, options, promise)
+    }
+
+    @ReactMethod
+    fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.loadConfiguration(options, promise)
+    }
+
+    @ReactMethod
     fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         implementation.setConfiguration(configuration, promise)
     }

@@ -29,6 +29,10 @@ export type DdSdkType = {
 
     fetchPrecomputedConfiguration(options: object): Promise<object>;
 
+    saveConfiguration(configuration: object, options: object): Promise<object>;
+
+    loadConfiguration(options: object): Promise<object>;
+
     setConfiguration(configuration: object): Promise<object>;
 
     setEvaluationContext(context: object): Promise<object>;
@@ -151,6 +155,14 @@ export class DdSdkWrapper implements DdNativeSdkType {
 
     fetchPrecomputedConfiguration(options: object): Promise<object> {
         return NativeDdSdk.fetchPrecomputedConfiguration(options);
+    }
+
+    saveConfiguration(configuration: object, options: object): Promise<object> {
+        return NativeDdSdk.saveConfiguration(configuration, options);
+    }
+
+    loadConfiguration(options: object): Promise<object> {
+        return NativeDdSdk.loadConfiguration(options);
     }
 
     setConfiguration(configuration: object): Promise<object> {

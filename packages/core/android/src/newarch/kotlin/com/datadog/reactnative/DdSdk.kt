@@ -211,6 +211,16 @@ class DdSdk(
     }
 
     @ReactMethod
+    override fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        implementation.saveConfiguration(configuration, options, promise)
+    }
+
+    @ReactMethod
+    override fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.loadConfiguration(options, promise)
+    }
+
+    @ReactMethod
     override fun setConfiguration(configuration: ReadableMap, promise: Promise) {
         implementation.setConfiguration(configuration, promise)
     }

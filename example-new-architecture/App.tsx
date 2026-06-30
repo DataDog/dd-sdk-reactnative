@@ -46,6 +46,9 @@ const NATIVE_FFE_STAGING_RULES_ENDPOINT =
   'https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based';
 const NATIVE_FFE_STAGING_CLIENT_TOKEN =
   'pub542a31cc0f5b23136420667ca212045a';
+const NATIVE_FFE_STORAGE_OPTIONS = {
+  slot: 'default',
+};
 const NATIVE_FFE_USER = {
   id: 'user-123',
   favoriteFruit: 'apple',
@@ -220,11 +223,18 @@ function NativeFfeFetchPanel({
       const serializedWire = await DdSdkReactNative.configurationToString(
         fetchedConfiguration,
       );
-      const parsedConfiguration = await DdSdkReactNative.configurationFromString(
+      const fetchedParsedConfiguration = await DdSdkReactNative.configurationFromString(
         serializedWire,
       );
+      const saveState = await DdSdkReactNative.saveConfiguration(
+        fetchedParsedConfiguration,
+        NATIVE_FFE_STORAGE_OPTIONS,
+      );
+      const loadedConfiguration = await DdSdkReactNative.loadConfiguration(
+        NATIVE_FFE_STORAGE_OPTIONS,
+      );
       const configurationState = await DdSdkReactNative.setConfiguration(
-        parsedConfiguration,
+        loadedConfiguration,
       );
       const contextState = await DdSdkReactNative.setEvaluationContext(
         NATIVE_FFE_EVALUATION_CONTEXT,
@@ -233,9 +243,9 @@ function NativeFfeFetchPanel({
 
       setFetchState({
         status: 'ready',
-        summary: `Fetched ${parsedConfiguration.kind} configuration ${
-          parsedConfiguration.etag ?? 'without etag'
-        }.`,
+        summary: `Fetched, saved, loaded, and activated ${
+          loadedConfiguration.kind
+        } configuration ${loadedConfiguration.etag ?? 'without etag'}.`,
         details: JSON.stringify(
           {
             fetchedConfiguration: {
@@ -244,6 +254,12 @@ function NativeFfeFetchPanel({
               etag: fetchedConfiguration.etag,
             },
             serializedWireBytes: serializedWire.length,
+            saveState,
+            loadedConfiguration: {
+              kind: loadedConfiguration.kind,
+              version: loadedConfiguration.version,
+              etag: loadedConfiguration.etag,
+            },
             configurationState,
             contextState,
             debugState,

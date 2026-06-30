@@ -70,6 +70,11 @@ export type FlagsFetchOptions = {
     previousConfigurationWire?: FlagsConfigurationWire;
 };
 
+export type FlagsConfigurationStorageOptions = {
+    slot?: string;
+    clientName?: string;
+};
+
 export type FlagValue =
     | boolean
     | string
@@ -98,6 +103,8 @@ export type FlagsProviderDebugState = {
     activeEtag?: string;
     currentContext?: FlagsEvaluationContext;
     configurationSetCount: number;
+    configurationSaveCount: number;
+    configurationLoadCount: number;
     fetchCount: number;
     evaluationCount: number;
     lastEvent?: 'provider_ready' | 'configuration_changed' | 'provider_error';
@@ -106,6 +113,13 @@ export type FlagsProviderDebugState = {
         method: string;
         headers: Record<string, string>;
         statusCode?: number;
+    };
+    lastStorage?: {
+        operation: 'save' | 'load';
+        status: 'stored' | 'failed';
+        key?: string;
+        updatedAtMs?: number;
+        wireBytes?: number;
     };
     lastError?: string;
     evaluationSideEffects?: {
@@ -515,6 +529,32 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
         return NativeDdSdk.fetchPrecomputedConfiguration(
+            options
+        ) as Promise<NativeFlagsConfiguration>;
+    };
+
+    static saveConfiguration = (
+        configuration: NativeFlagsConfiguration,
+        options: FlagsConfigurationStorageOptions = {}
+    ): Promise<FlagsProviderDebugState> => {
+        InternalLog.log(
+            'Saving native flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.saveConfiguration(
+            configuration,
+            options
+        ) as Promise<FlagsProviderDebugState>;
+    };
+
+    static loadConfiguration = (
+        options: FlagsConfigurationStorageOptions = {}
+    ): Promise<NativeFlagsConfiguration> => {
+        InternalLog.log(
+            'Loading native flags configuration',
+            SdkVerbosity.DEBUG
+        );
+        return NativeDdSdk.loadConfiguration(
             options
         ) as Promise<NativeFlagsConfiguration>;
     };

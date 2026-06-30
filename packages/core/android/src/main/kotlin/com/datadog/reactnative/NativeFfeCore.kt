@@ -16,10 +16,13 @@ internal class NativeFfeCore {
     private var currentContext: Map<String, Any?> = emptyMap()
     private var status: String = STATUS_NOT_READY
     private var configurationSetCount: Int = 0
+    private var configurationSaveCount: Int = 0
+    private var configurationLoadCount: Int = 0
     private var fetchCount: Int = 0
     private var evaluationCount: Int = 0
     private var lastEvent: String? = null
     private var lastFetchRequest: Map<String, Any?>? = null
+    private var lastStorage: Map<String, Any?>? = null
     private var lastError: String? = null
 
     fun configurationFromString(wire: String): NativeFlagsConfiguration {
@@ -77,6 +80,49 @@ internal class NativeFfeCore {
         }
     }
 
+    fun saveConfiguration(
+        configuration: Map<String, Any?>,
+        options: Map<String, Any?>,
+        store: NativeFfeConfigurationStore,
+    ): Map<String, Any?> {
+        configurationSaveCount += 1
+        return try {
+            val wire = configurationToString(configuration)
+            val stored = store.save(options.toStorageSlot(), wire)
+            lastStorage = stored.toDebugMap(OPERATION_SAVE)
+            lastError = null
+            debugState()
+        } catch (error: Exception) {
+            lastStorage = mapOf(
+                "operation" to OPERATION_SAVE,
+                "status" to STATUS_FAILED,
+            )
+            markProviderError(error)
+            throw error
+        }
+    }
+
+    fun loadConfiguration(
+        options: Map<String, Any?>,
+        store: NativeFfeConfigurationStore,
+    ): NativeFlagsConfiguration {
+        configurationLoadCount += 1
+        return try {
+            val stored = store.load(options.toStorageSlot())
+                ?: throw IllegalStateException("No stored flags configuration for slot '${options.toStorageSlot()}'")
+            lastStorage = stored.toDebugMap(OPERATION_LOAD)
+            lastError = null
+            configurationFromString(stored.wire)
+        } catch (error: Exception) {
+            lastStorage = mapOf(
+                "operation" to OPERATION_LOAD,
+                "status" to STATUS_FAILED,
+            )
+            markProviderError(error)
+            throw error
+        }
+    }
+
     fun setConfiguration(configuration: Map<String, Any?>): Map<String, Any?> {
         return try {
             val parsed = configurationFromString(configurationToString(configuration))
@@ -124,10 +170,13 @@ internal class NativeFfeCore {
             "activeEtag" to configuration?.etag,
             "currentContext" to currentContext,
             "configurationSetCount" to configurationSetCount,
+            "configurationSaveCount" to configurationSaveCount,
+            "configurationLoadCount" to configurationLoadCount,
             "fetchCount" to fetchCount,
             "evaluationCount" to evaluationCount,
             "lastEvent" to lastEvent,
             "lastFetchRequest" to lastFetchRequest,
+            "lastStorage" to lastStorage,
             "lastError" to lastError,
         ).filterValues { it != null }
     }
@@ -370,6 +419,22 @@ internal class NativeFfeCore {
         lastEvent = EVENT_PROVIDER_ERROR
     }
 
+    private fun Map<String, Any?>.toStorageSlot(): String {
+        return (this["slot"] as? String)
+            ?: (this["clientName"] as? String)
+            ?: DEFAULT_STORAGE_SLOT
+    }
+
+    private fun NativeFfeStoredConfiguration.toDebugMap(operation: String): Map<String, Any?> {
+        return mapOf(
+            "operation" to operation,
+            "status" to STATUS_STORED,
+            "key" to key,
+            "updatedAtMs" to updatedAtMs,
+            "wireBytes" to wire.toByteArray(Charsets.UTF_8).size,
+        )
+    }
+
     data class NativeFlagsConfiguration(
         val wire: String,
         val version: Int,
@@ -434,9 +499,14 @@ internal class NativeFfeCore {
         const val STATUS_READY = "ready"
         const val STATUS_STALE = "stale"
         const val STATUS_ERROR = "error"
+        const val STATUS_STORED = "stored"
+        const val STATUS_FAILED = "failed"
         const val EVENT_PROVIDER_READY = "provider_ready"
         const val EVENT_CONFIGURATION_CHANGED = "configuration_changed"
         const val EVENT_PROVIDER_ERROR = "provider_error"
+        const val OPERATION_SAVE = "save"
+        const val OPERATION_LOAD = "load"
+        const val DEFAULT_STORAGE_SLOT = "default"
         const val EXPECTED_BOOLEAN = "boolean"
         const val EXPECTED_STRING = "string"
         const val EXPECTED_NUMBER = "number"

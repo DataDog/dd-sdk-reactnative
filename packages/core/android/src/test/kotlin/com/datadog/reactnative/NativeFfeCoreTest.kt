@@ -6,11 +6,13 @@
 
 package com.datadog.reactnative
 
+import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 internal class NativeFfeCoreTest {
     private val testedCore = NativeFfeCore()
@@ -29,6 +31,43 @@ internal class NativeFfeCoreTest {
         assertThat(configuration.etag).isEqualTo("ffe-system-test-data")
         assertThat(embeddedUfcConfig).isEqualTo(canonicalUfcConfig)
         assertThat(serialized).isEqualTo(flagsConfigurationWire)
+    }
+
+    @Test
+    fun `M save and load configuration W native disk store`(@TempDir tempDir: File) {
+        // Given
+        val store = FileNativeFfeConfigurationStore(tempDir) { STORED_AT_MS }
+        val configuration = testedCore.configurationFromString(flagsConfigurationWire)
+
+        // When
+        val saveState = testedCore.saveConfiguration(
+            configuration.toMap(),
+            mapOf("slot" to "default"),
+            store,
+        )
+        val loadedConfiguration = testedCore.loadConfiguration(
+            mapOf("slot" to "default"),
+            store,
+        )
+        val activatedState = testedCore.setConfiguration(loadedConfiguration.toMap())
+
+        // Then
+        assertThat(testedCore.configurationToString(loadedConfiguration.toMap()))
+            .isEqualTo(flagsConfigurationWire)
+        assertThat(saveState)
+            .containsEntry("configurationSaveCount", 1)
+            .containsEntry("configurationLoadCount", 0)
+            .doesNotContainKey("activeConfigurationKind")
+        @Suppress("UNCHECKED_CAST")
+        val lastSave = saveState["lastStorage"] as Map<String, Any?>
+        assertThat(lastSave)
+            .containsEntry("operation", "save")
+            .containsEntry("status", "stored")
+            .containsEntry("key", "flags-configuration-default")
+            .containsEntry("updatedAtMs", STORED_AT_MS)
+        assertThat(activatedState)
+            .containsEntry("activeConfigurationKind", "rules")
+            .containsEntry("configurationLoadCount", 1)
     }
 
     @Test
@@ -178,6 +217,7 @@ internal class NativeFfeCoreTest {
 
     private companion object {
         const val NUMERIC_TOLERANCE = 0.0000001
+        const val STORED_AT_MS = 1780000000000L
 
         val flagsConfigurationWire: String by lazy {
             readNativeFfeFixture(

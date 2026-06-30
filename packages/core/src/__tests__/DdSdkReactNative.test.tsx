@@ -73,6 +73,8 @@ beforeEach(async () => {
     NativeModules.DdSdk.configurationToString.mockClear();
     NativeModules.DdSdk.fetchRulesConfiguration.mockClear();
     NativeModules.DdSdk.fetchPrecomputedConfiguration.mockClear();
+    NativeModules.DdSdk.saveConfiguration.mockClear();
+    NativeModules.DdSdk.loadConfiguration.mockClear();
     NativeModules.DdSdk.setConfiguration.mockClear();
     NativeModules.DdSdk.setEvaluationContext.mockClear();
     NativeModules.DdSdk.resolveBooleanEvaluation.mockClear();
@@ -1542,6 +1544,52 @@ describe('DdSdkReactNative', () => {
                 kind: 'precomputed',
                 etag: 'mock-fetch'
             });
+        });
+
+        it('saves and loads configuration from native disk before explicit activation', async () => {
+            // GIVEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const storageOptions = { slot: 'default' };
+
+            // WHEN
+            const saveState = await DdSdkReactNative.saveConfiguration(
+                configuration,
+                storageOptions
+            );
+            const loadedConfiguration = await DdSdkReactNative.loadConfiguration(
+                storageOptions
+            );
+            const loadedState = await DdSdkReactNative.setConfiguration(
+                loadedConfiguration
+            );
+
+            // THEN
+            expect(NativeDdSdk.saveConfiguration).toHaveBeenCalledWith(
+                configuration,
+                storageOptions
+            );
+            expect(NativeDdSdk.loadConfiguration).toHaveBeenCalledWith(
+                storageOptions
+            );
+            expect(NativeDdSdk.setConfiguration).toHaveBeenCalledWith(
+                loadedConfiguration
+            );
+            expect(saveState).toMatchObject({
+                configurationSaveCount: 1,
+                lastStorage: {
+                    operation: 'save',
+                    status: 'stored',
+                    key: 'flags-configuration-default'
+                }
+            });
+            expect(loadedConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'rules',
+                etag: 'stored'
+            });
+            expect(loadedState.status).toBe('ready');
         });
     });
 

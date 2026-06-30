@@ -14,10 +14,13 @@ internal final class NativeFfeCore {
     private var currentContext: [String: Any] = [:]
     private var status = Status.notReady
     private var configurationSetCount = 0
+    private var configurationSaveCount = 0
+    private var configurationLoadCount = 0
     private var fetchCount = 0
     private var evaluationCount = 0
     private var lastEvent: String?
     private var lastFetchRequest: [String: Any]?
+    private var lastStorage: [String: Any]?
     private var lastError: String?
 
     func configurationFromString(_ wire: String) throws -> NativeFlagsConfiguration {
@@ -89,6 +92,53 @@ internal final class NativeFfeCore {
         }
     }
 
+    func saveConfiguration(
+        _ configuration: [String: Any],
+        options: [String: Any],
+        store: NativeFfeConfigurationStoring
+    ) throws -> [String: Any] {
+        configurationSaveCount += 1
+        do {
+            let wire = try configurationToString(configuration)
+            let stored = try store.save(slot: storageSlot(options), wire: wire)
+            lastStorage = stored.toDebugMap(operation: Operation.save)
+            lastError = nil
+            return debugState()
+        } catch {
+            lastStorage = [
+                "operation": Operation.save,
+                "status": StorageStatus.failed,
+            ]
+            markProviderError(error)
+            throw error
+        }
+    }
+
+    func loadConfiguration(
+        options: [String: Any],
+        store: NativeFfeConfigurationStoring
+    ) throws -> NativeFlagsConfiguration {
+        configurationLoadCount += 1
+        do {
+            let slot = storageSlot(options)
+            guard let stored = try store.load(slot: slot) else {
+                throw NativeFfeCoreError.invalidConfigurationWire(
+                    "No stored flags configuration for slot '\(slot)'"
+                )
+            }
+            lastStorage = stored.toDebugMap(operation: Operation.load)
+            lastError = nil
+            return try configurationFromString(stored.wire)
+        } catch {
+            lastStorage = [
+                "operation": Operation.load,
+                "status": StorageStatus.failed,
+            ]
+            markProviderError(error)
+            throw error
+        }
+    }
+
     func setConfiguration(_ configuration: [String: Any]) -> [String: Any] {
         do {
             let parsed = try configurationFromString(configurationToString(configuration))
@@ -135,10 +185,13 @@ internal final class NativeFfeCore {
             ("activeEtag", activeConfiguration?.etag),
             ("currentContext", currentContext),
             ("configurationSetCount", configurationSetCount),
+            ("configurationSaveCount", configurationSaveCount),
+            ("configurationLoadCount", configurationLoadCount),
             ("fetchCount", fetchCount),
             ("evaluationCount", evaluationCount),
             ("lastEvent", lastEvent),
             ("lastFetchRequest", lastFetchRequest),
+            ("lastStorage", lastStorage),
             ("lastError", lastError),
         ])
     }
@@ -460,6 +513,12 @@ internal final class NativeFfeCore {
         lastEvent = Event.providerError
     }
 
+    private func storageSlot(_ options: [String: Any]) -> String {
+        stringValue(options["slot"])
+            ?? stringValue(options["clientName"])
+            ?? Constants.defaultStorageSlot
+    }
+
     private func parseOptionalResponse(_ value: Any?) throws -> [String: Any]? {
         guard let response = value as? String else {
             return nil
@@ -673,6 +732,7 @@ internal enum NativeFfeCoreError: LocalizedError {
 private enum Constants {
     static let supportedWireVersion = 2
     static let wireKey = "wire"
+    static let defaultStorageSlot = "default"
 }
 
 private enum ConfigurationKind {
@@ -694,9 +754,31 @@ private enum Event {
     static let providerError = "provider_error"
 }
 
+private enum Operation {
+    static let save = "save"
+    static let load = "load"
+}
+
+private enum StorageStatus {
+    static let stored = "stored"
+    static let failed = "failed"
+}
+
 private enum ExpectedType {
     static let boolean = "boolean"
     static let string = "string"
     static let number = "number"
     static let object = "object"
+}
+
+private extension NativeFfeStoredConfiguration {
+    func toDebugMap(operation: String) -> [String: Any] {
+        [
+            "operation": operation,
+            "status": StorageStatus.stored,
+            "key": key,
+            "updatedAtMs": updatedAtMs,
+            "wireBytes": wire.data(using: .utf8)?.count ?? 0,
+        ]
+    }
 }
