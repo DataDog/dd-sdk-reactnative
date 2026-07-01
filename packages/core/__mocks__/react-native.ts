@@ -227,6 +227,20 @@ actualRN.NativeModules.DdSdk = {
     getProviderDebugState: jest.fn().mockImplementation(
         () => new Promise<object>(resolve => resolve(mockFlagsDebugState))
     ) as jest.MockedFunction<DdNativeSdkType['getProviderDebugState']>,
+    runNativeFfeBenchmark: jest.fn().mockImplementation(
+        () =>
+            new Promise<object>(resolve =>
+                resolve({
+                    iterations: 0,
+                    checksum: '00000000',
+                    evalTotalMs: 0,
+                    perEvalUs: 0,
+                    p50Us: 0,
+                    p95Us: 0,
+                    p99Us: 0
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['runNativeFfeBenchmark']>,
     addListener: jest.fn().mockImplementation((_: string) => {
         /* empty */
     }) as jest.MockedFunction<DdNativeSdkType['addListener']>,

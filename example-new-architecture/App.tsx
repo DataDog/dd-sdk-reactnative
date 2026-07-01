@@ -33,6 +33,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import * as ddCredentials from './ddCredentials.example';
 import {runNativeFfeOfflineFixtureCorpus} from './nativeFfeOfflineFixtureRunner';
+import {runFfeJsVsNativeBenchmark} from '../packages/core/src/flags/benchmark';
 
 const APPLICATION_ID = ddCredentials.APPLICATION_ID;
 const CLIENT_TOKEN = ddCredentials.CLIENT_TOKEN;
@@ -109,6 +110,7 @@ function App(): React.JSX.Element {
           style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}
         >
           <NativeFfeFlowPanel isDarkMode={isDarkMode} />
+          <NativeFfeBenchmarkPanel isDarkMode={isDarkMode} />
 
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
@@ -127,6 +129,107 @@ function App(): React.JSX.Element {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+type NativeFfeBenchmarkState = {
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  summary: string;
+  details?: string;
+};
+
+function NativeFfeBenchmarkPanel({
+  isDarkMode,
+}: {
+  isDarkMode: boolean;
+}): React.JSX.Element {
+  const [benchmarkState, setBenchmarkState] =
+    React.useState<NativeFfeBenchmarkState>({
+      status: 'idle',
+      summary: 'FF&E benchmark has not run yet.',
+    });
+  const loading = benchmarkState.status === 'loading';
+
+  const runBenchmark = React.useCallback(async () => {
+    setBenchmarkState({
+      status: 'loading',
+      summary: 'Running FF&E JS-vs-native benchmark...',
+    });
+
+    try {
+      await datadogInitialization;
+
+      const report = await runFfeJsVsNativeBenchmark({
+        rnArchitecture: 'new',
+        build: __DEV__ ? 'debug' : 'release',
+      });
+      console.log(`FFE_BENCHMARK_RESULT ${JSON.stringify(report)}`);
+
+      setBenchmarkState({
+        status: 'ready',
+        summary: `FF&E benchmark ${report.parity}: ${report.iterations} evaluations.`,
+        details: JSON.stringify(report, null, 2),
+      });
+    } catch (error) {
+      setBenchmarkState({
+        status: 'error',
+        summary:
+          error instanceof Error ? error.message : 'FF&E benchmark failed.',
+      });
+    }
+  }, []);
+
+  return (
+    <View style={styles.sectionContainer}>
+      <Text
+        style={[
+          styles.sectionTitle,
+          {
+            color: isDarkMode ? Colors.white : Colors.black,
+          },
+        ]}
+      >
+        FF&E benchmark
+      </Text>
+      <Text
+        style={[
+          styles.sectionDescription,
+          {
+            color: isDarkMode ? Colors.light : Colors.dark,
+          },
+        ]}
+      >
+        {benchmarkState.summary}
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        disabled={loading}
+        onPress={runBenchmark}
+        style={({pressed}) => [
+          styles.nativeFfeButton,
+          loading && styles.nativeFfeButtonDisabled,
+          pressed && !loading && styles.nativeFfeButtonPressed,
+        ]}
+      >
+        <Text style={styles.nativeFfeButtonText}>
+          {loading ? 'Running...' : 'Run JS vs native benchmark'}
+        </Text>
+      </Pressable>
+      {benchmarkState.details ? (
+        <Text
+          selectable
+          style={[
+            styles.nativeFfeDetails,
+            {
+              color: isDarkMode ? Colors.light : Colors.dark,
+              backgroundColor: isDarkMode ? Colors.black : '#f3f4f6',
+            },
+          ]}
+        >
+          {benchmarkState.details}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 

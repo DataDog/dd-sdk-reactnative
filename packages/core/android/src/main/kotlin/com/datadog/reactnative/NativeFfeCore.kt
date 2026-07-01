@@ -175,6 +175,49 @@ internal class NativeFfeCore {
         return resolveEvaluation(flagKey, defaultValue, EXPECTED_OBJECT)
     }
 
+    fun runBenchmark(options: Map<String, Any?>): Map<String, Any?> {
+        val contexts = options["contexts"].asBenchmarkMapList()
+        val flags = options["flags"].asBenchmarkMapList()
+        val batchDurationsUs = mutableListOf<Double>()
+        var iterations = 0L
+        var checksum = FNV_OFFSET_BASIS
+        val previousContext = currentContext
+        val totalStartNs = System.nanoTime()
+
+        try {
+            for (context in contexts) {
+                currentContext = context
+                val batchStartNs = System.nanoTime()
+                for (flag in flags) {
+                    val flagKey = flag["key"]?.toString() ?: continue
+                    val variationType = flag["variationType"]?.toString() ?: continue
+                    val result = resolveEvaluation(
+                        flagKey,
+                        flag["defaultValue"].benchmarkDefaultValue(variationType),
+                        variationType.benchmarkExpectedType(),
+                    )
+                    checksum = checksumResult(checksum, flagKey, result)
+                    iterations += 1
+                }
+                batchDurationsUs += (System.nanoTime() - batchStartNs).toDouble() /
+                    NANOSECONDS_PER_MICROSECOND / flags.size.coerceAtLeast(1)
+            }
+
+            val evalTotalMs = (System.nanoTime() - totalStartNs).toDouble() / NANOSECONDS_PER_MILLISECOND
+            return mapOf(
+                "iterations" to iterations,
+                "checksum" to checksum.toChecksumHex(),
+                "evalTotalMs" to evalTotalMs,
+                "perEvalUs" to if (iterations > 0) evalTotalMs * MICROSECONDS_PER_MILLISECOND / iterations else 0.0,
+                "p50Us" to batchDurationsUs.percentile(0.50),
+                "p95Us" to batchDurationsUs.percentile(0.95),
+                "p99Us" to batchDurationsUs.percentile(0.99),
+            )
+        } finally {
+            currentContext = previousContext
+        }
+    }
+
     fun debugState(): Map<String, Any?> {
         val configuration = activeConfiguration
         return mapOf(
@@ -337,6 +380,12 @@ internal class NativeFfeCore {
             "GT" -> value.asDouble()?.let { it > (condition.value.asDouble() ?: 0.0) } ?: false
             "LTE" -> value.asDouble()?.let { it <= (condition.value.asDouble() ?: 0.0) } ?: false
             "LT" -> value.asDouble()?.let { it < (condition.value.asDouble() ?: 0.0) } ?: false
+            "SEMVER_EQ",
+            "SEMVER_NEQ",
+            "SEMVER_GT",
+            "SEMVER_GTE",
+            "SEMVER_LT",
+            "SEMVER_LTE" -> semverMatches(condition.operator, value, condition.value)
             else -> false
         }
     }
@@ -418,6 +467,75 @@ internal class NativeFfeCore {
         return replace("[:alnum:]", "\\p{Alnum}")
     }
 
+    private fun semverMatches(operator: String, actual: Any?, expected: Any?): Boolean {
+        val comparison = compareSemver(actual?.toString(), expected?.toString()) ?: return false
+        return when (operator) {
+            "SEMVER_EQ" -> comparison == 0
+            "SEMVER_NEQ" -> comparison != 0
+            "SEMVER_GT" -> comparison > 0
+            "SEMVER_GTE" -> comparison >= 0
+            "SEMVER_LT" -> comparison < 0
+            "SEMVER_LTE" -> comparison <= 0
+            else -> false
+        }
+    }
+
+    private fun compareSemver(actual: String?, expected: String?): Int? {
+        val left = actual?.toNativeSemver() ?: return null
+        val right = expected?.toNativeSemver() ?: return null
+        compareValues(left.major, right.major).takeIf { it != 0 }?.let { return it }
+        compareValues(left.minor, right.minor).takeIf { it != 0 }?.let { return it }
+        compareValues(left.patch, right.patch).takeIf { it != 0 }?.let { return it }
+        return comparePrerelease(left.prerelease, right.prerelease)
+    }
+
+    private fun String.toNativeSemver(): NativeSemver? {
+        val normalized = trim().removePrefix("v").removePrefix("V").substringBefore("+")
+        val parts = normalized.split("-", limit = 2)
+        val core = parts[0].split(".")
+        if (core.isEmpty() || core.size > 3 || core.any { it.isBlank() || !it.all(Char::isDigit) }) {
+            return null
+        }
+        return NativeSemver(
+            major = core[0].toIntOrNull() ?: return null,
+            minor = core.getOrNull(1)?.toIntOrNull() ?: 0,
+            patch = core.getOrNull(2)?.toIntOrNull() ?: 0,
+            prerelease = parts.getOrNull(1)?.split(".") ?: emptyList(),
+        )
+    }
+
+    private fun comparePrerelease(left: List<String>, right: List<String>): Int {
+        if (left.isEmpty() && right.isEmpty()) {
+            return 0
+        }
+        if (left.isEmpty()) {
+            return 1
+        }
+        if (right.isEmpty()) {
+            return -1
+        }
+        val maxSize = maxOf(left.size, right.size)
+        for (index in 0 until maxSize) {
+            val leftIdentifier = left.getOrNull(index) ?: return -1
+            val rightIdentifier = right.getOrNull(index) ?: return 1
+            comparePrereleaseIdentifier(leftIdentifier, rightIdentifier).takeIf { it != 0 }?.let {
+                return it
+            }
+        }
+        return 0
+    }
+
+    private fun comparePrereleaseIdentifier(left: String, right: String): Int {
+        val leftNumber = left.toIntOrNull()
+        val rightNumber = right.toIntOrNull()
+        return when {
+            leftNumber != null && rightNumber != null -> compareValues(leftNumber, rightNumber)
+            leftNumber != null -> -1
+            rightNumber != null -> 1
+            else -> left.compareTo(right)
+        }
+    }
+
     private fun markProviderError(error: Exception) {
         status = if (activeConfiguration == null) STATUS_ERROR else STATUS_STALE
         lastError = error.message
@@ -493,6 +611,13 @@ internal class NativeFfeCore {
         val attribute: String,
         val operator: String,
         val value: Any?,
+    )
+
+    data class NativeSemver(
+        val major: Int,
+        val minor: Int,
+        val patch: Int,
+        val prerelease: List<String>,
     )
 
     data class NativeSplit(
@@ -753,6 +878,100 @@ internal class NativeFfeCore {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun Any?.asBenchmarkMapList(): List<Map<String, Any?>> {
+        return (this as? List<*>)?.mapNotNull { it as? Map<String, Any?> } ?: emptyList()
+    }
+
+    private fun Any?.benchmarkDefaultValue(variationType: String): Any? {
+        return when (variationType) {
+            "BOOLEAN" -> this as? Boolean ?: false
+            "STRING" -> this as? String ?: ""
+            "INTEGER", "NUMERIC" -> asDouble() ?: 0.0
+            "JSON" -> this as? Map<*, *> ?: emptyMap<String, Any?>()
+            else -> this
+        }
+    }
+
+    private fun String.benchmarkExpectedType(): String {
+        return when (this) {
+            "BOOLEAN" -> EXPECTED_BOOLEAN
+            "STRING" -> EXPECTED_STRING
+            "INTEGER", "NUMERIC" -> EXPECTED_NUMBER
+            "JSON" -> EXPECTED_OBJECT
+            else -> ""
+        }
+    }
+
+    private fun List<Double>.percentile(quantile: Double): Double {
+        if (isEmpty()) {
+            return 0.0
+        }
+        val sorted = sorted()
+        val index = ((sorted.size - 1) * quantile).toInt().coerceIn(sorted.indices)
+        return sorted[index]
+    }
+
+    private fun checksumResult(
+        checksum: Long,
+        flagKey: String,
+        result: Map<String, Any?>,
+    ): Long {
+        return checksum.updateChecksum(
+            listOf(
+                flagKey,
+                result["value"].canonicalBenchmarkValue(),
+                result["variant"]?.toString() ?: "",
+                result["reason"]?.toString() ?: "",
+                result["errorCode"]?.toString() ?: "",
+            ).joinToString("|")
+        )
+    }
+
+    private fun Long.updateChecksum(value: String): Long {
+        var hash = this
+        for (character in value) {
+            hash = hash xor character.code.toLong()
+            hash = (hash * FNV_PRIME) and UNSIGNED_INT_MASK
+        }
+        return hash
+    }
+
+    private fun Long.toChecksumHex(): String {
+        return toString(16).padStart(CHECKSUM_HEX_LENGTH, '0')
+    }
+
+    private fun Any?.canonicalBenchmarkValue(): String {
+        return when (this) {
+            null -> "null"
+            is Map<*, *> -> {
+                entries
+                    .sortedBy { it.key.toString() }
+                    .joinToString(prefix = "{", postfix = "}") {
+                        "${JSONObject.quote(it.key.toString())}:${it.value.canonicalBenchmarkValue()}"
+                    }
+            }
+            is List<*> -> joinToString(prefix = "[", postfix = "]") { it.canonicalBenchmarkValue() }
+            is String -> JSONObject.quote(this)
+            is Boolean -> toString()
+            is Number -> canonicalNumber()
+            else -> JSONObject.quote(toString())
+        }
+    }
+
+    private fun Number.canonicalNumber(): String {
+        val doubleValue = toDouble()
+        return if (
+            !doubleValue.isNaN() &&
+            !doubleValue.isInfinite() &&
+            doubleValue % 1.0 == 0.0
+        ) {
+            doubleValue.toLong().toString()
+        } else {
+            toString()
+        }
+    }
+
     private class TargetingKeyMissingException : Exception()
 
     private companion object {
@@ -777,6 +996,13 @@ internal class NativeFfeCore {
         const val EXPECTED_STRING = "string"
         const val EXPECTED_NUMBER = "number"
         const val EXPECTED_OBJECT = "object"
+        const val CHECKSUM_HEX_LENGTH = 8
+        const val FNV_OFFSET_BASIS = 2166136261L
+        const val FNV_PRIME = 16777619L
+        const val MICROSECONDS_PER_MILLISECOND = 1000.0
+        const val NANOSECONDS_PER_MICROSECOND = 1000.0
+        const val NANOSECONDS_PER_MILLISECOND = 1_000_000.0
+        const val UNSIGNED_INT_MASK = 0xffffffffL
         const val BYTE_MASK = 0xffL
         const val MAX_UNSIGNED_INT = 4_294_967_295L
         const val ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
@@ -791,6 +1017,12 @@ internal class NativeFfeCore {
             "GT",
             "LTE",
             "LT",
+            "SEMVER_EQ",
+            "SEMVER_NEQ",
+            "SEMVER_GT",
+            "SEMVER_GTE",
+            "SEMVER_LT",
+            "SEMVER_LTE",
         )
     }
 }

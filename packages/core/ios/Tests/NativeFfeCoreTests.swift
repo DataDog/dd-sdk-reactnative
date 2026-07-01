@@ -202,9 +202,82 @@ final class NativeFfeCoreTests: XCTestCase {
         XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n"))
     }
 
-    private func configuredCore() throws -> NativeFfeCore {
+    func testMatchSemverOperatorsWithNativeRulesConfiguration() throws {
+        let testedCore = try configuredCore(wire: Self.semverConfigurationWire())
+        let cases = [
+            ("semver-eq", "version_eq", "1.2.3"),
+            ("semver-neq", "version_neq", "1.2.4"),
+            ("semver-gt", "version_gt", "1.2.4"),
+            ("semver-gte", "version_gte", "1.2.3"),
+            ("semver-lt", "version_lt", "1.2.2"),
+            ("semver-lte", "version_lte", "1.2.3-beta.2"),
+        ]
+
+        for (flagKey, attribute, value) in cases {
+            _ = testedCore.setEvaluationContext([
+                "targetingKey": "user-123",
+                "attributes": [attribute: value],
+            ])
+
+            let result = testedCore.resolveBooleanEvaluation(
+                flagKey: flagKey,
+                defaultValue: false
+            )
+
+            XCTAssertEqual(result["value"] as? Bool, true, "Expected \(flagKey) to match")
+            XCTAssertEqual(result["reason"] as? String, "TARGETING_MATCH")
+        }
+    }
+
+    func testMatchInlineCaseInsensitiveRegexWithNativeRulesConfiguration() throws {
+        let testedCore = try configuredCore(wire: Self.regexConfigurationWire())
+        _ = testedCore.setEvaluationContext([
+            "targetingKey": "user-123",
+            "attributes": ["device": "Pixel 8"],
+        ])
+
+        let result = testedCore.resolveBooleanEvaluation(
+            flagKey: "regex-inline-case",
+            defaultValue: false
+        )
+
+        XCTAssertEqual(result["value"] as? Bool, true)
+        XCTAssertEqual(result["reason"] as? String, "TARGETING_MATCH")
+    }
+
+    func testRunBenchmarkAggregateWithNativeRulesConfiguration() throws {
+        let testedCore = try configuredCore(wire: Self.semverConfigurationWire())
+        _ = testedCore.setEvaluationContext([
+            "targetingKey": "existing-user",
+            "attributes": ["version_eq": "0.0.1"],
+        ])
+
+        let result = testedCore.runBenchmark(options: [
+            "contexts": [
+                [
+                    "targetingKey": "user-123",
+                    "attributes": ["version_eq": "1.2.3"],
+                ],
+            ],
+            "flags": [
+                [
+                    "key": "semver-eq",
+                    "variationType": "BOOLEAN",
+                    "defaultValue": false,
+                ],
+            ],
+        ])
+
+        XCTAssertEqual(result["iterations"] as? Int64, 1)
+        XCTAssertNotNil(result["checksum"] as? String)
+        XCTAssertNotNil(result["evalTotalMs"] as? Double)
+        XCTAssertNotNil(result["perEvalUs"] as? Double)
+        XCTAssertEqual(testedCore.evaluationContext()["targetingKey"] as? String, "existing-user")
+    }
+
+    private func configuredCore(wire: String? = nil) throws -> NativeFfeCore {
         let testedCore = NativeFfeCore()
-        let configuration = try testedCore.configurationFromString(Self.flagsConfigurationWire)
+        let configuration = try testedCore.configurationFromString(wire ?? Self.flagsConfigurationWire)
         _ = testedCore.setConfiguration(configuration.toMap())
         return testedCore
     }
@@ -413,6 +486,99 @@ final class NativeFfeCoreTests: XCTestCase {
     private static func jsonObject(_ json: String) throws -> [String: Any] {
         let data = try XCTUnwrap(json.data(using: .utf8))
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    private static func semverConfigurationWire() throws -> String {
+        let cases = [
+            ("semver-eq", "version_eq", "SEMVER_EQ", "1.2.3"),
+            ("semver-neq", "version_neq", "SEMVER_NEQ", "1.2.3"),
+            ("semver-gt", "version_gt", "SEMVER_GT", "1.2.3"),
+            ("semver-gte", "version_gte", "SEMVER_GTE", "1.2.3"),
+            ("semver-lt", "version_lt", "SEMVER_LT", "1.2.3"),
+            ("semver-lte", "version_lte", "SEMVER_LTE", "1.2.3"),
+        ]
+        var flags: [String: Any] = [:]
+        for (key, attribute, conditionOperator, expectedValue) in cases {
+            flags[key] = booleanFlag(
+                key: key,
+                attribute: attribute,
+                conditionOperator: conditionOperator,
+                expectedValue: expectedValue
+            )
+        }
+        return try NativeFfeTestFixtures.rulesConfigurationWire(
+            response: jsonString([
+                "format": "SERVER",
+                "environment": ["name": "Test"],
+                "flags": flags,
+            ]),
+            etag: "semver-test"
+        )
+    }
+
+    private static func regexConfigurationWire() throws -> String {
+        try NativeFfeTestFixtures.rulesConfigurationWire(
+            response: jsonString([
+                "format": "SERVER",
+                "environment": ["name": "Test"],
+                "flags": [
+                    "regex-inline-case": booleanFlag(
+                        key: "regex-inline-case",
+                        attribute: "device",
+                        conditionOperator: "MATCHES",
+                        expectedValue: "(?i)pixel [6-9]"
+                    ),
+                ],
+            ]),
+            etag: "regex-test"
+        )
+    }
+
+    private static func booleanFlag(
+        key: String,
+        attribute: String,
+        conditionOperator: String,
+        expectedValue: String
+    ) -> [String: Any] {
+        [
+            "key": key,
+            "enabled": true,
+            "variationType": "BOOLEAN",
+            "variations": [
+                "on": ["key": "on", "value": true],
+                "off": ["key": "off", "value": false],
+            ],
+            "allocations": [
+                [
+                    "key": "match",
+                    "rules": [
+                        [
+                            "conditions": [
+                                [
+                                    "attribute": attribute,
+                                    "operator": conditionOperator,
+                                    "value": expectedValue,
+                                ],
+                            ],
+                        ],
+                    ],
+                    "splits": [
+                        ["variationKey": "on", "shards": []],
+                    ],
+                ],
+                [
+                    "key": "default",
+                    "splits": [
+                        ["variationKey": "off", "shards": []],
+                    ],
+                ],
+            ],
+        ]
+    }
+
+    private static func jsonString(_ object: [String: Any]) throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        return try XCTUnwrap(String(data: data, encoding: .utf8))
     }
 
     private static let flagsConfigurationWire: String = {

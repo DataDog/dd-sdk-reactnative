@@ -255,6 +255,11 @@ class DdSdk(
         implementation.getProviderDebugState(promise)
     }
 
+    @ReactMethod
+    override fun runNativeFfeBenchmark(options: ReadableMap, promise: Promise) {
+        implementation.runNativeFfeBenchmark(options, promise)
+    }
+
     override fun addListener(eventType: String?) {
         // No-op
     }

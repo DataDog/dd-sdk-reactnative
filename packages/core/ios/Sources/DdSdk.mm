@@ -230,6 +230,13 @@ RCT_EXPORT_METHOD(getProviderDebugState:(RCTPromiseResolveBlock)resolve
     [self getProviderDebugState:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(runNativeFfeBenchmark, runNativeFfeBenchmarkWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self runNativeFfeBenchmark:options resolve:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
                  withAttributes: (NSDictionary *)attributes
                  withConfig:(NSDictionary *)config
@@ -384,6 +391,10 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)getProviderDebugState:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation getProviderDebugStateWithResolve:resolve reject:reject];
+}
+
+- (void)runNativeFfeBenchmark:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation runNativeFfeBenchmarkWithOptions:options resolve:resolve reject:reject];
 }
 
 - (void)addListener:(NSString *)eventType {

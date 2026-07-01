@@ -15,6 +15,7 @@ import styles from './styles';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
+import { runFfeJsVsNativeBenchmark } from '../../../packages/core/src/flags/benchmark';
 
 const axios = require('../axiosConfig');
 
@@ -26,7 +27,9 @@ interface MainScreenState {
   resultTouchableWithoutFeedback: string,
   resultTouchableNativeFeedback: string,
   trackingConsent: TrackingConsent,
-  trackingConsentModalVisible: boolean
+  trackingConsentModalVisible: boolean,
+  ffeBenchmarkResult: string,
+  ffeBenchmarkRunning: boolean
 }
 
 export default class MainScreen extends Component<any, MainScreenState> {
@@ -40,7 +43,9 @@ export default class MainScreen extends Component<any, MainScreenState> {
       resultButtonAction: "",
       resultTouchableOpacityAction: "",
       trackingConsent: TrackingConsent.PENDING,
-      trackingConsentModalVisible: false
+      trackingConsentModalVisible: false,
+      ffeBenchmarkResult: "FF&E benchmark has not run yet.",
+      ffeBenchmarkRunning: false
     } as MainScreenState;
     this.consentModal = React.createRef()
   }
@@ -90,6 +95,29 @@ export default class MainScreen extends Component<any, MainScreenState> {
   axiosVehicle() {
     return axios.request({ method: 'get', url: '/api/vehicle/random_vehicle' })
       .then((response) => response.data);
+  }
+
+  runFfeBenchmark() {
+    this.setState({
+      ffeBenchmarkRunning: true,
+      ffeBenchmarkResult: "Running FF&E JS-vs-native benchmark..."
+    } as MainScreenState)
+
+    runFfeJsVsNativeBenchmark({
+      rnArchitecture: 'old',
+      build: __DEV__ ? 'debug' : 'release'
+    }).then((report) => {
+      console.log(`FFE_BENCHMARK_RESULT ${JSON.stringify(report)}`)
+      this.setState({
+        ffeBenchmarkRunning: false,
+        ffeBenchmarkResult: JSON.stringify(report, null, 2)
+      } as MainScreenState)
+    }).catch((error) => {
+      this.setState({
+        ffeBenchmarkRunning: false,
+        ffeBenchmarkResult: error instanceof Error ? error.message : "FF&E benchmark failed."
+      } as MainScreenState)
+    })
   }
 
   componentDidMount() {
@@ -151,6 +179,14 @@ export default class MainScreen extends Component<any, MainScreenState> {
             });
           }}
         />
+        <Button
+          title="Run FF&E benchmark"
+          accessibilityLabel="run_ffe_benchmark"
+          disabled={this.state.ffeBenchmarkRunning}
+          onPress={() => this.runFfeBenchmark()}
+        />
+        {this.state.ffeBenchmarkRunning ? <ActivityIndicator style={{ marginTop: 10 }} /> : null}
+        <Text selectable style={{ marginTop: 20 }}>{this.state.ffeBenchmarkResult}</Text>
         <Text style={{ marginTop: 20 }}>{this.state.resultButtonAction}</Text>
         <Button
           title="Click me"

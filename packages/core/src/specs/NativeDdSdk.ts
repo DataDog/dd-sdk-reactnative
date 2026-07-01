@@ -215,6 +215,13 @@ export interface Spec extends TurboModule {
     getProviderDebugState(): Promise<Object>;
 
     /**
+     * Benchmark-only aggregate native FF&E evaluation hook. The active native
+     * configuration is evaluated against every provided context and flag spec
+     * inside native, and the method returns timing plus a result checksum.
+     */
+    runNativeFfeBenchmark(options: Object): Promise<Object>;
+
+    /**
      * Required definitions, because of:
      * https://github.com/react-native-community/RNNewArchitectureLibraries/tree/feat/swift-event-emitter?tab=readme-ov-file#codegen-update-codegen-specs)
      */

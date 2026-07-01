@@ -179,6 +179,56 @@ internal final class NativeFfeCore {
         resolveEvaluation(flagKey: flagKey, defaultValue: defaultValue, expectedType: ExpectedType.object)
     }
 
+    func runBenchmark(options: [String: Any]) -> [String: Any] {
+        let contexts = options["contexts"] as? [[String: Any]] ?? []
+        let flags = options["flags"] as? [[String: Any]] ?? []
+        var batchDurationsUs: [Double] = []
+        var iterations: Int64 = 0
+        var checksum = BenchmarkChecksum.offsetBasis
+        let previousContext = currentContext
+        let totalStartNs = DispatchTime.now().uptimeNanoseconds
+        defer {
+            currentContext = previousContext
+        }
+
+        for context in contexts {
+            currentContext = context
+            let batchStartNs = DispatchTime.now().uptimeNanoseconds
+            for flag in flags {
+                guard let flagKey = stringValue(flag["key"]),
+                    let variationType = stringValue(flag["variationType"])
+                else {
+                    continue
+                }
+                let result = resolveEvaluation(
+                    flagKey: flagKey,
+                    defaultValue: benchmarkDefaultValue(flag["defaultValue"], variationType: variationType),
+                    expectedType: benchmarkExpectedType(variationType)
+                )
+                checksum = checksumResult(checksum, flagKey: flagKey, result: result)
+                iterations += 1
+            }
+            let batchDurationUs = Double(DispatchTime.now().uptimeNanoseconds - batchStartNs)
+                / BenchmarkTime.nanosecondsPerMicrosecond
+                / Double(max(flags.count, 1))
+            batchDurationsUs.append(batchDurationUs)
+        }
+
+        let evalTotalMs = Double(DispatchTime.now().uptimeNanoseconds - totalStartNs)
+            / BenchmarkTime.nanosecondsPerMillisecond
+        return [
+            "iterations": iterations,
+            "checksum": String(format: "%08x", checksum),
+            "evalTotalMs": evalTotalMs,
+            "perEvalUs": iterations > 0
+                ? evalTotalMs * BenchmarkTime.microsecondsPerMillisecond / Double(iterations)
+                : 0.0,
+            "p50Us": percentile(batchDurationsUs, quantile: 0.50),
+            "p95Us": percentile(batchDurationsUs, quantile: 0.95),
+            "p99Us": percentile(batchDurationsUs, quantile: 0.99),
+        ]
+    }
+
     func debugState() -> [String: Any] {
         buildMap([
             ("status", status),
@@ -425,6 +475,12 @@ internal final class NativeFfeCore {
             return doubleValue(value).map { $0 <= (doubleValue(condition.value) ?? 0) } ?? false
         case "LT":
             return doubleValue(value).map { $0 < (doubleValue(condition.value) ?? 0) } ?? false
+        case "SEMVER_EQ", "SEMVER_NEQ", "SEMVER_GT", "SEMVER_GTE", "SEMVER_LT", "SEMVER_LTE":
+            return semverMatches(
+                operator: condition.operator,
+                actual: value,
+                expected: condition.value
+            )
         default:
             return false
         }
@@ -669,6 +725,231 @@ internal final class NativeFfeCore {
         }
     }
 
+    private func semverMatches(operator: String, actual: Any?, expected: Any?) -> Bool {
+        guard let comparison = compareSemver(
+            stringValue(actual),
+            stringValue(expected)
+        ) else {
+            return false
+        }
+        switch `operator` {
+        case "SEMVER_EQ":
+            return comparison == 0
+        case "SEMVER_NEQ":
+            return comparison != 0
+        case "SEMVER_GT":
+            return comparison > 0
+        case "SEMVER_GTE":
+            return comparison >= 0
+        case "SEMVER_LT":
+            return comparison < 0
+        case "SEMVER_LTE":
+            return comparison <= 0
+        default:
+            return false
+        }
+    }
+
+    private func compareSemver(_ actual: String?, _ expected: String?) -> Int? {
+        guard let left = nativeSemver(actual), let right = nativeSemver(expected) else {
+            return nil
+        }
+        let coreComparison = compareInts(left.major, right.major)
+            ?? compareInts(left.minor, right.minor)
+            ?? compareInts(left.patch, right.patch)
+        if let coreComparison {
+            return coreComparison
+        }
+        return comparePrerelease(left.prerelease, right.prerelease)
+    }
+
+    private func nativeSemver(_ value: String?) -> NativeSemver? {
+        guard let value else {
+            return nil
+        }
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"^[vV]"#, with: "", options: .regularExpression)
+            .split(separator: "+", maxSplits: 1, omittingEmptySubsequences: false)[0]
+        let parts = normalized.split(separator: "-", maxSplits: 1, omittingEmptySubsequences: false)
+        let core = parts[0].split(separator: ".", omittingEmptySubsequences: false)
+        guard !core.isEmpty, core.count <= 3 else {
+            return nil
+        }
+        let numbers = core.map { Int($0) }
+        guard numbers.allSatisfy({ $0 != nil }) else {
+            return nil
+        }
+        return NativeSemver(
+            major: numbers[0]!,
+            minor: core.indices.contains(1) ? numbers[1]! : 0,
+            patch: core.indices.contains(2) ? numbers[2]! : 0,
+            prerelease: parts.indices.contains(1)
+                ? parts[1].split(separator: ".").map(String.init)
+                : []
+        )
+    }
+
+    private func comparePrerelease(_ left: [String], _ right: [String]) -> Int {
+        if left.isEmpty, right.isEmpty {
+            return 0
+        }
+        if left.isEmpty {
+            return 1
+        }
+        if right.isEmpty {
+            return -1
+        }
+        for index in 0..<max(left.count, right.count) {
+            guard left.indices.contains(index) else {
+                return -1
+            }
+            guard right.indices.contains(index) else {
+                return 1
+            }
+            let comparison = comparePrereleaseIdentifier(left[index], right[index])
+            if comparison != 0 {
+                return comparison
+            }
+        }
+        return 0
+    }
+
+    private func comparePrereleaseIdentifier(_ left: String, _ right: String) -> Int {
+        let leftNumber = Int(left)
+        let rightNumber = Int(right)
+        if let leftNumber, let rightNumber {
+            return compareInts(leftNumber, rightNumber) ?? 0
+        }
+        if leftNumber != nil {
+            return -1
+        }
+        if rightNumber != nil {
+            return 1
+        }
+        return compareInts(left.compare(right).rawValue, 0) ?? 0
+    }
+
+    private func compareInts(_ left: Int, _ right: Int) -> Int? {
+        if left < right {
+            return -1
+        }
+        if left > right {
+            return 1
+        }
+        return nil
+    }
+
+    private func benchmarkDefaultValue(_ value: Any?, variationType: String) -> Any {
+        switch variationType {
+        case "BOOLEAN":
+            return boolValue(value) ?? false
+        case "STRING":
+            return stringValue(value) ?? ""
+        case "INTEGER", "NUMERIC":
+            return doubleValue(value) ?? 0.0
+        case "JSON":
+            return dictionaryValue(value) ?? [:]
+        default:
+            return value ?? NSNull()
+        }
+    }
+
+    private func benchmarkExpectedType(_ variationType: String) -> String {
+        switch variationType {
+        case "BOOLEAN":
+            return ExpectedType.boolean
+        case "STRING":
+            return ExpectedType.string
+        case "INTEGER", "NUMERIC":
+            return ExpectedType.number
+        case "JSON":
+            return ExpectedType.object
+        default:
+            return ""
+        }
+    }
+
+    private func percentile(_ values: [Double], quantile: Double) -> Double {
+        guard !values.isEmpty else {
+            return 0
+        }
+        let sorted = values.sorted()
+        let index = max(0, min(sorted.count - 1, Int(Double(sorted.count - 1) * quantile)))
+        return sorted[index]
+    }
+
+    private func checksumResult(
+        _ checksum: UInt32,
+        flagKey: String,
+        result: [String: Any]
+    ) -> UInt32 {
+        updateChecksum(
+            checksum,
+            [
+                flagKey,
+                canonicalBenchmarkValue(result["value"]),
+                stringValue(result["variant"]) ?? "",
+                stringValue(result["reason"]) ?? "",
+                stringValue(result["errorCode"]) ?? "",
+            ].joined(separator: "|")
+        )
+    }
+
+    private func updateChecksum(_ checksum: UInt32, _ value: String) -> UInt32 {
+        var hash = checksum
+        for byte in value.utf8 {
+            hash ^= UInt32(byte)
+            hash = hash &* BenchmarkChecksum.prime
+        }
+        return hash
+    }
+
+    private func canonicalBenchmarkValue(_ value: Any?) -> String {
+        guard let value, !(value is NSNull) else {
+            return "null"
+        }
+        if let dictionary = dictionaryValue(value) {
+            return "{"
+                + dictionary.keys.sorted().map {
+                    "\(jsonString($0)):\(canonicalBenchmarkValue(dictionary[$0]))"
+                }.joined(separator: ",")
+                + "}"
+        }
+        if let array = arrayValueOrNil(value) {
+            return "[" + array.map { canonicalBenchmarkValue($0) }.joined(separator: ",") + "]"
+        }
+        if let string = value as? String {
+            return jsonString(string)
+        }
+        if let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                return number.boolValue ? "true" : "false"
+            }
+            return canonicalNumber(number.doubleValue)
+        }
+        return jsonString(String(describing: value))
+    }
+
+    private func canonicalNumber(_ value: Double) -> String {
+        if value.isFinite,
+            value.rounded(.towardZero) == value,
+            value >= Double(Int64.min),
+            value <= Double(Int64.max) {
+            return String(Int64(value))
+        }
+        return String(describing: value)
+    }
+
+    private func jsonString(_ value: String) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: [value]),
+            let encodedArray = String(data: data, encoding: .utf8)
+        else {
+            return "\"\(value)\""
+        }
+        return String(encodedArray.dropFirst().dropLast())
+    }
+
     private func containsString(_ values: [Any], expected: String) -> Bool {
         values.contains { stringValue($0) == expected }
     }
@@ -892,6 +1173,13 @@ internal struct NativeCondition {
     let value: Any?
 }
 
+private struct NativeSemver {
+    let major: Int
+    let minor: Int
+    let patch: Int
+    let prerelease: [String]
+}
+
 internal struct NativeSplit {
     let variationKey: String
     let shards: [NativeShard]
@@ -988,6 +1276,17 @@ private enum ExpectedType {
     static let object = "object"
 }
 
+private enum BenchmarkChecksum {
+    static let offsetBasis: UInt32 = 2_166_136_261
+    static let prime: UInt32 = 16_777_619
+}
+
+private enum BenchmarkTime {
+    static let microsecondsPerMillisecond = 1_000.0
+    static let nanosecondsPerMicrosecond = 1_000.0
+    static let nanosecondsPerMillisecond = 1_000_000.0
+}
+
 private enum KnownConditionOperators {
     static let values: Set<String> = [
         "IS_NULL",
@@ -999,6 +1298,12 @@ private enum KnownConditionOperators {
         "GT",
         "LTE",
         "LT",
+        "SEMVER_EQ",
+        "SEMVER_NEQ",
+        "SEMVER_GT",
+        "SEMVER_GTE",
+        "SEMVER_LT",
+        "SEMVER_LTE",
     ]
 }
 

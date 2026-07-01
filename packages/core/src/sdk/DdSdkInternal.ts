@@ -58,6 +58,8 @@ export type DdSdkType = {
     ): Promise<object>;
 
     getProviderDebugState(): Promise<object>;
+
+    runNativeFfeBenchmark(options: object): Promise<object>;
 };
 
 export class DdSdkWrapper implements DdNativeSdkType {
@@ -203,6 +205,10 @@ export class DdSdkWrapper implements DdNativeSdkType {
 
     getProviderDebugState(): Promise<object> {
         return NativeDdSdk.getProviderDebugState();
+    }
+
+    runNativeFfeBenchmark(options: object): Promise<object> {
+        return NativeDdSdk.runNativeFfeBenchmark(options);
     }
 
     addListener(eventType: string): void {

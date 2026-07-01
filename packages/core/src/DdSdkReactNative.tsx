@@ -132,6 +132,25 @@ export type FlagsProviderDebugState = {
     };
 };
 
+export type NativeFfeBenchmarkOptions = {
+    contexts: FlagsEvaluationContext[];
+    flags: Array<{
+        key: string;
+        variationType: 'BOOLEAN' | 'STRING' | 'INTEGER' | 'NUMERIC' | 'JSON';
+        defaultValue: FlagValue;
+    }>;
+};
+
+export type NativeFfeBenchmarkResult = {
+    iterations: number;
+    checksum: string;
+    evalTotalMs: number;
+    perEvalUs: number;
+    p50Us: number;
+    p95Us: number;
+    p99Us: number;
+};
+
 /**
  * This class initializes the Datadog SDK, and sets up communication with the server.
  */
@@ -625,6 +644,14 @@ export class DdSdkReactNative {
 
     static getProviderDebugState = (): Promise<FlagsProviderDebugState> => {
         return NativeDdSdk.getProviderDebugState() as Promise<FlagsProviderDebugState>;
+    };
+
+    static runNativeFfeBenchmark = (
+        options: NativeFfeBenchmarkOptions
+    ): Promise<NativeFfeBenchmarkResult> => {
+        return NativeDdSdk.runNativeFfeBenchmark(
+            options
+        ) as Promise<NativeFfeBenchmarkResult>;
     };
 
     private static buildConfiguration = (

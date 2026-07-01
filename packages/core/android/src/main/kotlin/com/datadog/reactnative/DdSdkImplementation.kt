@@ -432,6 +432,16 @@ class DdSdkImplementation(
         }
     }
 
+    /**
+     * Runs a benchmark-only aggregate evaluator loop inside native. This path
+     * intentionally skips evaluation side effects so it measures evaluator cost.
+     */
+    fun runNativeFfeBenchmark(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.runBenchmark(options.toMap()).toWritableMap()
+        }
+    }
+
     // endregion
 
     // region Internal

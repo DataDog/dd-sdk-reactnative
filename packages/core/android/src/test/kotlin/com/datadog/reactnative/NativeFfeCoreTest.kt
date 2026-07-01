@@ -217,6 +217,103 @@ internal class NativeFfeCoreTest {
         assertThat(failures).isEmpty()
     }
 
+    @Test
+    fun `M match semver operators W native rules configuration`() {
+        // Given
+        val core = NativeFfeCore()
+        val configuration = core.configurationFromString(semverConfigurationWire())
+        core.setConfiguration(configuration.toMap())
+
+        val cases = listOf(
+            Triple("semver-eq", "version_eq", "1.2.3"),
+            Triple("semver-neq", "version_neq", "1.2.4"),
+            Triple("semver-gt", "version_gt", "1.2.4"),
+            Triple("semver-gte", "version_gte", "1.2.3"),
+            Triple("semver-lt", "version_lt", "1.2.2"),
+            Triple("semver-lte", "version_lte", "1.2.3-beta.2"),
+        )
+
+        cases.forEach { (flagKey, attribute, value) ->
+            core.setEvaluationContext(
+                mapOf(
+                    "targetingKey" to "user-123",
+                    "attributes" to mapOf(attribute to value)
+                )
+            )
+
+            // When
+            val result = core.resolveBooleanEvaluation(flagKey, false)
+
+            // Then
+            assertThat(result["value"])
+                .withFailMessage("Expected $flagKey to match semver condition")
+                .isEqualTo(true)
+            assertThat(result["reason"]).isEqualTo("TARGETING_MATCH")
+        }
+    }
+
+    @Test
+    fun `M match inline case insensitive regex W native rules configuration`() {
+        // Given
+        val core = NativeFfeCore()
+        val configuration = core.configurationFromString(regexConfigurationWire())
+        core.setConfiguration(configuration.toMap())
+        core.setEvaluationContext(
+            mapOf(
+                "targetingKey" to "user-123",
+                "attributes" to mapOf("device" to "Pixel 8")
+            )
+        )
+
+        // When
+        val result = core.resolveBooleanEvaluation("regex-inline-case", false)
+
+        // Then
+        assertThat(result["value"]).isEqualTo(true)
+        assertThat(result["reason"]).isEqualTo("TARGETING_MATCH")
+    }
+
+    @Test
+    fun `M run benchmark aggregate W native rules configuration`() {
+        // Given
+        val core = NativeFfeCore()
+        val configuration = core.configurationFromString(semverConfigurationWire())
+        core.setConfiguration(configuration.toMap())
+        core.setEvaluationContext(
+            mapOf(
+                "targetingKey" to "existing-user",
+                "attributes" to mapOf("version_eq" to "0.0.1")
+            )
+        )
+
+        // When
+        val result = core.runBenchmark(
+            mapOf(
+                "contexts" to listOf(
+                    mapOf(
+                        "targetingKey" to "user-123",
+                        "attributes" to mapOf("version_eq" to "1.2.3")
+                    )
+                ),
+                "flags" to listOf(
+                    mapOf(
+                        "key" to "semver-eq",
+                        "variationType" to "BOOLEAN",
+                        "defaultValue" to false
+                    )
+                )
+            )
+        )
+
+        // Then
+        assertThat(result["iterations"]).isEqualTo(1L)
+        assertThat(result["checksum"]).isInstanceOf(String::class.java)
+        assertThat(result["evalTotalMs"]).isInstanceOf(Double::class.javaObjectType)
+        assertThat(result["perEvalUs"]).isInstanceOf(Double::class.javaObjectType)
+        assertThat(core.evaluationContext())
+            .containsEntry("targetingKey", "existing-user")
+    }
+
     private fun setConfiguration() {
         val configuration = testedCore.configurationFromString(flagsConfigurationWire)
         testedCore.setConfiguration(configuration.toMap())
@@ -381,6 +478,106 @@ internal class NativeFfeCoreTest {
 
     private fun readFixture(relativePath: String): String {
         return readNativeFfeFixture(javaClass, "ffe-system-test-data/$relativePath")
+    }
+
+    private fun semverConfigurationWire(): String {
+        val flags = JSONObject()
+        listOf(
+            arrayOf("semver-eq", "version_eq", "SEMVER_EQ", "1.2.3"),
+            arrayOf("semver-neq", "version_neq", "SEMVER_NEQ", "1.2.3"),
+            arrayOf("semver-gt", "version_gt", "SEMVER_GT", "1.2.3"),
+            arrayOf("semver-gte", "version_gte", "SEMVER_GTE", "1.2.3"),
+            arrayOf("semver-lt", "version_lt", "SEMVER_LT", "1.2.3"),
+            arrayOf("semver-lte", "version_lte", "SEMVER_LTE", "1.2.3"),
+        ).forEach { flag ->
+            flags.put(flag[0], booleanFlag(flag[0], flag[1], flag[2], flag[3]))
+        }
+        return nativeFfeRulesConfigurationWire(
+            JSONObject()
+                .put("format", "SERVER")
+                .put("environment", JSONObject().put("name", "Test"))
+                .put("flags", flags)
+                .toString(),
+            etag = "semver-test"
+        )
+    }
+
+    private fun regexConfigurationWire(): String {
+        return nativeFfeRulesConfigurationWire(
+            JSONObject()
+                .put("format", "SERVER")
+                .put("environment", JSONObject().put("name", "Test"))
+                .put(
+                    "flags",
+                    JSONObject().put(
+                        "regex-inline-case",
+                        booleanFlag(
+                            "regex-inline-case",
+                            "device",
+                            "MATCHES",
+                            "(?i)pixel [6-9]"
+                        )
+                    )
+                )
+                .toString(),
+            etag = "regex-test"
+        )
+    }
+
+    private fun booleanFlag(
+        key: String,
+        attribute: String,
+        operator: String,
+        expectedValue: String
+    ): JSONObject {
+        return JSONObject()
+            .put("key", key)
+            .put("enabled", true)
+            .put("variationType", "BOOLEAN")
+            .put(
+                "variations",
+                JSONObject()
+                    .put("on", JSONObject().put("key", "on").put("value", true))
+                    .put("off", JSONObject().put("key", "off").put("value", false))
+            )
+            .put(
+                "allocations",
+                JSONArray()
+                    .put(
+                        JSONObject()
+                            .put("key", "match")
+                            .put(
+                                "rules",
+                                JSONArray().put(
+                                    JSONObject().put(
+                                        "conditions",
+                                        JSONArray().put(
+                                            JSONObject()
+                                                .put("attribute", attribute)
+                                                .put("operator", operator)
+                                                .put("value", expectedValue)
+                                        )
+                                    )
+                                )
+                            )
+                            .put(
+                                "splits",
+                                JSONArray().put(
+                                    JSONObject().put("variationKey", "on").put("shards", JSONArray())
+                                )
+                            )
+                    )
+                    .put(
+                        JSONObject()
+                            .put("key", "default")
+                            .put(
+                                "splits",
+                                JSONArray().put(
+                                    JSONObject().put("variationKey", "off").put("shards", JSONArray())
+                                )
+                            )
+                    )
+            )
     }
 
     private data class EvaluationCase(

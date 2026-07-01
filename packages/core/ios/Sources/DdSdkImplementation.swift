@@ -453,6 +453,15 @@ public class DdSdkImplementation: NSObject {
         }
     }
 
+    @objc
+    public func runNativeFfeBenchmark(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.runBenchmark(options: options as? [String: Any] ?? [:])
+        }
+    }
+
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
         DdTelemetry.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType

@@ -286,6 +286,11 @@ class DdSdk(
         implementation.getProviderDebugState(promise)
     }
 
+    @ReactMethod
+    fun runNativeFfeBenchmark(options: ReadableMap, promise: Promise) {
+        implementation.runNativeFfeBenchmark(options, promise)
+    }
+
     // Required for rn built in EventEmitter Calls.
     @ReactMethod
     fun addListener(eventName: String) {
