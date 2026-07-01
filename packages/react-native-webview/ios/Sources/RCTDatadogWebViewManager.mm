@@ -5,7 +5,6 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <DatadogSDKReactNative/DatadogSDKReactNative-umbrella.h>
 #import "RCTDatadogWebViewManager.h"
 #import "RCTDatadogWebView.h"
 

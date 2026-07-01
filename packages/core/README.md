@@ -51,12 +51,12 @@ const datadogConfiguration = new DatadogProviderConfiguration(
             trackErrors: true, // track errors
             nativeCrashReportEnabled: true, // Optional: enable or disable native crash reports
             sessionSampleRate: 80, // Optional: sample RUM sessions (here, 80% of session will be sent to Datadog. Default = 100%)
-            resourceTracingSamplingRate: 80, // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%) 
+            resourceTraceSampleRate: 80, // Optional: sample tracing integrations for network calls between your app and your backend (here, 80% of calls to your instrumented backend will be linked from the RUM view to the APM view. Default = 20%)
             // You need to specify the hosts of your backends to enable tracing with these backends
             firstPartyHosts: ['example.com'], // matches 'example.com' and subdomains like 'api.example.com'
         },
         logsConfiguration: {
-            logEventMapper: (logEvent) => {
+            logEventMapper: logEvent => {
                 logEvent.message = `[CUSTOM] ${logEvent.message}`;
                 return logEvent;
             }

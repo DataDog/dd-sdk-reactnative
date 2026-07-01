@@ -218,6 +218,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
      * @param stacktrace The error stacktrace.
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the error occurred (in milliseconds). If not provided, current timestamp will be used.
+     * @param fingerprint A custom fingerprint to group this error with similar ones.
      */
     @Suppress("LongParameterList")
     fun addError(
