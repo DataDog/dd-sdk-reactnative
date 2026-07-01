@@ -411,11 +411,12 @@ internal final class NativeFfeCore {
             }
             return !regexMatches(pattern: stringValue(condition.value), value: subjectValue)
         case "ONE_OF":
-            return stringValue(value).map { containsString(arrayValue(condition.value), expected: $0) }
-                ?? false
+            return containsComparableValue(arrayValue(condition.value), actual: value)
         case "NOT_ONE_OF":
-            return stringValue(value).map { !containsString(arrayValue(condition.value), expected: $0) }
-                ?? false
+            guard !isNull(value) else {
+                return false
+            }
+            return !containsComparableValue(arrayValue(condition.value), actual: value)
         case "GTE":
             return doubleValue(value).map { $0 >= (doubleValue(condition.value) ?? 0) } ?? false
         case "GT":
@@ -670,6 +671,32 @@ internal final class NativeFfeCore {
 
     private func containsString(_ values: [Any], expected: String) -> Bool {
         values.contains { stringValue($0) == expected }
+    }
+
+    private func containsComparableValue(_ values: [Any], actual: Any?) -> Bool {
+        comparableStrings(actual).contains { containsString(values, expected: $0) }
+    }
+
+    private func comparableStrings(_ value: Any?) -> [String] {
+        guard let value, !(value is NSNull) else {
+            return []
+        }
+
+        var strings = Set<String>()
+        if let string = stringValue(value) {
+            strings.insert(string)
+        }
+        if let number = value as? NSNumber,
+            CFGetTypeID(number) != CFBooleanGetTypeID() {
+            let doubleValue = number.doubleValue
+            if doubleValue.isFinite,
+                doubleValue.rounded(.towardZero) == doubleValue,
+                doubleValue >= Double(Int64.min),
+                doubleValue <= Double(Int64.max) {
+                strings.insert(String(Int64(doubleValue)))
+            }
+        }
+        return Array(strings)
     }
 
     private func bridgeValue(_ value: Any?) -> Any? {

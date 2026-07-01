@@ -131,6 +131,26 @@ internal class NativeFfeCoreTest {
     }
 
     @Test
+    fun `M match integer one of W React Native bridge double`() {
+        // Given
+        val evaluationCase = evaluationCase("test-case-numeric-one-of.json")
+        setConfiguration()
+        testedCore.setEvaluationContext(
+            mapOf(
+                "targetingKey" to evaluationCase.targetingKey,
+                "attributes" to mapOf("number" to 1.0)
+            )
+        )
+
+        // When
+        val result = testedCore.resolveNumberEvaluation(evaluationCase.flag, 0.0)
+
+        // Then
+        assertJsonValue(result["value"], 1)
+        assertThat(result["reason"]).isEqualTo("TARGETING_MATCH")
+    }
+
+    @Test
     fun `M return split reason W canonical sharded flag case`() {
         // Given
         val evaluationCase = evaluationCase("test-case-flag-with-empty-string.json", caseIndex = 1)

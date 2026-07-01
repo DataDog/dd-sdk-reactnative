@@ -11,11 +11,6 @@ import {
   TrackingConsent,
   PropagatorType,
 } from '@datadog/mobile-react-native';
-import type {
-  FlagEvaluationResult,
-  FlagsProviderDebugState,
-  NativeFlagsConfiguration,
-} from '@datadog/mobile-react-native';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
@@ -36,50 +31,12 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-// @ts-ignore local ignored credentials file
-import * as ddCredentials from './ddCredentials';
-import nativeFfeRulesConfigurationWire from './fixtures/native-ffe/offline-rules-configuration-wire.json';
+import * as ddCredentials from './ddCredentials.example';
+import {runNativeFfeOfflineFixtureCorpus} from './nativeFfeOfflineFixtureRunner';
 
 const APPLICATION_ID = ddCredentials.APPLICATION_ID;
 const CLIENT_TOKEN = ddCredentials.CLIENT_TOKEN;
 const ENVIRONMENT = ddCredentials.ENVIRONMENT;
-const NATIVE_FFE_CLIENT_TOKEN =
-  ddCredentials.NATIVE_FFE_CLIENT_TOKEN ?? CLIENT_TOKEN;
-const NATIVE_FFE_STAGING_RULES_ENDPOINT =
-  'https://dd.datad0g.com/api/v2/feature-flagging/config/rules-based';
-const NATIVE_FFE_STORAGE_OPTIONS = {
-  slot: 'default',
-};
-const NATIVE_FFE_BUNDLED_RULES_WIRE = JSON.stringify(
-  nativeFfeRulesConfigurationWire,
-);
-const NATIVE_FFE_DEMO_FLAG = 'boolean-false-assignment';
-const NATIVE_FFE_ANONYMOUS_CONTEXT = {
-  targetingKey: 'anonymous-user',
-  attributes: {
-    should_disable_feature: true,
-  },
-};
-const NATIVE_FFE_AUTHENTICATED_CONTEXT = {
-  targetingKey: 'authenticated-user',
-  attributes: {
-    should_disable_feature: false,
-  },
-};
-const NATIVE_FFE_STAGING_CONTEXT = {
-  targetingKey: 'test_subject4',
-  attributes: {
-    attr1: 'value1',
-    companyId: '1',
-  },
-};
-const NATIVE_FFE_STAGING_FLAGS = {
-  boolean: 'ffe-dogfooding-boolean-flag',
-  string: 'ffe-dogfooding-string-flag',
-  integer: 'ffe-dogfooding-integer-flag',
-  float: 'ffe-dogfooding-float-flag',
-  object: 'ffe-dogfooding-json-flag',
-};
 
 const datadogInitialization = (async () => {
   const config = new CoreConfiguration(
@@ -193,142 +150,18 @@ function NativeFfeFlowPanel({
   const runNativeFfeFlow = React.useCallback(async () => {
     setFlowState({
       status: 'loading',
-      summary: 'Running native FF&E flow...',
+      summary: 'Running native FF&E offline fixture corpus...',
     });
 
     try {
       await datadogInitialization;
 
-      const bundledConfiguration = await DdSdkReactNative.configurationFromString(
-        NATIVE_FFE_BUNDLED_RULES_WIRE,
-      );
-      const bundledState = await DdSdkReactNative.setConfiguration(
-        bundledConfiguration,
-      );
-      await DdSdkReactNative.setEvaluationContext(NATIVE_FFE_ANONYMOUS_CONTEXT);
-      const anonymousResult = await DdSdkReactNative.resolveBooleanEvaluation(
-        NATIVE_FFE_DEMO_FLAG,
-        true,
-      );
-      await DdSdkReactNative.setEvaluationContext(
-        NATIVE_FFE_AUTHENTICATED_CONTEXT,
-      );
-      const authenticatedResult = await DdSdkReactNative.resolveBooleanEvaluation(
-        NATIVE_FFE_DEMO_FLAG,
-        true,
-      );
-      const beforeFetchState = await DdSdkReactNative.getProviderDebugState();
-      const fetchedConfiguration = await DdSdkReactNative.fetchRulesConfiguration(
-        {
-          endpoint: NATIVE_FFE_STAGING_RULES_ENDPOINT,
-          headers: {
-            'Fastly-Client': '1',
-            'dd-client-token': NATIVE_FFE_CLIENT_TOKEN,
-          },
-          flagQueryParams: {
-            dd_env: 'staging',
-          },
-          previousConfigurationWire: NATIVE_FFE_BUNDLED_RULES_WIRE,
-        },
-      );
-      const afterFetchState = await DdSdkReactNative.getProviderDebugState();
-      const serializedWire = await DdSdkReactNative.configurationToString(
-        fetchedConfiguration,
-      );
-      const fetchedParsedConfiguration = await DdSdkReactNative.configurationFromString(
-        serializedWire,
-      );
-      const saveState = await DdSdkReactNative.saveConfiguration(
-        fetchedParsedConfiguration,
-        NATIVE_FFE_STORAGE_OPTIONS,
-      );
-      const loadedConfiguration = await DdSdkReactNative.loadConfiguration(
-        NATIVE_FFE_STORAGE_OPTIONS,
-      );
-      const afterLoadState = await DdSdkReactNative.getProviderDebugState();
-      const loadedState = await DdSdkReactNative.setConfiguration(
-        loadedConfiguration,
-      );
-      await DdSdkReactNative.setEvaluationContext(NATIVE_FFE_STAGING_CONTEXT);
-      const stagingResults = {
-        boolean: await DdSdkReactNative.resolveBooleanEvaluation(
-          NATIVE_FFE_STAGING_FLAGS.boolean,
-          false,
-        ),
-        string: await DdSdkReactNative.resolveStringEvaluation(
-          NATIVE_FFE_STAGING_FLAGS.string,
-          'Fallback title',
-        ),
-        integer: await DdSdkReactNative.resolveNumberEvaluation(
-          NATIVE_FFE_STAGING_FLAGS.integer,
-          0,
-        ),
-        float: await DdSdkReactNative.resolveNumberEvaluation(
-          NATIVE_FFE_STAGING_FLAGS.float,
-          0,
-        ),
-        object: await DdSdkReactNative.resolveObjectEvaluation(
-          NATIVE_FFE_STAGING_FLAGS.object,
-          {},
-        ),
-      };
-      const debugState = await DdSdkReactNative.getProviderDebugState();
+      const report = await runNativeFfeOfflineFixtureCorpus();
 
       setFlowState({
         status: 'ready',
-        summary: `Offline ${anonymousResult.value} -> ${
-          authenticatedResult.value
-        }; fetch count ${beforeFetchState.fetchCount} -> ${
-          afterFetchState.fetchCount
-        }; evaluated ${Object.keys(stagingResults).length} staging flags.`,
-        details: JSON.stringify(
-          {
-            offlineInit: {
-              bundledConfiguration: summarizeConfiguration(
-                bundledConfiguration,
-              ),
-              setState: summarizeDebugState(bundledState),
-              anonymousResult: summarizeEvaluation(anonymousResult),
-              authenticatedResult: summarizeEvaluation(authenticatedResult),
-              fetchCountAfterContextChange: beforeFetchState.fetchCount,
-            },
-            nativeFetch: {
-              activeBeforeFetch: summarizeDebugState(beforeFetchState),
-              fetchedConfiguration: summarizeConfiguration(
-                fetchedConfiguration,
-              ),
-              activeAfterFetch: summarizeDebugState(afterFetchState),
-              activeStateUnchanged:
-                beforeFetchState.activeEtag === afterFetchState.activeEtag &&
-                beforeFetchState.configurationSetCount ===
-                  afterFetchState.configurationSetCount,
-              serializedWireBytes: serializedWire.length,
-            },
-            nativePersistence: {
-              saveState: summarizeDebugState(saveState),
-              loadedConfiguration: summarizeConfiguration(loadedConfiguration),
-              stateAfterLoad: summarizeDebugState(afterLoadState),
-              loadDidNotActivate:
-                afterLoadState.activeEtag === afterFetchState.activeEtag &&
-                afterLoadState.configurationSetCount ===
-                  afterFetchState.configurationSetCount,
-            },
-            explicitActivation: {
-              setState: summarizeDebugState(loadedState),
-              stagingContext: NATIVE_FFE_STAGING_CONTEXT,
-              stagingResults: {
-                boolean: summarizeEvaluation(stagingResults.boolean),
-                string: summarizeEvaluation(stagingResults.string),
-                integer: summarizeEvaluation(stagingResults.integer),
-                float: summarizeEvaluation(stagingResults.float),
-                object: summarizeEvaluation(stagingResults.object),
-              },
-            },
-            finalDebugState: summarizeDebugState(debugState),
-          },
-          null,
-          2,
-        ),
+        summary: report.summary,
+        details: JSON.stringify(report.details, null, 2),
       });
     } catch (error) {
       setFlowState({
@@ -381,7 +214,7 @@ function NativeFfeFlowPanel({
         ]}
       >
         <Text style={styles.nativeFfeButtonText}>
-          {loading ? 'Running...' : 'Run native flow'}
+          {loading ? 'Running...' : 'Run offline fixture corpus'}
         </Text>
       </Pressable>
       {flowState.details ? (
@@ -400,43 +233,6 @@ function NativeFfeFlowPanel({
       ) : null}
     </View>
   );
-}
-
-function summarizeConfiguration(configuration: NativeFlagsConfiguration) {
-  return {
-    kind: configuration.kind,
-    version: configuration.version,
-    etag: configuration.etag,
-  };
-}
-
-function summarizeEvaluation(result: FlagEvaluationResult) {
-  return {
-    flagKey: result.flagKey,
-    value: result.value,
-    variant: result.variant,
-    reason: result.reason,
-    errorCode: result.errorCode,
-    flagMetadata: result.flagMetadata,
-  };
-}
-
-function summarizeDebugState(state: FlagsProviderDebugState) {
-  return {
-    status: state.status,
-    activeConfigurationKind: state.activeConfigurationKind,
-    activeEtag: state.activeEtag,
-    configurationSetCount: state.configurationSetCount,
-    configurationSaveCount: state.configurationSaveCount,
-    configurationLoadCount: state.configurationLoadCount,
-    fetchCount: state.fetchCount,
-    evaluationCount: state.evaluationCount,
-    lastEvent: state.lastEvent,
-    lastFetchRequest: state.lastFetchRequest,
-    lastStorage: state.lastStorage,
-    lastError: state.lastError,
-    evaluationSideEffects: state.evaluationSideEffects,
-  };
 }
 
 type SectionProps = PropsWithChildren<{

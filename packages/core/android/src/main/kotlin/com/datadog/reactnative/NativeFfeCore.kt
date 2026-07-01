@@ -331,8 +331,8 @@ internal class NativeFfeCore {
             }
             "MATCHES" -> regexMatches(condition.value.toString(), value?.toString())
             "NOT_MATCHES" -> value?.toString()?.let { !regexMatches(condition.value.toString(), it) } ?: false
-            "ONE_OF" -> value?.toString()?.let { condition.value.containsString(it) } ?: false
-            "NOT_ONE_OF" -> value?.toString()?.let { !condition.value.containsString(it) } ?: false
+            "ONE_OF" -> condition.value.containsComparableValue(value)
+            "NOT_ONE_OF" -> value != null && !condition.value.containsComparableValue(value)
             "GTE" -> value.asDouble()?.let { it >= (condition.value.asDouble() ?: 0.0) } ?: false
             "GT" -> value.asDouble()?.let { it > (condition.value.asDouble() ?: 0.0) } ?: false
             "LTE" -> value.asDouble()?.let { it <= (condition.value.asDouble() ?: 0.0) } ?: false
@@ -683,6 +683,30 @@ internal class NativeFfeCore {
             return containsString(expected)
         }
         return false
+    }
+
+    private fun Any?.containsComparableValue(value: Any?): Boolean {
+        return value.matchableStrings().any { containsString(it) }
+    }
+
+    private fun Any?.matchableStrings(): Set<String> {
+        if (this == null) {
+            return emptySet()
+        }
+        val strings = mutableSetOf(toString())
+        if (this is Number) {
+            val doubleValue = toDouble()
+            if (
+                !doubleValue.isNaN() &&
+                !doubleValue.isInfinite() &&
+                doubleValue % 1.0 == 0.0 &&
+                doubleValue >= Long.MIN_VALUE.toDouble() &&
+                doubleValue <= Long.MAX_VALUE.toDouble()
+            ) {
+                strings.add(doubleValue.toLong().toString())
+            }
+        }
+        return strings
     }
 
     private fun JSONArray.containsString(expected: String): Boolean {

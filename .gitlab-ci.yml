@@ -93,6 +93,7 @@ test:native-android:
         - (cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)
         - (cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)
         - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
+        - ./example-new-architecture/scripts/native-ffe-offline-android-smoke.sh
 
 test:native-ios:
     tags: ['macos:sonoma', 'specific:true']
