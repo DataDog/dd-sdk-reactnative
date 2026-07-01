@@ -102,10 +102,20 @@ start_metro_if_needed() {
 
 install_and_launch_app() {
   "$ADB" reverse tcp:8081 tcp:8081 >/dev/null 2>&1 || true
-  (
-    cd "$ANDROID_DIR"
-    ./gradlew --no-daemon :app:installDebug
-  )
+  for attempt in 1 2 3; do
+    if (
+      cd "$ANDROID_DIR"
+      ./gradlew --no-daemon :app:installDebug
+    ); then
+      break
+    fi
+    if [[ "$attempt" == "3" ]]; then
+      echo "Failed to install Android example after $attempt attempts." >&2
+      exit 1
+    fi
+    echo "Android example install failed; retrying attempt $((attempt + 1)) of 3." >&2
+    sleep 20
+  done
   "$ADB" shell am force-stop "$PACKAGE_NAME" >/dev/null 2>&1 || true
   "$ADB" shell am start -n "$ACTIVITY_NAME" >/dev/null
 }
