@@ -30,8 +30,8 @@ subprojects {
             repo instanceof MavenArtifactRepository &&
                 repo.url.toString().contains("oss.sonatype.org/content/repositories/snapshots")
         ) {
-            repo.content {
-                excludeGroupByRegex("com\\.datadoghq(\\..*)?")
+            repo.mavenContent {
+                snapshotsOnly()
             }
         }
     }
