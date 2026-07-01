@@ -23,7 +23,7 @@ internal class NativeFfeConfigurationFetcherTest {
         fakeTransport.response = NativeFfeHttpResponse(
             statusCode = 200,
             headers = mapOf("ETag" to "rules-v2"),
-            body = canonicalUfcConfig,
+            body = canonicalUfcConfig
         )
 
         // When
@@ -36,9 +36,9 @@ internal class NativeFfeConfigurationFetcherTest {
                 "site" to "datadoghq.com",
                 "headers" to mapOf("X-Test" to "true"),
                 "flagQueryParams" to mapOf("project" to "rn"),
-                "previousConfigurationWire" to rulesConfigurationWire,
+                "previousConfigurationWire" to rulesConfigurationWire
             ),
-            testedFetcher,
+            testedFetcher
         )
 
         // Then
@@ -74,7 +74,7 @@ internal class NativeFfeConfigurationFetcherTest {
         fakeTransport.response = NativeFfeHttpResponse(
             statusCode = 304,
             headers = emptyMap(),
-            body = "",
+            body = ""
         )
 
         // When
@@ -82,9 +82,9 @@ internal class NativeFfeConfigurationFetcherTest {
             "rules",
             mapOf(
                 "endpoint" to "https://config.example.test/flags",
-                "previousConfigurationWire" to rulesConfigurationWire,
+                "previousConfigurationWire" to rulesConfigurationWire
             ),
-            testedFetcher,
+            testedFetcher
         )
 
         // Then
@@ -102,7 +102,7 @@ internal class NativeFfeConfigurationFetcherTest {
         fakeTransport.response = NativeFfeHttpResponse(
             statusCode = 200,
             headers = mapOf("etag" to "precomputed-v1"),
-            body = """{"flags":{}}""",
+            body = """{"flags":{}}"""
         )
 
         // When
@@ -112,10 +112,10 @@ internal class NativeFfeConfigurationFetcherTest {
                 "endpoint" to "https://config.example.test/precomputed",
                 "evaluationContext" to mapOf(
                     "targetingKey" to "user-123",
-                    "attributes" to mapOf("plan" to "pro"),
-                ),
+                    "attributes" to mapOf("plan" to "pro")
+                )
             ),
-            testedFetcher,
+            testedFetcher
         )
 
         // Then

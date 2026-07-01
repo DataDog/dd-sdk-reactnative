@@ -79,12 +79,12 @@ internal class NativeFfeEvaluationSideEffectsTest {
 
         return SideEffectFixture(
             result = fixture.getJSONObject("result").toNativeFfeFixtureMap(),
-            context = (fixture.optJSONObject("context") ?: JSONObject()).toNativeFfeFixtureMap(),
+            context = (fixture.optJSONObject("context") ?: JSONObject()).toNativeFfeFixtureMap()
         )
     }
 
     private data class SideEffectFixture(
         val result: Map<String, Any?>,
-        val context: Map<String, Any?>,
+        val context: Map<String, Any?>
     )
 }

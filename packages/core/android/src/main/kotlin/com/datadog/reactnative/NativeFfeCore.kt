@@ -16,7 +16,10 @@
 package com.datadog.reactnative
 
 import java.security.MessageDigest
-import java.time.Instant
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -300,10 +303,10 @@ internal class NativeFfeCore {
     }
 
     private fun NativeAllocation.isActive(): Boolean {
-        val now = Instant.now()
+        val nowMs = System.currentTimeMillis()
         return !hasInvalidDate &&
-            (startAt == null || !now.isBefore(startAt)) &&
-            (endAt == null || now.isBefore(endAt))
+            (startAtMs == null || nowMs >= startAtMs) &&
+            (endAtMs == null || nowMs < endAtMs)
     }
 
     private fun rulesMatch(rules: List<NativeRule>, subjectAttributes: Map<String, Any?>): Boolean {
@@ -357,7 +360,7 @@ internal class NativeFfeCore {
         if (allocation.rules.isNotEmpty()) {
             return "TARGETING_MATCH"
         }
-        if (allocation.startAt != null || allocation.endAt != null) {
+        if (allocation.startAtMs != null || allocation.endAtMs != null) {
             return "DEFAULT"
         }
         return if (split.shards.isNotEmpty()) {
@@ -477,8 +480,8 @@ internal class NativeFfeCore {
         val splits: List<NativeSplit>,
         val doLog: Boolean,
         val extraLogging: Map<String, Any?>?,
-        val startAt: Instant?,
-        val endAt: Instant?,
+        val startAtMs: Long?,
+        val endAtMs: Long?,
         val hasInvalidDate: Boolean,
     )
 
@@ -549,16 +552,16 @@ internal class NativeFfeCore {
     private fun JSONObject.toNativeAllocation(): NativeAllocation {
         val startAt = optString("startAt").takeIf { it.isNotBlank() }
         val endAt = optString("endAt").takeIf { it.isNotBlank() }
-        val parsedStartAt = startAt?.toInstantOrNull()
-        val parsedEndAt = endAt?.toInstantOrNull()
+        val parsedStartAt = startAt?.toEpochMillisOrNull()
+        val parsedEndAt = endAt?.toEpochMillisOrNull()
         return NativeAllocation(
             key = optString("key").takeIf { it.isNotBlank() },
             rules = optJSONArray("rules")?.toNativeRules() ?: emptyList(),
             splits = optJSONArray("splits")?.toNativeSplits() ?: emptyList(),
             doLog = optBoolean("doLog", false),
             extraLogging = optJSONObject("extraLogging")?.toMap(),
-            startAt = parsedStartAt,
-            endAt = parsedEndAt,
+            startAtMs = parsedStartAt,
+            endAtMs = parsedEndAt,
             hasInvalidDate = (startAt != null && parsedStartAt == null) || (endAt != null && parsedEndAt == null),
         )
     }
@@ -636,11 +639,39 @@ internal class NativeFfeCore {
         }
     }
 
-    private fun String.toInstantOrNull(): Instant? {
+    private fun String.toEpochMillisOrNull(): Long? {
+        val normalizedValue = normalizedIsoTimestamp() ?: return null
         return try {
-            Instant.parse(this)
-        } catch (_: Exception) {
+            isoDateFormatter().parse(normalizedValue)?.time
+        } catch (_: ParseException) {
             null
+        }
+    }
+
+    private fun String.normalizedIsoTimestamp(): String? {
+        if (!endsWith("Z")) {
+            return null
+        }
+
+        val withoutZone = dropLast(1)
+        val fractionStart = withoutZone.indexOf('.')
+        if (fractionStart < 0) {
+            return "${withoutZone}.000Z"
+        }
+
+        val timestampPrefix = withoutZone.substring(0, fractionStart)
+        val fraction = withoutZone.substring(fractionStart + 1)
+        if (fraction.isEmpty() || fraction.any { !it.isDigit() }) {
+            return null
+        }
+
+        return "$timestampPrefix.${fraction.padEnd(ISO_MILLIS_LENGTH, '0').take(ISO_MILLIS_LENGTH)}Z"
+    }
+
+    private fun isoDateFormatter(): SimpleDateFormat {
+        return SimpleDateFormat(ISO_DATE_FORMAT, Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+            isLenient = false
         }
     }
 
@@ -724,6 +755,8 @@ internal class NativeFfeCore {
         const val EXPECTED_OBJECT = "object"
         const val BYTE_MASK = 0xffL
         const val MAX_UNSIGNED_INT = 4_294_967_295L
+        const val ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        const val ISO_MILLIS_LENGTH = 3
         val KNOWN_CONDITION_OPERATORS = setOf(
             "IS_NULL",
             "MATCHES",

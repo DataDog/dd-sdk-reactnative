@@ -49,11 +49,11 @@ internal class NativeFfeCoreTest {
         val saveState = testedCore.saveConfiguration(
             configuration.toMap(),
             mapOf("slot" to "default"),
-            store,
+            store
         )
         val loadedConfiguration = testedCore.loadConfiguration(
             mapOf("slot" to "default"),
-            store,
+            store
         )
         val activatedState = testedCore.setConfiguration(loadedConfiguration.toMap())
 
@@ -82,7 +82,7 @@ internal class NativeFfeCoreTest {
         val dataStore = FakeDataStoreHandler()
         val store = DatadogDataStoreNativeFfeConfigurationStore(
             dataStoreProvider = { dataStore },
-            clockMs = { STORED_AT_MS },
+            clockMs = { STORED_AT_MS }
         )
         val configuration = testedCore.configurationFromString(flagsConfigurationWire)
 
@@ -90,11 +90,11 @@ internal class NativeFfeCoreTest {
         val saveState = testedCore.saveConfiguration(
             configuration.toMap(),
             mapOf("slot" to "default"),
-            store,
+            store
         )
         val loadedConfiguration = testedCore.loadConfiguration(
             mapOf("slot" to "default"),
-            store,
+            store
         )
 
         // Then
@@ -206,7 +206,7 @@ internal class NativeFfeCoreTest {
         testedCore.setEvaluationContext(
             mapOf(
                 "targetingKey" to evaluationCase.targetingKey,
-                "attributes" to evaluationCase.attributes,
+                "attributes" to evaluationCase.attributes
             )
         )
     }
@@ -215,29 +215,34 @@ internal class NativeFfeCoreTest {
         return when (evaluationCase.variationType) {
             "BOOLEAN" -> testedCore.resolveBooleanEvaluation(
                 evaluationCase.flag,
-                evaluationCase.defaultValue as Boolean,
+                evaluationCase.defaultValue as Boolean
             )
             "STRING" -> testedCore.resolveStringEvaluation(
                 evaluationCase.flag,
-                evaluationCase.defaultValue as String,
+                evaluationCase.defaultValue as String
             )
             "INTEGER",
             "NUMERIC" -> testedCore.resolveNumberEvaluation(
                 evaluationCase.flag,
-                (evaluationCase.defaultValue as Number).toDouble(),
+                (evaluationCase.defaultValue as Number).toDouble()
             )
             "JSON" -> {
                 @Suppress("UNCHECKED_CAST")
                 testedCore.resolveObjectEvaluation(
                     evaluationCase.flag,
-                    evaluationCase.defaultValue as Map<String, Any?>,
+                    evaluationCase.defaultValue as Map<String, Any?>
                 )
             }
-            else -> error("Unsupported fixture variation type: ${evaluationCase.variationType}")
+            else -> error(
+                "Unsupported fixture variation type: ${evaluationCase.variationType}"
+            )
         }
     }
 
-    private fun assertEvaluationResult(result: Map<String, Any?>, evaluationCase: EvaluationCase) {
+    private fun assertEvaluationResult(
+        result: Map<String, Any?>,
+        evaluationCase: EvaluationCase
+    ) {
         assertThat(result["flagKey"]).isEqualTo(evaluationCase.flag)
         assertThat(result["reason"]).isEqualTo(evaluationCase.expectedReason)
         assertJsonValue(result["value"], evaluationCase.expectedValue)
@@ -246,25 +251,50 @@ internal class NativeFfeCoreTest {
         }
     }
 
-    private fun evaluationMismatch(result: Map<String, Any?>, evaluationCase: EvaluationCase): String? {
+    private fun evaluationMismatch(
+        result: Map<String, Any?>,
+        evaluationCase: EvaluationCase
+    ): String? {
         if (result["flagKey"] != evaluationCase.flag) {
-            return "${evaluationCase.source}: flagKey expected ${evaluationCase.flag}, got ${result["flagKey"]}"
+            return evaluationCase.mismatch(
+                "flagKey",
+                evaluationCase.flag,
+                result["flagKey"]
+            )
         }
         if (result["reason"] != evaluationCase.expectedReason) {
-            return "${evaluationCase.source}: reason expected ${evaluationCase.expectedReason}, got ${result["reason"]}"
+            return evaluationCase.mismatch(
+                "reason",
+                evaluationCase.expectedReason,
+                result["reason"]
+            )
         }
         if (!jsonValuesEqual(result["value"], evaluationCase.expectedValue)) {
-            return "${evaluationCase.source}: value expected ${evaluationCase.expectedValue}, got ${result["value"]}"
+            return evaluationCase.mismatch(
+                "value",
+                evaluationCase.expectedValue,
+                result["value"]
+            )
         }
-        if (evaluationCase.expectedErrorCode != null && result["errorCode"] != evaluationCase.expectedErrorCode) {
-            return "${evaluationCase.source}: errorCode expected ${evaluationCase.expectedErrorCode}, got ${result["errorCode"]}"
+        if (
+            evaluationCase.expectedErrorCode != null &&
+            result["errorCode"] != evaluationCase.expectedErrorCode
+        ) {
+            return evaluationCase.mismatch(
+                "errorCode",
+                evaluationCase.expectedErrorCode,
+                result["errorCode"]
+            )
         }
         return null
     }
 
     private fun assertJsonValue(actual: Any?, expected: Any?) {
         if (actual is Number && expected is Number) {
-            assertThat(actual.toDouble()).isCloseTo(expected.toDouble(), Offset.offset(NUMERIC_TOLERANCE))
+            assertThat(actual.toDouble()).isCloseTo(
+                expected.toDouble(),
+                Offset.offset(NUMERIC_TOLERANCE)
+            )
         } else {
             assertThat(jsonValuesEqual(actual, expected))
                 .withFailMessage("Expected <%s>, got <%s>", expected, actual)
@@ -307,7 +337,7 @@ internal class NativeFfeCoreTest {
     private fun evaluationCase(
         fileName: String,
         caseIndex: Int,
-        caseJson: JSONObject,
+        caseJson: JSONObject
     ): EvaluationCase {
         val resultJson = caseJson.getJSONObject("result")
         return EvaluationCase(
@@ -316,10 +346,12 @@ internal class NativeFfeCoreTest {
             variationType = caseJson.getString("variationType"),
             defaultValue = caseJson.get("defaultValue").toNativeFfeFixtureValue(),
             targetingKey = caseJson.optionalNativeFfeString("targetingKey"),
-            attributes = (caseJson.optJSONObject("attributes") ?: JSONObject()).toNativeFfeFixtureMap(),
+            attributes = (
+                caseJson.optJSONObject("attributes") ?: JSONObject()
+                ).toNativeFfeFixtureMap(),
             expectedValue = resultJson.get("value").toNativeFfeFixtureValue(),
             expectedReason = resultJson.getString("reason"),
-            expectedErrorCode = resultJson.optionalNativeFfeString("errorCode"),
+            expectedErrorCode = resultJson.optionalNativeFfeString("errorCode")
         )
     }
 
@@ -340,8 +372,12 @@ internal class NativeFfeCoreTest {
         val attributes: Map<String, Any?>,
         val expectedValue: Any?,
         val expectedReason: String,
-        val expectedErrorCode: String?,
-    )
+        val expectedErrorCode: String?
+    ) {
+        fun mismatch(field: String, expected: Any?, actual: Any?): String {
+            return "$source: $field expected $expected, got $actual"
+        }
+    }
 
     private companion object {
         const val NUMERIC_TOLERANCE = 0.0000001
@@ -368,7 +404,7 @@ private class FakeDataStoreHandler : DataStoreHandler {
         data: T,
         version: Int,
         callback: DataStoreWriteCallback?,
-        serializer: Serializer<T>,
+        serializer: Serializer<T>
     ) {
         values[key] = version to (serializer.serialize(data) ?: "")
         callback?.onSuccess()
@@ -378,7 +414,7 @@ private class FakeDataStoreHandler : DataStoreHandler {
         key: String,
         version: Int?,
         callback: DataStoreReadCallback<T>,
-        deserializer: Deserializer<String, T>,
+        deserializer: Deserializer<String, T>
     ) {
         val stored = values[key] ?: return callback.onFailure()
         if (version != null && stored.first != version) {
@@ -388,7 +424,7 @@ private class FakeDataStoreHandler : DataStoreHandler {
         callback.onSuccess(
             DataStoreContent(
                 stored.first,
-                deserializer.deserialize(stored.second),
+                deserializer.deserialize(stored.second)
             )
         )
     }

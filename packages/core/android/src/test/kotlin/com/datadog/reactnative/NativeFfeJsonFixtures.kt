@@ -19,7 +19,7 @@ internal fun readNativeFfeFixture(owner: Class<*>, relativePath: String): String
 
 internal fun nativeFfeRulesConfigurationWire(
     response: String,
-    etag: String = "ffe-system-test-data",
+    etag: String = "ffe-system-test-data"
 ): String {
     return JSONObject()
         .put("version", 2)
