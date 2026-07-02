@@ -266,6 +266,7 @@ final class NativeFfeCoreTests: XCTestCase {
                     "defaultValue": false,
                 ],
             ],
+            "evaluationTimeMs": Self.benchmarkEvaluationTimeMs,
         ])
 
         XCTAssertEqual(result["iterations"] as? Int64, 1)
@@ -588,6 +589,8 @@ final class NativeFfeCoreTests: XCTestCase {
     private static let canonicalUfcConfig: String = {
         try! NativeFfeTestFixtures.readString("ffe-system-test-data/ufc-config.json")
     }()
+
+    private static let benchmarkEvaluationTimeMs: Double = 1_782_907_200_000
 }
 
 private final class NativeFfeFakeDataStore: DataStore {

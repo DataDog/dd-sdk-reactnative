@@ -6,7 +6,7 @@
 
 import React, { Component, RefObject } from 'react';
 import {
-  View, Text, Button, TouchableOpacity,
+  Platform, Settings, View, Text, Button, TouchableOpacity,
   TouchableWithoutFeedback, TouchableNativeFeedback, ActivityIndicator
 } from 'react-native';
 import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
@@ -18,6 +18,9 @@ import { ConsentModal } from '../components/consent';
 import { runFfeJsVsNativeBenchmark } from '../../../packages/core/src/flags/benchmark';
 
 const axios = require('../axiosConfig');
+const FFE_BENCHMARK_AUTORUN_SETTING = 'FfeBenchmarkAutorun';
+const FFE_BENCHMARK_DEVICE_KIND_SETTING = 'FfeBenchmarkDeviceKind';
+const FFE_BENCHMARK_REPORT_URL_SETTING = 'FfeBenchmarkReportUrl';
 
 interface MainScreenState {
   welcomeMessage: string
@@ -104,14 +107,15 @@ export default class MainScreen extends Component<any, MainScreenState> {
     } as MainScreenState)
 
     runFfeJsVsNativeBenchmark({
+      deviceKind: benchmarkDeviceKind(),
       rnArchitecture: 'old',
       build: __DEV__ ? 'debug' : 'release'
     }).then((report) => {
       console.log(`FFE_BENCHMARK_RESULT ${JSON.stringify(report)}`)
-      this.setState({
+      return postBenchmarkReport(report).then(() => this.setState({
         ffeBenchmarkRunning: false,
         ffeBenchmarkResult: JSON.stringify(report, null, 2)
-      } as MainScreenState)
+      } as MainScreenState))
     }).catch((error) => {
       this.setState({
         ffeBenchmarkRunning: false,
@@ -123,6 +127,9 @@ export default class MainScreen extends Component<any, MainScreenState> {
   componentDidMount() {
     this.updateTrackingConsent()
     DdLogs.debug("[DATADOG SDK] Test React Native Debug Log");
+    if (consumeFfeBenchmarkAutorunSetting()) {
+      setTimeout(() => this.runFfeBenchmark(), 1000);
+    }
   }
 
   updateTrackingConsent() {
@@ -249,4 +256,46 @@ export default class MainScreen extends Component<any, MainScreenState> {
       </View>
     </View>
   }
+}
+
+function consumeFfeBenchmarkAutorunSetting(): boolean {
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  const value = Settings.get(FFE_BENCHMARK_AUTORUN_SETTING);
+  const enabled =
+    value === true ||
+    value === 1 ||
+    value === '1' ||
+    String(value).toLowerCase() === 'true' ||
+    String(value).toLowerCase() === 'yes';
+  if (enabled) {
+    Settings.set({ [FFE_BENCHMARK_AUTORUN_SETTING]: false });
+  }
+  return enabled;
+}
+
+function benchmarkDeviceKind(): 'physical' | 'simulator' | 'emulator' | 'unknown' {
+  if (Platform.OS !== 'ios') {
+    return 'unknown';
+  }
+  const value = Settings.get(FFE_BENCHMARK_DEVICE_KIND_SETTING);
+  return value === 'physical' || value === 'simulator' || value === 'emulator'
+    ? value
+    : 'unknown';
+}
+
+function postBenchmarkReport(report: unknown): Promise<void> {
+  if (Platform.OS !== 'ios') {
+    return Promise.resolve();
+  }
+  const reportUrl = Settings.get(FFE_BENCHMARK_REPORT_URL_SETTING);
+  if (typeof reportUrl !== 'string' || reportUrl.length === 0) {
+    return Promise.resolve();
+  }
+  return fetch(reportUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(report),
+  }).then(() => undefined);
 }

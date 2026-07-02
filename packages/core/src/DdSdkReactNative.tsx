@@ -139,6 +139,7 @@ export type NativeFfeBenchmarkOptions = {
         variationType: 'BOOLEAN' | 'STRING' | 'INTEGER' | 'NUMERIC' | 'JSON';
         defaultValue: FlagValue;
     }>;
+    evaluationTimeMs?: number;
 };
 
 export type NativeFfeBenchmarkResult = {

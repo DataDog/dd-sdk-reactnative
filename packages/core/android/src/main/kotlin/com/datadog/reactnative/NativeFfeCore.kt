@@ -36,6 +36,7 @@ internal class NativeFfeCore {
     private var lastFetchRequest: Map<String, Any?>? = null
     private var lastStorage: Map<String, Any?>? = null
     private var lastError: String? = null
+    private var evaluationTimeOverrideMs: Long? = null
 
     fun configurationFromString(wire: String): NativeFlagsConfiguration {
         val wireJson = JSONObject(wire)
@@ -182,6 +183,8 @@ internal class NativeFfeCore {
         var iterations = 0L
         var checksum = FNV_OFFSET_BASIS
         val previousContext = currentContext
+        val previousEvaluationTimeOverrideMs = evaluationTimeOverrideMs
+        evaluationTimeOverrideMs = options["evaluationTimeMs"].asLong()
         val totalStartNs = System.nanoTime()
 
         try {
@@ -215,6 +218,7 @@ internal class NativeFfeCore {
             )
         } finally {
             currentContext = previousContext
+            evaluationTimeOverrideMs = previousEvaluationTimeOverrideMs
         }
     }
 
@@ -346,7 +350,7 @@ internal class NativeFfeCore {
     }
 
     private fun NativeAllocation.isActive(): Boolean {
-        val nowMs = System.currentTimeMillis()
+        val nowMs = evaluationTimeOverrideMs ?: System.currentTimeMillis()
         return !hasInvalidDate &&
             (startAtMs == null || nowMs >= startAtMs) &&
             (endAtMs == null || nowMs < endAtMs)
@@ -869,6 +873,14 @@ internal class NativeFfeCore {
         }
     }
 
+    private fun Any?.asLong(): Long? {
+        return when (this) {
+            is Number -> toLong()
+            is String -> toLongOrNull()
+            else -> null
+        }
+    }
+
     private fun Any?.toBridgeValue(): Any? {
         return when (this) {
             JSONObject.NULL -> null
@@ -947,11 +959,11 @@ internal class NativeFfeCore {
             is Map<*, *> -> {
                 entries
                     .sortedBy { it.key.toString() }
-                    .joinToString(prefix = "{", postfix = "}") {
+                    .joinToString(prefix = "{", postfix = "}", separator = ",") {
                         "${JSONObject.quote(it.key.toString())}:${it.value.canonicalBenchmarkValue()}"
                     }
             }
-            is List<*> -> joinToString(prefix = "[", postfix = "]") { it.canonicalBenchmarkValue() }
+            is List<*> -> joinToString(prefix = "[", postfix = "]", separator = ",") { it.canonicalBenchmarkValue() }
             is String -> JSONObject.quote(this)
             is Boolean -> toString()
             is Number -> canonicalNumber()

@@ -63,6 +63,7 @@ const BENCHMARK_CONFIG =
     ufcMaxcomplex2500 as unknown as UniversalFlagConfigurationResponse;
 const BENCHMARK_CONTEXTS = benchmarkContexts as FlagsEvaluationContext[];
 const BENCHMARK_FLAGS = flagSpecs();
+const BENCHMARK_EVALUATION_TIME_MS = Date.parse('2026-07-01T12:00:00.000Z');
 const BENCHMARK_WIRE = JSON.stringify({
     version: 2,
     server: {
@@ -90,7 +91,8 @@ export async function runFfeJsVsNativeBenchmark(
     const nativeWallStart = nowMs();
     const nativeResult = (await DdSdkReactNative.runNativeFfeBenchmark({
         contexts: BENCHMARK_CONTEXTS,
-        flags: BENCHMARK_FLAGS
+        flags: BENCHMARK_FLAGS,
+        evaluationTimeMs: BENCHMARK_EVALUATION_TIME_MS
     })) as NativeBenchmarkResult;
     const nativeWallMs = nowMs() - nativeWallStart;
 
@@ -148,7 +150,8 @@ export function runJsBenchmark(): FfeBenchmarkMeasurement {
                 flagType(flag.variationType),
                 flag.key,
                 flag.defaultValue as JsonValue,
-                context
+                context,
+                { nowMs: BENCHMARK_EVALUATION_TIME_MS }
             );
             checksum = checksumResult(checksum, flag.key, result);
             iterations += 1;

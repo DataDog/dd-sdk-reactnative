@@ -11,7 +11,7 @@ describe('FFE benchmark runner', () => {
         const result = runJsBenchmark();
 
         expect(result.measurement).toBe('js-in-process');
-        expect(result.checksum).toMatch(/^[0-9a-f]{8}$/);
+        expect(result.checksum).toBe('114e3e58');
         expect(result.evalTotalMs).toBeGreaterThan(0);
         expect(result.perEvalUs).toBeGreaterThan(0);
     });

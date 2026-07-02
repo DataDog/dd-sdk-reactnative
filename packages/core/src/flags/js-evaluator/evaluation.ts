@@ -29,7 +29,8 @@ export function evaluate<T extends JsonValue>(
     type: FlagValueType,
     flagKey: string,
     defaultValue: T,
-    context: EvaluationContext
+    context: EvaluationContext,
+    options: { nowMs?: number } = {}
 ): ResolutionDetails<T> {
     const config = unwrapConfiguration(inputConfig);
     if (!config) {
@@ -48,7 +49,8 @@ export function evaluate<T extends JsonValue>(
             type,
             subjectKey,
             subjectAttributes(context),
-            defaultValue
+            defaultValue,
+            options.nowMs
         );
     } catch (error) {
         if (error instanceof TargetingKeyMissingError) {
@@ -79,7 +81,8 @@ function evaluateForSubject<T extends JsonValue>(
     type: FlagValueType,
     subjectKey: string | null | undefined,
     attributes: Record<string, unknown>,
-    defaultValue: T
+    defaultValue: T,
+    nowMs?: number
 ): ResolutionDetails<T> {
     if (!flag.enabled) {
         return defaultResult(defaultValue, StandardResolutionReasons.DISABLED);
@@ -89,7 +92,7 @@ function evaluateForSubject<T extends JsonValue>(
     }
 
     for (const allocation of flag.allocations ?? []) {
-        if (!allocationIsActive(allocation)) {
+        if (!allocationIsActive(allocation, nowMs)) {
             continue;
         }
         if (!rulesMatch(allocation, attributes)) {
@@ -146,8 +149,8 @@ function typeMatches(expectedType: FlagValueType, variantType: VariantType): boo
     );
 }
 
-function allocationIsActive(allocation: Allocation): boolean {
-    const now = Date.now();
+function allocationIsActive(allocation: Allocation, nowMs?: number): boolean {
+    const now = nowMs ?? Date.now();
     const startAt = allocation.startAt ? Date.parse(allocation.startAt) : undefined;
     const endAt = allocation.endAt ? Date.parse(allocation.endAt) : undefined;
     if (

@@ -22,6 +22,7 @@ internal final class NativeFfeCore {
     private var lastFetchRequest: [String: Any]?
     private var lastStorage: [String: Any]?
     private var lastError: String?
+    private var evaluationDateOverride: Date?
 
     func configurationFromString(_ wire: String) throws -> NativeFlagsConfiguration {
         let wireJson = try parseJSONObject(wire)
@@ -186,9 +187,14 @@ internal final class NativeFfeCore {
         var iterations: Int64 = 0
         var checksum = BenchmarkChecksum.offsetBasis
         let previousContext = currentContext
+        let previousEvaluationDateOverride = evaluationDateOverride
+        evaluationDateOverride = doubleValue(options["evaluationTimeMs"]).map {
+            Date(timeIntervalSince1970: $0 / 1_000)
+        }
         let totalStartNs = DispatchTime.now().uptimeNanoseconds
         defer {
             currentContext = previousContext
+            evaluationDateOverride = previousEvaluationDateOverride
         }
 
         for context in contexts {
@@ -420,7 +426,7 @@ internal final class NativeFfeCore {
     }
 
     private func allocationIsActive(_ allocation: NativeAllocation) -> Bool {
-        let now = Date()
+        let now = evaluationDateOverride ?? Date()
         if allocation.hasInvalidDate {
             return false
         }

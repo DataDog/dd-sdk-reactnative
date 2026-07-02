@@ -14,9 +14,11 @@ import {
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
+  Settings,
   StatusBar,
   StyleSheet,
   Text,
@@ -38,6 +40,9 @@ import {runFfeJsVsNativeBenchmark} from '../packages/core/src/flags/benchmark';
 const APPLICATION_ID = ddCredentials.APPLICATION_ID;
 const CLIENT_TOKEN = ddCredentials.CLIENT_TOKEN;
 const ENVIRONMENT = ddCredentials.ENVIRONMENT;
+const FFE_BENCHMARK_AUTORUN_SETTING = 'FfeBenchmarkAutorun';
+const FFE_BENCHMARK_DEVICE_KIND_SETTING = 'FfeBenchmarkDeviceKind';
+const FFE_BENCHMARK_REPORT_URL_SETTING = 'FfeBenchmarkReportUrl';
 
 const datadogInitialization = (async () => {
   const config = new CoreConfiguration(
@@ -90,6 +95,7 @@ const datadogInitialization = (async () => {
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const benchmarkAutorun = React.useMemo(isFfeBenchmarkAutorunEnabled, []);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -109,8 +115,14 @@ function App(): React.JSX.Element {
         <View
           style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}
         >
-          <NativeFfeFlowPanel isDarkMode={isDarkMode} />
-          <NativeFfeBenchmarkPanel isDarkMode={isDarkMode} />
+          <NativeFfeFlowPanel
+            benchmarkAutorun={benchmarkAutorun}
+            isDarkMode={isDarkMode}
+          />
+          <NativeFfeBenchmarkPanel
+            benchmarkAutorun={benchmarkAutorun}
+            isDarkMode={isDarkMode}
+          />
 
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
@@ -139,8 +151,10 @@ type NativeFfeBenchmarkState = {
 };
 
 function NativeFfeBenchmarkPanel({
+  benchmarkAutorun,
   isDarkMode,
 }: {
+  benchmarkAutorun: boolean;
   isDarkMode: boolean;
 }): React.JSX.Element {
   const [benchmarkState, setBenchmarkState] =
@@ -160,10 +174,12 @@ function NativeFfeBenchmarkPanel({
       await datadogInitialization;
 
       const report = await runFfeJsVsNativeBenchmark({
+        deviceKind: benchmarkDeviceKind(),
         rnArchitecture: 'new',
         build: __DEV__ ? 'debug' : 'release',
       });
       console.log(`FFE_BENCHMARK_RESULT ${JSON.stringify(report)}`);
+      await postBenchmarkReport(report);
 
       setBenchmarkState({
         status: 'ready',
@@ -178,6 +194,15 @@ function NativeFfeBenchmarkPanel({
       });
     }
   }, []);
+
+  const benchmarkAutoRunStarted = React.useRef(false);
+  React.useEffect(() => {
+    if (benchmarkAutoRunStarted.current || !benchmarkAutorun) {
+      return;
+    }
+    benchmarkAutoRunStarted.current = true;
+    void runBenchmark();
+  }, [benchmarkAutorun, runBenchmark]);
 
   return (
     <View style={styles.sectionContainer}>
@@ -233,6 +258,49 @@ function NativeFfeBenchmarkPanel({
   );
 }
 
+function isFfeBenchmarkAutorunEnabled(): boolean {
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  const value = Settings.get(FFE_BENCHMARK_AUTORUN_SETTING);
+  return (
+    value === true ||
+    value === 1 ||
+    value === '1' ||
+    String(value).toLowerCase() === 'true' ||
+    String(value).toLowerCase() === 'yes'
+  );
+}
+
+function benchmarkDeviceKind():
+  | 'physical'
+  | 'simulator'
+  | 'emulator'
+  | 'unknown' {
+  if (Platform.OS !== 'ios') {
+    return 'unknown';
+  }
+  const value = Settings.get(FFE_BENCHMARK_DEVICE_KIND_SETTING);
+  return value === 'physical' || value === 'simulator' || value === 'emulator'
+    ? value
+    : 'unknown';
+}
+
+async function postBenchmarkReport(report: unknown): Promise<void> {
+  if (Platform.OS !== 'ios') {
+    return;
+  }
+  const reportUrl = Settings.get(FFE_BENCHMARK_REPORT_URL_SETTING);
+  if (typeof reportUrl !== 'string' || reportUrl.length === 0) {
+    return;
+  }
+  await fetch(reportUrl, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(report),
+  });
+}
+
 type NativeFfeFlowState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   summary: string;
@@ -240,8 +308,10 @@ type NativeFfeFlowState = {
 };
 
 function NativeFfeFlowPanel({
+  benchmarkAutorun,
   isDarkMode,
 }: {
+  benchmarkAutorun: boolean;
   isDarkMode: boolean;
 }): React.JSX.Element {
   const [flowState, setFlowState] = React.useState<NativeFfeFlowState>({
@@ -280,9 +350,12 @@ function NativeFfeFlowPanel({
     if (autoRunStarted.current) {
       return;
     }
+    if (benchmarkAutorun) {
+      return;
+    }
     autoRunStarted.current = true;
     void runNativeFfeFlow();
-  }, [runNativeFfeFlow]);
+  }, [benchmarkAutorun, runNativeFfeFlow]);
 
   return (
     <View style={styles.sectionContainer}>

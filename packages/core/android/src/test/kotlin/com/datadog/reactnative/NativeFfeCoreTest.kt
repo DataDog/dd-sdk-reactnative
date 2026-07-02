@@ -12,6 +12,7 @@ import com.datadog.android.api.storage.datastore.DataStoreWriteCallback
 import com.datadog.android.core.internal.persistence.Deserializer
 import com.datadog.android.core.persistence.Serializer
 import com.datadog.android.core.persistence.datastore.DataStoreContent
+import com.google.gson.JsonParser
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Offset
@@ -314,6 +315,30 @@ internal class NativeFfeCoreTest {
             .containsEntry("targetingKey", "existing-user")
     }
 
+    @Test
+    fun `M run benchmark full UFC workload W bundled benchmark fixtures`() {
+        // Given
+        val core = NativeFfeCore()
+        val configurationJson = benchmarkFixture("ufc-maxcomplex-2500.json").readText()
+        val configuration = core.configurationFromString(benchmarkWire(configurationJson))
+        core.setConfiguration(configuration.toMap())
+        val contexts = JSONArray(benchmarkFixture("contexts-200.json").readText()).toMaps()
+        val flags = benchmarkFlagSpecs(configurationJson)
+
+        // When
+        val result = core.runBenchmark(
+            mapOf(
+                "contexts" to contexts,
+                "flags" to flags,
+                "evaluationTimeMs" to BENCHMARK_EVALUATION_TIME_MS
+            )
+        )
+
+        // Then
+        assertThat(result["iterations"]).isEqualTo(500_000L)
+        assertThat(result["checksum"]).isEqualTo("114e3e58")
+    }
+
     private fun setConfiguration() {
         val configuration = testedCore.configurationFromString(flagsConfigurationWire)
         testedCore.setConfiguration(configuration.toMap())
@@ -326,6 +351,83 @@ internal class NativeFfeCoreTest {
                 "attributes" to evaluationCase.attributes
             )
         )
+    }
+
+    private fun benchmarkFixture(name: String): File {
+        return File("../src/flags/benchmark/$name").canonicalFile
+    }
+
+    private fun benchmarkWire(configurationJson: String): String {
+        return JSONObject()
+            .put("version", 2)
+            .put(
+                "server",
+                JSONObject()
+                    .put("response", configurationJson)
+                    .put("etag", "ufc-maxcomplex-2500")
+            )
+            .toString()
+    }
+
+    private fun benchmarkFlagSpecs(configurationJson: String): List<Map<String, Any?>> {
+        val flags = JsonParser.parseString(configurationJson)
+            .asJsonObject
+            .getAsJsonObject("data")
+            .getAsJsonObject("attributes")
+            .getAsJsonObject("flags")
+        return flags.entrySet()
+            .map { entry ->
+                val flag = entry.value.asJsonObject
+                val variationType = flag.get("variationType").asString
+                mapOf(
+                    "key" to flag.get("key").asString,
+                    "variationType" to variationType,
+                    "defaultValue" to benchmarkDefaultValue(variationType)
+                )
+            }
+    }
+
+    private fun benchmarkDefaultValue(variationType: String): Any {
+        return when (variationType) {
+            "BOOLEAN" -> false
+            "STRING" -> ""
+            "INTEGER", "NUMERIC" -> 0.0
+            "JSON" -> emptyMap<String, Any?>()
+            else -> ""
+        }
+    }
+
+    private fun JSONArray.toMaps(): List<Map<String, Any?>> {
+        return (0 until length()).map { index ->
+            getJSONObject(index).toNativeMap()
+        }
+    }
+
+    private fun JSONObject.toNativeMap(): Map<String, Any?> {
+        return keys().asSequence().mapNotNull { key ->
+            val value = get(key).toNativeValue()
+            if (value == null) {
+                null
+            } else {
+                key to value
+            }
+        }.toMap()
+    }
+
+    private fun JSONArray.toNativeList(): List<Any?> {
+        return (0 until length()).map { index ->
+            get(index).toNativeValue()
+        }
+    }
+
+    private fun Any?.toNativeValue(): Any? {
+        return when (this) {
+            JSONObject.NULL -> null
+            is JSONObject -> toNativeMap()
+            is JSONArray -> toNativeList()
+            is Number -> toDouble()
+            else -> this
+        }
     }
 
     private fun resolveEvaluation(evaluationCase: EvaluationCase): Map<String, Any?> {
@@ -599,6 +701,7 @@ internal class NativeFfeCoreTest {
     private companion object {
         const val NUMERIC_TOLERANCE = 0.0000001
         const val STORED_AT_MS = 1780000000000L
+        const val BENCHMARK_EVALUATION_TIME_MS = 1782907200000L
 
         val flagsConfigurationWire: String by lazy {
             nativeFfeRulesConfigurationWire(canonicalUfcConfig)
