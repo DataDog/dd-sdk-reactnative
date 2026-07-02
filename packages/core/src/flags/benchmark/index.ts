@@ -6,9 +6,11 @@
 
 export {
     runFfeJsVsNativeBenchmark,
-    runJsBenchmark
+    runJsBenchmark,
+    runJsParseBenchmark
 } from './FfeBenchmarkRunner';
 export type {
     FfeBenchmarkMeasurement,
+    FfeBenchmarkParseMeasurement,
     FfeBenchmarkReport
 } from './FfeBenchmarkRunner';

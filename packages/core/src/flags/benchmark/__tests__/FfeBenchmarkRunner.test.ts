@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { runJsBenchmark } from '../FfeBenchmarkRunner';
+import { runJsBenchmark, runJsParseBenchmark } from '../FfeBenchmarkRunner';
 
 describe('FFE benchmark runner', () => {
     it('evaluates the full maxcomplex workload in JavaScript', () => {
@@ -14,5 +14,14 @@ describe('FFE benchmark runner', () => {
         expect(result.checksum).toBe('114e3e58');
         expect(result.evalTotalMs).toBeGreaterThan(0);
         expect(result.perEvalUs).toBeGreaterThan(0);
+    });
+
+    it('parses the full maxcomplex workload JSON in JavaScript', () => {
+        const result = runJsParseBenchmark();
+
+        expect(result.measurement).toBe('js-json-parse');
+        expect(result.runs).toBe(5);
+        expect(result.medianMs).toBeGreaterThan(0);
+        expect(result.p95Ms).toBeGreaterThan(0);
     });
 });

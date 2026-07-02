@@ -39,6 +39,15 @@ export type FfeBenchmarkMeasurement = BenchmarkStats & {
     checksum: string;
 };
 
+export type FfeBenchmarkParseMeasurement = {
+    measurement: 'js-json-parse' | 'native-as-consumed-parse';
+    runs: number;
+    totalMs: number;
+    minMs: number;
+    medianMs: number;
+    p95Ms: number;
+};
+
 export type FfeBenchmarkReport = {
     platform: 'ios' | 'android' | 'unknown';
     deviceKind: 'physical' | 'simulator' | 'emulator' | 'unknown';
@@ -50,6 +59,7 @@ export type FfeBenchmarkReport = {
     contexts: number;
     iterations: number;
     parseMs: number;
+    parseMeasurements: FfeBenchmarkParseMeasurement[];
     parity: 'passed' | 'failed';
     measurements: FfeBenchmarkMeasurement[];
 };
@@ -64,10 +74,12 @@ const BENCHMARK_CONFIG =
 const BENCHMARK_CONTEXTS = benchmarkContexts as FlagsEvaluationContext[];
 const BENCHMARK_FLAGS = flagSpecs();
 const BENCHMARK_EVALUATION_TIME_MS = Date.parse('2026-07-01T12:00:00.000Z');
+const BENCHMARK_PARSE_RUNS = 5;
+const BENCHMARK_RAW_CONFIG = JSON.stringify(ufcMaxcomplex2500);
 const BENCHMARK_WIRE = JSON.stringify({
     version: 2,
     server: {
-        response: JSON.stringify(ufcMaxcomplex2500),
+        response: BENCHMARK_RAW_CONFIG,
         etag: 'ufc-maxcomplex-2500'
     }
 });
@@ -79,14 +91,11 @@ export async function runFfeJsVsNativeBenchmark(
         build?: FfeBenchmarkReport['build'];
     } = {}
 ): Promise<FfeBenchmarkReport> {
+    const jsParseMeasurement = runJsParseBenchmark();
     const jsMeasurement = runJsBenchmark();
 
-    const parseStart = nowMs();
-    const nativeConfiguration = await DdSdkReactNative.configurationFromString(
-        BENCHMARK_WIRE
-    );
-    await DdSdkReactNative.setConfiguration(nativeConfiguration);
-    const parseMs = nowMs() - parseStart;
+    const nativeParseMeasurement = await runNativeParseBenchmark();
+    const parseMs = nativeParseMeasurement.medianMs;
 
     const nativeWallStart = nowMs();
     const nativeResult = (await DdSdkReactNative.runNativeFfeBenchmark({
@@ -124,6 +133,7 @@ export async function runFfeJsVsNativeBenchmark(
         contexts: BENCHMARK_CONTEXTS.length,
         iterations: nativeResult.iterations,
         parseMs,
+        parseMeasurements: [jsParseMeasurement, nativeParseMeasurement],
         parity:
             jsMeasurement.checksum === nativeResult.checksum
                 ? 'passed'
@@ -133,6 +143,55 @@ export async function runFfeJsVsNativeBenchmark(
             nativeComputeMeasurement,
             nativeAsConsumedMeasurement
         ]
+    };
+}
+
+export function runJsParseBenchmark(): FfeBenchmarkParseMeasurement {
+    const durationsMs: number[] = [];
+    let flagCount = 0;
+
+    for (let run = 0; run < BENCHMARK_PARSE_RUNS; run += 1) {
+        const start = nowMs();
+        const parsed = JSON.parse(
+            BENCHMARK_RAW_CONFIG
+        ) as UniversalFlagConfigurationResponse;
+        flagCount += Object.keys(unwrapConfiguration(parsed)?.flags ?? {}).length;
+        durationsMs.push(nowMs() - start);
+    }
+
+    if (flagCount !== BENCHMARK_FLAGS.length * BENCHMARK_PARSE_RUNS) {
+        throw new Error('JS benchmark parse produced an unexpected flag count.');
+    }
+
+    return parseMeasurement('js-json-parse', durationsMs);
+}
+
+async function runNativeParseBenchmark(): Promise<FfeBenchmarkParseMeasurement> {
+    const durationsMs: number[] = [];
+
+    for (let run = 0; run < BENCHMARK_PARSE_RUNS; run += 1) {
+        const start = nowMs();
+        const nativeConfiguration = await DdSdkReactNative.configurationFromString(
+            BENCHMARK_WIRE
+        );
+        await DdSdkReactNative.setConfiguration(nativeConfiguration);
+        durationsMs.push(nowMs() - start);
+    }
+
+    return parseMeasurement('native-as-consumed-parse', durationsMs);
+}
+
+function parseMeasurement(
+    measurement: FfeBenchmarkParseMeasurement['measurement'],
+    durationsMs: number[]
+): FfeBenchmarkParseMeasurement {
+    return {
+        measurement,
+        runs: durationsMs.length,
+        totalMs: durationsMs.reduce((sum, duration) => sum + duration, 0),
+        minMs: Math.min(...durationsMs),
+        medianMs: percentile(durationsMs, 0.5),
+        p95Ms: percentile(durationsMs, 0.95)
     };
 }
 
