@@ -17,6 +17,7 @@ jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
         variationKey: 'true',
         reason: 'TARGETED',
         doLog: true,
+        // Internal fields for Android.
         variationType: '',
         variationValue: '',
         extraLogging: {}
@@ -24,10 +25,11 @@ jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
     'flag-no-alloc': {
         key: 'flag-no-alloc',
         value: 'hello',
-        allocationKey: '',
+        allocationKey: null,
         variationKey: 'hello',
         reason: 'STATIC',
         doLog: true,
+        // Internal fields for Android.
         variationType: '',
         variationValue: '',
         extraLogging: {}
@@ -65,7 +67,7 @@ describe('DatadogOpenFeatureProvider', () => {
             });
         });
 
-        it('should return undefined flagMetadata when allocationKey is absent', () => {
+        it('should return undefined flagMetadata when allocationKey is null', () => {
             const result = provider.resolveStringEvaluation(
                 'flag-no-alloc',
                 'default',
