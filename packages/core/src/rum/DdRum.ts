@@ -427,6 +427,16 @@ class DdRumWrapper implements DdRumType {
         );
     };
 
+    reportAppFullyDisplayed = (): Promise<void> => {
+        InternalLog.log(
+            'Reporting App Fully Displayed (TTFD)',
+            SdkVerbosity.DEBUG
+        );
+        return bufferVoidNativeCall(() =>
+            this.nativeRum.reportAppFullyDisplayed()
+        );
+    };
+
     stopSession = (): Promise<void> => {
         InternalLog.log('Stopping RUM Session', SdkVerbosity.DEBUG);
         clearCachedSessionId();

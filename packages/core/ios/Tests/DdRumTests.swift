@@ -466,6 +466,14 @@ internal class DdRumTests: XCTestCase {
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
 
+    func testReportAppFullyDisplayed() throws {
+        rum.reportAppFullyDsiplayed(resolve: mockResolve, reject: mockReject)
+
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .reportAppFullyDsiplayed())
+        XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
+    }
+
     func testStopSession() throws {
         rum.stopSession(resolve: mockResolve, reject: mockReject)
 
