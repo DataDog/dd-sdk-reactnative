@@ -33,7 +33,7 @@ tracking reconstructs what it needs from the per-flag data JS passes it. This me
 init can be done **entirely in JS with no native changes**: parse a supplied configuration
 into the same `FlagCacheEntry` map and populate `flagsCache`.
 
-## Approach (decisions)
+## Approach
 
 - **Parse the `ConfigurationWire` string in JS**, populating the existing `flagsCache`.
 - **Input** is a `ConfigurationWire` string, consumed via `configurationFromString(wire)`.
@@ -48,7 +48,7 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
   into RN core rather than depending on the package, whose provider/exposure-logging would
   bypass RN's native RUM/exposure path.
 
-## Wire format (confirmed)
+## Wire format
 
 **ConfigurationWire v1** ([ConfigurationWire](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141725646/ConfigurationWire)):
 
