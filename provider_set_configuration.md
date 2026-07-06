@@ -45,19 +45,23 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
 
 ## Wire format (confirmed)
 
-**ConfigurationWire v2** ([ConfigurationWire](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141725646/ConfigurationWire)):
+**ConfigurationWire v1** ([ConfigurationWire](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141725646/ConfigurationWire)):
 
 ```ts
 type ConfigurationWire = string // JSON-serialized
 type Configuration = {
-  version: 2
+  version: 1
   precomputed?: {
     response: string            // JSON-encoded PrecomputedConfiguration
     context?: EvaluationContext // the context the assignments were computed for
     fetchedAt?: number
     etag?: string
   }
-  // no `server`/rules branch defined yet — keep the type extensible for it
+  server?: {                    // rules-based (UFC) config — out of scope for MVP
+    response: string            // JSON-encoded server configuration
+    fetchedAt?: number
+    etag?: string
+  }
 }
 ```
 
@@ -107,7 +111,7 @@ not served.
 
 | Subtask | Summary |
 | :------ | :------ |
-| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v2, validate, fail predictably; extensible for rules) |
+| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1, validate, fail predictably; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode `PrecomputedConfiguration` → `FlagCacheEntry` map (plain JSON) |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
