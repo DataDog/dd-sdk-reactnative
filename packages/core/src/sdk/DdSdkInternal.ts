@@ -20,6 +20,44 @@ export type DdSdkType = {
      * @param configuration: The configuration to use.
      */
     initialize(configuration: DdSdkNativeConfiguration): Promise<void>;
+
+    configurationFromString(wire: string): Promise<object>;
+
+    configurationToString(configuration: object): Promise<string>;
+
+    fetchRulesConfiguration(options: object): Promise<object>;
+
+    fetchPrecomputedConfiguration(options: object): Promise<object>;
+
+    saveConfiguration(configuration: object, options: object): Promise<object>;
+
+    loadConfiguration(options: object): Promise<object>;
+
+    setConfiguration(configuration: object): Promise<object>;
+
+    setEvaluationContext(context: object): Promise<object>;
+
+    resolveBooleanEvaluation(
+        flagKey: string,
+        defaultValue: boolean
+    ): Promise<object>;
+
+    resolveStringEvaluation(
+        flagKey: string,
+        defaultValue: string
+    ): Promise<object>;
+
+    resolveNumberEvaluation(
+        flagKey: string,
+        defaultValue: number
+    ): Promise<object>;
+
+    resolveObjectEvaluation(
+        flagKey: string,
+        defaultValue: object
+    ): Promise<object>;
+
+    getProviderDebugState(): Promise<object>;
 };
 
 export class DdSdkWrapper implements DdNativeSdkType {
@@ -101,6 +139,70 @@ export class DdSdkWrapper implements DdNativeSdkType {
 
     clearAllData(): Promise<void> {
         return NativeDdSdk.clearAllData();
+    }
+
+    configurationFromString(wire: string): Promise<object> {
+        return NativeDdSdk.configurationFromString(wire);
+    }
+
+    configurationToString(configuration: object): Promise<string> {
+        return NativeDdSdk.configurationToString(configuration);
+    }
+
+    fetchRulesConfiguration(options: object): Promise<object> {
+        return NativeDdSdk.fetchRulesConfiguration(options);
+    }
+
+    fetchPrecomputedConfiguration(options: object): Promise<object> {
+        return NativeDdSdk.fetchPrecomputedConfiguration(options);
+    }
+
+    saveConfiguration(configuration: object, options: object): Promise<object> {
+        return NativeDdSdk.saveConfiguration(configuration, options);
+    }
+
+    loadConfiguration(options: object): Promise<object> {
+        return NativeDdSdk.loadConfiguration(options);
+    }
+
+    setConfiguration(configuration: object): Promise<object> {
+        return NativeDdSdk.setConfiguration(configuration);
+    }
+
+    setEvaluationContext(context: object): Promise<object> {
+        return NativeDdSdk.setEvaluationContext(context);
+    }
+
+    resolveBooleanEvaluation(
+        flagKey: string,
+        defaultValue: boolean
+    ): Promise<object> {
+        return NativeDdSdk.resolveBooleanEvaluation(flagKey, defaultValue);
+    }
+
+    resolveStringEvaluation(
+        flagKey: string,
+        defaultValue: string
+    ): Promise<object> {
+        return NativeDdSdk.resolveStringEvaluation(flagKey, defaultValue);
+    }
+
+    resolveNumberEvaluation(
+        flagKey: string,
+        defaultValue: number
+    ): Promise<object> {
+        return NativeDdSdk.resolveNumberEvaluation(flagKey, defaultValue);
+    }
+
+    resolveObjectEvaluation(
+        flagKey: string,
+        defaultValue: object
+    ): Promise<object> {
+        return NativeDdSdk.resolveObjectEvaluation(flagKey, defaultValue);
+    }
+
+    getProviderDebugState(): Promise<object> {
+        return NativeDdSdk.getProviderDebugState();
     }
 
     addListener(eventType: string): void {

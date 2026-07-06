@@ -135,6 +135,101 @@ RCT_EXPORT_METHOD(clearAllData:(RCTPromiseResolveBlock)resolve
     [self clearAllData:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(configurationFromString, configurationFromStringWithWire:(NSString*)wire
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self configurationFromString:wire resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(configurationToString, configurationToStringWithConfiguration:(NSDictionary*)configuration
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self configurationToString:configuration resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(fetchRulesConfiguration, fetchRulesConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self fetchRulesConfiguration:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(fetchPrecomputedConfiguration, fetchPrecomputedConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self fetchPrecomputedConfiguration:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(saveConfiguration, saveConfigurationWithConfiguration:(NSDictionary*)configuration
+                 options:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self saveConfiguration:configuration options:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(loadConfiguration, loadConfigurationWithOptions:(NSDictionary*)options
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self loadConfiguration:options resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(setConfiguration, setNativeFlagsConfiguration:(NSDictionary*)configuration
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self setConfiguration:configuration resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(setEvaluationContext, setNativeFlagsEvaluationContext:(NSDictionary*)context
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self setEvaluationContext:context resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(resolveBooleanEvaluation, resolveBooleanEvaluationWithFlagKey:(NSString*)flagKey
+                 defaultValue:(BOOL)defaultValue
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self resolveBooleanEvaluation:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(resolveStringEvaluation, resolveStringEvaluationWithFlagKey:(NSString*)flagKey
+                 defaultValue:(NSString*)defaultValue
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self resolveStringEvaluation:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(resolveNumberEvaluation, resolveNumberEvaluationWithFlagKey:(NSString*)flagKey
+                 defaultValue:(double)defaultValue
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self resolveNumberEvaluation:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(resolveObjectEvaluation, resolveObjectEvaluationWithFlagKey:(NSString*)flagKey
+                 defaultValue:(NSDictionary*)defaultValue
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self resolveObjectEvaluation:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(getProviderDebugState:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self getProviderDebugState:resolve reject:reject];
+}
+
 RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
                  withAttributes: (NSDictionary *)attributes
                  withConfig:(NSDictionary *)config
@@ -237,6 +332,58 @@ RCT_REMAP_METHOD(sendTelemetryLog, withMessage:(NSString*)message
 
 - (void)clearAllData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddSdkImplementation clearAllDataWithResolve:resolve reject:reject];
+}
+
+- (void)configurationFromString:(NSString *)wire resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation configurationFromStringWithWire:wire resolve:resolve reject:reject];
+}
+
+- (void)configurationToString:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation configurationToStringWithConfiguration:configuration resolve:resolve reject:reject];
+}
+
+- (void)fetchRulesConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation fetchRulesConfigurationWithOptions:options resolve:resolve reject:reject];
+}
+
+- (void)fetchPrecomputedConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation fetchPrecomputedConfigurationWithOptions:options resolve:resolve reject:reject];
+}
+
+- (void)saveConfiguration:(NSDictionary *)configuration options:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation saveConfigurationWithConfiguration:configuration options:options resolve:resolve reject:reject];
+}
+
+- (void)loadConfiguration:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation loadConfigurationWithOptions:options resolve:resolve reject:reject];
+}
+
+- (void)setConfiguration:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation setConfigurationWithConfiguration:configuration resolve:resolve reject:reject];
+}
+
+- (void)setEvaluationContext:(NSDictionary *)context resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation setEvaluationContextWithContext:context resolve:resolve reject:reject];
+}
+
+- (void)resolveBooleanEvaluation:(NSString *)flagKey defaultValue:(BOOL)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation resolveBooleanEvaluationWithFlagKey:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+- (void)resolveStringEvaluation:(NSString *)flagKey defaultValue:(NSString *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation resolveStringEvaluationWithFlagKey:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+- (void)resolveNumberEvaluation:(NSString *)flagKey defaultValue:(double)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation resolveNumberEvaluationWithFlagKey:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+- (void)resolveObjectEvaluation:(NSString *)flagKey defaultValue:(NSDictionary *)defaultValue resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation resolveObjectEvaluationWithFlagKey:flagKey defaultValue:defaultValue resolve:resolve reject:reject];
+}
+
+- (void)getProviderDebugState:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddSdkImplementation getProviderDebugStateWithResolve:resolve reject:reject];
 }
 
 - (void)addListener:(NSString *)eventType {

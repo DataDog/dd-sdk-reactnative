@@ -1,0 +1,3 @@
+[submodule "packages/core/src/flags/__fixtures__/ffe-system-test-data"]
+	path = packages/core/src/flags/__fixtures__/ffe-system-test-data
+	url = https://github.com/DataDog/ffe-system-test-data.git

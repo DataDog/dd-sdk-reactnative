@@ -127,6 +127,94 @@ export interface Spec extends TurboModule {
     clearAllData(): Promise<void>;
 
     /**
+     * Parses a portable flags configuration wire string into an opaque native
+     * configuration object.
+     */
+    configurationFromString(wire: string): Promise<Object>;
+
+    /**
+     * Serializes an opaque native flags configuration object into a portable
+     * configuration wire string.
+     */
+    configurationToString(configuration: Object): Promise<string>;
+
+    /**
+     * Fetches a rules-based portable flags configuration without mutating
+     * active provider state.
+     */
+    fetchRulesConfiguration(options: Object): Promise<Object>;
+
+    /**
+     * Fetches a precomputed portable flags configuration without mutating
+     * active provider state.
+     */
+    fetchPrecomputedConfiguration(options: Object): Promise<Object>;
+
+    /**
+     * Persists a portable flags configuration to native disk storage without
+     * mutating active provider state.
+     */
+    saveConfiguration(configuration: Object, options: Object): Promise<Object>;
+
+    /**
+     * Loads a portable flags configuration from native disk storage without
+     * mutating active provider state.
+     */
+    loadConfiguration(options: Object): Promise<Object>;
+
+    /**
+     * Sets or replaces the active native flags configuration.
+     */
+    setConfiguration(configuration: Object): Promise<Object>;
+
+    /**
+     * Stores the current evaluation context for subsequent evaluations.
+     */
+    setEvaluationContext(context: Object): Promise<Object>;
+
+    /**
+     * Resolves a boolean feature flag evaluation against the active native
+     * configuration and current evaluation context.
+     */
+    resolveBooleanEvaluation(
+        flagKey: string,
+        defaultValue: boolean
+    ): Promise<Object>;
+
+    /**
+     * Resolves a string feature flag evaluation against the active native
+     * configuration and current evaluation context.
+     */
+    resolveStringEvaluation(
+        flagKey: string,
+        defaultValue: string
+    ): Promise<Object>;
+
+    /**
+     * Resolves a number feature flag evaluation against the active native
+     * configuration and current evaluation context.
+     */
+    resolveNumberEvaluation(
+        flagKey: string,
+        defaultValue: number
+    ): Promise<Object>;
+
+    /**
+     * Resolves an object feature flag evaluation against the active native
+     * configuration and current evaluation context.
+     */
+    resolveObjectEvaluation(
+        flagKey: string,
+        defaultValue: Object
+    ): Promise<Object>;
+
+    /**
+     * Returns debug-only provider state for validating the RN-local native
+     * implementation.
+     */
+    getProviderDebugState(): Promise<Object>;
+
+    /**
      * Required definitions, because of:
      * https://github.com/react-native-community/RNNewArchitectureLibraries/tree/feat/swift-event-emitter?tab=readme-ov-file#codegen-update-codegen-specs)
      */

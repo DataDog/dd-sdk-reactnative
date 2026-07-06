@@ -143,6 +143,7 @@ android {
     }
     test {
       java.srcDir("src/test/kotlin")
+      resources.srcDir("../src/flags/__fixtures__")
     }
   }
 

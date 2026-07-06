@@ -1,0 +1,22 @@
+{
+    "result": {
+        "flagKey": "checkout.copy",
+        "value": "enabled",
+        "variant": "treatment",
+        "reason": "TARGETING_MATCH",
+        "flagMetadata": {
+            "allocationKey": "pro allocation",
+            "doLog": true,
+            "extraLogging": {
+                "owner": "feature-flags"
+            },
+            "variationType": "string"
+        }
+    },
+    "context": {
+        "targetingKey": "user-123",
+        "attributes": {
+            "plan": "pro"
+        }
+    }
+}

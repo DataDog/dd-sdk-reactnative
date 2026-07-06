@@ -221,6 +221,71 @@ class DdSdk(
         implementation.clearAllData(promise)
     }
 
+    @ReactMethod
+    fun configurationFromString(wire: String, promise: Promise) {
+        implementation.configurationFromString(wire, promise)
+    }
+
+    @ReactMethod
+    fun configurationToString(configuration: ReadableMap, promise: Promise) {
+        implementation.configurationToString(configuration, promise)
+    }
+
+    @ReactMethod
+    fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchRulesConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchPrecomputedConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        implementation.saveConfiguration(configuration, options, promise)
+    }
+
+    @ReactMethod
+    fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.loadConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    fun setConfiguration(configuration: ReadableMap, promise: Promise) {
+        implementation.setConfiguration(configuration, promise)
+    }
+
+    @ReactMethod
+    fun setEvaluationContext(context: ReadableMap, promise: Promise) {
+        implementation.setEvaluationContext(context, promise)
+    }
+
+    @ReactMethod
+    fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
+        implementation.resolveBooleanEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
+        implementation.resolveStringEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
+        implementation.resolveNumberEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
+        implementation.resolveObjectEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    fun getProviderDebugState(promise: Promise) {
+        implementation.getProviderDebugState(promise)
+    }
+
     // Required for rn built in EventEmitter Calls.
     @ReactMethod
     fun addListener(eventName: String) {

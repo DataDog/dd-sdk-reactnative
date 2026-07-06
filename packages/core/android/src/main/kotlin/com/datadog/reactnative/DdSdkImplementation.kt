@@ -36,6 +36,13 @@ class DdSdkImplementation(
     internal val appContext: Context = reactContext.applicationContext
     internal val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
+    private val nativeFfeCore: NativeFfeCore = NativeFfeCore()
+    private val nativeFfeConfigurationFetcher: NativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
+    private val nativeFfeConfigurationStore: NativeFfeConfigurationStore =
+        DatadogDataStoreNativeFfeConfigurationStore(
+            fallbackStore = FileNativeFfeConfigurationStore(appContext)
+        )
+    private val nativeFfeSideEffects: NativeFfeEvaluationSideEffects = NativeFfeEvaluationSideEffects()
 
     @Volatile
     private var maxDisplayRefreshRate: Double? = null
@@ -285,6 +292,149 @@ class DdSdkImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Parses a serialized flags configuration wire payload into the bridge representation.
+     */
+    fun configurationFromString(wire: String, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.configurationFromString(wire).toMap().toWritableMap()
+        }
+    }
+
+    /**
+     * Serializes a bridge flags configuration back to its wire payload.
+     */
+    fun configurationToString(configuration: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.configurationToString(configuration.toMap())
+        }
+    }
+
+    /**
+     * Fetches a rules-based flags configuration and returns it as a bridge configuration.
+     */
+    fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.fetchConfiguration(
+                FFE_KIND_RULES,
+                options.toMap(),
+                nativeFfeConfigurationFetcher,
+            ).toMap().toWritableMap()
+        }
+    }
+
+    /**
+     * Fetches a precomputed flags configuration and returns it as a bridge configuration.
+     */
+    fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.fetchConfiguration(
+                FFE_KIND_PRECOMPUTED,
+                options.toMap(),
+                nativeFfeConfigurationFetcher,
+            ).toMap().toWritableMap()
+        }
+    }
+
+    /**
+     * Persists a flags configuration in the requested native storage slot.
+     */
+    fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.saveConfiguration(
+                configuration.toMap(),
+                options.toMap(),
+                nativeFfeConfigurationStore,
+            ).toWritableMap()
+        }
+    }
+
+    /**
+     * Loads a persisted flags configuration from the requested native storage slot.
+     */
+    fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.loadConfiguration(
+                options.toMap(),
+                nativeFfeConfigurationStore,
+            ).toMap().toWritableMap()
+        }
+    }
+
+    /**
+     * Activates a flags configuration for subsequent native evaluations.
+     */
+    fun setConfiguration(configuration: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.setConfiguration(configuration.toMap()).toWritableMap()
+        }
+    }
+
+    /**
+     * Updates the evaluation context used by subsequent native flag evaluations.
+     */
+    fun setEvaluationContext(context: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            nativeFfeCore.setEvaluationContext(context.toMap()).toWritableMap()
+        }
+    }
+
+    /**
+     * Resolves a boolean flag evaluation through the active native configuration.
+     */
+    fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
+        resolveFfePromise(promise) {
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveBooleanEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
+        }
+    }
+
+    /**
+     * Resolves a string flag evaluation through the active native configuration.
+     */
+    fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
+        resolveFfePromise(promise) {
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveStringEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
+        }
+    }
+
+    /**
+     * Resolves a numeric flag evaluation through the active native configuration.
+     */
+    fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
+        resolveFfePromise(promise) {
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveNumberEvaluation(flagKey, defaultValue)
+            }.toWritableMap()
+        }
+    }
+
+    /**
+     * Resolves a JSON/object flag evaluation through the active native configuration.
+     */
+    fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
+        resolveFfePromise(promise) {
+            resolveNativeFfeEvaluation {
+                nativeFfeCore.resolveObjectEvaluation(flagKey, defaultValue.toMap())
+            }.toWritableMap()
+        }
+    }
+
+    /**
+     * Returns native flags provider counters and last-operation state for the bridge.
+     */
+    fun getProviderDebugState(promise: Promise) {
+        resolveFfePromise(promise) {
+            (
+                nativeFfeCore.debugState() +
+                    mapOf("evaluationSideEffects" to nativeFfeSideEffects.debugState())
+            ).toWritableMap()
+        }
+    }
+
     // endregion
 
     // region Internal
@@ -314,6 +464,26 @@ class DdSdkImplementation(
             DdSdkSynthetics.testId,
             DdSdkSynthetics.resultId
         )
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private inline fun resolveFfePromise(
+        promise: Promise,
+        block: () -> Any?
+    ) {
+        try {
+            promise.resolve(block())
+        } catch (error: Exception) {
+            promise.reject(FFE_ERROR_CODE, error.message, error)
+        }
+    }
+
+    private inline fun resolveNativeFfeEvaluation(
+        block: () -> Map<String, Any?>
+    ): Map<String, Any?> {
+        val result = block()
+        nativeFfeSideEffects.trackEvaluation(result, nativeFfeCore.evaluationContext())
+        return result
     }
 
     private fun buildVitalUpdateFrequency(vitalsUpdateFrequency: String?): VitalsUpdateFrequency {
@@ -427,5 +597,8 @@ class DdSdkImplementation(
         internal const val PACKAGE_INFO_NOT_FOUND_ERROR_MESSAGE = "Error getting package info"
         internal const val DEFAULT_REFRESH_HZ = 60.0
         internal const val NAME = "DdSdk"
+        internal const val FFE_ERROR_CODE = "FEATURE_FLAGS_CONFIGURATION_ERROR"
+        internal const val FFE_KIND_RULES = "rules"
+        internal const val FFE_KIND_PRECOMPUTED = "precomputed"
     }
 }

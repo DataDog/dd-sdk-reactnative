@@ -60,6 +60,7 @@ import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
+import java.io.File
 import java.util.Locale
 import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
@@ -70,6 +71,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -146,6 +148,9 @@ internal class DdSdkTest {
     @Mock
     lateinit var mockChoreographer: Choreographer
 
+    @TempDir
+    lateinit var tempDir: File
+
     @BeforeEach
     fun `set up`() {
         val mockLooper = mock<Looper>()
@@ -161,6 +166,7 @@ internal class DdSdkTest {
 
         whenever(mockReactContext.applicationContext) doReturn mockContext
         whenever(mockContext.packageName) doReturn "packageName"
+        whenever(mockContext.filesDir) doReturn tempDir
         whenever(
             mockContext.packageManager.getPackageInfo(
                 "packageName",

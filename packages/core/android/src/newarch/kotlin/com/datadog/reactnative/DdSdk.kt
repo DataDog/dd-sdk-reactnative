@@ -190,6 +190,71 @@ class DdSdk(
         implementation.clearAllData(promise)
     }
 
+    @ReactMethod
+    override fun configurationFromString(wire: String, promise: Promise) {
+        implementation.configurationFromString(wire, promise)
+    }
+
+    @ReactMethod
+    override fun configurationToString(configuration: ReadableMap, promise: Promise) {
+        implementation.configurationToString(configuration, promise)
+    }
+
+    @ReactMethod
+    override fun fetchRulesConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchRulesConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    override fun fetchPrecomputedConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.fetchPrecomputedConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    override fun saveConfiguration(configuration: ReadableMap, options: ReadableMap, promise: Promise) {
+        implementation.saveConfiguration(configuration, options, promise)
+    }
+
+    @ReactMethod
+    override fun loadConfiguration(options: ReadableMap, promise: Promise) {
+        implementation.loadConfiguration(options, promise)
+    }
+
+    @ReactMethod
+    override fun setConfiguration(configuration: ReadableMap, promise: Promise) {
+        implementation.setConfiguration(configuration, promise)
+    }
+
+    @ReactMethod
+    override fun setEvaluationContext(context: ReadableMap, promise: Promise) {
+        implementation.setEvaluationContext(context, promise)
+    }
+
+    @ReactMethod
+    override fun resolveBooleanEvaluation(flagKey: String, defaultValue: Boolean, promise: Promise) {
+        implementation.resolveBooleanEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    override fun resolveStringEvaluation(flagKey: String, defaultValue: String, promise: Promise) {
+        implementation.resolveStringEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    override fun resolveNumberEvaluation(flagKey: String, defaultValue: Double, promise: Promise) {
+        implementation.resolveNumberEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    override fun resolveObjectEvaluation(flagKey: String, defaultValue: ReadableMap, promise: Promise) {
+        implementation.resolveObjectEvaluation(flagKey, defaultValue, promise)
+    }
+
+    @ReactMethod
+    override fun getProviderDebugState(promise: Promise) {
+        implementation.getProviderDebugState(promise)
+    }
+
     override fun addListener(eventType: String?) {
         // No-op
     }

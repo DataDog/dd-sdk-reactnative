@@ -1,0 +1,10 @@
+{
+    "result": {
+        "flagKey": "missing",
+        "value": "fallback",
+        "reason": "DEFAULT"
+    },
+    "context": {
+        "targetingKey": "user-123"
+    }
+}

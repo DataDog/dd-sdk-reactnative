@@ -64,6 +64,7 @@ yarn-error.log
 
 # Secrets
 ddCredentials.*
+!ddCredentials.example.js
 
 # Yarn ignored files
 .pnp.*

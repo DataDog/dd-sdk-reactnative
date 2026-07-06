@@ -32,6 +32,12 @@ public class DdSdkImplementation: NSObject {
     let mainDispatchQueue: DispatchQueueType
     var RUMMonitorProvider: () -> RUMMonitorProtocol?
     var RUMMonitorInternalProvider: () -> RUMMonitorInternalProtocol?
+    private let nativeFfeCore = NativeFfeCore()
+    private let nativeFfeConfigurationFetcher = NativeFfeConfigurationFetcher()
+    private let nativeFfeConfigurationStore = DatadogDataStoreNativeFfeConfigurationStore(
+        fallbackStore: FileNativeFfeConfigurationStore()
+    )
+    private let nativeFfeSideEffects = NativeFfeEvaluationSideEffects()
 
     #if os(iOS)
         var webviewMessageEmitter: InternalExtension<WebViewTracking>.AbstractMessageEmitter?
@@ -286,6 +292,167 @@ public class DdSdkImplementation: NSObject {
         resolve(nil)
     }
 
+    @objc
+    public func configurationFromString(
+        wire: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.configurationFromString(wire as String).toMap()
+        }
+    }
+
+    @objc
+    public func configurationToString(
+        configuration: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.configurationToString(configuration as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func fetchRulesConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.fetchConfiguration(
+                kind: Constants.ffeKindRules,
+                options: options as? [String: Any] ?? [:],
+                fetcher: self.nativeFfeConfigurationFetcher
+            ).toMap()
+        }
+    }
+
+    @objc
+    public func fetchPrecomputedConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.fetchConfiguration(
+                kind: Constants.ffeKindPrecomputed,
+                options: options as? [String: Any] ?? [:],
+                fetcher: self.nativeFfeConfigurationFetcher
+            ).toMap()
+        }
+    }
+
+    @objc
+    public func saveConfiguration(
+        configuration: NSDictionary, options: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.saveConfiguration(
+                configuration as? [String: Any] ?? [:],
+                options: options as? [String: Any] ?? [:],
+                store: self.nativeFfeConfigurationStore
+            )
+        }
+    }
+
+    @objc
+    public func loadConfiguration(
+        options: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            try self.nativeFfeCore.loadConfiguration(
+                options: options as? [String: Any] ?? [:],
+                store: self.nativeFfeConfigurationStore
+            ).toMap()
+        }
+    }
+
+    @objc
+    public func setConfiguration(
+        configuration: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.setConfiguration(configuration as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func setEvaluationContext(
+        context: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.nativeFfeCore.setEvaluationContext(context as? [String: Any] ?? [:])
+        }
+    }
+
+    @objc
+    public func resolveBooleanEvaluation(
+        flagKey: NSString, defaultValue: Bool, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveBooleanEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue
+                )
+            }
+        }
+    }
+
+    @objc
+    public func resolveStringEvaluation(
+        flagKey: NSString, defaultValue: NSString, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveStringEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue as String
+                )
+            }
+        }
+    }
+
+    @objc
+    public func resolveNumberEvaluation(
+        flagKey: NSString, defaultValue: Double, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveNumberEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue
+                )
+            }
+        }
+    }
+
+    @objc
+    public func resolveObjectEvaluation(
+        flagKey: NSString, defaultValue: NSDictionary, resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            self.resolveNativeFfeEvaluation {
+                self.nativeFfeCore.resolveObjectEvaluation(
+                    flagKey: flagKey as String,
+                    defaultValue: defaultValue as? [String: Any] ?? [:]
+                )
+            }
+        }
+    }
+
+    @objc
+    public func getProviderDebugState(
+        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    ) {
+        resolveFfePromise(resolve: resolve, reject: reject) {
+            var state = self.nativeFfeCore.debugState()
+            state["evaluationSideEffects"] = self.nativeFfeSideEffects.debugState()
+            return state
+        }
+    }
+
     func overrideReactNativeTelemetry(rnConfiguration: DdSdkConfiguration) {
         DdTelemetry.overrideTelemetryConfiguration(
             initializationType: rnConfiguration.configurationForTelemetry?.initializationType
@@ -356,6 +523,27 @@ public class DdSdkImplementation: NSObject {
         return frameTimeCallback
     }
 
+    private func resolveFfePromise(
+        resolve: RCTPromiseResolveBlock,
+        reject: RCTPromiseRejectBlock,
+        block: () throws -> Any?
+    ) {
+        do {
+            resolve(try block())
+        } catch {
+            reject("FEATURE_FLAGS_CONFIGURATION_ERROR", error.localizedDescription, error)
+        }
+    }
+
+    private func resolveNativeFfeEvaluation(_ block: () -> [String: Any]) -> [String: Any] {
+        let result = block()
+        nativeFfeSideEffects.trackEvaluation(
+            result: result,
+            context: nativeFfeCore.evaluationContext()
+        )
+        return result
+    }
+
     // Normalizes frameTime values so when they are turned into FPS metrics they are normalized on a range between 0 and fpsBudget. If fpsBudget is not provided it will default to 60hz.
     public static func normalizeFrameTimeForDeviceRefreshRate(
         _ frameTime: Double, fpsBudget: Double? = nil, deviceDisplayFps: Double? = nil
@@ -379,4 +567,9 @@ public class DdSdkImplementation: NSObject {
 
         return normalizedFrameTimeMs / 1000.0  // in seconds
     }
+}
+
+private enum Constants {
+    static let ffeKindRules = "rules"
+    static let ffeKindPrecomputed = "precomputed"
 }

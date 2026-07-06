@@ -15,6 +15,67 @@ import type { DdTraceType } from '../src/types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const actualRN = require('react-native');
 
+const mockFlagsDebugState = {
+    status: 'ready',
+    activeConfigurationKind: 'rules',
+    activeEtag: 'ffe-system-test-data',
+    configurationSetCount: 1,
+    configurationSaveCount: 0,
+    configurationLoadCount: 0,
+    fetchCount: 1,
+    evaluationCount: 0,
+    lastEvent: 'provider_ready',
+    lastFetchRequest: {
+        url: 'https://mock.datadog.test/config',
+        method: 'GET',
+        headers: {
+            Accept: 'application/json'
+        },
+        statusCode: 200
+    },
+    evaluationSideEffects: {
+        attemptedCount: 0,
+        trackedCount: 0,
+        skippedCount: 0,
+        failedCount: 0,
+        lastStatus: 'skipped'
+    }
+};
+
+const mockConfigurationFromString = (wire: string) => {
+    const parsed = JSON.parse(wire);
+    const kind =
+        parsed.server && parsed.precomputed
+            ? 'mixed'
+            : parsed.server
+            ? 'rules'
+            : 'precomputed';
+
+    return {
+        __ddNativeFfeConfiguration: true,
+        version: parsed.version,
+        kind,
+        etag: parsed.server?.etag ?? parsed.precomputed?.etag,
+        wire
+    };
+};
+
+const mockFetchConfiguration = (
+    kind: 'precomputed' | 'rules',
+    options: { previousConfigurationWire?: string }
+) => {
+    return mockConfigurationFromString(
+        options.previousConfigurationWire ??
+            JSON.stringify({
+                version: 2,
+                [kind === 'rules' ? 'server' : 'precomputed']: {
+                    response: '{}',
+                    etag: 'mock-fetch'
+                }
+            })
+    );
+};
+
 actualRN.NativeModules.DdSdk = {
     initialize: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
@@ -58,6 +119,114 @@ actualRN.NativeModules.DdSdk = {
     clearAllData: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['clearAllData']>,
+    configurationFromString: jest.fn().mockImplementation(
+        (wire: string) =>
+            new Promise<object>(resolve =>
+                resolve(mockConfigurationFromString(wire))
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['configurationFromString']>,
+    configurationToString: jest.fn().mockImplementation(
+        (configuration: { wire?: string }) =>
+            new Promise<string>(resolve => resolve(configuration.wire ?? '{}'))
+    ) as jest.MockedFunction<DdNativeSdkType['configurationToString']>,
+    fetchRulesConfiguration: jest.fn().mockImplementation(
+        (options: { previousConfigurationWire?: string }) =>
+            new Promise<object>(resolve =>
+                resolve(mockFetchConfiguration('rules', options))
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['fetchRulesConfiguration']>,
+    fetchPrecomputedConfiguration: jest.fn().mockImplementation(
+        (options: { previousConfigurationWire?: string }) =>
+            new Promise<object>(resolve =>
+                resolve(mockFetchConfiguration('precomputed', options))
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['fetchPrecomputedConfiguration']>,
+    saveConfiguration: jest.fn().mockImplementation(
+        (configuration: { wire?: string }, options: { slot?: string }) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    ...mockFlagsDebugState,
+                    configurationSaveCount: 1,
+                    lastStorage: {
+                        operation: 'save',
+                        status: 'stored',
+                        key: `flags-configuration-${options.slot ?? 'default'}`,
+                        wireBytes: (configuration.wire ?? '').length
+                    }
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['saveConfiguration']>,
+    loadConfiguration: jest.fn().mockImplementation(
+        () =>
+            new Promise<object>(resolve =>
+                resolve(
+                    mockConfigurationFromString(
+                        JSON.stringify({
+                            version: 2,
+                            server: {
+                                response: '{}',
+                                etag: 'stored'
+                            }
+                        })
+                    )
+                )
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['loadConfiguration']>,
+    setConfiguration: jest.fn().mockImplementation(
+        () => new Promise<object>(resolve => resolve(mockFlagsDebugState))
+    ) as jest.MockedFunction<DdNativeSdkType['setConfiguration']>,
+    setEvaluationContext: jest.fn().mockImplementation(
+        (context: object) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    ...mockFlagsDebugState,
+                    currentContext: context
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['setEvaluationContext']>,
+    resolveBooleanEvaluation: jest.fn().mockImplementation(
+        (flagKey: string, defaultValue: boolean) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    flagKey,
+                    value: defaultValue,
+                    reason: 'DEFAULT'
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['resolveBooleanEvaluation']>,
+    resolveStringEvaluation: jest.fn().mockImplementation(
+        (flagKey: string, defaultValue: string) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    flagKey,
+                    value: defaultValue,
+                    reason: 'DEFAULT'
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['resolveStringEvaluation']>,
+    resolveNumberEvaluation: jest.fn().mockImplementation(
+        (flagKey: string, defaultValue: number) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    flagKey,
+                    value: defaultValue,
+                    reason: 'DEFAULT'
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['resolveNumberEvaluation']>,
+    resolveObjectEvaluation: jest.fn().mockImplementation(
+        (flagKey: string, defaultValue: object) =>
+            new Promise<object>(resolve =>
+                resolve({
+                    flagKey,
+                    value: defaultValue,
+                    reason: 'DEFAULT'
+                })
+            )
+    ) as jest.MockedFunction<DdNativeSdkType['resolveObjectEvaluation']>,
+    getProviderDebugState: jest.fn().mockImplementation(
+        () => new Promise<object>(resolve => resolve(mockFlagsDebugState))
+    ) as jest.MockedFunction<DdNativeSdkType['getProviderDebugState']>,
     addListener: jest.fn().mockImplementation((_: string) => {
         /* empty */
     }) as jest.MockedFunction<DdNativeSdkType['addListener']>,

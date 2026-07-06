@@ -31,6 +31,20 @@ import { version as sdkVersion } from '../version';
 
 jest.mock('../InternalLog');
 
+const flagsEvaluationContext = {
+    targetingKey: 'user-123',
+    attributes: {
+        plan: 'pro'
+    }
+};
+const rulesConfigurationWire = {
+    version: 2,
+    server: {
+        response: '{}',
+        etag: 'ffe-system-test-data'
+    }
+};
+
 jest.mock(
     '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking',
     () => {
@@ -67,6 +81,19 @@ beforeEach(async () => {
     NativeModules.DdSdk.initialize.mockClear();
     NativeModules.DdSdk.addAttributes.mockClear();
     NativeModules.DdSdk.setTrackingConsent.mockClear();
+    NativeModules.DdSdk.configurationFromString.mockClear();
+    NativeModules.DdSdk.configurationToString.mockClear();
+    NativeModules.DdSdk.fetchRulesConfiguration.mockClear();
+    NativeModules.DdSdk.fetchPrecomputedConfiguration.mockClear();
+    NativeModules.DdSdk.saveConfiguration.mockClear();
+    NativeModules.DdSdk.loadConfiguration.mockClear();
+    NativeModules.DdSdk.setConfiguration.mockClear();
+    NativeModules.DdSdk.setEvaluationContext.mockClear();
+    NativeModules.DdSdk.resolveBooleanEvaluation.mockClear();
+    NativeModules.DdSdk.resolveStringEvaluation.mockClear();
+    NativeModules.DdSdk.resolveNumberEvaluation.mockClear();
+    NativeModules.DdSdk.resolveObjectEvaluation.mockClear();
+    NativeModules.DdSdk.getProviderDebugState.mockClear();
     NativeModules.DdSdk.onRUMSessionStarted.mockClear();
 
     (DdRumUserInteractionTracking.startTracking as jest.MockedFunction<
@@ -1368,6 +1395,213 @@ describe('DdSdkReactNative', () => {
 
             // THEN
             expect(NativeDdSdk.clearAllData).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('flags configuration building blocks', () => {
+        const flagsWire = JSON.stringify(rulesConfigurationWire);
+
+        it('parses and serializes a native flags configuration wire', async () => {
+            // WHEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const serialized = await DdSdkReactNative.configurationToString(
+                configuration
+            );
+
+            // THEN
+            expect(NativeDdSdk.configurationFromString).toHaveBeenCalledWith(
+                flagsWire
+            );
+            expect(NativeDdSdk.configurationToString).toHaveBeenCalledWith(
+                configuration
+            );
+            expect(configuration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                version: 2,
+                kind: 'rules',
+                etag: 'ffe-system-test-data'
+            });
+            expect(serialized).toBe(flagsWire);
+        });
+
+        it('sets configuration and context before resolving evaluations', async () => {
+            // GIVEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const context = flagsEvaluationContext;
+
+            // WHEN
+            const configState = await DdSdkReactNative.setConfiguration(
+                configuration
+            );
+            const contextState = await DdSdkReactNative.setEvaluationContext(
+                context
+            );
+            const booleanResult = await DdSdkReactNative.resolveBooleanEvaluation(
+                'checkout.enabled',
+                false
+            );
+            const stringResult = await DdSdkReactNative.resolveStringEvaluation(
+                'checkout.copy',
+                'default'
+            );
+            const numberResult = await DdSdkReactNative.resolveNumberEvaluation(
+                'checkout.limit',
+                0
+            );
+            const objectResult = await DdSdkReactNative.resolveObjectEvaluation(
+                'checkout.config',
+                { mode: 'default' }
+            );
+            const debugState = await DdSdkReactNative.getProviderDebugState();
+
+            // THEN
+            expect(NativeDdSdk.setConfiguration).toHaveBeenCalledWith(
+                configuration
+            );
+            expect(NativeDdSdk.setEvaluationContext).toHaveBeenCalledWith(
+                context
+            );
+            expect(NativeDdSdk.resolveBooleanEvaluation).toHaveBeenCalledWith(
+                'checkout.enabled',
+                false
+            );
+            expect(NativeDdSdk.resolveStringEvaluation).toHaveBeenCalledWith(
+                'checkout.copy',
+                'default'
+            );
+            expect(NativeDdSdk.resolveNumberEvaluation).toHaveBeenCalledWith(
+                'checkout.limit',
+                0
+            );
+            expect(
+                NativeDdSdk.resolveObjectEvaluation
+            ).toHaveBeenCalledWith('checkout.config', { mode: 'default' });
+            expect(configState.status).toBe('ready');
+            expect(contextState.currentContext).toStrictEqual(context);
+            expect(booleanResult).toStrictEqual({
+                flagKey: 'checkout.enabled',
+                value: false,
+                reason: 'DEFAULT'
+            });
+            expect(stringResult.value).toBe('default');
+            expect(numberResult.value).toBe(0);
+            expect(objectResult.value).toStrictEqual({ mode: 'default' });
+            expect(debugState).toMatchObject({
+                status: 'ready',
+                activeConfigurationKind: 'rules',
+                activeEtag: 'ffe-system-test-data',
+                fetchCount: 1,
+                lastFetchRequest: {
+                    url: 'https://mock.datadog.test/config',
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json'
+                    },
+                    statusCode: 200
+                },
+                evaluationSideEffects: {
+                    attemptedCount: 0,
+                    trackedCount: 0,
+                    skippedCount: 0,
+                    failedCount: 0,
+                    lastStatus: 'skipped'
+                }
+            });
+        });
+
+        it('fetches configurations natively without setting active state', async () => {
+            // GIVEN
+            const options = {
+                endpoint: 'https://mock.datadog.test/config',
+                clientToken: 'client-token',
+                headers: {
+                    'X-Test': 'true'
+                },
+                previousConfigurationWire: flagsWire
+            };
+
+            // WHEN
+            const rulesConfiguration = await DdSdkReactNative.fetchRulesConfiguration(
+                options
+            );
+            const precomputedOptions = {
+                endpoint: options.endpoint,
+                clientToken: options.clientToken,
+                headers: options.headers,
+                evaluationContext: flagsEvaluationContext
+            };
+            const precomputedConfiguration = await DdSdkReactNative.fetchPrecomputedConfiguration(
+                precomputedOptions
+            );
+
+            // THEN
+            expect(NativeDdSdk.fetchRulesConfiguration).toHaveBeenCalledWith(
+                options
+            );
+            expect(
+                NativeDdSdk.fetchPrecomputedConfiguration
+            ).toHaveBeenCalledWith(precomputedOptions);
+            expect(NativeDdSdk.setConfiguration).not.toHaveBeenCalled();
+            expect(rulesConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'rules',
+                etag: 'ffe-system-test-data'
+            });
+            expect(precomputedConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'precomputed',
+                etag: 'mock-fetch'
+            });
+        });
+
+        it('saves and loads configuration from native disk before explicit activation', async () => {
+            // GIVEN
+            const configuration = await DdSdkReactNative.configurationFromString(
+                flagsWire
+            );
+            const storageOptions = { slot: 'default' };
+
+            // WHEN
+            const saveState = await DdSdkReactNative.saveConfiguration(
+                configuration,
+                storageOptions
+            );
+            const loadedConfiguration = await DdSdkReactNative.loadConfiguration(
+                storageOptions
+            );
+            const loadedState = await DdSdkReactNative.setConfiguration(
+                loadedConfiguration
+            );
+
+            // THEN
+            expect(NativeDdSdk.saveConfiguration).toHaveBeenCalledWith(
+                configuration,
+                storageOptions
+            );
+            expect(NativeDdSdk.loadConfiguration).toHaveBeenCalledWith(
+                storageOptions
+            );
+            expect(NativeDdSdk.setConfiguration).toHaveBeenCalledWith(
+                loadedConfiguration
+            );
+            expect(saveState).toMatchObject({
+                configurationSaveCount: 1,
+                lastStorage: {
+                    operation: 'save',
+                    status: 'stored',
+                    key: 'flags-configuration-default'
+                }
+            });
+            expect(loadedConfiguration).toMatchObject({
+                __ddNativeFfeConfiguration: true,
+                kind: 'rules',
+                etag: 'stored'
+            });
+            expect(loadedState.status).toBe('ready');
         });
     });
 

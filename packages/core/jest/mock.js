@@ -10,6 +10,64 @@ const React = require('react');
 
 const actualDatadog = jest.requireActual('@datadog/mobile-react-native');
 
+const mockFlagsDebugState = {
+    status: 'ready',
+    activeConfigurationKind: 'rules',
+    activeEtag: 'ffe-system-test-data',
+    configurationSetCount: 1,
+    configurationSaveCount: 0,
+    configurationLoadCount: 0,
+    fetchCount: 1,
+    evaluationCount: 0,
+    lastEvent: 'provider_ready',
+    lastFetchRequest: {
+        url: 'https://mock.datadog.test/config',
+        method: 'GET',
+        headers: {
+            Accept: 'application/json'
+        },
+        statusCode: 200
+    },
+    evaluationSideEffects: {
+        attemptedCount: 0,
+        trackedCount: 0,
+        skippedCount: 0,
+        failedCount: 0,
+        lastStatus: 'skipped'
+    }
+};
+
+const mockConfigurationFromString = wire => {
+    const parsed = JSON.parse(wire);
+    const kind =
+        parsed.server && parsed.precomputed
+            ? 'mixed'
+            : parsed.server
+            ? 'rules'
+            : 'precomputed';
+
+    return {
+        __ddNativeFfeConfiguration: true,
+        version: parsed.version,
+        kind,
+        etag: parsed.server?.etag ?? parsed.precomputed?.etag,
+        wire
+    };
+};
+
+const mockFetchConfiguration = (kind, options) => {
+    return mockConfigurationFromString(
+        options.previousConfigurationWire ??
+            JSON.stringify({
+                version: 2,
+                [kind === 'rules' ? 'server' : 'precomputed']: {
+                    response: '{}',
+                    etag: 'mock-fetch'
+                }
+            })
+    );
+};
+
 /**
  * Explicitly mocking the provider prevents auto-instrumentation in tests.
  * This prevents errors in tests to be logged in the console, as well as needing
@@ -71,7 +129,129 @@ module.exports = {
             .mockImplementation(() => new Promise(resolve => resolve())),
         clearAllData: jest
             .fn()
-            .mockImplementation(() => new Promise(resolve => resolve()))
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        configurationFromString: jest
+            .fn()
+            .mockImplementation(
+                wire =>
+                    new Promise(resolve =>
+                        resolve(mockConfigurationFromString(wire))
+                    )
+            ),
+        configurationToString: jest
+            .fn()
+            .mockImplementation(
+                configuration =>
+                    new Promise(resolve => resolve(configuration.wire ?? '{}'))
+            ),
+        fetchRulesConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('rules', options))
+                    )
+            ),
+        fetchPrecomputedConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('precomputed', options))
+                    )
+            ),
+        saveConfiguration: jest.fn().mockImplementation(
+            (configuration, options) =>
+                new Promise(resolve =>
+                    resolve({
+                        ...mockFlagsDebugState,
+                        configurationSaveCount: 1,
+                        lastStorage: {
+                            operation: 'save',
+                            status: 'stored',
+                            key: `flags-configuration-${
+                                options.slot ?? 'default'
+                            }`,
+                            wireBytes: (configuration.wire ?? '').length
+                        }
+                    })
+                )
+        ),
+        loadConfiguration: jest.fn().mockImplementation(
+            () =>
+                new Promise(resolve =>
+                    resolve(
+                        mockConfigurationFromString(
+                            JSON.stringify({
+                                version: 2,
+                                server: {
+                                    response: '{}',
+                                    etag: 'stored'
+                                }
+                            })
+                        )
+                    )
+                )
+        ),
+        setConfiguration: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve(mockFlagsDebugState))
+            ),
+        setEvaluationContext: jest.fn().mockImplementation(
+            context =>
+                new Promise(resolve =>
+                    resolve({
+                        ...mockFlagsDebugState,
+                        currentContext: context
+                    })
+                )
+        ),
+        resolveBooleanEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveStringEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveNumberEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveObjectEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        getProviderDebugState: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve(mockFlagsDebugState))
+            )
     },
 
     DdLogs: {
@@ -174,6 +354,128 @@ module.exports = {
     DdSdk: {
         initialize: jest
             .fn()
-            .mockImplementation(() => new Promise(resolve => resolve()))
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        configurationFromString: jest
+            .fn()
+            .mockImplementation(
+                wire =>
+                    new Promise(resolve =>
+                        resolve(mockConfigurationFromString(wire))
+                    )
+            ),
+        configurationToString: jest
+            .fn()
+            .mockImplementation(
+                configuration =>
+                    new Promise(resolve => resolve(configuration.wire ?? '{}'))
+            ),
+        fetchRulesConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('rules', options))
+                    )
+            ),
+        fetchPrecomputedConfiguration: jest
+            .fn()
+            .mockImplementation(
+                options =>
+                    new Promise(resolve =>
+                        resolve(mockFetchConfiguration('precomputed', options))
+                    )
+            ),
+        saveConfiguration: jest.fn().mockImplementation(
+            (configuration, options) =>
+                new Promise(resolve =>
+                    resolve({
+                        ...mockFlagsDebugState,
+                        configurationSaveCount: 1,
+                        lastStorage: {
+                            operation: 'save',
+                            status: 'stored',
+                            key: `flags-configuration-${
+                                options.slot ?? 'default'
+                            }`,
+                            wireBytes: (configuration.wire ?? '').length
+                        }
+                    })
+                )
+        ),
+        loadConfiguration: jest.fn().mockImplementation(
+            () =>
+                new Promise(resolve =>
+                    resolve(
+                        mockConfigurationFromString(
+                            JSON.stringify({
+                                version: 2,
+                                server: {
+                                    response: '{}',
+                                    etag: 'stored'
+                                }
+                            })
+                        )
+                    )
+                )
+        ),
+        setConfiguration: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve(mockFlagsDebugState))
+            ),
+        setEvaluationContext: jest.fn().mockImplementation(
+            context =>
+                new Promise(resolve =>
+                    resolve({
+                        ...mockFlagsDebugState,
+                        currentContext: context
+                    })
+                )
+        ),
+        resolveBooleanEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveStringEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveNumberEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        resolveObjectEvaluation: jest.fn().mockImplementation(
+            (flagKey, defaultValue) =>
+                new Promise(resolve =>
+                    resolve({
+                        flagKey,
+                        value: defaultValue,
+                        reason: 'DEFAULT'
+                    })
+                )
+        ),
+        getProviderDebugState: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve(mockFlagsDebugState))
+            )
     }
 };
