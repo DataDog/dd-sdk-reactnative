@@ -95,6 +95,11 @@ Key facts that de-risk the JS approach:
   JSON → object mapping (no key hashing, no base64/salt decoding).
 - `context` and the active context are both plain (`targetingKey` + attributes) — matching
   is a normalized deep-equality.
+- **`configurationFromString` is lenient** — it returns an empty config (`{}`) on a parse
+  error or unknown `version` rather than throwing, matching the shipped
+  `openfeature-js-client` `wire.ts`. Predictable failure surfaces at the
+  `setConfiguration`/provider layer (empty/absent precomputed → provider stays not-ready /
+  emits `PROVIDER_ERROR`), not as a thrown parse error.
 - `PrecomputedFlag` → `FlagCacheEntry` is nearly 1:1 for the evaluation path. Two
   tracking-only fields (`doLog`, `variationValue`; new format exposes
   `flagMetadata.experiment`) need a mapping decision, confirmed with the flags backend team.
@@ -111,7 +116,7 @@ not served.
 
 | Subtask | Summary |
 | :------ | :------ |
-| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1, validate, fail predictably; extensible for `server`/rules) |
+| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode `PrecomputedConfiguration` → `FlagCacheEntry` map (plain JSON) |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
