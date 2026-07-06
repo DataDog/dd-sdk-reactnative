@@ -42,6 +42,11 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
 - **Expose the API on both** the core `FlagsClient` and the `DatadogOpenFeatureProvider`.
 - The customer still calls `setEvaluationContext` themselves; `setConfiguration` must
   **verify the precomputed config matches the active context** (see below).
+- **Port, don't depend.** `openfeature-js-client` is not a dependency here (only upstream
+  `@openfeature/core` + `@openfeature/web-sdk` are). Port its small pure helpers —
+  `wire.ts` (`configurationFromString`/`configurationToString`) and `configMatchesContext` —
+  into RN core rather than depending on the package, whose provider/exposure-logging would
+  bypass RN's native RUM/exposure path.
 
 ## Wire format (confirmed)
 
@@ -119,13 +124,17 @@ Customers may call `setConfiguration` and `setEvaluationContext` in either order
 when the two **match**; the match is re-validated on **both** calls. On mismatch, values are
 not served.
 
+This is a port of the reference `configMatchesContext` (deep-equality on `targetingKey` +
+attributes), including its nuance: **a config with no embedded `context` is context-agnostic
+and matches any evaluation context; a stored context must match exactly.**
+
 ## Work breakdown
 
 | Subtask | Summary |
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
-| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching |
+| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`) |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
 | [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Tests (parse/round-trip, decode, context match/mismatch, events) |
