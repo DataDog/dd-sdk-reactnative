@@ -70,40 +70,51 @@ type Configuration = {
 }
 ```
 
-**Inner `precomputed.response` → PrecomputedConfiguration** — **ASSUMED**: the shipped
-`openfeature-js-client` `PrecomputedFlag` shape
-(`packages/core/src/configuration/configuration.ts`), which matches RN's existing
-`FlagCacheEntry`:
+**Inner `precomputed.response` → PrecomputedConfiguration.** A sample staging CDN response
+(`POST /precompute-assignments?dd_env=staging`, saved locally as `example.json`) shows the
+`PrecomputedFlag`-style shape used by the shipped `openfeature-js-client`, which lines up
+with RN's existing `FlagCacheEntry`:
 
 ```ts
 {
-  data: { attributes: {
-    createdAt: string
-    flags: Record<flagName, {
-      allocationKey: string
-      variationKey: string
-      variationType: 'boolean' | 'string' | 'number' | 'object'
-      variationValue: /* typed value, per variationType */
-      reason: string
-      doLog: boolean
-      extraLogging: Record<string, unknown>
-    }>
-  }}
+  data: {
+    id: string
+    type: 'precomputed-assignments'
+    attributes: {
+      obfuscated: boolean          // false in the sample
+      createdAt: string            // RFC3339 timestamp (string, not a number)
+      format: 'PRECOMPUTED'
+      environment: { name: string }
+      flags: Record<flagName, {
+        variationType: 'boolean' | 'string' | 'number' | 'object'
+        variationValue: /* typed value (e.g. boolean false) — NOT a string */
+        variationKey: string
+        allocationKey: string
+        reason: string
+        doLog: boolean
+        extraLogging: Record<string, unknown>
+        serialId?: number
+      }>
+    }
+  }
 }
 ```
 
 > ⚠️ **Two documented formats exist.** The Confluence *PrecomputedConfiguration format*
 > page ([5141791092](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141791092/PrecomputedConfiguration+format))
 > describes an OpenFeature-aligned shape (`type` + `resolution.flagMetadata.experiment`).
-> The **shipped** `openfeature-js-client` uses the `PrecomputedFlag` shape above, which
-> matches RN's `FlagCacheEntry`. **We assume the shipped `PrecomputedFlag` shape.** Confirm
-> with the flags backend team which the CDN actually returns, and whether `variationValue`
-> is the typed value or a string.
+> The sample CDN response and the shipped `openfeature-js-client` instead use the
+> `PrecomputedFlag`-style shape above, which matches RN's `FlagCacheEntry`. **This plan
+> assumes the `PrecomputedFlag`-style shape.** Since `variationValue` is the **typed** value,
+> the decoder maps it to RN's `FlagCacheEntry.value` and derives the string
+> `variationValue`/`variationType` that native Android exposure tracking expects. Still worth
+> checking with the flags team whether the shape is stable across environments and versions.
 
 Key facts that de-risk the JS approach:
 
-- **Obfuscation is not supported** in the DD precomputed format — parsing is plain
-  JSON → object mapping (no key hashing, no base64/salt decoding).
+- **Obfuscation is not supported** in the DD precomputed format (the sample response carries
+  `obfuscated: false`) — parsing is plain JSON → object mapping (no key hashing, no
+  base64/salt decoding).
 - `context` and the active context are both plain (`targetingKey` + attributes) — matching
   is a normalized deep-equality.
 - **`configurationFromString` is lenient** — it returns an empty config (`{}`) on a parse
@@ -111,10 +122,11 @@ Key facts that de-risk the JS approach:
   `openfeature-js-client` `wire.ts`. Predictable failure surfaces at the
   `setConfiguration`/provider layer (empty/absent precomputed → provider stays not-ready /
   emits `PROVIDER_ERROR`), not as a thrown parse error.
-- The assumed `PrecomputedFlag` shape maps **~1:1** onto RN's existing `FlagCacheEntry`
+- The `PrecomputedFlag`-style shape maps **~1:1** onto RN's existing `FlagCacheEntry`
   (`allocationKey`, `variationKey`, `variationType`, `variationValue`, `reason`, `doLog`,
-  `extraLogging`), so the decoder is near-trivial and the earlier `doLog`/`variationValue`
-  uncertainty is resolved by the shipped format.
+  `extraLogging`), so the decoder is near-trivial — the sample shows `doLog` and the per-flag
+  fields present directly. The one transform is the typed `variationValue` → RN's typed
+  `value` plus a stringified `variationValue`.
 
 ## Context matching (order-independent)
 
@@ -141,9 +153,9 @@ and matches any evaluation context; a stored context must match exactly.**
 
 ## Open items (non-blocking)
 
-- Confirm the CDN's actual precomputed shape against the two documented formats, and whether
-  `variationValue` is the typed value or a string (FFL-2687). Plan assumes the shipped
-  `PrecomputedFlag` shape.
+- Check with the flags team whether the `PrecomputedFlag`-style shape seen in the sample
+  (`example.json`) is stable across environments/versions, vs the OpenFeature-aligned proposal
+  page (FFL-2687).
 - Precomputed context-mismatch behavior: default value vs `PROVIDER_NOT_READY` vs error
   (RFC open question).
 - `setConfiguration` sync vs `Promise`-returning (JS-only work is synchronous, but a Promise
