@@ -65,29 +65,35 @@ type Configuration = {
 }
 ```
 
-**Inner `precomputed.response` → PrecomputedConfiguration**
-([PrecomputedConfiguration format](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141791092/PrecomputedConfiguration+format)):
+**Inner `precomputed.response` → PrecomputedConfiguration** — **ASSUMED**: the shipped
+`openfeature-js-client` `PrecomputedFlag` shape
+(`packages/core/src/configuration/configuration.ts`), which matches RN's existing
+`FlagCacheEntry`:
 
 ```ts
 {
-  id: string
   data: { attributes: {
-    createdAt: number
-    expiresAt?: number
+    createdAt: string
     flags: Record<flagName, {
-      type: 'boolean' | 'string' | 'number' | 'object'
-      resolution: {
-        value: any
-        variant?: string
-        flagMetadata: { allocationKey: string; experiment: boolean }
-        reason?: string
-        errorCode?: string
-        errorMessage?: string
-      }
+      allocationKey: string
+      variationKey: string
+      variationType: 'boolean' | 'string' | 'number' | 'object'
+      variationValue: /* typed value, per variationType */
+      reason: string
+      doLog: boolean
+      extraLogging: Record<string, unknown>
     }>
   }}
 }
 ```
+
+> ⚠️ **Two documented formats exist.** The Confluence *PrecomputedConfiguration format*
+> page ([5141791092](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141791092/PrecomputedConfiguration+format))
+> describes an OpenFeature-aligned shape (`type` + `resolution.flagMetadata.experiment`).
+> The **shipped** `openfeature-js-client` uses the `PrecomputedFlag` shape above, which
+> matches RN's `FlagCacheEntry`. **We assume the shipped `PrecomputedFlag` shape.** Confirm
+> with the flags backend team which the CDN actually returns, and whether `variationValue`
+> is the typed value or a string.
 
 Key facts that de-risk the JS approach:
 
@@ -100,9 +106,10 @@ Key facts that de-risk the JS approach:
   `openfeature-js-client` `wire.ts`. Predictable failure surfaces at the
   `setConfiguration`/provider layer (empty/absent precomputed → provider stays not-ready /
   emits `PROVIDER_ERROR`), not as a thrown parse error.
-- `PrecomputedFlag` → `FlagCacheEntry` is nearly 1:1 for the evaluation path. Two
-  tracking-only fields (`doLog`, `variationValue`; new format exposes
-  `flagMetadata.experiment`) need a mapping decision, confirmed with the flags backend team.
+- The assumed `PrecomputedFlag` shape maps **~1:1** onto RN's existing `FlagCacheEntry`
+  (`allocationKey`, `variationKey`, `variationType`, `variationValue`, `reason`, `doLog`,
+  `extraLogging`), so the decoder is near-trivial and the earlier `doLog`/`variationValue`
+  uncertainty is resolved by the shipped format.
 
 ## Context matching (order-independent)
 
@@ -117,7 +124,7 @@ not served.
 | Subtask | Summary |
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
-| [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode `PrecomputedConfiguration` → `FlagCacheEntry` map (plain JSON) |
+| [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
@@ -125,7 +132,9 @@ not served.
 
 ## Open items (non-blocking)
 
-- `doLog` / `variationValue` / `experiment` mapping for native exposure tracking (FFL-2687).
+- Confirm the CDN's actual precomputed shape against the two documented formats, and whether
+  `variationValue` is the typed value or a string (FFL-2687). Plan assumes the shipped
+  `PrecomputedFlag` shape.
 - Precomputed context-mismatch behavior: default value vs `PROVIDER_NOT_READY` vs error
   (RFC open question).
 - `setConfiguration` sync vs `Promise`-returning (JS-only work is synchronous, but a Promise
