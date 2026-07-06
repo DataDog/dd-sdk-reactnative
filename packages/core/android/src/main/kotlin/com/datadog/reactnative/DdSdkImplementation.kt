@@ -37,6 +37,9 @@ class DdSdkImplementation(
     internal val initialized = AtomicBoolean(false)
     private var frameRateProvider: FrameRateProvider? = null
 
+    @Volatile
+    private var maxDisplayRefreshRate: Double? = null
+
     // region DdSdk
 
     /**
@@ -383,7 +386,7 @@ class DdSdkImplementation(
         val frameTimeMs = frameTimeSeconds * 1000.0
         val frameBudgetHz = fpsBudget ?: DEFAULT_REFRESH_HZ
         val maxDeviceDisplayHz = deviceDisplayFps ?:  getMaxDisplayRefreshRate(context)
-        ?: 60.0
+        ?: DEFAULT_REFRESH_HZ
 
         val maxDeviceFrameTimeMs = 1000.0 / maxDeviceDisplayHz
         val budgetFrameTimeMs = 1000.0 / frameBudgetHz
@@ -402,10 +405,14 @@ class DdSdkImplementation(
 
     @Suppress("CyclomaticComplexMethod")
     private fun getMaxDisplayRefreshRate(context: Context?): Double {
-        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return 60.0
-        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+        maxDisplayRefreshRate?.let { return it }
 
-        return display.supportedModes.maxOfOrNull { it.refreshRate.toDouble() } ?: DEFAULT_REFRESH_HZ
+        val dm = context?.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return DEFAULT_REFRESH_HZ
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY) ?: return DEFAULT_REFRESH_HZ
+        val hz = display.supportedModes.maxOfOrNull { it.refreshRate.toDouble() } ?: DEFAULT_REFRESH_HZ
+        maxDisplayRefreshRate = hz
+
+        return hz
     }
 
     // endregion

@@ -76,6 +76,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Answers
 import org.mockito.Mock
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
@@ -3593,6 +3594,35 @@ internal class DdSdkTest {
 
         // Then
         assertThat(result).isEqualTo(0.016, Offset.offset(0.001))
+    }
+
+    @Test
+    fun `M read supportedModes only once W normalizeFrameTime called multiple times`() {
+        // Given
+        val mockContext = mock(Context::class.java)
+        val mockDisplayManager = mock(DisplayManager::class.java)
+        val mockDisplay = mock(Display::class.java)
+
+        `when`(mockContext.getSystemService(Context.DISPLAY_SERVICE)).thenReturn(mockDisplayManager)
+        `when`(mockDisplayManager.getDisplay(Display.DEFAULT_DISPLAY)).thenReturn(mockDisplay)
+        `when`(mockDisplay.supportedModes).thenReturn(arrayOf())
+
+        // When
+        testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = null,
+            deviceDisplayFps = null
+        )
+        testedBridgeSdk.normalizeFrameTime(
+            frameTimeSeconds = 0.016,
+            context = mockContext,
+            fpsBudget = null,
+            deviceDisplayFps = null
+        )
+
+        // Then
+        verify(mockDisplay, times(1)).supportedModes
     }
 
     // endregion
