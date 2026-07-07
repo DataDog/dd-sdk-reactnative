@@ -71,7 +71,11 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
   `@openfeature/core` + `@openfeature/web-sdk` are). Port its small pure helpers —
   `wire.ts` (`configurationFromString`/`configurationToString`) and `configMatchesContext` —
   into RN core rather than depending on the package, whose provider/exposure-logging would
-  bypass RN's native RUM/exposure path.
+  bypass RN's native RUM/exposure path. **But for the future rules (UFC) evaluator and any
+  obfuscation logic, prefer *depending* on a shared platform-agnostic core (e.g.
+  `@datadog/flagging-core`) rather than re-porting** — hand-porting an evolving evaluator risks
+  silent assignment drift. Keep the ported helpers behind a thin internal module boundary so a
+  later port → dependency swap stays contained.
 
 ## Wire format
 
@@ -256,6 +260,10 @@ Only `ALWAYS` (default) and `NEVER` are built now. `ON_MISMATCH` is declared for
 and implemented later. A mutable runtime setter is intentionally left out of v1 to avoid races
 with in-flight fetches and already-loaded config.
 
+`fetchPolicy` is passed inside an **options object** at `enable()` / `getClient()` (not a bare
+positional enum) so it can grow fields later — e.g. `ttl`, `staleWhileRevalidate` for the future
+staleness axis — without an API break.
+
 `fetchPolicy` is purely the **network axis**; *how* a config is evaluated is set by its
 [configuration kind](#configuration-kind-evaluation-mode), not by `fetchPolicy`.
 
@@ -266,7 +274,7 @@ with in-flight fetches and already-loaded config.
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `ParsedFlagsConfiguration` type (distinct from the existing `enable()` `FlagsConfiguration`; parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — plain JSON; inject `key`; derive typed `value` + string `variationValue`; fail predictably if `attributes.obfuscated` |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`, gated on config kind = precomputed); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
-| [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
+| [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring via an **options object** at `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite and sets context synchronously). `ON_MISMATCH` declared, implemented later |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
 | [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Integration / e2e tests (RUM FIT) — offline-loaded flag → RUM parity; unit tests ship inside each PR above |
