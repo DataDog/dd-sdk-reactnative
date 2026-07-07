@@ -178,6 +178,35 @@ describe('decodePrecomputedFlags', () => {
         expect(decodePrecomputedFlags(responseWith({}))).toEqual({});
     });
 
+    it('omits an integer flag with a fractional value', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                frac: flag({ variationType: 'integer', variationValue: 7.9 })
+            })
+        );
+
+        expect(cache.frac).toBeUndefined();
+        expect(InternalLog.log).toHaveBeenCalled();
+    });
+
+    it('omits a number flag whose value is not finite', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                inf: flag({ variationType: 'number', variationValue: Infinity })
+            })
+        );
+
+        expect(cache.inf).toBeUndefined();
+    });
+
+    it('returns an empty map for a structurally broken response', () => {
+        expect(
+            decodePrecomputedFlags(
+                ({} as unknown) as Parameters<typeof decodePrecomputedFlags>[0]
+            )
+        ).toEqual({});
+    });
+
     it('rejects an array value for an object flag', () => {
         const cache = decodePrecomputedFlags(
             responseWith({

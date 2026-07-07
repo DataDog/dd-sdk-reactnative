@@ -65,6 +65,9 @@ export interface PrecomputedConfigurationResponse {
         id?: string;
         type?: string;
         attributes: {
+            // Only `flags` is load-bearing (and `obfuscated`, which gates support). The
+            // remaining fields are metadata the decoder ignores; typed loosely/optional
+            // on purpose so payload variation across environments doesn't matter.
             obfuscated?: boolean;
             createdAt?: string;
             format?: string;

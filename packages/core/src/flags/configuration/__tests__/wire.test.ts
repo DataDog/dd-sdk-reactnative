@@ -25,6 +25,24 @@ const buildResponse = () => ({
                     reason: 'STATIC',
                     doLog: false,
                     extraLogging: {}
+                },
+                'num-flag': {
+                    variationType: 'number',
+                    variationValue: 1.5,
+                    variationKey: '1.5',
+                    allocationKey: 'alloc-2',
+                    reason: 'STATIC',
+                    doLog: true,
+                    extraLogging: {}
+                },
+                'obj-flag': {
+                    variationType: 'object',
+                    variationValue: { nested: { a: 1 }, list: [1, 2] },
+                    variationKey: 'obj',
+                    allocationKey: 'alloc-3',
+                    reason: 'TARGETING_MATCH',
+                    doLog: false,
+                    extraLogging: { extra: 'x' }
                 }
             }
         }

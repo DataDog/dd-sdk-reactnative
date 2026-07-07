@@ -90,6 +90,9 @@ const toFlagCacheEntry = (
         return null;
     }
 
+    // `serialId` is intentionally not propagated: `FlagCacheEntry` has no slot for it
+    // and the native CDN-fetched snapshot omits it too, so dropping it keeps
+    // offline/online parity.
     return {
         key,
         value: variationValue,
@@ -113,9 +116,13 @@ const valueMatchesVariationType = (
         case 'string':
             return typeof value === 'string';
         case 'number':
-        case 'integer':
         case 'float':
-            return typeof value === 'number';
+            // Reject NaN/Infinity: native parsers can't round-trip them.
+            return typeof value === 'number' && Number.isFinite(value);
+        case 'integer':
+            // A fractional value under an integer flag would be truncated/mis-parsed
+            // natively, so require a whole number.
+            return Number.isInteger(value);
         case 'object':
             // Object flags are a JSON object at the root; arrays are not valid values.
             return (
