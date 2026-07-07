@@ -59,6 +59,9 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
 - **Expose the API on both** the core `FlagsClient` and the `DatadogOpenFeatureProvider`.
 - The customer still calls `setEvaluationContext` themselves; `setConfiguration` must
   **check that the precomputed config matches the active context** (see below).
+- Add a **`fetchPolicy`** (`ALWAYS` default / `NEVER` / `ON_MISMATCH`) set at `enable()` with a
+  per-`getClient()` override, so customers can turn off the fetch-on-`setEvaluationContext`.
+  Offline init needs `NEVER`; see [Fetch policy](#fetch-policy).
 - **Port, don't depend.** `openfeature-js-client` is not a dependency here (only upstream
   `@openfeature/core` + `@openfeature/web-sdk` are). Port its small pure helpers —
   `wire.ts` (`configurationFromString`/`configurationToString`) and `configMatchesContext` —
@@ -194,9 +197,37 @@ this.flagsCache = result;                                        // overwrites l
 ```
 
 In the offline flow the customer still calls `setEvaluationContext` (needed for context matching
-and to hand a context to `trackEvaluation`), so this path has to branch when an offline
-configuration is present: record the context without invoking the native fetch and without
-overwriting the config-populated cache. This is a JS-only change and lives in FFL-2688.
+and to hand a context to `trackEvaluation`), so under `fetchPolicy: NEVER` this path records the
+context without invoking the native fetch and without overwriting the config-populated cache.
+This is a JS-only change. See [Fetch policy](#fetch-policy) below.
+
+## Fetch policy
+
+Because `setEvaluationContext` fetches from the CDN today (see above), offline customers need an
+explicit way to turn that off — and a hard "no network" guarantee, not just "usually won't." We
+add a `fetchPolicy` set at `enable()` (global default) with an optional per-`getClient()`
+override:
+
+```ts
+enum FetchPolicy {
+  ALWAYS,      // fetch on setEvaluationContext (today's behavior; default)
+  NEVER,       // never fetch; serve only configurations supplied via setConfiguration
+  ON_MISMATCH, // use a matching supplied config; fetch only when it doesn't match the context
+}
+```
+
+- **`ALWAYS`** — default; preserves current behavior. A `setConfiguration` bootstrap is
+  overwritten by the fetch, so this mode is mostly for online apps.
+- **`NEVER`** — MVP target for offline. `setEvaluationContext` records the context but does not
+  call the native fetch or overwrite the cache; the client serves only what `setConfiguration`
+  loaded. A context set with no matching config → provider not-ready / `PROVIDER_ERROR`.
+- **`ON_MISMATCH`** — *fast-follow, not in this MVP.* Bootstrap-then-refresh: serve a supplied
+  config when it matches the active context, otherwise fetch. Adds async fetch orchestration,
+  `Reconciling`/`Stale`/`Ready` sequencing, and a fetch-failure fallback, so it is deferred.
+
+Only `ALWAYS` (default) and `NEVER` are built now. `ON_MISMATCH` is declared for forward-compat
+and implemented later. A mutable runtime setter is intentionally left out of v1 to avoid races
+with in-flight fetches and already-loaded config.
 
 ## Work breakdown
 
@@ -204,7 +235,8 @@ overwriting the config-populated cache. This is a JS-only change and lives in FF
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
-| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`); branch `setEvaluationContext` so it does not trigger the native CDN fetch / overwrite the loaded cache when an offline config is present |
+| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
+| [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
 | [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Tests (parse/round-trip, decode, context match/mismatch, events) |
@@ -219,3 +251,7 @@ overwriting the config-populated cache. This is a JS-only change and lives in FF
   existing OpenFeature code) — current direction for RFC open Q2.
 - `setConfiguration` sync vs `Promise`-returning (JS-only work is synchronous, but a Promise
   keeps parity with `setEvaluationContext` and forward-compat for rules).
+- For the future `ON_MISMATCH` policy: fetch-failure fallback (keep serving the previous usable
+  config and report `Stale`, but never serve a config that doesn't match the context) and a
+  staleness axis (`fetchedAt`/`etag`/`expiresAt`-driven refresh) are separate from context
+  matching and out of this MVP.
