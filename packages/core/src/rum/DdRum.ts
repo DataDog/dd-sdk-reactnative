@@ -40,6 +40,7 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
+import { DdRumResourceTracking } from './instrumentation/resourceTracking/DdRumResourceTracking';
 import type {
     DdRumType,
     FirstPartyHost,
@@ -253,8 +254,31 @@ class DdRumWrapper implements DdRumType {
         context: object = {},
         timestampMs: number = this.timeProvider.now()
     ): Promise<void> => {
+        const mappedEvent = this.resourceEventMapper.applyEventMapper({
+            key,
+            statusCode: 0,
+            kind: 'xhr',
+            size: -1,
+            context,
+            timestampMs,
+            resourceContext: { responseURL: url } as XMLHttpRequest
+        });
+        /**
+         * The keep/drop decision is made here, where the request URL is always
+         * available (`responseURL` is set to `url`). When the mapper drops the
+         * event (non-first-party host or missing consent) the resource is never
+         * started, so the matching `stopResource` is a native no-op. We always
+         * use the original `key` for the native call so start/stop correlate,
+         * and only sanitize the displayed URL and context.
+         */
+        if (!mappedEvent) {
+            return generateEmptyPromise();
+        }
+
+        const startUrl = mappedEvent.resourceContext?.responseURL ?? url;
+
         InternalLog.log(
-            `Starting RUM Resource #${key} ${method}: ${url}`,
+            `Starting RUM Resource #${key} ${method}: ${startUrl}`,
             SdkVerbosity.DEBUG
         );
 
@@ -262,8 +286,8 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.startResource(
                 key,
                 method,
-                url,
-                encodeAttributes(context),
+                startUrl,
+                encodeAttributes(mappedEvent.context),
                 timestampMs
             )
         );
@@ -287,24 +311,13 @@ class DdRumWrapper implements DdRumType {
             timestampMs,
             resourceContext
         });
+        /**
+         * We never drop at `stopResource`: the keep/drop decision was already
+         * made at `startResource`. A resource dropped there was never started,
+         * so this stop is a native no-op.
+         */
         if (!mappedEvent) {
-            /**
-             * To drop the resource we call `stopResource` and pass the `_dd.drop_resource` attribute in the context.
-             * It will be picked up by the resource mappers we implement on the native side that will drop the resource.
-             * This ensures we don't have any "started" resource left in memory on the native side.
-             */
-            return bufferVoidNativeCall(() =>
-                this.nativeRum.stopResource(
-                    key,
-                    statusCode,
-                    kind,
-                    size,
-                    {
-                        '_dd.resource.drop_resource': true
-                    },
-                    timestampMs
-                )
-            );
+            return generateEmptyPromise();
         }
 
         InternalLog.log(
@@ -507,10 +520,12 @@ class DdRumWrapper implements DdRumType {
         this.resourceEventMapper = generateResourceEventMapper(
             resourceEventMapper
         );
+        DdRumResourceTracking.updateResourceEventMapper(resourceEventMapper);
     }
 
     unregisterResourceEventMapper() {
         this.resourceEventMapper = generateResourceEventMapper(undefined);
+        DdRumResourceTracking.updateResourceEventMapper(undefined);
     }
 
     registerActionEventMapper(actionEventMapper: ActionEventMapper) {

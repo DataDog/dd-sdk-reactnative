@@ -5,6 +5,7 @@
  */
 
 import type { PropagatorType } from '../../../../types';
+import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 
 export interface RequestProxyOptions {
     tracingSamplingRate: number;
@@ -20,6 +21,7 @@ export abstract class RequestProxy {
     abstract onTrackingStart: (context: RequestProxyOptions) => void;
     abstract onTrackingStop: () => void;
     abstract onTrackingUpdate: (context: {
-        tracingSamplingRate: number;
+        tracingSamplingRate?: number;
+        resourceEventMapper?: ResourceEventMapper | null;
     }) => void;
 }

@@ -553,7 +553,8 @@ export class DdSdkReactNative {
         if (trackResources) {
             DdRumResourceTracking.startTracking({
                 resourceTraceSampleRate,
-                firstPartyHosts
+                firstPartyHosts,
+                resourceEventMapper
             });
         }
 

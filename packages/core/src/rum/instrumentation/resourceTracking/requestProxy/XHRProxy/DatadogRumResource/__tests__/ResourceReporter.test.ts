@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import type { ResourceEventMapper } from '../../../../../../eventMappers/resourceEventMapper';
 import { BufferSingleton } from '../../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import type { RUMResource } from '../../../interfaces/RumResource';
 import { ResourceReporter } from '../ResourceReporter';
@@ -65,6 +66,129 @@ describe('Resource reporter', () => {
             expect.anything()
         );
         expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses resource context response URL from resource event mapper', async () => {
+        // GIVEN
+        const sanitizeURL: ResourceEventMapper = resource => {
+            return {
+                ...resource,
+                resourceContext: {
+                    responseURL: 'https://sanitized.example.com/'
+                } as XMLHttpRequest
+            };
+        };
+        const resourceReporter = new ResourceReporter([sanitizeURL]);
+        const resource = resourceMockFactory.getCustomResource({
+            request: {
+                method: 'GET',
+                url: 'https://api.example.com/users/123',
+                kind: 'xhr'
+            }
+        });
+
+        // WHEN
+        resourceReporter.reportResource(resource);
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            'https://sanitized.example.com/',
+            expect.anything(),
+            expect.anything()
+        );
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('builds the resource event mapper fields from the RUM resource', async () => {
+        // GIVEN
+        const inspectResourceEventMapper = jest.fn(resource => resource);
+        const resourceReporter = new ResourceReporter([
+            inspectResourceEventMapper
+        ]);
+        const resource = resourceMockFactory.getCustomResource({
+            request: {
+                method: 'GET',
+                url: 'https://api.example.com/users/123',
+                kind: 'xhr'
+            },
+            response: {
+                statusCode: 201,
+                size: 1234
+            },
+            timings: {
+                startTime: 1000,
+                stopTime: 1500
+            }
+        });
+
+        // WHEN
+        resourceReporter.reportResource(resource);
+        await flushPromises();
+
+        // THEN
+        expect(inspectResourceEventMapper).toHaveBeenCalledWith(
+            expect.objectContaining({
+                key: resource.key,
+                statusCode: resource.response.statusCode,
+                kind: resource.request.kind,
+                size: resource.response.size,
+                context: {},
+                timestampMs: resource.timings.stopTime,
+                attributes: {}
+            })
+        );
+        expect(DdRum.startResource).toHaveBeenCalledTimes(1);
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('updates the resource event mapper while keeping existing resource mappers', async () => {
+        // GIVEN
+        const setURLToGoogle = (resource: RUMResource) => {
+            resource.request.url = 'https://google.com/';
+            return resource;
+        };
+        const sanitizeURL: ResourceEventMapper = resource => {
+            return {
+                ...resource,
+                resourceContext: {
+                    responseURL: 'https://sanitized.example.com/'
+                } as XMLHttpRequest
+            };
+        };
+        const resourceReporter = new ResourceReporter([setURLToGoogle]);
+        resourceReporter.setResourceEventMapper(sanitizeURL);
+
+        // WHEN
+        resourceReporter.reportResource(resourceMockFactory.getBasicResource());
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            'https://sanitized.example.com/',
+            expect.anything(),
+            expect.anything()
+        );
+
+        // WHEN
+        DdRum.startResource.mockClear();
+        DdRum.stopResource.mockClear();
+        resourceReporter.setResourceEventMapper(undefined);
+        resourceReporter.reportResource(resourceMockFactory.getBasicResource());
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            'https://google.com/',
+            expect.anything(),
+            expect.anything()
+        );
     });
 
     it('drops the resource when a mapper returns null', async () => {

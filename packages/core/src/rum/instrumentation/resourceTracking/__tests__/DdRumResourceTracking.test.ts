@@ -7,6 +7,7 @@
 import { NativeModules } from 'react-native';
 
 import { BufferSingleton } from '../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdRum as DdRumWrapper } from '../../../DdRum';
 import { PropagatorType } from '../../../types';
 import { DdRumResourceTracking } from '../DdRumResourceTracking';
 import { SAMPLING_PRIORITY_HEADER_KEY } from '../distributedTracing/headers';
@@ -26,6 +27,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    DdRumWrapper.unregisterResourceEventMapper();
+    DdRumResourceTracking.stopTracking();
     global.XMLHttpRequest = undefined;
 });
 
@@ -90,6 +93,67 @@ describe('DdRumResourceTracking', () => {
         // THEN
         expect(DdRum.startResource).not.toHaveBeenCalled();
         expect(DdRum.stopResource).not.toHaveBeenCalled();
+    });
+
+    it('applies a resource event mapper registered after tracking has started', async () => {
+        // GIVEN
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: []
+        });
+        DdRumWrapper.registerResourceEventMapper(resource => {
+            return {
+                ...resource,
+                resourceContext: {
+                    responseURL: 'https://sanitized.example.com/'
+                } as XMLHttpRequest
+            };
+        });
+
+        // WHEN
+        executeRequest('https://api.example.com/users/123');
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).toHaveBeenCalledWith(
+            expect.anything(),
+            'GET',
+            'https://sanitized.example.com/',
+            expect.anything(),
+            expect.anything()
+        );
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops applying a resource event mapper after it is unregistered', async () => {
+        // GIVEN
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: []
+        });
+        DdRumWrapper.registerResourceEventMapper(resource => {
+            return {
+                ...resource,
+                resourceContext: {
+                    responseURL: 'https://sanitized.example.com/'
+                } as XMLHttpRequest
+            };
+        });
+        DdRumWrapper.unregisterResourceEventMapper();
+
+        // WHEN
+        executeRequest('https://api.example.com/users/123');
+        await flushPromises();
+
+        // THEN
+        expect(DdRum.startResource).toHaveBeenCalledWith(
+            expect.anything(),
+            'GET',
+            'https://api.example.com/users/123',
+            expect.anything(),
+            expect.anything()
+        );
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
     });
 
     describe('updateTrackingContext', () => {

@@ -27,13 +27,16 @@ import {
     DATADOG_GRAPH_QL_PAYLOAD_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../graphql/graphqlHeaders';
+import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
-import { ResourceReporter } from './DatadogRumResource/ResourceReporter';
+import {
+    ResourceReporter
+} from './DatadogRumResource/ResourceReporter';
 import { filterDevResource } from './DatadogRumResource/internalDevResourceBlocklist';
 import { URLHostParser } from './URLHostParser';
 import { formatBaggageHeader } from './baggageHeaderUtils';
@@ -78,10 +81,15 @@ export class XHRProxy extends RequestProxy {
         this.providers = providers;
     }
 
-    static createWithResourceReporter() {
+    static createWithResourceReporter(
+        resourceEventMapper?: ResourceEventMapper | null
+    ) {
         return new XHRProxy({
             xhrType: XMLHttpRequest,
-            resourceReporter: new ResourceReporter([filterDevResource])
+            resourceReporter: new ResourceReporter(
+                [filterDevResource],
+                resourceEventMapper
+            )
         });
     }
 
@@ -101,11 +109,21 @@ export class XHRProxy extends RequestProxy {
         this.context = null;
     };
 
-    onTrackingUpdate = (options: { tracingSamplingRate: number }) => {
+    onTrackingUpdate = (options: {
+        tracingSamplingRate?: number;
+        resourceEventMapper?: ResourceEventMapper | null;
+    }) => {
         if (this.context === null) {
             return;
         }
-        this.context.tracingSamplingRate = options.tracingSamplingRate;
+        if (options.tracingSamplingRate !== undefined) {
+            this.context.tracingSamplingRate = options.tracingSamplingRate;
+        }
+        if ('resourceEventMapper' in options) {
+            this.providers.resourceReporter.setResourceEventMapper(
+                options.resourceEventMapper
+            );
+        }
     };
 }
 

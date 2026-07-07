@@ -1673,7 +1673,7 @@ describe('DdRum', () => {
             );
         });
 
-        it('adds the drop context key to the event if the mapper returns null', async () => {
+        it('does not start or stop the resource if the mapper returns null', async () => {
             const resourceEventMapper: ResourceEventMapper = resource => {
                 return null;
             };
@@ -1696,14 +1696,8 @@ describe('DdRum', () => {
                 245
             );
 
-            expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
-                'key',
-                200,
-                'xhr',
-                302,
-                { '_dd.resource.drop_resource': true },
-                245
-            );
+            expect(NativeModules.DdRum.startResource).not.toHaveBeenCalled();
+            expect(NativeModules.DdRum.stopResource).not.toHaveBeenCalled();
         });
     });
 

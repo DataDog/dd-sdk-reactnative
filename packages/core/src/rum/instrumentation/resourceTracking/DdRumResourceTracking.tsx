@@ -9,6 +9,7 @@ import BigInt from 'big-integer';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
+import type { ResourceEventMapper } from '../../eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
@@ -40,10 +41,12 @@ class RumResourceTracking {
      */
     startTracking({
         resourceTraceSampleRate,
-        firstPartyHosts
+        firstPartyHosts,
+        resourceEventMapper
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
+        resourceEventMapper?: ResourceEventMapper | null;
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (this._isTracking) {
@@ -54,7 +57,8 @@ class RumResourceTracking {
             return;
         }
 
-        this._requestProxy = XHRProxy.createWithResourceReporter();
+        this._requestProxy =
+            XHRProxy.createWithResourceReporter(resourceEventMapper);
         this._requestProxy.onTrackingStart({
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
@@ -97,6 +101,17 @@ class RumResourceTracking {
         DistributedTracingSampling.setResourceTraceSampleRate(
             resourceTraceSampleRate
         );
+    }
+
+    updateResourceEventMapper(
+        resourceEventMapper?: ResourceEventMapper | null
+    ): void {
+        if (!this._isTracking || !this._requestProxy) {
+            return;
+        }
+        this._requestProxy.onTrackingUpdate({
+            resourceEventMapper
+        });
     }
 
     stopTracking(): void {

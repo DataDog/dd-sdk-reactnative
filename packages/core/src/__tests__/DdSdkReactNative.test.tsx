@@ -676,7 +676,8 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                resourceEventMapper: undefined
             });
         });
 
@@ -835,6 +836,15 @@ describe('DdSdkReactNative', () => {
             await DdRum.stopResource('key', 200, 'xhr', 22, {}, 345);
 
             // THEN
+            expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
+                'key',
+                'GET',
+                'https://datadoghq.com',
+                {
+                    body: 'content'
+                },
+                234
+            );
             expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
                 'key',
                 200,
