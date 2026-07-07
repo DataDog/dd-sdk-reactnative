@@ -21,6 +21,7 @@ import Webview from './component/WebView';
 import Sliders from './component/Sliders';
 import SectionList from './component/SectionList';
 import Modal from './component/Modal';
+import Svg from './component/Svg';
 
 type UIDetailViewRouteProp = RouteProp<SessionReplayStackParamList, 'UIDetailView'>;
 
@@ -59,6 +60,8 @@ function UIDetailView(): React.JSX.Element {
                 return <SectionList/>;
             case UIElement.Modal:
                 return <Modal/>;
+            case UIElement.Svg:
+                return <Svg/>;
             default:
                 return (
                     <View style={styles.fullScreenHolder}>
