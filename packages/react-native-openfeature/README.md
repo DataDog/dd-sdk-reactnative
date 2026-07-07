@@ -112,6 +112,39 @@ function App() {
 export default AppWithProviders;
 ```
 
+### Offline initialization
+
+If you fetch a flag configuration yourself (for example a precomputed-assignments payload
+cached on disk, delivered via your own service, or bundled with the app), use
+`DatadogOfflineOpenFeatureProvider` instead of `DatadogOpenFeatureProvider`. It evaluates flags
+and reports exposures exactly like the online provider, but **never fetches configuration from
+the network** — you supply it with `setConfiguration`.
+
+```tsx
+import { DdFlags } from '@datadog/mobile-react-native';
+import {
+    DatadogOfflineOpenFeatureProvider,
+    configurationFromString
+} from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+await DdFlags.enable();
+
+const provider = new DatadogOfflineOpenFeatureProvider();
+await OpenFeature.setProviderAndWait(provider);
+
+// `wire` is a ConfigurationWire string you fetched yourself.
+provider.setConfiguration(configurationFromString(wire));
+
+// Evaluate flags — no network request is made.
+const client = OpenFeature.getClient();
+const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false);
+```
+
+The configuration carries the evaluation context it was computed for, so you do not need to call
+`OpenFeature.setContext` for the offline precomputed flow. If you do set a context, it must match
+the configuration's context; otherwise the provider reports an error and serves default values.
+
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
 [3]: https://github.com/DataDog/dd-sdk-reactnative/tree/develop/packages/core

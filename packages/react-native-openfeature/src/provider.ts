@@ -42,7 +42,7 @@ export class DatadogOpenFeatureProvider implements Provider {
     };
 
     private options: DatadogOpenFeatureProviderOptions;
-    private flagsClient: FlagsClient;
+    protected flagsClient: FlagsClient;
 
     readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();
     private contextChangePromise = Promise.resolve();
@@ -139,7 +139,9 @@ export class DatadogOpenFeatureProvider implements Provider {
     }
 }
 
-const toDdContext = (context: OFEvaluationContext): DdEvaluationContext => {
+export const toDdContext = (
+    context: OFEvaluationContext
+): DdEvaluationContext => {
     const { targetingKey, ...attributes } = context;
 
     // Important ⚠️
