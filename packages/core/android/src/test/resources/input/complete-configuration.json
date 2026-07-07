@@ -30,6 +30,10 @@
             "resourceTraceSampleRate": 33,
             "trackBackgroundEvents": true,
             "trackFrustrations": false,
+            "timeseries": {
+                "enabled": true,
+                "bufferSize": 15
+            },
             "firstPartyHosts": [
               {
                 "match": "example.com",

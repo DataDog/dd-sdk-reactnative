@@ -7,6 +7,7 @@ import type { ActionEventMapper } from '../../rum/eventMappers/actionEventMapper
 import type { ErrorEventMapper } from '../../rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../../rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../rum/types';
+import type { TimeseriesConfiguration } from '../types';
 import { VitalsUpdateFrequency } from '../types';
 
 import type {
@@ -31,6 +32,7 @@ const DEFAULTS = {
     resourceTraceSampleRate: 100.0,
     sessionSampleRate: 100.0,
     telemetrySampleRate: 20.0,
+    timeseries: undefined,
     trackBackgroundEvents: false,
     trackErrors: false,
     trackFetchResources: false,
@@ -100,6 +102,9 @@ export class RumConfiguration implements RumConfigurationType {
 
     // Telemetry Sample Rate
     public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
+
+    // Experimental Timeseries Configuration
+    public timeseries?: TimeseriesConfiguration = DEFAULTS.timeseries;
 
     // Track Background Events Enabled
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;

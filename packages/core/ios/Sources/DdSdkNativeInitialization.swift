@@ -236,7 +236,11 @@ public class DdSdkNativeInitialization: NSObject {
             trackMemoryWarnings: rumConfig.trackMemoryWarnings
                 ?? DefaultConfiguration.trackMemoryWarnings,
             telemetrySampleRate: Float(
-                rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
+                rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate),
+            enableTimeseries: rumConfig.enableTimeseries
+                ?? DefaultConfiguration.enableTimeseries,
+            timeseriesBatchSize: Int(
+                rumConfig.timeseriesBatchSize ?? DefaultConfiguration.timeseriesBatchSize)
         )
     }
 

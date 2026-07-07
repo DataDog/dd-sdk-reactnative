@@ -1049,6 +1049,34 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.vitalsUpdateFrequency, nil)
     }
 
+    func testBuildConfigurationEnabledTimeseries() {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.enableTimeseries = true
+        rumConfiguration.timeseriesBatchSize = 15.0
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.enableTimeseries, true)
+        XCTAssertEqual(ddConfig.timeseriesBatchSize, 15)
+    }
+
+    func testBuildConfigurationDisabledTimeseriesByDefault() {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.enableTimeseries = nil
+        rumConfiguration.timeseriesBatchSize = nil
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.enableTimeseries, false)
+        XCTAssertEqual(ddConfig.timeseriesBatchSize, 30)
+    }
+
     func testBuildConfigurationAverageUploadFrequency() {
         let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "AVERAGE")
 
@@ -1781,7 +1809,9 @@ func makeDefaultRumConfiguration() -> RumConfiguration {
         initialResourceThreshold: nil,
         trackMemoryWarnings: true,
         telemetrySampleRate: 45.0,
-        customEndpoint: nil
+        customEndpoint: nil,
+        enableTimeseries: nil,
+        timeseriesBatchSize: nil
     )
 }
 
@@ -1908,6 +1938,7 @@ extension NSDictionary {
         rumConfig["nativeInteractionTracking"] = rumConfiguration?["nativeInteractionTracking"]
         rumConfig["customEndpoint"] = rumConfiguration?["customEndpoint"]
         rumConfig["trackFrustrations"] = rumConfiguration?["trackFrustrations"]
+        rumConfig["timeseries"] = rumConfiguration?["timeseries"]
 
         logsConfig["bundleLogsWithRum"] = logsConfiguration?["bundleLogsWithRum"]
         logsConfig["bundleLogsWithTraces"] = logsConfiguration?["bundleLogsWithTraces"]

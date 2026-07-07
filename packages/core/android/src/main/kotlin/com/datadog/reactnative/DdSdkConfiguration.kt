@@ -65,6 +65,7 @@ data class DdSdkConfiguration(
  * @param initialResourceThreshold The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS).
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param customEndpoint Custom RUM intake endpoint used to override the default Datadog intake.
+ * @param timeseries Experimental: configuration for memory and CPU timeseries collection.
  */
 data class RumConfiguration(
     val applicationId: String,
@@ -82,7 +83,26 @@ data class RumConfiguration(
     val trackNonFatalAnrs: Boolean? = null,
     val initialResourceThreshold: Double? = null,
     val telemetrySampleRate: Double? = null,
-    val customEndpoint: String? = null
+    val customEndpoint: String? = null,
+    val timeseries: TimeseriesConfiguration? = null
+)
+
+/**
+ * Experimental: configuration for memory and CPU timeseries collection.
+ * Requires a native SDK build with timeseries support.
+ *
+ * @param enabled Enables collection of memory and CPU timeseries events.
+ * @param bufferSize The number of samples collected before a timeseries batch is flushed.
+ * @param intervalMs The sampling interval in milliseconds.
+ * @param collectInBackground Whether to keep sampling timeseries when the app is in background.
+ * @param useDeltaCompression Whether to encode each sample as a delta from the previous value instead of an absolute value.
+ */
+data class TimeseriesConfiguration(
+    val enabled: Boolean,
+    val bufferSize: Double? = null,
+    val intervalMs: Double? = null,
+    val collectInBackground: Boolean? = null,
+    val useDeltaCompression: Boolean? = null
 )
 
 /**
@@ -157,7 +177,16 @@ internal data class JSONRumConfiguration(
     val vitalsUpdateFrequency: String? = null,
     val trackMemoryWarnings: Boolean? = null,
     val telemetrySampleRate: Double? = null,
-    val customEndpoint: String? = null
+    val customEndpoint: String? = null,
+    val timeseries: JSONTimeseriesConfiguration? = null
+)
+
+internal data class JSONTimeseriesConfiguration(
+    val enabled: Boolean? = null,
+    val bufferSize: Double? = null,
+    val intervalMs: Double? = null,
+    val collectInBackground: Boolean? = null,
+    val useDeltaCompression: Boolean? = null
 )
 
 internal data class JSONLogsConfiguration(

@@ -266,6 +266,35 @@
                         "customEndpoint": {
                             "description": "Target a custom server for RUM.",
                             "type": "string"
+                        },
+                        "timeseries": {
+                            "description": "Experimental: configuration for memory and CPU timeseries collection. Requires a native SDK build with timeseries support.",
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Enables collection of memory and CPU timeseries events.",
+                                    "type": "boolean"
+                                },
+                                "bufferSize": {
+                                    "description": "The number of samples collected before a timeseries batch is flushed. iOS and Android only.",
+                                    "type": "integer"
+                                },
+                                "intervalMs": {
+                                    "description": "The sampling interval in milliseconds. Android only.",
+                                    "type": "integer"
+                                },
+                                "collectInBackground": {
+                                    "description": "Whether to keep sampling timeseries when the app is in background. Android only.",
+                                    "type": "boolean"
+                                },
+                                "useDeltaCompression": {
+                                    "description": "Whether to encode each sample as a delta from the previous value instead of an absolute value. Android only.",
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "enabled"
+                            ]
                         }
                     },
                     "required": [

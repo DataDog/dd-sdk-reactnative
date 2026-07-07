@@ -19,6 +19,7 @@ import com.datadog.android.event.EventMapper
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.ExperimentalRumApi
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android._InternalProxy
@@ -27,6 +28,7 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
+import com.datadog.android.rum.timeseries.TimeseriesConfiguration as NativeTimeseriesConfiguration
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.Trace
@@ -253,9 +255,31 @@ class DdSdkNativeInitialization internal constructor(
             configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
         }
 
+        configuration.rumConfiguration?.timeseries?.let { timeseries ->
+            setTimeseriesConfiguration(configBuilder, timeseries)
+        }
+
         configBuilder.setSessionListener(DdSdkSessionStartedListener.getInstance())
 
         return configBuilder.build()
+    }
+
+    @OptIn(ExperimentalRumApi::class)
+    private fun setTimeseriesConfiguration(
+        configBuilder: RumConfiguration.Builder,
+        timeseries: TimeseriesConfiguration
+    ) {
+        if (!timeseries.enabled) {
+            return
+        }
+
+        val nativeConfigBuilder = NativeTimeseriesConfiguration.Builder()
+        timeseries.bufferSize?.let { nativeConfigBuilder.setBufferSize(it.toInt()) }
+        timeseries.intervalMs?.let { nativeConfigBuilder.setIntervalMs(it.toLong()) }
+        timeseries.collectInBackground?.let { nativeConfigBuilder.collectInBackground(it) }
+        timeseries.useDeltaCompression?.let { nativeConfigBuilder.useDeltaCompression(it) }
+
+        configBuilder.setTimeseriesConfiguration(nativeConfigBuilder.build())
     }
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {
