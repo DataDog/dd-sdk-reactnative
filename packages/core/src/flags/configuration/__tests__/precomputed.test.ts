@@ -177,4 +177,31 @@ describe('decodePrecomputedFlags', () => {
     it('returns an empty map when there are no flags', () => {
         expect(decodePrecomputedFlags(responseWith({}))).toEqual({});
     });
+
+    it('rejects an array value for an object flag', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                arr: flag({
+                    variationType: 'object',
+                    variationValue: [1, 2, 3]
+                })
+            })
+        );
+
+        expect(cache.arr).toBeUndefined();
+        expect(InternalLog.log).toHaveBeenCalled();
+    });
+
+    it('stores a flag keyed "__proto__" as data without polluting the prototype', () => {
+        // Computed key mirrors how JSON.parse yields an own "__proto__" property.
+        const cache = decodePrecomputedFlags(
+            responseWith({ ['__proto__']: flag({ variationValue: true }) })
+        );
+
+        // Stored as an own data property, not via the Object.prototype setter.
+        expect(Object.getPrototypeOf(cache)).toBe(Object.prototype);
+        expect(Object.keys(cache)).toContain('__proto__');
+        // No global prototype pollution.
+        expect(({} as Record<string, unknown>).variationType).toBeUndefined();
+    });
 });

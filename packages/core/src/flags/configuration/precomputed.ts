@@ -52,16 +52,20 @@ export const decodePrecomputedFlags = (
     }
 
     const flags = attributes?.flags ?? {};
-    const cache: Record<string, FlagCacheEntry> = {};
+    // Accumulate in a Map so a pathological flag keyed "__proto__" is stored as data
+    // instead of hitting the `Object.prototype` "__proto__" setter (which a plain
+    // `obj[key] = ...` assignment would). `Object.fromEntries` then materializes own
+    // properties without invoking inherited setters.
+    const cache = new Map<string, FlagCacheEntry>();
 
     for (const [key, flag] of Object.entries(flags)) {
         const entry = toFlagCacheEntry(key, flag);
         if (entry) {
-            cache[key] = entry;
+            cache.set(key, entry);
         }
     }
 
-    return cache;
+    return Object.fromEntries(cache);
 };
 
 const toFlagCacheEntry = (
@@ -113,7 +117,12 @@ const valueMatchesVariationType = (
         case 'float':
             return typeof value === 'number';
         case 'object':
-            return typeof value === 'object' && value !== null;
+            // Object flags are a JSON object at the root; arrays are not valid values.
+            return (
+                typeof value === 'object' &&
+                value !== null &&
+                !Array.isArray(value)
+            );
         default:
             return false;
     }
