@@ -301,6 +301,35 @@ Ordering rationale: leaf-first (pure, tested transforms), then client behavior, 
 control, then the public surface — one reviewable idea per PR, tests co-located. Jira encodes
 this order with `Blocks` links: 2686 → 2687 → 2688 → 2718 → 2689 → 2690 → 2691.
 
+## Review-driven acceptance criteria (must-fix at implementation)
+
+From a two-agent plan review. These are silent-failure risks; mirrored as acceptance checklists
+on each sub-task.
+
+- **FFL-2686 (parse):** accept a *known set* of `version`s (not a hard `1`); `setConfiguration`
+  must distinguish parse-failure from valid-but-no-`precomputed` (don't let a lenient `{}`
+  masquerade as success); align the type with the ported source (no phantom `etag`; `fetchedAt`
+  type).
+- **FFL-2687 (decode):** inject `key` from the flag map key (`PrecomputedFlag` has none,
+  `FlagCacheEntry.key` is required); set `value` = typed `variationValue` **and** a string
+  `variationValue` (`JSON.stringify` for objects, lowercase `"true"/"false"` for booleans) so
+  Android exposure tracking round-trips; `serialId?: number | null`; validate `variationType`
+  ∈ the four values and reject unknowns; fail predictably if `obfuscated`.
+- **FFL-2688 (setConfiguration + matching):** normalize the wire `context` through the *same*
+  `processEvaluationContext` before comparing — the raw wire context is flat
+  `{ targetingKey, …attrs }` while the active one is `{ targetingKey, attributes: {…} }`, so a
+  naive deep-equal always mismatches; gate the match on config kind = precomputed; emit
+  `PROVIDER_ERROR` via the provider event emitter (do **not** reject `initialize` /
+  `onContextChange`); distinguish empty/absent precomputed (`PROVIDER_ERROR`) from `FLAG_NOT_FOUND`.
+- **FFL-2718 (fetchPolicy):** the `NEVER` branch must set `evaluationContext` **synchronously**
+  (no `await`, no throw) and re-run matching, or the provider is stuck `PROVIDER_NOT_READY`.
+- **FFL-2689 (provider):** one owner of `{ loadedConfig, activeContext, cache }`; define ordering
+  of `setConfiguration` vs the `contextChangePromise` chain and reset it to resolved after
+  failures so later context changes aren't poisoned; keep any future rules evaluator in a
+  tree-shakeable entry point.
+- **FFL-2691 (RUM FIT):** iOS derives numeric type from `value` at runtime (whole number →
+  integer, fractional → double) — watch int/double parity vs Android in the RUM assertions.
+
 ## Open items (non-blocking)
 
 - Check with the flags team whether the `PrecomputedFlag`-style shape seen in the sample
