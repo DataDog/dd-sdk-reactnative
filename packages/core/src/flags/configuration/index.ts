@@ -14,6 +14,7 @@ export {
     decodePrecomputedFlags,
     UnsupportedConfigurationError
 } from './precomputed';
+export { contextMatchesConfiguration, normalizeWireContext } from './context';
 export type {
     ParsedFlagsConfiguration,
     ParsedPrecomputedConfiguration,

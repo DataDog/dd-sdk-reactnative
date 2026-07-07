@@ -8,9 +8,22 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
+import {
+    contextMatchesConfiguration,
+    decodePrecomputedFlags,
+    normalizeWireContext
+} from './configuration';
+import type { ParsedFlagsConfiguration } from './configuration';
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
 import type { JsonValue, EvaluationContext, FlagDetails } from './types';
+
+/**
+ * Tracks how a configuration supplied via {@link FlagsClient.setConfiguration} relates
+ * to the active evaluation context. `'none'` means no offline configuration is engaged
+ * (the online/fetch path is in effect).
+ */
+type ConfigurationStatus = 'none' | 'ready' | 'mismatch' | 'invalid';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -22,6 +35,12 @@ export class FlagsClient {
     private evaluationContext: EvaluationContext | undefined = undefined;
 
     private flagsCache: Record<string, FlagCacheEntry> = {};
+
+    private loadedConfiguration:
+        | ParsedFlagsConfiguration
+        | undefined = undefined;
+
+    private configurationStatus: ConfigurationStatus = 'none';
 
     constructor(clientName: string = 'default') {
         this.clientName = clientName;
@@ -65,6 +84,11 @@ export class FlagsClient {
 
             this.evaluationContext = processedContext;
             this.flagsCache = result;
+
+            // An explicit online fetch supersedes any previously loaded offline
+            // configuration, so drop the offline overlay to keep state coherent.
+            this.loadedConfiguration = undefined;
+            this.configurationStatus = 'none';
         } catch (error) {
             if (error instanceof Error) {
                 InternalLog.log(
@@ -74,6 +98,105 @@ export class FlagsClient {
             }
 
             throw error;
+        }
+    };
+
+    /**
+     * Load a configuration (parsed from a `ConfigurationWire` string via
+     * `configurationFromString`) into the client for offline evaluation.
+     *
+     * For a precomputed configuration this populates the flag cache and, when no context
+     * has been set yet, adopts the configuration's embedded evaluation context — **no
+     * network request is made**. If a context has already been set, the configuration's
+     * context must match it; otherwise the client serves no values and reports
+     * `INVALID_CONTEXT`.
+     *
+     * @param configuration The configuration to load.
+     *
+     * @example
+     * ```ts
+     * const configuration = configurationFromString(wire);
+     * flagsClient.setConfiguration(configuration);
+     *
+     * const value = flagsClient.getBooleanValue('new-feature', false);
+     * ```
+     */
+    setConfiguration = (configuration: ParsedFlagsConfiguration): void => {
+        this.loadedConfiguration = configuration;
+        this.applyConfiguration();
+    };
+
+    /**
+     * Reconcile the loaded configuration against the active evaluation context and
+     * (re)compute the servable flag cache and configuration status.
+     */
+    private applyConfiguration = (): void => {
+        const precomputed = this.loadedConfiguration?.precomputed;
+
+        // Only precomputed configurations are supported for now. An empty configuration
+        // (an invalid/failed wire parse, or a server-only wire) is not usable.
+        if (!precomputed) {
+            this.flagsCache = {};
+            this.configurationStatus = 'invalid';
+            InternalLog.log(
+                `No usable precomputed configuration was provided for '${this.clientName}'.`,
+                SdkVerbosity.WARN
+            );
+            return;
+        }
+
+        let decoded: Record<string, FlagCacheEntry>;
+        try {
+            decoded = decodePrecomputedFlags(precomputed.response);
+        } catch (error) {
+            this.flagsCache = {};
+            this.configurationStatus = 'invalid';
+            if (error instanceof Error) {
+                InternalLog.log(
+                    `Unsupported flags configuration for '${this.clientName}': ${error.message}`,
+                    SdkVerbosity.WARN
+                );
+            }
+            return;
+        }
+
+        // If no context has been set yet, adopt the configuration's embedded context
+        // (implicit set — no native fetch). A context-agnostic configuration falls back
+        // to an empty context so evaluation can proceed.
+        if (!this.evaluationContext) {
+            if (precomputed.context) {
+                this.evaluationContext = normalizeWireContext(
+                    precomputed.context
+                );
+            } else {
+                InternalLog.log(
+                    `The provided configuration for '${this.clientName}' has no embedded context; treating it as context-agnostic.`,
+                    SdkVerbosity.WARN
+                );
+                this.evaluationContext = { targetingKey: '', attributes: {} };
+            }
+
+            this.flagsCache = decoded;
+            this.configurationStatus = 'ready';
+            return;
+        }
+
+        // A context is already set — the configuration must match it.
+        if (
+            contextMatchesConfiguration(
+                precomputed.context,
+                this.evaluationContext
+            )
+        ) {
+            this.flagsCache = decoded;
+            this.configurationStatus = 'ready';
+        } else {
+            this.flagsCache = {};
+            this.configurationStatus = 'mismatch';
+            InternalLog.log(
+                `The provided configuration for '${this.clientName}' does not match the active evaluation context.`,
+                SdkVerbosity.WARN
+            );
         }
     };
 
@@ -102,6 +225,26 @@ export class FlagsClient {
         defaultValue: T,
         type: 'boolean' | 'string' | 'number' | 'object'
     ): FlagDetails<T> => {
+        if (this.configurationStatus === 'mismatch') {
+            return {
+                key,
+                value: defaultValue,
+                reason: 'ERROR',
+                errorCode: 'INVALID_CONTEXT',
+                errorMessage: `The loaded configuration for '${this.clientName}' does not match the active evaluation context.`
+            };
+        }
+
+        if (this.configurationStatus === 'invalid') {
+            return {
+                key,
+                value: defaultValue,
+                reason: 'ERROR',
+                errorCode: 'PROVIDER_NOT_READY',
+                errorMessage: `The loaded configuration for '${this.clientName}' is not usable. Provide a valid precomputed configuration.`
+            };
+        }
+
         if (!this.evaluationContext) {
             return {
                 key,

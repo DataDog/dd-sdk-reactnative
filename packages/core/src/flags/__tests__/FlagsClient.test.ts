@@ -9,6 +9,7 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { DdFlags } from '../DdFlags';
+import { configurationFromString } from '../configuration';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
     'test-boolean-flag': {
@@ -315,6 +316,134 @@ describe('FlagsClient', () => {
             expect(booleanFlagAsString).toBe('default');
             expect(stringFlagAsBoolean).toBe(false);
             expect(numberFlagAsString).toBe('default');
+        });
+    });
+
+    describe('setConfiguration', () => {
+        const offlineFlags = {
+            'offline-bool': {
+                variationType: 'boolean',
+                variationValue: true,
+                variationKey: 'true',
+                allocationKey: 'alloc-1',
+                reason: 'STATIC',
+                doLog: false,
+                extraLogging: {}
+            }
+        };
+
+        const buildConfig = (
+            flags: Record<string, unknown>,
+            context?: Record<string, unknown>
+        ) =>
+            configurationFromString(
+                JSON.stringify({
+                    version: 1,
+                    precomputed: {
+                        response: JSON.stringify({
+                            data: { attributes: { obfuscated: false, flags } }
+                        }),
+                        context
+                    }
+                })
+            );
+
+        it('serves flags from the configuration without a native fetch', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-1',
+                    country: 'US'
+                })
+            );
+
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('serves flags when an explicit matching context was set first', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-1',
+                    country: 'US'
+                })
+            );
+
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns INVALID_CONTEXT when the config does not match an explicit context', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-2',
+                    country: 'US'
+                })
+            );
+
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'INVALID_CONTEXT'
+            });
+        });
+
+        it('returns PROVIDER_NOT_READY for an empty/invalid configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(configurationFromString('garbage'));
+
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PROVIDER_NOT_READY'
+            });
+        });
+
+        it('is superseded by a later native fetch', async () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-1',
+                    country: 'US'
+                })
+            );
+
+            // A subsequent explicit context fetch replaces the offline configuration
+            // with the native snapshot (mocked in __mocks__/react-native.ts + above).
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+            expect(
+                flagsClient.getBooleanValue('test-boolean-flag', false)
+            ).toBe(true);
         });
     });
 });
