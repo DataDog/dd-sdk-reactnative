@@ -289,17 +289,21 @@ coverage (FFL-2691) lands after the feature is complete.
 PR1 ─▶ PR2 ─▶ PR3 ─▶ PR4        (each branch based on the previous)
 ```
 
-| PR | Sub-tasks | Scope |
-| :- | :-------- | :---- |
-| PR1 | FFL-2686 + FFL-2687 | Pure JS: wire parse + precomputed → `FlagCacheEntry`, with fixtures. Kept internal (un-exported) until PR4. |
-| PR2 | FFL-2688 | `FlagsClient.setConfiguration` + context matching; mismatch → `PROVIDER_ERROR` / `INVALID_CONTEXT`. |
-| PR3 | FFL-2718 | `fetchPolicy` `ALWAYS`/`NEVER`. Code-independent of PR1/PR2 — can be authored in parallel and rebased into the stack. |
-| PR4 | FFL-2689 + FFL-2690 | OpenFeature provider `setConfiguration` + events, public exports, docs, example. |
-| after | FFL-2691 | RUM FIT integration/e2e: an offline-loaded flag evaluation reports to RUM with parity to the fetch path. |
+| PR | Branch | Sub-tasks | Scope |
+| :- | :----- | :-------- | :---- |
+| PR1 | `blake.thomas/FFL-2666-PR1` | FFL-2686 + FFL-2687 | Pure JS: wire parse + precomputed → `FlagCacheEntry`, with fixtures. Kept internal (un-exported) until PR4. |
+| PR2 | `blake.thomas/FFL-2666-PR2` | FFL-2688 | `FlagsClient.setConfiguration` + context matching; mismatch → `PROVIDER_ERROR` / `INVALID_CONTEXT`. |
+| PR3 | `blake.thomas/FFL-2666-PR3` | FFL-2718 | `fetchPolicy` `ALWAYS`/`NEVER`. Code-independent of PR1/PR2 — can be authored in parallel and rebased into the stack. |
+| PR4 | `blake.thomas/FFL-2666-PR4` | FFL-2689 + FFL-2690 | OpenFeature provider `setConfiguration` + events, public exports, docs, example. |
+| after | (RUM FIT repos) | FFL-2691 | RUM FIT integration/e2e in the test-framework repos: an offline-loaded flag evaluation reports to RUM with parity to the fetch path. |
 
 Ordering rationale: leaf-first (pure, tested transforms), then client behavior, then fetch
 control, then the public surface — one reviewable idea per PR, tests co-located. Jira encodes
 this order with `Blocks` links: 2686 → 2687 → 2688 → 2718 → 2689 → 2690 → 2691.
+
+**Branch naming & base:** each step branch is `blake.thomas/FFL-2666-PR{N}`, based on the
+previous step's branch. PR1 is based on this planning branch (`blake.thomas/FFL-2666`) so every
+step inherits this plan. (FFL-2691 lands in the RUM FIT repos, not this one.)
 
 ## Executing a step (meta-plan for future agents)
 
@@ -350,8 +354,9 @@ with **no prior context**. To execute a step (one of FFL-2686 / 2687 / 2688 / 27
   is network-only, passed inside an options object; mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT`.
 - Keep new parse/decode helpers **internal (un-exported)** until the exports step (FFL-2690).
 - Ship unit tests **in the same PR** (no trailing test-only PR).
-- Delivery is **stacked PRs**: base each step on the previous step's branch (base of the stack is
-  `develop`), in the order the Jira `Blocks` links encode.
+- Delivery is **stacked PRs** named `blake.thomas/FFL-2666-PR{N}`: base each step on the previous
+  step's branch, in the order the Jira `Blocks` links encode. The base of the stack (PR1) is this
+  planning branch `blake.thomas/FFL-2666`, so every step inherits this plan.
 - Writing style for plans/PRs: state facts and assumptions plainly; don't overstate certainty
   about things that are still assumptions.
 
