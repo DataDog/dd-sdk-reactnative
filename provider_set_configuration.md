@@ -41,7 +41,7 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
   JS-provided data.
 - **Expose the API on both** the core `FlagsClient` and the `DatadogOpenFeatureProvider`.
 - The customer still calls `setEvaluationContext` themselves; `setConfiguration` must
-  **verify the precomputed config matches the active context** (see below).
+  **check that the precomputed config matches the active context** (see below).
 - **Port, don't depend.** `openfeature-js-client` is not a dependency here (only upstream
   `@openfeature/core` + `@openfeature/web-sdk` are). Port its small pure helpers —
   `wire.ts` (`configurationFromString`/`configurationToString`) and `configMatchesContext` —
@@ -140,13 +140,45 @@ This is a port of the reference `configMatchesContext` (deep-equality on `target
 attributes), including its nuance: **a config with no embedded `context` is context-agnostic
 and matches any evaluation context; a stored context must match exactly.**
 
+## Native tracking path and `setEvaluationContext`
+
+Two native code paths shape how much of this can stay in JS.
+
+**Exposure / RUM tracking is per-flag and parameter-driven.** RN's `trackEvaluation` bridges to
+the native SDK's internal tracking entry point (iOS
+`FlagsClient.sendFlagEvaluation(key:assignment:context:)`, Android
+`_FlagsInternalProxy.trackFlagSnapshotEvaluation(key, flag, context)`). On iOS that calls
+`exposureLogger.logExposure`, `evaluationLogger.logEvaluation`, and
+`rumFlagEvaluationReporter.sendFlagEvaluation` — each takes the `key`, `assignment`, and
+`context` as arguments and none reads the native repository's stored context or fetched
+assignments (`ExposureLogger` gates on `assignment.doLog`, dedups in memory, and writes through
+the core feature scope). Android's `ExposureEventsProcessor` is constructed from a record writer
+plus a time provider and builds each event from the passed flag + context. So tracking runs off
+the flag data and context that JS supplies, as long as `DdFlags.enable()` and `getClient()` have
+run to create the client. That is what keeps offline init in JS with no Swift/Kotlin changes.
+
+**`setEvaluationContext` currently triggers a native CDN fetch.** RN's JS
+`FlagsClient.setEvaluationContext` calls native `setEvaluationContext`, which fetches precomputed
+assignments from the CDN and then overwrites `flagsCache` with the result:
+
+```ts
+const result = await this.nativeFlags.setEvaluationContext(...); // CDN fetch
+this.evaluationContext = processedContext;
+this.flagsCache = result;                                        // overwrites loaded config
+```
+
+In the offline flow the customer still calls `setEvaluationContext` (needed for context matching
+and to hand a context to `trackEvaluation`), so this path has to branch when an offline
+configuration is present: record the context without invoking the native fetch and without
+overwriting the config-populated cache. This is a JS-only change and lives in FFL-2688.
+
 ## Work breakdown
 
 | Subtask | Summary |
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
-| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`) |
+| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`); branch `setEvaluationContext` so it does not trigger the native CDN fetch / overwrite the loaded cache when an offline config is present |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
 | [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Tests (parse/round-trip, decode, context match/mismatch, events) |
