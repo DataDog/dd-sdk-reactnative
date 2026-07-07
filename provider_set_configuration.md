@@ -26,7 +26,8 @@ later:
 - **`fetchPrecomputedConfiguration(...)`** — a convenience helper that fetches precomputed
   assignments over HTTP (from the Datadog/Fastly edge CDN, or from the customer's own
   service/proxy) and returns a `FlagsConfiguration`. Customers in this work fetch the
-  configuration themselves; a JS-level fetch helper (auth, endpoint, ETag/`304`) is a separate
+  configuration themselves; a JS-level fetch helper (auth, endpoint, ETag/`304`) returns a
+  `ParsedFlagsConfiguration` and is a separate
   convenience feature for customers who would rather not handle the HTTP fetch, and is later
   work.
 - **`precomputeConfiguration(...)`** — server-side conversion of rules into a client precomputed
@@ -57,6 +58,10 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
 - **No Swift/Kotlin changes** — evaluation and per-flag exposure tracking already run off
   JS-provided data.
 - **Expose the API on both** the core `FlagsClient` and the `DatadogOpenFeatureProvider`.
+- **Avoid the `FlagsConfiguration` name collision.** That identifier is already the `enable()`
+  options type (`packages/core/src/flags/types.ts`). Name the parsed-wire config type distinctly
+  — this plan uses **`ParsedFlagsConfiguration`** — so `configurationFromString` /
+  `setConfiguration` don't overload the existing type.
 - The customer still calls `setEvaluationContext` themselves; `setConfiguration` must
   **check that the precomputed config matches the active context** (see below).
 - Add a **`fetchPolicy`** (`ALWAYS` default / `NEVER` / `ON_MISMATCH`) set at `enable()` with a
@@ -233,7 +238,7 @@ with in-flight fetches and already-loaded config.
 
 | Subtask | Summary |
 | :------ | :------ |
-| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `FlagsConfiguration` type (parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
+| [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `ParsedFlagsConfiguration` type (distinct from the existing `enable()` `FlagsConfiguration`; parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
 | [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
