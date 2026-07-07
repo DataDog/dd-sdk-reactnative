@@ -13,9 +13,26 @@ SDK fetches precomputed assignments from the edge CDN. The core operation is:
 configurationFromString(wire) -> provider.setConfiguration(configuration) -> evaluate(...)
 ```
 
-Scope for this task: **precomputed (static context)** configuration only. The API is
-designed to leave room for a future **rules-based (UFC / dynamic)** branch without
+Scope for this task: **precomputed, static single-context (one user)** configuration only.
+The API is designed to leave room for a future **rules-based (UFC / dynamic)** branch without
 reshaping it.
+
+## Non-goals (out of scope for now)
+
+The goal here is only `setConfiguration()` for a **static, single-context (one user)**
+precomputed configuration. The following are explicitly out of scope for this work and can be
+later:
+
+- **`fetchPrecomputedConfiguration(...)`** — a convenience helper that fetches precomputed
+  assignments over HTTP (from the Datadog/Fastly edge CDN, or from the customer's own
+  service/proxy) and returns a `FlagsConfiguration`. Customers in this work fetch the
+  configuration themselves; a JS-level fetch helper (auth, endpoint, ETag/`304`) is a separate
+  convenience feature for customers who would rather not handle the HTTP fetch, and is later
+  work.
+- **`precomputeConfiguration(...)`** — server-side conversion of rules into a client precomputed
+  configuration (Node.js-only in the RFC). Not relevant to the RN client.
+- **Rules-based / dynamic (UFC) on-device evaluation** — the wire `server` branch. The type
+  stays extensible for it, but it is not implemented here.
 
 ## Background: how flags work today
 
@@ -133,8 +150,17 @@ Key facts that de-risk the JS approach:
 Customers may call `setConfiguration` and `setEvaluationContext` in either order. The
 `FlagsClient` holds the **loaded configuration** (carrying its embedded `context`) and the
 **active evaluation context** independently. The servable `flagsCache` is only populated
-when the two **match**; the match is re-validated on **both** calls. On mismatch, values are
-not served.
+when the two **match**; the match is re-validated on **both** calls.
+
+On mismatch the provider does not serve the precomputed values: it emits a `PROVIDER_ERROR`
+event and enters the error provider state, and flag evaluations return the default with an
+`INVALID_CONTEXT` error code (the active context does not match the loaded precomputed
+configuration). `PROVIDER_ERROR` is an OpenFeature provider event/status, not an evaluation
+error code. `INVALID_CONTEXT` is an existing OpenFeature `ErrorCode` — no new code is needed —
+but RN's local `FlagErrorCode` union
+(`PROVIDER_NOT_READY | FLAG_NOT_FOUND | PARSE_ERROR | TYPE_MISMATCH`) has to be extended to
+include it. The provider's `toFlagResolution` already maps any `ErrorCode`, so it needs no
+change.
 
 This is a port of the reference `configMatchesContext` (deep-equality on `targetingKey` +
 attributes), including its nuance: **a config with no embedded `context` is context-agnostic
@@ -188,7 +214,8 @@ overwriting the config-populated cache. This is a JS-only change and lives in FF
 - Check with the flags team whether the `PrecomputedFlag`-style shape seen in the sample
   (`example.json`) is stable across environments/versions, vs the OpenFeature-aligned proposal
   page (FFL-2687).
-- Precomputed context-mismatch behavior: default value vs `PROVIDER_NOT_READY` vs error
-  (RFC open question).
+- Precomputed context mismatch surfaces as a `PROVIDER_ERROR` event/state plus an
+  `INVALID_CONTEXT` evaluation error code (extending RN's `FlagErrorCode` union with this
+  existing OpenFeature code) — current direction for RFC open Q2.
 - `setConfiguration` sync vs `Promise`-returning (JS-only work is synchronous, but a Promise
   keeps parity with `setEvaluationContext` and forward-compat for rules).
