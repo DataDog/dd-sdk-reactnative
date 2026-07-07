@@ -412,3 +412,13 @@ on each sub-task.
   config and report `Stale`, but never serve a config that doesn't match the context) and a
   staleness axis (`fetchedAt`/`etag`/`expiresAt`-driven refresh) are separate from context
   matching and out of this MVP.
+- **Persist the loaded configuration to disk?** Today a config loaded via `setConfiguration` is
+  in-memory only — on the next cold start the customer must call `setConfiguration` again. An
+  option (e.g. `setConfiguration(config, { persist: true })`) could cache it for offline
+  last-known-values across restarts. Sub-questions: (a) persist the raw wire string or the parsed
+  config; (b) where — a JS-side store (AsyncStorage / filesystem / MMKV) or the native
+  `flagsDataStore` (native work, breaks the JS-only guarantee); (c) auto-load on next launch and
+  how that interacts with `fetchPolicy` (`NEVER` + persisted = offline startup with no network);
+  (d) staleness / eviction of the persisted copy. Note the native SDK already persists its own
+  fetched flags to disk, but RN's JS read path does not consume that store. Likely a fast-follow,
+  not MVP.
