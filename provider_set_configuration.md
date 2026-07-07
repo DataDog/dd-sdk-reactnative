@@ -1,7 +1,7 @@
 # `provider.setConfiguration` — Offline Init for React Native Feature Flags
 
 **Jira:** [FFL-2666](https://datadoghq.atlassian.net/browse/FFL-2666)
-**Status:** Planning (no implementation yet)
+**Status:** In progress — see [Delivery plan](#delivery-plan-prs)
 
 ## Goal
 
@@ -57,16 +57,18 @@ into the same `FlagCacheEntry` map and populate `flagsCache`.
 - **Input** is a `ConfigurationWire` string, consumed via `configurationFromString(wire)`.
 - **No Swift/Kotlin changes** — evaluation and per-flag exposure tracking already run off
   JS-provided data.
-- **Expose the API on both** the core `FlagsClient` and the `DatadogOpenFeatureProvider`.
+- **Expose `setConfiguration`** on the core `FlagsClient` and on a new **`OfflineProvider`**
+  (see [Offline provider](#offline-provider)).
 - **Avoid the `FlagsConfiguration` name collision.** That identifier is already the `enable()`
   options type (`packages/core/src/flags/types.ts`). Name the parsed-wire config type distinctly
   — this plan uses **`ParsedFlagsConfiguration`** — so `configurationFromString` /
   `setConfiguration` don't overload the existing type.
 - The customer still calls `setEvaluationContext` themselves; `setConfiguration` must
   **check that the precomputed config matches the active context** (see below).
-- Add a **`fetchPolicy`** (`ALWAYS` default / `NEVER` / `ON_MISMATCH`) set at `enable()` with a
-  per-`getClient()` override, so customers can turn off the fetch-on-`setEvaluationContext`.
-  Offline init needs `NEVER`; see [Fetch policy](#fetch-policy).
+- **Never-fetch via a dedicated `OfflineProvider`, not a `fetchPolicy` flag.** The offline
+  behavior is delivered by a second OpenFeature provider whose `initialize`/`onContextChange`
+  use `FlagsClient.setEvaluationContextWithoutFetching` and never hit the CDN. See
+  [Offline provider](#offline-provider).
 - **Port, don't depend.** `openfeature-js-client` is not a dependency here (only upstream
   `@openfeature/core` + `@openfeature/web-sdk` are). Port its small pure helpers —
   `wire.ts` (`configurationFromString`/`configurationToString`) and `configMatchesContext` —
@@ -168,8 +170,10 @@ Keep two axes separate so the future rules mode is additive, not a reshape:
   wire branch is populated (the way the reference providers do it): `precomputed` → look up an
   assignment that **must match** the active context; `server` (future rules/UFC) → evaluate the
   active context **locally** and serve *any* context. Only `precomputed` is implemented now.
-- **`fetchPolicy`** — *whether* the SDK may hit the network on `setEvaluationContext`
-  ([Fetch policy](#fetch-policy)). Network posture only; it does not select the evaluation mode.
+- **Provider choice** — *whether* the SDK may hit the network on `setEvaluationContext` depends
+  on which provider you use: `DatadogOpenFeatureProvider` (online, fetches) vs
+  `OfflineProvider` (never fetches; see [Offline provider](#offline-provider)). Network posture
+  only; it does not select the evaluation mode.
 
 The context match/mismatch rules below apply to the **precomputed** kind; a rules config is
 context-agnostic (below).
@@ -227,45 +231,40 @@ this.evaluationContext = processedContext;
 this.flagsCache = result;                                        // overwrites loaded config
 ```
 
-In the offline flow the customer still calls `setEvaluationContext` (needed for context matching
-and to hand a context to `trackEvaluation`), so under `fetchPolicy: NEVER` this path records the
-context without invoking the native fetch and without overwriting the config-populated cache.
-This is a JS-only change. See [Fetch policy](#fetch-policy) below.
+For the offline flow the client exposes **`setEvaluationContextWithoutFetching(context)`**: it
+records the context and reconciles the loaded config (context matching for precomputed) without
+invoking the native fetch. The `OfflineProvider` uses this in `initialize`/`onContextChange`.
+This is a JS-only change. See [Offline provider](#offline-provider) below.
 
-## Fetch policy
+## Offline provider
 
-Because `setEvaluationContext` fetches from the CDN today (see above), offline customers need an
-explicit way to turn that off — and a hard "no network" guarantee, not just "usually won't." We
-add a `fetchPolicy` set at `enable()` (global default) with an optional per-`getClient()`
-override:
+Rather than a `fetchPolicy` flag on the core, the never-fetch behavior is a **provider choice**.
+Alongside the existing `DatadogOpenFeatureProvider` (online — fetches on context changes), add an
+**`OfflineProvider`** (working name; likely `DatadogOfflineOpenFeatureProvider`) in
+`react-native-openfeature`. It is identical to `DatadogOpenFeatureProvider` **except**:
 
-```ts
-enum FetchPolicy {
-  ALWAYS,      // fetch on setEvaluationContext (today's behavior; default)
-  NEVER,       // never fetch; serve only configurations supplied via setConfiguration
-  ON_MISMATCH, // use a matching supplied config; fetch only when it doesn't match the context
-}
-```
+- `initialize` / `onContextChange` call `FlagsClient.setEvaluationContextWithoutFetching` instead
+  of the fetching `setEvaluationContext`, so it **never hits the CDN**.
+- It exposes `setConfiguration` (delegating to the `FlagsClient`) and re-exports
+  `configurationFromString`.
 
-- **`ALWAYS`** — default; preserves current behavior. A `setConfiguration` bootstrap is
-  overwritten by the fetch, so this mode is mostly for online apps.
-- **`NEVER`** — MVP target for offline. `setEvaluationContext` records the context but does not
-  call the native fetch or overwrite the cache; the client serves only what `setConfiguration`
-  loaded. A context set with no matching config → provider not-ready / `PROVIDER_ERROR`.
-- **`ON_MISMATCH`** — *fast-follow, not in this MVP.* Bootstrap-then-refresh: serve a supplied
-  config when it matches the active context, otherwise fetch. Adds async fetch orchestration,
-  `Reconciling`/`Stale`/`Ready` sequencing, and a fetch-failure fallback, so it is deferred.
+Everything else — `resolveBoolean/String/Number/Object`, `toDdContext`, `toFlagResolution`, the
+event emitter — is shared with `DatadogOpenFeatureProvider` (via a common base/helpers).
 
-Only `ALWAYS` (default) and `NEVER` are built now. `ON_MISMATCH` is declared for forward-compat
-and implemented later. A mutable runtime setter is intentionally left out of v1 to avoid races
-with in-flight fetches and already-loaded config.
+Why a provider instead of a flag:
 
-`fetchPolicy` is passed inside an **options object** at `enable()` / `getClient()` (not a bare
-positional enum) so it can grow fields later — e.g. `ttl`, `staleWhileRevalidate` for the future
-staleness axis — without an API break.
+- **Simpler core** — no `fetchPolicy` enum or options object on `enable()`/`getClient()`.
+- **No online/offline mixing** — a given client is driven by one provider, so "always fetch" and
+  "never fetch" never contend on the same `FlagsClient` (this dissolves the precedence/overlay
+  edge cases from the PR2 review).
+- **Extensible** — the same `OfflineProvider` serves future offline **dynamic rules**:
+  `onContextChange` re-evaluates the ruleset locally (still no fetch); only the core evaluator
+  gains a rules branch later.
+- **No native changes** — the offline path uses existing native `enable` + `trackEvaluation` and
+  skips native `setEvaluationContext` entirely; evaluation is all JS.
 
-`fetchPolicy` is purely the **network axis**; *how* a config is evaluated is set by its
-[configuration kind](#configuration-kind-evaluation-mode), not by `fetchPolicy`.
+`OfflineProvider` emits the OpenFeature events: first configuration → `PROVIDER_READY`,
+subsequent → `PROVIDER_CONFIGURATION_CHANGED`, invalid/mismatch → `PROVIDER_ERROR`.
 
 ## Work breakdown
 
@@ -274,32 +273,30 @@ staleness axis — without an API break.
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `ParsedFlagsConfiguration` type (distinct from the existing `enable()` `FlagsConfiguration`; parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — plain JSON; inject `key`; derive typed `value` + string `variationValue`; fail predictably if `attributes.obfuscated` |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`, gated on config kind = precomputed); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
-| [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring via an **options object** at `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite and sets context synchronously). `ON_MISMATCH` declared, implemented later |
-| [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
+| [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `FlagsClient.setEvaluationContextWithoutFetching` — set context + reconcile the loaded config with no native fetch (the primitive the `OfflineProvider` uses). Replaces the earlier `fetchPolicy` flag |
+| [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | `OfflineProvider` (never-fetch OpenFeature provider) + `setConfiguration` surface + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
 | [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Integration / e2e tests (RUM FIT) — offline-loaded flag → RUM parity; unit tests ship inside each PR above |
 
 ## Delivery plan (PRs)
 
-To keep each changeset easy to review, the seven sub-tasks ship as **four stacked PRs**, each
+To keep each changeset easy to review, the work ships as **three stacked PRs**, each
 self-contained with its own unit tests (no trailing test-only PR). RUM FIT integration/e2e
-coverage (FFL-2691) lands after the feature is complete.
+coverage (FFL-2691) lands after the feature is complete, in the test-framework repos.
 
 ```
-PR1 ─▶ PR2 ─▶ PR3 ─▶ PR4        (each branch based on the previous)
+PR1 ─▶ PR2 ─▶ PR3        (each branch based on the previous)
 ```
 
 | PR | Branch | Sub-tasks | Scope |
 | :- | :----- | :-------- | :---- |
-| PR1 | `blake.thomas/FFL-2666-PR1` | FFL-2686 + FFL-2687 | Pure JS: wire parse + precomputed → `FlagCacheEntry`, with fixtures. Kept internal (un-exported) until PR4. |
-| PR2 | `blake.thomas/FFL-2666-PR2` | FFL-2688 | `FlagsClient.setConfiguration` + context matching; mismatch → `PROVIDER_ERROR` / `INVALID_CONTEXT`. |
-| PR3 | `blake.thomas/FFL-2666-PR3` | FFL-2718 | `fetchPolicy` `ALWAYS`/`NEVER`. Code-independent of PR1/PR2 — can be authored in parallel and rebased into the stack. |
-| PR4 | `blake.thomas/FFL-2666-PR4` | FFL-2689 + FFL-2690 | OpenFeature provider `setConfiguration` + events, public exports, docs, example. |
-| after | (RUM FIT repos) | FFL-2691 | RUM FIT integration/e2e in the test-framework repos: an offline-loaded flag evaluation reports to RUM with parity to the fetch path. |
+| PR1 | `blake.thomas/FFL-2666-PR1` | FFL-2686 + FFL-2687 | Pure JS: wire parse + precomputed → `FlagCacheEntry`, with fixtures. Internal (un-exported). |
+| PR2 | `blake.thomas/FFL-2666-PR2` | FFL-2688 + FFL-2718 | Core offline API on `FlagsClient`: `setConfiguration` + context matching + `setEvaluationContextWithoutFetching`. |
+| PR3 | `blake.thomas/FFL-2666-PR3` | FFL-2689 + FFL-2690 | `OfflineProvider` (never-fetch) + `setConfiguration` surface + events + public exports/docs/example. |
+| after | (RUM FIT repos) | FFL-2691 | RUM FIT integration/e2e: an offline-loaded flag evaluation reports to RUM with parity to the fetch path. |
 
-Ordering rationale: leaf-first (pure, tested transforms), then client behavior, then fetch
-control, then the public surface — one reviewable idea per PR, tests co-located. Jira encodes
-this order with `Blocks` links: 2686 → 2687 → 2688 → 2718 → 2689 → 2690 → 2691.
+Ordering rationale: leaf-first (pure, tested transforms) → core client API → the provider +
+public surface. One reviewable idea per PR, tests co-located.
 
 **Branch naming & base:** each step branch is `blake.thomas/FFL-2666-PR{N}`, based on the
 previous step's branch. PR1 is based on this planning branch (`blake.thomas/FFL-2666`) so every
@@ -313,7 +310,7 @@ with **no prior context**. To execute a step (one of FFL-2686 / 2687 / 2688 / 27
 
 **1. Orient — read, in this order:**
 - This file (`provider_set_configuration.md`) end to end — it is the source of truth for scope,
-  design decisions, wire/format shapes, the config-kind vs `fetchPolicy` split, and the
+  design decisions, wire/format shapes, the config-kind vs provider-choice split, and the
   [acceptance criteria](#review-driven-acceptance-criteria-must-fix-at-implementation).
 - `Offline-Initialization-for-Feature-Flagging.md` (read fully — small) and
   `Portable-Flag-Configuration-RFC.md` (repo root) for intent. ⚠️ The Portable RFC is ~200 KB
@@ -350,8 +347,8 @@ with **no prior context**. To execute a step (one of FFL-2686 / 2687 / 2688 / 27
 - **JS-only, no Swift/Kotlin changes.** Evaluation and per-flag tracking already run off
   JS-supplied data.
 - Use the agreed names: `ParsedFlagsConfiguration` (never reuse `FlagsConfiguration`, the
-  `enable()` options type); config-kind chosen by which wire branch is populated; `fetchPolicy`
-  is network-only, passed inside an options object; mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT`.
+  `enable()` options type); config-kind chosen by which wire branch is populated; never-fetch is
+  a provider choice (`OfflineProvider`), not a flag; mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT`.
 - Keep new parse/decode helpers **internal (un-exported)** until the exports step (FFL-2690).
 - Ship unit tests **in the same PR** (no trailing test-only PR).
 - Delivery is **stacked PRs** named `blake.thomas/FFL-2666-PR{N}`: base each step on the previous
@@ -391,11 +388,13 @@ on each sub-task.
   naive deep-equal always mismatches; gate the match on config kind = precomputed; emit
   `PROVIDER_ERROR` via the provider event emitter (do **not** reject `initialize` /
   `onContextChange`); distinguish empty/absent precomputed (`PROVIDER_ERROR`) from `FLAG_NOT_FOUND`.
-- **FFL-2718 (fetchPolicy):** the `NEVER` branch must set `evaluationContext` **synchronously**
-  (no `await`, no throw) and re-run matching, or the provider is stuck `PROVIDER_NOT_READY`.
-- **FFL-2689 (provider):** one owner of `{ loadedConfig, activeContext, cache }`; define ordering
-  of `setConfiguration` vs the `contextChangePromise` chain and reset it to resolved after
-  failures so later context changes aren't poisoned; keep any future rules evaluator in a
+- **FFL-2718 (`setEvaluationContextWithoutFetching`):** sets the context and re-runs matching
+  with **no native call**; a context change re-validates the loaded config (match serves,
+  mismatch → `INVALID_CONTEXT`). Replaces the earlier `fetchPolicy` flag.
+- **FFL-2689 (`OfflineProvider`):** `initialize`/`onContextChange` use
+  `setEvaluationContextWithoutFetching` (never fetch); shares code with
+  `DatadogOpenFeatureProvider`; one owner of `{ loadedConfig, activeContext, cache }`; a rejected
+  promise must not poison later `onContextChange`; keep any future rules evaluator in a
   tree-shakeable entry point.
 - **FFL-2691 (RUM FIT):** iOS derives numeric type from `value` at runtime (whole number →
   integer, fractional → double) — watch int/double parity vs Android in the RUM assertions.
@@ -408,19 +407,19 @@ on each sub-task.
 - Precomputed context mismatch surfaces as a `PROVIDER_ERROR` event/state plus an
   `INVALID_CONTEXT` evaluation error code (extending RN's `FlagErrorCode` union with this
   existing OpenFeature code) — current direction for RFC open Q2.
-- `setConfiguration` sync vs `Promise`-returning (JS-only work is synchronous, but a Promise
-  keeps parity with `setEvaluationContext` and forward-compat for rules).
-- For the future `ON_MISMATCH` policy: fetch-failure fallback (keep serving the previous usable
-  config and report `Stale`, but never serve a config that doesn't match the context) and a
-  staleness axis (`fetchedAt`/`etag`/`expiresAt`-driven refresh) are separate from context
-  matching and out of this MVP.
+- Resolved: `setConfiguration` and `setEvaluationContextWithoutFetching` are synchronous
+  (`void`) — JS-only work, no I/O.
+- Future online refresh / bootstrap-then-refresh (an online provider that starts from a supplied
+  config, then refreshes via the CDN): fetch-failure fallback (keep serving the previous usable
+  config, report `Stale`, never serve a mismatched config) and a staleness axis
+  (`fetchedAt`/`etag`/`expiresAt`) are separate from context matching and out of this MVP.
 - **Persist the loaded configuration to disk?** Today a config loaded via `setConfiguration` is
   in-memory only — on the next cold start the customer must call `setConfiguration` again. An
   option (e.g. `setConfiguration(config, { persist: true })`) could cache it for offline
   last-known-values across restarts. Sub-questions: (a) persist the raw wire string or the parsed
   config; (b) where — a JS-side store (AsyncStorage / filesystem / MMKV) or the native
   `flagsDataStore` (native work, breaks the JS-only guarantee); (c) auto-load on next launch and
-  how that interacts with `fetchPolicy` (`NEVER` + persisted = offline startup with no network);
+  how it interacts with the `OfflineProvider` (persisted + offline = startup with no network);
   (d) staleness / eviction of the persisted copy. Note the native SDK already persists its own
   fetched flags to disk, but RN's JS read path does not consume that store. Likely a fast-follow,
   not MVP.
