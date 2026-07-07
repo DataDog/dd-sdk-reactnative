@@ -45,7 +45,8 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
             trackNonFatalAnrs = rm.getBooleanOrNull("trackNonFatalAnrs"),
             initialResourceThreshold = rm.getDoubleOrNull("initialResourceThreshold"),
             telemetrySampleRate = rm.getDoubleOrNull("telemetrySampleRate"),
-            customEndpoint = rm.getString("customEndpoint")
+            customEndpoint = rm.getString("customEndpoint"),
+            timeseries = rm.getMap("timeseries")?.asTimeseriesConfiguration()
         )
     }
 
@@ -85,6 +86,16 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     )
 }
 
+
+internal fun ReadableMap.asTimeseriesConfiguration(): TimeseriesConfiguration {
+    return TimeseriesConfiguration(
+        enabled = getBooleanOrNull("enabled") ?: false,
+        bufferSize = getDoubleOrNull("bufferSize"),
+        intervalMs = getDoubleOrNull("intervalMs"),
+        collectInBackground = getBooleanOrNull("collectInBackground"),
+        useDeltaCompression = getBooleanOrNull("useDeltaCompression")
+    )
+}
 
 internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetry {
     return ConfigurationForTelemetry(
@@ -187,7 +198,8 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
                 ?: DefaultConfiguration.telemetrySampleRate,
-            customEndpoint = rum.customEndpoint
+            customEndpoint = rum.customEndpoint,
+            timeseries = rum.timeseries?.asTimeseriesConfiguration()
         )
     }
 
@@ -228,6 +240,16 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
     )
 }
 
+
+internal fun JSONTimeseriesConfiguration.asTimeseriesConfiguration(): TimeseriesConfiguration {
+    return TimeseriesConfiguration(
+        enabled = this.enabled ?: false,
+        bufferSize = this.bufferSize,
+        intervalMs = this.intervalMs,
+        collectInBackground = this.collectInBackground,
+        useDeltaCompression = this.useDeltaCompression
+    )
+}
 
 internal fun JSONProxyConfiguration.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
     return buildProxyConfig(type, address, port, username, password)
@@ -331,6 +353,15 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         rum.initialResourceThreshold?.let { rumMap.putDouble("initialResourceThreshold", it) }
         rum.telemetrySampleRate?.let { rumMap.putDouble("telemetrySampleRate", it) }
         rum.customEndpoint?.let { rumMap.putString("customEndpoint", it) }
+        rum.timeseries?.let { timeseries ->
+            val timeseriesMap = WritableNativeMap()
+            timeseriesMap.putBoolean("enabled", timeseries.enabled)
+            timeseries.bufferSize?.let { timeseriesMap.putDouble("bufferSize", it) }
+            timeseries.intervalMs?.let { timeseriesMap.putDouble("intervalMs", it) }
+            timeseries.collectInBackground?.let { timeseriesMap.putBoolean("collectInBackground", it) }
+            timeseries.useDeltaCompression?.let { timeseriesMap.putBoolean("useDeltaCompression", it) }
+            rumMap.putMap("timeseries", timeseriesMap)
+        }
 
         map.putMap("rumConfiguration", rumMap)
     }

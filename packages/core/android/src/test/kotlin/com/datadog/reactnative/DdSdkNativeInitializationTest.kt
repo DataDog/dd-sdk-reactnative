@@ -144,6 +144,8 @@ internal class DdSdkNativeInitializationTest {
             "[B3MULTI, TRACECONTEXT]"
         )
         assertThat(configuration.rumConfiguration?.initialResourceThreshold).isEqualTo(0.5)
+        assertThat(configuration.rumConfiguration?.timeseries?.enabled).isEqualTo(true)
+        assertThat(configuration.rumConfiguration?.timeseries?.bufferSize).isEqualTo(15.0)
     }
 
     @Test
@@ -192,6 +194,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.rumConfiguration?.firstPartyHosts).isNull()
         assertThat(configuration.logsConfiguration?.customEndpoint).isNull()
         assertThat(configuration.traceConfiguration?.customEndpoint).isNull()
+        assertThat(configuration.rumConfiguration?.timeseries).isNull()
     }
 
     @Test

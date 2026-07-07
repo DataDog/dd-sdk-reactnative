@@ -33,7 +33,11 @@
             "trackBackgroundEvents": true,
             "trackMemoryWarnings": false,
             "trackWatchdogTerminations": true,
-            "vitalsUpdateFrequency": "NEVER"
+            "vitalsUpdateFrequency": "NEVER",
+            "timeseries": {
+                "enabled": true,
+                "bufferSize": 15
+            }
         },
         "traceConfiguration": {
             "customEndpoint": "https://example.com/trace"
