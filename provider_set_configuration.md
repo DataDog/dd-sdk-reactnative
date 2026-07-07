@@ -115,7 +115,7 @@ with RN's existing `FlagCacheEntry`:
       format: 'PRECOMPUTED'
       environment: { name: string }
       flags: Record<flagName, {
-        variationType: 'boolean' | 'string' | 'number' | 'object'
+        variationType: 'boolean' | 'string' | 'number' | 'integer' | 'float' | 'object'
         variationValue: /* typed value (e.g. boolean false) — NOT a string */
         variationKey: string
         allocationKey: string
