@@ -382,7 +382,9 @@ on each sub-task.
   `FlagCacheEntry.key` is required); set `value` = typed `variationValue` **and** a string
   `variationValue` (`JSON.stringify` for objects, lowercase `"true"/"false"` for booleans) so
   Android exposure tracking round-trips; `serialId?: number | null`; validate `variationType`
-  ∈ the four values and reject unknowns; fail predictably if `obfuscated`.
+  ∈ `boolean | string | number | integer | float | object` and reject unknowns; map both
+  `integer` and `float` to a JS `number` for `value` while preserving the original
+  `variationType` string for Android's round-trip; fail predictably if `obfuscated`.
 - **FFL-2688 (setConfiguration + matching):** normalize the wire `context` through the *same*
   `processEvaluationContext` before comparing — the raw wire context is flat
   `{ targetingKey, …attrs }` while the active one is `{ targetingKey, attributes: {…} }`, so a
