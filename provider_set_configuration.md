@@ -139,7 +139,10 @@ Key facts that de-risk the JS approach:
 
 - **Obfuscation is not supported** in the DD precomputed format (the sample response carries
   `obfuscated: false`) — parsing is plain JSON → object mapping (no key hashing, no
-  base64/salt decoding).
+  base64/salt decoding). The decoder must still **read `attributes.obfuscated` and fail
+  predictably** (unsupported → `PROVIDER_ERROR`) if it is ever `true`, rather than silently
+  mis-mapping hashed keys as flag names when the CDN flips it on. This is the seam for a future
+  obfuscated precomputed/rules format.
 - `context` and the active context are both plain (`targetingKey` + attributes) — matching
   is a normalized deep-equality.
 - **`configurationFromString` is lenient** — it returns an empty config (`{}`) on a parse
@@ -261,7 +264,7 @@ with in-flight fetches and already-loaded config.
 | Subtask | Summary |
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `ParsedFlagsConfiguration` type (distinct from the existing `enable()` `FlagsConfiguration`; parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
-| [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
+| [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — plain JSON; inject `key`; derive typed `value` + string `variationValue`; fail predictably if `attributes.obfuscated` |
 | [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`, gated on config kind = precomputed); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
 | [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
