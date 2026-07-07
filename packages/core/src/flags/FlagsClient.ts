@@ -87,9 +87,18 @@ export class FlagsClient {
 
             // An explicit online fetch supersedes any previously loaded offline
             // configuration, so drop the offline overlay to keep state coherent.
+            //
+            // PROVISIONAL: this reflects the current fetch-always default. When the
+            // `NEVER` fetch policy lands, that path must skip the fetch and re-run
+            // `applyConfiguration()` against the new context instead of dropping the
+            // loaded configuration.
             this.loadedConfiguration = undefined;
             this.configurationStatus = 'none';
         } catch (error) {
+            // NOTE: a failed fetch leaves any previously loaded offline configuration in
+            // place, so the client may keep serving it (and attribute exposures to its
+            // context). Fetch-failure/staleness fallback is deferred to the fetch-policy
+            // step.
             if (error instanceof Error) {
                 InternalLog.log(
                     `Error setting flag evaluation context: ${error.message}`,
@@ -135,6 +144,10 @@ export class FlagsClient {
 
         // Only precomputed configurations are supported for now. An empty configuration
         // (an invalid/failed wire parse, or a server-only wire) is not usable.
+        //
+        // FORWARD-COMPAT SEAM: when the `server`/rules branch is parsed (see
+        // `ParsedFlagsConfiguration`), it must be handled BEFORE this guard — a rules
+        // configuration is context-agnostic and must NOT be rejected here as `invalid`.
         if (!precomputed) {
             this.flagsCache = {};
             this.configurationStatus = 'invalid';
@@ -191,6 +204,9 @@ export class FlagsClient {
             this.flagsCache = decoded;
             this.configurationStatus = 'ready';
         } else {
+            // Per spec, a context mismatch must not serve values. This also blocks a
+            // previously-fetched online cache until a matching config or a new fetch;
+            // the fetch policy (a later step) formalizes online/offline precedence.
             this.flagsCache = {};
             this.configurationStatus = 'mismatch';
             InternalLog.log(
@@ -235,6 +251,9 @@ export class FlagsClient {
             };
         }
 
+        // A loaded-but-unusable configuration surfaces as PROVIDER_NOT_READY at the
+        // evaluation layer (distinct from FLAG_NOT_FOUND). The dedicated PROVIDER_ERROR
+        // provider event is wired by the OpenFeature provider in a later step.
         if (this.configurationStatus === 'invalid') {
             return {
                 key,

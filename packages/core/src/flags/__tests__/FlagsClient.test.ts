@@ -422,6 +422,43 @@ describe('FlagsClient', () => {
             });
         });
 
+        it('serves a context-agnostic configuration (no embedded context)', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(buildConfig(offlineFlags));
+
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('replaces a previously loaded configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(
+                buildConfig(
+                    { 'flag-a': offlineFlags['offline-bool'] },
+                    { targetingKey: 'user-1' }
+                )
+            );
+            expect(flagsClient.getBooleanValue('flag-a', false)).toBe(true);
+
+            flagsClient.setConfiguration(
+                buildConfig(
+                    { 'flag-b': offlineFlags['offline-bool'] },
+                    { targetingKey: 'user-1' }
+                )
+            );
+
+            expect(
+                flagsClient.getBooleanDetails('flag-a', false)
+            ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+            expect(flagsClient.getBooleanValue('flag-b', false)).toBe(true);
+        });
+
         it('is superseded by a later native fetch', async () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(

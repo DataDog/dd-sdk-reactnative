@@ -44,6 +44,19 @@ describe('normalizeWireContext', () => {
             })
         ).toEqual({ targetingKey: 'user-1', attributes: { country: 'US' } });
     });
+
+    it('handles a "__proto__" attribute without polluting the prototype', () => {
+        const normalized = normalizeWireContext({
+            targetingKey: 'user-1',
+            ['__proto__']: 'x'
+        });
+
+        // The reserved key is safely discarded; the prototype is untouched.
+        expect(Object.getPrototypeOf(normalized.attributes)).toBe(
+            Object.prototype
+        );
+        expect(({} as Record<string, unknown>).x).toBeUndefined();
+    });
 });
 
 describe('contextMatchesConfiguration', () => {

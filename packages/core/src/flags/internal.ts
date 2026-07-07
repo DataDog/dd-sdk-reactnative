@@ -30,7 +30,10 @@ export const processEvaluationContext = (
     const providedAttributes: Record<string, unknown> =
         context.attributes ?? {};
 
-    const attributes: Record<string, PrimitiveValue> = {};
+    // Accumulate in a Map so reserved keys such as "__proto__" are handled as data
+    // instead of hitting the Object.prototype setter (which would silently drop them or
+    // pollute the prototype). Object.fromEntries then materializes own properties safely.
+    const attributes = new Map<string, PrimitiveValue>();
 
     for (const [key, value] of Object.entries(providedAttributes)) {
         const isPrimitiveValue =
@@ -53,11 +56,11 @@ export const processEvaluationContext = (
             continue;
         }
 
-        attributes[key] = value;
+        attributes.set(key, value as PrimitiveValue);
     }
 
     return {
         targetingKey,
-        attributes
+        attributes: Object.fromEntries(attributes)
     };
 };
