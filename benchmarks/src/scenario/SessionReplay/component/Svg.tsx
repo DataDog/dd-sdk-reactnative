@@ -339,7 +339,7 @@ function BarrelShieldImport() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GROUP H — Unsupported nested elements (customer repro)
+// GROUP I — Unsupported nested elements (customer repro)
 // AnimatedPath isn't a recognized SVG tag, so it's now spliced out of the tree
 // instead of breaking generation for the whole parent <Svg> (see RNSvgHandler).
 // ─────────────────────────────────────────────────────────────
