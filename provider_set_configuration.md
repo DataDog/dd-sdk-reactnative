@@ -239,7 +239,29 @@ with in-flight fetches and already-loaded config.
 | [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
-| [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Tests (parse/round-trip, decode, context match/mismatch, events) |
+| [FFL-2691](https://datadoghq.atlassian.net/browse/FFL-2691) | Integration / e2e tests (RUM FIT) — offline-loaded flag → RUM parity; unit tests ship inside each PR above |
+
+## Delivery plan (PRs)
+
+To keep each changeset easy to review, the seven sub-tasks ship as **four stacked PRs**, each
+self-contained with its own unit tests (no trailing test-only PR). RUM FIT integration/e2e
+coverage (FFL-2691) lands after the feature is complete.
+
+```
+PR1 ─▶ PR2 ─▶ PR3 ─▶ PR4        (each branch based on the previous)
+```
+
+| PR | Sub-tasks | Scope |
+| :- | :-------- | :---- |
+| PR1 | FFL-2686 + FFL-2687 | Pure JS: wire parse + precomputed → `FlagCacheEntry`, with fixtures. Kept internal (un-exported) until PR4. |
+| PR2 | FFL-2688 | `FlagsClient.setConfiguration` + context matching; mismatch → `PROVIDER_ERROR` / `INVALID_CONTEXT`. |
+| PR3 | FFL-2718 | `fetchPolicy` `ALWAYS`/`NEVER`. Code-independent of PR1/PR2 — can be authored in parallel and rebased into the stack. |
+| PR4 | FFL-2689 + FFL-2690 | OpenFeature provider `setConfiguration` + events, public exports, docs, example. |
+| after | FFL-2691 | RUM FIT integration/e2e: an offline-loaded flag evaluation reports to RUM with parity to the fetch path. |
+
+Ordering rationale: leaf-first (pure, tested transforms), then client behavior, then fetch
+control, then the public surface — one reviewable idea per PR, tests co-located. Jira encodes
+this order with `Blocks` links: 2686 → 2687 → 2688 → 2718 → 2689 → 2690 → 2691.
 
 ## Open items (non-blocking)
 
