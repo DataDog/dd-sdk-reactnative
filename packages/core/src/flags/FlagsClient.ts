@@ -111,6 +111,30 @@ export class FlagsClient {
     };
 
     /**
+     * Set the evaluation context **without** fetching a configuration from the network,
+     * then reconcile any configuration loaded via {@link setConfiguration} against it.
+     *
+     * This is the offline counterpart to {@link setEvaluationContext}: it records the
+     * active context and re-evaluates the loaded configuration (context matching, for a
+     * precomputed configuration) with no native request. It is intended for offline
+     * providers that own their configuration via `setConfiguration` and must not fetch on
+     * a context change. With no configuration loaded yet, the context is simply recorded.
+     *
+     * @param context The evaluation context to associate with the current client.
+     */
+    setEvaluationContextWithoutFetching = (
+        context: EvaluationContext
+    ): void => {
+        this.evaluationContext = processEvaluationContext(context);
+
+        // Re-evaluate a loaded offline configuration against the new context. Readiness
+        // when no configuration is loaded yet is the provider's concern.
+        if (this.loadedConfiguration) {
+            this.applyConfiguration();
+        }
+    };
+
+    /**
      * Load a configuration (parsed from a `ConfigurationWire` string via
      * `configurationFromString`) into the client for offline evaluation.
      *

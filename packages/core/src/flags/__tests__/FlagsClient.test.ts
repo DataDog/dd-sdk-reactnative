@@ -483,4 +483,78 @@ describe('FlagsClient', () => {
             ).toBe(true);
         });
     });
+
+    describe('setEvaluationContextWithoutFetching', () => {
+        const offlineFlags = {
+            'offline-bool': {
+                variationType: 'boolean',
+                variationValue: true,
+                variationKey: 'true',
+                allocationKey: 'alloc-1',
+                reason: 'STATIC',
+                doLog: false,
+                extraLogging: {}
+            }
+        };
+
+        const buildConfig = (context: Record<string, unknown>) =>
+            configurationFromString(
+                JSON.stringify({
+                    version: 1,
+                    precomputed: {
+                        response: JSON.stringify({
+                            data: {
+                                attributes: {
+                                    obfuscated: false,
+                                    flags: offlineFlags
+                                }
+                            }
+                        }),
+                        context
+                    }
+                })
+            );
+
+        it('reconciles a loaded config against the context without fetching', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig({ targetingKey: 'user-1', country: 'US' })
+            );
+
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('re-validates on a context change (mismatch -> INVALID_CONTEXT), still no fetch', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig({ targetingKey: 'user-1', country: 'US' })
+            );
+
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: { country: 'US' }
+            });
+
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'INVALID_CONTEXT'
+            });
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+    });
 });
