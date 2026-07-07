@@ -301,6 +301,69 @@ Ordering rationale: leaf-first (pure, tested transforms), then client behavior, 
 control, then the public surface — one reviewable idea per PR, tests co-located. Jira encodes
 this order with `Blocks` links: 2686 → 2687 → 2688 → 2718 → 2689 → 2690 → 2691.
 
+## Executing a step (meta-plan for future agents)
+
+Each PR in the [Delivery plan](#delivery-plan-prs) is a "step." A future agent may start a step
+with **no prior context**. To execute a step (one of FFL-2686 / 2687 / 2688 / 2718 / 2689 / 2690 /
+2691), follow this procedure.
+
+**1. Orient — read, in this order:**
+- This file (`provider_set_configuration.md`) end to end — it is the source of truth for scope,
+  design decisions, wire/format shapes, the config-kind vs `fetchPolicy` split, and the
+  [acceptance criteria](#review-driven-acceptance-criteria-must-fix-at-implementation).
+- `Offline-Initialization-for-Feature-Flagging.md` (read fully — small) and
+  `Portable-Flag-Configuration-RFC.md` (repo root) for intent. ⚠️ The Portable RFC is ~200 KB
+  with an embedded base64 image — **do not read it whole; grep it for specific terms.**
+- The step's Jira ticket(s) via the Atlassian MCP (`getJiraIssue`, cloudId
+  `datadoghq.atlassian.net`); parent is FFL-2666. **Read the "Acceptance checklist" in the ticket
+  description — every item is a requirement for the step.** The same items are mirrored in
+  [Review-driven acceptance criteria](#review-driven-acceptance-criteria-must-fix-at-implementation)
+  below in case the MCP is unavailable (if it is, ask the user to authenticate).
+
+**2. Ground in the code & formats — only what the step touches:**
+- Current flags code: `packages/core/src/flags/{FlagsClient.ts,DdFlags.ts,types.ts,internal.ts}`,
+  `packages/core/src/specs/NativeDdFlags.ts`, `packages/react-native-openfeature/src/provider.ts`.
+- Reference to **port from** (do NOT add it as a dependency):
+  `~/dd/openfeature-js-client/packages/core/src/configuration/{wire.ts,configuration.ts}`; for
+  provider behavior, `~/dd/openfeature-js-client/packages/{browser,node-server}/src/…provider*.ts`.
+- Sample precomputed CDN payload for fixtures: `example.json` (repo root, untracked).
+- Native tracking path (for parity — **not** to change): iOS
+  `example-new-architecture/ios/Pods/DatadogFlags/DatadogFlags/Sources/…`; Android in the
+  `dd-sdk-android-flags` `.aar` in the gradle cache.
+- Format specs (Confluence, via Atlassian MCP `getConfluencePage`): ConfigurationWire
+  `5141725646`, PrecomputedConfiguration `5141791092`, RUM FIT `6896386323`.
+
+**3. Produce a short implementation plan _before_ writing code.** It must be explicit:
+- **Files** to add/change (exact paths).
+- **Function / type signatures** with parameter and **return types**, e.g.
+  `configurationFromString(wire: string): ParsedFlagsConfiguration`.
+- **Behavior** for each acceptance-checklist item, and how each is tested (test file paths + cases).
+- Anything touching **native** — expected to be **none** (see
+  [Native tracking path](#native-tracking-path-and-setevaluationcontext)); if a step seems to
+  need a native change, stop and flag it to the user.
+
+**4. Guardrails:**
+- **JS-only, no Swift/Kotlin changes.** Evaluation and per-flag tracking already run off
+  JS-supplied data.
+- Use the agreed names: `ParsedFlagsConfiguration` (never reuse `FlagsConfiguration`, the
+  `enable()` options type); config-kind chosen by which wire branch is populated; `fetchPolicy`
+  is network-only, passed inside an options object; mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT`.
+- Keep new parse/decode helpers **internal (un-exported)** until the exports step (FFL-2690).
+- Ship unit tests **in the same PR** (no trailing test-only PR).
+- Delivery is **stacked PRs**: base each step on the previous step's branch (base of the stack is
+  `develop`), in the order the Jira `Blocks` links encode.
+- Writing style for plans/PRs: state facts and assumptions plainly; don't overstate certainty
+  about things that are still assumptions.
+
+**5. Reusable prompt** — instantiate `{TICKET}` and `{STEP}`:
+
+> Read `Offline-Initialization-for-Feature-Flagging.md` and `Portable-Flag-Configuration-RFC.md`
+> (grep the Portable RFC — do not read it whole). Read `provider_set_configuration.md` and the
+> Jira ticket `{TICKET}` (Atlassian MCP, cloudId `datadoghq.atlassian.net`); note its acceptance
+> checklist. Then produce a short plan to achieve `{STEP}` of `provider_set_configuration.md`,
+> with **explicit changes** — filenames, function signatures, return types, and the test cases
+> covering each acceptance item — before writing any code.
+
 ## Review-driven acceptance criteria (must-fix at implementation)
 
 From a two-agent plan review. These are silent-failure risks; mirrored as acceptance checklists
