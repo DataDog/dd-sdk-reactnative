@@ -153,12 +153,30 @@ Key facts that de-risk the JS approach:
   fields present directly. The one transform is the typed `variationValue` → RN's typed
   `value` plus a stringified `variationValue`.
 
+## Configuration kind (evaluation mode)
+
+Keep two axes separate so the future rules mode is additive, not a reshape:
+
+- **Configuration kind / evaluation mode** — *how* a loaded config is evaluated, chosen by which
+  wire branch is populated (the way the reference providers do it): `precomputed` → look up an
+  assignment that **must match** the active context; `server` (future rules/UFC) → evaluate the
+  active context **locally** and serve *any* context. Only `precomputed` is implemented now.
+- **`fetchPolicy`** — *whether* the SDK may hit the network on `setEvaluationContext`
+  ([Fetch policy](#fetch-policy)). Network posture only; it does not select the evaluation mode.
+
+The context match/mismatch rules below apply to the **precomputed** kind; a rules config is
+context-agnostic (below).
+
 ## Context matching (order-independent)
 
 Customers may call `setConfiguration` and `setEvaluationContext` in either order. The
 `FlagsClient` holds the **loaded configuration** (carrying its embedded `context`) and the
-**active evaluation context** independently. The servable `flagsCache` is only populated
-when the two **match**; the match is re-validated on **both** calls.
+**active evaluation context** independently.
+
+**For a precomputed configuration** the servable `flagsCache` is only populated when the two
+**match**; the match is re-validated on **both** calls. (A future rules/`server` configuration
+is context-agnostic — it evaluates any active context locally and is never rejected for a
+context mismatch; the match check is gated on config kind = precomputed.)
 
 On mismatch the provider does not serve the precomputed values: it emits a `PROVIDER_ERROR`
 event and enters the error provider state, and flag evaluations return the default with an
@@ -172,7 +190,8 @@ change.
 
 This is a port of the reference `configMatchesContext` (deep-equality on `targetingKey` +
 attributes), including its nuance: **a config with no embedded `context` is context-agnostic
-and matches any evaluation context; a stored context must match exactly.**
+and matches any evaluation context; a stored context must match exactly.** The RN port must
+also treat a **rules-kind** config (not just a missing `context`) as context-agnostic.
 
 ## Native tracking path and `setEvaluationContext`
 
@@ -234,13 +253,16 @@ Only `ALWAYS` (default) and `NEVER` are built now. `ON_MISMATCH` is declared for
 and implemented later. A mutable runtime setter is intentionally left out of v1 to avoid races
 with in-flight fetches and already-loaded config.
 
+`fetchPolicy` is purely the **network axis**; *how* a config is evaluated is set by its
+[configuration kind](#configuration-kind-evaluation-mode), not by `fetchPolicy`.
+
 ## Work breakdown
 
 | Subtask | Summary |
 | :------ | :------ |
 | [FFL-2686](https://datadoghq.atlassian.net/browse/FFL-2686) | `configurationFromString` + `ParsedFlagsConfiguration` type (distinct from the existing `enable()` `FlagsConfiguration`; parse wire v1; lenient — empty config on invalid/unknown version; extensible for `server`/rules) |
 | [FFL-2687](https://datadoghq.atlassian.net/browse/FFL-2687) | Decode precomputed `flags` (assumed `PrecomputedFlag` shape) → `FlagCacheEntry` map — ~1:1, plain JSON |
-| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
+| [FFL-2688](https://datadoghq.atlassian.net/browse/FFL-2688) | `FlagsClient.setConfiguration` + order-independent context matching (port `configMatchesContext`, gated on config kind = precomputed); mismatch → `PROVIDER_ERROR` + `INVALID_CONTEXT` |
 | [FFL-2718](https://datadoghq.atlassian.net/browse/FFL-2718) | `fetchPolicy` enum + wiring: `enable()` default + `getClient()` override; implement `ALWAYS` (default) and `NEVER` (under `NEVER`, `setEvaluationContext` skips the native fetch / cache overwrite). `ON_MISMATCH` declared, implemented later |
 | [FFL-2689](https://datadoghq.atlassian.net/browse/FFL-2689) | OpenFeature provider `setConfiguration` + lifecycle events |
 | [FFL-2690](https://datadoghq.atlassian.net/browse/FFL-2690) | Public exports, types & docs (core + openfeature + example) |
