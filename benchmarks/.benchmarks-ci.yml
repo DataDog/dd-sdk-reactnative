@@ -73,6 +73,14 @@ build-and-upload:app:
     - echo "Installing DDSDK dependencies"
     - yarn install
 
+    # `yarn install` does not run each workspace's `prepare` script (Yarn Berry only
+    # runs install/postinstall automatically), so packages that rely solely on
+    # `prepare` to produce their `lib/` output - like the babel plugin - are never
+    # built by the install step above. Build it explicitly so benchmarks' babel
+    # config (which loads @datadog/mobile-react-native-babel-plugin) can resolve it.
+    - echo "Building the babel plugin"
+    - (cd packages/react-native-babel-plugin && yarn prepare)
+
     # Prepare Logs Directory
     - cd $(pwd)/benchmarks
     - mkdir -p logs
