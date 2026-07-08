@@ -6,7 +6,7 @@ Header capture is **disabled by default** and requires `trackResources: true`.
 
 ## Configuration
 
-Set `headerCaptureRules` in your RUM configuration:
+Set `trackResourceHeaders: true` in your RUM configuration:
 
 ```typescript
 import { DatadogProvider } from '@datadog/mobile-react-native';
@@ -14,17 +14,30 @@ import { DatadogProvider } from '@datadog/mobile-react-native';
 DatadogProvider.initialize({
   // ...
   trackResources: true,
+  trackResourceHeaders: true,
+});
+```
+
+By default this captures the predefined set of caching and content headers (`'defaults'`). To customize which headers get captured, set `headerCaptureRules`:
+
+```typescript
+DatadogProvider.initialize({
+  // ...
+  trackResources: true,
+  trackResourceHeaders: true,
   headerCaptureRules: 'defaults',
 });
 ```
+
+`headerCaptureRules` only takes effect when `trackResourceHeaders` is `true`.
 
 ### Modes
 
 | Value | What gets captured |
 |---|---|
-| Omitted (default) | Nothing |
-| `'defaults'` | A predefined set of caching and content headers across all URLs |
-| `HeaderCaptureRule[]` | Custom rules — see below |
+| `trackResourceHeaders: false` (default) | Nothing |
+| `trackResourceHeaders: true` + `headerCaptureRules: 'defaults'` (default) | A predefined set of caching and content headers across all URLs |
+| `trackResourceHeaders: true` + `headerCaptureRules: HeaderCaptureRule[]` | Custom rules — see below |
 
 ### Default headers
 
