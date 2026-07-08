@@ -70,13 +70,37 @@ export const decodePrecomputedFlags = (
 
 const toFlagCacheEntry = (
     key: string,
-    flag: PrecomputedFlag
+    flag: unknown
 ): FlagCacheEntry | null => {
-    const { variationType, variationValue } = flag;
-
-    if (!SUPPORTED_VARIATION_TYPES.has(variationType)) {
+    // A malformed payload can carry a non-object flag (e.g. `flags: { "k": null }`).
+    // Skip the bad entry with a warning instead of throwing and aborting decoding of
+    // the whole configuration.
+    if (typeof flag !== 'object' || flag === null) {
         InternalLog.log(
-            `Flag "${key}" has unsupported variation type "${variationType}". Omitting it from the configuration.`,
+            `Flag "${key}" is not an object. Omitting it from the configuration.`,
+            SdkVerbosity.WARN
+        );
+        return null;
+    }
+
+    const {
+        variationType,
+        variationValue,
+        variationKey,
+        allocationKey,
+        reason,
+        doLog,
+        extraLogging
+    } = flag as Partial<PrecomputedFlag>;
+
+    if (
+        typeof variationType !== 'string' ||
+        !SUPPORTED_VARIATION_TYPES.has(variationType)
+    ) {
+        InternalLog.log(
+            `Flag "${key}" has an unsupported variation type "${String(
+                variationType
+            )}". Omitting it from the configuration.`,
             SdkVerbosity.WARN
         );
         return null;
@@ -90,19 +114,36 @@ const toFlagCacheEntry = (
         return null;
     }
 
+    // The remaining fields feed evaluation and native exposure tracking. A corrupt
+    // payload could carry wrong types here, so validate before forwarding them.
+    if (
+        typeof allocationKey !== 'string' ||
+        typeof variationKey !== 'string' ||
+        typeof reason !== 'string' ||
+        typeof doLog !== 'boolean' ||
+        (extraLogging !== undefined &&
+            (typeof extraLogging !== 'object' || extraLogging === null))
+    ) {
+        InternalLog.log(
+            `Flag "${key}" has malformed metadata. Omitting it from the configuration.`,
+            SdkVerbosity.WARN
+        );
+        return null;
+    }
+
     // `serialId` is intentionally not propagated: `FlagCacheEntry` has no slot for it
     // and the native CDN-fetched snapshot omits it too, so dropping it keeps
     // offline/online parity.
     return {
         key,
         value: variationValue,
-        allocationKey: flag.allocationKey,
-        variationKey: flag.variationKey,
+        allocationKey,
+        variationKey,
         variationType,
         variationValue: stringifyValue(variationValue),
-        reason: flag.reason,
-        doLog: flag.doLog,
-        extraLogging: flag.extraLogging ?? {}
+        reason,
+        doLog,
+        extraLogging: extraLogging ?? {}
     };
 };
 

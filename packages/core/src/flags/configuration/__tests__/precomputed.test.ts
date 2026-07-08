@@ -168,6 +168,32 @@ describe('decodePrecomputedFlags', () => {
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
+    it('omits a non-object flag entry and keeps the valid ones', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                good: flag({}),
+                bad: (null as unknown) as PrecomputedFlag
+            })
+        );
+
+        expect(cache.good).toBeDefined();
+        expect(cache.bad).toBeUndefined();
+        expect(InternalLog.log).toHaveBeenCalled();
+    });
+
+    it('omits a flag with malformed metadata field types', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                badReason: flag({ reason: (42 as unknown) as string }),
+                badDoLog: flag({ doLog: ('yes' as unknown) as boolean })
+            })
+        );
+
+        expect(cache.badReason).toBeUndefined();
+        expect(cache.badDoLog).toBeUndefined();
+        expect(InternalLog.log).toHaveBeenCalled();
+    });
+
     it('throws UnsupportedConfigurationError for an obfuscated response', () => {
         expect(() =>
             decodePrecomputedFlags(responseWith({ f: flag({}) }, true))

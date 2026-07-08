@@ -4,8 +4,20 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../InternalLog';
 import type { ParsedFlagsConfiguration } from '../types';
 import { configurationFromString, configurationToString } from '../wire';
+
+jest.mock('../../../InternalLog', () => {
+    return {
+        InternalLog: { log: jest.fn() },
+        DATADOG_MESSAGE_PREFIX: 'DATADOG:'
+    };
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
 const buildResponse = () => ({
     data: {
@@ -86,8 +98,9 @@ describe('configurationFromString', () => {
         expect(configurationFromString(wire)).toEqual({});
     });
 
-    it('returns an empty config for invalid JSON', () => {
+    it('returns an empty config and logs a warning for invalid JSON', () => {
         expect(configurationFromString('not json')).toEqual({});
+        expect(InternalLog.log).toHaveBeenCalled();
     });
 
     it('returns an empty config when the inner response is invalid JSON', () => {

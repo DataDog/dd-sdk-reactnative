@@ -4,6 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
+
 import type {
     ConfigurationWire,
     ParsedFlagsConfiguration,
@@ -48,7 +51,13 @@ export const configurationFromString = (
         }
 
         return configuration;
-    } catch {
+    } catch (error) {
+        InternalLog.log(
+            `Failed to parse the ConfigurationWire string: ${
+                error instanceof Error ? error.message : String(error)
+            }`,
+            SdkVerbosity.WARN
+        );
         return {};
     }
 };
