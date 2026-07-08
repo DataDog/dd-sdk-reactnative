@@ -88,12 +88,10 @@ export interface ParsedPrecomputedConfiguration {
  * string via {@link configurationFromString}.
  *
  * Named distinctly from the `enable()` options type (`FlagsConfiguration`) to avoid a
- * collision. Modelled with an optional `precomputed` branch and reserved space for a
- * future `server` (rules/UFC) branch so the type is additive.
+ * collision.
  */
 export interface ParsedFlagsConfiguration {
     precomputed?: ParsedPrecomputedConfiguration;
-    // server?: ParsedServerConfiguration; // future rules/UFC branch — not implemented
 }
 
 /**
@@ -106,10 +104,6 @@ export interface ConfigurationWire {
     precomputed?: {
         response: string;
         context?: WireEvaluationContext;
-        fetchedAt?: number;
-    };
-    server?: {
-        response: string;
         fetchedAt?: number;
     };
 }

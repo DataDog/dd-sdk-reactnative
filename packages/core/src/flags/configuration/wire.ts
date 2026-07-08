@@ -47,9 +47,6 @@ export const configurationFromString = (
             };
         }
 
-        // The `server` (rules/UFC) branch is intentionally not parsed here — it is
-        // reserved for future work. Leaving it unhandled keeps this MVP precomputed-only.
-
         return configuration;
     } catch {
         return {};

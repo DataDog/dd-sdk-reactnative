@@ -104,16 +104,6 @@ describe('configurationFromString', () => {
 
         expect(configurationFromString(wire)).toEqual({});
     });
-
-    it('does not populate a precomputed branch from a server-only wire (MVP)', () => {
-        const wire = JSON.stringify({
-            version: 1,
-            server: { response: '{}' }
-        });
-
-        const config = configurationFromString(wire);
-        expect(config.precomputed).toBeUndefined();
-    });
 });
 
 describe('configurationToString round-trip', () => {
