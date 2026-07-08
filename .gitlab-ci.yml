@@ -45,7 +45,8 @@ stages:
 # TESTS
 
 test:lint:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -55,7 +56,8 @@ test:lint:
         - yarn run lint
 
 test:js:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -66,7 +68,8 @@ test:js:
         - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test
 
 test:build:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -76,7 +79,8 @@ test:build:
         - yarn prepare
 
 test:native-android:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -94,7 +98,8 @@ test:native-android:
         - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -105,7 +110,8 @@ test:native-ios:
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -116,7 +122,8 @@ test:native-ios-sr:
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-newarch:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
