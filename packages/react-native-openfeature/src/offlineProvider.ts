@@ -14,7 +14,7 @@ import type {
     ProviderMetadata
 } from '@openfeature/web-sdk';
 
-import { DatadogOpenFeatureProvider, toDdContext } from './provider';
+import { DatadogCoreOpenFeatureProvider, toDdContext } from './coreProvider';
 
 /**
  * An offline Datadog OpenFeature provider.
@@ -42,7 +42,7 @@ import { DatadogOpenFeatureProvider, toDdContext } from './provider';
  * const enabled = client.getBooleanValue('new-feature', false);
  * ```
  */
-export class DatadogOfflineOpenFeatureProvider extends DatadogOpenFeatureProvider {
+export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
     readonly metadata: ProviderMetadata = {
         name: 'datadog-react-native-offline'
     };
