@@ -2722,6 +2722,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@datadog/flagging-core@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@datadog/flagging-core@npm:1.2.1"
+  dependencies:
+    spark-md5: ^3.0.2
+  checksum: 714e92b0fc43d9d14b79d9d235da0c97522332f3ba384ca8155b5c35817967286d012096282ee6975bf43d550358e750131ab0c3b00977dca2ffb0d5d9c3cd38
+  languageName: node
+  linkType: hard
+
 "@datadog/libdatadog@npm:^0.6.0":
   version: 0.6.0
   resolution: "@datadog/libdatadog@npm:0.6.0"
@@ -2863,6 +2872,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
+    "@datadog/flagging-core": ^1.2.1
+    "@openfeature/core": ^1.9.2
     "@testing-library/react-native": 7.0.2
     big-integer: ^1.6.52
     react-native-builder-bob: 0.26.0
@@ -18123,6 +18134,13 @@ __metadata:
   version: 0.7.4
   resolution: "source-map@npm:0.7.4"
   checksum: 01cc5a74b1f0e1d626a58d36ad6898ea820567e87f18dfc9d24a9843a351aaa2ec09b87422589906d6ff1deed29693e176194dc88bcae7c9a852dc74b311dbf5
+  languageName: node
+  linkType: hard
+
+"spark-md5@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "spark-md5@npm:3.0.2"
+  checksum: 5feebff0bfabcecf56ba03af3e38fdb068272ed41fbf0a94ff9ef65b9bb9cb1dd69be3684db6542e62497b1eac3ae324c07ac4dcb606465dc36ca048177077bf
   languageName: node
   linkType: hard
 

@@ -43,9 +43,11 @@ export const decodePrecomputedFlags = (
 ): Record<string, FlagCacheEntry> => {
     const attributes = response?.data?.attributes;
 
-    if (attributes?.obfuscated) {
-        // Obfuscated payloads would need key de-hashing / value decoding that this SDK
-        // does not implement. Fail predictably instead of mis-mapping hashed keys.
+    // `obfuscated` is not part of flagging-core's response type, but the CDN payload
+    // carries it. Read it defensively so obfuscated payloads are still rejected:
+    // de-hashing keys / decoding values is not implemented here, so fail predictably
+    // instead of mis-mapping hashed keys.
+    if ((attributes as { obfuscated?: boolean } | undefined)?.obfuscated) {
         throw new UnsupportedConfigurationError(
             'Obfuscated precomputed configurations are not supported.'
         );

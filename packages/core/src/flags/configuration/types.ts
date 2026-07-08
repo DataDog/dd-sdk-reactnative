@@ -4,12 +4,18 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type {
+    FlagsConfiguration,
+    PrecomputedConfiguration,
+    PrecomputedConfigurationResponse as FlaggingCorePrecomputedConfigurationResponse,
+    PrecomputedFlag as FlaggingCorePrecomputedFlag
+} from '@datadog/flagging-core';
+
 /**
- * The flag `variationType`s emitted by the precomputed CDN response.
- *
- * `integer` and `float` are distinct on the wire but both map to a JavaScript
- * `number` when decoded (JS has no int/float distinction). The original string is
- * preserved on the {@link FlagCacheEntry} so native exposure tracking round-trips.
+ * The flag `variationType`s the decoder accepts. `@datadog/flagging-core` models the
+ * type as OpenFeature's `boolean | string | number | object`, and the CDN confirms only
+ * those are emitted. `integer`/`float` are kept here defensively — the decoder validates
+ * untrusted payloads and treats both as JavaScript `number`s.
  */
 export const SUPPORTED_VARIATION_TYPES: ReadonlySet<string> = new Set([
     'boolean',
@@ -32,72 +38,18 @@ export type WireEvaluationContext = {
     targetingKey?: string;
 } & Record<string, unknown>;
 
-/**
- * A single precomputed flag assignment as it appears inside the CDN response.
- *
- * `variationValue` is the already-typed value (e.g. the boolean `false`, the number
- * `1.5`, or a JSON object), not a string.
- */
-export interface PrecomputedFlag {
-    variationType: string;
-    variationValue: unknown;
-    variationKey: string;
-    allocationKey: string;
-    reason: string;
-    doLog: boolean;
-    extraLogging?: Record<string, unknown>;
-    serialId?: number | null;
-}
+// The wire/precomputed types are re-exported from `@datadog/flagging-core` so this SDK
+// shares the canonical shapes instead of maintaining its own copies. Local names are
+// kept so the rest of the SDK is insulated from the upstream naming.
+export type PrecomputedFlag = FlaggingCorePrecomputedFlag;
+export type PrecomputedConfigurationResponse = FlaggingCorePrecomputedConfigurationResponse;
+export type ParsedPrecomputedConfiguration = PrecomputedConfiguration;
+export type ParsedFlagsConfiguration = FlagsConfiguration;
 
 /**
- * The precomputed assignments payload returned by the CDN (the JSON that is encoded
- * as the `precomputed.response` string on the wire).
- */
-export interface PrecomputedConfigurationResponse {
-    data: {
-        id?: string;
-        type?: string;
-        attributes: {
-            // Only `flags` is load-bearing (and `obfuscated`, which gates support). The
-            // remaining fields are metadata the decoder ignores; typed loosely/optional
-            // on purpose so payload variation across environments doesn't matter.
-            obfuscated?: boolean;
-            createdAt?: string;
-            format?: string;
-            environment?: { name?: string };
-            flags: Record<string, PrecomputedFlag>;
-        };
-    };
-}
-
-/**
- * In-memory precomputed configuration: the parsed CDN response plus the metadata
- * that travelled alongside it on the wire.
- */
-export interface ParsedPrecomputedConfiguration {
-    /** The parsed CDN response (decoded from the wire's `response` string). */
-    response: PrecomputedConfigurationResponse;
-    /** The evaluation context the assignments were computed for, if any. */
-    context?: WireEvaluationContext;
-    /** Milliseconds since the Unix epoch when the configuration was fetched. */
-    fetchedAt?: number;
-}
-
-/**
- * The in-memory configuration the SDK operates on, parsed from a `ConfigurationWire`
- * string via {@link configurationFromString}.
- *
- * Named distinctly from the `enable()` options type (`FlagsConfiguration`) to avoid a
- * collision.
- */
-export interface ParsedFlagsConfiguration {
-    precomputed?: ParsedPrecomputedConfiguration;
-}
-
-/**
- * The serialized `ConfigurationWire` envelope (version 1). Internal to this module;
- * the only public entry/exit points are {@link configurationFromString} /
- * {@link configurationToString}.
+ * The serialized `ConfigurationWire` envelope (version 1). `@datadog/flagging-core`
+ * keeps its own wire envelope internal, so this mirrors the shape for our local
+ * {@link configurationToString} (see wire.ts).
  */
 export interface ConfigurationWire {
     version: 1;
