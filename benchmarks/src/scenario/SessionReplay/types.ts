@@ -24,4 +24,5 @@ export enum UIElement {
     WebView = "WebView",
     SectionList = "SectionList",
     Modal = "Modal",
+    Svg = "Svg",
 }
