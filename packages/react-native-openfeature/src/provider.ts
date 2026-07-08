@@ -9,7 +9,8 @@ import type {
     ProviderMetadata
 } from '@openfeature/web-sdk';
 
-import { DatadogCoreOpenFeatureProvider, toDdContext } from './coreProvider';
+import { DatadogCoreOpenFeatureProvider } from './coreProvider';
+import { toDdContext } from './mappers';
 
 export type { DatadogOpenFeatureProviderOptions } from './coreProvider';
 

@@ -5,11 +5,7 @@
  */
 
 import { DdFlags } from '@datadog/mobile-react-native';
-import type {
-    FlagDetails,
-    FlagsClient,
-    EvaluationContext as DdEvaluationContext
-} from '@datadog/mobile-react-native';
+import type { FlagDetails, FlagsClient } from '@datadog/mobile-react-native';
 import { OpenFeatureEventEmitter, ErrorCode } from '@openfeature/web-sdk';
 import type {
     EvaluationContext as OFEvaluationContext,
@@ -19,7 +15,6 @@ import type {
     Provider,
     ProviderMetadata,
     ResolutionDetails,
-    PrimitiveValue,
     ProviderEventEmitter,
     ProviderEvents
 } from '@openfeature/web-sdk';
@@ -120,23 +115,6 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
         return toFlagResolution(details);
     }
 }
-
-export const toDdContext = (
-    context: OFEvaluationContext
-): DdEvaluationContext => {
-    const { targetingKey, ...attributes } = context;
-
-    // Important ⚠️
-    // The Flags SDK doesn't support nested non-primitive values in the evaluation context as per OF.3 FFE SDK requirement.
-    // However, we let the SDK handle this inside of FlagsClient since it does this processing anyways.
-    const ddContextAttributes = attributes as Record<string, PrimitiveValue>;
-
-    return {
-        // Allow flag evaluations without a provided targeting key.
-        targetingKey: targetingKey ?? '',
-        attributes: ddContextAttributes
-    };
-};
 
 const toFlagResolution = <T>(details: FlagDetails<T>): ResolutionDetails<T> => {
     const {

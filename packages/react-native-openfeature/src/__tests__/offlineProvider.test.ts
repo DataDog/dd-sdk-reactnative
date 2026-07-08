@@ -42,18 +42,32 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         );
     });
 
-    it('never fetches on initialize (uses the no-fetch context setter)', async () => {
+    it('does not stamp an empty context on initialize', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+
+        await provider.initialize({});
+
+        // An empty OpenFeature context must not override the configuration's embedded context.
+        expect(
+            mockFlagsClient.setEvaluationContextWithoutFetching
+        ).not.toHaveBeenCalled();
+        expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('records a non-empty context without fetching', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
         await provider.initialize({ targetingKey: 'user-1' });
 
         expect(
             mockFlagsClient.setEvaluationContextWithoutFetching
-        ).toHaveBeenCalled();
+        ).toHaveBeenCalledWith(
+            expect.objectContaining({ targetingKey: 'user-1' })
+        );
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
     });
 
-    it('never fetches on a context change', async () => {
+    it('reconciles a non-empty context change without fetching', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
         await provider.onContextChange({}, { targetingKey: 'user-2' });
@@ -66,32 +80,34 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
     });
 
-    it('delegates setConfiguration to the client and emits READY then CONFIGURATION_CHANGED', () => {
+    it('delegates setConfiguration to the client and emits CONFIGURATION_CHANGED', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
         provider.setConfiguration({} as never);
-        provider.setConfiguration({} as never);
 
-        expect(mockFlagsClient.setConfiguration).toHaveBeenCalledTimes(2);
-        expect(emitSpy).toHaveBeenNthCalledWith(1, ProviderEvents.Ready);
-        expect(emitSpy).toHaveBeenNthCalledWith(
-            2,
+        expect(mockFlagsClient.setConfiguration).toHaveBeenCalled();
+        // The provider is already READY from initialize; a loaded config is a config change.
+        expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.ConfigurationChanged
         );
+        expect(emitSpy).not.toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
-    it('emits PROVIDER_ERROR on a mismatched configuration', () => {
-        mockFlagsClient.setConfiguration.mockReturnValueOnce('mismatch');
+    it('emits PROVIDER_ERROR on a mismatched configuration, then READY on recovery', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
+        mockFlagsClient.setConfiguration.mockReturnValueOnce('mismatch');
         provider.setConfiguration({} as never);
-
         expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.Error,
             expect.objectContaining({ message: expect.any(String) })
         );
+
+        // A subsequent matching config recovers — emit READY to clear the error status.
+        provider.setConfiguration({} as never);
+        expect(emitSpy).toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
     it('resolves boolean evaluation through the client', () => {

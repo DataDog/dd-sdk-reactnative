@@ -31,7 +31,7 @@ import {
     VitalsUpdateFrequency
 } from './config/types';
 import { DdFlags } from './flags/DdFlags';
-import type { ConfigurationStatus, FlagsClient } from './flags/FlagsClient';
+import type { FlagsClient } from './flags/FlagsClient';
 import {
     configurationFromString,
     configurationToString
@@ -126,7 +126,6 @@ export type {
     FlagsConfiguration,
     FlagsClient,
     ParsedFlagsConfiguration,
-    ConfigurationStatus,
     EvaluationContext,
     PrimitiveValue,
     FlagDetails

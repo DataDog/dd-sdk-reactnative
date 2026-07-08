@@ -131,10 +131,12 @@ import { OpenFeature } from '@openfeature/react-sdk';
 await DdFlags.enable();
 
 const provider = new DatadogOfflineOpenFeatureProvider();
-await OpenFeature.setProviderAndWait(provider);
 
 // `wire` is a ConfigurationWire string you fetched yourself.
 provider.setConfiguration(configurationFromString(wire));
+
+// Set the provider after loading the configuration so it is ready with real flag values.
+await OpenFeature.setProviderAndWait(provider);
 
 // Evaluate flags — no network request is made.
 const client = OpenFeature.getClient();

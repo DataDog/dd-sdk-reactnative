@@ -5,7 +5,7 @@
  */
 
 import type {
-    ConfigurationStatus,
+    FlagsClient,
     ParsedFlagsConfiguration
 } from '@datadog/mobile-react-native';
 import { ProviderEvents } from '@openfeature/web-sdk';
@@ -14,17 +14,25 @@ import type {
     ProviderMetadata
 } from '@openfeature/web-sdk';
 
-import { DatadogCoreOpenFeatureProvider, toDdContext } from './coreProvider';
+import { DatadogCoreOpenFeatureProvider } from './coreProvider';
+import { isEmptyContext, toDdContext } from './mappers';
+
+// The outcome of a `FlagsClient` reconcile. Kept internal (not part of the package's public
+// API) — derived from the client so the provider maps it to OpenFeature events.
+type ConfigurationOutcome = ReturnType<FlagsClient['setConfiguration']>;
 
 /**
  * An offline Datadog OpenFeature provider.
  *
- * It behaves exactly like {@link DatadogOpenFeatureProvider} — same flag evaluation and
+ * It behaves like the online `DatadogOpenFeatureProvider` — same flag evaluation and
  * exposure/RUM tracking — **except it never fetches configuration from the network**.
- * Instead of fetching on `initialize`/`onContextChange`, it records the context and
- * reconciles a configuration supplied via {@link setConfiguration}. Use it for offline
- * initialization: load a `ParsedFlagsConfiguration` (from `configurationFromString`) and
- * evaluate flags with no network request.
+ * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
+ * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}. A precomputed
+ * configuration carries the evaluation context it was computed for, so you do not need to call
+ * `OpenFeature.setContext` for the offline precomputed flow.
+ *
+ * Load the configuration before setting the provider so the provider is ready with real flag
+ * values from the start:
  *
  * @example
  * ```ts
@@ -35,9 +43,9 @@ import { DatadogCoreOpenFeatureProvider, toDdContext } from './coreProvider';
  * } from '@datadog/mobile-react-native-openfeature';
  *
  * const provider = new DatadogOfflineOpenFeatureProvider();
+ * provider.setConfiguration(configurationFromString(wire)); // no network
  * await OpenFeature.setProviderAndWait(provider);
  *
- * provider.setConfiguration(configurationFromString(wire));
  * const client = OpenFeature.getClient();
  * const enabled = client.getBooleanValue('new-feature', false);
  * ```
@@ -47,24 +55,17 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         name: 'datadog-react-native-offline'
     };
 
-    private hasServedConfiguration = false;
+    private hasEmittedError = false;
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
-        // Record the context and reconcile any loaded configuration — no network fetch.
-        const status = this.flagsClient.setEvaluationContextWithoutFetching(
-            toDdContext(context)
-        );
-        this.emitConfigurationOutcome(status);
+        this.applyContext(context);
     }
 
     async onContextChange(
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): Promise<void> {
-        const status = this.flagsClient.setEvaluationContextWithoutFetching(
-            toDdContext(newContext)
-        );
-        this.emitConfigurationOutcome(status);
+        this.applyContext(newContext);
     }
 
     /**
@@ -74,21 +75,40 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
      * `configurationFromString`.
      */
     setConfiguration(configuration: ParsedFlagsConfiguration): void {
-        const status = this.flagsClient.setConfiguration(configuration);
-        this.emitConfigurationOutcome(status);
+        const outcome = this.flagsClient.setConfiguration(configuration);
+        this.emitConfigurationOutcome(outcome);
     }
 
-    private emitConfigurationOutcome(status: ConfigurationStatus): void {
-        if (status === 'ready') {
-            if (this.hasServedConfiguration) {
-                this.events.emit(ProviderEvents.ConfigurationChanged);
-            } else {
-                this.hasServedConfiguration = true;
+    private applyContext(context: OFEvaluationContext): void {
+        // Do not overwrite the configuration's embedded context with an empty context stamped
+        // by the OpenFeature lifecycle (e.g. `initialize({})` on `setProviderAndWait`). Only a
+        // context the app actually set should take effect.
+        if (isEmptyContext(context)) {
+            return;
+        }
+
+        const outcome = this.flagsClient.setEvaluationContextWithoutFetching(
+            toDdContext(context)
+        );
+        this.emitConfigurationOutcome(outcome);
+    }
+
+    private emitConfigurationOutcome(outcome: ConfigurationOutcome): void {
+        if (outcome === 'ready') {
+            if (this.hasEmittedError) {
+                // Recover from a prior error state: emit READY to clear the provider status
+                // (a bare CONFIGURATION_CHANGED would not clear it).
+                this.hasEmittedError = false;
                 this.events.emit(ProviderEvents.Ready);
+            } else {
+                // The provider is already READY from initialize; a (re)loaded configuration is
+                // signalled as a configuration change.
+                this.events.emit(ProviderEvents.ConfigurationChanged);
             }
-        } else if (status === 'mismatch' || status === 'invalid') {
+        } else if (outcome === 'mismatch' || outcome === 'invalid') {
+            this.hasEmittedError = true;
             this.events.emit(ProviderEvents.Error, {
-                message: `The Datadog offline provider cannot serve the loaded configuration (${status}).`
+                message: `The Datadog offline provider cannot serve the loaded configuration (${outcome}).`
             });
         }
         // 'none' — no configuration engaged yet; nothing to signal.
