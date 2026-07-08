@@ -12,12 +12,15 @@ import {
   DdFlags,
   PropagatorType,
 } from '@datadog/mobile-react-native';
-import {DatadogOpenFeatureProvider} from '@datadog/mobile-react-native-openfeature';
 import {
   OpenFeature,
   OpenFeatureProvider,
+  useBooleanFlagDetails,
   useObjectFlagDetails,
 } from '@openfeature/react-sdk';
+import {setFlagsProvider} from './flags/flagsProvider';
+import {OFFLINE_CONTEXT} from './flags/sampleOfflineConfiguration';
+import {FlagsSourceToggle} from './flags/FlagsSourceToggle';
 import React, {Suspense} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
@@ -75,9 +78,10 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
   // Enable Datadog Flags feature.
   await DdFlags.enable();
 
-  // Set the provider with OpenFeature.
-  const provider = new DatadogOpenFeatureProvider();
-  OpenFeature.setProvider(provider);
+  // Set the flags provider. This app defaults to the offline provider (a bundled
+  // ConfigurationWire, no network); the "Flags source" switch flips to the online provider
+  // (CDN) at runtime.
+  await setFlagsProvider('offline');
 
   // Datadog SDK usage examples.
   await DdRum.startView('main', 'Main');
@@ -94,15 +98,10 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
 function AppWithProviders() {
   React.useEffect(() => {
-    const user = {
-      id: 'user-123',
-      favoriteFruit: 'apple',
-    };
-
-    OpenFeature.setContext({
-      targetingKey: user.id,
-      favoriteFruit: user.favoriteFruit,
-    });
+    // Set the same context the bundled offline configuration was precomputed for. Context
+    // matching is exact (targetingKey AND attributes), so this MUST equal OFFLINE_CONTEXT —
+    // otherwise the offline provider reports a mismatch and flags fall back to their defaults.
+    OpenFeature.setContext(OFFLINE_CONTEXT);
   }, []);
 
   return (
@@ -123,6 +122,8 @@ function App(): React.JSX.Element {
   const greetingFlag = useObjectFlagDetails('rn-sdk-test-json-flag', {
     greeting: 'Default greeting',
   });
+  // The boolean flag carried by the bundled offline configuration.
+  const offlineFlag = useBooleanFlagDetails('rn-sdk-test-boolean-flag', false);
 
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
@@ -137,6 +138,27 @@ function App(): React.JSX.Element {
       />
       <ScrollView contentInsetAdjustmentBehavior="automatic" style={backgroundStyle}>
         <Header />
+
+        <View style={styles.sectionContainer}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              {color: isDarkMode ? Colors.white : Colors.black},
+            ]}>
+            Offline Feature Flag
+          </Text>
+          <Text style={styles.sectionDescription}>
+            {offlineFlag.value
+              ? 'Greetings from the offline Feature Flags!'
+              : 'Welcome!'}
+          </Text>
+          <Text style={styles.sectionDescription}>
+            `{offlineFlag.flagKey}` ={' '}
+            <Text style={styles.highlight}>{String(offlineFlag.value)}</Text>,
+            reason <Text style={styles.highlight}>{offlineFlag.reason}</Text>.
+          </Text>
+          <FlagsSourceToggle initialSource="offline" />
+        </View>
 
         <View style={{backgroundColor: isDarkMode ? Colors.black : Colors.white}}>
           <Section title={greetingFlag.value.greeting}>

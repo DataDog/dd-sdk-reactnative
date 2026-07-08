@@ -9,11 +9,11 @@ import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
 import { DatadogProvider, TrackingConsent, DdFlags } from '@datadog/mobile-react-native'
-import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
-import { OpenFeature, OpenFeatureProvider } from '@openfeature/react-sdk';
+import { OpenFeatureProvider } from '@openfeature/react-sdk';
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
 import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
+import { setFlagsProvider } from './flags/flagsProvider';
 
 const Tab = createBottomTabNavigator();
 
@@ -74,9 +74,10 @@ const handleDatadogInitialization = async () => {
   // Enable Datadog Flags feature.
   await DdFlags.enable();
 
-  // Set the provider with OpenFeature.
-  const provider = new DatadogOpenFeatureProvider();
-  OpenFeature.setProvider(provider);
+  // Set the flags provider. This example defaults to the offline provider (a bundled
+  // ConfigurationWire, no network); the "Flags source" switch on the Home screen flips to
+  // the online provider (CDN) at runtime.
+  await setFlagsProvider('offline');
 }
 
 export default function App() {
