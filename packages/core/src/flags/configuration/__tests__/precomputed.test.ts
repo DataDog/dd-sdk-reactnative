@@ -233,18 +233,32 @@ describe('decodePrecomputedFlags', () => {
         ).toEqual({});
     });
 
-    it('rejects an array value for an object flag', () => {
+    it('accepts any JSON value for an object flag (array, null, primitive)', () => {
+        // ffe-service enforces a top-level object at the API layer, but that is not a
+        // storage constraint, so the decoder accepts whatever JSON arrives here.
         const cache = decodePrecomputedFlags(
             responseWith({
                 arr: flag({
                     variationType: 'object',
                     variationValue: [1, 2, 3]
+                }),
+                nul: flag({
+                    variationType: 'object',
+                    variationValue: null
+                }),
+                str: flag({
+                    variationType: 'object',
+                    variationValue: 'hi'
                 })
             })
         );
 
-        expect(cache.arr).toBeUndefined();
-        expect(InternalLog.log).toHaveBeenCalled();
+        expect(cache.arr.value).toEqual([1, 2, 3]);
+        expect(cache.arr.variationValue).toBe('[1,2,3]');
+        expect(cache.nul.value).toBeNull();
+        expect(cache.nul.variationValue).toBe('null');
+        expect(cache.str.value).toBe('hi');
+        expect(cache.str.variationValue).toBe('hi');
     });
 
     it('stores a flag keyed "__proto__" as data without polluting the prototype', () => {

@@ -165,12 +165,12 @@ const valueMatchesVariationType = (
             // natively, so require a whole number.
             return Number.isInteger(value);
         case 'object':
-            // Object flags are a JSON object at the root; arrays are not valid values.
-            return (
-                typeof value === 'object' &&
-                value !== null &&
-                !Array.isArray(value)
-            );
+            // The `object` variation type carries arbitrary JSON — objects, arrays,
+            // numbers, strings, booleans, or null. ffe-service enforces a top-level
+            // object at the API layer, but that is not a storage constraint, so a
+            // payload could still carry any JSON value here. Accept it and rely on the
+            // value being defended downstream (string form + evaluation both tolerate it).
+            return true;
         default:
             return false;
     }
