@@ -554,7 +554,11 @@ export class DdSdkReactNative {
             DdRumResourceTracking.startTracking({
                 resourceTraceSampleRate,
                 firstPartyHosts,
-                resourceEventMapper
+                resourceEventMapper,
+                resourceReporters: {
+                    startResource: DdRum.startResource,
+                    stopResource: DdRum.stopResource
+                }
             });
         }
 

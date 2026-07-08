@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { PropagatorType } from '../../../../types';
 import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
+import type { PropagatorType } from '../../../../types';
 
 export interface RequestProxyOptions {
     tracingSamplingRate: number;

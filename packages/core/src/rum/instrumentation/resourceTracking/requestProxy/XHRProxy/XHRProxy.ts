@@ -7,6 +7,7 @@
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { Timer } from '../../../../../utils/Timer';
+import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 import {
     getCachedAccountId,
     getCachedSessionId,
@@ -27,16 +28,14 @@ import {
     DATADOG_GRAPH_QL_PAYLOAD_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../graphql/graphqlHeaders';
-import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
-import {
-    ResourceReporter
-} from './DatadogRumResource/ResourceReporter';
+import type { RumResourceReporters } from './DatadogRumResource/ResourceReporter';
+import { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { filterDevResource } from './DatadogRumResource/internalDevResourceBlocklist';
 import { URLHostParser } from './URLHostParser';
 import { formatBaggageHeader } from './baggageHeaderUtils';
@@ -82,11 +81,13 @@ export class XHRProxy extends RequestProxy {
     }
 
     static createWithResourceReporter(
+        resourceReporters: RumResourceReporters,
         resourceEventMapper?: ResourceEventMapper | null
     ) {
         return new XHRProxy({
             xhrType: XMLHttpRequest,
             resourceReporter: new ResourceReporter(
+                resourceReporters,
                 [filterDevResource],
                 resourceEventMapper
             )

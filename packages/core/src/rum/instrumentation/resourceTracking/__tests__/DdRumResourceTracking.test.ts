@@ -29,7 +29,7 @@ beforeEach(() => {
 afterEach(() => {
     DdRumWrapper.unregisterResourceEventMapper();
     DdRumResourceTracking.stopTracking();
-    global.XMLHttpRequest = undefined;
+    delete (global as any).XMLHttpRequest;
 });
 
 const executeRequest = (url: string = 'https://api.example.com/v2/user') => {
@@ -51,7 +51,8 @@ describe('DdRumResourceTracking', () => {
                     match: 'example.com',
                     propagatorTypes: [PropagatorType.DATADOG]
                 }
-            ]
+            ],
+            resourceReporters: DdRumWrapper
         });
 
         // WHEN
@@ -83,7 +84,8 @@ describe('DdRumResourceTracking', () => {
                     match: 'example.com',
                     propagatorTypes: [PropagatorType.DATADOG]
                 }
-            ]
+            ],
+            resourceReporters: DdRumWrapper
         });
 
         // WHEN
@@ -99,7 +101,8 @@ describe('DdRumResourceTracking', () => {
         // GIVEN
         DdRumResourceTracking.startTracking({
             resourceTraceSampleRate: 100,
-            firstPartyHosts: []
+            firstPartyHosts: [],
+            resourceReporters: DdRumWrapper
         });
         DdRumWrapper.registerResourceEventMapper(resource => {
             return {
@@ -129,7 +132,8 @@ describe('DdRumResourceTracking', () => {
         // GIVEN
         DdRumResourceTracking.startTracking({
             resourceTraceSampleRate: 100,
-            firstPartyHosts: []
+            firstPartyHosts: [],
+            resourceReporters: DdRumWrapper
         });
         DdRumWrapper.registerResourceEventMapper(resource => {
             return {
@@ -190,7 +194,8 @@ describe('DdRumResourceTracking', () => {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
-                ]
+                ],
+                resourceReporters: DdRumWrapper
             });
 
             // pre-update request gets sampling priority '0'
@@ -224,7 +229,8 @@ describe('DdRumResourceTracking', () => {
                         match: 'api.example.com',
                         propagatorTypes: [PropagatorType.DATADOG]
                     }
-                ]
+                ],
+                resourceReporters: DdRumWrapper
             });
             DdRumResourceTracking.stopTracking();
 

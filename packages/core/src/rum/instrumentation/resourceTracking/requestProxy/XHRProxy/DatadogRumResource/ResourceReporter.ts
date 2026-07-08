@@ -4,11 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../../../../DdRum';
 import type {
     ResourceEvent,
     ResourceEventMapper
 } from '../../../../../eventMappers/resourceEventMapper';
+import type { ResourceKind } from '../../../../../types';
 import { TracingIdFormat } from '../../../distributedTracing/TracingIdentifier';
 import type { RUMResource } from '../../interfaces/RumResource';
 
@@ -19,16 +19,43 @@ type ResourceEventMapperAdapter = (
     resource: ReportedResourceEvent
 ) => Partial<ReportedResourceEvent> | null;
 type RumResourceMapper = (resource: RUMResource) => RUMResource | null;
-export type ResourceMapper = ResourceEventMapperAdapter | RumResourceMapper;
+export type ResourceMapper =
+    | ResourceEventMapperAdapter
+    | RumResourceMapper
+    | null
+    | undefined;
+export type RumResourceReporters = {
+    startResource(
+        key: string,
+        method: string,
+        url: string,
+        context?: object,
+        timestampMs?: number,
+        kind?: ResourceKind,
+        resourceContext?: XMLHttpRequest
+    ): Promise<void>;
+    stopResource(
+        key: string,
+        statusCode: number,
+        kind: ResourceKind,
+        size?: number,
+        context?: object,
+        timestampMs?: number,
+        resourceContext?: XMLHttpRequest
+    ): Promise<void>;
+};
 
 export class ResourceReporter {
+    private resourceReporters: RumResourceReporters;
     private resourceMappers: ResourceMapper[];
     private resourceEventMapper?: ResourceEventMapper | null;
 
     constructor(
+        resourceReporters: RumResourceReporters,
         resourceMappers: ResourceMapper[],
         resourceEventMapper?: ResourceEventMapper | null
     ) {
+        this.resourceReporters = resourceReporters;
         this.resourceMappers = resourceMappers;
         this.resourceEventMapper = resourceEventMapper;
     }
@@ -37,22 +64,26 @@ export class ResourceReporter {
         let modifiedResource = toReportedResourceEvent(resource);
 
         for (const mapper of this.getMappers()) {
-            const mappedResource = mapper(modifiedResource);
-            if (mappedResource === null) {
-                return;
+            try {
+                const mappedResource = mapper?.(modifiedResource) ?? null;
+                if (mappedResource === null) {
+                    return;
+                }
+                modifiedResource = {
+                    ...modifiedResource,
+                    ...mappedResource
+                };
+            } catch {
+                continue;
             }
-            modifiedResource = {
-                ...modifiedResource,
-                ...mappedResource
-            };
         }
 
-        reportResource({
+        this.reportResourceToRum({
             ...modifiedResource,
             request: {
                 ...modifiedResource.request,
                 url:
-                    modifiedResource.resourceContext?.responseURL ??
+                    modifiedResource.resourceContext?.responseURL ||
                     modifiedResource.request.url
             }
         });
@@ -68,6 +99,31 @@ export class ResourceReporter {
         ...this.resourceMappers,
         ...(this.resourceEventMapper ? [this.resourceEventMapper] : [])
     ];
+
+    private reportResourceToRum = async (resource: ReportedResourceEvent) => {
+        await this.resourceReporters.startResource(
+            resource.key,
+            resource.request.method,
+            resource.request.url,
+            formatResourceStartContext(resource.tracingAttributes),
+            resource.timings.startTime,
+            resource.request.kind,
+            resource.resourceContext
+        );
+
+        this.resourceReporters.stopResource(
+            resource.key,
+            resource.response.statusCode,
+            resource.request.kind,
+            resource.response.size,
+            formatResourceStopContext(
+                resource.timings,
+                resource.graphqlAttributes
+            ),
+            resource.timings.stopTime,
+            resource.resourceContext
+        );
+    };
 }
 
 const formatResourceStartContext = (
@@ -87,7 +143,9 @@ const formatResourceStartContext = (
     return attributes;
 };
 
-const toReportedResourceEvent = (resource: RUMResource): ReportedResourceEvent => ({
+const toReportedResourceEvent = (
+    resource: RUMResource
+): ReportedResourceEvent => ({
     ...resource,
     statusCode: resource.response.statusCode,
     kind: resource.request.kind,
@@ -135,24 +193,4 @@ const formatResourceStopContext = (
     }
 
     return attributes;
-};
-
-const reportResource = async (resource: ReportedResourceEvent) => {
-    await DdRum.startResource(
-        resource.key,
-        resource.request.method,
-        resource.request.url,
-        formatResourceStartContext(resource.tracingAttributes),
-        resource.timings.startTime
-    );
-
-    DdRum.stopResource(
-        resource.key,
-        resource.response.statusCode,
-        resource.request.kind,
-        resource.response.size,
-        formatResourceStopContext(resource.timings, resource.graphqlAttributes),
-        resource.timings.stopTime,
-        resource.resourceContext
-    );
 };

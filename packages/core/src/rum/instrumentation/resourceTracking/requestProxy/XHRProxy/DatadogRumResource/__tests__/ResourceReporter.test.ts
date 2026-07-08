@@ -6,8 +6,9 @@
 
 import { NativeModules } from 'react-native';
 
-import type { ResourceEventMapper } from '../../../../../../eventMappers/resourceEventMapper';
 import { BufferSingleton } from '../../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { DdRum as DdRumWrapper } from '../../../../../../DdRum';
+import type { ResourceEventMapper } from '../../../../../../eventMappers/resourceEventMapper';
 import type { RUMResource } from '../../../interfaces/RumResource';
 import { ResourceReporter } from '../ResourceReporter';
 
@@ -27,7 +28,7 @@ beforeEach(() => {
 describe('Resource reporter', () => {
     it('reports resource when no mapper is passed', async () => {
         // GIVEN
-        const resourceReporter = new ResourceReporter([]);
+        const resourceReporter = new ResourceReporter(DdRumWrapper, []);
         const resource = resourceMockFactory.getBasicResource();
 
         // WHEN
@@ -44,7 +45,9 @@ describe('Resource reporter', () => {
             resource.request.url = 'https://google.com/';
             return resource;
         };
-        const resourceReporter = new ResourceReporter([setURLToGoogle]);
+        const resourceReporter = new ResourceReporter(DdRumWrapper, [
+            setURLToGoogle
+        ]);
         const resource = resourceMockFactory.getCustomResource({
             request: {
                 method: 'GET',
@@ -78,7 +81,9 @@ describe('Resource reporter', () => {
                 } as XMLHttpRequest
             };
         };
-        const resourceReporter = new ResourceReporter([sanitizeURL]);
+        const resourceReporter = new ResourceReporter(DdRumWrapper, [
+            sanitizeURL
+        ]);
         const resource = resourceMockFactory.getCustomResource({
             request: {
                 method: 'GET',
@@ -105,7 +110,7 @@ describe('Resource reporter', () => {
     it('builds the resource event mapper fields from the RUM resource', async () => {
         // GIVEN
         const inspectResourceEventMapper = jest.fn(resource => resource);
-        const resourceReporter = new ResourceReporter([
+        const resourceReporter = new ResourceReporter(DdRumWrapper, [
             inspectResourceEventMapper
         ]);
         const resource = resourceMockFactory.getCustomResource({
@@ -158,7 +163,9 @@ describe('Resource reporter', () => {
                 } as XMLHttpRequest
             };
         };
-        const resourceReporter = new ResourceReporter([setURLToGoogle]);
+        const resourceReporter = new ResourceReporter(DdRumWrapper, [
+            setURLToGoogle
+        ]);
         resourceReporter.setResourceEventMapper(sanitizeURL);
 
         // WHEN
@@ -196,7 +203,9 @@ describe('Resource reporter', () => {
         const discardResource = (resource: RUMResource) => {
             return null;
         };
-        const resourceReporter = new ResourceReporter([discardResource]);
+        const resourceReporter = new ResourceReporter(DdRumWrapper, [
+            discardResource
+        ]);
         const resource = resourceMockFactory.getBasicResource();
 
         // WHEN

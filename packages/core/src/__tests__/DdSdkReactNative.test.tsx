@@ -47,7 +47,10 @@ jest.mock(
     () => {
         return {
             DdRumResourceTracking: {
-                startTracking: jest.fn().mockImplementation(() => {})
+                startTracking: jest.fn().mockImplementation(() => {}),
+                updateResourceEventMapper: jest
+                    .fn()
+                    .mockImplementation(() => {})
             }
         };
     }
@@ -74,6 +77,9 @@ beforeEach(async () => {
     >).mockClear();
     (DdRumResourceTracking.startTracking as jest.MockedFunction<
         typeof DdRumResourceTracking.startTracking
+    >).mockClear();
+    (DdRumResourceTracking.updateResourceEventMapper as jest.MockedFunction<
+        typeof DdRumResourceTracking.updateResourceEventMapper
     >).mockClear();
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
@@ -677,7 +683,11 @@ describe('DdSdkReactNative', () => {
                         propagatorTypes: ['datadog']
                     }
                 ],
-                resourceEventMapper: undefined
+                resourceEventMapper: null,
+                resourceReporters: {
+                    startResource: DdRum.startResource,
+                    stopResource: DdRum.stopResource
+                }
             });
         });
 

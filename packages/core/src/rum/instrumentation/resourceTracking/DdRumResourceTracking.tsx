@@ -14,6 +14,7 @@ import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import type { RumResourceReporters } from './requestProxy/XHRProxy/DatadogRumResource/ResourceReporter';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
@@ -42,10 +43,12 @@ class RumResourceTracking {
     startTracking({
         resourceTraceSampleRate,
         firstPartyHosts,
+        resourceReporters,
         resourceEventMapper
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
+        resourceReporters: RumResourceReporters;
         resourceEventMapper?: ResourceEventMapper | null;
     }): void {
         // extra safety to avoid proxying the XHR class twice
@@ -57,8 +60,10 @@ class RumResourceTracking {
             return;
         }
 
-        this._requestProxy =
-            XHRProxy.createWithResourceReporter(resourceEventMapper);
+        this._requestProxy = XHRProxy.createWithResourceReporter(
+            resourceReporters,
+            resourceEventMapper
+        );
         this._requestProxy.onTrackingStart({
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(

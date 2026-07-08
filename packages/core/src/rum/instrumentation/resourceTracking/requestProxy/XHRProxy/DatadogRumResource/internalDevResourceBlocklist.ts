@@ -33,7 +33,7 @@ const internalDevResourceBlocklist: RegExp[] = [
 
 /**
  * Filters RN symbolicate calls and Expo logs calls that happen only in dev.
- * @param resource RUMResource
+ * @param resource Resource event passed through the resource mapper.
  */
 export const filterDevResource = (
     resource: Parameters<ResourceMapper>[0]
