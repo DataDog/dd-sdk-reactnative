@@ -26,6 +26,7 @@ export type AutoInstrumentationConfiguration = {
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
         readonly headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
+        readonly trackResourceHeaders?: boolean;
         readonly nativeCrashReportEnabled?: boolean;
         readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
@@ -58,6 +59,7 @@ export type AutoInstrumentationParameters = {
         readonly resourceEventMapper: ResourceEventMapper | null;
         readonly firstPartyHosts: FirstPartyHost[];
         readonly headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
+        readonly trackResourceHeaders: boolean;
     };
     readonly logsConfiguration?: {
         readonly logEventMapper: LogEventMapper | null;
@@ -118,7 +120,10 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
             firstPartyHosts:
                 features.rumConfiguration.firstPartyHosts ||
                 RUM_DEFAULTS.getFirstPartyHosts(),
-            headerCaptureRules: features.rumConfiguration.headerCaptureRules
+            headerCaptureRules: features.rumConfiguration.headerCaptureRules,
+            trackResourceHeaders:
+                features.rumConfiguration.trackResourceHeaders ??
+                RUM_DEFAULTS.trackResourceHeaders
         },
         logsConfiguration: {
             logEventMapper:

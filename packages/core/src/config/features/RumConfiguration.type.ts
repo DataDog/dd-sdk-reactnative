@@ -175,16 +175,15 @@ export interface RumConfigurationOptions {
 
     /**
      * Controls which resource headers the SDK captures on network requests.
+     * Only takes effect when {@link RumConfigurationOptions.trackResourceHeaders}
+     * is `true`.
      *
-     * - **Omitted** (default): No headers are captured.
-     * - `'defaults'`: Captures a predefined set of caching and content headers
-     *   across all URLs.
+     * - `'defaults'` (default): Captures a predefined set of caching and content
+     *   headers across all URLs.
      * - `HeaderCaptureRule[]`: An array of composable rules. When multiple rules
      *   match a URL their header sets are merged. If at least one scoped rule
      *   (with explicit `forURLs` patterns) matches, catch-all rules (no `forURLs`
      *   or `['*']`) are ignored for that URL.
-     *
-     * Requires `trackResources: true` to take effect.
      */
     headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
 
@@ -247,6 +246,16 @@ export interface RumConfigurationOptions {
      * Enables tracking of non-fatal ANRs on Android.
      */
     trackNonFatalAnrs?: boolean;
+
+    /**
+     * Enables capturing of HTTP request and response headers on RUM resource
+     * events. Defaults to `false`.
+     *
+     * When enabled, the headers that get captured are controlled by
+     * {@link RumConfigurationOptions.headerCaptureRules} (defaults to
+     * `'defaults'`). Requires `trackResources: true` to take effect.
+     */
+    trackResourceHeaders?: boolean;
 
     /**
      * Enables tracking of app termination by the iOS watchdog.

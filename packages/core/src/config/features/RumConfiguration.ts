@@ -38,10 +38,11 @@ const DEFAULTS = {
     trackInteractions: false,
     trackMemoryWarnings: true,
     trackNonFatalAnrs: undefined,
-    headerCaptureRules: undefined as
+    headerCaptureRules: 'defaults' as
         | 'defaults'
         | HeaderCaptureRule[]
         | undefined,
+    trackResourceHeaders: false,
     trackResources: false,
     trackWatchdogTerminations: false,
     useAccessibilityLabel: true,
@@ -120,6 +121,9 @@ export class RumConfiguration implements RumConfigurationType {
     // Header Capture Rules
     public headerCaptureRules: 'defaults' | HeaderCaptureRule[] | undefined =
         DEFAULTS.headerCaptureRules;
+
+    // Track Resource Headers enabled
+    public trackResourceHeaders: boolean = DEFAULTS.trackResourceHeaders;
 
     // Track Watchdog Terminations enabled
     public trackWatchdogTerminations: boolean =
