@@ -9,7 +9,6 @@ import type {
     ParsedFlagsConfiguration,
     PrecomputedConfigurationResponse
 } from './types';
-import { SUPPORTED_WIRE_VERSIONS } from './types';
 
 /**
  * Parse a portable `ConfigurationWire` string into an in-memory
@@ -26,9 +25,11 @@ export const configurationFromString = (
     wire: string
 ): ParsedFlagsConfiguration => {
     try {
-        const parsed: ConfigurationWire = JSON.parse(wire);
+        const parsed: Partial<ConfigurationWire> = JSON.parse(wire);
 
-        if (!SUPPORTED_WIRE_VERSIONS.has(parsed?.version)) {
+        // Only version 1 is supported. Any other version (or none) is treated as
+        // an unusable empty configuration rather than throwing.
+        if (parsed?.version !== 1) {
             return {};
         }
 

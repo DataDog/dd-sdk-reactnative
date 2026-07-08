@@ -5,13 +5,6 @@
  */
 
 /**
- * The set of `ConfigurationWire` versions this SDK can parse. A known set (rather
- * than a single hardcoded value) leaves room for the future `server`/rules format
- * to bump the version without forcing a parser change.
- */
-export const SUPPORTED_WIRE_VERSIONS: ReadonlySet<number> = new Set([1]);
-
-/**
  * The flag `variationType`s emitted by the precomputed CDN response.
  *
  * `integer` and `float` are distinct on the wire but both map to a JavaScript
@@ -109,7 +102,7 @@ export interface ParsedFlagsConfiguration {
  * {@link configurationToString}.
  */
 export interface ConfigurationWire {
-    version: number;
+    version: 1;
     precomputed?: {
         response: string;
         context?: WireEvaluationContext;
