@@ -25,6 +25,11 @@ stages:
     install-jdk-17:
         - brew install openjdk@17
     install-android-sdk:
+        # sdkmanager needs a Java runtime. openjdk@17 is keg-only and the VM only
+        # exports JAVA_HOME/PATH in ~/.zshrc, which the tart runner's non-interactive
+        # shell does not source, so make Java discoverable here.
+        - export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+        - export PATH="$JAVA_HOME/bin:$PATH"
         - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
         - rm -rf ~/android_sdk
         - rm -rf ~/cmdline-tools
