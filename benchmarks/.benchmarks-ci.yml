@@ -60,7 +60,8 @@ stages:
 
 build-and-upload:app:
   stage: build-and-upload
-  tags: ['macos:sonoma', 'specific:true']
+  tags: ['macos:tart']
+  image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
   script:
     - !reference [.snippets, install-node]
     - !reference [.snippets, install-android-sdk]
