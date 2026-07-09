@@ -467,10 +467,10 @@ internal class DdRumTests: XCTestCase {
     }
 
     func testReportAppFullyDisplayed() throws {
-        rum.reportAppFullyDsiplayed(resolve: mockResolve, reject: mockReject)
+        rum.reportAppFullyDisplayed(resolve: mockResolve, reject: mockReject)
 
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
-        XCTAssertEqual(mockNativeRUM.calledMethods.last, .reportAppFullyDsiplayed())
+        XCTAssertEqual(mockNativeRUM.calledMethods.last, .reportAppFullyDisplayed())
         XCTAssertEqual(mockNativeRUM.receivedAttributes.count, 0)
     }
 
