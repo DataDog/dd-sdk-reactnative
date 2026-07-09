@@ -58,6 +58,16 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
     return config
 }
 
+export function onDatadogInitialization() {
+    DdLogs.info('The RN Sdk was properly initialized')
+    DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
+    DdSdkReactNative.addAttributes({campaign: "ad-network"})
+
+    setTimeout(async () => {
+        await DdRum.reportAppFullyDisplayed();
+    }, 5000);
+}
+
 // Legacy SDK Setup
 export function initializeDatadog(trackingConsent: TrackingConsent) {
 
