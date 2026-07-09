@@ -241,6 +241,7 @@ dependencies {
   implementation "com.datadoghq:dd-sdk-android-ndk:3.12.1"
   implementation "com.datadoghq:dd-sdk-android-flags:3.12.1"
   implementation "com.datadoghq:dd-sdk-android-internal:3.12.1"
+  implementation "com.datadoghq:dd-sdk-android-rum-prelaunch:3.12.1"
   implementation "com.google.code.gson:gson:2.11.0"
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.2"
