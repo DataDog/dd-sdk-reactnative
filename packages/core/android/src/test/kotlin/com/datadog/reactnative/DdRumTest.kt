@@ -562,7 +562,7 @@ internal class DdRumTest {
         // When
         testedDdRum.reportAppFullyDisplayed(mockPromise)
 
-        // Then 
+        // Then
         verify(mockRumMonitor).reportAppFullyDisplayed()
     }
 
