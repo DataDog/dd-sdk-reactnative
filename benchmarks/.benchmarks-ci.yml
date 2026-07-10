@@ -107,10 +107,11 @@ build-and-upload:app:
     - ./scripts/build-ios-benchmark.sh | tee -a $XCODEBUILD_LOG_PATH
 
     # Upload builds to synthetics
-    - echo "Uploading app-release.apk to Synthetics"
-    - ./scripts/upload.sh android/app/build/outputs/apk/release/app-release.apk ANDROID
-    - echo "Uploading BenchmarkRunner.ipa to Synthetics"
-    - ./scripts/upload.sh ios/BenchmarkRunner.ipa/BenchmarkRunner.ipa IOS
+    # TEST ONLY: upload disabled so this pipeline does not publish a new
+    # --latest version to the shared Synthetics mobile apps.
+    - echo "SKIPPING Synthetics upload (test pipeline)"
+    # - ./scripts/upload.sh android/app/build/outputs/apk/release/app-release.apk ANDROID
+    # - ./scripts/upload.sh ios/BenchmarkRunner.ipa/BenchmarkRunner.ipa IOS
 
   artifacts:
     paths:

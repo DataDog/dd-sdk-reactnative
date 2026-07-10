@@ -142,6 +142,9 @@ benchmark:
           allow_failure: true
         - if: '$CI_COMMIT_BRANCH == $DEVELOP_BRANCH'
           allow_failure: true
+        # TEST ONLY: allow the benchmark pipeline to run on any branch
+        - if: '$CI_COMMIT_BRANCH'
+          allow_failure: true
     trigger:
         include: 'benchmarks/.benchmarks-ci.yml'
         strategy: depend
