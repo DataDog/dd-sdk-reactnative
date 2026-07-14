@@ -735,21 +735,111 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
     });
 
     describe('Error Handling', () => {
-        it('should warn for unsupported element names but still include them in output', () => {
+        it('should warn for unsupported element names and remove them from output', () => {
             const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
             const input = '<Svg><UnsupportedElement x="10" y="10" /></Svg>';
             const output = transformSvg(input);
 
-            // Unsupported elements are converted to lowercase and included
+            // Unsupported elements are now removed entirely rather than left in place.
             expect(output).toMatchInlineSnapshot(
-                `"<svg xmlns="http://www.w3.org/2000/svg"><unsupportedElement x="10" y="10" /></svg>"`
+                `"<svg xmlns="http://www.w3.org/2000/svg"></svg>"`
             );
             expect(warnSpy).toHaveBeenCalledWith(
-                expect.stringContaining('Skipping unsupported element')
+                expect.stringContaining('Removing unsupported element')
             );
 
             warnSpy.mockRestore();
+        });
+
+        it('should remove an unsupported element but keep its supported siblings', () => {
+            const input =
+                '<Svg><Circle cx="50" cy="50" r="40" fill="#27ae60" /><UnsupportedElement x="10" y="10" /></Svg>';
+            const output = transformSvg(input);
+
+            expect(output).toContain(
+                '<circle cx="50" cy="50" r="40" fill="#27ae60" />'
+            );
+            expect(output).not.toContain('unsupportedElement');
+        });
+
+        it('should remove an unsupported element with dynamic/unresolvable attributes without throwing', () => {
+            const input = `
+                function Icon({ color, opacity }) {
+                    return (
+                        <Svg width="64" height="64" viewBox="0 0 64 64">
+                            <Circle cx="32" cy="32" r="28" fill="#27ae60" />
+                            <AnimatedPath
+                                d="M18 32 L28 42 L46 20"
+                                fill={color}
+                                style={{ opacity }}
+                            />
+                        </Svg>
+                    );
+                }
+            `;
+
+            expect(() => transformSvg(input)).not.toThrow();
+
+            const output = transformSvg(input);
+            expect(output).toContain(
+                '<circle cx="32" cy="32" r="28" fill="#27ae60" />'
+            );
+            expect(output).not.toContain('animatedPath');
+            expect(output).not.toContain('fill={color}');
+        });
+
+        it('should preserve resolvable falsy values (0) instead of treating them as unresolved', () => {
+            const input =
+                '<Svg><Circle cx="50" cy="50" r="40" opacity={0} /></Svg>';
+            const output = transformSvg(input);
+
+            expect(output).toContain('opacity="0"');
+        });
+
+        it('should leave an unresolvable property value untouched rather than strip it or drop the element, deferring to native-side fill-in', () => {
+            // Property-level resolution is intentionally out of scope for this fix (see PR
+            // review discussion) — dropping properties/tags based on resolvability can affect
+            // an SVG's bounds in ways that are hard to reason about. This fix only drops
+            // unsupported *tags*; a follow-up PR will pass unresolvable runtime property
+            // values through the native view to be filled in on the native side instead.
+            const input = `
+                function Icon({ color }) {
+                    return (
+                        <Svg>
+                            <Circle cx="50" cy="50" r="40" fill={color} />
+                        </Svg>
+                    );
+                }
+            `;
+            const output = transformSvg(input);
+
+            expect(output).toContain('fill={color}');
+        });
+
+        it('should drop only the unresolvable child inside a group, leaving the group and its other siblings intact', () => {
+            const input = `
+                function Icon() {
+                    return <Svg><G><UnsupportedElement /></G><Rect x="1" y="1" width="1" height="1" /></Svg>;
+                }
+            `;
+            const output = transformSvg(input);
+
+            expect(output).toContain('<g></g>');
+            expect(output).toContain(
+                '<rect x="1" y="1" width="1" height="1" />'
+            );
+            expect(output).not.toContain('unsupportedElement');
+        });
+
+        it('should keep a polygon whose `points` use nested coordinate-pair arrays with signed numbers', () => {
+            const input =
+                '<Svg><Polygon points={[[-10, 20], [30, -40]]} fill="red" /></Svg>';
+            const output = transformSvg(input);
+
+            expect(output).toContain(
+                '<polygon points="-10,20 30,-40" fill="red" />'
+            );
         });
 
         it('should handle malformed transform array gracefully', () => {
@@ -759,6 +849,30 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
             expect(output).toMatchInlineSnapshot(
                 `"<svg xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="50" height="50" /></svg>"`
             );
+        });
+
+        it('should return undefined from transformSvgNode when the root tag itself is unsupported, without mutating the node', () => {
+            // Direct unit test of RNSvgHandler.transformSvgNode's own guard — the real plugin
+            // never reaches this via <SvgUri> today (HandlerResolver disables that handler
+            // first), but the guard exists so the root element is checked the same way as any
+            // child before anything is mutated.
+            const ast = parser.parse(
+                '<SvgUri uri="https://example.com/x.svg" />',
+                {
+                    sourceType: 'module',
+                    plugins: ['jsx', 'typescript']
+                }
+            );
+
+            let result: string | undefined;
+            traverse(ast, {
+                JSXElement(nodePath) {
+                    const handler = new RNSvgHandler(t, nodePath, 'SvgUri');
+                    result = handler.transformSvgNode({});
+                }
+            });
+
+            expect(result).toBeUndefined();
         });
     });
 });
@@ -810,6 +924,16 @@ describe('SessionReplayView.Privacy SVG Wrapper', () => {
         expect(output).toMatchSnapshot();
     });
 
+    it('should leave SvgUri untouched, since its handler is disabled in HandlerResolver, rather than throw or produce a broken wrapper', () => {
+        const input =
+            '<SvgUri uri="https://example.com/x.svg" width="40" height="40" />';
+        const output = transformWithSvgTracking(input);
+
+        expect(output).not.toContain('SessionReplayView.Privacy');
+        expect(output).toContain('SvgUri');
+        expect(output).toContain('https://example.com/x.svg');
+    });
+
     it('should wrap an SVG without explicit dimensions', () => {
         const input =
             '<Svg viewBox="0 0 100 100"><Circle cx="50" cy="50" r="40" fill="blue" /></Svg>';
@@ -825,5 +949,26 @@ describe('SessionReplayView.Privacy SVG Wrapper', () => {
 
         expect(output).not.toContain('flexShrink');
         expect(output).not.toContain('style');
+    });
+
+    it('should skip wrapping the SVG entirely when a supported child has an unresolvable property, rather than strip the property or the element', () => {
+        // Property-level resolution is deferred to a follow-up PR (native-side fill-in). Until
+        // then, an unresolvable property on an otherwise-supported tag is left in place, svgo
+        // fails to parse the resulting invalid markup, and this SVG is skipped — same
+        // (pre-existing) graceful-failure path as before this fix, just no longer reachable
+        // for unsupported *tags* like AnimatedPath, which are now removed before svgo ever runs.
+        const input = `
+            function Icon({ color }) {
+                return (
+                    <Svg width="80" height="80" viewBox="0 0 100 100">
+                        <Circle cx={50} cy={50} r={40} fill={color} />
+                    </Svg>
+                );
+            }
+        `;
+        const output = transformWithSvgTracking(input);
+
+        expect(output).not.toContain('SessionReplayView.Privacy');
+        expect(output).toContain('fill: color');
     });
 });
