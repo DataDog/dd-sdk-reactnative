@@ -7,6 +7,7 @@
 /* eslint quotes: ["off"] */
 import { transform } from '@babel/core';
 import * as parser from '@babel/parser';
+import type { NodePath } from '@babel/traverse';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import fs from 'fs';
@@ -763,6 +764,25 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
             expect(output).not.toContain('unsupportedElement');
         });
 
+        it('should remove an element whose tag name is a member expression (e.g. <Icons.Path />), rather than pass it through unconverted', () => {
+            const input = `
+                function Icon({ color }) {
+                    return (
+                        <Svg width="64" height="64" viewBox="0 0 64 64">
+                            <Circle cx="32" cy="32" r="28" fill="#27ae60" />
+                            <Icons.Path d="M18 32 L28 42 L46 20" fill={color} />
+                        </Svg>
+                    );
+                }
+            `;
+            const output = transformSvg(input);
+
+            expect(output).not.toContain('Icons.Path');
+            expect(output).toContain(
+                '<circle cx="32" cy="32" r="28" fill="#27ae60" />'
+            );
+        });
+
         it('should remove an unsupported element with dynamic/unresolvable attributes without throwing', () => {
             const input = `
                 function Icon({ color, opacity }) {
@@ -817,7 +837,7 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
             expect(output).toContain('fill={color}');
         });
 
-        it('should drop only the unresolvable child inside a group, leaving the group and its other siblings intact', () => {
+        it('should drop only the unsupported child inside a group, leaving the group and its other siblings intact', () => {
             const input = `
                 function Icon() {
                     return <Svg><G><UnsupportedElement /></G><Rect x="1" y="1" width="1" height="1" /></Svg>;
@@ -865,14 +885,107 @@ describe('React Native SVG Processing - RNSvgHandler', () => {
             );
 
             let result: string | undefined;
+            let openingName: string | undefined;
             traverse(ast, {
                 JSXElement(nodePath) {
                     const handler = new RNSvgHandler(t, nodePath, 'SvgUri');
                     result = handler.transformSvgNode({});
+                    const name = nodePath.node.openingElement.name;
+                    openingName = t.isJSXIdentifier(name)
+                        ? name.name
+                        : undefined;
                 }
             });
 
             expect(result).toBeUndefined();
+            expect(openingName).toBe('SvgUri');
+        });
+
+        it('should remove (not throw for) an element whose closing tag has a mismatched name form, so a malformed node never lingers in the tree', () => {
+            // A real parser never produces an opening/closing tag pair with different node
+            // types — this can only happen via direct AST manipulation, which is exactly what
+            // this test does. It matters because throwing here (instead of returning false)
+            // would leave the malformed node in the tree unrepaired; Babel's own code
+            // generation can then fail on it later, corrupting the *whole file's* output, not
+            // just this element. Returning false lets the caller splice it out cleanly.
+            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            const ast = parser.parse(
+                '<Svg width="10" height="10"><Circle cx="1" cy="1" r="1"></Circle></Svg>',
+                { sourceType: 'module', plugins: ['jsx', 'typescript'] }
+            );
+
+            let svgPath: NodePath<t.JSXElement> | undefined;
+            traverse(ast, {
+                JSXElement(elPath) {
+                    const name = elPath.node.openingElement.name;
+                    if (t.isJSXIdentifier(name) && name.name === 'Svg') {
+                        svgPath = elPath;
+                    }
+                    if (
+                        t.isJSXIdentifier(name) &&
+                        name.name === 'Circle' &&
+                        elPath.node.closingElement
+                    ) {
+                        elPath.node.closingElement.name = t.jsxMemberExpression(
+                            t.jsxIdentifier('Icons'),
+                            t.jsxIdentifier('Circle')
+                        );
+                    }
+                }
+            });
+
+            const handler = new RNSvgHandler(t, svgPath!, 'Svg');
+
+            expect(() => handler.transformSvgNode({})).not.toThrow();
+            expect(handler.transformSvgNode({})).toBe(
+                '<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg"></svg>'
+            );
+
+            warnSpy.mockRestore();
+        });
+
+        it('should remove an element whose opening and closing tags are each individually supported but name different elements (e.g. <Circle>...</Rect>)', () => {
+            // Both tags pass the individual "is this a supported element" check, but they
+            // don't match each other. A real parser never produces this — mismatched
+            // opening/closing tag names are a parse error — so this is exercised via direct
+            // AST manipulation, simulating a malformed tree from an upstream transform.
+            // Left unchecked, this would still generate invalid markup with the same
+            // whole-file blast radius the other checks in this function guard against.
+            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            const ast = parser.parse(
+                '<Svg width="10" height="10"><Circle cx="1" cy="1" r="1"></Circle></Svg>',
+                { sourceType: 'module', plugins: ['jsx', 'typescript'] }
+            );
+
+            let svgPath: NodePath<t.JSXElement> | undefined;
+            traverse(ast, {
+                JSXElement(elPath) {
+                    const name = elPath.node.openingElement.name;
+                    if (t.isJSXIdentifier(name) && name.name === 'Svg') {
+                        svgPath = elPath;
+                    }
+                    if (
+                        t.isJSXIdentifier(name) &&
+                        name.name === 'Circle' &&
+                        elPath.node.closingElement
+                    ) {
+                        elPath.node.closingElement.name = t.jsxIdentifier(
+                            'Rect'
+                        );
+                    }
+                }
+            });
+
+            const handler = new RNSvgHandler(t, svgPath!, 'Svg');
+
+            expect(() => handler.transformSvgNode({})).not.toThrow();
+            expect(handler.transformSvgNode({})).toBe(
+                '<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg"></svg>'
+            );
+
+            warnSpy.mockRestore();
         });
     });
 });
@@ -970,5 +1083,66 @@ describe('SessionReplayView.Privacy SVG Wrapper', () => {
 
         expect(output).not.toContain('SessionReplayView.Privacy');
         expect(output).toContain('fill: color');
+    });
+
+    it('should skip wrapping the SVG entirely when an unsupported tag is reachable only through a JSXExpressionContainer, e.g. conditional rendering', () => {
+        // traverseAndTransformChildren only inspects direct JSXElement entries of
+        // `jsxElement.children`. An unsupported tag reached through a JSXExpressionContainer
+        // (conditional `{cond && <X/>}`, `{items.map(...)}`) or a JSXFragment child is a
+        // different node type at that position, so it's skipped entirely rather than removed
+        // — same deferred-limitation category as unresolvable properties above (see PR
+        // discussion). This test locks in that current, known-limitation behavior so a partial
+        // fix for one wrapper shape doesn't silently leave the others untested.
+        const input = `
+            function Icon({ showCheckmark, color }) {
+                return (
+                    <Svg width="64" height="64" viewBox="0 0 64 64">
+                        <Circle cx="32" cy="32" r="28" fill="#27ae60" />
+                        {showCheckmark && <AnimatedPath d="M18 32 L28 42 L46 20" fill={color} />}
+                    </Svg>
+                );
+            }
+        `;
+        const output = transformWithSvgTracking(input);
+
+        expect(output).not.toContain('SessionReplayView.Privacy');
+    });
+
+    it('should wrap the SVG and write a clean asset when an unsupported tag is removed, going through the real svgo/asset-writing pipeline', () => {
+        // The mirror case of the test above, and the actual customer repro: unlike an
+        // unresolvable property, an unsupported *tag* (AnimatedPath) is removed before the
+        // string is ever handed to svgo, so this one — unlike the property case — must still
+        // get wrapped. This exercises the real pipeline (svgo, asset file on disk), not just
+        // RNSvgHandler's own output string.
+        const assetDir = path.join(os.tmpdir(), 'dd-svg-test-assets');
+        const input = `
+            function Icon({ color, opacity }) {
+                return (
+                    <Svg width="64" height="64" viewBox="0 0 64 64">
+                        <Circle cx="32" cy="32" r="28" fill="#27ae60" />
+                        <AnimatedPath
+                            d="M18 32 L28 42 L46 20"
+                            fill={color}
+                            style={{ opacity }}
+                        />
+                    </Svg>
+                );
+            }
+        `;
+        const output = transformWithSvgTracking(input);
+
+        expect(output).toContain('SessionReplayView.Privacy');
+
+        const match = output!.match(/hash:\s*["']([0-9a-f]{32})["']/i);
+        expect(match?.[1]).toBeTruthy();
+        const svgContent = fs.readFileSync(
+            path.join(assetDir, `${match![1]}.svg`),
+            'utf8'
+        );
+        expect(svgContent).toContain(
+            '<circle cx="32" cy="32" r="28" fill="#27ae60"/>'
+        );
+        expect(svgContent).not.toContain('animatedPath');
+        expect(svgContent).not.toContain('fill={color}');
     });
 });

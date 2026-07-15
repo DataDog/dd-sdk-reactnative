@@ -331,9 +331,9 @@ export function handleJoinedTransformAttributes(
 /**
  * Converts a standard JSX attribute (e.g., `stroke`, `fill`, `opacity`) to a string literal
  * if it holds a statically resolvable value. Attributes whose value can't be resolved at
- * build time (e.g. `fill={color}`) are left untouched — the plugin doesn't attempt to guess
- * or drop them; that's handled separately, on the native side, once the runtime value is
- * known.
+ * build time (e.g. `fill={color}`) are left untouched today — the plugin doesn't attempt to
+ * guess or drop them. Resolving these on the native side, once the runtime value is known, is
+ * planned as a follow-up and not yet implemented.
  *
  * @param t - Babel types helper.
  * @param attr - JSX attribute node.
@@ -344,7 +344,7 @@ export function handleRegularAttributes(
 ): void {
     const result = getJSXAttributeData(t, attr);
 
-    // !== null, not truthiness: 0/''/false (e.g. opacity={0}) are valid resolved values.
+    // !== null, not truthiness: 0/'' (e.g. opacity={0}) are valid resolved values.
     if (result.value !== null) {
         attr.value = t.stringLiteral(result.value.toString());
     }

@@ -100,26 +100,61 @@ export class RNSvgHandler implements SvgHandler {
     ): boolean {
         const openingNode = el.openingElement.name;
 
-        if (t.isJSXIdentifier(openingNode)) {
-            const elementName = convertAttributeCasing(openingNode.name);
+        // A member expression (<Foo.Bar />), namespaced name, or any other non-identifier tag
+        // name form is never in svgElements (a plain-string allowlist), so it's unsupported —
+        // but it would otherwise skip this check entirely and pass through unconverted,
+        // reopening the exact "one bad tag corrupts the whole SVG" failure this check exists
+        // to prevent.
+        if (!t.isJSXIdentifier(openingNode)) {
+            console.warn(
+                `RNSvgHandler[isElementSupported]: Removing element with an unsupported tag name form: "${getNodeName(
+                    t,
+                    openingNode
+                )}"`
+            );
+            return false;
+        }
 
-            if (!isSupportedSvgElement(elementName)) {
+        const elementName = convertAttributeCasing(openingNode.name);
+
+        if (!isSupportedSvgElement(elementName)) {
+            console.warn(
+                `RNSvgHandler[isElementSupported]: Removing unsupported element: "${elementName}"`
+            );
+            return false;
+        }
+
+        if (el.closingElement) {
+            const closingNode = el.closingElement.name;
+
+            // Same treatment as the opening tag: return false (element removed by the caller)
+            // rather than throw. A throw here wouldn't clean up the malformed node first, and
+            // the mismatched tag left behind can make Babel's own code generation fail later —
+            // for the *whole file*, not just this element. Removing it keeps the tree valid.
+            if (!t.isJSXIdentifier(closingNode)) {
                 console.warn(
-                    `RNSvgHandler[isElementSupported]: Removing unsupported element: "${elementName}"`
+                    `RNSvgHandler[isElementSupported]: Removing element with an unsupported closing tag name form: "${getNodeName(
+                        t,
+                        closingNode
+                    )}"`
                 );
                 return false;
             }
-        }
 
-        const closingNode = el.closingElement?.name;
-
-        if (t.isJSXIdentifier(closingNode)) {
             const closingElementName = convertAttributeCasing(closingNode.name);
 
-            if (!isSupportedSvgElement(closingElementName)) {
-                throw new Error(
-                    `RNSvgHandler[isElementSupported]: Failed to transform element: "${closingElementName}" is not supported`
+            // `elementName` (the opening tag) is already confirmed supported above, so a
+            // mismatch check here also subsumes "closing tag is unsupported": the only way
+            // closingElementName can equal elementName is if it's supported too. Both tags can
+            // individually be supported elements yet still not match each other (e.g.
+            // <Circle>...</Rect>) — a real parser never produces this, but a malformed AST from
+            // AST manipulation upstream could. Left unchecked, this would generate invalid
+            // markup with the same whole-file blast radius as the other checks above.
+            if (closingElementName !== elementName) {
+                console.warn(
+                    `RNSvgHandler[isElementSupported]: Removing element with mismatched closing tag: "${elementName}" vs "${closingElementName}"`
                 );
+                return false;
             }
         }
 
