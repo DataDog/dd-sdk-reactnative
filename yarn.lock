@@ -2722,12 +2722,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datadog/flagging-core@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@datadog/flagging-core@npm:1.2.1"
+"@datadog/flagging-core@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@datadog/flagging-core@npm:2.0.0"
   dependencies:
+    "@datadog/js-core": 0.0.3
     spark-md5: ^3.0.2
-  checksum: 714e92b0fc43d9d14b79d9d235da0c97522332f3ba384ca8155b5c35817967286d012096282ee6975bf43d550358e750131ab0c3b00977dca2ffb0d5d9c3cd38
+  checksum: d7ced1b9568410269f6a88b4a95cac4caf0025fb771f56f644e290b4d376dc41d5abba465f14dfd99f209f5611050d88146e7fc3c492f1c67ebe5d31d190e8ba
+  languageName: node
+  linkType: hard
+
+"@datadog/js-core@npm:0.0.3":
+  version: 0.0.3
+  resolution: "@datadog/js-core@npm:0.0.3"
+  checksum: c8d70cb21f0c5089fa9d3e8d54a9bc2fafde8927b9f9286721b5a12c82cf46b5ff2d39486ecd1c871e4d8a321d88ed5ad5d1cccc06659bce7b9c67c4eaac6695
   languageName: node
   linkType: hard
 
@@ -2872,7 +2880,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
-    "@datadog/flagging-core": ^1.2.1
+    "@datadog/flagging-core": ^2.0.0
     "@openfeature/core": ^1.9.2
     "@testing-library/react-native": 7.0.2
     big-integer: ^1.6.52

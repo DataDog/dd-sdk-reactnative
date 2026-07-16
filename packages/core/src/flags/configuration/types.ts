@@ -45,17 +45,3 @@ export type PrecomputedFlag = FlaggingCorePrecomputedFlag;
 export type PrecomputedConfigurationResponse = FlaggingCorePrecomputedConfigurationResponse;
 export type ParsedPrecomputedConfiguration = PrecomputedConfiguration;
 export type ParsedFlagsConfiguration = FlagsConfiguration;
-
-/**
- * The serialized `ConfigurationWire` envelope (version 1). `@datadog/flagging-core`
- * keeps its own wire envelope internal, so this mirrors the shape for our local
- * {@link configurationToString} (see wire.ts).
- */
-export interface ConfigurationWire {
-    version: 1;
-    precomputed?: {
-        response: string;
-        context?: WireEvaluationContext;
-        fetchedAt?: number;
-    };
-}
