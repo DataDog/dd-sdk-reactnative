@@ -1074,7 +1074,7 @@ class DdSdkTests: XCTestCase {
         )
 
         XCTAssertEqual(ddConfig.enableTimeseries, false)
-        XCTAssertEqual(ddConfig.timeseriesBatchSize, 30)
+        XCTAssertEqual(ddConfig.timeseriesBatchSize, 120)
     }
 
     func testBuildConfigurationAverageUploadFrequency() {

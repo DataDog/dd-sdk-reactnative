@@ -107,7 +107,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, nil)
         XCTAssertEqual(configuration?.rumConfiguration?.enableTimeseries, false)
-        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesBatchSize, 30.0)
+        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesBatchSize, 120.0)
     }
 
     func testPrintsMessageWithIncorrectFile() {
