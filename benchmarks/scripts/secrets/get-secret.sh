@@ -9,6 +9,7 @@ get_secret() {
 
     export VAULT_ADDR=$DD_VAULT_ADDR
     if [ "$CI" = "true" ]; then
+        eval "$(aws configure export-credentials --format env)"
         vault login -method=aws -no-print
     else
         if vault token lookup &>/dev/null; then
