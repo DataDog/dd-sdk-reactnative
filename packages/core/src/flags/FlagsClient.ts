@@ -8,11 +8,11 @@ import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 
-import {
-    contextMatchesConfiguration,
-    decodePrecomputedFlags,
-    normalizeWireContext
-} from './configuration';
+// Imported directly (not via the module index): context matching is an internal helper,
+// used here only to detect and warn about a runtime context that an offline precomputed
+// configuration cannot honor.
+import { contextMatchesConfiguration } from './configuration/context';
+import { decodePrecomputedFlags, normalizeWireContext } from './configuration';
 import type { ParsedFlagsConfiguration } from './configuration';
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
@@ -23,7 +23,7 @@ import type { JsonValue, EvaluationContext, FlagDetails } from './types';
  * to the active evaluation context. `'none'` means no offline configuration is engaged
  * (the online/fetch path is in effect).
  */
-type ConfigurationStatus = 'none' | 'ready' | 'mismatch' | 'invalid';
+type ConfigurationStatus = 'none' | 'ready' | 'invalid';
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -127,10 +127,14 @@ export class FlagsClient {
     ): void => {
         this.evaluationContext = processEvaluationContext(context);
 
-        // Re-evaluate a loaded offline configuration against the new context. Readiness
-        // when no configuration is loaded yet is the provider's concern.
+        // Re-evaluate a loaded offline configuration against the new context.
         if (this.loadedConfiguration) {
             this.applyConfiguration();
+        } else {
+            // No offline configuration is engaged: do not keep serving any previously
+            // cached flags (e.g. from a prior online fetch) against the new context.
+            this.flagsCache = {};
+            this.configurationStatus = 'none';
         }
     };
 
@@ -138,11 +142,11 @@ export class FlagsClient {
      * Load a configuration (parsed from a `ConfigurationWire` string via
      * `configurationFromString`) into the client for offline evaluation.
      *
-     * For a precomputed configuration this populates the flag cache and, when no context
-     * has been set yet, adopts the configuration's embedded evaluation context — **no
-     * network request is made**. If a context has already been set, the configuration's
-     * context must match it; otherwise the client serves no values and reports
-     * `INVALID_CONTEXT`.
+     * For a precomputed configuration this populates the flag cache and adopts the
+     * configuration's embedded evaluation context — **no network request is made**. A
+     * precomputed snapshot is single-subject: if a different runtime context has been set,
+     * it is ignored (the snapshot is served for its embedded context) and a warning is
+     * logged. Use a rules-based configuration for per-context evaluation.
      *
      * @param configuration The configuration to load.
      *
@@ -218,26 +222,29 @@ export class FlagsClient {
             return;
         }
 
-        // A context is already set — the configuration must match it.
+        // A context is already set. An offline precomputed configuration is a snapshot
+        // bound to the context it was computed for, and offline never fetches, so it cannot
+        // be recomputed for a different subject. A runtime context that does not match is
+        // therefore IGNORED: revert to the embedded context, keep serving the snapshot, and
+        // warn once. (Precomputed is single-subject by design — a rules-based configuration
+        // is the path for per-context evaluation.)
         if (
-            contextMatchesConfiguration(
+            !contextMatchesConfiguration(
                 precomputed.context,
                 this.evaluationContext
             )
         ) {
-            this.flagsCache = decoded;
-            this.configurationStatus = 'ready';
-        } else {
-            // Per spec, a context mismatch must not serve values. This also blocks a
-            // previously-fetched online cache until a matching config or a new fetch;
-            // the fetch policy (a later step) formalizes online/offline precedence.
-            this.flagsCache = {};
-            this.configurationStatus = 'mismatch';
             InternalLog.log(
-                `The provided configuration for '${this.clientName}' does not match the active evaluation context.`,
+                `Ignoring the evaluation context set for '${this.clientName}': an offline precomputed configuration is served against the context it was computed for. Set a matching context, or use a rules-based configuration for per-context evaluation.`,
                 SdkVerbosity.WARN
             );
+            this.evaluationContext = precomputed.context
+                ? normalizeWireContext(precomputed.context)
+                : { targetingKey: '', attributes: {} };
         }
+
+        this.flagsCache = decoded;
+        this.configurationStatus = 'ready';
     };
 
     private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
@@ -265,16 +272,6 @@ export class FlagsClient {
         defaultValue: T,
         type: 'boolean' | 'string' | 'number' | 'object'
     ): FlagDetails<T> => {
-        if (this.configurationStatus === 'mismatch') {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'INVALID_CONTEXT',
-                errorMessage: `The loaded configuration for '${this.clientName}' does not match the active evaluation context.`
-            };
-        }
-
         // A loaded-but-unusable configuration surfaces as PROVIDER_NOT_READY at the
         // evaluation layer (distinct from FLAG_NOT_FOUND). The dedicated PROVIDER_ERROR
         // provider event is wired by the OpenFeature provider in a later step.

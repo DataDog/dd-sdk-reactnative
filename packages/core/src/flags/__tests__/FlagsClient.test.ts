@@ -385,7 +385,7 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('returns INVALID_CONTEXT when the config does not match an explicit context', async () => {
+        it('ignores a differing explicit context, serving the snapshot and warning', async () => {
             const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'user-1',
@@ -399,13 +399,15 @@ describe('FlagsClient', () => {
                 })
             );
 
-            expect(
-                flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({
-                value: false,
-                reason: 'ERROR',
-                errorCode: 'INVALID_CONTEXT'
-            });
+            // Offline precomputed is single-subject: the differing context is ignored and
+            // the snapshot is served for its embedded context, with a warning.
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                expect.stringContaining('Ignoring the evaluation context'),
+                expect.anything()
+            );
         });
 
         it('returns PROVIDER_NOT_READY for an empty/invalid configuration', () => {
@@ -534,7 +536,7 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('re-validates on a context change (mismatch -> INVALID_CONTEXT), still no fetch', () => {
+        it('ignores a differing context change, still serving without fetching', () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
                 buildConfig({ targetingKey: 'user-1', country: 'US' })
@@ -545,13 +547,15 @@ describe('FlagsClient', () => {
                 attributes: { country: 'US' }
             });
 
-            expect(
-                flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({
-                value: false,
-                reason: 'ERROR',
-                errorCode: 'INVALID_CONTEXT'
-            });
+            // The differing context is ignored (offline never fetches) and the snapshot is
+            // still served for its embedded context, with a warning.
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                expect.stringContaining('Ignoring the evaluation context'),
+                expect.anything()
+            );
             expect(
                 NativeModules.DdFlags.setEvaluationContext
             ).not.toHaveBeenCalled();

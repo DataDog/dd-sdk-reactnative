@@ -51,7 +51,9 @@ describe('normalizeWireContext', () => {
             ['__proto__']: 'x'
         });
 
-        // The reserved key is safely discarded; the prototype is untouched.
+        // A reserved "__proto__" attribute does not pollute the prototype: the normalized
+        // attributes keep `Object.prototype` and nothing leaks onto the global prototype.
+        // (Whether the key is retained or dropped is an implementation detail we don't assert.)
         expect(Object.getPrototypeOf(normalized.attributes)).toBe(
             Object.prototype
         );
