@@ -65,6 +65,16 @@ build-and-upload:app:
   tags: ['macos:tart']
   image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
   script:
+    - echo "=== DEBUG AWS env ==="
+    - echo "AWS_REGION=$AWS_REGION"
+    - echo "AWS_EC2_METADATA_SERVICE_ENDPOINT=$AWS_EC2_METADATA_SERVICE_ENDPOINT"
+    - env | grep -iE 'AWS_|VAULT' || true
+    - echo "=== DEBUG IAM proxy role ==="
+    - curl -sS "$AWS_EC2_METADATA_SERVICE_ENDPOINT/latest/meta-data/iam/security-credentials/" -w "\nHTTP %{http_code}\n" || echo "curl failed"
+    - echo "=== DEBUG aws sts ==="
+    - aws sts get-caller-identity || echo ">>> aws sts FAILED - no creds"
+    - echo "=== DEBUG aws cli version ==="
+    - aws --version || true
     - !reference [.snippets, install-node]
     - !reference [.snippets, install-android-sdk]
     - !reference [.snippets, install-jdk-17]

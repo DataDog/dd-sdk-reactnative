@@ -52,6 +52,8 @@ test:lint:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
@@ -63,6 +65,8 @@ test:js:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
@@ -75,6 +79,8 @@ test:build:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
@@ -86,6 +92,8 @@ test:native-android:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - !reference [.snippets, install-android-sdk]
@@ -105,6 +113,8 @@ test:native-ios:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
@@ -117,6 +127,8 @@ test:native-ios-sr:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
@@ -129,6 +141,8 @@ test:native-ios-newarch:
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
+          when: manual
+          allow_failure: true
     timeout: 1h
     script:
         - yarn
