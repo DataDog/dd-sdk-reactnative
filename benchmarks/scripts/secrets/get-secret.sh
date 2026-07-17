@@ -9,7 +9,9 @@ get_secret() {
 
     export VAULT_ADDR=$DD_VAULT_ADDR
     if [ "$CI" = "true" ]; then
-        eval "$(aws configure export-credentials --format env)"
+        if [ -z "${AWS_ACCESS_KEY_ID:-}" ] || [ -z "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            eval "$(aws configure export-credentials --format env)"
+        fi
         vault login -method=aws -no-print
     else
         if vault token lookup &>/dev/null; then
