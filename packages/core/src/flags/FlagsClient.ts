@@ -34,7 +34,11 @@ export class FlagsClient {
 
     private evaluationContext: EvaluationContext | undefined = undefined;
 
-    private flagsCache: Record<string, FlagCacheEntry> = {};
+    // A Map (not a plain object) so a flag keyed like an inherited property
+    // ("toString", "constructor", "__proto__") is looked up as data via `.get()` and never
+    // resolves an `Object.prototype` member. This matters now that the cache can be fed
+    // from untrusted wire data via `setConfiguration`.
+    private flagsCache: Map<string, FlagCacheEntry> = new Map();
 
     private loadedConfiguration:
         | ParsedFlagsConfiguration
@@ -83,7 +87,7 @@ export class FlagsClient {
             );
 
             this.evaluationContext = processedContext;
-            this.flagsCache = result;
+            this.flagsCache = new Map(Object.entries(result));
 
             // An explicit online fetch supersedes any previously loaded offline
             // configuration, so drop the offline overlay to keep state coherent.
@@ -135,7 +139,7 @@ export class FlagsClient {
         } else {
             // No offline configuration is engaged: do not keep serving any previously
             // cached flags (e.g. from a prior online fetch) against the new context.
-            this.flagsCache = {};
+            this.flagsCache = new Map();
             this.configurationStatus = 'none';
         }
     };
@@ -179,7 +183,7 @@ export class FlagsClient {
         // handled BEFORE this guard — rules are context-agnostic and must NOT be rejected
         // here as `invalid`.
         if (!precomputed) {
-            this.flagsCache = {};
+            this.flagsCache = new Map();
             this.configurationStatus = 'invalid';
             InternalLog.log(
                 `No usable precomputed configuration was provided for '${this.clientName}'.`,
@@ -188,11 +192,11 @@ export class FlagsClient {
             return;
         }
 
-        let decoded: Record<string, FlagCacheEntry>;
+        let decoded: Map<string, FlagCacheEntry>;
         try {
             decoded = decodePrecomputedFlags(precomputed.response);
         } catch (error) {
-            this.flagsCache = {};
+            this.flagsCache = new Map();
             this.configurationStatus = 'invalid';
             if (error instanceof Error) {
                 InternalLog.log(
@@ -298,7 +302,7 @@ export class FlagsClient {
         }
 
         // Retrieve the flag from the cache.
-        const flag = this.flagsCache[key];
+        const flag = this.flagsCache.get(key);
 
         if (!flag) {
             return {
