@@ -6,6 +6,7 @@ include:
 variables:
     GIT_DEPTH: 5
     DEVELOP_BRANCH: 'develop'
+    TART_VM_IMAGE: '486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'
     ANDROID_ARCH: 'arm64-v8a'
@@ -48,7 +49,7 @@ stages:
 
 test:lint:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -59,7 +60,7 @@ test:lint:
 
 test:js:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -71,7 +72,7 @@ test:js:
 
 test:build:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -82,14 +83,14 @@ test:build:
 
 test:native-android:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
-        - !reference [.snippets, install-android-sdk]
         - !reference [.snippets, install-jdk-17]
+        - !reference [.snippets, install-android-sdk]
         - /opt/homebrew/opt/openjdk@17/bin/java --version
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/core/android/gradle.properties
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
@@ -101,7 +102,7 @@ test:native-android:
 
 test:native-ios:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -113,7 +114,7 @@ test:native-ios:
 
 test:native-ios-sr:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -125,7 +126,7 @@ test:native-ios-sr:
 
 test:native-ios-newarch:
     tags: ['macos:tart']
-    image: "486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest"
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'

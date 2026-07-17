@@ -10,7 +10,12 @@ get_secret() {
     export VAULT_ADDR=$DD_VAULT_ADDR
     if [ "$CI" = "true" ]; then
         if [ -z "${AWS_ACCESS_KEY_ID:-}" ] || [ -z "${AWS_SECRET_ACCESS_KEY:-}" ]; then
-            eval "$(aws configure export-credentials --format env)"
+            local aws_env
+            if ! aws_env="$(aws configure export-credentials --format env)"; then
+                echo "Error: Failed to export AWS credentials via 'aws configure export-credentials'." >&2
+                exit 1
+            fi
+            eval "$aws_env"
         fi
         vault login -method=aws -no-print
     else
