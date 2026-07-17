@@ -128,6 +128,16 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(emitSpy).toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
+    it('rejects initialize when a config was loaded (pre-registration) and is invalid', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        mockFlagsClient.setConfiguration.mockReturnValueOnce('invalid');
+        provider.setConfiguration({} as never);
+
+        // The PROVIDER_ERROR emitted by setConfiguration had no listeners yet, so initialize
+        // must reject — OpenFeature then starts the provider in ERROR, not a misleading READY.
+        await expect(provider.initialize({})).rejects.toThrow();
+    });
+
     it('resolves boolean evaluation through the client', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 

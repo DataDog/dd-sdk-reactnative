@@ -59,6 +59,18 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
         this.applyContext(context);
+
+        // OpenFeature derives the provider's initial status from whether `initialize()`
+        // settles: resolve => READY, reject => ERROR. In the documented order —
+        // `setConfiguration(...)` then `setProviderAndWait(...)` — `setConfiguration` runs
+        // BEFORE the provider is registered, so any PROVIDER_ERROR it emitted had no
+        // listeners. Re-surface an already-loaded invalid configuration here so the provider
+        // starts in ERROR instead of a misleading READY that only serves default values.
+        if (this.hasEmittedError) {
+            throw new Error(
+                'The Datadog offline provider was given a configuration it cannot serve.'
+            );
+        }
     }
 
     async onContextChange(

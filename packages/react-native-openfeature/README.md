@@ -149,6 +149,13 @@ single-subject snapshot: if you do set a different runtime context it is ignored
 and the snapshot keeps being served for its embedded context — it is not an error. Per-context
 evaluation is a future (rules-based) capability.
 
+> **Note:** Load the configuration with `setConfiguration` _before_ `setProviderAndWait`, as shown
+> above. If you call `setProviderAndWait` before any successful `setConfiguration`, the provider
+> becomes `READY` with no configuration loaded, so flag evaluations return their **fallback
+> (default) values** until `setConfiguration` completes. With `suspendUntilReady` this means your
+> UI can un-suspend and render fallbacks before the real flag values are available. Configuring
+> first avoids this window.
+
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
 [3]: https://github.com/DataDog/dd-sdk-reactnative/tree/develop/packages/core
