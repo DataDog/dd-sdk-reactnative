@@ -91,9 +91,7 @@ internal fun ReadableMap.asTimeseriesConfiguration(): TimeseriesConfiguration {
     return TimeseriesConfiguration(
         enabled = getBooleanOrNull("enabled") ?: false,
         bufferSize = getDoubleOrNull("bufferSize"),
-        intervalMs = getDoubleOrNull("intervalMs"),
-        collectInBackground = getBooleanOrNull("collectInBackground"),
-        useDeltaCompression = getBooleanOrNull("useDeltaCompression")
+        intervalMs = getDoubleOrNull("intervalMs")
     )
 }
 
@@ -245,9 +243,7 @@ internal fun JSONTimeseriesConfiguration.asTimeseriesConfiguration(): Timeseries
     return TimeseriesConfiguration(
         enabled = this.enabled ?: false,
         bufferSize = this.bufferSize,
-        intervalMs = this.intervalMs,
-        collectInBackground = this.collectInBackground,
-        useDeltaCompression = this.useDeltaCompression
+        intervalMs = this.intervalMs
     )
 }
 
@@ -358,8 +354,6 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
             timeseriesMap.putBoolean("enabled", timeseries.enabled)
             timeseries.bufferSize?.let { timeseriesMap.putDouble("bufferSize", it) }
             timeseries.intervalMs?.let { timeseriesMap.putDouble("intervalMs", it) }
-            timeseries.collectInBackground?.let { timeseriesMap.putBoolean("collectInBackground", it) }
-            timeseries.useDeltaCompression?.let { timeseriesMap.putBoolean("useDeltaCompression", it) }
             rumMap.putMap("timeseries", timeseriesMap)
         }
 
