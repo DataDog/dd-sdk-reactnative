@@ -87,10 +87,14 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
             return;
         }
 
-        const outcome = this.flagsClient.setEvaluationContextWithoutFetching(
+        // No event is emitted here on purpose: a precomputed configuration is a single-subject
+        // snapshot, so a runtime context change does not change what is served (a differing
+        // context is ignored — and warned — by the client). Configuration-change events come
+        // from `setConfiguration`. (A future rules-based configuration, where the context does
+        // affect the result, would signal a change here.)
+        this.flagsClient.setEvaluationContextWithoutFetching(
             toDdContext(context)
         );
-        this.emitConfigurationOutcome(outcome);
     }
 
     private emitConfigurationOutcome(outcome: ConfigurationOutcome): void {

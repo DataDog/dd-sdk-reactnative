@@ -31,10 +31,11 @@ export const toDdContext = (
 };
 
 /**
- * Whether an OpenFeature evaluation context carries no information (no targeting key and no
- * attributes). Used by the offline provider to avoid overwriting a configuration's embedded
- * context with an empty context stamped by the OpenFeature lifecycle.
+ * Whether an OpenFeature evaluation context carries no information — no targeting key and no
+ * attributes with a defined value (so `{}` and `{ targetingKey: undefined }` are both empty).
+ * Used by the offline provider to avoid overwriting a configuration's embedded context with an
+ * empty context stamped by the OpenFeature lifecycle.
  */
 export const isEmptyContext = (context: OFEvaluationContext): boolean => {
-    return Object.keys(context).length === 0;
+    return Object.values(context).every(value => value === undefined);
 };

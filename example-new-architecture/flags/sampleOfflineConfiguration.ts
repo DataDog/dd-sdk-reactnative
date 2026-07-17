@@ -1,20 +1,16 @@
-// The boolean flag key demonstrated by the offline example.
+// The flag key shared with the online example, so the UI is comparable across providers.
 export const OFFLINE_FLAG_KEY = 'rn-sdk-test-boolean-flag';
 
-// Value type kept to JSON primitives so this is assignable to OpenFeature's
-// `EvaluationContext` when passed to `OpenFeature.setContext`.
 export type OfflineWireContext = {targetingKey?: string} & Record<
   string,
   string | number | boolean
 >;
 
-// The evaluation context the bundled configuration is precomputed for. This app also calls
-// `OpenFeature.setContext` (see App.tsx), so the two MUST be identical — context matching is
-// exact (targetingKey AND attributes). A mismatch surfaces PROVIDER_ERROR and the flag falls
-// back to its default.
-export const OFFLINE_CONTEXT: OfflineWireContext = {
+// The evaluation context the bundled configuration is precomputed for. Because the wire
+// carries its own context, the app does not need to call `OpenFeature.setContext` for the
+// offline flow.
+export const DEFAULT_OFFLINE_CONTEXT: OfflineWireContext = {
   targetingKey: 'example-offline-user',
-  favoriteFruit: 'apple',
 };
 
 /**
@@ -25,7 +21,7 @@ export const OFFLINE_CONTEXT: OfflineWireContext = {
  * the flag's fallback renders.
  */
 export const buildSampleWire = (
-  context: OfflineWireContext = OFFLINE_CONTEXT,
+  context: OfflineWireContext = DEFAULT_OFFLINE_CONTEXT,
   variationValue = true,
 ): string =>
   JSON.stringify({

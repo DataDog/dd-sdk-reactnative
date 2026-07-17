@@ -67,8 +67,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
     });
 
-    it('reconciles a non-empty context change without fetching', async () => {
+    it('reconciles a non-empty context change without fetching or signalling a change', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
+        const emitSpy = jest.spyOn(provider.events, 'emit');
 
         await provider.onContextChange({}, { targetingKey: 'user-2' });
 
@@ -78,6 +79,23 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
             expect.objectContaining({ targetingKey: 'user-2' })
         );
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
+        // A precomputed snapshot is context-independent, so a context change is not a
+        // configuration change — no PROVIDER_CONFIGURATION_CHANGED is emitted.
+        expect(emitSpy).not.toHaveBeenCalledWith(
+            ProviderEvents.ConfigurationChanged
+        );
+    });
+
+    it('treats a context with only an undefined targetingKey as empty', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+
+        await provider.onContextChange({}, { targetingKey: undefined });
+
+        // `{ targetingKey: undefined }` carries no information and must not override the
+        // configuration's embedded context.
+        expect(
+            mockFlagsClient.setEvaluationContextWithoutFetching
+        ).not.toHaveBeenCalled();
     });
 
     it('delegates setConfiguration to the client and emits CONFIGURATION_CHANGED', () => {

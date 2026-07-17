@@ -144,8 +144,10 @@ const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false)
 ```
 
 The configuration carries the evaluation context it was computed for, so you do not need to call
-`OpenFeature.setContext` for the offline precomputed flow. If you do set a context, it must match
-the configuration's context; otherwise the provider reports an error and serves default values.
+`OpenFeature.setContext` for the offline precomputed flow. A precomputed configuration is a
+single-subject snapshot: if you do set a different runtime context it is ignored (with a warning)
+and the snapshot keeps being served for its embedded context — it is not an error. Per-context
+evaluation is a future (rules-based) capability.
 
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
