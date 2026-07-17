@@ -292,7 +292,7 @@ internal struct DefaultConfiguration {
     static let trackWatchdogTerminations = false
     static let trackMemoryWarnings = true
     static let enableTimeseries = false
-    static let timeseriesBatchSize = 30.0
+    static let timeseriesBatchSize = 120.0
 }
 
 extension Dictionary where Key == String, Value == AnyObject {
