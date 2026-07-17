@@ -90,7 +90,7 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.bool).toEqual({
+        expect(cache.get('bool')).toEqual({
             key: 'bool',
             value: false,
             allocationKey: 'alloc-1',
@@ -101,20 +101,20 @@ describe('decodePrecomputedFlags', () => {
             doLog: false,
             extraLogging: {}
         });
-        expect(cache.str.value).toBe('hello');
-        expect(cache.str.variationValue).toBe('hello');
-        expect(cache.num.value).toBe(42);
-        expect(cache.num.variationValue).toBe('42');
+        expect(cache.get('str')?.value).toBe('hello');
+        expect(cache.get('str')?.variationValue).toBe('hello');
+        expect(cache.get('num')?.value).toBe(42);
+        expect(cache.get('num')?.variationValue).toBe('42');
         // integer/float keep their wire variationType but decode to a JS number.
-        expect(cache.int.value).toBe(7);
-        expect(cache.int.variationType).toBe('integer');
-        expect(cache.int.variationValue).toBe('7');
-        expect(cache.flt.value).toBe(1.5);
-        expect(cache.flt.variationType).toBe('float');
-        expect(cache.flt.variationValue).toBe('1.5');
+        expect(cache.get('int')?.value).toBe(7);
+        expect(cache.get('int')?.variationType).toBe('integer');
+        expect(cache.get('int')?.variationValue).toBe('7');
+        expect(cache.get('flt')?.value).toBe(1.5);
+        expect(cache.get('flt')?.variationType).toBe('float');
+        expect(cache.get('flt')?.variationValue).toBe('1.5');
         // objects are JSON-encoded for the string form; value stays an object.
-        expect(cache.obj.value).toEqual({ greeting: 'hi' });
-        expect(cache.obj.variationValue).toBe('{"greeting":"hi"}');
+        expect(cache.get('obj')?.value).toEqual({ greeting: 'hi' });
+        expect(cache.get('obj')?.variationValue).toBe('{"greeting":"hi"}');
     });
 
     it('uses the flag map key as the entry key', () => {
@@ -122,7 +122,7 @@ describe('decodePrecomputedFlags', () => {
             responseWith({ 'my-feature': flag({}) })
         );
 
-        expect(cache['my-feature'].key).toBe('my-feature');
+        expect(cache.get('my-feature')?.key).toBe('my-feature');
     });
 
     it('defaults missing extraLogging to an empty object', () => {
@@ -130,7 +130,7 @@ describe('decodePrecomputedFlags', () => {
             responseWith({ f: flag({ extraLogging: undefined }) })
         );
 
-        expect(cache.f.extraLogging).toEqual({});
+        expect(cache.get('f')?.extraLogging).toEqual({});
     });
 
     it('tolerates a null serialId', () => {
@@ -138,7 +138,7 @@ describe('decodePrecomputedFlags', () => {
             responseWith({ f: flag({ serialId: null }) })
         );
 
-        expect(cache.f.key).toBe('f');
+        expect(cache.get('f')?.key).toBe('f');
     });
 
     it('omits flags with an unsupported variation type and logs a warning', () => {
@@ -149,8 +149,8 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.good).toBeDefined();
-        expect(cache.bad).toBeUndefined();
+        expect(cache.get('good')).toBeDefined();
+        expect(cache.get('bad')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
@@ -164,7 +164,7 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.mismatched).toBeUndefined();
+        expect(cache.get('mismatched')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
@@ -176,8 +176,8 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.good).toBeDefined();
-        expect(cache.bad).toBeUndefined();
+        expect(cache.get('good')).toBeDefined();
+        expect(cache.get('bad')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
@@ -189,8 +189,8 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.badReason).toBeUndefined();
-        expect(cache.badDoLog).toBeUndefined();
+        expect(cache.get('badReason')).toBeUndefined();
+        expect(cache.get('badDoLog')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
@@ -201,7 +201,7 @@ describe('decodePrecomputedFlags', () => {
     });
 
     it('returns an empty map when there are no flags', () => {
-        expect(decodePrecomputedFlags(responseWith({}))).toEqual({});
+        expect(decodePrecomputedFlags(responseWith({})).size).toBe(0);
     });
 
     it('omits an integer flag with a fractional value', () => {
@@ -211,7 +211,7 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.frac).toBeUndefined();
+        expect(cache.get('frac')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
@@ -222,15 +222,15 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.inf).toBeUndefined();
+        expect(cache.get('inf')).toBeUndefined();
     });
 
     it('returns an empty map for a structurally broken response', () => {
         expect(
             decodePrecomputedFlags(
                 ({} as unknown) as Parameters<typeof decodePrecomputedFlags>[0]
-            )
-        ).toEqual({});
+            ).size
+        ).toBe(0);
     });
 
     it('accepts any JSON value for an object flag (array, null, primitive)', () => {
@@ -253,12 +253,12 @@ describe('decodePrecomputedFlags', () => {
             })
         );
 
-        expect(cache.arr.value).toEqual([1, 2, 3]);
-        expect(cache.arr.variationValue).toBe('[1,2,3]');
-        expect(cache.nul.value).toBeNull();
-        expect(cache.nul.variationValue).toBe('null');
-        expect(cache.str.value).toBe('hi');
-        expect(cache.str.variationValue).toBe('hi');
+        expect(cache.get('arr')?.value).toEqual([1, 2, 3]);
+        expect(cache.get('arr')?.variationValue).toBe('[1,2,3]');
+        expect(cache.get('nul')?.value).toBeNull();
+        expect(cache.get('nul')?.variationValue).toBe('null');
+        expect(cache.get('str')?.value).toBe('hi');
+        expect(cache.get('str')?.variationValue).toBe('hi');
     });
 
     it('stores a flag keyed "__proto__" as data without polluting the prototype', () => {
@@ -267,9 +267,9 @@ describe('decodePrecomputedFlags', () => {
             responseWith({ ['__proto__']: flag({ variationValue: true }) })
         );
 
-        // Stored as an own data property, not via the Object.prototype setter.
-        expect(Object.getPrototypeOf(cache)).toBe(Object.prototype);
-        expect(Object.keys(cache)).toContain('__proto__');
+        // A Map stores "__proto__" as an ordinary key, retrievable via .get(), and never
+        // touches Object.prototype.
+        expect(cache.get('__proto__')?.value).toBe(true);
         // No global prototype pollution.
         expect(({} as Record<string, unknown>).variationType).toBeUndefined();
     });

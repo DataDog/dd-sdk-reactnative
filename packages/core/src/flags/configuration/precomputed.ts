@@ -40,7 +40,7 @@ export class UnsupportedConfigurationError extends Error {
  */
 export const decodePrecomputedFlags = (
     response: PrecomputedConfigurationResponse
-): Record<string, FlagCacheEntry> => {
+): Map<string, FlagCacheEntry> => {
     const attributes = response?.data?.attributes;
 
     // `obfuscated` is not part of flagging-core's response type, but the CDN payload
@@ -54,10 +54,9 @@ export const decodePrecomputedFlags = (
     }
 
     const flags = attributes?.flags ?? {};
-    // Accumulate in a Map so a pathological flag keyed "__proto__" is stored as data
-    // instead of hitting the `Object.prototype` "__proto__" setter (which a plain
-    // `obj[key] = ...` assignment would). `Object.fromEntries` then materializes own
-    // properties without invoking inherited setters.
+    // A Map (returned as-is) so a pathological flag keyed "__proto__" is stored as data
+    // and later looked up via `.get()` — never hitting the `Object.prototype` "__proto__"
+    // setter (on write) or the prototype chain (on read) the way a plain object would.
     const cache = new Map<string, FlagCacheEntry>();
 
     for (const [key, flag] of Object.entries(flags)) {
@@ -67,7 +66,7 @@ export const decodePrecomputedFlags = (
         }
     }
 
-    return Object.fromEntries(cache);
+    return cache;
 };
 
 const toFlagCacheEntry = (
