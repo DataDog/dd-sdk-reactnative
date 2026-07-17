@@ -71,6 +71,10 @@ build-and-upload:app:
     - env | grep -iE 'AWS_|VAULT' || true
     - echo "=== DEBUG IAM proxy role ==="
     - curl -sS "$AWS_EC2_METADATA_SERVICE_ENDPOINT/latest/meta-data/iam/security-credentials/" -w "\nHTTP %{http_code}\n" || echo "curl failed"
+    - echo "=== DEBUG IAM proxy creds (assume) ==="
+    - ROLE=$(curl -sS "$AWS_EC2_METADATA_SERVICE_ENDPOINT/latest/meta-data/iam/security-credentials/")
+    - echo "role=$ROLE"
+    - curl -sS "$AWS_EC2_METADATA_SERVICE_ENDPOINT/latest/meta-data/iam/security-credentials/$ROLE" -w "\nHTTP %{http_code}\n" 2>&1 | sed -E 's/("SecretAccessKey"|"Token"):"[^"]*"/\1:"REDACTED"/g' || echo "curl failed"
     - echo "=== DEBUG aws sts ==="
     - aws sts get-caller-identity || echo ">>> aws sts FAILED - no creds"
     - echo "=== DEBUG aws cli version ==="
