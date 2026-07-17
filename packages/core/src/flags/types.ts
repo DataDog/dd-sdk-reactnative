@@ -169,8 +169,7 @@ type FlagErrorCode =
     | 'PROVIDER_NOT_READY'
     | 'FLAG_NOT_FOUND'
     | 'PARSE_ERROR'
-    | 'TYPE_MISMATCH'
-    | 'INVALID_CONTEXT';
+    | 'TYPE_MISMATCH';
 
 /**
  * Detailed information about a feature flag evaluation.

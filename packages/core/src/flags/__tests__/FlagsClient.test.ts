@@ -560,5 +560,29 @@ describe('FlagsClient', () => {
                 NativeModules.DdFlags.setEvaluationContext
             ).not.toHaveBeenCalled();
         });
+
+        it('attributes exposures to the embedded context when a differing context is ignored', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig({ targetingKey: 'user-1', country: 'US' })
+            );
+
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: { country: 'US' }
+            });
+
+            flagsClient.getBooleanValue('offline-bool', false);
+
+            // The exposure is attributed to the snapshot's embedded context (user-1), not
+            // the ignored runtime context (user-2).
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                expect.any(String),
+                'offline-bool',
+                expect.any(Object),
+                'user-1',
+                expect.objectContaining({ country: 'US' })
+            );
+        });
     });
 });

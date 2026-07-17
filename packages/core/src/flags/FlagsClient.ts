@@ -228,8 +228,8 @@ export class FlagsClient {
         // bound to the context it was computed for, and offline never fetches, so it cannot
         // be recomputed for a different subject. A runtime context that does not match is
         // therefore IGNORED: revert to the embedded context, keep serving the snapshot, and
-        // warn once. (Precomputed is single-subject by design — a rules-based configuration
-        // is the path for per-context evaluation.)
+        // warn on the change. (Precomputed is single-subject by design — a rules-based
+        // configuration is the path for per-context evaluation.)
         if (
             !contextMatchesConfiguration(
                 precomputed.context,

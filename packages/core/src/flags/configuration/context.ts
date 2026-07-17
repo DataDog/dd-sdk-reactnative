@@ -21,7 +21,8 @@ export const normalizeWireContext = (
     const { targetingKey, ...attributes } = wireContext;
 
     return processEvaluationContext({
-        targetingKey: targetingKey ?? '',
+        // The wire is untrusted, so a non-string targetingKey is treated as absent.
+        targetingKey: typeof targetingKey === 'string' ? targetingKey : '',
         // `processEvaluationContext` drops non-primitive attributes; casting here mirrors
         // how the active context's attributes are typed before that same processing.
         attributes: attributes as Record<string, PrimitiveValue>
