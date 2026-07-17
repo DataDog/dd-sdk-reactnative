@@ -112,13 +112,15 @@ export class FlagsClient {
 
     /**
      * Set the evaluation context **without** fetching a configuration from the network,
-     * then reconcile any configuration loaded via {@link setConfiguration} against it.
+     * then re-apply any configuration loaded via {@link setConfiguration} against it.
      *
      * This is the offline counterpart to {@link setEvaluationContext}: it records the
-     * active context and re-evaluates the loaded configuration (context matching, for a
-     * precomputed configuration) with no native request. It is intended for offline
-     * providers that own their configuration via `setConfiguration` and must not fetch on
-     * a context change. With no configuration loaded yet, the context is simply recorded.
+     * active context and re-applies the loaded configuration with no native request. A
+     * precomputed configuration is single-subject, so a context that differs from the one
+     * it was computed for is ignored (the snapshot keeps serving) with a warning. Intended
+     * for offline providers that own their configuration via `setConfiguration` and must
+     * not fetch on a context change. With no configuration loaded, previously served flags
+     * are cleared.
      *
      * @param context The evaluation context to associate with the current client.
      */
@@ -171,11 +173,11 @@ export class FlagsClient {
         const precomputed = this.loadedConfiguration?.precomputed;
 
         // Only precomputed configurations are supported for now. An empty configuration
-        // (an invalid/failed wire parse, or a server-only wire) is not usable.
+        // (an invalid/failed wire parse, or a wire with no precomputed branch) is not usable.
         //
-        // FORWARD-COMPAT SEAM: when the `server`/rules branch is parsed (see
-        // `ParsedFlagsConfiguration`), it must be handled BEFORE this guard — a rules
-        // configuration is context-agnostic and must NOT be rejected here as `invalid`.
+        // FORWARD-COMPAT SEAM: when a rules-based configuration is supported, it must be
+        // handled BEFORE this guard — rules are context-agnostic and must NOT be rejected
+        // here as `invalid`.
         if (!precomputed) {
             this.flagsCache = {};
             this.configurationStatus = 'invalid';
