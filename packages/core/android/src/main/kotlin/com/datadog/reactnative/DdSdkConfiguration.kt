@@ -94,15 +94,11 @@ data class RumConfiguration(
  * @param enabled Enables collection of memory and CPU timeseries events.
  * @param bufferSize The number of samples collected before a timeseries batch is flushed.
  * @param intervalMs The sampling interval in milliseconds.
- * @param collectInBackground Whether to keep sampling timeseries when the app is in background.
- * @param useDeltaCompression Whether to encode each sample as a delta from the previous value instead of an absolute value.
  */
 data class TimeseriesConfiguration(
     val enabled: Boolean,
     val bufferSize: Double? = null,
-    val intervalMs: Double? = null,
-    val collectInBackground: Boolean? = null,
-    val useDeltaCompression: Boolean? = null
+    val intervalMs: Double? = null
 )
 
 /**
@@ -184,9 +180,7 @@ internal data class JSONRumConfiguration(
 internal data class JSONTimeseriesConfiguration(
     val enabled: Boolean? = null,
     val bufferSize: Double? = null,
-    val intervalMs: Double? = null,
-    val collectInBackground: Boolean? = null,
-    val useDeltaCompression: Boolean? = null
+    val intervalMs: Double? = null
 )
 
 internal data class JSONLogsConfiguration(

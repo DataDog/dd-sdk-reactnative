@@ -276,8 +276,6 @@ class DdSdkNativeInitialization internal constructor(
         val nativeConfigBuilder = NativeTimeseriesConfiguration.Builder()
         timeseries.bufferSize?.let { nativeConfigBuilder.setBufferSize(it.toInt()) }
         timeseries.intervalMs?.let { nativeConfigBuilder.setIntervalMs(it.toLong()) }
-        timeseries.collectInBackground?.let { nativeConfigBuilder.collectInBackground(it) }
-        timeseries.useDeltaCompression?.let { nativeConfigBuilder.useDeltaCompression(it) }
 
         configBuilder.setTimeseriesConfiguration(nativeConfigBuilder.build())
     }

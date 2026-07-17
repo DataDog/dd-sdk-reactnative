@@ -282,14 +282,6 @@
                                 "intervalMs": {
                                     "description": "The sampling interval in milliseconds. Android only.",
                                     "type": "integer"
-                                },
-                                "collectInBackground": {
-                                    "description": "Whether to keep sampling timeseries when the app is in background. Android only.",
-                                    "type": "boolean"
-                                },
-                                "useDeltaCompression": {
-                                    "description": "Whether to encode each sample as a delta from the previous value instead of an absolute value. Android only.",
-                                    "type": "boolean"
                                 }
                             },
                             "required": [

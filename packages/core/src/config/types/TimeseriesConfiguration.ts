@@ -25,16 +25,4 @@ export interface TimeseriesConfiguration {
      * Android only.
      */
     intervalMs?: number;
-
-    /**
-     * Whether to keep sampling timeseries when the app is in background.
-     * Android only.
-     */
-    collectInBackground?: boolean;
-
-    /**
-     * Whether to encode each sample as a delta from the previous value instead of an absolute value.
-     * Android only.
-     */
-    useDeltaCompression?: boolean;
 }
