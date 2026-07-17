@@ -94,18 +94,18 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(emitSpy).not.toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
-    it('emits PROVIDER_ERROR on a mismatched configuration, then READY on recovery', () => {
+    it('emits PROVIDER_ERROR on an invalid configuration, then READY on recovery', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
-        mockFlagsClient.setConfiguration.mockReturnValueOnce('mismatch');
+        mockFlagsClient.setConfiguration.mockReturnValueOnce('invalid');
         provider.setConfiguration({} as never);
         expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.Error,
             expect.objectContaining({ message: expect.any(String) })
         );
 
-        // A subsequent matching config recovers — emit READY to clear the error status.
+        // A subsequent valid config recovers — emit READY to clear the error status.
         provider.setConfiguration({} as never);
         expect(emitSpy).toHaveBeenCalledWith(ProviderEvents.Ready);
     });

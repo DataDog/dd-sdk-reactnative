@@ -13,13 +13,11 @@ import {
   PropagatorType,
 } from '@datadog/mobile-react-native';
 import {
-  OpenFeature,
   OpenFeatureProvider,
   useBooleanFlagDetails,
   useObjectFlagDetails,
 } from '@openfeature/react-sdk';
 import {setFlagsProvider} from './flags/flagsProvider';
-import {OFFLINE_CONTEXT} from './flags/sampleOfflineConfiguration';
 import {FlagsSourceToggle} from './flags/FlagsSourceToggle';
 import React, {Suspense} from 'react';
 import type {PropsWithChildren} from 'react';
@@ -97,13 +95,9 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 })();
 
 function AppWithProviders() {
-  React.useEffect(() => {
-    // Set the same context the bundled offline configuration was precomputed for. Context
-    // matching is exact (targetingKey AND attributes), so this MUST equal OFFLINE_CONTEXT —
-    // otherwise the offline provider reports a mismatch and flags fall back to their defaults.
-    OpenFeature.setContext(OFFLINE_CONTEXT);
-  }, []);
-
+  // No OpenFeature.setContext here on purpose: the offline precomputed configuration is a
+  // single-subject snapshot served against the context it was computed for (see the wire's
+  // embedded context in flags/). A runtime context would simply be ignored (with a warning).
   return (
     <Suspense
       fallback={

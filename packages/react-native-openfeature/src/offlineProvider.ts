@@ -105,12 +105,15 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
                 // signalled as a configuration change.
                 this.events.emit(ProviderEvents.ConfigurationChanged);
             }
-        } else if (outcome === 'mismatch' || outcome === 'invalid') {
+        } else if (outcome === 'invalid') {
             this.hasEmittedError = true;
             this.events.emit(ProviderEvents.Error, {
-                message: `The Datadog offline provider cannot serve the loaded configuration (${outcome}).`
+                message:
+                    'The Datadog offline provider cannot serve the loaded configuration (invalid).'
             });
         }
-        // 'none' — no configuration engaged yet; nothing to signal.
+        // 'none' — no configuration engaged yet; nothing to signal. A runtime context that
+        // does not match a precomputed snapshot is not an error: the client ignores it
+        // (serving the snapshot for its embedded context) and warns.
     }
 }

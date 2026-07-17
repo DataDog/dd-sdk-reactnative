@@ -61,7 +61,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient)', ()
         );
     });
 
-    it('errors when an explicit context mismatches the config', async () => {
+    it('ignores an explicit context that mismatches the config instead of erroring', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider({
             clientName: 'offline-integration-mismatch'
         });
@@ -70,7 +70,12 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient)', ()
         await provider.initialize({ targetingKey: 'someone-else' });
         provider.setConfiguration(configurationFromString(wireFor('user-123')));
 
+        // Offline precomputed is single-subject: a differing context is ignored (with a
+        // warning) and the snapshot stays served — a configuration change, not an error.
         expect(emitSpy).toHaveBeenCalledWith(
+            ProviderEvents.ConfigurationChanged
+        );
+        expect(emitSpy).not.toHaveBeenCalledWith(
             ProviderEvents.Error,
             expect.anything()
         );
