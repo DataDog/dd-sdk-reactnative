@@ -22,8 +22,23 @@ import type { JsonValue, EvaluationContext, FlagDetails } from './types';
  * Tracks how a configuration supplied via {@link FlagsClient.setConfiguration} relates
  * to the active evaluation context. `'none'` means no offline configuration is engaged
  * (the online/fetch path is in effect).
+ *
+ * Modelled as an `as const` object rather than a TS `enum` so call sites read
+ * `ConfigurationStatus.Ready` — self-documenting and typo-safe — while the type stays a
+ * plain string union that erases at build time (no runtime enum code, friendlier to Babel
+ * and tree-shaking).
  */
-type ConfigurationStatus = 'none' | 'ready' | 'invalid';
+const ConfigurationStatus = {
+    None: 'none',
+    Ready: 'ready',
+    Invalid: 'invalid'
+} as const;
+
+// Intentional value + type merging: the const above provides the `.Ready`/`.None`/`.Invalid`
+// accessors, this alias provides the string-union type. Same name is the idiomatic pattern;
+// no-redeclare doesn't model TS's separate value/type namespaces.
+// eslint-disable-next-line no-redeclare, @typescript-eslint/no-redeclare
+type ConfigurationStatus = typeof ConfigurationStatus[keyof typeof ConfigurationStatus];
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -44,7 +59,7 @@ export class FlagsClient {
         | ParsedFlagsConfiguration
         | undefined = undefined;
 
-    private configurationStatus: ConfigurationStatus = 'none';
+    private configurationStatus: ConfigurationStatus = ConfigurationStatus.None;
 
     constructor(clientName: string = 'default') {
         this.clientName = clientName;
@@ -97,7 +112,7 @@ export class FlagsClient {
             // `applyConfiguration()` against the new context instead of dropping the
             // loaded configuration.
             this.loadedConfiguration = undefined;
-            this.configurationStatus = 'none';
+            this.configurationStatus = ConfigurationStatus.None;
         } catch (error) {
             // NOTE: a failed fetch leaves any previously loaded offline configuration in
             // place, so the client may keep serving it (and attribute exposures to its
@@ -140,7 +155,7 @@ export class FlagsClient {
             // No offline configuration is engaged: do not keep serving any previously
             // cached flags (e.g. from a prior online fetch) against the new context.
             this.flagsCache = new Map();
-            this.configurationStatus = 'none';
+            this.configurationStatus = ConfigurationStatus.None;
         }
     };
 
@@ -184,7 +199,7 @@ export class FlagsClient {
         // here as `invalid`.
         if (!precomputed) {
             this.flagsCache = new Map();
-            this.configurationStatus = 'invalid';
+            this.configurationStatus = ConfigurationStatus.Invalid;
             InternalLog.log(
                 `No usable precomputed configuration was provided for '${this.clientName}'.`,
                 SdkVerbosity.WARN
@@ -197,7 +212,7 @@ export class FlagsClient {
             decoded = decodePrecomputedFlags(precomputed.response);
         } catch (error) {
             this.flagsCache = new Map();
-            this.configurationStatus = 'invalid';
+            this.configurationStatus = ConfigurationStatus.Invalid;
             if (error instanceof Error) {
                 InternalLog.log(
                     `Unsupported flags configuration for '${this.clientName}': ${error.message}`,
@@ -224,7 +239,7 @@ export class FlagsClient {
             }
 
             this.flagsCache = decoded;
-            this.configurationStatus = 'ready';
+            this.configurationStatus = ConfigurationStatus.Ready;
             return;
         }
 
@@ -250,7 +265,7 @@ export class FlagsClient {
         }
 
         this.flagsCache = decoded;
-        this.configurationStatus = 'ready';
+        this.configurationStatus = ConfigurationStatus.Ready;
     };
 
     private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
@@ -281,7 +296,7 @@ export class FlagsClient {
         // A loaded-but-unusable configuration surfaces as PROVIDER_NOT_READY at the
         // evaluation layer (distinct from FLAG_NOT_FOUND). The dedicated PROVIDER_ERROR
         // provider event is wired by the OpenFeature provider in a later step.
-        if (this.configurationStatus === 'invalid') {
+        if (this.configurationStatus === ConfigurationStatus.Invalid) {
             return {
                 key,
                 value: defaultValue,
