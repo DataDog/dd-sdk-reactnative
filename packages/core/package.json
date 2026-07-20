@@ -117,7 +117,7 @@
         }
     },
     "dependencies": {
-        "@datadog/flagging-core": "^2.0.0",
+        "@datadog/flagging-core": "2.0.0",
         "big-integer": "^1.6.52"
     }
 }

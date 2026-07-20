@@ -2722,7 +2722,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datadog/flagging-core@npm:^2.0.0":
+"@datadog/flagging-core@npm:2.0.0":
   version: 2.0.0
   resolution: "@datadog/flagging-core@npm:2.0.0"
   dependencies:
@@ -2880,7 +2880,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
-    "@datadog/flagging-core": ^2.0.0
+    "@datadog/flagging-core": 2.0.0
     "@openfeature/core": ^1.9.2
     "@testing-library/react-native": 7.0.2
     big-integer: ^1.6.52
