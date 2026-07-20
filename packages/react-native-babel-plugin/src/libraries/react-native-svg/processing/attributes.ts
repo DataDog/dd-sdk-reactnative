@@ -19,7 +19,8 @@ import {
     rnSvgArrayAttributeValues,
     rnSvgTransformAttributeValues,
     svgAttributesCC,
-    svgAttributesKC
+    svgAttributesKC,
+    svgElements
 } from '../constants';
 import { convertStyleObjToCssObj, kebabCase } from '../utils';
 
@@ -91,6 +92,10 @@ export function handleRNSpecificAttributes(
     }
 
     return false;
+}
+
+export function isSupportedSvgElement(name: string): boolean {
+    return svgElements.has(name);
 }
 
 /**
@@ -325,7 +330,10 @@ export function handleJoinedTransformAttributes(
 
 /**
  * Converts a standard JSX attribute (e.g., `stroke`, `fill`, `opacity`) to a string literal
- * if it holds a valid value.
+ * if it holds a statically resolvable value. Attributes whose value can't be resolved at
+ * build time (e.g. `fill={color}`) are left untouched today — the plugin doesn't attempt to
+ * guess or drop them. Resolving these on the native side, once the runtime value is known, is
+ * planned as a follow-up and not yet implemented.
  *
  * @param t - Babel types helper.
  * @param attr - JSX attribute node.
@@ -333,10 +341,11 @@ export function handleJoinedTransformAttributes(
 export function handleRegularAttributes(
     t: typeof Babel.types,
     attr: Babel.types.JSXAttribute
-) {
+): void {
     const result = getJSXAttributeData(t, attr);
 
-    if (result.value) {
+    // !== null, not truthiness: 0/'' (e.g. opacity={0}) are valid resolved values.
+    if (result.value !== null) {
         attr.value = t.stringLiteral(result.value.toString());
     }
 }

@@ -27,11 +27,9 @@ import { HeartIcon, ShieldIcon } from './assets/icons';
 // Module-level const used in Case D1 to test findIdentifierInScope
 const BADGE_SIZE = 72;
 
-// Used in Group I to reproduce the customer's `AnimatedPath` case without pulling in
-// react-native-reanimated. `Animated.createAnimatedComponent` is core React Native and
-// produces the exact same shape that breaks the Babel plugin: a capitalized custom
-// component whose first-letter-lowercased tag name ('AnimatedPath' -> 'animatedPath')
-// is not in svgElements.
+// Used in Group I. `Animated.createAnimatedComponent` is core React Native and needs no
+// extra dependency to produce a capitalized custom component whose first-letter-lowercased
+// tag name ('AnimatedPath' -> 'animatedPath') is not in svgElements.
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 // ─────────────────────────────────────────────────────────────
@@ -266,12 +264,16 @@ function ViewBoxOnlyIcon() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GROUP E — Dynamic props
-// Non-resolvable props are stripped before svgo runs (Fix 1).
-// Shape is captured; dynamic attribute is absent in replay.
+// GROUP E — Dynamic props (known limitation, deferred to a follow-up PR)
+// A property value that can't be resolved at build time (e.g. fill={color}) is left as-is
+// rather than stripped or guessed at — stripping/altering properties can change an SVG's
+// bounds in ways that are hard to reason about. Left in place, it makes the generated markup
+// invalid, svgo fails to parse it, and the whole <Svg> is skipped — same graceful-failure path
+// as before any of this work, just no longer reachable for unsupported *tags* (see Group I).
+// A follow-up PR will pass these runtime values through the native view to fill in natively.
 // ─────────────────────────────────────────────────────────────
 
-/** E1: Dynamic fill on root element — fill dropped, container captured */
+/** E1: Dynamic fill on root element — EXPECTED: absent from replay entirely */
 function DynamicRootFill({ accentColor }: { accentColor: string }) {
     return (
         <Svg width="64" height="64" viewBox="0 0 64 64" fill={accentColor}>
@@ -280,7 +282,7 @@ function DynamicRootFill({ accentColor }: { accentColor: string }) {
     );
 }
 
-/** E2: Dynamic fill on child — child fill dropped, shape still captured */
+/** E2: Dynamic fill on child — EXPECTED: absent from replay entirely */
 function DynamicChildFill({ iconColor }: { iconColor: string }) {
     return (
         <Svg width="64" height="64" viewBox="0 0 64 64">
@@ -290,7 +292,7 @@ function DynamicChildFill({ iconColor }: { iconColor: string }) {
     );
 }
 
-/** E3: Dynamic stroke and strokeWidth — both dropped, base shape preserved */
+/** E3: Dynamic stroke and strokeWidth — EXPECTED: absent from replay entirely */
 function DynamicStrokeRect({ borderColor, borderWidth }: { borderColor: string; borderWidth: number }) {
     return (
         <Svg width="80" height="56" viewBox="0 0 80 56">
@@ -308,7 +310,7 @@ function DynamicStrokeRect({ borderColor, borderWidth }: { borderColor: string; 
     );
 }
 
-/** E4: Mix of static fill + dynamic opacity — fill kept, opacity dropped */
+/** E4: Mix of static fill + dynamic opacity — EXPECTED: absent from replay entirely */
 function DynamicOpacityCircle({ fadeLevel }: { fadeLevel: number }) {
     return (
         <Svg width="64" height="64" viewBox="0 0 64 64">
@@ -339,7 +341,7 @@ function BarrelShieldImport() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GROUP I — Unsupported nested elements (customer repro)
+// GROUP I — Unsupported nested elements
 // AnimatedPath isn't a recognized SVG tag, so it's now spliced out of the tree
 // instead of breaking generation for the whole parent <Svg> (see RNSvgHandler).
 // ─────────────────────────────────────────────────────────────
@@ -427,7 +429,7 @@ export default function SvgTestCases() {
             <RNText style={styles.heading}>Session Replay SVG Test Screen</RNText>
             <RNText style={styles.subtitle}>
                 All cases in Groups A–D should appear in replay.{'\n'}
-                Group E: shape appears, dynamic attr is absent.{'\n'}
+                Group E: known limitation — absent from replay entirely (see comment).{'\n'}
                 Group F: appears after buildSvgMap fixes.{'\n'}
                 Group G: privacy overrides — verify masking behavior in replay.{'\n'}
                 Group I: I1 shows circle only (checkmark removed), I2 shows circle + checkmark.
@@ -493,17 +495,17 @@ export default function SvgTestCases() {
                 </Case>
             </Section>
 
-            <Section title="E — Dynamic props (Fix 1: dropped attr, not dropped SVG)">
-                <Case label="E1 fill={accentColor}" sublabel="root fill dropped">
+            <Section title="E — Dynamic props (known limitation, see comment — deferred to a follow-up PR)">
+                <Case label="E1 fill={accentColor}" sublabel="expect: absent entirely">
                     <DynamicRootFill accentColor="#3498db" />
                 </Case>
-                <Case label="E2 fill={iconColor}" sublabel="child fill dropped">
+                <Case label="E2 fill={iconColor}" sublabel="expect: absent entirely">
                     <DynamicChildFill iconColor="#e74c3c" />
                 </Case>
-                <Case label="E3 stroke={color}" sublabel="stroke+width dropped">
+                <Case label="E3 stroke={color}" sublabel="expect: absent entirely">
                     <DynamicStrokeRect borderColor="#9b59b6" borderWidth={4} />
                 </Case>
-                <Case label="E4 opacity={fadeLevel}" sublabel="opacity dropped">
+                <Case label="E4 opacity={fadeLevel}" sublabel="expect: absent entirely">
                     <DynamicOpacityCircle fadeLevel={0.8} />
                 </Case>
             </Section>
@@ -561,8 +563,8 @@ export default function SvgTestCases() {
                 </Case>
 
                 {/*
-                  G4: imagePrivacy = MASK_NON_BUNDLED_ONLY, matching the customer's session
-                  setting. SVGs come from assets.bin (bundled), so EXPECTED: VISIBLE.
+                  G4: imagePrivacy = MASK_NON_BUNDLED_ONLY. SVGs come from assets.bin
+                  (bundled), so EXPECTED: VISIBLE.
                 */}
                 <Case label="G4 NonBundledOnly" sublabel="expect: visible (bundled)">
                     <SessionReplayView.Privacy
@@ -585,7 +587,7 @@ export default function SvgTestCases() {
                 </Case>
             </Section>
 
-            <Section title="I — Unsupported nested elements (customer repro)">
+            <Section title="I — Unsupported nested elements">
                 <Case label="I1 AnimatedPath (fixed)" sublabel="expect: circle only, no checkmark">
                     <BrokenAnimatedCheckmark />
                 </Case>
@@ -601,7 +603,10 @@ export default function SvgTestCases() {
                     from the Babel transform by design (index.ts:81,128). No DdPrivacyView wrapper
                     is ever created around them.{'\n\n'}
                     • SvgUri is listed in svgSupportedNames but its handler is commented out —
-                    &lt;SvgUri uri="..." /&gt; is silently skipped.
+                    &lt;SvgUri uri="..." /&gt; is silently skipped.{'\n\n'}
+                    • A property value that can't be resolved at build time (e.g. fill=&#123;color&#125;)
+                    makes the whole &lt;Svg&gt; skipped, not just that attribute — see Group E.
+                    A follow-up PR will fill these in on the native side instead.
                 </RNText>
             </View>
         </ScrollView>

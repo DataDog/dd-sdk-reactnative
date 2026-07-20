@@ -9,7 +9,7 @@ import generate from '@babel/generator';
 import { jsxAttribute, jSXIdentifier, stringLiteral } from '@babel/types';
 
 import { getNodeName } from '../../../utils';
-import { svgElements, svgSupportedNames, xmlNamespace } from '../constants';
+import { svgSupportedNames, xmlNamespace } from '../constants';
 import {
     buildTransformStringAttribute,
     handleArrayAttributes,
@@ -18,6 +18,7 @@ import {
     handleRNSpecificAttributes,
     handleSeparateTransformAttributes,
     handleSvgDimensions,
+    isSupportedSvgElement,
     validateAttribute
 } from '../processing/attributes';
 import { convertAttributeCasing } from '../utils';
@@ -56,6 +57,10 @@ export class RNSvgHandler implements SvgHandler {
 
         const clone = this.types.cloneNode(this.path.node, true);
 
+        if (!this.isElementSupported(this.types, clone)) {
+            return undefined;
+        }
+
         this.transformElement(this.types, this.path, clone, dimensions);
         this.setNamespace(this.types, clone);
 
@@ -84,97 +89,132 @@ export class RNSvgHandler implements SvgHandler {
     }
 
     /**
-     * Transforms an individual JSXElement by:
-     * - Converting tag casing to be web-compatible.
-     * - Processing and sanitizing attributes.
-     * - Recursively handling children.
-     *
-     * @param t - Babel types helper.
-     * @param el - JSXElement node to transform.
-     * @param dimensions - Optional object to collect extracted width/height info.
+     * Pure check, run before any mutation — callers never infer support from whether a
+     * transform happened to succeed. Only the element's own tag is checked here: unresolvable
+     * property *values* are handled separately (see `processAttributes`) and don't affect
+     * whether the element itself is kept.
+     */
+    private isElementSupported(
+        t: typeof Babel.types,
+        el: Babel.types.JSXElement
+    ): boolean {
+        const openingNode = el.openingElement.name;
+
+        // A member expression (<Foo.Bar />), namespaced name, or any other non-identifier tag
+        // name form is never in svgElements (a plain-string allowlist), so it's unsupported —
+        // but it would otherwise skip this check entirely and pass through unconverted,
+        // reopening the exact "one bad tag corrupts the whole SVG" failure this check exists
+        // to prevent.
+        if (!t.isJSXIdentifier(openingNode)) {
+            console.warn(
+                `RNSvgHandler[isElementSupported]: Removing element with an unsupported tag name form: "${getNodeName(
+                    t,
+                    openingNode
+                )}"`
+            );
+            return false;
+        }
+
+        const elementName = convertAttributeCasing(openingNode.name);
+
+        if (!isSupportedSvgElement(elementName)) {
+            console.warn(
+                `RNSvgHandler[isElementSupported]: Removing unsupported element: "${elementName}"`
+            );
+            return false;
+        }
+
+        if (el.closingElement) {
+            const closingNode = el.closingElement.name;
+
+            // Same treatment as the opening tag: return false (element removed by the caller)
+            // rather than throw. A throw here wouldn't clean up the malformed node first, and
+            // the mismatched tag left behind can make Babel's own code generation fail later —
+            // for the *whole file*, not just this element. Removing it keeps the tree valid.
+            if (!t.isJSXIdentifier(closingNode)) {
+                console.warn(
+                    `RNSvgHandler[isElementSupported]: Removing element with an unsupported closing tag name form: "${getNodeName(
+                        t,
+                        closingNode
+                    )}"`
+                );
+                return false;
+            }
+
+            const closingElementName = convertAttributeCasing(closingNode.name);
+
+            // `elementName` (the opening tag) is already confirmed supported above, so a
+            // mismatch check here also subsumes "closing tag is unsupported": the only way
+            // closingElementName can equal elementName is if it's supported too. Both tags can
+            // individually be supported elements yet still not match each other (e.g.
+            // <Circle>...</Rect>) — a real parser never produces this, but a malformed AST from
+            // AST manipulation upstream could. Left unchecked, this would generate invalid
+            // markup with the same whole-file blast radius as the other checks above.
+            if (closingElementName !== elementName) {
+                console.warn(
+                    `RNSvgHandler[isElementSupported]: Removing element with mismatched closing tag: "${elementName}" vs "${closingElementName}"`
+                );
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Assumes `isElementSupported(el)` already returned `true`.
      */
     private transformElement(
         t: typeof Babel.types,
         rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         el: Babel.types.JSXElement,
         dimensions: Record<string, string>
-    ) {
+    ): void {
         const openingNode = el.openingElement.name;
-        const isJSXIdentifierOpen = t.isJSXIdentifier(openingNode);
 
-        // Fix casing for openingElement
-        if (isJSXIdentifierOpen) {
+        if (t.isJSXIdentifier(openingNode)) {
             openingNode.name = convertAttributeCasing(openingNode.name);
-            if (!svgElements.has(openingNode.name)) {
-                console.warn(
-                    `RNSvgHandler[transformElement]: Skipping unsupported element: "${openingNode.name}"`
-                );
-                return; // Skip unsupported elements instead of crashing
-            }
         }
 
         const closingNode = el.closingElement?.name;
-        const isJSXIdentifierClose = t.isJSXIdentifier(closingNode);
 
-        // Fix casing for closingElement
-        if (isJSXIdentifierClose) {
+        if (t.isJSXIdentifier(closingNode)) {
             closingNode.name = convertAttributeCasing(closingNode.name);
-
-            if (!svgElements.has(closingNode.name)) {
-                throw new Error(
-                    `RNSvgHandler[transformElement]: Failed to transform element: "${closingNode.name}" is not supported`
-                );
-            }
         }
 
         this.processAttributes(t, rootElementPath, el, dimensions);
     }
 
-    /**
-     * Recursively traverses the children of a JSXElement and applies `transformElement`
-     * to each child that is itself a JSXElement.
-     *
-     * @param t - Babel types helper.
-     * @param rootElementPath - The path of the root JSX element containing the SVG.
-     *   Used to locate lexical scopes (component or program) for resolving variable references.
-     *   May be `null` if no traversal context is available.
-     * @param jsxElement - Parent JSXElement whose children will be transformed.
-     * @param dimensions - Optional object to propagate width/height info through child elements.
-     */
     private traverseAndTransformChildren(
         t: typeof Babel.types,
         rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string> = {}
     ) {
-        for (const child of jsxElement.children) {
-            if (t.isJSXElement(child)) {
-                this.transformElement(t, rootElementPath, child, dimensions);
+        const children = jsxElement.children;
+
+        // Iterate in reverse so splicing doesn't shift the indices of unvisited entries.
+        for (let i = children.length - 1; i >= 0; i--) {
+            const child = children[i];
+            if (!t.isJSXElement(child)) {
+                continue;
             }
+
+            if (!this.isElementSupported(t, child)) {
+                children.splice(i, 1);
+                continue;
+            }
+
+            this.transformElement(t, rootElementPath, child, dimensions);
         }
     }
 
-    /**
-     * Processes and transforms all attributes of a given JSXElement:
-     * - Removes invalid or unsupported attributes.
-     * - Normalizes attribute casing and naming.
-     * - Consolidates transform-related attributes into a single `transform` string.
-     * - Extracts dimensions and stores them in the provided `dimensions` object.
-     * - Recursively applies transformations to child elements.
-     *
-     * @param t - Babel types helper.
-     * @param rootElementPath - The path of the root JSX element containing the SVG.
-     *   Used to locate lexical scopes (component or program) for resolving variable references.
-     *   May be `null` if no traversal context is available.
-     * @param jsxElement - JSXElement whose attributes are to be processed.
-     * @param dimensions - Optional object to collect extracted width/height info.
-     */
     private processAttributes(
         t: typeof Babel.types,
         rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
         jsxElement: Babel.types.JSXElement,
         dimensions: Record<string, string> = {}
-    ) {
+    ): void {
         const el = jsxElement.openingElement;
         const name = getNodeName(t, el);
         const transformsArray: { name: string; value: string | number }[] = [];
@@ -192,7 +232,6 @@ export class RNSvgHandler implements SvgHandler {
                     continue;
                 }
 
-                // Handle RN style attribute & non-supported attributes
                 const rnAttributesHandled = handleRNSpecificAttributes(
                     t,
                     attr,
@@ -205,7 +244,6 @@ export class RNSvgHandler implements SvgHandler {
                     continue;
                 }
 
-                // Validate whether the attribute is valid
                 const { attrName, isInvalidAttribute } = validateAttribute(
                     attr.name.name
                 );
@@ -214,10 +252,6 @@ export class RNSvgHandler implements SvgHandler {
                     el.attributes.splice(index, 1);
                     continue;
                 }
-
-                /* If we reach this point we know we have a valid attribute name */
-
-                // Handle SVG dimensions
 
                 const {
                     resolved: dimensionsHandled,
@@ -233,18 +267,16 @@ export class RNSvgHandler implements SvgHandler {
                 );
 
                 if (dimensionsHandled) {
-                    // If dimension is invalid or if it's a variable that was not initialized in the file
-                    // We remove the attribute and assign a value in the native layer where we have access to wireframe's dimensions
+                    // Unresolved variable dimensions are filled in natively, where wireframe
+                    // sizing is available.
                     if (removeDimension) {
                         el.attributes.splice(index, 1);
                     }
                     continue;
                 }
 
-                // Set the formatted attibute name to our cloned element
                 attr.name.name = attrName;
 
-                // Handle array attributes
                 const arrayAttributesHandled = handleArrayAttributes(
                     t,
                     attr,
@@ -255,7 +287,6 @@ export class RNSvgHandler implements SvgHandler {
                     continue;
                 }
 
-                // Handle separate transform attributes
                 const separateTransformAttributesHandled = handleSeparateTransformAttributes(
                     t,
                     attr,
@@ -268,7 +299,6 @@ export class RNSvgHandler implements SvgHandler {
                     continue;
                 }
 
-                // Handle joined transform attributes
                 const joinedTransformAttributesHandled = handleJoinedTransformAttributes(
                     t,
                     attr,
@@ -287,10 +317,7 @@ export class RNSvgHandler implements SvgHandler {
             }
         }
 
-        // Create & Set a new transform attribute based on the element's transform attributes
         buildTransformStringAttribute(el, transformsArray);
-
-        // Goes through an elements children and transforms its properties
         this.traverseAndTransformChildren(t, null, jsxElement, dimensions);
     }
 }
