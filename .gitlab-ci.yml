@@ -44,6 +44,13 @@ stages:
 
 # TESTS
 
+check-simulators:
+    tags: ['macos:sonoma', 'specific:true']
+    stage: test
+    script:
+        - xcodebuild -version
+        - xcrun simctl list runtimes
+
 test:lint:
     tags: ['macos:sonoma', 'specific:true']
     stage: test
