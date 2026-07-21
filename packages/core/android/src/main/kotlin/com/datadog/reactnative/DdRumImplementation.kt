@@ -139,7 +139,7 @@ class DdRumImplementation internal constructor(
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
 
-        val eligibleAction = heatmapActionHandler.resolveEligibility(datadog, type, touch)
+        val eligibleAction = heatmapActionHandler.resolveEligibility(datadog, type, name, touch)
         if (eligibleAction == null) {
             addActionWithoutHeatmap(type, name, attributes)
             promise.resolve(null)

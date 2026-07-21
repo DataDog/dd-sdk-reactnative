@@ -24,6 +24,8 @@ class DdRum(
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : NativeDdRumSpec(reactContext) {
 
+    private val telemetry = DdTelemetry()
+
     private val implementation = DdRumImplementation(
         datadog = datadogWrapper,
         heatmapActionHandler = HeatmapActionHandler(
@@ -32,7 +34,8 @@ class DdRum(
                     val uiManagerType = ViewUtil.getUIManagerType(reactTag)
                     UIManagerHelper.getUIManager(reactApplicationContext, uiManagerType)
                         ?.resolveView(reactTag)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    telemetry.telemetryError("Failed to resolve view for heatmap tracking", e)
                     null
                 }
             })

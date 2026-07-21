@@ -22,8 +22,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
@@ -204,7 +207,7 @@ internal class HeatmapTouchResolverTest {
     }
 
     @Test
-    fun `M return null W resolve and view traversal throws`(
+    fun `M return null and report telemetry W resolve and view traversal throws`(
         @IntForgery(min = 1) fakeReactTag: Int,
         @DoubleForgery(0.0, 100.0) fakeX: Double,
         @DoubleForgery(0.0, 100.0) fakeY: Double,
@@ -212,9 +215,11 @@ internal class HeatmapTouchResolverTest {
     ) {
         // Given
         val mockView = mock<View>()
-        whenever(mockView.isClickable).thenThrow(RuntimeException("unexpected"))
+        val fakeException = RuntimeException("unexpected")
+        val mockTelemetry = mock<DdTelemetry>()
+        whenever(mockView.isClickable).thenThrow(fakeException)
 
-        val resolver = HeatmapTouchResolver(viewResolver = { mockView })
+        val resolver = HeatmapTouchResolver(viewResolver = { mockView }, telemetry = mockTelemetry)
 
         // When
         val result = resolver.resolveHeatmapActionData(
@@ -226,6 +231,7 @@ internal class HeatmapTouchResolverTest {
 
         // Then
         assertThat(result).isNull()
+        verify(mockTelemetry).telemetryError(any(), eq(fakeException))
     }
 
     @Test

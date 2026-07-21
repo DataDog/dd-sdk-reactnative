@@ -25,6 +25,8 @@ class DdRum(
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
+    private val telemetry = DdTelemetry()
+
     private val implementation = DdRumImplementation(
         datadog = datadogWrapper,
         heatmapActionHandler = HeatmapActionHandler(
@@ -32,7 +34,8 @@ class DdRum(
                 try {
                     UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.DEFAULT)
                         ?.resolveView(reactTag)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    telemetry.telemetryError("Failed to resolve view for heatmap tracking", e)
                     null
                 }
             })

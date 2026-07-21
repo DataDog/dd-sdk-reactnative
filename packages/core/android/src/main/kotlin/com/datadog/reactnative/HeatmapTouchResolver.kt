@@ -18,7 +18,8 @@ import com.datadog.android.heatmaps.CrossPlatformHeatmapActionData
  * the resulting hash matches the `permanentId` SR assigned to that view's wireframe.
  */
 internal class HeatmapTouchResolver(
-    private val viewResolver: (Int) -> View? = { null }
+    private val viewResolver: (Int) -> View? = { null },
+    private val telemetry: DdTelemetry = DdTelemetry()
 ) {
 
     /** Returns null if [reactTag] doesn't resolve to a valid tap target. */
@@ -47,6 +48,8 @@ internal class HeatmapTouchResolver(
         } else {
             null
         }
+    }.onFailure {
+        telemetry.telemetryError("Failed to resolve heatmap action data", it)
     }.getOrNull()
 
     // region Private helpers
