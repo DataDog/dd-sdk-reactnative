@@ -4,7 +4,13 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { ErrorCode, ProviderEvents } from '@openfeature/web-sdk';
+import {
+    ErrorCode,
+    GeneralError,
+    InvalidContextError,
+    ProviderEvents,
+    ProviderNotReadyError
+} from '@openfeature/web-sdk';
 
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 
@@ -88,7 +94,7 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
 
         await expect(
             provider.initialize({ targetingKey: 'user-2' })
-        ).rejects.toThrow();
+        ).rejects.toThrow(InvalidContextError);
     });
 
     it('rejects initialize when no configuration is loaded (provider-first)', async () => {
@@ -97,7 +103,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
             notReady
         );
 
-        await expect(provider.initialize({})).rejects.toThrow();
+        await expect(provider.initialize({})).rejects.toThrow(
+            ProviderNotReadyError
+        );
     });
 
     it('reconciles a matching context change without fetching or signalling a change', () => {
@@ -129,7 +137,7 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         // Synchronous throw so the Web SDK transitions straight to ERROR (no async race).
         expect(() =>
             provider.onContextChange({}, { targetingKey: 'user-2' })
-        ).toThrow();
+        ).toThrow(InvalidContextError);
     });
 
     it('re-adopts the embedded context on clearContext / empty context change', () => {
@@ -221,7 +229,7 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         mockFlagsClient.resetEvaluationContextWithoutFetching.mockReturnValueOnce(
             generalError
         );
-        await expect(provider.initialize({})).rejects.toThrow();
+        await expect(provider.initialize({})).rejects.toThrow(GeneralError);
     });
 
     it('resolves boolean evaluation through the client', () => {
