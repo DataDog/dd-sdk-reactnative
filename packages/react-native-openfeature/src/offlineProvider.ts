@@ -53,7 +53,8 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * configuration carries the evaluation context it was computed for, so you should **not** call
  * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
  *
- * A runtime context that is not deep-equal to the configuration's embedded context cannot be
+ * A runtime context that does not match the configuration's embedded context (compared after
+ * normalization) cannot be
  * served (offline never fetches), so it puts the provider into the OpenFeature `ERROR` state and
  * evaluations fall back to your coded defaults (`INVALID_CONTEXT`). Clearing or omitting context
  * re-adopts the embedded context and recovers. Load the configuration before setting the provider
