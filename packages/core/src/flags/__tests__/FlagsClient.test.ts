@@ -598,6 +598,37 @@ describe('FlagsClient', () => {
                 flagsClient.getBooleanValue('test-boolean-flag', false)
             ).toBe(true);
         });
+
+        it('drops the offline overlay when entering online mode, serving defaults if the fetch fails', async () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+
+            NativeModules.DdFlags.setEvaluationContext.mockRejectedValueOnce(
+                new Error('network down')
+            );
+            await expect(
+                flagsClient.setEvaluationContext({
+                    targetingKey: 'user-1',
+                    attributes: {}
+                })
+            ).rejects.toThrow('network down');
+
+            // Using one client for both modes is unsupported: the online fetch discards the offline
+            // overlay up front and warns, so a failed fetch serves coded defaults rather than the
+            // stale offline snapshot.
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                false
+            );
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                expect.stringContaining('online fetch was requested'),
+                expect.anything()
+            );
+        });
     });
 
     describe('setEvaluationContextWithoutFetching', () => {

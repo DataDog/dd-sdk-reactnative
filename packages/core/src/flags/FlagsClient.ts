@@ -132,6 +132,24 @@ export class FlagsClient {
         // Make sure to process the incoming context because we don't support nested object values in context.
         const processedContext = processEvaluationContext(context);
 
+        // Entering online mode drops any offline overlay *before* fetching, so a failed fetch falls
+        // back to coded defaults rather than continuing to serve a stale offline snapshot. Using one
+        // client for both online and offline is unsupported (give the offline provider its own
+        // `clientName`), so warn when an offline configuration is discarded here. Online-only clients
+        // have no overlay, so this does not touch their keep-last-known-flags-on-failure behavior.
+        if (this.loadedConfiguration.kind !== 'none') {
+            InternalLog.log(
+                `An offline configuration was loaded for '${this.clientName}' but an online fetch was requested; discarding it and serving default values on failure. Use a separate client for the offline provider.`,
+                SdkVerbosity.WARN
+            );
+            this.loadedConfiguration = { kind: 'none' };
+            this.configurationStatus = 'none';
+            this.configurationError = undefined;
+            this.flagsCache = new Map();
+            this.evaluationContext = undefined;
+            this.externalContext = undefined;
+        }
+
         try {
             const result = await this.nativeFlags.setEvaluationContext(
                 this.clientName,
@@ -142,17 +160,9 @@ export class FlagsClient {
             this.externalContext = processedContext;
             this.evaluationContext = processedContext;
             this.flagsCache = new Map(Object.entries(result));
-
-            // An explicit online fetch supersedes any previously loaded offline configuration.
-            // Online vs. offline is a property of the provider — the offline provider adopts
-            // context via `setEvaluationContextWithoutFetching` and never calls this method — so
-            // drop the offline overlay here to keep state coherent.
-            this.loadedConfiguration = { kind: 'none' };
-            this.configurationStatus = 'none';
-            this.configurationError = undefined;
         } catch (error) {
-            // NOTE: a failed fetch leaves any previously loaded offline configuration in
-            // place, so the client may keep serving it (and attribute exposures to its context).
+            // A failed fetch leaves the previous online cache in place (keep-last-known); any offline
+            // overlay was already dropped above, so no stale offline snapshot is served.
             if (error instanceof Error) {
                 InternalLog.log(
                     `Error setting flag evaluation context: ${error.message}`,
