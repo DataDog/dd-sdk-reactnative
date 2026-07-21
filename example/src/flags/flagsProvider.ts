@@ -17,6 +17,10 @@ export type FlagsSource = 'online' | 'offline';
  *   **before** setting it, so flags resolve immediately with no network request.
  * - `online`: the standard `DatadogOpenFeatureProvider`, which fetches assignments from the CDN.
  *
+ * The two providers use distinct `clientName`s so each is backed by its own `FlagsClient`.
+ * Sharing one client across the offline and online modes is unsupported (an online fetch would
+ * discard the offline configuration).
+ *
  * `DdFlags.enable()` must have been called once before this (it enables the native feature).
  */
 export const setFlagsProvider = async (
@@ -24,7 +28,9 @@ export const setFlagsProvider = async (
     offlineContext?: OfflineWireContext
 ): Promise<void> => {
     if (source === 'offline') {
-        const provider = new DatadogOfflineOpenFeatureProvider();
+        const provider = new DatadogOfflineOpenFeatureProvider({
+            clientName: 'offline'
+        });
         provider.setConfiguration(
             configurationFromString(buildSampleWire(offlineContext))
         );
@@ -32,5 +38,7 @@ export const setFlagsProvider = async (
         return;
     }
 
-    await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
+    await OpenFeature.setProviderAndWait(
+        new DatadogOpenFeatureProvider({ clientName: 'online' })
+    );
 };
