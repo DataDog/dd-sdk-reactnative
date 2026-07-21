@@ -13,6 +13,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.uimanager.UIManagerHelper
+import com.facebook.react.uimanager.common.UIManagerType
 
 /**
  * The entry point to use Datadog's RUM feature.
@@ -23,7 +25,19 @@ class DdRum(
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : ReactContextBaseJavaModule(reactContext) {
 
-    private val implementation = DdRumImplementation(datadog = datadogWrapper)
+    private val implementation = DdRumImplementation(
+        datadog = datadogWrapper,
+        heatmapActionHandler = HeatmapActionHandler(
+            heatmapTouchResolver = HeatmapTouchResolver(viewResolver = { reactTag ->
+                try {
+                    UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.DEFAULT)
+                        ?.resolveView(reactTag)
+                } catch (_: Exception) {
+                    null
+                }
+            })
+        )
+    )
 
     override fun getName(): String = DdRumImplementation.NAME
 
@@ -98,7 +112,6 @@ class DdRum(
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
      * @param touch The native touch data for tap actions, or null for other action types.
-     * Currently unused on Android; reserved for heatmap support.
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */

@@ -6,12 +6,14 @@
 
 package com.datadog.reactnative
 
+import com.datadog.android.heatmaps.CrossPlatformHeatmapActionData
 import com.datadog.android.rum.RumActionType
 import com.datadog.android.rum.RumAttributes
 import com.datadog.android.rum.RumErrorSource
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
+import com.datadog.android.rum._RumInternalProxy
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableMap
@@ -36,7 +38,11 @@ import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.inOrder
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
@@ -48,6 +54,18 @@ import org.mockito.quality.Strictness
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ForgeConfiguration(BaseConfigurator::class)
 internal class DdRumTest {
+
+    /**
+     * `RumMonitor._getInternal()` is a synthetic method (dd-sdk-android's `@NoOpImplementation`);
+     * Mockito can't override it, so stubbing it directly throws `AbstractMethodError`. A real
+     * compiled override sidesteps that.
+     */
+    private class RumMonitorWithInternalProxy(
+        monitor: RumMonitor,
+        private val internalProxy: _RumInternalProxy?
+    ) : RumMonitor by monitor {
+        override fun _getInternal(): _RumInternalProxy? = internalProxy
+    }
 
     // TODO: 14/12/2020 RUMM-925 Add the relevant unit tests after merging the feature/bridge branch
 
@@ -61,6 +79,12 @@ internal class DdRumTest {
 
     @Mock
     lateinit var mockPromise: Promise
+
+    @Mock
+    lateinit var mockInternalProxy: _RumInternalProxy
+
+    @Mock
+    lateinit var mockHeatmapTouchResolver: HeatmapTouchResolver
 
     lateinit var fakeContext: Map<String, Any?>
 
@@ -88,6 +112,8 @@ internal class DdRumTest {
 
     @AfterEach
     fun `tear down`() {
+        // Reset global heatmaps flag so it never leaks into subsequent tests
+        HeatmapActionHandler.heatmapsEnabled = false
     }
 
     @Test
@@ -555,4 +581,460 @@ internal class DdRumTest {
         // Then
         verify(mockRumMonitor).addFeatureFlagEvaluation(name, value)
     }
+
+    @Test
+    fun `M call addActionWithHeatmap W addAction() with TAP type and resolver returns data`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double,
+        @StringForgery fakeViewUrl: String
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn fakeViewUrl
+
+        val fakeHeatmapData = CrossPlatformHeatmapActionData(
+            elementPath = listOf("cls:android.view.View#0"),
+            viewUrl = fakeViewUrl,
+            positionX = fakeX.toLong(),
+            positionY = fakeY.toLong(),
+            targetWidth = 100L,
+            targetHeight = 50L
+        )
+        whenever(
+            mockHeatmapTouchResolver.resolveHeatmapActionData(
+                fakeReactTag,
+                fakeX.toLong(),
+                fakeY.toLong(),
+                fakeViewUrl
+            )
+        ) doReturn fakeHeatmapData
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockInternalProxy).addActionWithHeatmap(
+            eq(RumActionType.TAP),
+            eq(name),
+            eq(fakeHeatmapData),
+            eq(updatedContext)
+        )
+        verify(mockPromise).resolve(null)
+        verify(mockRumMonitor, never()).addAction(RumActionType.TAP, name, updatedContext)
+    }
+
+    @Test
+    fun `M fall back to addAction W addAction() with TAP type and resolver returns null`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double,
+        @StringForgery fakeViewUrl: String
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn fakeViewUrl
+        whenever(
+            mockHeatmapTouchResolver.resolveHeatmapActionData(any(), any(), any(), any())
+        ) doReturn null
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(any(), any(), any(), any())
+        verify(mockPromise).resolve(null)
+    }
+
+    @Test
+    fun `M call addAction W addAction() with TAP type and no internal proxy`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            null
+        )
+
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        // When
+        testedDdRum.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockPromise).resolve(null)
+    }
+
+    // region heatmapsEnabled gate and type guard
+
+    @Test
+    fun `M call addAction W addAction() TAP with touch but heatmapsEnabled false`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double
+    ) {
+        // Given — heatmapsEnabled false short-circuits before _getInternal() is reached
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        // When
+        testedDdRum.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(
+            any(),
+            any(),
+            any(),
+            any()
+        )
+    }
+
+    @Test
+    fun `M call addAction W addAction() non-TAP type with touch and heatmapsEnabled`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double
+    ) {
+        // Given — non-TAP type short-circuits before _getInternal() is reached
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "SCROLL",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.SCROLL, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(
+            any(),
+            any(),
+            any(),
+            any()
+        )
+    }
+
+    @Test
+    fun `M fall back to addAction W addAction() TAP with touch missing required keys`(
+        @StringForgery name: String,
+        @StringForgery fakeViewUrl: String
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn fakeViewUrl
+
+        val fakeIncompleteTouch = mapOf<String, Any>("reactTag" to 1).toReadableMap()
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeIncompleteTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(any(), any(), any(), any())
+        verify(mockPromise).resolve(null)
+    }
+
+    @Test
+    fun `M fall back to addAction W addAction() TAP with touch fields of the wrong type`(
+        @StringForgery name: String,
+        @StringForgery fakeViewUrl: String
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn fakeViewUrl
+
+        val fakeMistypedTouch = mapOf<String, Any>(
+            "reactTag" to 1,
+            "x" to "not-a-number",
+            "y" to 2.0
+        ).toReadableMap()
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeMistypedTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(any(), any(), any(), any())
+        verify(mockPromise).resolve(null)
+    }
+
+    @Test
+    fun `M fall back to addAction W addAction() TAP with no current view url`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double
+    ) {
+        // Given
+        val updatedContext = fakeContext.toReadableMap().toHashMap().toMutableMap().apply {
+            put(RumAttributes.INTERNAL_TIMESTAMP, fakeTimestamp.toLong())
+        }
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn null
+
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then
+        verify(mockRumMonitor).addAction(RumActionType.TAP, name, updatedContext)
+        verify(mockInternalProxy, never()).addActionWithHeatmap(any(), any(), any(), any())
+        verify(mockPromise).resolve(null)
+    }
+
+    @Test
+    fun `M resolve promise before dispatching heatmap work W addAction() with TAP type`(
+        @StringForgery name: String,
+        @IntForgery(min = 1) fakeReactTag: Int,
+        @DoubleForgery(0.0, 300.0) fakeX: Double,
+        @DoubleForgery(0.0, 300.0) fakeY: Double,
+        @StringForgery fakeViewUrl: String
+    ) {
+        // Given
+        HeatmapActionHandler.heatmapsEnabled = true
+        whenever(mockDatadog.getRumMonitor()) doReturn RumMonitorWithInternalProxy(
+            mockRumMonitor,
+            mockInternalProxy
+        )
+        whenever(mockInternalProxy.getCurrentViewUrl()) doReturn fakeViewUrl
+
+        val fakeHeatmapData = CrossPlatformHeatmapActionData(
+            elementPath = listOf("cls:android.view.View#0"),
+            viewUrl = fakeViewUrl,
+            positionX = fakeX.toLong(),
+            positionY = fakeY.toLong(),
+            targetWidth = 100L,
+            targetHeight = 50L
+        )
+        whenever(
+            mockHeatmapTouchResolver.resolveHeatmapActionData(any(), any(), any(), any())
+        ) doReturn fakeHeatmapData
+
+        val testedDdRumWithHeatmap = DdRumImplementation(
+            datadog = mockDatadog,
+            heatmapActionHandler = HeatmapActionHandler(
+                heatmapTouchResolver = mockHeatmapTouchResolver,
+                mainThreadExecutor = { it() }
+            )
+        )
+        val fakeTouch = mapOf<String, Any>(
+            "reactTag" to fakeReactTag,
+            "x" to fakeX,
+            "y" to fakeY,
+            "pageX" to fakeX,
+            "pageY" to fakeY
+        ).toReadableMap()
+
+        // When
+        testedDdRumWithHeatmap.addAction(
+            "TAP",
+            name,
+            fakeTouch,
+            fakeContext.toReadableMap(),
+            fakeTimestamp,
+            mockPromise
+        )
+
+        // Then — order holds even though mainThreadExecutor runs synchronously here
+        inOrder(mockPromise, mockInternalProxy) {
+            verify(mockPromise).resolve(null)
+            verify(mockInternalProxy).addActionWithHeatmap(any(), any(), any(), any())
+        }
+    }
+
+    // endregion
 }
