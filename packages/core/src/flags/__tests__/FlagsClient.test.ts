@@ -58,6 +58,30 @@ jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
         variationType: '',
         variationValue: '',
         extraLogging: {}
+    },
+    'test-flag-with-alloc-key': {
+        key: 'test-flag-with-alloc-key',
+        value: true,
+        allocationKey: 'alloc-abc',
+        variationKey: 'true',
+        reason: 'TARGETED',
+        doLog: true,
+        // Internal fields for Android.
+        variationType: '',
+        variationValue: '',
+        extraLogging: {}
+    },
+    'test-flag-no-alloc-key': {
+        key: 'test-flag-no-alloc-key',
+        value: false,
+        allocationKey: null,
+        variationKey: 'false',
+        reason: 'STATIC',
+        doLog: false,
+        // Internal fields for Android.
+        variationType: '',
+        variationValue: '',
+        extraLogging: {}
     }
 });
 
@@ -204,6 +228,36 @@ describe('FlagsClient', () => {
                 reason: 'ERROR',
                 errorCode: 'FLAG_NOT_FOUND'
             });
+        });
+
+        it('should populate allocationKey in details', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+
+            const details = flagsClient.getBooleanDetails(
+                'test-flag-with-alloc-key',
+                false
+            );
+
+            expect(details.allocationKey).toBe('alloc-abc');
+        });
+
+        it('should return null allocationKey when not present', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+
+            const details = flagsClient.getBooleanDetails(
+                'test-flag-no-alloc-key',
+                true
+            );
+
+            expect(details.allocationKey).toBeNull();
         });
 
         it('should return TYPE_MISMATCH when using wrong typed accessor method', async () => {

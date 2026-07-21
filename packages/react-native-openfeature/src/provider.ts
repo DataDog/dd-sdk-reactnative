@@ -8,7 +8,8 @@ import { DdFlags } from '@datadog/mobile-react-native';
 import type {
     FlagDetails,
     FlagsClient,
-    EvaluationContext as DdEvaluationContext
+    EvaluationContext as DdEvaluationContext,
+    PrimitiveValue
 } from '@datadog/mobile-react-native';
 import { OpenFeatureEventEmitter, ErrorCode } from '@openfeature/web-sdk';
 import type {
@@ -19,7 +20,6 @@ import type {
     Provider,
     ProviderMetadata,
     ResolutionDetails,
-    PrimitiveValue,
     ProviderEventEmitter,
     ProviderEvents
 } from '@openfeature/web-sdk';
