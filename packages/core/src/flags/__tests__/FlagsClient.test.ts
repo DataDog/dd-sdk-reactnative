@@ -319,45 +319,47 @@ describe('FlagsClient', () => {
         });
     });
 
+    const offlineFlags = {
+        'offline-bool': {
+            variationType: 'boolean',
+            variationValue: true,
+            variationKey: 'true',
+            allocationKey: 'alloc-1',
+            reason: 'STATIC',
+            doLog: false,
+            extraLogging: {}
+        }
+    };
+
+    const buildConfig = (
+        flags: Record<string, unknown>,
+        context?: Record<string, unknown>,
+        obfuscated = false
+    ) =>
+        configurationFromString(
+            JSON.stringify({
+                version: 1,
+                precomputed: {
+                    response: JSON.stringify({
+                        data: { attributes: { obfuscated, flags } }
+                    }),
+                    context
+                }
+            })
+        );
+
     describe('setConfiguration', () => {
-        const offlineFlags = {
-            'offline-bool': {
-                variationType: 'boolean',
-                variationValue: true,
-                variationKey: 'true',
-                allocationKey: 'alloc-1',
-                reason: 'STATIC',
-                doLog: false,
-                extraLogging: {}
-            }
-        };
-
-        const buildConfig = (
-            flags: Record<string, unknown>,
-            context?: Record<string, unknown>
-        ) =>
-            configurationFromString(
-                JSON.stringify({
-                    version: 1,
-                    precomputed: {
-                        response: JSON.stringify({
-                            data: { attributes: { obfuscated: false, flags } }
-                        }),
-                        context
-                    }
-                })
-            );
-
         it('serves flags from the configuration without a native fetch', () => {
             const flagsClient = DdFlags.getClient();
 
-            flagsClient.setConfiguration(
+            const result = flagsClient.setConfiguration(
                 buildConfig(offlineFlags, {
                     targetingKey: 'user-1',
                     country: 'US'
                 })
             );
 
+            expect(result).toEqual({ status: 'ready' });
             expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
                 true
             );
@@ -385,43 +387,67 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('ignores a differing explicit context, serving the snapshot and warning', async () => {
+        it('errors with INVALID_CONTEXT and serves defaults when an explicit context differs', async () => {
             const flagsClient = DdFlags.getClient();
             await flagsClient.setEvaluationContext({
                 targetingKey: 'user-1',
                 attributes: { country: 'US' }
             });
 
-            flagsClient.setConfiguration(
+            const result = flagsClient.setConfiguration(
                 buildConfig(offlineFlags, {
                     targetingKey: 'user-2',
                     country: 'US'
                 })
             );
 
-            // Offline precomputed is single-subject: the differing context is ignored and
-            // the snapshot is served for its embedded context, with a warning.
-            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
-                true
-            );
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                expect.stringContaining('Ignoring the evaluation context'),
-                expect.anything()
-            );
-        });
-
-        it('returns PROVIDER_NOT_READY for an empty/invalid configuration', () => {
-            const flagsClient = DdFlags.getClient();
-
-            flagsClient.setConfiguration(configurationFromString('garbage'));
-
+            // Offline precomputed is single-subject: a differing context cannot be served, so
+            // it is an error and evaluation returns the coded default with INVALID_CONTEXT.
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'INVALID_CONTEXT'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
             ).toMatchObject({
                 value: false,
                 reason: 'ERROR',
-                errorCode: 'PROVIDER_NOT_READY'
+                errorCode: 'INVALID_CONTEXT'
             });
+            // No exposure is tracked while serving defaults.
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+        });
+
+        it('errors with GENERAL for an empty/unparseable configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            const result = flagsClient.setConfiguration(
+                configurationFromString('garbage')
+            );
+
+            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'GENERAL'
+            });
+        });
+
+        it('errors with GENERAL for an unsupported (obfuscated) configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            const result = flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' }, true)
+            );
+
+            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'GENERAL' });
         });
 
         it('serves a context-agnostic configuration (no embedded context)', () => {
@@ -461,6 +487,45 @@ describe('FlagsClient', () => {
             expect(flagsClient.getBooleanValue('flag-b', false)).toBe(true);
         });
 
+        it('does not resurrect a prior valid snapshot after an invalid replacement', () => {
+            const flagsClient = DdFlags.getClient();
+
+            // Valid A.
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+
+            // Invalid replacement.
+            expect(
+                flagsClient.setConfiguration(configurationFromString('garbage'))
+            ).toEqual({ status: 'error', errorCode: 'GENERAL' });
+
+            // A later context change must NOT promote the invalid load back to ready.
+            const afterContextChange = flagsClient.setEvaluationContextWithoutFetching(
+                { targetingKey: 'user-1', attributes: {} }
+            );
+            expect(afterContextChange).toEqual({
+                status: 'error',
+                errorCode: 'GENERAL'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+
+            // A valid replacement recovers.
+            expect(
+                flagsClient.setConfiguration(
+                    buildConfig(offlineFlags, { targetingKey: 'user-1' })
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
         it('is superseded by a later native fetch', async () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
@@ -487,47 +552,21 @@ describe('FlagsClient', () => {
     });
 
     describe('setEvaluationContextWithoutFetching', () => {
-        const offlineFlags = {
-            'offline-bool': {
-                variationType: 'boolean',
-                variationValue: true,
-                variationKey: 'true',
-                allocationKey: 'alloc-1',
-                reason: 'STATIC',
-                doLog: false,
-                extraLogging: {}
-            }
-        };
-
-        const buildConfig = (context: Record<string, unknown>) =>
-            configurationFromString(
-                JSON.stringify({
-                    version: 1,
-                    precomputed: {
-                        response: JSON.stringify({
-                            data: {
-                                attributes: {
-                                    obfuscated: false,
-                                    flags: offlineFlags
-                                }
-                            }
-                        }),
-                        context
-                    }
+        it('reconciles a loaded config against a matching context without fetching', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-1',
+                    country: 'US'
                 })
             );
 
-        it('reconciles a loaded config against the context without fetching', () => {
-            const flagsClient = DdFlags.getClient();
-            flagsClient.setConfiguration(
-                buildConfig({ targetingKey: 'user-1', country: 'US' })
-            );
-
-            flagsClient.setEvaluationContextWithoutFetching({
+            const result = flagsClient.setEvaluationContextWithoutFetching({
                 targetingKey: 'user-1',
                 attributes: { country: 'US' }
             });
 
+            expect(result).toEqual({ status: 'ready' });
             expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
                 true
             );
@@ -536,53 +575,153 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('ignores a differing context change, still serving without fetching', () => {
+        it('errors with INVALID_CONTEXT on a differing context change, serving defaults', () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
-                buildConfig({ targetingKey: 'user-1', country: 'US' })
+                buildConfig(offlineFlags, {
+                    targetingKey: 'user-1',
+                    country: 'US'
+                })
             );
 
-            flagsClient.setEvaluationContextWithoutFetching({
+            const result = flagsClient.setEvaluationContextWithoutFetching({
                 targetingKey: 'user-2',
                 attributes: { country: 'US' }
             });
 
-            // The differing context is ignored (offline never fetches) and the snapshot is
-            // still served for its embedded context, with a warning.
-            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
-                true
-            );
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                expect.stringContaining('Ignoring the evaluation context'),
-                expect.anything()
-            );
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'INVALID_CONTEXT'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ value: false, errorCode: 'INVALID_CONTEXT' });
             expect(
                 NativeModules.DdFlags.setEvaluationContext
             ).not.toHaveBeenCalled();
+            // Defaults are served, so no exposure is tracked.
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
         });
 
-        it('attributes exposures to the embedded context when a differing context is ignored', () => {
+        it('recovers to ready when a matching context is set after a mismatch', () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
-                buildConfig({ targetingKey: 'user-1', country: 'US' })
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
             );
 
             flagsClient.setEvaluationContextWithoutFetching({
                 targetingKey: 'user-2',
-                attributes: { country: 'US' }
+                attributes: {}
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'INVALID_CONTEXT' });
+
+            const recovered = flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
             });
 
-            flagsClient.getBooleanValue('offline-bool', false);
-
-            // The exposure is attributed to the snapshot's embedded context (user-1), not
-            // the ignored runtime context (user-2).
-            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
-                expect.any(String),
-                'offline-bool',
-                expect.any(Object),
-                'user-1',
-                expect.objectContaining({ country: 'US' })
+            expect(recovered).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
             );
+        });
+
+        it('returns PROVIDER_NOT_READY (not FLAG_NOT_FOUND) with no configuration loaded', () => {
+            const flagsClient = DdFlags.getClient();
+
+            const result = flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PROVIDER_NOT_READY'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PROVIDER_NOT_READY'
+            });
+        });
+    });
+
+    describe('resetEvaluationContextWithoutFetching', () => {
+        it('re-adopts the embedded context, recovering from a mismatch', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: {}
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'INVALID_CONTEXT' });
+
+            const result = flagsClient.resetEvaluationContextWithoutFetching();
+
+            expect(result).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('clears the override so a config loaded after reset adopts its embedded context', () => {
+            const flagsClient = DdFlags.getClient();
+
+            // No config yet, an external context is set, then cleared.
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: {}
+            });
+            flagsClient.resetEvaluationContextWithoutFetching();
+
+            // Loading A now adopts A's embedded context (not the stale user-2 override).
+            const result = flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+
+            expect(result).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('clears the override after an invalid load so a later valid load is ready', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(configurationFromString('garbage'));
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: {}
+            });
+            flagsClient.resetEvaluationContextWithoutFetching();
+
+            const result = flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+
+            expect(result).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns PROVIDER_NOT_READY with no configuration loaded', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(
+                flagsClient.resetEvaluationContextWithoutFetching()
+            ).toEqual({ status: 'error', errorCode: 'PROVIDER_NOT_READY' });
         });
     });
 });
