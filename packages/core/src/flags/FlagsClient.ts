@@ -70,6 +70,15 @@ export class FlagsClient {
 
     private clientName: string;
 
+    // The context the app explicitly set — the online fetch context, or the offline override via
+    // {@link setEvaluationContextWithoutFetching}. `undefined` means "no external override": an
+    // offline precomputed configuration is then served against its own embedded context. Tracked
+    // separately from {@link evaluationContext} so that adopting a configuration's embedded context
+    // is never mistaken for an app-set override (which would spuriously fail a later replacement).
+    private externalContext: EvaluationContext | undefined = undefined;
+
+    // The effective context evaluation and exposure tracking run against: the external override
+    // when set, otherwise the loaded configuration's embedded context.
     private evaluationContext: EvaluationContext | undefined = undefined;
 
     // The servable flag cache. On the online path it holds the native-fetched flags; on the
@@ -130,6 +139,7 @@ export class FlagsClient {
                 processedContext.attributes ?? {}
             );
 
+            this.externalContext = processedContext;
             this.evaluationContext = processedContext;
             this.flagsCache = new Map(Object.entries(result));
 
@@ -170,7 +180,7 @@ export class FlagsClient {
     setEvaluationContextWithoutFetching = (
         context: EvaluationContext
     ): ConfigurationResult => {
-        this.evaluationContext = processEvaluationContext(context);
+        this.externalContext = processEvaluationContext(context);
 
         return this.reconcile();
     };
@@ -185,7 +195,7 @@ export class FlagsClient {
      * configuration loaded the result is `PROVIDER_NOT_READY`.
      */
     resetEvaluationContextWithoutFetching = (): ConfigurationResult => {
-        this.evaluationContext = undefined;
+        this.externalContext = undefined;
 
         return this.reconcile();
     };
@@ -287,44 +297,43 @@ export class FlagsClient {
 
         const { configuration, flags } = loaded;
 
-        // Adopt the configuration's embedded context when no external context is set (implicit
-        // set — no native fetch). A context-agnostic configuration falls back to an empty context.
-        if (!this.evaluationContext) {
-            if (configuration.context) {
-                this.evaluationContext = normalizeWireContext(
-                    configuration.context
-                );
-            } else {
-                InternalLog.log(
-                    `The provided configuration for '${this.clientName}' has no embedded context; treating it as context-agnostic.`,
-                    SdkVerbosity.WARN
-                );
-                this.evaluationContext = { targetingKey: '', attributes: {} };
-            }
-        }
-
-        // A precomputed snapshot is bound to the subject it was computed for. A non-matching
-        // context cannot be served (offline never fetches), so it is an error and evaluation
-        // serves coded defaults. The decoded snapshot is retained for a later matching context.
+        // A precomputed snapshot is bound to the subject it was computed for. If the app set an
+        // *external* context that does not match, it cannot be served (offline never fetches), so
+        // it is an error and evaluation serves coded defaults. Only an external override is checked
+        // here — the configuration's own embedded context (adopted below when no override is set)
+        // matches by construction, so replacing one snapshot with another for a different subject
+        // stays `ready`. The decoded snapshot is retained for a later matching context.
         if (
+            this.externalContext &&
             !contextMatchesConfiguration(
                 configuration.context,
-                this.evaluationContext
+                this.externalContext
             )
         ) {
-            // The decoded snapshot stays in `loadedConfiguration.flags`; a later matching context
-            // reconciles back to `ready` and repopulates `flagsCache` — no re-decode needed.
             return this.enterError(
                 'INVALID_CONTEXT',
                 `The evaluation context does not match the precomputed configuration for '${this.clientName}'. Serving default values. Set a matching context, or use a rules-based configuration for per-context evaluation.`
             );
         }
 
+        // Serve against the external override when set, otherwise the configuration's embedded
+        // context (a context-agnostic configuration falls back to an empty context).
+        this.evaluationContext =
+            this.externalContext ?? this.embeddedContext(configuration);
         this.flagsCache = flags;
         this.configurationStatus = 'ready';
         this.configurationError = undefined;
 
         return { status: 'ready' };
+    };
+
+    /** The evaluation context a precomputed configuration was computed for (empty if agnostic). */
+    private embeddedContext = (
+        configuration: ParsedPrecomputedConfiguration
+    ): EvaluationContext => {
+        return configuration.context
+            ? normalizeWireContext(configuration.context)
+            : { targetingKey: '', attributes: {} };
     };
 
     /** Record an error status + message, clear the servable cache, and return the result. */

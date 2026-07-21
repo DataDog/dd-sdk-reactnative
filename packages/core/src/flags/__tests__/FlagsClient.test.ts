@@ -487,6 +487,55 @@ describe('FlagsClient', () => {
             expect(flagsClient.getBooleanValue('flag-b', false)).toBe(true);
         });
 
+        it('replaces a snapshot for one subject with a snapshot for another (no external context)', () => {
+            const flagsClient = DdFlags.getClient();
+
+            // Load A for user-1 — no external context is set, so A's embedded context is adopted.
+            expect(
+                flagsClient.setConfiguration(
+                    buildConfig(
+                        { 'flag-a': offlineFlags['offline-bool'] },
+                        { targetingKey: 'user-1' }
+                    )
+                )
+            ).toEqual({ status: 'ready' });
+
+            // Replace with B for a DIFFERENT subject. Because the app never set an external
+            // context, this must adopt B's embedded context and stay ready — not error as a
+            // mismatch against A's adopted context.
+            expect(
+                flagsClient.setConfiguration(
+                    buildConfig(
+                        { 'flag-b': offlineFlags['offline-bool'] },
+                        { targetingKey: 'user-2' }
+                    )
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('flag-b', false)).toBe(true);
+            expect(
+                flagsClient.getBooleanDetails('flag-a', false)
+            ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+        });
+
+        it('adopts a subject-bound snapshot loaded after a context-agnostic one (no external context)', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(buildConfig(offlineFlags));
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildConfig(
+                        { 'flag-b': offlineFlags['offline-bool'] },
+                        { targetingKey: 'user-2' }
+                    )
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('flag-b', false)).toBe(true);
+        });
+
         it('does not resurrect a prior valid snapshot after an invalid replacement', () => {
             const flagsClient = DdFlags.getClient();
 
