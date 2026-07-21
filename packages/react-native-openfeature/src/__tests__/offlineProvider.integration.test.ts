@@ -4,12 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Integration test: exercises the offline provider against the REAL core FlagsClient (no mock
-// of @datadog/mobile-react-native), so the actual configuration parse + context reconcile run.
-// It asserts via provider events only (no flag evaluation), so it needs no native module.
+// Integration test: exercises the offline provider against the REAL core FlagsClient (no mock of
+// @datadog/mobile-react-native) AND through the REAL OpenFeature Web SDK lifecycle, so the actual
+// configuration parse, context reconcile, and provider-status transitions run. Assertions read
+// the SDK's provider status (the status-overwrite bug is only visible end to end) and evaluate
+// only in the ERROR state (which returns the coded default before any native tracking call), so
+// no native module is required.
 
 import { configurationFromString } from '@datadog/mobile-react-native';
-import { ProviderEvents } from '@openfeature/web-sdk';
+import { OpenFeature, ProviderStatus } from '@openfeature/web-sdk';
 
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 
@@ -39,45 +42,101 @@ const wireFor = (targetingKey: string): string =>
         }
     });
 
-describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient)', () => {
-    it('adopts the config context after initialize({}) — regression for empty-context stamping', async () => {
-        const provider = new DatadogOfflineOpenFeatureProvider({
-            clientName: 'offline-integration-adopt'
-        });
-        const emitSpy = jest.spyOn(provider.events, 'emit');
+// A unique OpenFeature domain + Datadog clientName per test keeps providers isolated (separate
+// domains otherwise share the same underlying FlagsClient).
+let seq = 0;
+const freshNames = () => {
+    seq += 1;
+    return { domain: `offline-int-${seq}`, clientName: `offline-int-${seq}` };
+};
 
-        // Empty OpenFeature context (as OpenFeature stamps on setProviderAndWait) must NOT
-        // defeat the configuration's embedded context.
-        await provider.initialize({});
+describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + OpenFeature)', () => {
+    afterEach(async () => {
+        await OpenFeature.clearProviders();
+    });
+
+    it('is READY when a matching configuration is loaded before registration', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
         provider.setConfiguration(configurationFromString(wireFor('user-123')));
 
-        // Before the fix this mismatched → PROVIDER_ERROR; now it serves → configuration change.
-        expect(emitSpy).toHaveBeenCalledWith(
-            ProviderEvents.ConfigurationChanged
-        );
-        expect(emitSpy).not.toHaveBeenCalledWith(
-            ProviderEvents.Error,
-            expect.anything()
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        expect(OpenFeature.getClient(domain).providerStatus).toBe(
+            ProviderStatus.READY
         );
     });
 
-    it('ignores an explicit context that mismatches the config instead of erroring', async () => {
-        const provider = new DatadogOfflineOpenFeatureProvider({
-            clientName: 'offline-integration-mismatch'
-        });
-        const emitSpy = jest.spyOn(provider.events, 'emit');
-
-        await provider.initialize({ targetingKey: 'someone-else' });
+    it('enters ERROR and serves defaults on a mismatching setContext, then recovers on a matching one', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
         provider.setConfiguration(configurationFromString(wireFor('user-123')));
+        await OpenFeature.setProviderAndWait(domain, provider);
 
-        // Offline precomputed is single-subject: a differing context is ignored (with a
-        // warning) and the snapshot stays served — a configuration change, not an error.
-        expect(emitSpy).toHaveBeenCalledWith(
-            ProviderEvents.ConfigurationChanged
+        // A runtime context that does not match the snapshot cannot be served.
+        await OpenFeature.setContext(domain, { targetingKey: 'someone-else' });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+        // Serving the coded default (evaluated in the ERROR state — no native tracking).
+        expect(client.getBooleanValue('new-feature', false)).toBe(false);
+
+        // Setting the matching context again recovers automatically.
+        await OpenFeature.setContext(domain, { targetingKey: 'user-123' });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+    });
+
+    it('stays READY when the context is cleared (empty = re-adopt embedded)', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString(wireFor('user-123')));
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        await OpenFeature.setContext(domain, { targetingKey: 'user-123' });
+        expect(OpenFeature.getClient(domain).providerStatus).toBe(
+            ProviderStatus.READY
         );
-        expect(emitSpy).not.toHaveBeenCalledWith(
-            ProviderEvents.Error,
-            expect.anything()
+
+        // clearContext() falls back to the empty global context; empty means "no override", so
+        // the embedded context is re-adopted and the provider stays READY.
+        await OpenFeature.clearContext(domain);
+        expect(OpenFeature.getClient(domain).providerStatus).toBe(
+            ProviderStatus.READY
         );
+    });
+
+    it('starts in ERROR when registered before any configuration, then recovers via setConfiguration', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+
+        // Provider-first: initialize rejects (no usable configuration), so registration surfaces
+        // an error and the provider is ERROR rather than a misleading READY.
+        await expect(
+            OpenFeature.setProviderAndWait(domain, provider)
+        ).rejects.toThrow();
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+
+        // Loading a valid configuration recovers via the emitted PROVIDER_READY.
+        provider.setConfiguration(configurationFromString(wireFor('user-123')));
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+    });
+
+    it('recovers via setConfiguration when a config matching the current context is loaded', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString(wireFor('user-123')));
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        await OpenFeature.setContext(domain, { targetingKey: 'someone-else' });
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+
+        // Load a configuration computed for the now-current context: it reconciles to ready and
+        // setConfiguration emits PROVIDER_READY.
+        provider.setConfiguration(
+            configurationFromString(wireFor('someone-else'))
+        );
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
     });
 });

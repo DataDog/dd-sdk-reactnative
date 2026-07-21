@@ -143,18 +143,36 @@ const client = OpenFeature.getClient();
 const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false);
 ```
 
-The configuration carries the evaluation context it was computed for, so you do not need to call
-`OpenFeature.setContext` for the offline precomputed flow. A precomputed configuration is a
-single-subject snapshot: if you do set a different runtime context it is ignored (with a warning)
-and the snapshot keeps being served for its embedded context — it is not an error. Per-context
-evaluation is a future (rules-based) capability.
+The configuration carries the evaluation context it was computed for, and the provider adopts it
+automatically. A precomputed configuration is a **single-subject snapshot**: it can only be served
+against the context it was computed for. Per-context evaluation is a future (rules-based) capability.
+
+> **Warning:** Do **not** call `OpenFeature.setContext` with a _different_ context for the offline
+> precomputed flow. A runtime context that is not deep-equal to the configuration's embedded context
+> cannot be served (offline never fetches), so the provider enters the OpenFeature **`ERROR`** state
+> and evaluations fall back to your **coded default values** (evaluation `errorCode: INVALID_CONTEXT`).
+> Setting a matching context again — or clearing/omitting context — recovers the provider to `READY`.
+
+Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
+
+- **Bind the offline provider to a dedicated OpenFeature domain** so a global `OpenFeature.setContext`
+  (which reaches providers bound to domains without their own context) does not put it into `ERROR`.
+- **Give that domain an explicit empty context** at registration (`OpenFeature.setContext(domain, {})`),
+  which this provider interprets as "no override — use the embedded context".
+- **Use a unique Datadog `clientName`** (`new DatadogOfflineOpenFeatureProvider({ clientName })`):
+  separate OpenFeature domains otherwise share the same underlying `DdFlags.getClient('default')`.
+
+Because you do not set an OpenFeature context, note the **context split**: OpenFeature hooks observe
+the OpenFeature evaluation context (`{}` when unset), while Datadog exposure tracking attributes
+evaluations to the configuration's embedded context.
 
 > **Note:** Load the configuration with `setConfiguration` _before_ `setProviderAndWait`, as shown
-> above. If you call `setProviderAndWait` before any successful `setConfiguration`, the provider
-> becomes `READY` with no configuration loaded, so flag evaluations return their **fallback
-> (default) values** until `setConfiguration` completes. With `suspendUntilReady` this means your
-> UI can un-suspend and render fallbacks before the real flag values are available. Configuring
-> first avoids this window.
+> above. If you register the provider before any successful `setConfiguration`, it initializes to the
+> `ERROR` state (there is nothing it can evaluate); loading a valid configuration afterwards recovers
+> it to `READY`. Configuring first avoids that window.
+
+This behavior targets `@openfeature/web-sdk` 1.8.0 semantics (the SDK owns the
+`PROVIDER_RECONCILING`/`PROVIDER_CONTEXT_CHANGED` lifecycle events on a context change).
 
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
