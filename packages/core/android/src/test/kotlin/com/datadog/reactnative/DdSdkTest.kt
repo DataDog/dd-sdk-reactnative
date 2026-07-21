@@ -1658,11 +1658,20 @@ internal class DdSdkTest {
             verbosity = verbosityName
         )
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+        try {
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        // Then
-        verify(mockDatadog).setVerbosity(verbosity)
+            // Then
+            verify(mockDatadog).setVerbosity(verbosity)
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -1675,11 +1684,20 @@ internal class DdSdkTest {
             verbosity = verbosity
         )
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+        try {
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        // Then
-        verify(mockDatadog, never()).setVerbosity(any())
+            // Then
+            verify(mockDatadog, never()).setVerbosity(any())
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
@@ -2493,26 +2511,35 @@ internal class DdSdkTest {
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Choreographer.FrameCallback> {
-            verify(mockChoreographer).postFrameCallback(capture())
-
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+        try {
             // When
-            firstValue.doFrame(timestampNs)
-            firstValue.doFrame(timestampNs + frameDurationNs)
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-            // then
-            verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
-                RumPerformanceMetric.JS_FRAME_TIME,
-                frameDurationNs.toDouble()
-            )
-            verify(mockRumMonitor._getInternal()!!).addLongTask(
-                frameDurationNs,
-                "javascript"
-            )
+            // Then
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+
+                // When
+                firstValue.doFrame(timestampNs)
+                firstValue.doFrame(timestampNs + frameDurationNs)
+
+                // then
+                verify(mockRumMonitor._getInternal()!!).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    frameDurationNs.toDouble()
+                )
+                verify(mockRumMonitor._getInternal()!!).addLongTask(
+                    frameDurationNs,
+                    "javascript"
+                )
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -2533,26 +2560,35 @@ internal class DdSdkTest {
         )
         val frameDurationNs = threshold + frameDurationOverThreshold
 
-        // When
-        testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
-
-        // Then
-        argumentCaptor<Choreographer.FrameCallback> {
-            verify(mockChoreographer).postFrameCallback(capture())
-
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+        try {
             // When
-            firstValue.doFrame(timestampNs)
-            firstValue.doFrame(timestampNs + frameDurationNs)
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
             // Then
-            verify(mockRumMonitor._getInternal()!!).addLongTask(
-                frameDurationNs,
-                "javascript"
-            )
-            verify(mockRumMonitor._getInternal()!!, never()).updatePerformanceMetric(
-                RumPerformanceMetric.JS_FRAME_TIME,
-                frameDurationNs.toDouble()
-            )
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+
+                // When
+                firstValue.doFrame(timestampNs)
+                firstValue.doFrame(timestampNs + frameDurationNs)
+
+                // Then
+                verify(mockRumMonitor._getInternal()!!).addLongTask(
+                    frameDurationNs,
+                    "javascript"
+                )
+                verify(mockRumMonitor._getInternal()!!, never()).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    frameDurationNs.toDouble()
+                )
+            }
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
         }
     }
 
@@ -3425,14 +3461,23 @@ internal class DdSdkTest {
         DdSdkSynthetics.testId = "unit-test-test-id"
         DdSdkSynthetics.resultId = "unit-test-result-id"
 
-        // When
-        testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+        try {
+            // When
+            testedBridgeSdk.initialize(fakeConfiguration.toReadableJavaOnlyMap(), mockPromise)
 
-        // Then
-        verify(mockRumInternalProxy).setSyntheticsAttribute(
-            "unit-test-test-id",
-            "unit-test-result-id"
-        )
+            // Then
+            verify(mockRumInternalProxy).setSyntheticsAttribute(
+                "unit-test-test-id",
+                "unit-test-result-id"
+            )
+        } finally {
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     @Test
