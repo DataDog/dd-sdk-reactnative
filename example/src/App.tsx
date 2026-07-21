@@ -8,11 +8,18 @@ import TraceScreen from './screens/TraceScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
-import { DatadogProvider, TrackingConsent, DdFlags } from '@datadog/mobile-react-native'
+import { DatadogProvider, TrackingConsent, DdFlags, DdLogs, DdSdkReactNative } from '@datadog/mobile-react-native'
 import { OpenFeatureProvider } from '@openfeature/react-sdk';
+import {
+  ImagePrivacyLevel,
+  SessionReplay,
+  TextAndInputPrivacyLevel,
+  TouchPrivacyLevel,
+} from '@datadog/mobile-react-native-session-replay';
+
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
-import { getDatadogConfig, onDatadogInitialization } from './ddUtils';
+import { getDatadogConfig } from './ddUtils';
 import { setFlagsProvider } from './flags/flagsProvider';
 
 const Tab = createBottomTabNavigator();
@@ -69,7 +76,18 @@ const configuration = getDatadogConfig(TrackingConsent.GRANTED)
 // const configuration = new DatadogProviderConfiguration("fake_value", "fake_value");
 
 const handleDatadogInitialization = async () => {
-  onDatadogInitialization();
+  DdLogs.info('The RN Sdk was properly initialized')
+  DdSdkReactNative.setUserInfo({id: "1337", name: "Xavier", email: "xg@example.com", extraInfo: { type: "premium" } })
+  DdSdkReactNative.addAttributes({campaign: "ad-network"})
+
+  // Enable Session Replay.
+  await SessionReplay.enable({
+    replaySampleRate: 100,
+    textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS,
+    imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE,
+    touchPrivacyLevel: TouchPrivacyLevel.SHOW,
+    enableHeatmaps: true,
+  });
 
   // Enable Datadog Flags feature.
   await DdFlags.enable();
