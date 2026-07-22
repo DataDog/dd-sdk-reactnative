@@ -158,6 +158,27 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
     });
 
     describe('domain / global-context isolation', () => {
+        it('stays READY with the documented setup: global mismatch set, explicit empty domain context, then register', async () => {
+            const { domain, clientName } = freshNames();
+            const provider = new DatadogOfflineOpenFeatureProvider({
+                clientName
+            });
+            provider.setConfiguration(
+                configurationFromString(wireFor('user-123'))
+            );
+
+            // The documented order: a mismatching GLOBAL context is already in place, the dedicated
+            // domain is given an explicit empty context (isolating it), and only then is the provider
+            // registered. It initializes against the empty domain context → embedded → READY.
+            await OpenFeature.setContext({ targetingKey: 'global-user' });
+            await OpenFeature.setContext(domain, {});
+            await OpenFeature.setProviderAndWait(domain, provider);
+
+            expect(OpenFeature.getClient(domain).providerStatus).toBe(
+                ProviderStatus.READY
+            );
+        });
+
         it('inherits a mismatching global context when the domain has none, entering ERROR', async () => {
             const { domain, clientName } = freshNames();
             const provider = new DatadogOfflineOpenFeatureProvider({
