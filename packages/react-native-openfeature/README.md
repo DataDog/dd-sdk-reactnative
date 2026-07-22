@@ -179,12 +179,12 @@ evaluations to the configuration's embedded context.
 > `setConfiguration`, it initializes to the `ERROR` state (there is nothing it can evaluate); loading a
 > valid configuration afterwards recovers it to `READY`. **Do not use the non-awaiting
 > `OpenFeature.setProvider(provider)` immediately followed by `setConfiguration`** — that ordering
-> races (the pending initialization can resolve after the recovery and overwrite the status).
-> Configure first, or `await OpenFeature.setProviderAndWait(...)`.
+> races (the pending initialization can **settle (reject)** after the recovery and overwrite the
+> status back to `ERROR`). Configure first, or `await OpenFeature.setProviderAndWait(...)`.
 
 This provider relies on the OpenFeature static-context lifecycle — the SDK owns the
-`PROVIDER_RECONCILING`/`PROVIDER_CONTEXT_CHANGED` events on a context change — verified against
-`@openfeature/web-sdk` 1.8.0 (peer range `^1.7.3`).
+`PROVIDER_RECONCILING`/`PROVIDER_CONTEXT_CHANGED` events on a context change — and requires
+`@openfeature/web-sdk` `^1.8.0` (the version it is developed and verified against).
 
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/

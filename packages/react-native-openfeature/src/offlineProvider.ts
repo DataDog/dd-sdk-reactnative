@@ -54,11 +54,12 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
  *
  * A runtime context that does not match the configuration's embedded context (compared after
- * normalization) cannot be
- * served (offline never fetches), so it puts the provider into the OpenFeature `ERROR` state and
- * evaluations fall back to your coded defaults (`INVALID_CONTEXT`). Clearing or omitting context
- * re-adopts the embedded context and recovers. Load the configuration before setting the provider
- * so it is ready with real flag values from the start:
+ * normalization) cannot be served (offline never fetches), so it puts the provider into the
+ * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
+ * An empty *effective* context re-adopts the embedded context and recovers — but note that
+ * `clearContext(domain)` falls back to the global context, which may itself be non-empty and
+ * mismatching (and would keep the provider in `ERROR`). Load the configuration before setting the
+ * provider so it is ready with real flag values from the start:
  *
  * @example
  * ```ts
