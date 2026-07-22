@@ -152,7 +152,10 @@ against the context it was computed for. Per-context evaluation is a future (rul
 > (compared after the SDK's context normalization, not raw deep-equality) cannot be served (offline
 > never fetches), so the provider enters the OpenFeature **`ERROR`** state and evaluations fall back
 > to your **coded default values** (evaluation `errorCode: INVALID_CONTEXT`). The provider recovers to
-> `READY` once the effective context is empty or matches the snapshot again.
+> `READY` once the effective context is empty or matches the snapshot again. Note that a blank
+> `{ targetingKey: '' }` is **not** "empty" — an empty string is a real (anonymous) targeting key, a
+> distinct subject that must match the snapshot; use `clearContext()` (or omit context) to fall back
+> to the embedded context.
 
 Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
 

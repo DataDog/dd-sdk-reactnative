@@ -785,6 +785,26 @@ describe('FlagsClient', () => {
                 errorCode: 'PROVIDER_NOT_READY'
             });
         });
+
+        it('treats an empty-string targeting key as a real (anonymous) subject that must match', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+
+            // An empty string is a distinct (anonymous) subject, not "no context": it must match the
+            // snapshot's subject. Against a user-1 snapshot it does not, so this errors rather than
+            // silently serving user-1's flags to an anonymous subject.
+            const result = flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: '',
+                attributes: {}
+            });
+
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'INVALID_CONTEXT'
+            });
+        });
     });
 
     describe('resetEvaluationContextWithoutFetching', () => {

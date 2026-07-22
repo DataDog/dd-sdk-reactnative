@@ -102,6 +102,23 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         expect(client.getBooleanValue('new-feature', false)).toBe(true);
     });
 
+    it('errors on an explicit empty-string targeting key (a real anonymous subject, not "cleared")', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString(wireFor('user-123')));
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        // `{ targetingKey: '' }` is an anonymous subject, distinct from the user-123 snapshot — not
+        // the same as clearing context. It must error rather than silently serve user-123's flags.
+        await OpenFeature.setContext(domain, { targetingKey: '' });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+        expect(client.getBooleanDetails('new-feature', false).errorCode).toBe(
+            ErrorCode.INVALID_CONTEXT
+        );
+    });
+
     it('stays READY when the context is cleared (empty = re-adopt embedded)', async () => {
         const { domain, clientName } = freshNames();
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
