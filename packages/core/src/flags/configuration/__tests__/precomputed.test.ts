@@ -225,12 +225,22 @@ describe('decodePrecomputedFlags', () => {
         expect(cache.get('inf')).toBeUndefined();
     });
 
-    it('returns an empty map for a structurally broken response', () => {
-        expect(
+    it.each([
+        ['a null response', null],
+        ['a non-object response', 'nonsense'],
+        ['a missing data envelope', {}],
+        ['a missing attributes envelope', { data: {} }],
+        ['a missing flags map', { data: { attributes: {} } }],
+        ['a null flags map', { data: { attributes: { flags: null } } }],
+        ['an array flags map', { data: { attributes: { flags: [] } } }]
+    ])('throws for a structurally malformed response (%s)', (_label, input) => {
+        expect(() =>
             decodePrecomputedFlags(
-                ({} as unknown) as Parameters<typeof decodePrecomputedFlags>[0]
-            ).size
-        ).toBe(0);
+                (input as unknown) as Parameters<
+                    typeof decodePrecomputedFlags
+                >[0]
+            )
+        ).toThrow(UnsupportedConfigurationError);
     });
 
     it('accepts any JSON value for an object flag (array, null, primitive)', () => {

@@ -14,6 +14,9 @@ export {
     decodePrecomputedFlags,
     UnsupportedConfigurationError
 } from './precomputed';
+// `contextMatchesConfiguration` is intentionally NOT re-exported — it is an internal
+// helper consumed directly by `FlagsClient` (see its import from `./configuration/context`).
+export { normalizeWireContext } from './context';
 export type {
     ParsedFlagsConfiguration,
     ParsedPrecomputedConfiguration,

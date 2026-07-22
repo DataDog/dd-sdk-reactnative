@@ -36,7 +36,8 @@ export class UnsupportedConfigurationError extends Error {
  *   booleans, `String(...)` otherwise) because native Android exposure tracking
  *   rebuilds the flag from the string form.
  *
- * @throws {UnsupportedConfigurationError} if the response is obfuscated.
+ * @throws {UnsupportedConfigurationError} if the response is obfuscated, or its envelope is
+ * structurally malformed (missing/non-object `data.attributes.flags`).
  */
 export const decodePrecomputedFlags = (
     response: PrecomputedConfigurationResponse
@@ -53,7 +54,17 @@ export const decodePrecomputedFlags = (
         );
     }
 
-    const flags = attributes?.flags ?? {};
+    // Validate the response envelope before trusting it. An untrusted wire can be JSON-valid yet
+    // structurally malformed (a null/non-object envelope, or a `flags` that is null or an array).
+    // Fail predictably so the caller classifies it as an error instead of silently decoding it to
+    // an empty — but "ready" — configuration. A genuinely empty `flags: {}` is still accepted.
+    const flags = attributes?.flags;
+    if (!isFlagsMap(flags)) {
+        throw new UnsupportedConfigurationError(
+            "Malformed precomputed configuration: 'data.attributes.flags' must be an object."
+        );
+    }
+
     // A Map (returned as-is) so a pathological flag keyed "__proto__" is stored as data
     // and later looked up via `.get()` — never hitting the `Object.prototype` "__proto__"
     // setter (on write) or the prototype chain (on read) the way a plain object would.
@@ -68,6 +79,11 @@ export const decodePrecomputedFlags = (
 
     return cache;
 };
+
+// A well-formed flags container is a plain object (a possibly-empty map of flag key -> flag).
+// `null`, arrays, and primitives are malformed envelopes.
+const isFlagsMap = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const toFlagCacheEntry = (
     key: string,
