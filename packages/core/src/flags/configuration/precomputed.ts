@@ -186,11 +186,13 @@ const valueMatchesVariationType = (
             // natively, so require a whole number.
             return Number.isInteger(value);
         case 'object':
-            // The `object` variation type carries arbitrary JSON — objects, arrays,
-            // numbers, strings, booleans, or null. ffe-service enforces a top-level
-            // object at the API layer, but that is not a storage constraint, so a
-            // payload could still carry any JSON value here. Accept it and rely on the
-            // value being defended downstream (string form + evaluation both tolerate it).
+            // The `object` variation type carries JSON. ffe-service enforces a top-level object at
+            // the API layer, so in practice the value is an object; that is not a storage
+            // constraint, so a malformed or hand-crafted payload could still carry any JSON value
+            // here. Accept it at decode (and stringify it for native tracking); a non-object value
+            // is then served the coded default with TYPE_MISMATCH at evaluation — see
+            // `FlagsClient.getObjectDetails`. So this only affects malformed wires, never the
+            // guaranteed-object values from a real Datadog config.
             return true;
         default:
             return false;

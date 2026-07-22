@@ -508,6 +508,40 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
+        it('serves the coded default with TYPE_MISMATCH for a primitive-valued object flag', () => {
+            const flagsClient = DdFlags.getClient();
+
+            // The decoder accepts any JSON value for an `object` flag, but evaluation requires an
+            // object. A primitive value (only possible from a malformed/hand-crafted wire, never a
+            // real Datadog config) is therefore served the coded default with TYPE_MISMATCH.
+            flagsClient.setConfiguration(
+                buildConfig(
+                    {
+                        'json-primitive': {
+                            variationType: 'object',
+                            variationValue: 'not-an-object',
+                            variationKey: 'primitive',
+                            allocationKey: 'alloc-1',
+                            reason: 'STATIC',
+                            doLog: false,
+                            extraLogging: {}
+                        }
+                    },
+                    { targetingKey: 'user-1' }
+                )
+            );
+
+            expect(
+                flagsClient.getObjectDetails('json-primitive', {
+                    fallback: true
+                })
+            ).toMatchObject({
+                value: { fallback: true },
+                reason: 'ERROR',
+                errorCode: 'TYPE_MISMATCH'
+            });
+        });
+
         it('replaces a previously loaded configuration', () => {
             const flagsClient = DdFlags.getClient();
 
