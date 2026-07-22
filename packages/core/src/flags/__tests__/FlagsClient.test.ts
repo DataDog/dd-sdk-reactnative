@@ -450,6 +450,28 @@ describe('FlagsClient', () => {
             ).toMatchObject({ errorCode: 'GENERAL' });
         });
 
+        it('errors with GENERAL for a structurally malformed response envelope', () => {
+            const flagsClient = DdFlags.getClient();
+
+            // A wire whose precomputed response omits `data.attributes.flags` entirely.
+            const wire = JSON.stringify({
+                version: 1,
+                precomputed: {
+                    response: JSON.stringify({ data: { attributes: {} } }),
+                    context: { targetingKey: 'user-1' }
+                }
+            });
+
+            const result = flagsClient.setConfiguration(
+                configurationFromString(wire)
+            );
+
+            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+        });
+
         it('serves a context-agnostic configuration (no embedded context)', () => {
             const flagsClient = DdFlags.getClient();
 
@@ -515,6 +537,16 @@ describe('FlagsClient', () => {
             expect(
                 flagsClient.getBooleanDetails('flag-a', false)
             ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+
+            // The exposure must be attributed to B's embedded context (user-2), not A's — a
+            // regression that updated the flags but kept A's context would misattribute here.
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'default',
+                'flag-b',
+                expect.any(Object),
+                'user-2',
+                {}
+            );
         });
 
         it('adopts a subject-bound snapshot loaded after a context-agnostic one (no external context)', () => {
