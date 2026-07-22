@@ -112,6 +112,80 @@ function App() {
 export default AppWithProviders;
 ```
 
+### Offline initialization
+
+If you fetch a flag configuration yourself (for example a precomputed-assignments payload
+cached on disk, delivered via your own service, or bundled with the app), use
+`DatadogOfflineOpenFeatureProvider` instead of `DatadogOpenFeatureProvider`. It evaluates flags
+and reports exposures exactly like the online provider, but **never fetches configuration from
+the network** — you supply it with `setConfiguration`.
+
+```tsx
+import { DdFlags } from '@datadog/mobile-react-native';
+import {
+    DatadogOfflineOpenFeatureProvider,
+    configurationFromString
+} from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+await DdFlags.enable();
+
+const provider = new DatadogOfflineOpenFeatureProvider();
+
+// `wire` is a ConfigurationWire string you fetched yourself.
+provider.setConfiguration(configurationFromString(wire));
+
+// Set the provider after loading the configuration so it is ready with real flag values.
+await OpenFeature.setProviderAndWait(provider);
+
+// Evaluate flags — no network request is made.
+const client = OpenFeature.getClient();
+const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false);
+```
+
+The configuration carries the evaluation context it was computed for, and the provider adopts it
+automatically. A precomputed configuration is a **single-subject snapshot**: it can only be served
+against the context it was computed for. Per-context evaluation is a future (rules-based) capability.
+
+> **Warning:** Do **not** call `OpenFeature.setContext` with a _different_ context for the offline
+> precomputed flow. A runtime context that does not match the configuration's embedded context
+> (compared after the SDK's context normalization, not raw deep-equality) cannot be served (offline
+> never fetches), so the provider enters the OpenFeature **`ERROR`** state and evaluations fall back
+> to your **coded default values** (evaluation `errorCode: INVALID_CONTEXT`). The provider recovers to
+> `READY` once the effective context is empty or matches the snapshot again.
+
+Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
+
+- **Bind the offline provider to a dedicated OpenFeature domain, and give that domain an explicit
+  empty context** at registration (`OpenFeature.setContext(domain, {})`) — which this provider reads
+  as "no override, use the embedded context". A domain with no context of its own **inherits the
+  global context**, so a global `OpenFeature.setContext` (or a mismatching global context) would
+  otherwise reach the provider and force it into `ERROR`.
+- **Use a unique Datadog `clientName`** (`new DatadogOfflineOpenFeatureProvider({ clientName })`):
+  separate OpenFeature domains otherwise share the same underlying `DdFlags.getClient('default')`, and
+  an online provider on that shared client would discard the offline configuration.
+
+Because you do not set an OpenFeature context, note the **context split**: OpenFeature hooks observe
+the OpenFeature evaluation context (`{}` when unset), while Datadog exposure tracking attributes
+evaluations to the configuration's embedded context.
+
+> **Note (recovery caveat):** "clearing context recovers" holds only when the resulting *effective*
+> context is empty or matches the snapshot. `OpenFeature.clearContext(domain)` removes the domain
+> context and **falls back to the global context** — if that global context is non-empty and does not
+> match, the provider stays in `ERROR`.
+
+> **Note (startup order):** Load the configuration with `setConfiguration` _before_
+> `setProviderAndWait`, as shown above. If you register the provider before any successful
+> `setConfiguration`, it initializes to the `ERROR` state (there is nothing it can evaluate); loading a
+> valid configuration afterwards recovers it to `READY`. **Do not use the non-awaiting
+> `OpenFeature.setProvider(provider)` immediately followed by `setConfiguration`** — that ordering
+> races (the pending initialization can **settle (reject)** after the recovery and overwrite the
+> status back to `ERROR`). Configure first, or `await OpenFeature.setProviderAndWait(...)`.
+
+This provider relies on the OpenFeature static-context lifecycle — the SDK owns the
+`PROVIDER_RECONCILING`/`PROVIDER_CONTEXT_CHANGED` events on a context change — and requires
+`@openfeature/web-sdk` `^1.8.0` (the version it is developed and verified against).
+
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
 [3]: https://github.com/DataDog/dd-sdk-reactnative/tree/develop/packages/core

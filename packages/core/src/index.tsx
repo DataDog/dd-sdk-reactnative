@@ -32,6 +32,11 @@ import {
 } from './config/types';
 import { DdFlags } from './flags/DdFlags';
 import type { FlagsClient } from './flags/FlagsClient';
+import {
+    configurationFromString,
+    configurationToString
+} from './flags/configuration';
+import type { ParsedFlagsConfiguration } from './flags/configuration';
 import type {
     FlagsConfiguration,
     FlagDetails,
@@ -72,6 +77,8 @@ export {
     InitializationMode,
     DdLogs,
     DdFlags,
+    configurationFromString,
+    configurationToString,
     DdTrace,
     DdRum,
     RumActionType,
@@ -118,6 +125,7 @@ export type {
     TraceConfigurationOptions,
     FlagsConfiguration,
     FlagsClient,
+    ParsedFlagsConfiguration,
     EvaluationContext,
     PrimitiveValue,
     FlagDetails
