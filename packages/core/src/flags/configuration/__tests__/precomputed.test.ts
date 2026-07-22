@@ -194,6 +194,21 @@ describe('decodePrecomputedFlags', () => {
         expect(InternalLog.log).toHaveBeenCalled();
     });
 
+    it('omits a flag whose extraLogging is an array (not a key/value map)', () => {
+        const cache = decodePrecomputedFlags(
+            responseWith({
+                arr: flag({
+                    extraLogging: ([] as unknown) as PrecomputedFlag['extraLogging']
+                })
+            })
+        );
+
+        // Arrays also satisfy `typeof === 'object'`; forwarding one to native exposure tracking
+        // (which expects an object map) would break it, so the entry is omitted.
+        expect(cache.get('arr')).toBeUndefined();
+        expect(InternalLog.log).toHaveBeenCalled();
+    });
+
     it('throws UnsupportedConfigurationError for an obfuscated response', () => {
         expect(() =>
             decodePrecomputedFlags(responseWith({ f: flag({}) }, true))

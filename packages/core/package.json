@@ -69,7 +69,6 @@
         "react-native": ">=0.63.4 <1.0"
     },
     "devDependencies": {
-        "@openfeature/core": "^1.9.2",
         "@testing-library/react-native": "7.0.2",
         "react-native-builder-bob": "0.26.0"
     },

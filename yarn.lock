@@ -2836,13 +2836,13 @@ __metadata:
   dependencies:
     "@datadog/mobile-react-native": ^3.5.3
     "@openfeature/core": ^1.9.2
-    "@openfeature/web-sdk": ^1.7.3
+    "@openfeature/web-sdk": ^1.8.0
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
   peerDependencies:
     "@datadog/mobile-react-native": ^3.1.0
-    "@openfeature/web-sdk": ^1.7.3
+    "@openfeature/web-sdk": ^1.8.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
@@ -2881,7 +2881,6 @@ __metadata:
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
     "@datadog/flagging-core": ~2.0.1
-    "@openfeature/core": ^1.9.2
     "@testing-library/react-native": 7.0.2
     big-integer: ^1.6.52
     react-native-builder-bob: 0.26.0
@@ -4498,7 +4497,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openfeature/web-sdk@npm:^1.7.3":
+"@openfeature/web-sdk@npm:^1.8.0":
   version: 1.8.0
   resolution: "@openfeature/web-sdk@npm:1.8.0"
   peerDependencies:

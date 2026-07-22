@@ -138,8 +138,12 @@ const toFlagCacheEntry = (
         typeof variationKey !== 'string' ||
         typeof reason !== 'string' ||
         typeof doLog !== 'boolean' ||
+        // `extraLogging` must be a key/value map; an array (also `typeof === 'object'`) would
+        // break native exposure tracking that expects an object, so treat it as malformed.
         (extraLogging !== undefined &&
-            (typeof extraLogging !== 'object' || extraLogging === null))
+            (typeof extraLogging !== 'object' ||
+                extraLogging === null ||
+                Array.isArray(extraLogging)))
     ) {
         InternalLog.log(
             `Flag "${key}" has malformed metadata. Omitting it from the configuration.`,

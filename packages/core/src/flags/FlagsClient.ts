@@ -160,6 +160,13 @@ export class FlagsClient {
             this.externalContext = processedContext;
             this.evaluationContext = processedContext;
             this.flagsCache = new Map(Object.entries(result));
+
+            // A successful online fetch is authoritative: reset to the clean online state so a
+            // prior offline error status (e.g. PROVIDER_NOT_READY from an offline op with no
+            // configuration loaded) can't keep serving coded defaults over the fetched flags.
+            this.loadedConfiguration = { kind: 'none' };
+            this.configurationStatus = 'none';
+            this.configurationError = undefined;
         } catch (error) {
             // A failed fetch leaves the previous online cache in place (keep-last-known); any offline
             // overlay was already dropped above, so no stale offline snapshot is served.

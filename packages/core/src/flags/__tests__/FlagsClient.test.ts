@@ -118,6 +118,29 @@ describe('FlagsClient', () => {
                 SdkVerbosity.WARN
             );
         });
+
+        it('clears a prior offline error status on a successful fetch', async () => {
+            const flagsClient = DdFlags.getClient();
+
+            // An offline op with no configuration loaded leaves the client in an error status.
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'test-user-1',
+                attributes: {}
+            });
+            expect(
+                flagsClient.getBooleanDetails('test-boolean-flag', false)
+            ).toMatchObject({ errorCode: 'PROVIDER_NOT_READY' });
+
+            // A successful online fetch is authoritative and must serve the fetched flags rather
+            // than keep returning coded defaults from the stale error status.
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: {}
+            });
+            expect(
+                flagsClient.getBooleanValue('test-boolean-flag', false)
+            ).toBe(true);
+        });
     });
 
     describe('getDetails', () => {
