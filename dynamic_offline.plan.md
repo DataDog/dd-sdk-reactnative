@@ -116,7 +116,7 @@ exported type/name before wiring RN types (R8), and never hard-code the wire fie
 | G3 | Rules engine / UFC types exported from package root | **Yes** | Confirm `evaluate`, `UniversalFlagConfigurationV1`, `RulesBasedConfiguration` are re-exported (`core/src/index.ts` re-exports `./evaluation` and `./configuration`). Verify after publish. |
 | G4 | Exposure/telemetry parity for the rules path | Partial | `evaluate()` returns only `ResolutionDetails`; it does **not** call RN native exposure tracking. RN synthesizes the fields `trackEvaluation` needs (see §4 step 5). Confirm `doLog` gating (allocation-level) with flagging-core owners. |
 | G5 | Bundle size / RN + Hermes compat of the engine | **Medium** | RFC flags the rules evaluator as materially larger than precomputed lookup and proposes split entrypoints (`.../precomputed` vs full `CoreProvider`). See §4 step 6 (bundle decision) and R5. Verify `sharders.ts` hashing runs under Hermes (no Node `crypto`/browser-only APIs). |
-| G6 | Obfuscated / hashed rules payloads | Low/Medium | RFC leaves "how obfuscation fits in" **open**. Base64 is not a security control; hashed values must still work for equality / `ONE_OF` checks. Confirm whether client rules can be obfuscated and that the engine handles/reject it. |
+| G6 | Obfuscated / hashed rules payloads | **No (D7)** | Obfuscation is an **upstream (flagging-core) concern**. If a customer enables it, they pre-hash their evaluation context with the same function used to hash the rules, and the engine does hashed equality / `ONE_OF` comparisons. **RN needs no special handling and no rejection path** — assume it works; just ensure RN's context normalization passes string values through untouched (test it). |
 
 ---
 
@@ -201,27 +201,36 @@ Largest change. `getDetails` currently serves from `flagsCache` (precomputed/onl
   `normalizeWireContext`); flagging-core folds `targetingKey → subjectAttributes.id` internally.
 - [ ] Map flagging-core `ResolutionDetails` → RN `FlagDetails<T>` (value, variant, `allocationKey` from
   `flagMetadata`, reason, errorCode/errorMessage). Let `evaluate` produce `TYPE_MISMATCH`/`FLAG_NOT_FOUND`.
-- [ ] **Exposure tracking:** rules `evaluate()` has no tracking side effect. Synthesize a
+- [ ] **Exposure tracking (DECIDED — D3):** rules `evaluate()` has no tracking side effect. Synthesize a
   `FlagCacheEntry` from the resolution (`key`, `value`, `variationKey`=variant, `allocationKey`,
   `variationType` from `flagMetadata`, `variationValue`=stringified value, `reason`, `doLog`,
-  `extraLogging`) and call `this.track(entry, this.evaluationContext)` — **gate on `doLog`** (confirm
-  policy: the precomputed path currently tracks unconditionally; decide match-vs-fix — G4).
+  `extraLogging`) and call `this.track(entry, this.evaluationContext)` **only when `doLog` is true**.
+  Separately, confirm whether the precomputed path's *unconditional* `track` is correct (native fetch
+  may already pre-filter to loggable flags) or a pre-existing bug to align — track as a follow-up, do
+  **not** silently change precomputed behavior here.
 - [ ] Keep precomputed + online paths serving from `flagsCache` untouched.
 
 ### Step 6 — Precedence when both present + bundle-size decision
-- [ ] Implement the flagging-core order faithfully (precomputed-if-match → rules). Easiest: pass the
-  full `FlagsConfiguration` into `evaluate()` and let it arbitrate; or route **everything** through
-  `evaluate()` for one code path (bigger refactor — weigh against the native-exposure parity the
-  current `Map`+`track` path guarantees).
-- [ ] **Bundle-size decision (RFC tree-shaking concern + Offline-Init open Q "max wire size"):** a
-  static `import { evaluate } from '@datadog/flagging-core'` pulls the whole rules engine (sharders,
-  rules, ufc) into **every** RN app, including precomputed-only users. Options:
-  1. Accept the cost (simplest; measure it).
-  2. **Dynamic `import()`** of the rules evaluator only when a rules config is loaded (lazy; keeps the
-     precomputed-only bundle lean — matches the RFC's split-entrypoint intent).
-  3. Ask flagging-core for a subpath export (`@datadog/flagging-core/evaluation`) so RN imports only
-     the engine when needed.
-  Pick one; record the measured delta. (R5)
+- [ ] **Two paths (DECIDED — D4):** keep precomputed on the decoded `Map` + `track`; only the rules
+  branch calls `evaluate()`. Do **not** route precomputed through `evaluate()`. Factor the shared
+  `ResolutionDetails → FlagDetails` + synthesize-`FlagCacheEntry`-for-`track` mapping into one helper so
+  both paths reuse it. Rationale: no risk to the shipped FFL-2666 precomputed flow, keeps the O(1)
+  precomputed lookup, and keeps the rules engine **out** of the precomputed-only path (serves D5).
+  Implement the both-present order (precomputed-if-context-matches → rules) by passing the full
+  `FlagsConfiguration` into `evaluate()` from the rules branch and letting it arbitrate.
+- [ ] **Bundle size (DECIDED — D5): accept the static import cost for MVP, measure the delta, and if it
+  is unacceptable do a provider split + subpath export — NOT dynamic `import()`.** Key constraint:
+  Metro does not do real code-splitting for standard RN app builds, so a dynamic `import()` still ships
+  the engine in the bundle (it only defers module *init* via `inlineRequires`) — it does **not** reduce
+  size on RN. So:
+  1. MVP: `import { evaluate } from '@datadog/flagging-core'` statically; measure the added bytes
+     (engine + eventual protobuf runtime).
+  2. Only if the delta is unacceptable: ship a precomputed-only provider
+     (`DatadogPrecomputedOfflineProvider`) that imports a flagging-core `@datadog/flagging-core/precomputed`
+     subpath, alongside the full rules-capable offline provider — mirrors the RFC's
+     `PrecomputedCoreProvider` vs `CoreProvider`. This is the *only* option that actually removes the
+     engine from precomputed-only bundles on RN. (This split is a **bundle-size lever only** — it is not
+     a security gate; see D6.)
 
 ### Step 7 — `DatadogOfflineOpenFeatureProvider` (`react-native-openfeature/src/offlineProvider.ts`)
 - [ ] `initialize` / `onContextChange` already do not fetch. For rules, `applyContext`'s reconcile
@@ -232,9 +241,14 @@ Largest change. `getDetails` currently serves from `flagsCache` (precomputed/onl
   **not** call `OpenFeature.setContext`"). For rules, `setContext` **is** the intended dynamic path.
 - [ ] `setConfiguration` event mapping (`Ready` / `ConfigurationChanged` / `Error`) is already generic
   and matches the RFC event model; confirm a rules `ready` triggers the right transitions.
-- [ ] **Opt-in / security posture (both RFCs):** client-side rules evaluation exposes targeting logic
-  and is a security-sensitive, explicitly opt-in path. Decide whether the rules-based offline provider
-  is gated behind an explicit opt-in flag/import and documented as such. (R7)
+- [ ] **No opt-in gate for offline rules (DECIDED — D6).** Online/offline is orthogonal to
+  precomputed/rules. In the offline flow the customer already holds the rules wire and explicitly loads
+  it via `setConfiguration`, so there is no hidden behavior to gate — loading a rules wire into the
+  OfflineProvider just works. The real security control lives at **fetch time** (a public client token
+  must not be scoped to pull private rules); that is enforced server-side and belongs to the
+  **OnlineProvider** rules-fetch work — **out of scope for FFL-2837**. Only obligation here: a docs
+  caveat that rules ship on-device and are reverse-engineerable (the customer's informed choice; base64
+  is not a security control). The precomputed-only provider from D5, if built, is a bundle lever only.
 
 ### Step 8 — Exports, examples & docs
 - [ ] Export new public types (`ParsedRulesBasedConfiguration`) from
@@ -248,7 +262,8 @@ Largest change. `getDetails` currently serves from `flagsCache` (precomputed/onl
 ## 5. All imports added to dd-sdk-reactnative
 
 From `@datadog/flagging-core` (post-bump):
-- `evaluate` — value import in `core/src/flags/FlagsClient.ts` (or behind a dynamic `import()` per §Step 6).
+- `evaluate` — **static** value import in `core/src/flags/FlagsClient.ts` (D5: no dynamic import — it
+  does not reduce bundle size on Metro).
 - `type RulesBasedConfiguration`, `type UniversalFlagConfigurationV1`, `type FlagsConfiguration`,
   `type FlagTypeToValue` — in `configuration/types.ts` and `FlagsClient.ts`.
 - (already imported) `configurationFromString`, `configurationToString`, precomputed types.
@@ -292,8 +307,11 @@ Model on existing suites: `react-native-openfeature/src/__tests__/offlineProvide
   the two subjects bucket differently (the core point of FFL-2837).
 - [ ] Flag-not-found → `FLAG_NOT_FOUND` + default. Type mismatch → `TYPE_MISMATCH` + default.
 - [ ] Missing targeting key where a rule requires it → `TARGETING_KEY_MISSING`/`INVALID_CONTEXT` + default.
-- [ ] Exposure: `native.trackEvaluation` called with a correctly synthesized flag (`variationKey`,
-  `allocationKey`, `variationValue` string) when `doLog` true; not called when false (per agreed policy).
+- [ ] Exposure (D3): `native.trackEvaluation` called with a correctly synthesized flag (`variationKey`,
+  `allocationKey`, `variationValue` string) **when `doLog` is true; not called when `doLog` is false**.
+- [ ] Hashed/obfuscated (D7): a context with string attribute values (as a customer would supply
+  pre-hashed) survives `processEvaluationContext`/the OpenFeature-flat adapter **unmodified**, so
+  hashed equality / `ONE_OF` matching in the engine can work.
 
 ### Provider (react-native-openfeature)
 - [ ] Rules config loaded before registration → provider reaches `READY` (no context needed).
@@ -319,43 +337,55 @@ Model on existing suites: `react-native-openfeature/src/__tests__/offlineProvide
 1. **flagging-core rules support is unmerged/unpublished (G1, G3).** Everything blocks on PR #336
    landing + a release. Mitigate: develop against a linked / `npm pack` build; keep the RN diff
    isolated so the dependency bump is the only integration point.
-2. **Two evaluation paths in `FlagsClient`.** Precomputed serves from a decoded `Map`; rules evaluate
-   lazily via `evaluate()`. Risk of divergent behavior (reason codes, exposure, type checks). Consider
-   routing precomputed through `evaluate()` too for one path — weigh against the native-exposure parity
-   the current `Map`+`track` path guarantees.
+2. **Two evaluation paths in `FlagsClient` (DECIDED D4 — keep two).** Precomputed serves from a decoded
+   `Map`; rules evaluate lazily via `evaluate()`. Residual risk: divergent reason codes / type checks
+   between the two — mitigated by the shared `ResolutionDetails → FlagDetails` mapping helper and the
+   regression tests.
 3. **Exposure parity (G4).** `evaluate()` has no tracking side effect; RN synthesizes the flag object
    for `trackEvaluation`. `doLog` gating (allocation-level) and RUM correlation must match the online
    path. Confirm with flagging-core / ffe owners.
-4. **Bundle size / tree-shaking (G5).** The RFC explicitly calls the rules evaluator larger than the
-   precomputed lookup and proposes split entrypoints. A naive static import taxes every RN app. Decide
-   accept-cost vs. dynamic `import()` vs. request a subpath export; measure. See §Step 6.
+4. **Bundle size / tree-shaking (DECIDED D5 — accept + measure).** The rules engine (and eventual
+   protobuf runtime) ships in every app that imports the offline provider; Metro won't code-split it
+   away. Residual risk: the measured delta is unacceptable for precomputed-only users — fallback is the
+   provider-split + subpath export (not dynamic import). See §Step 6.
 5. **Hermes/RN bundling of the engine.** `sharders.ts` hashing may assume Node/browser APIs. Verify it
    runs under Hermes; add the smoke test above.
 6. **Context shape adapters.** flagging-core wants OpenFeature-flat context and folds `targetingKey→id`;
    RN holds `{targetingKey, attributes}`. Normalization mismatches could mis-bucket. Cover with the
    determinism tests.
-7. **Security / opt-in (both RFCs).** Client-side rules expose targeting logic and are an explicitly
-   opt-in, security-sensitive path. Decide whether to gate the rules offline provider behind an opt-in
-   and document it. Public client credentials must not fetch private rules by default (fetch is out of
-   scope here, but the posture matters for docs).
+7. **Security posture (DECIDED D6 — no offline opt-in gate).** Offline rules are customer-supplied, so
+   there is nothing to gate; the real control is fetch-time API-token scoping in the OnlineProvider
+   (out of scope for FFL-2837). Residual: a docs caveat that rules are reverse-engineerable on-device.
 8. **Wire naming/version churn (§2.5).** `rulesBased` (code) vs `server` (RFC) vs `rules` (Confluence);
    `version` 1 vs 2. The docs are drafts. Pin to the released flagging-core version, never hard-code the
    field name in RN, and add a guard test.
-9. **Obfuscated / hashed UFC (G6).** RFC leaves obfuscation open. Confirm whether client rules can be
-   obfuscated and that the engine handles hashed equality / `ONE_OF` — else reject predictably like the
-   precomputed path does.
+9. **Obfuscated / hashed UFC (DECIDED D7 — upstream, assume it works).** Hashing is a flagging-core
+   engine concern; the customer hashes their context with the same function. RN adds no handling and no
+   rejection — only a test that context normalization preserves (hashed) string values.
 
 ---
 
-## 8. Open questions to resolve before coding
-- [ ] Which published `@datadog/flagging-core` version carries rules, and does its package root export
-  `evaluate`, `UniversalFlagConfigurationV1`, `RulesBasedConfiguration`? What is the final rules field
-  name/version on the wire? (G1/G3/R8)
-- [ ] Protobuf rules encoding: when will flagging-core publish the `.proto` schema and switch its rules
-  `response` from JSON to protobuf/base64-decode? What protobuf runtime does it pull in, and is it
-  Hermes-safe? (G2/§2.5)
-- [ ] Exposure/`doLog` policy for rules — match precomputed's unconditional `track`, or gate on `doLog`? (G4)
-- [ ] Do we route precomputed through `evaluate()` too, or keep two paths? (R2)
-- [ ] Bundle-size approach: accept, dynamic-import, or subpath export? (R4/§Step 6)
-- [ ] Is client-side rules an explicit opt-in in RN, and how is it surfaced/documented? (R7)
-- [ ] Can rules payloads be obfuscated for mobile, and must the engine handle hashed values? (G6)
+## 8. Decisions & remaining open questions
+
+### Decisions (2026-07-22)
+- **D3 — Exposure/`doLog`:** rules-path exposure is **gated on `doLog`** (track only when true). Precomputed's
+  current unconditional `track` is left as-is pending confirmation it isn't a pre-existing bug (follow-up). (§Step 5, R3)
+- **D4 — Evaluation paths:** **keep two paths** — precomputed on the decoded `Map` + `track`, rules via
+  `evaluate()` — with a shared `ResolutionDetails → FlagDetails` mapping helper. No unification. (§Step 6, R2)
+- **D5 — Bundle size:** **accept the static-import cost for MVP and measure it.** Dynamic `import()` is
+  rejected (Metro doesn't code-split, so it wouldn't shrink the bundle). If the delta is unacceptable,
+  fall back to a precomputed-only provider + `@datadog/flagging-core/precomputed` subpath. (§Step 6, R4)
+- **D6 — Security/opt-in:** **no opt-in gate for offline rules** — offline is orthogonal to rules, and the
+  wire is customer-supplied. The real control is fetch-time API-token scoping in the OnlineProvider
+  (out of scope). Only a docs caveat is owed. The D5 provider split, if built, is a bundle lever, not a
+  security gate. (§Step 7, R7)
+- **D7 — Obfuscation/hashing:** **upstream concern; assume it works.** Customer pre-hashes context with the
+  same function used on the rules; the engine does hashed comparisons. RN adds no handling/rejection, only
+  a normalization-preserves-strings test. (G6, R9)
+
+### Remaining open questions (PUNTED — revisit with flagging-core owners; do not block planning)
+- [ ] **Q1 (punted):** which published `@datadog/flagging-core` version carries rules; confirm root exports
+  (`evaluate`, `UniversalFlagConfigurationV1`, `RulesBasedConfiguration`) and the final wire field
+  name/version. (G1/G3/R8)
+- [ ] **Q2 (punted):** protobuf rules encoding — when flagging-core publishes the `.proto` and switches
+  `response` from JSON to protobuf/base64-decode; which protobuf runtime, and is it Hermes-safe? (G2/§2.5)
