@@ -6,8 +6,8 @@
 **Upstream reference:** [openfeature-js-client PR #336 — FFL-2753 browser `CoreProvider`](https://github.com/DataDog/openfeature-js-client/pull/336) (`sameerank/FFL-2753-browser-core-provider`)
 
 ### Source docs (drafts — both dated Jun 2026, status "In review", so names/versions may still move)
-- `./Portable-Flag-Configuration-RFC.md` (repo root, untracked) — defines the building blocks: `ConfigurationWire`, `configurationFromString/ToString`, `CoreProvider`, fetch fns, hooks.
-- `./Offline-Initialization-for-Feature-Flagging.md` (repo root, untracked) — offline recipes built from those blocks; the operation is always `configurationFromString(wire) → provider.setConfiguration(config) → evaluate(...)`.
+- [Portable Flag Configuration RFC](https://docs.google.com/document/d/1OWNBtXtSk535VXqf-9fqsAmU9W8kpFLAwxYi2y1qyQQ/edit?pli=1&tab=t.0#heading=h.n52036mkzewg) (local snapshot: `./Portable-Flag-Configuration-RFC.md`, repo root, untracked) — defines the building blocks: `ConfigurationWire`, `configurationFromString/ToString`, `CoreProvider`, fetch fns, hooks.
+- [Offline Initialization for Feature Flagging RFC](https://docs.google.com/document/d/1q1GlEbAgCGuO1OWfGbmKQkk5Oo-rE7YQwq29kMJJ4II/edit?pli=1&tab=t.0#heading=h.rnd972k0hiyer) (local snapshot: `./Offline-Initialization-for-Feature-Flagging.md`, repo root, untracked) — offline recipes built from those blocks; the operation is always `configurationFromString(wire) → provider.setConfiguration(config) → evaluate(...)`.
 - [ConfigurationWire (Confluence)](https://datadoghq.atlassian.net/wiki/spaces/PANA/pages/5141725646/ConfigurationWire) — the published wire spec. Its **protobuf/base64** rules encoding is the intended target (see §2.5), even though the current code still uses JSON.
 
 ---
