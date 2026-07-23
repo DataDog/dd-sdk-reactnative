@@ -71,7 +71,8 @@ Launch a specific test scenario with a particular configuration:
 - **Method**: `start`
 - **Parameters**:
   - **scenario**: name of the test as defined on the `Scenario` enum in `types/testConfig.ts`
-  - **runType**: `instrumented|baseline|profiling`
+  - **runType**: `instrumented|baseline`
+  - **scenarioConfig** (optional): a URL-encoded JSON object with scenario-specific configuration
 
 ### iOS
 
@@ -83,6 +84,20 @@ xcrun simctl openurl booted "benchmark://start?scenario=navigation&runType=instr
 
 ```
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=navigation\&runType=instrumented' com.benchmarkrunner
+```
+
+### Example: profiling scenario with scenarioConfig
+
+iOS:
+
+```
+xcrun simctl openurl booted "benchmark://start?scenario=profiling&runType=instrumented&scenarioConfig={\"nativeProfilerEnabled\":true,\"jsProfilerEnabled\":true}"
+```
+
+Android:
+
+```
+adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented\&scenarioConfig={"nativeProfilerEnabled":true,"jsProfilerEnabled":true}' com.benchmarkrunner
 ```
 
 ## Stop a test scenario
@@ -133,7 +148,7 @@ Create a new folder under `benchmarks/src/scenario/` named after your scenario (
 Create a `types.ts` file:
 
 ```ts
-import type {TestConfig} from 'benchmarks/src/testSetup/types/testConfig';
+import type {TestConfig} from '../../testSetup/types/testConfig';
 
 export type NewScenarioProps = {
   testConfig?: TestConfig;

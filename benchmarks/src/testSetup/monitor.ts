@@ -4,9 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DefaultTimeProvider, ErrorSource, RumActionType } from "@datadog/mobile-react-native";
-import type { DdRumType, ResourceKind } from "@datadog/mobile-react-native/lib/typescript/rum/types";
+import { DdRum, DefaultTimeProvider, ErrorSource, RumActionType } from "@datadog/mobile-react-native";
 import type { GestureResponderEvent } from "react-native/types";
+
+type DdRumType = typeof DdRum;
+type ResourceKind = Parameters<DdRumType['stopResource']>[2];
 
 const timeProvider = new DefaultTimeProvider();
 

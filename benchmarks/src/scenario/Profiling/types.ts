@@ -4,7 +4,13 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-declare module '*.svg' {
-    const content: import('react').FC<import('react-native-svg').SvgProps>;
-    export default content;
+import type { TestConfig } from "../../testSetup/types/testConfig"
+
+export type ProfilingScenarioProps = {
+    testConfig?: TestConfig,
+}
+
+export type ProfilingScenarioConfig = {
+    nativeProfilerEnabled?: boolean,
+    jsProfilerEnabled?: boolean,
 }

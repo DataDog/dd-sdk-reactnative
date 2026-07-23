@@ -365,6 +365,7 @@ function BrokenAnimatedCheckmark() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
+                // @ts-expect-error react-native-svg's AnimatedProps<PathProps> doesn't declare 'style'
                 style={{ opacity }}
             />
         </Svg>

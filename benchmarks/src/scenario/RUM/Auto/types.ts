@@ -5,7 +5,7 @@
  */
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { TestConfig } from "benchmarks/src/testSetup/types/testConfig";
+import type { TestConfig } from "../../../testSetup/types/testConfig";
 import type { Character, Location, Episode } from "./service/types";
 
 export type RUMAutoScenarioProps = {

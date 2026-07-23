@@ -1,4 +1,4 @@
-import type { TestConfig } from "benchmarks/src/testSetup/types/testConfig";
+import type { TestConfig } from "../../testSetup/types/testConfig";
 
 export type SessionReplayScenarioProps = {
     testConfig?: TestConfig,
