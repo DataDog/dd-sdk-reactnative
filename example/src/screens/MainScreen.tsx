@@ -12,6 +12,7 @@ import {
 import { DdLogs, DdSdkReactNative, TrackingConsent, DdFlags } from '@datadog/mobile-react-native';
 import { FeatureFlag } from '@openfeature/react-sdk';
 import styles from './styles';
+import { FlagsSourceToggle } from '../components/FlagsSourceToggle';
 import { APPLICATION_KEY, API_KEY } from '../../src/ddCredentials';
 import { getTrackingConsent, saveTrackingConsent } from '../utils';
 import { ConsentModal } from '../components/consent';
@@ -114,11 +115,13 @@ export default class MainScreen extends Component<any, MainScreenState> {
 
   render() {
     return <View style={styles.defaultScreen}>
+      <FlagsSourceToggle initialSource="offline" />
+
       <FeatureFlag flagKey="rn-sdk-test-boolean-flag" defaultValue={false} fallback={<Text>Welcome!</Text>}>
         <Text>Greetings from the Feature Flags!</Text>
       </FeatureFlag>
 
-      <Text style={{ marginTop: 10, textAlign: 'center' }}>The above greeting is being controlled by the{'\n'}`rn-sdk-test-boolean-flag` feature flag.</Text>
+      <Text style={{ marginTop: 10, textAlign: 'center' }}>The above greeting is being controlled by the{'\n'}`rn-sdk-test-boolean-flag` feature flag,{'\n'}resolved from the source selected above.</Text>
 
       <View style={{ marginTop: 40, alignItems: "center" }}>
         <Button

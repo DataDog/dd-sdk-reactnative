@@ -2722,6 +2722,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@datadog/flagging-core@npm:~2.0.1":
+  version: 2.0.1
+  resolution: "@datadog/flagging-core@npm:2.0.1"
+  dependencies:
+    "@datadog/js-core": 0.0.3
+    spark-md5: ^3.0.2
+  checksum: d4864a76be535acda9bbcdaa95718484f1b16842fba8591ba13308b988e043f7aafd002e240b2393349af616091b5cdb9a75325e24e82aeede8b34dc2bc7560b
+  languageName: node
+  linkType: hard
+
+"@datadog/js-core@npm:0.0.3":
+  version: 0.0.3
+  resolution: "@datadog/js-core@npm:0.0.3"
+  checksum: c8d70cb21f0c5089fa9d3e8d54a9bc2fafde8927b9f9286721b5a12c82cf46b5ff2d39486ecd1c871e4d8a321d88ed5ad5d1cccc06659bce7b9c67c4eaac6695
+  languageName: node
+  linkType: hard
+
 "@datadog/libdatadog@npm:^0.6.0":
   version: 0.6.0
   resolution: "@datadog/libdatadog@npm:0.6.0"
@@ -2819,13 +2836,13 @@ __metadata:
   dependencies:
     "@datadog/mobile-react-native": ^3.5.3
     "@openfeature/core": ^1.9.2
-    "@openfeature/web-sdk": ^1.7.3
+    "@openfeature/web-sdk": ^1.8.0
     "@testing-library/react-native": 7.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
   peerDependencies:
     "@datadog/mobile-react-native": ^3.1.0
-    "@openfeature/web-sdk": ^1.7.3
+    "@openfeature/web-sdk": ^1.8.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
@@ -2863,6 +2880,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
+    "@datadog/flagging-core": ~2.0.1
     "@testing-library/react-native": 7.0.2
     big-integer: ^1.6.52
     react-native-builder-bob: 0.26.0
@@ -4479,7 +4497,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openfeature/web-sdk@npm:^1.7.3":
+"@openfeature/web-sdk@npm:^1.8.0":
   version: 1.8.0
   resolution: "@openfeature/web-sdk@npm:1.8.0"
   peerDependencies:
@@ -18123,6 +18141,13 @@ __metadata:
   version: 0.7.4
   resolution: "source-map@npm:0.7.4"
   checksum: 01cc5a74b1f0e1d626a58d36ad6898ea820567e87f18dfc9d24a9843a351aaa2ec09b87422589906d6ff1deed29693e176194dc88bcae7c9a852dc74b311dbf5
+  languageName: node
+  linkType: hard
+
+"spark-md5@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "spark-md5@npm:3.0.2"
+  checksum: 5feebff0bfabcecf56ba03af3e38fdb068272ed41fbf0a94ff9ef65b9bb9cb1dd69be3684db6542e62497b1eac3ae324c07ac4dcb606465dc36ca048177077bf
   languageName: node
   linkType: hard
 

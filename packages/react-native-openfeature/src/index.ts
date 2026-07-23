@@ -4,8 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { configurationFromString } from '@datadog/mobile-react-native';
+
+import { DatadogOfflineOpenFeatureProvider } from './offlineProvider';
 import { DatadogOpenFeatureProvider } from './provider';
 import type { DatadogOpenFeatureProviderOptions } from './provider';
 
-export { DatadogOpenFeatureProvider };
+export {
+    DatadogOpenFeatureProvider,
+    DatadogOfflineOpenFeatureProvider,
+    configurationFromString
+};
 export type { DatadogOpenFeatureProviderOptions };
