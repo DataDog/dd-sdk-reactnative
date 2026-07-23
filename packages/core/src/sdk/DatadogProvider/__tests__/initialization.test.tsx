@@ -102,6 +102,7 @@ describe('DatadogProvider', () => {
                     "resourceTraceSampleRate": 100,
                     "sessionSampleRate": 100,
                     "telemetrySampleRate": 20,
+                    "timeseries": undefined,
                     "trackBackgroundEvents": false,
                     "trackErrors": true,
                     "trackFetchResources": false,
