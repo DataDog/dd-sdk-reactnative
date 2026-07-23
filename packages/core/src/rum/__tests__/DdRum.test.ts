@@ -1884,6 +1884,21 @@ describe('DdRum', () => {
         });
     });
 
+    describe('DdRum.startProfiling', () => {
+        it('calls the native API', async () => {
+            await DdRum.startProfiling();
+            expect(NativeModules.DdRum.startProfiling).toHaveBeenCalledWith();
+        });
+    });
+
+    describe('DdRum.stopProfiling', () => {
+        it('calls the native API and returns the trace file path', async () => {
+            const tracePath = await DdRum.stopProfiling();
+            expect(NativeModules.DdRum.stopProfiling).toHaveBeenCalledWith();
+            expect(tracePath).toBe('test-trace-path');
+        });
+    });
+
     describe('PropagatorTypes', () => {
         it('matches with the native name of propagators', () => {
             /**

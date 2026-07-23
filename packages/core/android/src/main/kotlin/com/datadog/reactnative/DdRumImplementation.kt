@@ -14,15 +14,21 @@ import com.datadog.android.rum.RumResourceKind
 import com.datadog.android.rum.RumResourceMethod
 import com.datadog.android.rum.featureoperations.FailureReason
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import java.io.File
 import java.util.Locale
 
 /**
  * The entry point to use Datadog's RUM feature.
  */
 @Suppress("TooManyFunctions")
-class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrapper()) {
+class DdRumImplementation(
+    private val reactContext: ReactApplicationContext,
+    private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val hermesProfiler: HermesProfilerWrapper = HermesSamplingProfilerWrapper()
+) {
     /**
      * Start tracking a RUM View.
      * @param key The view unique key identifier.
@@ -393,6 +399,37 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         promise.resolve(null)
     }
 
+    /**
+     * Starts the Hermes JS sampling profiler.
+     */
+    fun startProfiling(promise: Promise) {
+        try {
+            hermesProfiler.enable()
+            promise.resolve(null)
+        } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+            promise.reject(HERMES_PROFILER_ERROR, e.message, e)
+        }
+    }
+
+    /**
+     * Stops the Hermes JS sampling profiler.
+     * @return The absolute path of the generated `.cpuprofile` trace file.
+     */
+    fun stopProfiling(promise: Promise) {
+        try {
+            val traceFile = File.createTempFile(
+                "sampling-profiler-trace",
+                ".cpuprofile",
+                reactContext.cacheDir
+            )
+            hermesProfiler.dumpSampledTraceToFile(traceFile.path)
+            hermesProfiler.disable()
+            promise.resolve(traceFile.path)
+        } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+            promise.reject(HERMES_PROFILER_ERROR, e.message, e)
+        }
+    }
+
     // region Internal
 
     private fun String.asRumActionType(): RumActionType {
@@ -463,6 +500,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     @Suppress("UndocumentedPublicClass")
     companion object {
         private const val MISSING_RESOURCE_SIZE = -1L
+        private const val HERMES_PROFILER_ERROR = "HERMES_PROFILER_ERROR"
         internal const val NAME = "DdRum"
     }
 }

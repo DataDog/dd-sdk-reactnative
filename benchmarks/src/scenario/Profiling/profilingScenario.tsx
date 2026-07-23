@@ -14,12 +14,11 @@ import {
     View,
 } from 'react-native';
 import type { ProfilingScenarioConfig, ProfilingScenarioProps } from './types';
+import { DdRum } from '@datadog/mobile-react-native';
 import { RunType } from '../../testSetup/types/testConfig';
 import { instrument } from '../../testSetup/testUtils';
 import {
     computePrimes,
-    enableJsProfiler,
-    enableNativeProfiler,
     fibonacci,
     sortNumbers,
 } from './profilingUtils';
@@ -33,22 +32,39 @@ const OS = Platform.OS;
 function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [lastResult, setLastResult] = useState<string>('');
+    const [isJsProfilingEnabled, setIsJsProfilingEnabled] = useState<boolean>(false);
+    const [isJsProfilingActive, setIsJsProfilingActive] = useState<boolean>(false);
 
     useEffect(() => {
+        console.log(props.testConfig);
         if (props.testConfig?.runType !== RunType.BASELINE) {
             instrument().then(() => {
                 const scenarioConfig = props.testConfig?.scenarioConfig as ProfilingScenarioConfig | undefined;
+                console.log(scenarioConfig)
 
                 if (scenarioConfig?.nativeProfilerEnabled) {
                     // TO DO
                 }
 
                 if (scenarioConfig?.jsProfilerEnabled) {
-                    // TO DO
+                    console.log("Enabling JS profiling")
+                    setIsJsProfilingEnabled(true);
+                    DdRum.startProfiling().then(() => {
+                        console.log("Started JS profiling");
+                        setIsJsProfilingActive(true)
+
+                    });
                 }
             });
         }
     }, []);
+
+    const onStopJsProfiling = () => {
+        DdRum.stopProfiling().then(tracePath => {
+            setIsJsProfilingActive(false);
+            setLastResult(`JS profiling stopped, trace saved at ${tracePath}`);
+        });
+    };
 
     const runWork = async (label: string, work: () => void) => {
         setIsRunning(true);
@@ -95,6 +111,16 @@ function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
                             disabled={isRunning}
                         />
                     </View>
+                    {isJsProfilingEnabled && (
+                        <View style={styles.buttonWrapper}>
+                            <Button
+                                color={OS === 'android' ? Colors.DatadogPurple : Colors.White}
+                                onPress={onStopJsProfiling}
+                                title="Stop JS Profiling"
+                                disabled={!isJsProfilingActive}
+                            />
+                        </View>
+                    )}
                 </View>
                 {isRunning && <ActivityIndicator/>}
                 <Text style={styles.resultTitle}>{lastResult}</Text>

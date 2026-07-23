@@ -16,6 +16,7 @@ import com.datadog.tools.unit.forge.BaseConfigurator
 import com.datadog.tools.unit.toReadableArray
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
 import fr.xgouchet.elmyr.Forge
 import fr.xgouchet.elmyr.annotation.AdvancedForgery
 import fr.xgouchet.elmyr.annotation.BoolForgery
@@ -27,16 +28,21 @@ import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.annotation.StringForgeryType
 import fr.xgouchet.elmyr.junit5.ForgeConfiguration
 import fr.xgouchet.elmyr.junit5.ForgeExtension
+import java.io.File
 import java.util.Date
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
@@ -62,6 +68,15 @@ internal class DdRumTest {
     @Mock
     lateinit var mockPromise: Promise
 
+    @Mock
+    lateinit var mockReactContext: ReactApplicationContext
+
+    @Mock
+    lateinit var mockHermesProfiler: HermesProfilerWrapper
+
+    @TempDir
+    lateinit var tempCacheDir: File
+
     lateinit var fakeContext: Map<String, Any?>
 
     @DoubleForgery(1000000000000.0, 2000000000000.0)
@@ -70,6 +85,7 @@ internal class DdRumTest {
     @BeforeEach
     fun `set up`(forge: Forge) {
         whenever(mockDatadog.getRumMonitor()) doReturn mockRumMonitor
+        whenever(mockReactContext.cacheDir) doReturn tempCacheDir
 
         fakeContext = forge.aMap {
             anAlphabeticalString() to aNullable {
@@ -83,7 +99,7 @@ internal class DdRumTest {
             }
         }
 
-        testedDdRum = DdRumImplementation(mockDatadog)
+        testedDdRum = DdRumImplementation(mockReactContext, mockDatadog, mockHermesProfiler)
     }
 
     @AfterEach
@@ -554,5 +570,48 @@ internal class DdRumTest {
 
         // Then
         verify(mockRumMonitor).addFeatureFlagEvaluation(name, value)
+    }
+
+    @Test
+    fun `M resolve promise W startProfiling()`() {
+        // When
+        testedDdRum.startProfiling(mockPromise)
+
+        // Then
+        verify(mockHermesProfiler).enable()
+        verify(mockPromise).resolve(null)
+    }
+
+    @Test
+    fun `M reject promise W startProfiling() {Hermes profiler throws}`(
+        @StringForgery fakeMessage: String
+    ) {
+        // Given
+        val fakeThrowable = RuntimeException(fakeMessage)
+        whenever(mockHermesProfiler.enable()) doThrow fakeThrowable
+
+        // When
+        testedDdRum.startProfiling(mockPromise)
+
+        // Then
+        verify(mockPromise).reject("HERMES_PROFILER_ERROR", fakeThrowable.message, fakeThrowable)
+    }
+
+    @Test
+    fun `M resolve promise with trace file path W stopProfiling()`() {
+        // When
+        testedDdRum.stopProfiling(mockPromise)
+
+        // Then
+        val tracePathCaptor = argumentCaptor<String>()
+        verify(mockHermesProfiler).dumpSampledTraceToFile(tracePathCaptor.capture())
+        verify(mockHermesProfiler).disable()
+
+        val resolvedPathCaptor = argumentCaptor<String>()
+        verify(mockPromise).resolve(resolvedPathCaptor.capture())
+        val tracePath = resolvedPathCaptor.firstValue
+        assertThat(tracePath).isEqualTo(tracePathCaptor.firstValue)
+        assertThat(tracePath).startsWith(tempCacheDir.path)
+        assertThat(File(tracePath)).exists()
     }
 }

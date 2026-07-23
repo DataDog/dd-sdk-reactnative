@@ -97,7 +97,7 @@ xcrun simctl openurl booted "benchmark://start?scenario=profiling&runType=instru
 Android:
 
 ```
-adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented\&scenarioConfig={"nativeProfilerEnabled":true,"jsProfilerEnabled":true}' com.benchmarkrunner
+adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented\&scenarioConfig=%7B%22nativeProfilerEnabled%22%3Atrue%2C%22jsProfilerEnabled%22%3Atrue%7D' com.benchmarkrunner
 ```
 
 ## Stop a test scenario

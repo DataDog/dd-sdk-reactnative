@@ -492,6 +492,43 @@ internal class DdRumTests: XCTestCase {
     private func nanoTimeToDate(timestampNs: Int64) -> Date {
         return Date(timeIntervalSince1970: TimeInterval(fromNs: timestampNs))
     }
+
+    func testStartProfilingResolves() throws {
+        let ddRum = DdRum()
+        let expectation = self.expectation(description: "startProfiling resolves")
+
+        ddRum.startProfiling({ _ in
+            expectation.fulfill()
+        }, reject: { _, _, _ in
+            XCTFail("Expected startProfiling to resolve")
+        })
+
+        waitForExpectations(timeout: 5)
+    }
+
+    func testStopProfilingResolvesWithTraceFilePath() throws {
+        let ddRum = DdRum()
+        let startExpectation = self.expectation(description: "startProfiling resolves")
+        ddRum.startProfiling({ _ in
+            startExpectation.fulfill()
+        }, reject: { _, _, _ in
+            XCTFail("Expected startProfiling to resolve")
+        })
+        waitForExpectations(timeout: 5)
+
+        let stopExpectation = self.expectation(description: "stopProfiling resolves")
+        var tracePath: String?
+        ddRum.stopProfiling({ path in
+            tracePath = path as? String
+            stopExpectation.fulfill()
+        }, reject: { _, _, _ in
+            XCTFail("Expected stopProfiling to resolve")
+        })
+        waitForExpectations(timeout: 5)
+
+        let resolvedPath = try XCTUnwrap(tracePath)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: resolvedPath))
+    }
 }
 
 private class MockUIManager: RCTUIManager {

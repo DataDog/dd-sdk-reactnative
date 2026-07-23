@@ -163,6 +163,14 @@ module.exports = {
         failFeatureOperation: jest
             .fn()
             .mockImplementation(() => new Promise() < (resolve => resolve())),
+        startProfiling: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
+        stopProfiling: jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => resolve('test-trace-path'))
+            ),
         setTimeProvider: jest.fn().mockImplementation(() => {}),
         timeProvider: jest.fn().mockReturnValue(undefined),
         getTracingContext: jest.fn().mockReturnValue(undefined),

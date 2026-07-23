@@ -8,6 +8,7 @@ import XCTest
 @testable import DatadogSDKReactNative
 @testable import DatadogCore
 @testable import DatadogTrace
+@testable import DatadogInternal
 
 
 internal class DdTraceTests: XCTestCase {
@@ -167,11 +168,21 @@ internal class DdTraceTests: XCTestCase {
     }
 }
 
-private class MockTracer: OTTracer {
-    var activeSpan: OTSpan?
+private final class MockTracer: OTTracer {
+    let activeSpan: OTSpan?
 
     private(set) var startedSpans = [MockSpan]()
-    func startSpan(operationName: String, references: [OTReference]?, tags: [String: Encodable]?, startTime: Date?) -> OTSpan {
+    init(activeSpan: OTSpan? = nil) {
+        self.activeSpan = activeSpan
+    }
+
+    func startSpan(operationName: String, references: [OTReference]?, tags: [String: OTTagValue]?, startTime: Date?) -> OTSpan {
+        let mockSpan = MockSpan(name: operationName, parent: nil, tags: tags, startTime: startTime)
+        startedSpans.append(mockSpan)
+        return mockSpan
+    }
+
+    func startRootSpan(operationName: String, tags: [String: OTTagValue]?, startTime: Date?, customSampleRate: SampleRate?) -> OTSpan {
         let mockSpan = MockSpan(name: operationName, parent: nil, tags: tags, startTime: startTime)
         startedSpans.append(mockSpan)
         return mockSpan
@@ -192,16 +203,16 @@ private class MockSpan: OTSpan {
 
     let name: String
     let parent: OTSpanContext?
-    private(set) var tags: [String: Encodable]
+    private(set) var tags: [String: OTTagValue]
     let startTime: Date?
-    init(name: String, parent: OTSpanContext?, tags: [String: Encodable]?, startTime: Date?) {
+    init(name: String, parent: OTSpanContext?, tags: [String: OTTagValue]?, startTime: Date?) {
         self.name = name
         self.parent = parent
         self.tags = tags ?? [:]
         self.startTime = startTime
     }
 
-    func setTag(key: String, value: Encodable) {
+    func setTag(key: String, value: OTTagValue) {
         tags[key] = value
     }
 
@@ -225,7 +236,7 @@ private class MockSpan: OTSpan {
     func setOperationName(_ operationName: String) {
         fatalError("Should not be called")
     }
-    func log(fields: [String: Encodable], timestamp: Date) {
+    func log(fields: [String: Encodable & Sendable], timestamp: Date) {
         fatalError("Should not be called")
     }
     func setBaggageItem(key: String, value: String) {

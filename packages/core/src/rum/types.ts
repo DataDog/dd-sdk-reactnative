@@ -270,6 +270,17 @@ export type DdRumType = {
         reason: FeatureOperationFailure,
         attributes: object
     ): Promise<void>;
+
+    /**
+     * Starts the Hermes JS sampling profiler.
+     */
+    startProfiling(): Promise<void>;
+
+    /**
+     * Stops the Hermes JS sampling profiler.
+     * @returns The absolute path of the generated `.cpuprofile` trace file.
+     */
+    stopProfiling(): Promise<string>;
 };
 
 /**

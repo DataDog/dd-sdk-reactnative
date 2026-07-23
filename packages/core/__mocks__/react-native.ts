@@ -165,7 +165,13 @@ actualRN.NativeModules.DdRum = {
     ) as jest.MockedFunction<DdRumType['startFeatureOperation']>,
     failFeatureOperation: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
-    ) as jest.MockedFunction<DdRumType['failFeatureOperation']>
+    ) as jest.MockedFunction<DdRumType['failFeatureOperation']>,
+    startProfiling: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['startProfiling']>,
+    stopProfiling: jest.fn().mockImplementation(
+        () => new Promise<string>(resolve => resolve('test-trace-path'))
+    ) as jest.MockedFunction<DdRumType['stopProfiling']>
 };
 
 const DdFlags: DdNativeFlagsType = {

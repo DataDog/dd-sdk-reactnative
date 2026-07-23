@@ -22,7 +22,7 @@ class DdRum(
     datadogWrapper: DatadogWrapper = DatadogSDKWrapper()
 ) : NativeDdRumSpec(reactContext) {
 
-    private val implementation = DdRumImplementation(datadog = datadogWrapper)
+    private val implementation = DdRumImplementation(reactContext, datadog = datadogWrapper)
 
     override fun getName(): String = DdRumImplementation.NAME
 
@@ -340,5 +340,21 @@ class DdRum(
         promise: Promise
     ) {
         implementation.failFeatureOperation(name, operationKey, failureReason, attributes, promise)
+    }
+
+    /**
+     * Starts the Hermes JS sampling profiler.
+     */
+    @ReactMethod
+    override fun startProfiling(promise: Promise) {
+        implementation.startProfiling(promise)
+    }
+
+    /**
+     * Stops the Hermes JS sampling profiler.
+     */
+    @ReactMethod
+    override fun stopProfiling(promise: Promise) {
+        implementation.stopProfiling(promise)
     }
 }

@@ -213,6 +213,16 @@ class DdRumWrapper implements DdRumType {
         this.timeProvider = timeProvider;
     };
 
+    startProfiling = (): Promise<void> => {
+        InternalLog.log('Starting JS sampling profiler', SdkVerbosity.DEBUG);
+        return this.nativeRum.startProfiling();
+    };
+
+    stopProfiling = (): Promise<string> => {
+        InternalLog.log('Stopping JS sampling profiler', SdkVerbosity.DEBUG);
+        return this.nativeRum.stopProfiling();
+    };
+
     addAction = (
         type: RumActionType,
         name: string,

@@ -227,6 +227,17 @@ export interface Spec extends TurboModule {
         reason: string,
         attributes: Object
     ): Promise<void>;
+
+    /**
+     * Starts the Hermes JS sampling profiler.
+     */
+    startProfiling(): Promise<void>;
+
+    /**
+     * Stops the Hermes JS sampling profiler.
+     * @returns The absolute path of the generated `.cpuprofile` trace file.
+     */
+    stopProfiling(): Promise<string>;
 }
 
 // eslint-disable-next-line import/no-default-export

@@ -11,6 +11,30 @@
 #endif
 #import "DdRum.h"
 
+#import <hermes/hermes.h>
+
+#ifdef __has_include
+#if __has_include(<cxxreact/ReactNativeVersion.h>)
+#define EXISTS_REACT_NATIVE_VERSION_HEADER
+#include <cxxreact/ReactNativeVersion.h>
+#elif __has_include(<React/ReactNativeVersion.h>)
+#define EXISTS_REACT_NATIVE_VERSION_HEADER
+#include <React/ReactNativeVersion.h>
+#endif
+#endif
+
+#ifdef EXISTS_REACT_NATIVE_VERSION_HEADER
+#define IS_RN_VERSION_0_81_OR_HIGHER                                         \
+  (REACT_NATIVE_VERSION_MAJOR > 0 ||                                         \
+   (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR >= 81))
+#else
+#define IS_RN_VERSION_0_81_OR_HIGHER false
+#endif
+
+#if IS_RN_VERSION_0_81_OR_HIGHER
+using namespace facebook::hermes;
+using namespace facebook::jsi;
+#endif
 
 @implementation DdRum
 
@@ -197,6 +221,20 @@ RCT_REMAP_METHOD(failFeatureOperation,
     [self failFeatureOperation:name operationKey:operationKey reason:reason attributes:attributes resolve:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(startProfiling,
+                 startProfilingWithResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self startProfiling:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(stopProfiling,
+                 stopProfilingWithResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self stopProfiling:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -300,6 +338,35 @@ RCT_REMAP_METHOD(failFeatureOperation,
 
 - (void) failFeatureOperation:(NSString *)name operationKey:(NSString *)operationKey reason:(NSString *)reason attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddRumImplementation failFeatureOperationWithName:name operationKey:operationKey reason:reason attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)startProfiling:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+#if IS_RN_VERSION_0_81_OR_HIGHER
+    IHermesRootAPI *api = castInterface<IHermesRootAPI>(makeHermesRootAPI());
+    api->enableSamplingProfiler();
+#else
+    facebook::hermes::HermesRuntime::enableSamplingProfiler();
+#endif
+    resolve(nil);
+}
+
+- (void)stopProfiling:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSURL *cachesDirectory = [[fileManager URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] firstObject];
+    NSString *fileName = [NSString stringWithFormat:@"sampling-profiler-trace-%@.cpuprofile", [[NSProcessInfo processInfo] globallyUniqueString]];
+    NSURL *fileURL = [cachesDirectory URLByAppendingPathComponent:fileName];
+    std::string path = std::string([fileURL.path UTF8String]);
+
+#if IS_RN_VERSION_0_81_OR_HIGHER
+    IHermesRootAPI *api = castInterface<IHermesRootAPI>(makeHermesRootAPI());
+    api->dumpSampledTraceToFile(path);
+    api->disableSamplingProfiler();
+#else
+    facebook::hermes::HermesRuntime::dumpSampledTraceToFile(path);
+    facebook::hermes::HermesRuntime::disableSamplingProfiler();
+#endif
+
+    resolve(fileURL.path);
 }
 
 @end

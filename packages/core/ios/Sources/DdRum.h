@@ -21,4 +21,7 @@
 
 @property (nonatomic, strong) DdRumImplementation* ddRumImplementation;
 
+- (void)startProfiling:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)stopProfiling:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
 @end
