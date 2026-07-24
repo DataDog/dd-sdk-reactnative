@@ -19,6 +19,8 @@ import type {
     ProviderEvents
 } from '@openfeature/web-sdk';
 
+import { isEmptyContext, toDdContext } from './mappers';
+
 export interface DatadogOpenFeatureProviderOptions {
     /**
      * The name of the Datadog Flags client to use.
@@ -45,6 +47,7 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
 
     private options: DatadogOpenFeatureProviderOptions;
     protected flagsClient: FlagsClient;
+    protected readonly useResolutionContext: boolean = false;
 
     readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();
 
@@ -64,10 +67,16 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<boolean> {
-        const details = this.flagsClient.getBooleanDetails(
-            flagKey,
-            defaultValue
-        );
+        const details =
+            this.useResolutionContext && !isEmptyContext(_context)
+                ? this.flagsClient.getDetailsForContext(
+                      flagKey,
+                      defaultValue,
+                      'boolean',
+                      toDdContext(_context),
+                      _logger
+                  )
+                : this.flagsClient.getBooleanDetails(flagKey, defaultValue);
         return toFlagResolution(details);
     }
 
@@ -77,10 +86,16 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<string> {
-        const details = this.flagsClient.getStringDetails(
-            flagKey,
-            defaultValue
-        );
+        const details =
+            this.useResolutionContext && !isEmptyContext(_context)
+                ? this.flagsClient.getDetailsForContext(
+                      flagKey,
+                      defaultValue,
+                      'string',
+                      toDdContext(_context),
+                      _logger
+                  )
+                : this.flagsClient.getStringDetails(flagKey, defaultValue);
         return toFlagResolution(details);
     }
 
@@ -90,10 +105,16 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
         _context: OFEvaluationContext,
         _logger: Logger
     ): ResolutionDetails<number> {
-        const details = this.flagsClient.getNumberDetails(
-            flagKey,
-            defaultValue
-        );
+        const details =
+            this.useResolutionContext && !isEmptyContext(_context)
+                ? this.flagsClient.getDetailsForContext(
+                      flagKey,
+                      defaultValue,
+                      'number',
+                      toDdContext(_context),
+                      _logger
+                  )
+                : this.flagsClient.getNumberDetails(flagKey, defaultValue);
         return toFlagResolution(details);
     }
 
@@ -108,10 +129,16 @@ export abstract class DatadogCoreOpenFeatureProvider implements Provider {
         // Thus, the user should always expect the returned value to be an object instead of any arbitrary JSON value.
         // Also, the user is responsible for providing a proper `defaultValue` that's an object.
 
-        const details = this.flagsClient.getObjectDetails<T>(
-            flagKey,
-            defaultValue
-        );
+        const details =
+            this.useResolutionContext && !isEmptyContext(_context)
+                ? this.flagsClient.getDetailsForContext(
+                      flagKey,
+                      defaultValue,
+                      'object',
+                      toDdContext(_context),
+                      _logger
+                  )
+                : this.flagsClient.getObjectDetails<T>(flagKey, defaultValue);
         return toFlagResolution(details);
     }
 }

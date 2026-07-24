@@ -1,13 +1,7 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  Switch,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import {View, Text, Switch, ActivityIndicator, StyleSheet} from 'react-native';
 
-import {setFlagsProvider} from './flagsProvider';
+import {setFlagsProvider, setOfflineExampleContext} from './flagsProvider';
 import type {FlagsSource} from './flagsProvider';
 
 /**
@@ -20,6 +14,7 @@ export const FlagsSourceToggle = ({
   initialSource?: FlagsSource;
 }) => {
   const [offline, setOffline] = useState(initialSource === 'offline');
+  const [included, setIncluded] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const onToggle = async (nextOffline: boolean) => {
@@ -27,6 +22,19 @@ export const FlagsSourceToggle = ({
     try {
       await setFlagsProvider(nextOffline ? 'offline' : 'online');
       setOffline(nextOffline);
+      if (nextOffline) {
+        setIncluded(true);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onAudienceToggle = async (nextIncluded: boolean) => {
+    setBusy(true);
+    try {
+      await setOfflineExampleContext(nextIncluded);
+      setIncluded(nextIncluded);
     } finally {
       setBusy(false);
     }
@@ -43,6 +51,19 @@ export const FlagsSourceToggle = ({
         onValueChange={onToggle}
         disabled={busy}
       />
+      {offline ? (
+        <>
+          <Text style={styles.audienceLabel}>
+            Rules match: {included ? 'yes' : 'no'}
+          </Text>
+          <Switch
+            accessibilityLabel="offline_rules_context_toggle"
+            value={included}
+            onValueChange={onAudienceToggle}
+            disabled={busy}
+          />
+        </>
+      ) : null}
       {busy ? <ActivityIndicator style={styles.spinner} /> : null}
     </View>
   );
@@ -59,5 +80,9 @@ const styles = StyleSheet.create({
   },
   spinner: {
     marginLeft: 10,
+  },
+  audienceLabel: {
+    marginLeft: 16,
+    marginRight: 10,
   },
 });
