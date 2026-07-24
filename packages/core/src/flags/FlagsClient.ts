@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { UniversalFlagConfigurationV1 } from '@datadog/flagging-core';
+
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
@@ -11,6 +13,18 @@ import type { DdNativeFlagsType } from '../nativeModulesTypes';
 // Imported directly (not via the module index): context matching is an internal helper,
 // used here only to detect a runtime context an offline precomputed configuration cannot honor.
 import { contextMatchesConfiguration } from './configuration/context';
+import { stringifyFlagValue } from './configuration/precomputed';
+import {
+    flaggingCoreRulesEngine,
+    getNoopRulesLogger,
+    prepareRulesConfiguration,
+    toRulesEvaluationContext
+} from './configuration/rules';
+import type {
+    RulesEngine,
+    RulesLogger,
+    RulesValueType
+} from './configuration/rules';
 import { decodePrecomputedFlags, normalizeWireContext } from './configuration';
 import type {
     ParsedFlagsConfiguration,
@@ -54,19 +68,36 @@ export type ConfigurationResult =
  *
  * `'none'` = no offline configuration engaged (the online/fetch path, or nothing loaded yet).
  */
+type LoadedBranch<T> =
+    | { status: 'absent' }
+    | { status: 'invalid'; errorMessage: string }
+    | { status: 'ready'; value: T };
+
+type LoadedPrecomputed = {
+    configuration: ParsedPrecomputedConfiguration;
+    flags: Map<string, FlagCacheEntry>;
+};
+
 type LoadedConfigurationState =
     | { kind: 'none' }
-    | { kind: 'invalid'; errorCode: ConfigurationErrorCode }
     | {
-          kind: 'precomputed';
-          configuration: ParsedPrecomputedConfiguration;
-          flags: Map<string, FlagCacheEntry>;
+          kind: 'configuration';
+          precomputed: LoadedBranch<LoadedPrecomputed>;
+          rules: LoadedBranch<UniversalFlagConfigurationV1>;
       };
+
+// TODO(FFL-2837): Remove this compatibility shape when the published
+// FlagsConfiguration type contains the rulesBased branch.
+type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
+    rulesBased?: { response?: unknown };
+};
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
         .default;
+
+    private readonly rulesEngine: RulesEngine = flaggingCoreRulesEngine;
 
     private clientName: string;
 
@@ -256,33 +287,56 @@ export class FlagsClient {
         configuration: ParsedFlagsConfiguration
     ): LoadedConfigurationState => {
         const precomputed = configuration?.precomputed;
+        const pendingConfiguration = configuration as ConfigurationWithPendingRules;
+        const rulesResponse = pendingConfiguration?.rulesBased?.response;
 
-        // An empty configuration (a failed/lenient wire parse, or a wire with no precomputed
-        // branch) is unusable. `configurationFromString` collapses malformed input and
-        // unsupported versions to the same empty shape, so this is classified as `GENERAL`.
-        if (!precomputed) {
-            InternalLog.log(
-                `No usable precomputed configuration was provided for '${this.clientName}'.`,
-                SdkVerbosity.WARN
-            );
-            return { kind: 'invalid', errorCode: 'GENERAL' };
-        }
-
-        try {
-            const flags = decodePrecomputedFlags(precomputed.response);
-
-            return { kind: 'precomputed', configuration: precomputed, flags };
-        } catch (error) {
-            // Decoding rejects unsupported payloads (e.g. obfuscated) — an unsupported kind,
-            // classified as `GENERAL`.
-            if (error instanceof Error) {
+        let precomputedBranch: LoadedBranch<LoadedPrecomputed> = {
+            status: 'absent'
+        };
+        if (precomputed) {
+            try {
+                precomputedBranch = {
+                    status: 'ready',
+                    value: {
+                        configuration: precomputed,
+                        flags: decodePrecomputedFlags(precomputed.response)
+                    }
+                };
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : 'The precomputed configuration is not valid.';
                 InternalLog.log(
-                    `Unsupported flags configuration for '${this.clientName}': ${error.message}`,
+                    `Unsupported precomputed configuration for '${this.clientName}': ${errorMessage}`,
                     SdkVerbosity.WARN
                 );
+                precomputedBranch = { status: 'invalid', errorMessage };
             }
-            return { kind: 'invalid', errorCode: 'GENERAL' };
         }
+
+        let rulesBranch: LoadedBranch<UniversalFlagConfigurationV1> = {
+            status: 'absent'
+        };
+        if (rulesResponse !== undefined) {
+            const prepared = prepareRulesConfiguration(rulesResponse);
+            rulesBranch =
+                prepared.status === 'ready'
+                    ? {
+                          status: 'ready',
+                          value: prepared.configuration
+                      }
+                    : {
+                          status: 'invalid',
+                          errorMessage: prepared.errorMessage
+                      };
+        }
+
+        return {
+            kind: 'configuration',
+            precomputed: precomputedBranch,
+            rules: rulesBranch
+        };
     };
 
     /**
@@ -303,44 +357,59 @@ export class FlagsClient {
             );
         }
 
-        // The load itself failed (malformed/unsupported/undecodable) — independent of context.
-        if (loaded.kind === 'invalid') {
+        const { precomputed, rules } = loaded;
+
+        if (
+            precomputed.status === 'ready' &&
+            (!this.externalContext ||
+                contextMatchesConfiguration(
+                    precomputed.value.configuration.context,
+                    this.externalContext
+                ))
+        ) {
+            this.evaluationContext =
+                this.externalContext ??
+                this.embeddedContext(precomputed.value.configuration);
+            this.flagsCache = precomputed.value.flags;
+            return this.enterReady();
+        }
+
+        if (rules.status === 'ready') {
+            // TODO(FFL-2837): Replace this empty-key fallback after D8 defines
+            // whether an absent targeting key differs from an empty key.
+            this.evaluationContext = this.externalContext ?? {
+                targetingKey: '',
+                attributes: {}
+            };
+            this.flagsCache = new Map();
+            return this.enterReady();
+        }
+
+        if (rules.status === 'invalid') {
             return this.enterError(
-                loaded.errorCode,
-                `The loaded configuration for '${this.clientName}' is not usable. Provide a valid precomputed configuration.`
+                'GENERAL',
+                `The rules configuration for '${this.clientName}' is not usable: ${rules.errorMessage}`
             );
         }
 
-        const { configuration, flags } = loaded;
+        if (precomputed.status === 'invalid') {
+            return this.enterError(
+                'GENERAL',
+                `The precomputed configuration for '${this.clientName}' is not usable: ${precomputed.errorMessage}`
+            );
+        }
 
-        // A precomputed snapshot is bound to the subject it was computed for. If the app set an
-        // *external* context that does not match, it cannot be served (offline never fetches), so
-        // it is an error and evaluation serves coded defaults. Only an external override is checked
-        // here — the configuration's own embedded context (adopted below when no override is set)
-        // matches by construction, so replacing one snapshot with another for a different subject
-        // stays `ready`. The decoded snapshot is retained for a later matching context.
-        if (
-            this.externalContext &&
-            !contextMatchesConfiguration(
-                configuration.context,
-                this.externalContext
-            )
-        ) {
+        if (precomputed.status === 'ready') {
             return this.enterError(
                 'INVALID_CONTEXT',
                 `The evaluation context does not match the precomputed configuration for '${this.clientName}'. Serving default values. Set a matching context, or use a rules-based configuration for per-context evaluation.`
             );
         }
 
-        // Serve against the external override when set, otherwise the configuration's embedded
-        // context (a context-agnostic configuration falls back to an empty context).
-        this.evaluationContext =
-            this.externalContext ?? this.embeddedContext(configuration);
-        this.flagsCache = flags;
-        this.configurationStatus = 'ready';
-        this.configurationError = undefined;
-
-        return { status: 'ready' };
+        return this.enterError(
+            'GENERAL',
+            `The loaded configuration for '${this.clientName}' does not contain a usable branch.`
+        );
     };
 
     /** The evaluation context a precomputed configuration was computed for (empty if agnostic). */
@@ -350,6 +419,12 @@ export class FlagsClient {
         return configuration.context
             ? normalizeWireContext(configuration.context)
             : { targetingKey: '', attributes: {} };
+    };
+
+    private enterReady = (): ConfigurationResult => {
+        this.configurationStatus = 'ready';
+        this.configurationError = undefined;
+        return { status: 'ready' };
     };
 
     /** Record an error status + message, clear the servable cache, and return the result. */
@@ -385,69 +460,281 @@ export class FlagsClient {
             });
     };
 
-    private getDetails = <T>(
+    private errorDetails = <T>(
         key: string,
         defaultValue: T,
-        type: 'boolean' | 'string' | 'number' | 'object'
+        errorCode:
+            | ConfigurationErrorCode
+            | 'FLAG_NOT_FOUND'
+            | 'TARGETING_KEY_MISSING'
+            | 'TYPE_MISMATCH',
+        errorMessage?: string
+    ): FlagDetails<T> => ({
+        key,
+        value: defaultValue,
+        reason: 'ERROR',
+        errorCode,
+        errorMessage
+    });
+
+    private getCachedDetails = <T>(
+        flags: Map<string, FlagCacheEntry>,
+        context: EvaluationContext,
+        key: string,
+        defaultValue: T,
+        type: RulesValueType
     ): FlagDetails<T> => {
-        // An offline configuration that cannot be served against the active context surfaces the
-        // precise error code (INVALID_CONTEXT / GENERAL / PROVIDER_NOT_READY) with the coded
-        // default. The OpenFeature provider maps this to a PROVIDER_ERROR / ERROR state.
-        if (this.configurationStatus === 'error' && this.configurationError) {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: this.configurationError.errorCode,
-                errorMessage: this.configurationError.errorMessage
-            };
-        }
-
-        if (!this.evaluationContext) {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'PROVIDER_NOT_READY',
-                errorMessage: `The evaluation context is not set for '${this.clientName}'. Please, set context before evaluating any flags.`
-            };
-        }
-
-        // Retrieve the flag from the cache.
-        const flag = this.flagsCache.get(key);
+        const flag = flags.get(key);
 
         if (!flag) {
-            return {
-                key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'FLAG_NOT_FOUND'
-            };
+            return this.errorDetails(key, defaultValue, 'FLAG_NOT_FOUND');
         }
 
-        // Validate the expected type against the actual flag value type.
         const actualType = typeof flag.value;
         if (actualType !== type) {
-            return {
+            return this.errorDetails(
                 key,
-                value: defaultValue,
-                reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH',
-                errorMessage: `Flag "${key}" returned a value of type "${typeof flag.value}". Use the corresponding method instead of the one expecting "${type}".`
-            };
+                defaultValue,
+                'TYPE_MISMATCH',
+                `Flag "${key}" returned a value of type "${actualType}". Use the corresponding method instead of the one expecting "${type}".`
+            );
         }
 
-        this.track(flag, this.evaluationContext);
+        this.track(flag, context);
 
-        const details: FlagDetails<T> = {
+        return {
             key: flag.key,
             value: flag.value as T,
             variant: flag.variationKey,
             allocationKey: flag.allocationKey,
             reason: flag.reason
         };
+    };
 
-        return details;
+    private normalizeRulesErrorCode = (
+        errorCode: string
+    ):
+        | ConfigurationErrorCode
+        | 'FLAG_NOT_FOUND'
+        | 'TARGETING_KEY_MISSING'
+        | 'TYPE_MISMATCH' => {
+        switch (errorCode) {
+            case 'INVALID_CONTEXT':
+            case 'PROVIDER_NOT_READY':
+            case 'FLAG_NOT_FOUND':
+            case 'TARGETING_KEY_MISSING':
+            case 'TYPE_MISMATCH':
+                return errorCode;
+            default:
+                return 'GENERAL';
+        }
+    };
+
+    private getRulesDetails = <T>(
+        configuration: UniversalFlagConfigurationV1,
+        context: EvaluationContext,
+        logger: RulesLogger,
+        key: string,
+        defaultValue: T,
+        type: RulesValueType
+    ): FlagDetails<T> => {
+        const result = this.rulesEngine.evaluate({
+            configuration,
+            type,
+            flagKey: key,
+            defaultValue,
+            context: toRulesEvaluationContext(context),
+            logger
+        } as never);
+
+        if (result.errorCode) {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                this.normalizeRulesErrorCode(result.errorCode),
+                result.errorMessage
+            );
+        }
+
+        const reason = result.reason ?? 'DEFAULT';
+        const isAssigned =
+            result.variant !== undefined &&
+            result.metadata.allocationKey !== undefined &&
+            reason !== 'DEFAULT' &&
+            reason !== 'DISABLED';
+
+        if (isAssigned) {
+            // TODO(FFL-2837): Replace the synthesized native flag after
+            // flagging-core and the native bridge publish one tracking payload.
+            this.track(
+                {
+                    key,
+                    value: result.value,
+                    allocationKey: result.metadata.allocationKey as string,
+                    variationKey: result.variant as string,
+                    variationType: result.metadata.variationType ?? type,
+                    variationValue: stringifyFlagValue(result.value),
+                    reason,
+                    doLog: result.metadata.doLog ?? false,
+                    extraLogging: result.metadata.extraLogging ?? {}
+                },
+                context
+            );
+        }
+
+        return {
+            key,
+            value: result.value as T,
+            variant: result.variant,
+            allocationKey: result.metadata.allocationKey,
+            reason
+        };
+    };
+
+    private getOfflineDetails = <T>(
+        loaded: Extract<LoadedConfigurationState, { kind: 'configuration' }>,
+        context: EvaluationContext,
+        logger: RulesLogger,
+        key: string,
+        defaultValue: T,
+        type: RulesValueType
+    ): FlagDetails<T> => {
+        if (
+            loaded.precomputed.status === 'ready' &&
+            contextMatchesConfiguration(
+                loaded.precomputed.value.configuration.context,
+                context
+            )
+        ) {
+            return this.getCachedDetails(
+                loaded.precomputed.value.flags,
+                context,
+                key,
+                defaultValue,
+                type
+            );
+        }
+
+        if (loaded.rules.status === 'ready') {
+            return this.getRulesDetails(
+                loaded.rules.value,
+                context,
+                logger,
+                key,
+                defaultValue,
+                type
+            );
+        }
+
+        if (loaded.rules.status === 'invalid') {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'GENERAL',
+                loaded.rules.errorMessage
+            );
+        }
+
+        if (loaded.precomputed.status === 'invalid') {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'GENERAL',
+                loaded.precomputed.errorMessage
+            );
+        }
+
+        if (loaded.precomputed.status === 'ready') {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'INVALID_CONTEXT',
+                `The evaluation context does not match the precomputed configuration for '${this.clientName}'.`
+            );
+        }
+
+        return this.errorDetails(
+            key,
+            defaultValue,
+            'GENERAL',
+            `The loaded configuration for '${this.clientName}' does not contain a usable branch.`
+        );
+    };
+
+    private getDetails = <T>(
+        key: string,
+        defaultValue: T,
+        type: RulesValueType,
+        resolutionContext?: EvaluationContext,
+        logger: RulesLogger = getNoopRulesLogger()
+    ): FlagDetails<T> => {
+        const effectiveContext =
+            resolutionContext ?? this.externalContext ?? this.evaluationContext;
+
+        if (
+            this.loadedConfiguration.kind === 'configuration' &&
+            effectiveContext
+        ) {
+            return this.getOfflineDetails(
+                this.loadedConfiguration,
+                effectiveContext,
+                logger,
+                key,
+                defaultValue,
+                type
+            );
+        }
+
+        // An offline configuration that cannot be served against the active context surfaces the
+        // precise error code (INVALID_CONTEXT / GENERAL / PROVIDER_NOT_READY) with the coded
+        // default. The OpenFeature provider maps this to a PROVIDER_ERROR / ERROR state.
+        if (this.configurationStatus === 'error' && this.configurationError) {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                this.configurationError.errorCode,
+                this.configurationError.errorMessage
+            );
+        }
+
+        if (!effectiveContext) {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'PROVIDER_NOT_READY',
+                `The evaluation context is not set for '${this.clientName}'. Please, set context before evaluating any flags.`
+            );
+        }
+
+        return this.getCachedDetails(
+            this.flagsCache,
+            effectiveContext,
+            key,
+            defaultValue,
+            type
+        );
+    };
+
+    /**
+     * Evaluate with the effective per-resolution context.
+     *
+     * @internal Used by the OpenFeature provider. It is not part of the public
+     * FlagsClient API.
+     */
+    getDetailsForContext = <T>(
+        key: string,
+        defaultValue: T,
+        type: RulesValueType,
+        context: EvaluationContext,
+        logger: RulesLogger
+    ): FlagDetails<T> => {
+        return this.getDetails(
+            key,
+            defaultValue,
+            type,
+            processEvaluationContext(context),
+            logger
+        );
     };
 
     /**

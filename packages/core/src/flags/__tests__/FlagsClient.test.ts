@@ -9,6 +9,16 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { DdFlags } from '../DdFlags';
+import { buildRulesConfiguration } from '../configuration/__tests__/__utils__/rulesTestUtils';
+import {
+    flaggingCoreRulesEngine,
+    getNoopRulesLogger
+} from '../configuration/rules';
+import type {
+    RulesEvaluationDetails,
+    RulesEvaluationRequest,
+    RulesValueType
+} from '../configuration/rules';
 import { configurationFromString } from '../configuration';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
@@ -370,6 +380,55 @@ describe('FlagsClient', () => {
                 }
             })
         );
+
+    const buildRulesConfig = (
+        rulesResponse: unknown = buildRulesConfiguration()
+    ) =>
+        configurationFromString(
+            JSON.stringify({
+                version: 1,
+                rulesBased: {
+                    response: JSON.stringify(rulesResponse)
+                }
+            })
+        );
+
+    const buildMixedConfig = (
+        context: Record<string, unknown>,
+        rulesResponse: unknown = buildRulesConfiguration(),
+        precomputedResponse: unknown = {
+            data: {
+                attributes: {
+                    obfuscated: false,
+                    flags: offlineFlags
+                }
+            }
+        }
+    ) =>
+        configurationFromString(
+            JSON.stringify({
+                version: 1,
+                precomputed: {
+                    response: JSON.stringify(precomputedResponse),
+                    context
+                },
+                rulesBased: {
+                    response: JSON.stringify(rulesResponse)
+                }
+            })
+        );
+
+    // TODO(FFL-2837): Remove this fake after flagging-core publishes canonical
+    // state-matrix vectors for non-assignment and error results.
+    const installFakeRulesEngine = (
+        implementation: (
+            request: RulesEvaluationRequest<RulesValueType>
+        ) => RulesEvaluationDetails<unknown>
+    ) => {
+        return jest
+            .spyOn(flaggingCoreRulesEngine, 'evaluate')
+            .mockImplementation(implementation as never);
+    };
 
     describe('setConfiguration', () => {
         it('serves flags from the configuration without a native fetch', () => {
@@ -938,6 +997,249 @@ describe('FlagsClient', () => {
             expect(
                 flagsClient.resetEvaluationContextWithoutFetching()
             ).toEqual({ status: 'error', errorCode: 'PROVIDER_NOT_READY' });
+        });
+    });
+
+    describe('dynamic offline rules', () => {
+        it('loads rules and evaluates a new context without fetching', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(buildRulesConfig())).toEqual({
+                status: 'ready'
+            });
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-1',
+                    attributes: { country: 'US' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: { country: 'CA' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                false
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('uses matching precomputed data before rules data', () => {
+            const evaluate = jest.spyOn(flaggingCoreRulesEngine, 'evaluate');
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig({ targetingKey: 'user-1' })
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(evaluate).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('uses rules after a precomputed context mismatch', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' })
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: { country: 'US' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+        });
+
+        it('keeps matching precomputed data when rules are invalid', () => {
+            const invalidRules = buildRulesConfiguration();
+            const condition =
+                invalidRules.flags['dynamic-flag'].allocations[0].rules?.[0]
+                    .conditions[0];
+            if (!condition) {
+                throw new Error('The fixture has no condition.');
+            }
+            (condition as { operator: string }).operator = 'ONE_OF_SHA256';
+
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig({ targetingKey: 'user-1' }, invalidRules)
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns GENERAL when mismatched precomputed data falls through to invalid rules', () => {
+            const invalidRules = buildRulesConfiguration();
+            const condition =
+                invalidRules.flags['dynamic-flag'].allocations[0].rules?.[0]
+                    .conditions[0];
+            if (!condition) {
+                throw new Error('The fixture has no condition.');
+            }
+            (condition as { operator: string }).operator = 'ONE_OF_SHA256';
+
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' }, invalidRules)
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: {}
+                })
+            ).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+        });
+
+        it('keeps valid rules when the precomputed branch is invalid', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig(
+                        { targetingKey: 'user-1' },
+                        buildRulesConfiguration(),
+                        { data: { attributes: {} } }
+                    )
+                )
+            ).toEqual({ status: 'ready' });
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: { country: 'US' }
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+        });
+
+        it('selects the path again for a per-resolution context', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' })
+            );
+
+            const details = flagsClient.getDetailsForContext(
+                'dynamic-flag',
+                false,
+                'boolean',
+                {
+                    targetingKey: 'user-2',
+                    attributes: { country: 'US' }
+                },
+                getNoopRulesLogger()
+            );
+
+            expect(details).toMatchObject({
+                value: true,
+                variant: 'enabled',
+                allocationKey: 'allocation-1'
+            });
+        });
+
+        it('tracks each real rules assignment even when doLog is false', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'default',
+                'dynamic-flag',
+                expect.objectContaining({
+                    allocationKey: 'allocation-1',
+                    variationKey: 'enabled',
+                    variationType: 'boolean',
+                    variationValue: 'true',
+                    doLog: false,
+                    extraLogging: { experiment: 'checkout' }
+                }),
+                'user-1',
+                { country: 'US' }
+            );
+        });
+
+        it('does not track a default rules result', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'DEFAULT',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                false
+            );
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('maps an unknown engine error to GENERAL', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                errorCode: 'FUTURE_ERROR',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getBooleanDetails('dynamic-flag', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'GENERAL'
+            });
+
+            evaluate.mockRestore();
         });
     });
 });

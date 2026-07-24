@@ -161,7 +161,7 @@ const toFlagCacheEntry = (
         allocationKey,
         variationKey,
         variationType,
-        variationValue: stringifyValue(variationValue),
+        variationValue: stringifyFlagValue(variationValue),
         reason,
         doLog,
         extraLogging: extraLogging ?? {}
@@ -204,7 +204,7 @@ const valueMatchesVariationType = (
  * Objects/arrays are JSON-encoded; everything else uses `String(...)`, which yields
  * lowercase `"true"/"false"` for booleans.
  */
-const stringifyValue = (value: unknown): string => {
+export const stringifyFlagValue = (value: unknown): string => {
     if (value === null) {
         return 'null';
     }
