@@ -13,8 +13,9 @@ import {
     Text,
     View,
 } from 'react-native';
-import type { ProfilingScenarioConfig, ProfilingScenarioProps } from './types';
+import type { ProfilingScenarioProps } from './types';
 import { DdRum } from '@datadog/mobile-react-native';
+import { DdProfiling } from '@datadog/mobile-react-native-profiling';
 import { RunType } from '../../testSetup/types/testConfig';
 import { instrument } from '../../testSetup/testUtils';
 import {
@@ -37,16 +38,23 @@ function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
 
     useEffect(() => {
         console.log(props.testConfig);
-        if (props.testConfig?.runType !== RunType.BASELINE) {
-            instrument().then(() => {
-                const scenarioConfig = props.testConfig?.scenarioConfig as ProfilingScenarioConfig | undefined;
-                console.log(scenarioConfig)
+        const runType = props.testConfig?.runType;
+        if (runType !== RunType.BASELINE) {
+            instrument().then(async () => {
+                const nativeProfilerEnabled = runType === RunType.INSTRUMENTED_PROFILING_NATIVE
+                    || runType === RunType.INSTRUMENTED_PROFILING_JS_NATIVE;
+                const jsProfilerEnabled = runType === RunType.INSTRUMENTED_PROFILING_JS
+                    || runType === RunType.INSTRUMENTED_PROFILING_JS_NATIVE;
 
-                if (scenarioConfig?.nativeProfilerEnabled) {
-                    // TO DO
+                if (nativeProfilerEnabled) {
+                    console.log("Enabling native profiling");
+                    await DdProfiling.enable({
+                        applicationLaunchSampleRate: 100,
+                        continuousSampleRate: 100,
+                    });
                 }
 
-                if (scenarioConfig?.jsProfilerEnabled) {
+                if (jsProfilerEnabled) {
                     console.log("Enabling JS profiling")
                     setIsJsProfilingEnabled(true);
                     DdRum.startProfiling().then(() => {

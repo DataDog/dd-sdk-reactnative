@@ -9,8 +9,3 @@ import type { TestConfig } from "../../testSetup/types/testConfig"
 export type ProfilingScenarioProps = {
     testConfig?: TestConfig,
 }
-
-export type ProfilingScenarioConfig = {
-    nativeProfilerEnabled?: boolean,
-    jsProfilerEnabled?: boolean,
-}

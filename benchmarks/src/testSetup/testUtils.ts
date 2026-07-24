@@ -92,18 +92,6 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
 };
 
 
-const parseScenarioConfig = (scenarioConfig: string | (string | null)[] | null | undefined): Record<string, unknown> | undefined => {
-    if (typeof scenarioConfig !== 'string') {
-        return undefined;
-    }
-
-    try {
-        return JSON.parse(scenarioConfig);
-    } catch (_error) {
-        return undefined;
-    }
-};
-
 export const getTestConfigFromDeeplink = (url: string): TestConfig | undefined => {
     try {
         const parsed = queryString.parseUrl(url);
@@ -115,7 +103,6 @@ export const getTestConfigFromDeeplink = (url: string): TestConfig | undefined =
             command: command ? command as Command : undefined,
             scenario: scenario ? scenario as Scenario : Scenario.Default,
             runType: runType ? runType as RunType : RunType.BASELINE,
-            scenarioConfig: parseScenarioConfig(parsed.query.scenarioConfig),
         }
 
         return testConfig;

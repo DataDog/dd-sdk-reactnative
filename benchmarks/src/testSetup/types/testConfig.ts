@@ -25,6 +25,9 @@ export enum Scenario {
 export enum RunType {
     BASELINE = 'baseline',
     INSTRUMENTED = 'instrumented',
+    INSTRUMENTED_PROFILING_JS = 'instrumented_profiling_js',
+    INSTRUMENTED_PROFILING_NATIVE = 'instrumented_profiling_native',
+    INSTRUMENTED_PROFILING_JS_NATIVE = 'instrumented_profiling_js_native',
 };
 
 export interface TestConfig {
@@ -32,7 +35,6 @@ export interface TestConfig {
     scenario?: Scenario;
     runType?: RunType;
     datadogConfig?: DatadogConfig;
-    scenarioConfig?: Record<string, unknown>;
 }
 
 export interface DatadogConfig {

@@ -2831,6 +2831,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@datadog/mobile-react-native-profiling@workspace:packages/react-native-profiling":
+  version: 0.0.0-use.local
+  resolution: "@datadog/mobile-react-native-profiling@workspace:packages/react-native-profiling"
+  dependencies:
+    react-native-builder-bob: 0.26.0
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  languageName: unknown
+  linkType: soft
+
 "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-session-replay@workspace:packages/react-native-session-replay"
@@ -7604,6 +7615,7 @@ __metadata:
     "@datadog/datadog-ci": 5.11.0
     "@datadog/mobile-react-native": "workspace:packages/core"
     "@datadog/mobile-react-native-babel-plugin": "workspace:packages/react-native-babel-plugin"
+    "@datadog/mobile-react-native-profiling": "workspace:packages/react-native-profiling"
     "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay"
     "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview"
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation"

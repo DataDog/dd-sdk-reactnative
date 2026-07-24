@@ -71,8 +71,7 @@ Launch a specific test scenario with a particular configuration:
 - **Method**: `start`
 - **Parameters**:
   - **scenario**: name of the test as defined on the `Scenario` enum in `types/testConfig.ts`
-  - **runType**: `instrumented|baseline`
-  - **scenarioConfig** (optional): a URL-encoded JSON object with scenario-specific configuration
+  - **runType**: one of the values defined on the `RunType` enum in `types/testConfig.ts`: `baseline|instrumented|instrumented_profiling_js|instrumented_profiling_native|instrumented_profiling_js_native`
 
 ### iOS
 
@@ -86,19 +85,27 @@ xcrun simctl openurl booted "benchmark://start?scenario=navigation&runType=instr
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=navigation\&runType=instrumented' com.benchmarkrunner
 ```
 
-### Example: profiling scenario with scenarioConfig
+### Example: profiling scenario
+
+The profiling scenario uses `runType` to decide which profiler(s) to enable:
+
+- `instrumented_profiling_js`: enables JS profiling only
+- `instrumented_profiling_native`: enables native profiling only
+- `instrumented_profiling_js_native`: enables both JS and native profiling
 
 iOS:
 
 ```
-xcrun simctl openurl booted "benchmark://start?scenario=profiling&runType=instrumented&scenarioConfig={\"nativeProfilerEnabled\":true,\"jsProfilerEnabled\":true}"
+xcrun simctl openurl booted "benchmark://start?scenario=profiling&runType=instrumented_profiling_js_native"
 ```
 
 Android:
 
 ```
-adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented\&scenarioConfig=%7B%22nativeProfilerEnabled%22%3Atrue%2C%22jsProfilerEnabled%22%3Atrue%7D' com.benchmarkrunner
+adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented_profiling_js_native' com.benchmarkrunner
 ```
+
+Note: native profiling only takes effect on Android 15 (API 35) and above; on lower API levels the native profiling call is a no-op.
 
 ## Stop a test scenario
 
