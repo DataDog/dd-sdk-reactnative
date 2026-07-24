@@ -7,6 +7,8 @@
 import type { ParsedFlagsConfiguration } from '../types';
 import { configurationFromString, configurationToString } from '../wire';
 
+import { buildRulesConfiguration } from './__utils__/rulesTestUtils';
+
 const buildResponse = () => ({
     data: {
         id: '2',
@@ -123,5 +125,62 @@ describe('configurationToString round-trip', () => {
         expect(configurationToString(empty)).toBe(
             JSON.stringify({ version: 1 })
         );
+    });
+});
+
+describe('rules configuration wire compatibility', () => {
+    it('parses and serializes a rules configuration', () => {
+        const rulesBased = {
+            response: buildRulesConfiguration(),
+            fetchedAt: 123,
+            etag: 'rules-etag'
+        };
+        const wire = JSON.stringify({
+            version: 1,
+            rulesBased: {
+                ...rulesBased,
+                response: JSON.stringify(rulesBased.response)
+            }
+        });
+
+        const parsed = configurationFromString(wire) as {
+            rulesBased?: typeof rulesBased;
+        };
+
+        expect(parsed.rulesBased).toEqual(rulesBased);
+        expect(
+            configurationFromString(
+                configurationToString(
+                    (parsed as unknown) as ParsedFlagsConfiguration
+                )
+            )
+        ).toEqual(parsed);
+    });
+
+    it('keeps both branches in a mixed configuration', () => {
+        const mixedWire = buildWire({
+            rulesBased: {
+                response: JSON.stringify(buildRulesConfiguration())
+            }
+        });
+
+        const parsed = configurationFromString(mixedWire) as {
+            precomputed?: unknown;
+            rulesBased?: unknown;
+        };
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rulesBased).toBeDefined();
+    });
+
+    it('returns an empty configuration for malformed rules JSON', () => {
+        expect(
+            configurationFromString(
+                JSON.stringify({
+                    version: 1,
+                    rulesBased: { response: '{' }
+                })
+            )
+        ).toEqual({});
     });
 });
