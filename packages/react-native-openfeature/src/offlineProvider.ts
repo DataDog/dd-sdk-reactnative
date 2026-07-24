@@ -51,13 +51,17 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
  * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}.
  *
- * A runtime context that does not match the configuration's embedded context (compared after
- * normalization) cannot be served (offline never fetches), so it puts the provider into the
- * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
- * An empty context is a real context. It does not select the embedded context. Use
- * `getPrecomputedContext` to get a supported copy of the embedded context, and set it on
- * OpenFeature before provider registration. Load the configuration before setting the provider so
- * it is ready with real flag values from the start:
+ * A rules configuration evaluates each new context locally. Call `OpenFeature.setContext` to
+ * change the subject. The provider does not fetch after this call.
+ *
+ * A precomputed configuration is a single-context snapshot. A different runtime context cannot
+ * use that snapshot. If no rules fallback exists, the provider enters the OpenFeature `ERROR`
+ * state and evaluations return coded defaults with `INVALID_CONTEXT`. An empty context is a real
+ * context; it does not select the embedded context. Use `getPrecomputedContext` to get a supported
+ * copy of the embedded context, and set it on OpenFeature before provider registration.
+ *
+ * A configuration can contain both branches. Matching precomputed data has priority. Rules data
+ * is the fallback for a different context. Load the configuration before you set the provider:
  *
  * @example
  * ```ts
@@ -86,6 +90,8 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     readonly metadata: ProviderMetadata = {
         name: 'datadog-react-native-offline'
     };
+
+    protected readonly useResolutionContext = true;
 
     // Whether the provider is currently in an error state, so a successful `setConfiguration` must
     // emit `PROVIDER_READY` to recover (a bare `CONFIGURATION_CHANGED` would not clear `ERROR`).

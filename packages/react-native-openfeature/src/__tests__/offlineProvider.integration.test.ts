@@ -55,6 +55,61 @@ const wireFor = (context?: EvaluationContext): string =>
         }
     });
 
+const rulesResponseFor = (flagKey: string) => ({
+    createdAt: '2026-07-23T12:00:00.000Z',
+    format: 'SERVER',
+    environment: { name: 'test' },
+    flags: {
+        [flagKey]: {
+            key: flagKey,
+            enabled: true,
+            variationType: 'BOOLEAN',
+            variations: {
+                enabled: { key: 'enabled', value: true }
+            },
+            allocations: [
+                {
+                    key: 'rules-allocation',
+                    rules: [
+                        {
+                            conditions: [
+                                {
+                                    operator: 'ONE_OF',
+                                    attribute: 'country',
+                                    value: ['US']
+                                }
+                            ]
+                        }
+                    ],
+                    splits: [
+                        {
+                            variationKey: 'enabled',
+                            serialId: 7,
+                            extraLogging: { source: 'dynamic-offline' },
+                            shards: [
+                                {
+                                    salt: 'test-salt',
+                                    ranges: [{ start: 0, end: 100 }],
+                                    totalShards: 100
+                                }
+                            ]
+                        }
+                    ],
+                    doLog: false
+                }
+            ]
+        }
+    }
+});
+
+const rulesWireFor = (flagKey: string): string =>
+    JSON.stringify({
+        version: 1,
+        rulesBased: {
+            response: JSON.stringify(rulesResponseFor(flagKey))
+        }
+    });
+
 // A unique OpenFeature domain + Datadog clientName per test keeps providers isolated (separate
 // domains otherwise share the same underlying FlagsClient).
 let seq = 0;
@@ -82,6 +137,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         await OpenFeature.clearProviders();
         // Reset the global context so a context set by one test does not leak into the next.
         await OpenFeature.clearContext();
+        jest.clearAllMocks();
     });
 
     it('uses the helper context to start READY with a precomputed configuration', async () => {
@@ -109,6 +165,35 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
             jest.requireMock('../../../core/src/specs/NativeDdFlags').default
                 .setEvaluationContext
         ).not.toHaveBeenCalled();
+    });
+
+    it('evaluates rules for each new context without a fetch', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('dynamic-feature'))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const client = OpenFeature.getClient(domain);
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-1',
+            country: 'US'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(true);
+
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-2',
+            country: 'CA'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(false);
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
 
     it('starts in ERROR when a context-specific configuration has no OpenFeature context', async () => {

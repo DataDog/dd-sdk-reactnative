@@ -1,48 +1,76 @@
 // The flag key shared with the online example, so the UI is comparable across providers.
 export const OFFLINE_FLAG_KEY = 'rn-sdk-test-boolean-flag';
 
-export type OfflineWireContext = { targetingKey?: string } & Record<
-    string,
-    string | number | boolean
->;
-
-// The evaluation context the bundled configuration is precomputed for. Because the wire
-// carries its own context, the app does not need to call `OpenFeature.setContext` for the
-// offline flow.
-export const DEFAULT_OFFLINE_CONTEXT: OfflineWireContext = {
-    targetingKey: 'example-offline-user'
+export const DYNAMIC_OFFLINE_CONTEXTS = {
+    included: {
+        targetingKey: 'example-offline-user-a',
+        country: 'US'
+    },
+    excluded: {
+        targetingKey: 'example-offline-user-b',
+        country: 'CA'
+    }
 };
 
 /**
- * Build a bundled `ConfigurationWire` v1 string for the offline example.
+ * Build a bundled rules `ConfigurationWire` string.
  *
- * Mirrors the shape the Datadog Flags CDN returns, but is bundled with the app so the demo
- * is fully offline — it never hits the network. Flip `variationValue` to `false` to confirm
- * the flag's fallback renders.
+ * The example is fully offline. It evaluates the same rules for each new
+ * OpenFeature context. It does not fetch assignments.
  */
-export const buildSampleWire = (
-    context: OfflineWireContext = DEFAULT_OFFLINE_CONTEXT,
-    variationValue = true
-): string =>
+export const buildSampleWire = (): string =>
     JSON.stringify({
         version: 1,
-        precomputed: {
-            context,
+        rulesBased: {
+            // TODO(FFL-2837): Replace this JSON rules fixture with the published
+            // portable wire fixture when flagging-core publishes the final format.
             response: JSON.stringify({
-                data: {
-                    attributes: {
-                        obfuscated: false,
-                        flags: {
-                            [OFFLINE_FLAG_KEY]: {
-                                variationType: 'boolean',
-                                variationValue,
-                                variationKey: String(variationValue),
-                                allocationKey: 'offline-example-alloc',
-                                reason: 'STATIC',
-                                doLog: true,
-                                extraLogging: {}
+                createdAt: '2026-07-23T12:00:00.000Z',
+                format: 'SERVER',
+                environment: { name: 'example' },
+                flags: {
+                    [OFFLINE_FLAG_KEY]: {
+                        key: OFFLINE_FLAG_KEY,
+                        enabled: true,
+                        variationType: 'BOOLEAN',
+                        variations: {
+                            enabled: { key: 'enabled', value: true }
+                        },
+                        allocations: [
+                            {
+                                key: 'offline-example-alloc',
+                                rules: [
+                                    {
+                                        conditions: [
+                                            {
+                                                operator: 'ONE_OF',
+                                                attribute: 'country',
+                                                value: ['US']
+                                            }
+                                        ]
+                                    }
+                                ],
+                                splits: [
+                                    {
+                                        variationKey: 'enabled',
+                                        serialId: 1,
+                                        extraLogging: {
+                                            source: 'dynamic-offline-example'
+                                        },
+                                        shards: [
+                                            {
+                                                salt: 'offline-example-salt',
+                                                ranges: [
+                                                    { start: 0, end: 100 }
+                                                ],
+                                                totalShards: 100
+                                            }
+                                        ]
+                                    }
+                                ],
+                                doLog: true
                             }
-                        }
+                        ]
                     }
                 }
             })

@@ -24,6 +24,12 @@ const mockFlagsClient = {
     setEvaluationContextWithoutFetching: jest.fn(() => READY),
     resetEvaluationContextWithoutFetching: jest.fn(() => READY),
     setEvaluationContext: jest.fn(() => Promise.resolve()),
+    getDetailsForContext: jest.fn(() => ({
+        key: 'flag',
+        value: true,
+        reason: 'TARGETING_MATCH',
+        variant: 'true'
+    })),
     getBooleanDetails: jest.fn(() => ({
         key: 'flag',
         value: true,
@@ -244,15 +250,22 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         const result = provider.resolveBooleanEvaluation(
             'flag',
             false,
-            {},
+            { targetingKey: 'user-1', country: 'US' },
             // eslint-disable-next-line no-console
             console as never
         );
 
         expect(result.value).toBe(true);
-        expect(mockFlagsClient.getBooleanDetails).toHaveBeenCalledWith(
+        expect(mockFlagsClient.getDetailsForContext).toHaveBeenCalledWith(
             'flag',
-            false
+            false,
+            'boolean',
+            {
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            },
+            console
         );
+        expect(mockFlagsClient.getBooleanDetails).not.toHaveBeenCalled();
     });
 });

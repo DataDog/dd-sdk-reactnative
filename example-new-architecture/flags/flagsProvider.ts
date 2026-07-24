@@ -6,7 +6,10 @@ import {
 } from '@datadog/mobile-react-native-openfeature';
 import {OpenFeature} from '@openfeature/react-sdk';
 
-import {buildSampleWire} from './sampleOfflineConfiguration';
+import {
+  buildSampleWire,
+  DYNAMIC_OFFLINE_CONTEXTS,
+} from './sampleOfflineConfiguration';
 
 export type FlagsSource = 'online' | 'offline';
 
@@ -37,10 +40,29 @@ export const setFlagsProvider = async (source: FlagsSource): Promise<void> => {
     });
     provider.setConfiguration(configuration);
     await OpenFeature.setProviderAndWait(provider);
+    await setOfflineExampleContext(true);
     return;
   }
 
   await OpenFeature.setProviderAndWait(
     new DatadogOpenFeatureProvider({clientName: 'online'}),
+  );
+};
+
+/**
+ * Change the dynamic offline subject without a network request.
+ *
+ * Try both calls:
+ *
+ * `await setOfflineExampleContext(true);`
+ * `await setOfflineExampleContext(false);`
+ */
+export const setOfflineExampleContext = async (
+  included: boolean,
+): Promise<void> => {
+  await OpenFeature.setContext(
+    included
+      ? DYNAMIC_OFFLINE_CONTEXTS.included
+      : DYNAMIC_OFFLINE_CONTEXTS.excluded,
   );
 };

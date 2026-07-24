@@ -6,8 +6,10 @@ import {
 } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
-import { buildSampleWire } from './sampleOfflineConfiguration';
-import type { OfflineWireContext } from './sampleOfflineConfiguration';
+import {
+    buildSampleWire,
+    DYNAMIC_OFFLINE_CONTEXTS
+} from './sampleOfflineConfiguration';
 
 export type FlagsSource = 'online' | 'offline';
 
@@ -24,10 +26,7 @@ export type FlagsSource = 'online' | 'offline';
  *
  * `DdFlags.enable()` must have been called once before this (it enables the native feature).
  */
-export const setFlagsProvider = async (
-    source: FlagsSource,
-    offlineContext?: OfflineWireContext
-): Promise<void> => {
+export const setFlagsProvider = async (source: FlagsSource): Promise<void> => {
     if (source === 'offline') {
         const configuration = configurationFromString(
             buildSampleWire(offlineContext)
@@ -43,10 +42,29 @@ export const setFlagsProvider = async (
         });
         provider.setConfiguration(configuration);
         await OpenFeature.setProviderAndWait(provider);
+        await setOfflineExampleContext(true);
         return;
     }
 
     await OpenFeature.setProviderAndWait(
         new DatadogOpenFeatureProvider({ clientName: 'online' })
+    );
+};
+
+/**
+ * Change the dynamic offline subject without a network request.
+ *
+ * Try both calls:
+ *
+ * `await setOfflineExampleContext(true);`
+ * `await setOfflineExampleContext(false);`
+ */
+export const setOfflineExampleContext = async (
+    included: boolean
+): Promise<void> => {
+    await OpenFeature.setContext(
+        included
+            ? DYNAMIC_OFFLINE_CONTEXTS.included
+            : DYNAMIC_OFFLINE_CONTEXTS.excluded
     );
 };
