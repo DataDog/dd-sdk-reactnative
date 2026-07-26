@@ -1220,4 +1220,22 @@ describe('ReactNativeSVG.buildSvgMap', () => {
 
         expect(instance.localSvgMap['StarIcon']).toBeDefined();
     });
+
+    it('should produce the same localSvgMap across instances for the same source tree', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export { StarIcon } from './icon.svg';`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+        const mapAfterFirstCall = { ...instance.localSvgMap };
+
+        const freshInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        freshInstance.setApiTypes(t);
+        freshInstance.buildSvgMap();
+
+        expect(freshInstance.localSvgMap).toEqual(mapAfterFirstCall);
+    });
 });
