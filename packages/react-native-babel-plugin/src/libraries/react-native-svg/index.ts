@@ -25,22 +25,23 @@ type SvgOffset = {
     length: number;
 };
 
-/**
- * Internal processor responsible for detecting, transforming, and wrapping
- * React Native SVG components for use with Session Replay.
- *
- * This class scans the project for `.svg` imports, builds a mapping between
- * JSX identifiers and SVG files, and transforms JSX SVG nodes into
- * optimized, web-compatible SVG markup. Each transformed element is then
- * wrapped in a `SessionReplayView.Privacy` component with metadata used by
- * the native Session Replay layer.
- */
+// A raw re-export edge found while scanning a file: `svgPath` is terminal
+// (points at an .svg); `fromFile`/`fromName` is a barrel hop still to resolve.
+type SvgExportEdge =
+    | { svgPath: string }
+    | { fromFile: string; fromName: string };
+
 export class ReactNativeSVG {
     svgMap: Record<string, { file: string; [key: string]: string }> = {};
 
     svgOffset: Record<string, SvgOffset> = {};
 
-    localSvgMap: Record<string, { path: string; content?: string }> = {};
+    // Resolved SVG re-exports, keyed by the barrel file's absolute path, then
+    // by the name it exposes. Direct `.svg` imports are resolved live in
+    // resolveSvgImport and are not stored here.
+    svgFileMap: Record<string, Record<string, string>> = {};
+
+    private svgContentCache: Record<string, string> = {};
 
     t: typeof Babel.types | null = null;
 
@@ -55,37 +56,21 @@ export class ReactNativeSVG {
     }
 
     /**
-     * Scans all source files in the project to detect `.svg` imports and builds a mapping
-     * of JSX identifiers to their corresponding SVG file paths. This is done by parsing each
-     * file's AST and collecting `import` or `export` declarations that reference `.svg` files.
-     *
-     * The collected mappings are stored in `localSvgMap`, keyed by the local/imported variable
-     * names (e.g., `Logo`, `IconSearch`), with their values pointing to the resolved file path.
-     *
-     * This method ignores files in `node_modules`, `lib`, and `dist`, as well as `.d.ts`, test,
-     * and config files.
-     *
-     * If `saveSvgMapToDisk` is false, it will first attempt to load the mapping from a previously
-     * saved `svg-map.json` file for better performance. If the file doesn't exist or can't be read,
-     * it falls back to scanning the codebase.
-     *
-     * If `saveSvgMapToDisk` is true, the mapping will be saved to a JSON file in the assets directory
-     * after scanning.
+     * Scans the project for `.svg` barrel re-exports and populates svgFileMap,
+     * following `export ... from` chains down to their terminal `.svg` file.
      */
     buildSvgMap() {
         if (!this.t) {
             return;
         }
 
-        // If not saving to disk, try to load from existing svg-map.json first
         if (!this.saveSvgMapToDisk) {
-            // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
-            const packageRoot = pathN.resolve(__dirname, '../../../..');
+            const packageRoot = resolvePackageRoot(__dirname);
             const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
             try {
                 if (fs.existsSync(svgMapPath)) {
                     const mapContent = fs.readFileSync(svgMapPath, 'utf8');
-                    this.localSvgMap = JSON.parse(mapContent);
+                    this.svgFileMap = JSON.parse(mapContent);
                     return;
                 }
             } catch (err) {
@@ -113,6 +98,8 @@ export class ReactNativeSVG {
             }
         );
 
+        const rawEdges: Record<string, Record<string, SvgExportEdge>> = {};
+
         for (const file of files) {
             try {
                 const code = fs.readFileSync(file, 'utf8');
@@ -132,62 +119,61 @@ export class ReactNativeSVG {
                 });
 
                 traverse(ast, {
-                    ImportDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source.value;
-                        if (!source.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            const name = getNodeName(this.t, spec.local.name);
-                            if (name) {
-                                this.localSvgMap[name] = {
-                                    path: resolved
-                                };
-                            }
-                        }
-                    },
                     ExportNamedDeclaration: path => {
                         if (!this.t) {
                             return;
                         }
                         const source = path.node.source?.value;
-                        if (!source?.endsWith('.svg')) {
+                        if (!source) {
                             return;
                         }
 
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
+                        const resolvedSourceFile = source.endsWith('.svg')
+                            ? pathN.resolve(pathN.dirname(file), source)
+                            : this.resolveModuleFile(
+                                  pathN.dirname(file),
+                                  source
+                              );
+
+                        if (!resolvedSourceFile) {
+                            return;
+                        }
+
                         for (const spec of path.node.specifiers) {
-                            if (spec.type === 'ExportSpecifier') {
-                                // spec.exported is the name consumers import under
-                                // ('default' would be wrong for `export { default as Logo }`)
-                                const exported = spec.exported;
-                                const name = getNodeName(
-                                    this.t,
-                                    this.t.isStringLiteral(exported)
-                                        ? exported.value
-                                        : exported.name
-                                );
-                                if (name) {
-                                    this.localSvgMap[name] = {
-                                        path: resolved
-                                    };
-                                }
-                            } else {
+                            if (spec.type !== 'ExportSpecifier') {
                                 console.warn(
                                     `[buildSvgMap]: Unhandled export specifier type: ${spec.type}`
                                 );
+                                continue;
                             }
+
+                            // spec.exported is the name consumers import under
+                            // ('default' would be wrong for aliased re-exports)
+                            const exported = spec.exported;
+                            const exportedName = getNodeName(
+                                this.t,
+                                this.t.isStringLiteral(exported)
+                                    ? exported.value
+                                    : exported.name
+                            );
+                            const localName = getNodeName(
+                                this.t,
+                                spec.local.name
+                            );
+
+                            if (!exportedName || !localName) {
+                                continue;
+                            }
+
+                            rawEdges[file] ??= {};
+                            rawEdges[file][exportedName] = source.endsWith(
+                                '.svg'
+                            )
+                                ? { svgPath: resolvedSourceFile }
+                                : {
+                                      fromFile: resolvedSourceFile,
+                                      fromName: localName
+                                  };
                         }
                     }
                 });
@@ -196,15 +182,44 @@ export class ReactNativeSVG {
             }
         }
 
-        // Save the mapping to disk if requested
+        const resolveEdge = (
+            file: string,
+            name: string,
+            seen: Set<string> = new Set()
+        ): string | null => {
+            const key = `${file}#${name}`;
+            if (seen.has(key)) {
+                return null;
+            }
+            seen.add(key);
+
+            const edge = rawEdges[file]?.[name];
+            if (!edge) {
+                return null;
+            }
+            if ('svgPath' in edge) {
+                return edge.svgPath;
+            }
+            return resolveEdge(edge.fromFile, edge.fromName, seen);
+        };
+
+        for (const file of Object.keys(rawEdges)) {
+            for (const name of Object.keys(rawEdges[file])) {
+                const svgPath = resolveEdge(file, name);
+                if (svgPath) {
+                    this.svgFileMap[file] ??= {};
+                    this.svgFileMap[file][name] = svgPath;
+                }
+            }
+        }
+
         if (this.saveSvgMapToDisk) {
             try {
-                // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
-                const packageRoot = pathN.resolve(__dirname, '../../../..');
+                const packageRoot = resolvePackageRoot(__dirname);
                 const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
                 fs.writeFileSync(
                     svgMapPath,
-                    JSON.stringify(this.localSvgMap, null, 2),
+                    JSON.stringify(this.svgFileMap, null, 2),
                     'utf8'
                 );
             } catch (err) {
@@ -216,21 +231,120 @@ export class ReactNativeSVG {
         }
     }
 
+    private resolveModuleFile(fromDir: string, source: string): string | null {
+        const base = pathN.resolve(fromDir, source);
+        const candidates = [
+            base,
+            `${base}.ts`,
+            `${base}.tsx`,
+            `${base}.js`,
+            `${base}.jsx`,
+            pathN.join(base, 'index.ts'),
+            pathN.join(base, 'index.tsx'),
+            pathN.join(base, 'index.js'),
+            pathN.join(base, 'index.jsx')
+        ];
+
+        for (const candidate of candidates) {
+            if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
     /**
-     * Processes a JSXElement representing an SVG-based component and transforms it into
-     * a web-compliant SVG string with normalized attributes and extracted dimensions.
-     * The resulting SVG content and its metadata (e.g., width/height) are stored in `svgMap`,
-     * keyed by a generated UUID for later reference.
-     *
-     * Internally, the appropriate handler is selected based on the tag name and used to
-     * perform the transformation.
-     *
-     * @param path - Babel NodePath pointing to the JSXElement to process.
-     * @param name - JSX tag name (e.g., 'Svg', 'Logo') used to resolve the appropriate handler.
-     * @returns An object containing the original SVG string and its optimized version,
-     *          or `undefined` if no transformation could be performed.
+     * Resolves the `.svg` path (if any) a JSX tag actually refers to in the
+     * current file, via its real import binding rather than a name-only
+     * lookup — this is what prevents cross-file name collisions.
      */
-    processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
+    resolveSvgImport(
+        path: Babel.NodePath<Babel.types.JSXElement>,
+        name: string,
+        currentFile: string
+    ): string | null {
+        if (!this.t) {
+            return null;
+        }
+
+        const binding = path.scope.getBinding(name);
+        if (!binding) {
+            return null;
+        }
+
+        const bindingNode = binding.path.node;
+        const isDefaultSpecifier = this.t.isImportDefaultSpecifier(bindingNode);
+        const isNamedSpecifier = this.t.isImportSpecifier(bindingNode);
+        const isNamespaceSpecifier = this.t.isImportNamespaceSpecifier(
+            bindingNode
+        );
+
+        if (!isDefaultSpecifier && !isNamedSpecifier && !isNamespaceSpecifier) {
+            return null;
+        }
+
+        const importDeclaration = binding.path.parentPath?.node;
+        if (
+            !importDeclaration ||
+            !this.t.isImportDeclaration(importDeclaration)
+        ) {
+            return null;
+        }
+
+        const source = importDeclaration.source.value;
+
+        if (source.endsWith('.svg')) {
+            return pathN.resolve(pathN.dirname(currentFile), source);
+        }
+
+        // A namespace import of a barrel (`import * as Icons from './icons'`)
+        // doesn't map to a single re-exported name.
+        if (isNamespaceSpecifier) {
+            return null;
+        }
+
+        let importedName: string | null = null;
+        if (isDefaultSpecifier) {
+            importedName = 'default';
+        } else if (this.t.isImportSpecifier(bindingNode)) {
+            const imported = bindingNode.imported;
+            importedName = this.t.isStringLiteral(imported)
+                ? imported.value
+                : imported.name;
+        }
+
+        if (!importedName) {
+            return null;
+        }
+
+        const resolvedSourceFile = this.resolveModuleFile(
+            pathN.dirname(currentFile),
+            source
+        );
+        if (!resolvedSourceFile) {
+            return null;
+        }
+
+        return this.svgFileMap[resolvedSourceFile]?.[importedName] ?? null;
+    }
+
+    getSvgContent(svgPath: string): string {
+        if (!this.svgContentCache[svgPath]) {
+            this.svgContentCache[svgPath] = fs.readFileSync(svgPath, 'utf8');
+        }
+        return this.svgContentCache[svgPath];
+    }
+
+    /**
+     * Transforms a JSXElement representing an SVG-based component into
+     * optimized, web-compatible SVG markup, wrapped for Session Replay.
+     */
+    processItem(
+        path: Babel.NodePath<Babel.types.JSXElement>,
+        name: string,
+        currentFile: string
+    ) {
         if (!this.t) {
             return;
         }
@@ -242,11 +356,14 @@ export class ReactNativeSVG {
                 return;
             }
 
+            const svgPath = this.resolveSvgImport(path, name, currentFile);
+
             HandlerResolver.configure({
                 t: this.t,
                 path,
                 name,
-                localSvgMap: this.localSvgMap
+                svgPath,
+                readSvgContent: this.getSvgContent.bind(this)
             });
 
             const handler = HandlerResolver.create();
@@ -304,37 +421,6 @@ export class ReactNativeSVG {
         }
     }
 
-    /**
-     * Wraps a JSX element with a `SessionReplayView.Privacy` component
-     * and injects metadata attributes used by Session Replay.
-     *
-     * The resulting element is transformed into:
-     * ```tsx
-     * <SessionReplayView.Privacy
-     *   nativeID={id}
-     *   collapsable={false}
-     *   pointerEvents="box-none"
-     *   attributes={{
-     *     type: 'svg',
-     *     hash,
-     *     width,
-     *     height
-     *   }}
-     * >
-     *   {originalElement}
-     * </SessionReplayView.Privacy>
-     * ```
-     *
-     * This transformation ensures the element is identifiable on the native side
-     * while preserving its layout and interaction behavior.
-     *
-     * @param t - Babel types helper used to build and manipulate AST nodes.
-     * @param path - The current JSXElement node path being transformed.
-     * @param id - The unique native identifier assigned to the element.
-     * @param hash - A content hash used to reference the corresponding resource.
-     * @param dimensions - Optional width and height metadata to include in the attributes.
-     * @returns A new `JSXElement` AST node wrapped in `SessionReplayView.Privacy`.
-     */
     private wrapElementForSessionReplay(
         t: typeof Babel.types,
         path: Babel.NodePath<Babel.types.JSXElement>,
@@ -376,12 +462,10 @@ export class ReactNativeSVG {
 
         const attributesNode = [
             t.jsxAttribute(jsxIdentifier('nativeID'), stringLiteral(id)),
-            // https://reactnative.dev/docs/view#collapsable
             t.jsxAttribute(
                 t.jsxIdentifier('collapsable'),
                 t.jsxExpressionContainer(t.booleanLiteral(false))
             ),
-            // https://reactnative.dev/docs/view#pointerevents
             t.jsxAttribute(
                 t.jsxIdentifier('pointerEvents'),
                 t.stringLiteral('box-none')
@@ -412,17 +496,6 @@ export class ReactNativeSVG {
         return viewWrapper;
     }
 
-    /**
-     * Ensures that the `SessionReplayView` import from
-     * `@datadog/mobile-react-native-session-replay` exists in the file.
-     *
-     * If the import is not already present, this method injects a new
-     * `import { SessionReplayView } from '@datadog/mobile-react-native-session-replay'`
-     * declaration at the top of the program.
-     *
-     * @param t - Babel types helper used to create and check AST nodes.
-     * @param path - The current JSXElement node path from which to locate the program root.
-     */
     private ensureSessionReplayImport(
         t: typeof Babel.types,
         path: Babel.NodePath<Babel.types.JSXElement>
@@ -457,4 +530,8 @@ export class ReactNativeSVG {
             program.unshiftContainer('body', importDecl);
         }
     }
+}
+
+function resolvePackageRoot(startDir: string): string {
+    return pathN.resolve(startDir, '../../../..');
 }

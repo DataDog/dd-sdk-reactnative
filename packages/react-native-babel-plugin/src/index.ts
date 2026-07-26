@@ -145,7 +145,13 @@ export default declare(
                         options
                     );
 
-                    pluginState.reactNativeSVG?.processItem(path, name);
+                    if (state.filename) {
+                        pluginState.reactNativeSVG?.processItem(
+                            path,
+                            name,
+                            state.filename
+                        );
+                    }
                 }
             }
         };

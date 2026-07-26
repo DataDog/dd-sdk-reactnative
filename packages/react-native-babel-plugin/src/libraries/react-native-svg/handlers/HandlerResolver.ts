@@ -16,45 +16,40 @@ type Dependencies = {
     t: typeof Babel.types;
     path: Babel.NodePath<Babel.types.JSXElement>;
     name: string;
-    localSvgMap: Record<string, { path: string; content?: string }>;
+    // Already scoped to the current file's actual import bindings (see
+    // ReactNativeSVG.resolveSvgImport) — null if this tag isn't a local SVG import.
+    svgPath: string | null;
+    readSvgContent: (path: string) => string;
 };
 
 export class HandlerResolver {
     private static registry: Record<string, Resolver>;
     private static dependencies: Dependencies | null = null;
 
-    /**
-     * Registers handler factories for supported JSX element types and stores shared dependencies.
-     * This method must be called before invoking `create()`, as it initializes the internal registry
-     * with handler constructors that are parameterized with the provided Babel context and configuration.
-     *
-     * @param dependencies - Shared Babel-related dependencies and contextual information,
-     *                       including `types`, the current JSX `path`, tag `name`, and the `localSvgMap`.
-     */
     static configure(dependencies: Dependencies) {
         this.dependencies = dependencies;
-        const { t, path, name, localSvgMap } = dependencies;
+        const { t, path, name, svgPath, readSvgContent } = dependencies;
 
         HandlerResolver.registry = {
             RNSvgHandler: () => new RNSvgHandler(t, path, name),
             // UriSvgHandler: () => new UriSvgHandler(t, path, name),
             LocalSvgHandler: () =>
-                new LocalSvgHandler(t, path, name, localSvgMap)
+                new LocalSvgHandler(
+                    t,
+                    path,
+                    name,
+                    svgPath as string,
+                    readSvgContent
+                )
         };
     }
 
-    /**
-     * Resolves and returns the appropriate handler instance based on the JSX tag name.
-     * @throws Error if `configure()` has not been called prior to invocation.
-     *
-     * @returns The resolved handler instance or `null` if no match exists.
-     */
     static create() {
         if (!this.dependencies) {
             throw new Error('HandlerResolver must be configured before use.');
         }
 
-        const { name, localSvgMap } = this.dependencies;
+        const { name, svgPath } = this.dependencies;
 
         switch (name) {
             case 'Svg': {
@@ -66,7 +61,7 @@ export class HandlerResolver {
             // }
 
             default: {
-                return localSvgMap[name]
+                return svgPath
                     ? HandlerResolver.registry.LocalSvgHandler()
                     : null;
             }

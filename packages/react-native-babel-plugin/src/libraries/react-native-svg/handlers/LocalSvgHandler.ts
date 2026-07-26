@@ -5,7 +5,6 @@
  */
 
 import type * as Babel from '@babel/core';
-import fs from 'fs';
 
 import { getNodeName } from '../../../utils';
 import { handleSvgDimensions } from '../processing/attributes';
@@ -13,40 +12,29 @@ import { handleSvgDimensions } from '../processing/attributes';
 import type { SvgHandler } from './SvgHandler';
 
 /**
- * Internal handler that inlines locally imported SVG components into
- * JSX output during Babel transformation.
- *
- * The `LocalSvgHandler` resolves SVG imports from disk, caches their raw
- * contents, and extracts relevant dimension attributes (e.g., width, height)
- * from the JSX element for use in the generated SVG markup.
+ * Inlines locally imported SVG components into JSX output during Babel
+ * transformation.
  */
 export class LocalSvgHandler implements SvgHandler {
     constructor(
         private types: typeof Babel.types,
         private path: Babel.NodePath<Babel.types.JSXElement>,
         private name: string,
-        private localSvgMap: Record<string, { path: string; content?: string }>
+        private svgPath: string,
+        private readSvgContent: (path: string) => string
     ) {
         // no-op
     }
 
-    /**
-     * Retrieves and returns the contents of a local SVG file corresponding to the JSXElement tag name.
-     * If the file hasn't been read yet, it reads the SVG content from disk and caches it in `localSvgMap`.
-     * Also extracts and stores width/height dimensions from the JSX attributes into the `dimensions` object.
-     *
-     * @param dimensions - Object to collect extracted width/height info.
-     * @returns Raw SVG string content from the local file, or undefined if the tag is not found in `localSvgMap`.
-     */
     transformSvgNode(dimensions: Record<string, string>) {
-        if (!this.localSvgMap[this.name]) {
+        if (!this.svgPath) {
             return undefined;
         }
 
-        const { path, content } = this.localSvgMap[this.name];
+        const content = this.readSvgContent(this.svgPath);
 
         if (!content) {
-            this.localSvgMap[this.name].content = fs.readFileSync(path, 'utf8');
+            return undefined;
         }
 
         this.processAttributes(
@@ -56,22 +44,9 @@ export class LocalSvgHandler implements SvgHandler {
             dimensions
         );
 
-        return this.localSvgMap[this.name].content;
+        return content;
     }
 
-    /**
-     * Processes the attributes of a JSXElement to extract relevant SVG metadata.
-     * Specifically identifies and handles dimension-related attributes (e.g., width, height),
-     * storing them into the provided `dimensions` object. Ignores spread attributes.
-     *
-     * @param t - Babel types helper.
-     *
-     * @param rootElementPath - The path of the root JSX element containing the SVG.
-     *   Used to locate lexical scopes (component or program) for resolving variable references.
-     *   May be `null` if no traversal context is available.
-     * @param jsxElement - The JSXElement whose attributes will be processed.
-     * @param dimensions - Object to collect extracted width/height info.
-     */
     private processAttributes(
         t: typeof Babel.types,
         rootElementPath: Babel.NodePath<Babel.types.JSXElement> | null,
@@ -90,7 +65,6 @@ export class LocalSvgHandler implements SvgHandler {
                 continue;
             }
 
-            // Handle SVG dimensions
             handleSvgDimensions(
                 t,
                 rootElementPath,

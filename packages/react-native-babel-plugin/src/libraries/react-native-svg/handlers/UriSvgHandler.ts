@@ -32,7 +32,7 @@ export class UriSvgHandler implements SvgHandler {
      * Also extracts and stores width/height dimensions from the JSX attributes into the `dimensions` object.
      *
      * @param dimensions - Object to collect extracted width/height info.
-     * @returns Raw SVG string content from the local file, or undefined if the tag is not found in `localSvgMap`.
+     * @returns The `uri` attribute value, or undefined if the element has none.
      */
     transformSvgNode(dimensions: Record<string, string>) {
         const uri = this.processAttributes(

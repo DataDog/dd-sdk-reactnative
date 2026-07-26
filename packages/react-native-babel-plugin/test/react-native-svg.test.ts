@@ -1147,6 +1147,39 @@ describe('SessionReplayView.Privacy SVG Wrapper', () => {
     });
 });
 
+/**
+ * Parses `code` and returns the NodePath of the first JSXElement whose tag matches
+ * `tagName`, with real scope/bindings built. Used to exercise `resolveSvgImport`.
+ */
+function getJsxElementPath(code: string, tagName: string) {
+    const ast = parser.parse(code, {
+        sourceType: 'module',
+        plugins: ['jsx', 'typescript']
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any;
+
+    traverse(ast, {
+        JSXElement(nodePath) {
+            const opening = nodePath.node.openingElement;
+            if (
+                !result &&
+                t.isJSXIdentifier(opening.name) &&
+                opening.name.name === tagName
+            ) {
+                result = nodePath;
+            }
+        }
+    });
+
+    if (!result) {
+        throw new Error(`<${tagName}/> not found in test fixture`);
+    }
+
+    return result;
+}
+
 describe('ReactNativeSVG.buildSvgMap', () => {
     let tmpDir: string;
 
@@ -1162,9 +1195,10 @@ describe('ReactNativeSVG.buildSvgMap', () => {
         fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
-    it('should populate localSvgMap from a default import of an SVG file', () => {
+    it('should not populate svgFileMap for a direct import of an SVG file', () => {
+        const srcFile = path.join(tmpDir, 'Component.tsx');
         fs.writeFileSync(
-            path.join(tmpDir, 'Component.tsx'),
+            srcFile,
             `import Logo from './icon.svg';\nexport default function C() { return <Logo />; }`
         );
 
@@ -1172,28 +1206,13 @@ describe('ReactNativeSVG.buildSvgMap', () => {
         instance.setApiTypes(t);
         instance.buildSvgMap();
 
-        expect(instance.localSvgMap['Logo']).toBeDefined();
-        expect(instance.localSvgMap['Logo'].path).toBe(
-            path.join(tmpDir, 'icon.svg')
-        );
+        expect(instance.svgFileMap[srcFile]).toBeUndefined();
     });
 
-    it('should populate localSvgMap from a named import of an SVG file', () => {
+    it('should populate svgFileMap with the exported name for aliased re-exports', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
         fs.writeFileSync(
-            path.join(tmpDir, 'Component.tsx'),
-            `import { ReactComponent as StarIcon } from './icon.svg';\nexport default function C() { return <StarIcon />; }`
-        );
-
-        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
-        instance.setApiTypes(t);
-        instance.buildSvgMap();
-
-        expect(instance.localSvgMap['StarIcon']).toBeDefined();
-    });
-
-    it('should populate localSvgMap with the exported name for aliased re-exports', () => {
-        fs.writeFileSync(
-            path.join(tmpDir, 'icons.ts'),
+            barrelFile,
             `export { default as Logo } from './icon.svg';`
         );
 
@@ -1201,42 +1220,374 @@ describe('ReactNativeSVG.buildSvgMap', () => {
         instance.setApiTypes(t);
         instance.buildSvgMap();
 
-        expect(instance.localSvgMap['Logo']).toBeDefined();
-        expect(instance.localSvgMap['Logo'].path).toBe(
+        expect(instance.svgFileMap[barrelFile]?.['Logo']).toBe(
             path.join(tmpDir, 'icon.svg')
         );
-        expect(instance.localSvgMap['default']).toBeUndefined();
+        expect(instance.svgFileMap[barrelFile]?.['default']).toBeUndefined();
     });
 
-    it('should populate localSvgMap with the exported name for non-aliased re-exports', () => {
-        fs.writeFileSync(
-            path.join(tmpDir, 'icons.ts'),
-            `export { StarIcon } from './icon.svg';`
-        );
+    it('should populate svgFileMap with the exported name for non-aliased re-exports', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(barrelFile, `export { StarIcon } from './icon.svg';`);
 
         const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
         instance.setApiTypes(t);
         instance.buildSvgMap();
 
-        expect(instance.localSvgMap['StarIcon']).toBeDefined();
+        expect(instance.svgFileMap[barrelFile]?.['StarIcon']).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
     });
 
-    it('should not overwrite localSvgMap when buildSvgMap is called a second time on a fresh instance', () => {
-        fs.writeFileSync(
-            path.join(tmpDir, 'icons.ts'),
-            `export { StarIcon } from './icon.svg';`
-        );
+    it('should resolve multi-hop barrel re-export chains to the terminal svg path', () => {
+        const innerBarrel = path.join(tmpDir, 'inner.ts');
+        const outerBarrel = path.join(tmpDir, 'outer.ts');
+        fs.writeFileSync(innerBarrel, `export { StarIcon } from './icon.svg';`);
+        fs.writeFileSync(outerBarrel, `export { StarIcon } from './inner';`);
 
         const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
         instance.setApiTypes(t);
         instance.buildSvgMap();
-        const mapAfterFirstCall = { ...instance.localSvgMap };
 
-        // Simulates what pre() used to do: create a brand-new instance per file
+        expect(instance.svgFileMap[outerBarrel]?.['StarIcon']).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should not overwrite svgFileMap when buildSvgMap is called a second time on a fresh instance', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(barrelFile, `export { StarIcon } from './icon.svg';`);
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+        const mapAfterFirstCall = JSON.parse(
+            JSON.stringify(instance.svgFileMap)
+        );
+
         const freshInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
         freshInstance.setApiTypes(t);
         freshInstance.buildSvgMap();
 
-        expect(freshInstance.localSvgMap).toEqual(mapAfterFirstCall);
+        expect(freshInstance.svgFileMap).toEqual(mapAfterFirstCall);
+    });
+});
+
+describe('ReactNativeSVG.resolveSvgImport', () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dd-resolvesvg-'));
+        fs.writeFileSync(
+            path.join(tmpDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+    });
+
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('should resolve a direct default import of an SVG file', () => {
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import Logo from './icon.svg';\nfunction C() { return <Logo />; }`,
+            'Logo'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(instance.resolveSvgImport(jsxPath, 'Logo', currentFile)).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should resolve a direct namespace import of an SVG file', () => {
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import * as Logo from './icon.svg';\nfunction C() { return <Logo />; }`,
+            'Logo'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(instance.resolveSvgImport(jsxPath, 'Logo', currentFile)).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should resolve a direct aliased named import of an SVG file', () => {
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import { ReactComponent as StarIcon } from './icon.svg';\nfunction C() { return <StarIcon />; }`,
+            'StarIcon'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(
+            instance.resolveSvgImport(jsxPath, 'StarIcon', currentFile)
+        ).toBe(path.join(tmpDir, 'icon.svg'));
+    });
+
+    it('should NOT resolve a namespace import of a barrel to any of its re-exports', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(
+            barrelFile,
+            `export { default as Logo } from './icon.svg';`
+        );
+
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import * as Icons from './icons';\nfunction C() { return <Icons />; }`,
+            'Icons'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(
+            instance.resolveSvgImport(jsxPath, 'Icons', currentFile)
+        ).toBeNull();
+    });
+
+    it('should resolve a barrel-imported SVG from a different file', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(
+            barrelFile,
+            `export { default as Logo } from './icon.svg';`
+        );
+
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import { Logo } from './icons';\nfunction C() { return <Logo />; }`,
+            'Logo'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.resolveSvgImport(jsxPath, 'Logo', currentFile)).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should resolve an aliased barrel import (import { Logo as Icon })', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(
+            barrelFile,
+            `export { default as Logo } from './icon.svg';`
+        );
+
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import { Logo as Icon } from './icons';\nfunction C() { return <Icon />; }`,
+            'Icon'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.resolveSvgImport(jsxPath, 'Icon', currentFile)).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    // Core regression case for the cross-file collision bug: a same-named
+    // component that is NOT an SVG import must never be treated as one.
+    it('should NOT resolve a locally declared component that merely shares a name with an SVG import elsewhere', () => {
+        const barrelFile = path.join(tmpDir, 'icons.ts');
+        fs.writeFileSync(
+            barrelFile,
+            `export { default as Icon } from './icon.svg';`
+        );
+
+        const currentFile = path.join(tmpDir, 'Unrelated.tsx');
+        const jsxPath = getJsxElementPath(
+            `function Icon() { return null; }\nfunction C() { return <Icon />; }`,
+            'Icon'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(
+            instance.resolveSvgImport(jsxPath, 'Icon', currentFile)
+        ).toBeNull();
+    });
+
+    it('should NOT resolve a name imported from an unrelated (non-barrel) module', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export { default as Icon } from './icon.svg';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'VectorIcon.tsx'),
+            `export default function Icon() { return null; }`
+        );
+
+        const currentFile = path.join(tmpDir, 'Unrelated.tsx');
+        const jsxPath = getJsxElementPath(
+            `import Icon from './VectorIcon';\nfunction C() { return <Icon />; }`,
+            'Icon'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(
+            instance.resolveSvgImport(jsxPath, 'Icon', currentFile)
+        ).toBeNull();
+    });
+
+    it('should resolve a barrel that is a directory with an index file', () => {
+        const barrelDir = path.join(tmpDir, 'icons');
+        fs.mkdirSync(barrelDir);
+        fs.writeFileSync(
+            path.join(barrelDir, 'index.ts'),
+            `export { default as Logo } from '../icon.svg';`
+        );
+
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import { Logo } from './icons';\nfunction C() { return <Logo />; }`,
+            'Logo'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.resolveSvgImport(jsxPath, 'Logo', currentFile)).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should return null (not throw) when the import source cannot be resolved to a file on disk', () => {
+        const currentFile = path.join(tmpDir, 'Component.tsx');
+        const jsxPath = getJsxElementPath(
+            `import Icon from 'some-package-that-does-not-exist';\nfunction C() { return <Icon />; }`,
+            'Icon'
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(() =>
+            instance.resolveSvgImport(jsxPath, 'Icon', currentFile)
+        ).not.toThrow();
+        expect(
+            instance.resolveSvgImport(jsxPath, 'Icon', currentFile)
+        ).toBeNull();
+    });
+});
+
+describe('SVG resolution is scoped per file (end-to-end)', () => {
+    let projectDir: string;
+    let assetsDir: string;
+
+    beforeEach(() => {
+        projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dd-svg-e2e-'));
+        assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-e2e-assets-')
+        );
+        fs.writeFileSync(
+            path.join(projectDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+    });
+
+    afterEach(() => {
+        fs.rmSync(projectDir, { recursive: true, force: true });
+        fs.rmSync(assetsDir, { recursive: true, force: true });
+    });
+
+    function transformProjectFile(
+        relativeFilename: string,
+        code: string,
+        reactNativeSVG: ReactNativeSVG
+    ): string | undefined {
+        return transform(code, {
+            filename: path.join(projectDir, relativeFilename),
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        sessionReplay: { svgTracking: true },
+                        __internal_reactNativeSVG: reactNativeSVG
+                    }
+                ]
+            ],
+            configFile: false
+        })?.code as string | undefined;
+    }
+
+    it('wraps a directly-imported local SVG', () => {
+        const reactNativeSVG = new ReactNativeSVG(projectDir, assetsDir, false);
+        reactNativeSVG.setApiTypes(t);
+
+        const output = transformProjectFile(
+            'Component.tsx',
+            `import Logo from './icon.svg';\nfunction C() { return <Logo />; }`,
+            reactNativeSVG
+        );
+
+        expect(output).toContain('SessionReplayView.Privacy');
+    });
+
+    it('wraps an SVG imported through a barrel re-export from a different file', () => {
+        fs.writeFileSync(
+            path.join(projectDir, 'icons.ts'),
+            `export { default as Logo } from './icon.svg';`
+        );
+
+        const reactNativeSVG = new ReactNativeSVG(projectDir, assetsDir, false);
+        reactNativeSVG.setApiTypes(t);
+        reactNativeSVG.buildSvgMap();
+
+        const output = transformProjectFile(
+            'Component.tsx',
+            `import { Logo } from './icons';\nfunction C() { return <Logo />; }`,
+            reactNativeSVG
+        );
+
+        expect(output).toContain('SessionReplayView.Privacy');
+    });
+
+    it('does not wrap an unrelated component that shares a name with an SVG imported elsewhere in the project', () => {
+        fs.writeFileSync(
+            path.join(projectDir, 'icons.ts'),
+            `export { default as Icon } from './icon.svg';`
+        );
+
+        const reactNativeSVG = new ReactNativeSVG(projectDir, assetsDir, false);
+        reactNativeSVG.setApiTypes(t);
+        reactNativeSVG.buildSvgMap();
+
+        const outputA = transformProjectFile(
+            'FileA.tsx',
+            `import { Icon } from './icons';\nfunction A() { return <Icon />; }`,
+            reactNativeSVG
+        );
+        expect(outputA).toContain('SessionReplayView.Privacy');
+
+        const inputB = `function Icon() { return null; }\nfunction B() { return <Icon />; }`;
+        const outputB = transformProjectFile(
+            'FileB.tsx',
+            inputB,
+            reactNativeSVG
+        );
+
+        expect(outputB).not.toContain('SessionReplayView.Privacy');
+        expect(outputB).toContain('function Icon()');
     });
 });
