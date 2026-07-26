@@ -1146,3 +1146,78 @@ describe('SessionReplayView.Privacy SVG Wrapper', () => {
         expect(svgContent).not.toContain('fill={color}');
     });
 });
+
+describe('ReactNativeSVG.buildSvgMap', () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dd-buildsvgmap-'));
+        fs.writeFileSync(
+            path.join(tmpDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+    });
+
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('should populate localSvgMap from a default import of an SVG file', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Logo from './icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+    });
+
+    it('should populate localSvgMap from a named import of an SVG file', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import { ReactComponent as StarIcon } from './icon.svg';\nexport default function C() { return <StarIcon />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['StarIcon']).toBeDefined();
+    });
+
+    it('should populate localSvgMap with the exported name for aliased re-exports', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export { default as Logo } from './icon.svg';`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+        expect(instance.localSvgMap['default']).toBeUndefined();
+    });
+
+    it('should populate localSvgMap with the exported name for non-aliased re-exports', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export { StarIcon } from './icon.svg';`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['StarIcon']).toBeDefined();
+    });
+});
