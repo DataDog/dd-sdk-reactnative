@@ -145,13 +145,11 @@ export default declare(
                         options
                     );
 
-                    if (state.filename) {
-                        pluginState.reactNativeSVG?.processItem(
-                            path,
-                            name,
-                            state.filename
-                        );
-                    }
+                    pluginState.reactNativeSVG?.processItem(
+                        path,
+                        name,
+                        state.filename ?? ''
+                    );
                 }
             }
         };
