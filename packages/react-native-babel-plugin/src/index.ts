@@ -60,6 +60,7 @@ export default declare(
                         assetsPath,
                         options.__internal_saveSvgMapToDisk || false
                     );
+                    reactNativeSVG.setApiTypes(api.types);
                     reactNativeSVG.buildSvgMap();
                 }
                 reactNativeSVG?.setApiTypes(api.types);
