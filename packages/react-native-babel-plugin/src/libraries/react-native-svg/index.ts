@@ -532,6 +532,36 @@ export class ReactNativeSVG {
     }
 }
 
+const PACKAGE_NAME = '@datadog/mobile-react-native-babel-plugin';
+
+// __dirname's depth relative to the package root differs between the built
+// lib/commonjs/... output and running straight from src/... (e.g. ts-jest),
+// so a hardcoded relative offset would be wrong in one of the two. Walk up
+// to the actual package.json instead.
 function resolvePackageRoot(startDir: string): string {
+    let currentDir = startDir;
+
+    for (let i = 0; i < 10; i++) {
+        const packageJsonPath = pathN.join(currentDir, 'package.json');
+        try {
+            if (fs.existsSync(packageJsonPath)) {
+                const pkg = JSON.parse(
+                    fs.readFileSync(packageJsonPath, 'utf8')
+                );
+                if (pkg.name === PACKAGE_NAME) {
+                    return currentDir;
+                }
+            }
+        } catch {
+            // Malformed package.json — keep walking up.
+        }
+
+        const parentDir = pathN.dirname(currentDir);
+        if (parentDir === currentDir) {
+            break;
+        }
+        currentDir = parentDir;
+    }
+
     return pathN.resolve(startDir, '../../../..');
 }
