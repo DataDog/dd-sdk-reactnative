@@ -18,6 +18,30 @@ import plugin from '../src/index';
 import { RNSvgHandler } from '../src/libraries/react-native-svg/handlers/RNSvgHandler';
 import { ReactNativeSVG } from '../src/libraries/react-native-svg';
 
+// buildSvgMap() reads <packageRoot>/svg-map.json as a cache whenever
+// saveSvgMapToDisk is false. If a real file exists there locally (e.g. from
+// running datadog-generate-sr-assets), every test in this file would
+// silently read stale data instead of scanning its own tmp fixtures. Hide it
+// unconditionally so results don't depend on local machine state.
+const REAL_SVG_MAP_PATH = path.join(
+    path.resolve(__dirname, '..'),
+    'svg-map.json'
+);
+const realFsExistsSync = fs.existsSync;
+
+beforeEach(() => {
+    jest.spyOn(fs, 'existsSync').mockImplementation(p => {
+        if (p === REAL_SVG_MAP_PATH) {
+            return false;
+        }
+        return realFsExistsSync(p);
+    });
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
 /**
  * Helper function to test SVG transformation
  */
