@@ -297,7 +297,7 @@ function mergeSvgAssets(assetsDir: string) {
  *   --followSymlinks      Follow symbolic links during directory traversal.
  *                         Default: false (symlinks are ignored).
  */
-function generateSessionReplayAssets() {
+export function generateSessionReplayAssets() {
     const cliOptions = parseCliArgs();
     const { verbose } = cliOptions;
 

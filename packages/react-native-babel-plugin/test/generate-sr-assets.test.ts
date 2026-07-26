@@ -4,11 +4,22 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
 import {
     parseCliArgs,
     DEFAULT_IGNORE_PATTERNS,
-    normalizeIgnorePattern
+    normalizeIgnorePattern,
+    generateSessionReplayAssets
 } from '../src/cli/generate-sr-assets';
+import * as assetsFs from '../src/libraries/react-native-svg/processing/fs';
+
+jest.mock('../src/libraries/react-native-svg/processing/fs', () => ({
+    ...jest.requireActual('../src/libraries/react-native-svg/processing/fs'),
+    getAssetsPath: jest.fn()
+}));
 
 describe('generate-sr-assets CLI', () => {
     describe('parseCliArgs', () => {
@@ -387,5 +398,87 @@ describe('generate-sr-assets CLI', () => {
                 ).toBe('**/src/**/*.test.ts');
             });
         });
+    });
+});
+
+describe('generateSessionReplayAssets', () => {
+    // getAssetsPath is mocked (rather than chdir-ing into the tmp project) so
+    // cwd stays the real repo root and Babel can still resolve
+    // @babel/preset-react/@babel/preset-typescript by name.
+    let projectDir: string;
+    let assetsDir: string;
+    let originalArgv: string[];
+    let consoleInfoSpy: jest.SpyInstance;
+    let consoleWarnSpy: jest.SpyInstance;
+    let writeFileSyncSpy: jest.SpyInstance;
+
+    // saveSvgMapToDisk writes svg-map.json to this package's real root, a
+    // location every other test file's buildSvgMap() also reads as a cache.
+    // Redirect just that one path into this test's own sandbox.
+    const realSvgMapPath = path.join(
+        path.resolve(__dirname, '..'),
+        'svg-map.json'
+    );
+    const realWriteFileSync = fs.writeFileSync;
+
+    beforeEach(() => {
+        projectDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-generate-sr-assets-')
+        );
+        assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-generate-sr-assets-out-')
+        );
+        fs.writeFileSync(
+            path.join(projectDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(projectDir, 'Component.tsx'),
+            "import Logo from './icon.svg';\nfunction C() { return <Logo />; }"
+        );
+
+        (assetsFs.getAssetsPath as jest.Mock).mockReturnValue(assetsDir);
+
+        originalArgv = process.argv;
+        process.argv = [...originalArgv, '--path', projectDir];
+
+        consoleInfoSpy = jest
+            .spyOn(console, 'info')
+            .mockImplementation(() => undefined);
+        consoleWarnSpy = jest
+            .spyOn(console, 'warn')
+            .mockImplementation(() => undefined);
+
+        writeFileSyncSpy = jest
+            .spyOn(fs, 'writeFileSync')
+            .mockImplementation((file, data, options) => {
+                const target =
+                    file === realSvgMapPath
+                        ? path.join(assetsDir, 'svg-map.json')
+                        : file;
+                return realWriteFileSync(target, data, options);
+            });
+    });
+
+    afterEach(() => {
+        process.argv = originalArgv;
+        writeFileSyncSpy.mockRestore();
+        fs.rmSync(projectDir, { recursive: true, force: true });
+        fs.rmSync(assetsDir, { recursive: true, force: true });
+        consoleInfoSpy.mockRestore();
+        consoleWarnSpy.mockRestore();
+    });
+
+    it('scans the project, wraps the SVG import, and writes a populated assets index', () => {
+        generateSessionReplayAssets();
+
+        const indexPath = path.join(assetsDir, 'assets.json');
+
+        expect(fs.existsSync(indexPath)).toBe(true);
+
+        const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        expect(Object.keys(index).length).toBeGreaterThan(0);
+
+        expect(fs.existsSync(path.join(assetsDir, 'assets.bin'))).toBe(true);
     });
 });

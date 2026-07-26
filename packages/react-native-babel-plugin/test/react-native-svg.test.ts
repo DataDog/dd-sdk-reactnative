@@ -1591,3 +1591,50 @@ describe('SVG resolution is scoped per file (end-to-end)', () => {
         expect(outputB).toContain('function Icon()');
     });
 });
+
+// Every other test in this file supplies __internal_reactNativeSVG pre-built
+// with setApiTypes() already called, bypassing pre()'s own instance-construction
+// branch entirely. This exercises that real path.
+describe('Babel plugin: pre() constructs its own ReactNativeSVG instance', () => {
+    let projectDir: string;
+    let originalCwd: string;
+    let originalPluginDev: string | undefined;
+
+    beforeEach(() => {
+        projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dd-pre-hook-'));
+        fs.writeFileSync(
+            path.join(projectDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+
+        originalCwd = process.cwd();
+        originalPluginDev = process.env.pluginDev;
+        process.env.pluginDev = 'true';
+        process.chdir(projectDir);
+    });
+
+    afterEach(() => {
+        process.chdir(originalCwd);
+        if (originalPluginDev === undefined) {
+            delete process.env.pluginDev;
+        } else {
+            process.env.pluginDev = originalPluginDev;
+        }
+        fs.rmSync(projectDir, { recursive: true, force: true });
+    });
+
+    it('wraps a directly-imported local SVG without an injected ReactNativeSVG instance', () => {
+        const output = transform(
+            `import Logo from './icon.svg';\nfunction C() { return <Logo />; }`,
+            {
+                filename: path.join(projectDir, 'Component.tsx'),
+                // No node_modules under projectDir to resolve presets from.
+                parserOpts: { plugins: ['jsx', 'typescript'] },
+                plugins: [[plugin, { sessionReplay: { svgTracking: true } }]],
+                configFile: false
+            }
+        )?.code as string | undefined;
+
+        expect(output).toContain('SessionReplayView.Privacy');
+    });
+});
