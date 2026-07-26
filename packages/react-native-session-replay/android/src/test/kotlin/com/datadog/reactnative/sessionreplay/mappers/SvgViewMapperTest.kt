@@ -148,7 +148,7 @@ internal class SvgViewMapperTest {
     }
 
     @Test
-    fun `M return empty list W map() { DdPrivacyView with hash but no entry data }`() {
+    fun `M return ShapeWireframe W map() { DdPrivacyView with hash but no entry data }`() {
         // Given
         val hash = "missing-entry-hash"
         whenever(mockDdPrivacyView.attributes).thenReturn(mapOf("hash" to hash))
@@ -163,11 +163,12 @@ internal class SvgViewMapperTest {
         )
 
         // Then
-        assertThat(result).isEmpty()
+        assertThat(result).hasSize(1)
+        assertThat(result[0]).isInstanceOf(MobileSegment.Wireframe.ShapeWireframe::class.java)
     }
 
     @Test
-    fun `M return empty list W map() { DdPrivacyView with hash but no child view }`() {
+    fun `M return ShapeWireframe W map() { DdPrivacyView with hash but no child view }`() {
         // Given
         val hash = "no-child-hash"
         val svgBytes = "<svg></svg>".toByteArray(Charsets.UTF_8)
@@ -184,6 +185,7 @@ internal class SvgViewMapperTest {
         )
 
         // Then
-        assertThat(result).isEmpty()
+        assertThat(result).hasSize(1)
+        assertThat(result[0]).isInstanceOf(MobileSegment.Wireframe.ShapeWireframe::class.java)
     }
 }
