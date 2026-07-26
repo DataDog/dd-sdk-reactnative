@@ -1220,4 +1220,23 @@ describe('ReactNativeSVG.buildSvgMap', () => {
 
         expect(instance.localSvgMap['StarIcon']).toBeDefined();
     });
+
+    it('should not overwrite localSvgMap when buildSvgMap is called a second time on a fresh instance', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export { StarIcon } from './icon.svg';`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+        const mapAfterFirstCall = { ...instance.localSvgMap };
+
+        // Simulates what pre() used to do: create a brand-new instance per file
+        const freshInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        freshInstance.setApiTypes(t);
+        freshInstance.buildSvgMap();
+
+        expect(freshInstance.localSvgMap).toEqual(mapAfterFirstCall);
+    });
 });

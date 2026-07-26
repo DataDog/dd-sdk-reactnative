@@ -53,7 +53,10 @@ export default declare(
                     assetsPath = getAssetsPath();
                 }
 
-                reactNativeSVG = options.__internal_reactNativeSVG;
+                // Reuse the instance across files instead of rebuilding (and
+                // rescanning) it per file.
+                reactNativeSVG =
+                    options.__internal_reactNativeSVG ?? reactNativeSVG;
                 if (!reactNativeSVG && assetsPath) {
                     reactNativeSVG = new ReactNativeSVG(
                         process.cwd(),
