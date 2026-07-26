@@ -321,7 +321,7 @@ function DynamicOpacityCircle({ fadeLevel }: { fadeLevel: number }) {
 
 // ─────────────────────────────────────────────────────────────
 // GROUP F — File imports
-// LocalSvgHandler reads the SVG file from disk (Fix 2, 3, 4).
+// LocalSvgHandler resolves and reads the imported SVG file from disk.
 // ─────────────────────────────────────────────────────────────
 
 /** F1: Default import of a local .svg file */
@@ -329,8 +329,11 @@ function LocalStarImport() {
     return <StarSvg width={64} height={64} />;
 }
 
-/** F2: Named import from barrel file (export { default as HeartIcon })
- *  Tests Fix 6: ExportNamedDeclaration uses spec.exported.name, not spec.local.name */
+/**
+ * F2: Named import from a barrel file (export { default as HeartIcon } from './heart.svg').
+ * The barrel scan must key this by the exported name ('HeartIcon'), not the source
+ * module's local name ('default') — otherwise this import is never resolved.
+ */
 function BarrelHeartImport() {
     return <HeartIcon width={64} height={64} />;
 }
@@ -430,7 +433,7 @@ export default function SvgTestCases() {
             <RNText style={styles.subtitle}>
                 All cases in Groups A–D should appear in replay.{'\n'}
                 Group E: known limitation — absent from replay entirely (see comment).{'\n'}
-                Group F: appears after buildSvgMap fixes.{'\n'}
+                Group F: direct and barrel-re-exported .svg imports should appear in replay.{'\n'}
                 Group G: privacy overrides — verify masking behavior in replay.{'\n'}
                 Group I: I1 shows circle only (checkmark removed), I2 shows circle + checkmark.
             </RNText>
@@ -510,7 +513,7 @@ export default function SvgTestCases() {
                 </Case>
             </Section>
 
-            <Section title="F — File imports (Fixes 2, 3, 4, 6)">
+            <Section title="F — File imports (direct + barrel re-exports)">
                 <Case label="F1 default import" sublabel="star.svg">
                     <LocalStarImport />
                 </Case>

@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Barrel file used to test Fix 6: ExportNamedDeclaration must use spec.exported.name
-// not spec.local.name, otherwise 'export { default as HeartIcon }' stores 'default'
-// as the key in localSvgMap instead of 'HeartIcon', and <HeartIcon/> is never found.
+// Barrel file used to test aliased re-exports: the SVG scan must key this
+// entry by the exported name ('HeartIcon'), not the source module's local
+// name ('default') — otherwise 'export { default as HeartIcon }' is never found.
 export { default as HeartIcon } from './heart.svg';
 export { default as ShieldIcon } from './shield.svg';
