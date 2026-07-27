@@ -370,7 +370,13 @@ function generateSessionReplayAssets() {
     let processedCount = 0;
     const errors: Array<{ file: string; error: string }> = [];
 
-    const reactNativeSVG = new ReactNativeSVG(rootDir, assetsPath, true);
+    const reactNativeSVG = new ReactNativeSVG(
+        rootDir,
+        assetsPath,
+        true,
+        ignorePatterns,
+        cliOptions.followSymlinks
+    );
     reactNativeSVG.setApiTypes(babelTypes);
     reactNativeSVG.buildSvgMap();
 

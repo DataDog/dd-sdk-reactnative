@@ -1238,4 +1238,27 @@ describe('ReactNativeSVG.buildSvgMap', () => {
 
         expect(freshInstance.localSvgMap).toEqual(mapAfterFirstCall);
     });
+
+    // generate-sr-assets passes its own (larger, user-configurable) ignore
+    // list here instead of relying on the hardcoded default -- otherwise it
+    // would scan directories the CLI was explicitly told to skip.
+    it('should respect a custom scanIgnorePatterns list instead of the hardcoded default', () => {
+        fs.mkdirSync(path.join(tmpDir, 'vendor'));
+        fs.writeFileSync(
+            path.join(tmpDir, 'vendor', 'icons.ts'),
+            `export { StarIcon } from '../icon.svg';`
+        );
+
+        const defaultInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        defaultInstance.setApiTypes(t);
+        defaultInstance.buildSvgMap();
+        expect(defaultInstance.localSvgMap['StarIcon']).toBeDefined();
+
+        const scopedInstance = new ReactNativeSVG(tmpDir, tmpDir, false, [
+            '**/vendor/**'
+        ]);
+        scopedInstance.setApiTypes(t);
+        scopedInstance.buildSvgMap();
+        expect(scopedInstance.localSvgMap['StarIcon']).toBeUndefined();
+    });
 });

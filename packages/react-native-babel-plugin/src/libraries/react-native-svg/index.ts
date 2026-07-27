@@ -25,6 +25,18 @@ type SvgOffset = {
     length: number;
 };
 
+// Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
+// specific set of patterns to pass in -- the generate-sr-assets CLI passes its
+// own (larger, user-configurable) ignore list instead of relying on this.
+const DEFAULT_SCAN_IGNORE_PATTERNS = [
+    '**/node_modules/**',
+    '**/lib/**',
+    '**/dist/**',
+    '**/*.d.ts',
+    '**/*.test.*',
+    '**/*.config.js'
+];
+
 /**
  * Internal processor responsible for detecting, transforming, and wrapping
  * React Native SVG components for use with Session Replay.
@@ -47,7 +59,9 @@ export class ReactNativeSVG {
     constructor(
         private rootDir: string,
         private assetsPath: string,
-        private saveSvgMapToDisk: boolean = false
+        private saveSvgMapToDisk: boolean = false,
+        private scanIgnorePatterns: string[] = DEFAULT_SCAN_IGNORE_PATTERNS,
+        private followSymlinks: boolean = false
     ) {}
 
     setApiTypes(t: typeof Babel.types) {
@@ -62,8 +76,7 @@ export class ReactNativeSVG {
      * The collected mappings are stored in `localSvgMap`, keyed by the local/imported variable
      * names (e.g., `Logo`, `IconSearch`), with their values pointing to the resolved file path.
      *
-     * This method ignores files in `node_modules`, `lib`, and `dist`, as well as `.d.ts`, test,
-     * and config files.
+     * Files matching `scanIgnorePatterns` (defaulted in the constructor) are skipped.
      *
      * If `saveSvgMapToDisk` is false, it will first attempt to load the mapping from a previously
      * saved `svg-map.json` file for better performance. If the file doesn't exist or can't be read,
@@ -102,14 +115,8 @@ export class ReactNativeSVG {
             {
                 cwd: this.rootDir,
                 absolute: true,
-                ignore: [
-                    '**/node_modules/**',
-                    '**/lib/**',
-                    '**/dist/**',
-                    '**/*.d.ts',
-                    '**/*.test.*',
-                    '**/*.config.js'
-                ]
+                ignore: this.scanIgnorePatterns,
+                followSymbolicLinks: this.followSymlinks
             }
         );
 
