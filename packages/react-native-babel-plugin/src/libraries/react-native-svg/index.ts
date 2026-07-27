@@ -20,11 +20,6 @@ import { getNodeName } from '../../utils';
 import { HandlerResolver } from './handlers/HandlerResolver';
 import { writeAssetToDisk } from './processing/fs';
 
-type SvgOffset = {
-    start: number;
-    length: number;
-};
-
 // Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
 // specific set of patterns to pass in -- the generate-sr-assets CLI passes its
 // own (larger, user-configurable) ignore list instead of relying on this.
@@ -48,10 +43,6 @@ const DEFAULT_SCAN_IGNORE_PATTERNS = [
  * the native Session Replay layer.
  */
 export class ReactNativeSVG {
-    svgMap: Record<string, { file: string; [key: string]: string }> = {};
-
-    svgOffset: Record<string, SvgOffset> = {};
-
     localSvgMap: Record<string, { path: string; content?: string }> = {};
 
     t: typeof Babel.types | null = null;
@@ -223,8 +214,6 @@ export class ReactNativeSVG {
     /**
      * Processes a JSXElement representing an SVG-based component and transforms it into
      * a web-compliant SVG string with normalized attributes and extracted dimensions.
-     * The resulting SVG content and its metadata (e.g., width/height) are stored in `svgMap`,
-     * keyed by a generated UUID for later reference.
      *
      * Internally, the appropriate handler is selected based on the tag name and used to
      * perform the transformation.
@@ -286,11 +275,6 @@ export class ReactNativeSVG {
 
                 path.node.extra = {
                     __wrappedForSR: true
-                };
-
-                this.svgMap[id] = {
-                    file: optimized,
-                    ...dimensions
                 };
 
                 writeAssetToDisk(this.assetsPath, id, hash, optimized);

@@ -45,7 +45,6 @@ export class RNSvgHandler implements SvgHandler {
     /**
      * Processes a JSXElement representing an SVG node and transforms it into
      * a web compliant SVG string with updated attributes and dimensions.
-     * Stores the transformed SVG string and dimensions in `svgMap`, keyed by a UUID.
      *
      * @param dimensions - Object to collect extracted width/height info.
      * @returns Transformed SVG JSX string, or undefined if the tag is not supported.
