@@ -44,8 +44,16 @@ export default declare(
         let assetsPath: string | null = null;
 
         return {
-            pre() {
+            pre(file) {
                 if (!options.sessionReplay.svgTracking) {
+                    return;
+                }
+
+                // Skip for web builds — the expensive buildSvgMap() scan below
+                // would otherwise run even though Program.enter skips all SVG
+                // handling for web anyway.
+                const platform = (file.opts?.caller as any)?.platform;
+                if (platform === 'web') {
                     return;
                 }
 
