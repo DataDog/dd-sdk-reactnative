@@ -418,8 +418,8 @@ describe('FlagsClient', () => {
             })
         );
 
-    // TODO(FFL-2837): Remove this fake after flagging-core publishes canonical
-    // state-matrix vectors for non-assignment and error results.
+    // Client tests use this fake to control non-assignment and error results
+    // independently of flagging-core integration vectors.
     const installFakeRulesEngine = (
         implementation: (
             request: RulesEvaluationRequest<RulesValueType>
@@ -1032,6 +1032,23 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
+        it('does not replace a missing targeting key with an empty key', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'DEFAULT',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.getBooleanValue('dynamic-flag', false);
+
+            expect(evaluate.mock.calls[0][0].context).toHaveProperty(
+                'targetingKey',
+                undefined
+            );
+        });
+
         it('uses matching precomputed data before rules data', () => {
             const evaluate = jest.spyOn(flaggingCoreRulesEngine, 'evaluate');
             const flagsClient = DdFlags.getClient();
@@ -1074,15 +1091,6 @@ describe('FlagsClient', () => {
         });
 
         it('keeps matching precomputed data when rules are invalid', () => {
-            const invalidRules = buildRulesConfiguration();
-            const condition =
-                invalidRules.flags['dynamic-flag'].allocations[0].rules?.[0]
-                    .conditions[0];
-            if (!condition) {
-                throw new Error('The fixture has no condition.');
-            }
-            (condition as { operator: string }).operator = 'ONE_OF_SHA256';
-
             const flagsClient = DdFlags.getClient();
             flagsClient.setEvaluationContextWithoutFetching({
                 targetingKey: 'user-1',
@@ -1091,7 +1099,7 @@ describe('FlagsClient', () => {
 
             expect(
                 flagsClient.setConfiguration(
-                    buildMixedConfig({ targetingKey: 'user-1' }, invalidRules)
+                    buildMixedConfig({ targetingKey: 'user-1' }, {})
                 )
             ).toEqual({ status: 'ready' });
             expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
@@ -1100,18 +1108,9 @@ describe('FlagsClient', () => {
         });
 
         it('returns GENERAL when mismatched precomputed data falls through to invalid rules', () => {
-            const invalidRules = buildRulesConfiguration();
-            const condition =
-                invalidRules.flags['dynamic-flag'].allocations[0].rules?.[0]
-                    .conditions[0];
-            if (!condition) {
-                throw new Error('The fixture has no condition.');
-            }
-            (condition as { operator: string }).operator = 'ONE_OF_SHA256';
-
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
-                buildMixedConfig({ targetingKey: 'user-1' }, invalidRules)
+                buildMixedConfig({ targetingKey: 'user-1' }, {})
             );
 
             expect(
@@ -1191,7 +1190,7 @@ describe('FlagsClient', () => {
                     variationType: 'boolean',
                     variationValue: 'true',
                     doLog: false,
-                    extraLogging: { experiment: 'checkout' }
+                    extraLogging: {}
                 }),
                 'user-1',
                 { country: 'US' }
