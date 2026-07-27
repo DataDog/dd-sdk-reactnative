@@ -62,8 +62,8 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
         source
     ) as PendingRulesConfiguration;
 
-    // TODO(FFL-2837): Delete this JSON compatibility shim after
-    // DataDog/openfeature-js-client#336 is published by flagging-core.
+    // TODO(FFL-2837): Delete this legacy JSON compatibility shim after a
+    // flagging-core release contains DataDog/openfeature-js-client#344.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -72,7 +72,7 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
                 response: JSON.parse(pendingRules.response)
             };
         } catch {
-            return {};
+            return configuration;
         }
     }
 
@@ -85,19 +85,12 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
 export const configurationToString = (
     configuration: FlagsConfiguration
 ): string => {
-    const serialized = coreConfigurationToString(configuration);
     const pendingConfiguration = configuration as PendingRulesConfiguration;
-    if (!pendingConfiguration.rulesBased) {
-        return serialized;
+    if (pendingConfiguration.rulesBased) {
+        throw new Error(
+            'Rules configurations cannot be serialized to the wire format'
+        );
     }
 
-    // TODO(FFL-2837): Delete this JSON compatibility shim after
-    // DataDog/openfeature-js-client#336 is published by flagging-core.
-    const wire = JSON.parse(serialized) as PendingRulesWire;
-    wire.rulesBased = {
-        fetchedAt: pendingConfiguration.rulesBased.fetchedAt,
-        etag: pendingConfiguration.rulesBased.etag,
-        response: JSON.stringify(pendingConfiguration.rulesBased.response)
-    };
-    return JSON.stringify(wire);
+    return coreConfigurationToString(configuration);
 };

@@ -45,7 +45,6 @@ export const buildRulesConfiguration = (): UniversalFlagConfigurationV1 => ({
                         {
                             variationKey: 'enabled',
                             serialId: 7,
-                            extraLogging: { experiment: 'checkout' },
                             shards: [
                                 {
                                     salt: 'test-salt',
@@ -71,8 +70,8 @@ export interface FakeRulesEngine extends RulesEngine {
     >;
 }
 
-// TODO(FFL-2837): Remove this fake after the upstream rules wire and engine
-// contract are published and the state-matrix tests can use canonical vectors.
+// Client tests use this fake to control evaluation independently of the
+// flagging-core implementation and its canonical integration vectors.
 export const createFakeRulesEngine = (
     result: FakeRulesEvaluation
 ): FakeRulesEngine => {

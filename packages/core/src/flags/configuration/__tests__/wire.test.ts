@@ -128,8 +128,8 @@ describe('configurationToString round-trip', () => {
     });
 });
 
-describe('rules configuration wire compatibility', () => {
-    it('parses and serializes a rules configuration', () => {
+describe('temporary rules configuration wire compatibility', () => {
+    it('parses a legacy rules configuration', () => {
         const rulesBased = {
             response: buildRulesConfiguration(),
             fetchedAt: 123,
@@ -148,13 +148,22 @@ describe('rules configuration wire compatibility', () => {
         };
 
         expect(parsed.rulesBased).toEqual(rulesBased);
-        expect(
-            configurationFromString(
-                configurationToString(
-                    (parsed as unknown) as ParsedFlagsConfiguration
-                )
+    });
+
+    it('does not serialize a rules configuration', () => {
+        const configuration = {
+            rulesBased: {
+                response: buildRulesConfiguration()
+            }
+        };
+
+        expect(() =>
+            configurationToString(
+                (configuration as unknown) as ParsedFlagsConfiguration
             )
-        ).toEqual(parsed);
+        ).toThrow(
+            'Rules configurations cannot be serialized to the wire format'
+        );
     });
 
     it('keeps both branches in a mixed configuration', () => {
@@ -173,14 +182,17 @@ describe('rules configuration wire compatibility', () => {
         expect(parsed.rulesBased).toBeDefined();
     });
 
-    it('returns an empty configuration for malformed rules JSON', () => {
-        expect(
-            configurationFromString(
-                JSON.stringify({
-                    version: 1,
-                    rulesBased: { response: '{' }
-                })
-            )
-        ).toEqual({});
+    it('keeps a valid precomputed branch when rules JSON is malformed', () => {
+        const parsed = configurationFromString(
+            buildWire({
+                rulesBased: { response: '{' }
+            })
+        ) as {
+            precomputed?: unknown;
+            rulesBased?: unknown;
+        };
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rulesBased).toBeUndefined();
     });
 });

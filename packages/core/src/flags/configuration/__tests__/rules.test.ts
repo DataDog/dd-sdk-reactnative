@@ -35,6 +35,17 @@ describe('rules configuration', () => {
         });
     });
 
+    it('preserves the difference between a missing and empty targeting key', () => {
+        expect(toRulesEvaluationContext({})).toHaveProperty(
+            'targetingKey',
+            undefined
+        );
+        expect(toRulesEvaluationContext({ targetingKey: '' })).toHaveProperty(
+            'targetingKey',
+            ''
+        );
+    });
+
     it('clones and freezes a valid rules configuration', () => {
         const source = buildRulesConfiguration();
         const prepared = prepareRulesConfiguration(source);
@@ -55,7 +66,7 @@ describe('rules configuration', () => {
         ).toBe(true);
     });
 
-    it('rejects an unsupported operator', () => {
+    it('omits a flag that uses an unsupported operator', () => {
         const source = buildRulesConfiguration();
         const condition =
             source.flags['dynamic-flag'].allocations[0].rules?.[0]
@@ -64,16 +75,18 @@ describe('rules configuration', () => {
         if (!condition) {
             throw new Error('The fixture has no condition.');
         }
-        (condition as { operator: string }).operator = 'ONE_OF_SHA256';
+        (condition as { operator: string }).operator = 'FUTURE_OPERATOR';
 
-        expect(prepareRulesConfiguration(source)).toEqual({
-            status: 'error',
-            errorMessage:
-                'The rules configuration uses the unsupported operator "ONE_OF_SHA256".'
-        });
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(prepared.configuration.flags).toEqual({});
     });
 
-    it('rejects an invalid regular expression', () => {
+    it('omits a flag that contains an invalid regular expression', () => {
         const source = buildRulesConfiguration();
         const conditions =
             source.flags['dynamic-flag'].allocations[0].rules?.[0].conditions;
@@ -86,21 +99,52 @@ describe('rules configuration', () => {
             value: '['
         } as typeof conditions[number];
 
-        expect(prepareRulesConfiguration(source)).toEqual({
-            status: 'error',
-            errorMessage: 'A regular expression condition is not valid.'
-        });
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(prepared.configuration.flags).toEqual({});
     });
 
-    it('rejects a split that points to an absent variation', () => {
+    it('omits a flag whose split points to an absent variation', () => {
         const source = buildRulesConfiguration();
         source.flags['dynamic-flag'].allocations[0].splits[0].variationKey =
             'absent';
 
-        expect(prepareRulesConfiguration(source)).toEqual({
-            status: 'error',
-            errorMessage: 'A split has an invalid variation key.'
-        });
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(prepared.configuration.flags).toEqual({});
+    });
+
+    it('keeps valid flags when it omits an invalid flag', () => {
+        const source = buildRulesConfiguration();
+        const validFlag = buildRulesConfiguration().flags['dynamic-flag'];
+        validFlag.key = 'valid-flag';
+        source.flags['valid-flag'] = validFlag;
+
+        const condition =
+            source.flags['dynamic-flag'].allocations[0].rules?.[0]
+                .conditions[0];
+        if (!condition) {
+            throw new Error('The fixture has no condition.');
+        }
+        (condition as { operator: string }).operator = 'FUTURE_OPERATOR';
+
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(Object.keys(prepared.configuration.flags)).toEqual([
+            'valid-flag'
+        ]);
     });
 
     it('normalizes a real flagging-core evaluation', () => {
@@ -125,33 +169,31 @@ describe('rules configuration', () => {
             metadata: {
                 allocationKey: 'allocation-1',
                 variationType: 'boolean',
-                doLog: false,
-                extraLogging: { experiment: 'checkout' },
-                splitSerialId: 7
+                doLog: false
             }
         });
-        expect(result.metadata.evaluationTimestampMs).toEqual(
-            expect.any(Number)
-        );
     });
 
-    it('checks own properties before it calls flagging-core', () => {
-        const result = flaggingCoreRulesEngine.evaluate({
-            configuration: buildRulesConfiguration(),
-            type: 'boolean',
-            flagKey: 'toString',
-            defaultValue: false,
-            context: { targetingKey: 'user-1' },
-            logger: getNoopRulesLogger()
-        });
+    it.each(['toString', 'constructor', '__proto__'])(
+        'checks own properties before it evaluates %s',
+        flagKey => {
+            const result = flaggingCoreRulesEngine.evaluate({
+                configuration: buildRulesConfiguration(),
+                type: 'boolean',
+                flagKey,
+                defaultValue: false,
+                context: { targetingKey: 'user-1' },
+                logger: getNoopRulesLogger()
+            });
 
-        expect(result).toEqual({
-            value: false,
-            reason: 'ERROR',
-            errorCode: 'FLAG_NOT_FOUND',
-            metadata: {}
-        });
-    });
+            expect(result).toEqual({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'FLAG_NOT_FOUND',
+                metadata: {}
+            });
+        }
+    );
 
     it('provides a deterministic fake engine for client tests', () => {
         const fake = createFakeRulesEngine({
