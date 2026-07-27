@@ -110,15 +110,12 @@ export class ReactNativeSVG {
         }
 
         // TODO: Support aliased paths (RUM-12185)
-        const files = glob.sync(
-            ['**/*.{js,jsx,ts,tsx}', '**/*.{js,jsx,ts,tsx}'],
-            {
-                cwd: this.rootDir,
-                absolute: true,
-                ignore: this.scanIgnorePatterns,
-                followSymbolicLinks: this.followSymlinks
-            }
-        );
+        const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
+            cwd: this.rootDir,
+            absolute: true,
+            ignore: this.scanIgnorePatterns,
+            followSymbolicLinks: this.followSymlinks
+        });
 
         for (const file of files) {
             try {
