@@ -37,9 +37,6 @@ export interface RulesEvaluationMetadata {
     allocationKey?: string;
     variationType?: RulesValueType;
     doLog?: boolean;
-    extraLogging?: Record<string, string>;
-    splitSerialId?: number;
-    evaluationTimestampMs?: number;
 }
 
 export interface RulesEvaluationDetails<T> {
@@ -125,14 +122,6 @@ const hasOwn = (value: object, key: PropertyKey): boolean =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const isStringRecord = (value: unknown): value is Record<string, string> => {
-    if (!isRecord(value)) {
-        return false;
-    }
-
-    return Object.values(value).every(item => typeof item === 'string');
-};
-
 const isJsonValue = (value: unknown): value is JsonValue => {
     if (
         value === null ||
@@ -196,8 +185,9 @@ const validateCondition = (value: unknown): string | undefined => {
                 return 'A regular expression condition must contain a string.';
             }
             try {
-                // TODO(FFL-2837): Replace this compile-only check with the upstream
-                // safe-regex policy before dynamic offline rules leave draft state.
+                // TODO(FFL-2837): Define a bounded regular expression policy before
+                // dynamic offline rules leave draft state. Upstream PR #344 validates
+                // regular expression syntax, but it does not limit expensive patterns.
                 RegExp(value.value); // dd-iac-scan ignore-line
             } catch {
                 return 'A regular expression condition is not valid.';
@@ -322,12 +312,6 @@ const validateAllocation = (
         if (split.serialId !== undefined && !Number.isInteger(split.serialId)) {
             return 'A split serial ID is not valid.';
         }
-        if (
-            split.extraLogging !== undefined &&
-            !isStringRecord(split.extraLogging)
-        ) {
-            return 'A split extraLogging field is not valid.';
-        }
 
         const shardsError = validateShards(split.shards);
         if (shardsError) {
@@ -378,7 +362,9 @@ const validateFlag = (value: unknown): string | undefined => {
     return undefined;
 };
 
-const validateRulesConfiguration = (value: unknown): string | undefined => {
+const validateRulesConfigurationEnvelope = (
+    value: unknown
+): string | undefined => {
     if (
         !isRecord(value) ||
         typeof value.createdAt !== 'string' ||
@@ -388,13 +374,6 @@ const validateRulesConfiguration = (value: unknown): string | undefined => {
         !isRecord(value.flags)
     ) {
         return 'The rules configuration has an invalid envelope.';
-    }
-
-    for (const flag of Object.values(value.flags)) {
-        const error = validateFlag(flag);
-        if (error) {
-            return error;
-        }
     }
 
     return undefined;
@@ -444,11 +423,19 @@ export const prepareRulesConfiguration = (
 ): PreparedRulesConfiguration => {
     const clone = cloneValue(value);
 
-    // TODO(FFL-2837): Replace the temporary SDK validator with the published
-    // flagging-core validation API. Keep the branch-level result contract.
-    const errorMessage = validateRulesConfiguration(clone);
+    // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
+    // flagging-core release contains upstream PR #344. That implementation
+    // decodes the protobuf response and omits unsupported or invalid flags.
+    const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
         return { status: 'error', errorMessage };
+    }
+
+    const flags = (clone as UniversalFlagConfigurationV1).flags;
+    for (const [flagKey, flag] of Object.entries(flags)) {
+        if (validateFlag(flag)) {
+            delete flags[flagKey];
+        }
     }
 
     freezeValue(clone);
@@ -481,64 +468,21 @@ const normalizeVariationType = (
     }
 };
 
-const recoverSplitMetadata = (
+const recoverVariationType = (
     configuration: UniversalFlagConfigurationV1,
-    flagKey: string,
-    variant: string | undefined,
-    allocationKey: string | undefined,
-    splitSerialId: number | undefined
-): Pick<RulesEvaluationMetadata, 'extraLogging' | 'variationType'> => {
+    flagKey: string
+): RulesValueType | undefined => {
     const flags = configuration.flags as Record<string, unknown>;
     if (!hasOwn(flags, flagKey)) {
-        return {};
+        return undefined;
     }
 
     const flag = flags[flagKey];
     if (!isRecord(flag)) {
-        return {};
+        return undefined;
     }
 
-    const variationType = normalizeVariationType(flag.variationType);
-    if (!Array.isArray(flag.allocations)) {
-        return { variationType };
-    }
-
-    const variations = isRecord(flag.variations) ? flag.variations : {};
-    const variationEntry = Object.entries(variations).find(([, value]) => {
-        return isRecord(value) && value.key === variant;
-    });
-    const variationKey = variationEntry?.[0];
-
-    for (const allocation of flag.allocations) {
-        if (
-            !isRecord(allocation) ||
-            allocation.key !== allocationKey ||
-            !Array.isArray(allocation.splits)
-        ) {
-            continue;
-        }
-        const split = allocation.splits.find(candidate => {
-            if (!isRecord(candidate)) {
-                return false;
-            }
-            if (
-                splitSerialId !== undefined &&
-                candidate.serialId === splitSerialId
-            ) {
-                return true;
-            }
-            return (
-                splitSerialId === undefined &&
-                variationKey !== undefined &&
-                candidate.variationKey === variationKey
-            );
-        });
-        if (isRecord(split) && isStringRecord(split.extraLogging)) {
-            return { extraLogging: split.extraLogging, variationType };
-        }
-    }
-
-    return { variationType };
+    return normalizeVariationType(flag.variationType);
 };
 
 export const flaggingCoreRulesEngine: RulesEngine = {
@@ -570,21 +514,6 @@ export const flaggingCoreRulesEngine: RulesEngine = {
                 : typeof rawMetadata.__dd_allocation_key === 'string'
                 ? rawMetadata.__dd_allocation_key
                 : undefined;
-        const splitSerialId =
-            typeof rawMetadata.__dd_split_serial_id === 'number'
-                ? rawMetadata.__dd_split_serial_id
-                : undefined;
-
-        // TODO(FFL-2837): Remove this metadata lookup when flagging-core
-        // returns extraLogging and the original UFC variation type.
-        const recoveredMetadata = recoverSplitMetadata(
-            request.configuration,
-            request.flagKey,
-            result.variant,
-            allocationKey,
-            splitSerialId
-        );
-
         return {
             value: result.value,
             reason: result.reason,
@@ -595,18 +524,15 @@ export const flaggingCoreRulesEngine: RulesEngine = {
                 allocationKey,
                 variationType:
                     normalizeVariationType(rawMetadata.variationType) ??
-                    recoveredMetadata.variationType,
+                    recoverVariationType(
+                        request.configuration,
+                        request.flagKey
+                    ),
                 doLog:
                     typeof rawMetadata.doLog === 'boolean'
                         ? rawMetadata.doLog
                         : typeof rawMetadata.__dd_do_log === 'boolean'
                         ? rawMetadata.__dd_do_log
-                        : undefined,
-                extraLogging: recoveredMetadata.extraLogging,
-                splitSerialId,
-                evaluationTimestampMs:
-                    typeof rawMetadata.__dd_eval_timestamp_ms === 'number'
-                        ? rawMetadata.__dd_eval_timestamp_ms
                         : undefined
             }
         };
